@@ -2,9 +2,15 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Core", "src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj", "{D20D1906-95B2-41CF-85DA-5C3387A0A909}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Web.Api.Management", "src\Umbraco.Ai.Web.Api.Management\Umbraco.Ai.Web.Api.Management.csproj", "{2CA0078C-4998-41EC-8588-44E7A0DB917A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Web", "src\Umbraco.Ai.Web\Umbraco.Ai.Web.csproj", "{2CA0078C-4998-41EC-8588-44E7A0DB917A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.OpenAi", "src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj", "{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai", "src\Umbraco.Ai\Umbraco.Ai.csproj", "{E5D545EA-18B5-403B-8C9B-C71B2B35F901}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Startup", "src\Umbraco.Ai.Startup\Umbraco.Ai.Startup.csproj", "{DEF46641-8C96-4F48-9951-F0A64FDD46DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Web.StaticAssets", "src\Umbraco.Ai.Web.StaticAssets\Umbraco.Ai.Web.StaticAssets.csproj", "{F0A6D704-4854-4784-9FCC-83C728807E14}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +30,17 @@ Global
 		{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5D545EA-18B5-403B-8C9B-C71B2B35F901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5D545EA-18B5-403B-8C9B-C71B2B35F901}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5D545EA-18B5-403B-8C9B-C71B2B35F901}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5D545EA-18B5-403B-8C9B-C71B2B35F901}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEF46641-8C96-4F48-9951-F0A64FDD46DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEF46641-8C96-4F48-9951-F0A64FDD46DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEF46641-8C96-4F48-9951-F0A64FDD46DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEF46641-8C96-4F48-9951-F0A64FDD46DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0A6D704-4854-4784-9FCC-83C728807E14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0A6D704-4854-4784-9FCC-83C728807E14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0A6D704-4854-4784-9FCC-83C728807E14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0A6D704-4854-4784-9FCC-83C728807E14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

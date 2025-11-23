@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <Title>Umbraco Ai</Title>
-        <Description>Contains core logic for Umbraco Ai</Description>
-        <RootNamespace>Umbraco.Ai.Cms.Api.Management</RootNamespace>
-    </PropertyGroup>
-
-</Project>

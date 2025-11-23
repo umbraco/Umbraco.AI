@@ -14,7 +14,7 @@ namespace Umbraco.Ai.Extensions;
 
 public static class UmbracoBuilderExtensions
 {
-    public static IUmbracoBuilder AddUmbracoAi(this IUmbracoBuilder builder)
+    internal static IUmbracoBuilder AddUmbracoAiCore(this IUmbracoBuilder builder)
     {
         var services = builder.Services;
         var config = builder.Config;

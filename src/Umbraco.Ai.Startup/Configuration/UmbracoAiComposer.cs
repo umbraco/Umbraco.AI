@@ -2,7 +2,7 @@
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Core.Configuration;
+namespace Umbraco.Ai.Startup.Configuration;
 
 /// <summary>
 /// Composer to add Umbraco AI services to the Umbraco builder.

@@ -1,0 +1,18 @@
+{
+  "id": "Umbraco.Ai",
+  "name": "Umbraco Ai",
+  "version": "",
+  "extensions": [
+    {
+      "name": "Umbraco Ai Backoffice Entry Point",
+      "alias": "Umb.Ai.BackofficeEntryPoint",
+      "type": "backofficeEntryPoint",
+      "js": "/App_Plugins/UmbracoAi/umbraco-ai.js"
+    }
+  ],
+  "importmap": {
+    "imports": {
+      "@umbraco-ai/backoffice": "/App_Plugins/UmbracoAi/umbraco-ai.js"
+    }
+  }
+}

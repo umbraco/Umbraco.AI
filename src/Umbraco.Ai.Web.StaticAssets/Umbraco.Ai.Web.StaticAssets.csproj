@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Title>Umbraco Ai</Title>
+        <Description>Contains static assets for Umbraco Ai</Description>
+        <StaticWebAssetBasePath>App_Plugins/UmbracoAi</StaticWebAssetBasePath>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    </PropertyGroup>
+
+    <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild" DependsOnTargets="GetBuildVersion;GetUmbracoBuildVersion" Condition="Exists('wwwroot\umbraco-package.json')">
+        <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
+        <ItemGroup>
+            <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
+        </ItemGroup>
+        <JsonPathUpdateValue JsonFile="%(_PackageManifestFiles.FullPath)" Path="$.version" Value="&quot;$(PackageVersion)&quot;" />
+    </Target>
+    
+</Project>

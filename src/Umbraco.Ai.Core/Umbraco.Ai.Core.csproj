@@ -12,4 +12,13 @@
         <PackageReference Include="Umbraco.Cms.Core" />
     </ItemGroup>
 
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.Ai.Web</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.Ai.Startup</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+    
 </Project>

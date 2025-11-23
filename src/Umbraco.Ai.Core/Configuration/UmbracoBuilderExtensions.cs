@@ -1,9 +1,13 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Core.Factories;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Registry;
-//using Umbraco.Ai.Core.Services;
+using Umbraco.Ai.Core.Services;
+using Umbraco.Ai.Core.Settings;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;
@@ -28,8 +32,22 @@ public static class UmbracoBuilderExtensions
         // Registry
         services.AddSingleton<IAiRegistry, AiRegistry>();
 
+        // Settings resolution
+        services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();
+
+        // Connection system
+        services.AddSingleton<IAiConnectionRepository, InMemoryAiConnectionRepository>();
+        services.AddSingleton<IAiConnectionService, AiConnectionService>();
+
+        // Profile resolution
+        //services.AddSingleton<IAiProfileResolver, AiProfileResolver>();
+
+        // Client factories
+        services.AddSingleton<IAiChatClientFactory, AiChatClientFactory>();
+        services.AddSingleton<IAiEmbeddingGeneratorFactory, AiEmbeddingGeneratorFactory>();
+
         // High-level services
-        //services.AddSingleton<IAiChatService, AiChatService>();
+        services.AddSingleton<IAiChatService, AiChatService>();
         // TODO: services.AddSingleton<IAiEmbeddingService, AiEmbeddingService>();
         // TODO: services.AddSingleton<IAiToolService, AiToolService>();
 

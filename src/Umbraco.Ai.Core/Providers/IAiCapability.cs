@@ -59,8 +59,13 @@ public interface IAiEmbeddingCapability : IAiCapability
 /// <summary>
 /// Base implementation of an AI capability.
 /// </summary>
-public abstract class AiCapabilityBase : IAiCapability
+public abstract class AiCapabilityBase(IAiProvider provider) : IAiCapability
 {
+    /// <summary>
+    /// Gets or sets the AI provider this capability belongs to.
+    /// </summary>
+    protected IAiProvider Provider { get; set; } = provider;
+    
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
@@ -80,8 +85,13 @@ public abstract class AiCapabilityBase : IAiCapability
 /// <summary>
 /// Base implementation of an AI capability with specific settings.
 /// </summary>
-public abstract class AiCapabilityBase<TSettings> : IAiCapability
+public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCapability
 {
+    /// <summary>
+    /// Gets or sets the AI provider this capability belongs to.
+    /// </summary>
+    protected IAiProvider Provider { get; set; } = provider;
+    
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
@@ -118,7 +128,7 @@ public abstract class AiCapabilityBase<TSettings> : IAiCapability
 /// <summary>
 /// Base implementation of an AI chat capability.
 /// </summary>
-public abstract class AiChatCapabilityBase : AiCapabilityBase, IAiChatCapability
+public abstract class AiChatCapabilityBase(IAiProvider provider) : AiCapabilityBase(provider), IAiChatCapability
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Chat;
@@ -137,7 +147,7 @@ public abstract class AiChatCapabilityBase : AiCapabilityBase, IAiChatCapability
 /// Base implementation of an AI chat capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings"></typeparam>
-public abstract class AiChatCapabilityBase<TSettings> : AiCapabilityBase<TSettings>, IAiCapability<TSettings>, IAiChatCapability
+public abstract class AiChatCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiChatCapability
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Chat;
@@ -157,7 +167,7 @@ public abstract class AiChatCapabilityBase<TSettings> : AiCapabilityBase<TSettin
 /// <summary>
 /// Base implementation of an AI embedding capability.
 /// </summary>
-public abstract class AiEmbeddingCapabilityBase : AiCapabilityBase, IAiEmbeddingCapability
+public abstract class AiEmbeddingCapabilityBase(IAiProvider provider) : AiCapabilityBase(provider), IAiEmbeddingCapability
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Embedding;
@@ -177,7 +187,7 @@ public abstract class AiEmbeddingCapabilityBase : AiCapabilityBase, IAiEmbedding
 /// Base implementation of an AI embedding capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings"></typeparam>
-public abstract class AiEmbeddingCapabilityBase<TSettings> : AiCapabilityBase<TSettings>, IAiCapability<TSettings>, IAiEmbeddingCapability 
+public abstract class AiEmbeddingCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiEmbeddingCapability 
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Embedding;

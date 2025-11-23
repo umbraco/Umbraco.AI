@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Umbraco.Ai.Core.Models;
 
@@ -34,20 +35,20 @@ public class AiSettingDefinition
     [JsonIgnore]
     public Type? PropertyType { get; set; }
     
-    /// <summary>
-    /// The alias of the editor used for the setting.
-    /// </summary>
-    public string? EditorAlias { get; set; }
+    // /// <summary>
+    // /// The alias of the editor used for the setting.
+    // /// </summary>
+    // public string? EditorAlias { get; set; }
     
     /// <summary>
     /// The UI alias of the editor used for the setting.
     /// </summary>
     public string? EditorUiAlias { get; set; }
     
-    /// <summary>
-    /// The element name of the editor used for the setting.
-    /// </summary>
-    public string? EditorElementName { get; set; }
+    // /// <summary>
+    // /// The element name of the editor used for the setting.
+    // /// </summary>
+    // public string? EditorElementName { get; set; }
     
     /// <summary>
     /// The configuration for the editor used for the setting.
@@ -63,4 +64,9 @@ public class AiSettingDefinition
     /// The sort order of the setting in the UI.
     /// </summary>
     public int SortOrder { get; set; }
+    
+    /// <summary>
+    /// The validation rules applied to the setting.
+    /// </summary>
+    public IEnumerable<ValidationAttribute> ValidationRules { get; set; } = Array.Empty<ValidationAttribute>();
 }

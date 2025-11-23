@@ -1,0 +1,45 @@
+using Umbraco.Ai.Core.Models;
+
+namespace Umbraco.Ai.Core.Connections;
+
+/// <summary>
+/// Service for managing AI provider connections with validation and business logic.
+/// </summary>
+public interface IAiConnectionService
+{
+    /// <summary>
+    /// Get a connection by ID.
+    /// </summary>
+    Task<AiConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get all connections, optionally filtered by provider.
+    /// </summary>
+    Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get connection references for a provider (lightweight list for UI).
+    /// </summary>
+    Task<IEnumerable<AiConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Save a connection (insert if new, update if exists) with validation.
+    /// If connection.Id is Guid.Empty, a new Guid will be generated.
+    /// </summary>
+    Task<AiConnection> SaveConnectionAsync(AiConnection connection, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delete a connection (with usage checks).
+    /// </summary>
+    Task DeleteConnectionAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validate connection settings against provider schema.
+    /// </summary>
+    Task<bool> ValidateConnectionAsync(string providerId, object? settings, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Test a connection by attempting to fetch models (if supported).
+    /// </summary>
+    Task<bool> TestConnectionAsync(Guid id, CancellationToken cancellationToken = default);
+}

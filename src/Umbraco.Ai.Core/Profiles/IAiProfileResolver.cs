@@ -11,9 +11,8 @@ public interface IAiProfileResolver
     /// Gets a specific profile by name and capability.
     /// </summary>
     /// <param name="profileAlias"></param>
-    /// <param name="capability"></param>
     /// <returns></returns>
-    AiProfile GetProfile(string profileAlias, AiCapability capability);
+    AiProfile GetProfile(string profileAlias);
     
     /// <summary>
     /// Gets all profiles for the specified capability.

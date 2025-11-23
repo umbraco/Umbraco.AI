@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Umbraco Ai OpenAi</Title>
+        <Description>Contains OpenAi specific logic for Umbraco Ai</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+    </ItemGroup>
+
+</Project>

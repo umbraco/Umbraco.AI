@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Core", "src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj", "{D20D1906-95B2-41CF-85DA-5C3387A0A909}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Web.Api.Management", "src\Umbraco.Ai.Web.Api.Management\Umbraco.Ai.Web.Api.Management.csproj", "{2CA0078C-4998-41EC-8588-44E7A0DB917A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.OpenAi", "src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj", "{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D20D1906-95B2-41CF-85DA-5C3387A0A909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D20D1906-95B2-41CF-85DA-5C3387A0A909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D20D1906-95B2-41CF-85DA-5C3387A0A909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D20D1906-95B2-41CF-85DA-5C3387A0A909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CA0078C-4998-41EC-8588-44E7A0DB917A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CA0078C-4998-41EC-8588-44E7A0DB917A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CA0078C-4998-41EC-8588-44E7A0DB917A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CA0078C-4998-41EC-8588-44E7A0DB917A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E864C43-A2F7-4BC0-B46E-63C38C046AEE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

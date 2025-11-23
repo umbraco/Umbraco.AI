@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
+    <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.8.118" />
+    <GlobalPackageReference Include="Umbraco.Code" Version="2.4.0" />
+    <GlobalPackageReference Include="Umbraco.GitVersioning.Extensions" Version="0.2.0" />
+    <GlobalPackageReference Include="Umbraco.JsonSchema.Extensions" Version="0.3.0" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="[10.0.1, 10.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.0, 10.999.999)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.0, 10.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.0.0-rc3, 17.999.999)" />
+  </ItemGroup>
+</Project>

@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.AI;
+﻿using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Providers;
@@ -28,6 +27,7 @@ public interface IAiCapability
 /// </summary>
 /// <typeparam name="TSettings"></typeparam>
 public interface IAiCapability<TSettings> : IAiCapability
+    where TSettings : class
 { }
 
 /// <summary>
@@ -86,6 +86,7 @@ public abstract class AiCapabilityBase(IAiProvider provider) : IAiCapability
 /// Base implementation of an AI capability with specific settings.
 /// </summary>
 public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCapability
+    where TSettings : class
 {
     /// <summary>
     /// Gets or sets the AI provider this capability belongs to.
@@ -106,23 +107,7 @@ public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCap
     protected abstract Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(TSettings settings, CancellationToken cancellationToken = default);
     
     Task<IReadOnlyList<AiModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
-        => GetModelsAsync(ResolveSettings(settings), cancellationToken);
-    
-    /// <summary>
-    /// Resolves the provided settings object to the expected settings type.
-    /// </summary>
-    /// <param name="settings"></param>
-    /// <typeparam name="TSettings"></typeparam>
-    /// <returns></returns>
-    protected TSettings ResolveSettings(object? settings)
-    {
-        return settings switch
-        {
-            TSettings typedSettings => typedSettings,
-            JsonElement jsonElement => jsonElement.Deserialize<TSettings>()!,
-            _ => default!
-        };
-    }
+        => settings != null ? GetModelsAsync((TSettings)settings, cancellationToken) : throw new ArgumentNullException(nameof(settings));
 }
 
 /// <summary>
@@ -148,6 +133,7 @@ public abstract class AiChatCapabilityBase(IAiProvider provider) : AiCapabilityB
 /// </summary>
 /// <typeparam name="TSettings"></typeparam>
 public abstract class AiChatCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiChatCapability
+    where TSettings : class
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Chat;
@@ -161,7 +147,7 @@ public abstract class AiChatCapabilityBase<TSettings>(IAiProvider provider) : Ai
 
     /// <inheritdoc />
     IChatClient IAiChatCapability.CreateClient(object? settings)
-        => CreateClient(ResolveSettings(settings));
+        => settings != null ? CreateClient((TSettings)settings) : throw new ArgumentNullException(nameof(settings));
 }
 
 /// <summary>
@@ -188,6 +174,7 @@ public abstract class AiEmbeddingCapabilityBase(IAiProvider provider) : AiCapabi
 /// </summary>
 /// <typeparam name="TSettings"></typeparam>
 public abstract class AiEmbeddingCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiEmbeddingCapability 
+    where TSettings : class
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Embedding;
@@ -201,5 +188,5 @@ public abstract class AiEmbeddingCapabilityBase<TSettings>(IAiProvider provider)
 
     /// <inheritdoc />
     IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings)
-        => CreateGenerator(ResolveSettings(settings));
+        => settings != null ? CreateGenerator((TSettings)settings!) : throw new ArgumentNullException(nameof(settings));
 }

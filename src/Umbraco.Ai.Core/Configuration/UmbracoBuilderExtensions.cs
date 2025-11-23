@@ -27,6 +27,9 @@ public static class UmbracoBuilderExtensions
         services.Configure<AiOptions>(config.GetSection("Umbraco:Ai"));
 
         // Scan and register providers
+        services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
+        services.AddSingleton<IAiSettingDefinitionBuilder, AiSettingDefinitionBuilder>();
+        services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
         RegisterProviders(services);
 
         // Registry
@@ -40,7 +43,8 @@ public static class UmbracoBuilderExtensions
         services.AddSingleton<IAiConnectionService, AiConnectionService>();
 
         // Profile resolution
-        //services.AddSingleton<IAiProfileResolver, AiProfileResolver>();
+        services.AddSingleton<IAiProfileRepository, InMemoryAiProfileRepository>();
+        services.AddSingleton<IAiProfileService, AiProfileService>();
 
         // Client factories
         services.AddSingleton<IAiChatClientFactory, AiChatClientFactory>();

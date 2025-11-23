@@ -6,6 +6,16 @@
 public sealed class AiProfile
 {
     /// <summary>
+    /// The unique identifier of the AI profile.
+    /// </summary>
+    public required Guid Id { get; init; }
+    
+    /// <summary>
+    /// The alias of the AI profile.
+    /// </summary>
+    public required string Alias { get; init; }
+    
+    /// <summary>
     /// The name of the AI profile.
     /// </summary>
     public required string Name { get; init; }

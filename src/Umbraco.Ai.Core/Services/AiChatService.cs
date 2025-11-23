@@ -10,39 +10,43 @@ namespace Umbraco.Ai.Core.Services;
 internal sealed class AiChatService : IAiChatService
 {
     private readonly IAiChatClientFactory _clientFactory;
-    private readonly IAiProfileResolver _profileResolver;
+    private readonly IAiProfileService _profileService;
     private readonly AiOptions _options;
 
     public AiChatService(
         IAiChatClientFactory clientFactory,
-        IAiProfileResolver profileResolver,
+        IAiProfileService profileService,
         IOptionsMonitor<AiOptions> options)
     {
         _clientFactory = clientFactory;
-        _profileResolver = profileResolver;
+        _profileService = profileService;
         _options = options.CurrentValue;
     }
 
-    public Task<ChatResponse> GetResponseAsync(
+    public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var profile = _profileResolver.GetDefaultProfile(AiCapability.Chat);
-        return GetResponseInternalAsync(profile, messages, options, cancellationToken);
+        var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+        return await GetResponseInternalAsync(profile, messages, options, cancellationToken);
     }
 
-    public Task<ChatResponse> GetResponseAsync(
-        string profileName,
+    public async Task<ChatResponse> GetResponseAsync(
+        Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var profile = _profileResolver.GetProfile(profileName);
+        var profile = await _profileService.GetProfileAsync(profileId, cancellationToken);
+        if (profile is null)
+        {
+            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
+        }
         
         EnsureProfileSupportsChat(profile);
         
-        return GetResponseInternalAsync(profile, messages, options, cancellationToken);
+        return await GetResponseInternalAsync(profile, messages, options, cancellationToken);
     }
 
     private async Task<ChatResponse> GetResponseInternalAsync(
@@ -57,26 +61,36 @@ internal sealed class AiChatService : IAiChatService
         return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
     }
 
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var profile = _profileResolver.GetDefaultProfile(AiCapability.Chat);
-        return GetStreamingResponseInternalAsync(profile, messages, options, cancellationToken);
+        var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+        await foreach (var update in GetStreamingResponseInternalAsync(profile, messages, options, cancellationToken))
+        {
+            yield return update;
+        }
     }
 
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        string profileName,
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var profile = _profileResolver.GetProfile(profileName);
-        
+        var profile = await _profileService.GetProfileAsync(profileId, cancellationToken);
+        if (profile is null)
+        {
+            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
+        }
+
         EnsureProfileSupportsChat(profile);
-        
-        return GetStreamingResponseInternalAsync(profile, messages, options, cancellationToken);
+
+        await foreach (var update in GetStreamingResponseInternalAsync(profile, messages, options, cancellationToken))
+        {
+            yield return update;
+        }
     }
 
     private async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseInternalAsync(
@@ -95,12 +109,17 @@ internal sealed class AiChatService : IAiChatService
     }
 
     public async Task<IChatClient> GetChatClientAsync(
-        string? profileName = null,
+        Guid? profileId = null,
         CancellationToken cancellationToken = default)
     {
-        var profile = string.IsNullOrWhiteSpace(profileName)
-            ? _profileResolver.GetDefaultProfile(AiCapability.Chat)
-            : _profileResolver.GetProfile(profileName);
+        var profile = profileId.HasValue
+            ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
+            : await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+        
+        if (profile is null)
+        {
+            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
+        }
         
         EnsureProfileSupportsChat(profile);
 

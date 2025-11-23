@@ -21,6 +21,12 @@ public sealed class AiProfile
     public AiModelRef Model { get; init; }
 
     /// <summary>
+    /// The ID of the connection to use for this profile.
+    /// Must reference a valid AiConnection.Id that matches the provider in Model.ProviderId.
+    /// </summary>
+    public required Guid ConnectionId { get; init; }
+
+    /// <summary>
     /// The temperature setting for the AI model, influencing randomness in responses.
     /// </summary>
     public float? Temperature { get; init; }

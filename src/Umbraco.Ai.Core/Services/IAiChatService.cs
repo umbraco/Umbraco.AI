@@ -28,13 +28,13 @@ public interface IAiChatService
     /// Profile settings (temperature, max tokens, model) are used as defaults
     /// and can be overridden by options.
     /// </summary>
-    /// <param name="profileName">The name of the profile to use.</param>
+    /// <param name="profileId">The ID of the profile to use.</param>
     /// <param name="messages">The chat messages to send.</param>
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The chat completion response from the AI model.</returns>
     Task<ChatResponse> GetResponseAsync(
-        string profileName,
+        Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
@@ -58,13 +58,13 @@ public interface IAiChatService
     /// Profile settings (temperature, max tokens, model) are used as defaults
     /// and can be overridden by options.
     /// </summary>
-    /// <param name="profileName">The name of the profile to use.</param>
+    /// <param name="profileId">The ID of the profile to use.</param>
     /// <param name="messages">The chat messages to send.</param>
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>An async stream of streaming chat updates.</returns>
     IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        string profileName,
+        Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
@@ -74,10 +74,10 @@ public interface IAiChatService
     /// The returned client has all registered middleware applied and is configured
     /// according to the specified profile.
     /// </summary>
-    /// <param name="profileName">Optional profile name. If not specified, uses the default chat profile.</param>
+    /// <param name="profileId">Optional profile id. If not specified, uses the default chat profile.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A configured IChatClient instance with middleware applied.</returns>
     Task<IChatClient> GetChatClientAsync(
-        string? profileName = null,
+        Guid? profileId = null,
         CancellationToken cancellationToken = default);
 }

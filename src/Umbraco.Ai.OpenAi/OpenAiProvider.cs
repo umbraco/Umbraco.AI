@@ -55,9 +55,9 @@ public class OpenAiProvider : AiProviderBase<OpenAiProviderSettings>
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenAiProvider"/> class.
     /// </summary>
-    /// <param name="serviceProvider"></param>
-    public OpenAiProvider(IServiceProvider serviceProvider) 
-        : base(serviceProvider)
+    /// <param name="infrastructure"></param>
+    public OpenAiProvider(IAiProviderInfrastructure infrastructure) 
+        : base(infrastructure)
     {
         WithCapability<OpenAiChatCapability>();
         WithCapability<OpenAiEmbeddingCapability>();

@@ -30,9 +30,9 @@ public class AiProviderAttribute(string id, string name) : Attribute
 public abstract class AiProviderBase : IAiProvider
 {
     /// <summary>
-    /// The service provider for dependency injection.
+    /// The infrastructure services for AI providers.
     /// </summary>
-    protected readonly IServiceProvider ServiceProvider;
+    protected readonly IAiProviderInfrastructure Infrastructure;
     
     /// <summary>
     /// The capabilities supported by this provider.
@@ -52,9 +52,9 @@ public abstract class AiProviderBase : IAiProvider
     /// Initializes a new instance of the <see cref="AiProviderBase"/> class.
     /// </summary>
     /// <exception cref="InvalidOperationException"></exception>
-    protected AiProviderBase(IServiceProvider serviceProvider)
+    protected AiProviderBase(IAiProviderInfrastructure infrastructure)
     {
-        ServiceProvider = serviceProvider;
+        Infrastructure = infrastructure;
         
         var attribute = GetType().GetCustomAttribute<AiProviderAttribute>(inherit: false);
         if (attribute == null)
@@ -107,7 +107,7 @@ public abstract class AiProviderBase : IAiProvider
     protected void WithCapability<TCapability>()
         where TCapability : class, IAiCapability
     {
-        Capabilities.Add(ServiceProvider.CreateInstance<TCapability>(this));
+        Capabilities.Add(Infrastructure.CapabilityFactory.Create<TCapability>(this));
     }
 }
 
@@ -124,38 +124,14 @@ public abstract class AiProviderBase<TSettings> : AiProviderBase
     /// <summary>
     /// Initializes a new instance of the <see cref="AiProviderBase{TSettings}"/> class.
     /// </summary>
-    /// <param name="serviceProvider"></param>
-    protected AiProviderBase(IServiceProvider serviceProvider)
-        : base(serviceProvider)
+    /// <param name="infrastructure"></param>
+    protected AiProviderBase(IAiProviderInfrastructure infrastructure)
+        : base(infrastructure)
     { }
 
     /// <inheritdoc />
     public override IReadOnlyList<AiSettingDefinition> GetSettingDefinitions()
-    {
-        var definitions = new List<AiSettingDefinition>();
-        var properties = typeof(TSettings).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var property in properties)
-        {
-            // Get custom attribute for metadata
-            var attr = property.GetCustomAttribute<AiSettingAttribute>();
-            
-            definitions.Add(new AiSettingDefinition
-            {
-                Key = property.Name.ToLowerInvariant(),
-                PropertyName = property.Name,
-                PropertyType = property.PropertyType,
-                Label = attr?.Label ?? $"#umbracoAiProviders_{Id.ToCamelCase()}Settings{property.Name}Label",
-                Description = attr?.Description ?? $"#umbracoAiProviders_{Id.ToCamelCase()}Settings{property.Name}Description",
-                EditorUiAlias = attr?.EditorUiAlias ?? InferEditorUiAlias(property.PropertyType),
-                DefaultValue = attr?.DefaultValue,
-                ValidationRules = InferValidationAttributes(property),
-                SortOrder = attr?.SortOrder ?? 0
-            });
-        }
-
-        return definitions;
-    }
+        => Infrastructure.SettingDefinitionBuilder.BuildForType<TSettings>(Id);
 
     /// <summary>
     /// Adds a capability to this AI provider.
@@ -164,7 +140,7 @@ public abstract class AiProviderBase<TSettings> : AiProviderBase
     protected new void WithCapability<TCapability>()
         where TCapability : class, IAiCapability<TSettings>
     {
-        Capabilities.Add(ServiceProvider.CreateInstance<TCapability>(this));
+        Capabilities.Add(Infrastructure.CapabilityFactory.Create<TCapability>(this));
     }
 
     private static string InferEditorUiAlias(Type type)

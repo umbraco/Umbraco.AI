@@ -95,7 +95,7 @@ internal sealed class AiConnectionService : IAiConnectionService
         }
 
         // TODO: Check if connection is in use by profiles before deletion
-        // This will require IAiProfileResolver when implemented
+        // This will require IAiProfileService when implemented
 
         await _repository.DeleteAsync(id, cancellationToken);
     }

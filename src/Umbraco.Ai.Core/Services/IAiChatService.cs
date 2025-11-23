@@ -1,34 +1,83 @@
-// using Umbraco.Ai.Core.Models;
-//
-// namespace Umbraco.Ai.Core.Services;
-//
-// /// <summary>
-// /// Defines an AI chat and text generation service.
-// /// </summary>
-// public interface IAiChatService
-// {
-//     /// <summary>
-//     /// Generates a chat completion based on the provided chat request.
-//     /// </summary>
-//     /// <param name="request">The chat request containing messages and configuration.</param>
-//     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-//     /// <returns>Chat response with generated message.</returns>
-//     Task<AiChatResponse> GenerateChatAsync(AiChatRequest request, CancellationToken cancellationToken = default);
-//
-//     /// <summary>
-//     /// Generates a chat completion based on the provided chat request using a specified profile.
-//     /// </summary>
-//     /// <param name="profileName">The name of the profile to use.</param>
-//     /// <param name="request">The chat request containing messages and configuration.</param>
-//     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-//     /// <returns>Chat response with generated message.</returns>
-//     Task<AiChatResponse> GenerateChatFromProfileAsync(string profileName, AiChatRequest request, CancellationToken cancellationToken = default);
-//
-//     /// <summary>
-//     /// Generates a chat completion in a streaming fashion, yielding message deltas as they are produced.
-//     /// </summary>
-//     /// <param name="request">The chat request containing messages and configuration.</param>
-//     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-//     /// <returns>Async stream of chat delta responses.</returns>
-//     IAsyncEnumerable<AiChatDeltaResponse> GenerateChatStreamAsync(AiChatRequest request, CancellationToken cancellationToken = default);
-// }
+using Microsoft.Extensions.AI;
+
+namespace Umbraco.Ai.Core.Services;
+
+/// <summary>
+/// Defines an AI chat service that provides access to chat completion capabilities.
+/// This service acts as a thin layer over Microsoft.Extensions.AI, adding Umbraco-specific
+/// features like profiles, connections, and configurable middleware.
+/// </summary>
+public interface IAiChatService
+{
+    /// <summary>
+    /// Gets a chat response using the default profile.
+    /// Profile settings (temperature, max tokens, model) are used as defaults
+    /// and can be overridden by options.
+    /// </summary>
+    /// <param name="messages">The chat messages to send.</param>
+    /// <param name="options">Optional chat options to override profile defaults.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>The chat completion response from the AI model.</returns>
+    Task<ChatResponse> GetResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a chat response using a specific named profile.
+    /// Profile settings (temperature, max tokens, model) are used as defaults
+    /// and can be overridden by options.
+    /// </summary>
+    /// <param name="profileName">The name of the profile to use.</param>
+    /// <param name="messages">The chat messages to send.</param>
+    /// <param name="options">Optional chat options to override profile defaults.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>The chat completion response from the AI model.</returns>
+    Task<ChatResponse> GetResponseAsync(
+        string profileName,
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a streaming chat response using the default profile.
+    /// Profile settings (temperature, max tokens, model) are used as defaults
+    /// and can be overridden by options.
+    /// </summary>
+    /// <param name="messages">The chat messages to send.</param>
+    /// <param name="options">Optional chat options to override profile defaults.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>An async stream of streaming chat updates.</returns>
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a streaming chat response using a specific named profile.
+    /// Profile settings (temperature, max tokens, model) are used as defaults
+    /// and can be overridden by options.
+    /// </summary>
+    /// <param name="profileName">The name of the profile to use.</param>
+    /// <param name="messages">The chat messages to send.</param>
+    /// <param name="options">Optional chat options to override profile defaults.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>An async stream of streaming chat updates.</returns>
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        string profileName,
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a configured chat client for advanced scenarios.
+    /// The returned client has all registered middleware applied and is configured
+    /// according to the specified profile.
+    /// </summary>
+    /// <param name="profileName">Optional profile name. If not specified, uses the default chat profile.</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>A configured IChatClient instance with middleware applied.</returns>
+    Task<IChatClient> GetChatClientAsync(
+        string? profileName = null,
+        CancellationToken cancellationToken = default);
+}

@@ -1,4 +1,7 @@
-﻿using Umbraco.Extensions;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using Umbraco.Ai.Core.Models;
+using Umbraco.Extensions;
 
 namespace Umbraco.Ai.Core.Providers;
 
@@ -42,6 +45,9 @@ public abstract class AiProviderBase : IAiProvider
     /// <inheritdoc />
     public string Name { get; }
 
+    /// <inheritdoc />
+    public virtual Type? SettingsType => null;
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="AiProviderBase"/> class.
     /// </summary>
@@ -86,7 +92,14 @@ public abstract class AiProviderBase : IAiProvider
     public bool HasCapability<TCapability>()
         where TCapability : class, IAiCapability
         => TryGeCapability<TCapability>(out _);
-    
+
+    /// <inheritdoc />
+    public virtual IReadOnlyList<AiSettingDefinition> GetSettingDefinitions()
+    {
+        // Base implementation returns empty list (no settings)
+        return Array.Empty<AiSettingDefinition>();
+    }
+
     /// <summary>
     /// Adds a capability to this AI provider.
     /// </summary>
@@ -94,7 +107,7 @@ public abstract class AiProviderBase : IAiProvider
     protected void WithCapability<TCapability>()
         where TCapability : class, IAiCapability
     {
-        Capabilities.Add(ServiceProvider.CreateInstance<TCapability>());
+        Capabilities.Add(ServiceProvider.CreateInstance<TCapability>(this));
     }
 }
 
@@ -105,6 +118,9 @@ public abstract class AiProviderBase : IAiProvider
 public abstract class AiProviderBase<TSettings> : AiProviderBase
     where TSettings : class, new()
 {
+    /// <inheritdoc />
+    public override Type? SettingsType => typeof(TSettings);
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AiProviderBase{TSettings}"/> class.
     /// </summary>
@@ -113,6 +129,34 @@ public abstract class AiProviderBase<TSettings> : AiProviderBase
         : base(serviceProvider)
     { }
 
+    /// <inheritdoc />
+    public override IReadOnlyList<AiSettingDefinition> GetSettingDefinitions()
+    {
+        var definitions = new List<AiSettingDefinition>();
+        var properties = typeof(TSettings).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var property in properties)
+        {
+            // Get custom attribute for metadata
+            var attr = property.GetCustomAttribute<AiSettingAttribute>();
+            
+            definitions.Add(new AiSettingDefinition
+            {
+                Key = property.Name.ToLowerInvariant(),
+                PropertyName = property.Name,
+                PropertyType = property.PropertyType,
+                Label = attr?.Label ?? $"#umbracoAiProviders_{Id.ToCamelCase()}Settings{property.Name}Label",
+                Description = attr?.Description ?? $"#umbracoAiProviders_{Id.ToCamelCase()}Settings{property.Name}Description",
+                EditorUiAlias = attr?.EditorUiAlias ?? InferEditorUiAlias(property.PropertyType),
+                DefaultValue = attr?.DefaultValue,
+                ValidationRules = InferValidationAttributes(property),
+                SortOrder = attr?.SortOrder ?? 0
+            });
+        }
+
+        return definitions;
+    }
+
     /// <summary>
     /// Adds a capability to this AI provider.
     /// </summary>
@@ -120,6 +164,34 @@ public abstract class AiProviderBase<TSettings> : AiProviderBase
     protected new void WithCapability<TCapability>()
         where TCapability : class, IAiCapability<TSettings>
     {
-        Capabilities.Add(ServiceProvider.CreateInstance<TCapability>());
+        Capabilities.Add(ServiceProvider.CreateInstance<TCapability>(this));
+    }
+
+    private static string InferEditorUiAlias(Type type)
+    {
+        var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+        // TODO: DateTime, Enum, etc.
+        
+        if (underlyingType == typeof(string)) return "Umb.PropertyEditorUi.TextBox";
+        if (underlyingType == typeof(int)) return "Umb.PropertyEditorUi.Integer";
+        if (underlyingType == typeof(bool)) return "Umb.PropertyEditorUi.Toggle";
+        if (underlyingType == typeof(decimal) || underlyingType == typeof(double) || underlyingType == typeof(float))
+            return "Umb.PropertyEditorUi.Decimal";
+
+        return "Umb.PropertyEditorUi.TextBox"; // fallback
+    }
+    
+    private static IEnumerable<ValidationAttribute> InferValidationAttributes(PropertyInfo property)
+    {
+        var validationAttributes = property.GetCustomAttributes<ValidationAttribute>().ToList();
+        
+        // If the property is non-nullable and doesn't already have a Required attribute, add one
+        if (!property.PropertyType.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any())
+        {
+            validationAttributes.Add(new RequiredAttribute());
+        }
+
+        return validationAttributes;
     }
 }

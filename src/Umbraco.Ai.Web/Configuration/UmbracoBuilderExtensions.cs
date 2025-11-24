@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Umbraco.Ai.Cms.Api.Management.Api;
 using Umbraco.Ai.Cms.Api.Management.Api.Management.Configuration;
@@ -33,7 +33,6 @@ public static class UmbracoBuilderExtensions
 
             options.DocumentFilter<MimeTypeDocumentFilter>(Constants.ManagementApi.ApiTitle);
             options.OperationFilter<UmbracoAiManagementApiBackOfficeSecurityRequirementsOperationFilter>();
-            // options.OperationFilter<SwaggerParameterAttributeFilter>();
         });
 
         builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAiManagementApiSchemaIdHandler>();

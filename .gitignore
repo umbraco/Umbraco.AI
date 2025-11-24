@@ -1,6 +1,10 @@
 bin/
 obj/
+demo/
 /packages/
 riderModule.iml
+node_modules/
 /_ReSharper.Caches/
 nul
+.idea
+*.local.sln

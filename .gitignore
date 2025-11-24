@@ -6,5 +6,5 @@ riderModule.iml
 node_modules/
 /_ReSharper.Caches/
 nul
-.idea
+.idea/
 *.local.sln

@@ -11,6 +11,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+      <ProjectReference Include="..\Umbraco.Ai.Persistence\Umbraco.Ai.Persistence.csproj" />
       <ProjectReference Include="..\Umbraco.Ai.Web\Umbraco.Ai.Web.csproj" />
     </ItemGroup>
 

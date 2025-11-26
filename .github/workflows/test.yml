@@ -31,11 +31,9 @@ jobs:
         run: dotnet test Umbraco.Ai.sln --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: actions/upload-artifact@v4
         if: success()
         with:
-          files: ./coverage/**/coverage.cobertura.xml
-          fail_ci_if_error: false
-          verbose: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage-report
+          path: ./coverage/**/coverage.cobertura.xml
+          retention-days: 30

@@ -71,14 +71,18 @@ Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<stri
 
 ### Middleware Pipeline
 
-Middleware wraps M.E.AI clients using the builder pattern. Lower `Order` values are applied first (closer to provider).
+Middleware wraps M.E.AI clients using the builder pattern. Ordering is controlled via the `OrderedCollectionBuilder` pattern using `Append()`, `InsertBefore<T>()`, and `InsertAfter<T>()` methods.
 
 ```csharp
 public interface IAiChatMiddleware
 {
     IChatClient Apply(IChatClient client);
-    int Order { get; }
 }
+
+// Register middleware in a Composer:
+builder.AiChatMiddleware()
+    .Append<LoggingChatMiddleware>()
+    .InsertBefore<LoggingChatMiddleware, TracingMiddleware>();
 ```
 
 ### Settings System

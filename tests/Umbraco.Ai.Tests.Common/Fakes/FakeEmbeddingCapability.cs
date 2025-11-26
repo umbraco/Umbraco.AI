@@ -41,6 +41,30 @@ public class FakeEmbeddingCapability : IAiEmbeddingCapability
 /// </summary>
 public class FakeEmbeddingGenerator : IEmbeddingGenerator<string, Embedding<float>>
 {
+    private readonly Func<IEnumerable<string>, EmbeddingGenerationOptions?, CancellationToken, Task<GeneratedEmbeddings<Embedding<float>>>>? _generateHandler;
+    private readonly float[] _defaultEmbedding;
+
+    public FakeEmbeddingGenerator(float[]? defaultEmbedding = null)
+    {
+        _defaultEmbedding = defaultEmbedding ?? [0.1f, 0.2f, 0.3f];
+    }
+
+    public FakeEmbeddingGenerator(Func<IEnumerable<string>, EmbeddingGenerationOptions?, CancellationToken, Task<GeneratedEmbeddings<Embedding<float>>>> generateHandler)
+    {
+        _generateHandler = generateHandler;
+        _defaultEmbedding = [0.1f, 0.2f, 0.3f];
+    }
+
+    /// <summary>
+    /// Gets the list of values that were sent to this generator.
+    /// </summary>
+    public List<IEnumerable<string>> ReceivedValues { get; } = [];
+
+    /// <summary>
+    /// Gets the list of options that were sent to this generator.
+    /// </summary>
+    public List<EmbeddingGenerationOptions?> ReceivedOptions { get; } = [];
+
     public EmbeddingGeneratorMetadata Metadata { get; } = new("FakeEmbeddingGenerator");
 
     public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
@@ -48,9 +72,17 @@ public class FakeEmbeddingGenerator : IEmbeddingGenerator<string, Embedding<floa
         EmbeddingGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        ReceivedValues.Add(values);
+        ReceivedOptions.Add(options);
+
+        if (_generateHandler is not null)
+        {
+            return await _generateHandler(values, options, cancellationToken);
+        }
+
         await Task.CompletedTask;
 
-        var embeddings = values.Select(_ => new Embedding<float>(new float[] { 0.1f, 0.2f, 0.3f })).ToList();
+        var embeddings = values.Select(_ => new Embedding<float>(_defaultEmbedding)).ToList();
         return new GeneratedEmbeddings<Embedding<float>>(embeddings);
     }
 

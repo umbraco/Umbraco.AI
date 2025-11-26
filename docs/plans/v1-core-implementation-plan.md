@@ -180,7 +180,18 @@ builder.AiChatMiddleware()
 
 ---
 
-## Phase 2: IAiEmbeddingService Implementation
+## Phase 2: IAiEmbeddingService Implementation ✅ COMPLETED
+
+### Implementation Status: COMPLETE (2025-11-26)
+
+**Completed Changes:**
+- ✅ `IAiEmbeddingService.cs` - Created interface with 5 methods for single/batch embedding generation and direct generator access
+- ✅ `AiEmbeddingService.cs` - Created internal implementation following `AiChatService` pattern
+- ✅ `UmbracoBuilderExtensions.cs` - Registered `IAiEmbeddingService` in DI container
+- ✅ `FakeEmbeddingCapability.cs` - Enhanced `FakeEmbeddingGenerator` to track received values/options for testing
+- ✅ `AiEmbeddingServiceTests.cs` - Created 16 comprehensive unit tests
+
+**Branch:** `feature/phase-2-embedding-service`
 
 ### New Files
 
@@ -188,32 +199,62 @@ builder.AiChatMiddleware()
 ```csharp
 public interface IAiEmbeddingService
 {
+    // Single value - default profile
+    Task<Embedding<float>> GenerateEmbeddingAsync(
+        string value,
+        EmbeddingGenerationOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    // Single value - specific profile
+    Task<Embedding<float>> GenerateEmbeddingAsync(
+        Guid profileId,
+        string value,
+        EmbeddingGenerationOptions? options = null,
+        CancellationToken cancellationToken = default);
+
+    // Multiple values - default profile
     Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
         IEnumerable<string> values,
         EmbeddingGenerationOptions? options = null,
         CancellationToken cancellationToken = default);
 
+    // Multiple values - specific profile
     Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
         Guid profileId,
         IEnumerable<string> values,
         EmbeddingGenerationOptions? options = null,
         CancellationToken cancellationToken = default);
 
-    Task<Embedding<float>> GenerateEmbeddingAsync(string value, ...);
-
+    // Direct generator access for advanced scenarios
     Task<IEmbeddingGenerator<string, Embedding<float>>> GetEmbeddingGeneratorAsync(
-        Guid? profileId = null, CancellationToken cancellationToken = default);
+        Guid? profileId = null,
+        CancellationToken cancellationToken = default);
 }
 ```
 
 **`src/Umbraco.Ai.Core/Services/AiEmbeddingService.cs`**
 - Inject `IAiEmbeddingGeneratorFactory`, `IAiProfileService`, `IOptionsMonitor<AiOptions>`
-- Resolve default profile via `AiOptions.DefaultEmbeddingProfileAlias`
+- Resolve default profile via `IAiProfileService.GetDefaultProfileAsync(AiCapability.Embedding, ...)`
 - Delegate to factory for generator creation
+- Options merging: caller options override profile defaults
 
 ### Modified Files
 
 - `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs` - Register `IAiEmbeddingService`
+- `tests/Umbraco.Ai.Tests.Common/Fakes/FakeEmbeddingCapability.cs` - Enhanced `FakeEmbeddingGenerator` with `ReceivedValues` and `ReceivedOptions` tracking
+
+### Tests Implemented
+
+**Unit Tests (`tests/Umbraco.Ai.Tests.Unit/Services/AiEmbeddingServiceTests.cs`):**
+
+16 tests covering:
+- ✅ Default embedding profile resolution
+- ✅ Named profile resolution by ID
+- ✅ Error handling: profile not found (`InvalidOperationException`)
+- ✅ Error handling: profile has wrong capability (Chat instead of Embedding)
+- ✅ Options merging when caller provides custom `EmbeddingGenerationOptions`
+- ✅ Multiple values returning embeddings for each value
+- ✅ Direct generator access via `GetEmbeddingGeneratorAsync`
 
 ---
 
@@ -310,6 +351,48 @@ src/Umbraco.Ai.Web/Api/Management/
 | Embedding | POST | `/embedding/generate` | Generate embeddings |
 | Chat | POST | `/chat/complete` | Chat completion (non-streaming) |
 | Chat | POST | `/chat/stream` | Chat completion with SSE streaming |
+
+### Testing Requirements
+
+**Unit Tests (`tests/Umbraco.Ai.Tests.Unit/Api/`):**
+
+For each controller, test the critical request/response mapping and validation:
+
+**Connection Controllers:**
+- `AllConnectionController` - Returns paginated list
+- `ByIdConnectionController` - Returns 404 when not found
+- `CreateConnectionController` - Validates required fields, returns created entity with ID
+- `UpdateConnectionController` - Returns 404 when not found
+- `DeleteConnectionController` - Returns 404 when not found, handles in-use connections
+- `TestConnectionController` - Returns test result with success/failure status
+
+**Profile Controllers:**
+- `AllProfileController` - Filters by capability query param
+- `ByIdProfileController` - Returns 404 when not found
+- `ByAliasProfileController` - Returns 404 when alias not found
+- `CreateProfileController` - Validates required fields, alias uniqueness
+- `UpdateProfileController` - Returns 404 when not found
+- `DeleteProfileController` - Returns 404 when not found
+
+**Provider Controllers:**
+- `AllProviderController` - Returns all registered providers
+- `ByIdProviderController` - Returns settings schema, 404 when not found
+- `ModelsByProviderController` - Returns available models for provider
+
+**Embedding Controller:**
+- `GenerateEmbeddingController` - Validates input, returns embeddings array
+
+**Chat Controllers:**
+- `CompleteChatController` - Validates messages array, returns response
+- `StreamChatController` - Returns SSE stream (integration test preferred)
+
+**Integration Tests (`tests/Umbraco.Ai.Tests.Integration/Api/`):**
+
+Create integration tests for full HTTP request/response cycles:
+- Connection CRUD workflow (create → read → update → delete)
+- Profile CRUD workflow with connection dependency
+- Test connection with fake provider
+- Generate embeddings with fake provider
 
 ---
 
@@ -536,6 +619,84 @@ The `MigrationsAssembly()` call in each provider's setup ensures EF Core looks f
 
 Migrations auto-apply on startup via `RunAiMigrationNotificationHandler`.
 
+### Testing Requirements
+
+**Unit Tests (`tests/Umbraco.Ai.Tests.Unit/Repositories/`):**
+
+Test repository methods with in-memory SQLite:
+
+**EfCoreAiConnectionRepository:**
+- `GetAsync` - Returns null when not found
+- `GetAllAsync` - Returns empty list when no data
+- `SaveAsync` - Creates new entity (insert)
+- `SaveAsync` - Updates existing entity (upsert)
+- `DeleteAsync` - Removes entity, returns true
+- `DeleteAsync` - Returns false when not found
+- Settings JSON serialization/deserialization
+
+**EfCoreAiProfileRepository:**
+- `GetByIdAsync` - Returns null when not found
+- `GetByAliasAsync` - Case-insensitive alias lookup
+- `GetAllAsync` - Filters by capability
+- `SaveAsync` - Enforces unique alias constraint
+- `DeleteAsync` - Handles foreign key constraint (connection reference)
+- Tags JSON serialization/deserialization
+
+**Migration Tests:**
+- Verify migrations apply cleanly to empty database
+- Verify schema matches entity configuration
+
+**Test Fixture (`tests/Umbraco.Ai.Tests.Common/Fixtures/EfCoreTestFixture.cs`):**
+
+```csharp
+public class EfCoreTestFixture : IDisposable
+{
+    private readonly SqliteConnection _connection;
+
+    public UmbracoAiDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<UmbracoAiDbContext>()
+            .UseSqlite(_connection)
+            .Options;
+        return new UmbracoAiDbContext(options);
+    }
+
+    public EfCoreTestFixture()
+    {
+        _connection = new SqliteConnection("DataSource=:memory:");
+        _connection.Open();
+
+        using var context = CreateContext();
+        context.Database.EnsureCreated();
+    }
+
+    public void Dispose() => _connection.Dispose();
+}
+```
+
+Usage in tests:
+```csharp
+public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
+{
+    private readonly EfCoreTestFixture _fixture;
+
+    public EfCoreAiConnectionRepositoryTests(EfCoreTestFixture fixture)
+        => _fixture = fixture;
+
+    [Fact]
+    public async Task GetAsync_WhenNotFound_ReturnsNull()
+    {
+        await using var context = _fixture.CreateContext();
+        var scopeProvider = CreateScopeProvider(context);
+        var repository = new EfCoreAiConnectionRepository(scopeProvider);
+
+        var result = await repository.GetAsync(Guid.NewGuid());
+
+        result.ShouldBeNull();
+    }
+}
+```
+
 ---
 
 ## Phase 5: Frontend UI Implementation
@@ -727,6 +888,22 @@ export class AiConnectionWorkspaceContext
 - Receives `settingDefinitions` array from provider settings schema
 - Dynamically renders `<umb-property>` for each setting based on `EditorUiAlias`
 - Emits change events with updated values
+
+### Testing Requirements
+
+**No automated tests required for v1.**
+
+Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity and maintenance overhead. For v1, rely on manual QA testing of the UI. Consider adding E2E tests in v2 once the UI patterns stabilize.
+
+**Manual Test Checklist:**
+- Connections collection view loads and displays data
+- Connection create/edit workspace saves correctly
+- Connection delete shows confirmation and removes entity
+- Profiles collection view loads with capability filter
+- Profile create/edit workspace validates required fields
+- Profile delete handles connection dependency warning
+- Dynamic settings form renders based on provider schema
+- Model picker filters by provider and capability
 
 ---
 

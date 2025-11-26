@@ -328,7 +328,9 @@ public class StreamChatControllerTests
         }
 
         // This is never reached but needed for compiler
+#pragma warning disable CS0162 // Unreachable code detected
         yield break;
+#pragma warning restore CS0162 // Unreachable code detected
     }
 
     #endregion

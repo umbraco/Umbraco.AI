@@ -45,9 +45,9 @@ public class AiProfileServiceTests
         var result = await _service.GetProfileAsync(profileId);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(profileId);
-        result.Alias.Should().Be("test-profile");
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(profileId);
+        result.Alias.ShouldBe("test-profile");
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class AiProfileServiceTests
         var result = await _service.GetProfileAsync(profileId);
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     #endregion
@@ -95,8 +95,8 @@ public class AiProfileServiceTests
         var result = await _service.GetProfilesAsync(AiCapability.Chat);
 
         // Assert
-        result.Should().HaveCount(2);
-        result.Should().AllSatisfy(p => p.Capability.Should().Be(AiCapability.Chat));
+        result.Count().ShouldBe(2);
+        result.ShouldAllBe(p => p.Capability == AiCapability.Chat);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class AiProfileServiceTests
         var result = await _service.GetProfilesAsync(AiCapability.Embedding);
 
         // Assert
-        result.Should().BeEmpty();
+        result.ShouldBeEmpty();
     }
 
     #endregion
@@ -135,8 +135,8 @@ public class AiProfileServiceTests
         var result = await _service.GetDefaultProfileAsync(AiCapability.Chat);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Alias.Should().Be("default-chat");
+        result.ShouldNotBeNull();
+        result.Alias.ShouldBe("default-chat");
     }
 
     [Fact]
@@ -156,8 +156,8 @@ public class AiProfileServiceTests
         var result = await _service.GetDefaultProfileAsync(AiCapability.Embedding);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Alias.Should().Be("default-embedding");
+        result.ShouldNotBeNull();
+        result.Alias.ShouldBe("default-embedding");
     }
 
     [Fact]
@@ -179,8 +179,8 @@ public class AiProfileServiceTests
         var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AiCapability.Chat);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Default Chat profile alias is not configured*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Default Chat profile alias is not configured");
     }
 
     [Fact]
@@ -195,8 +195,8 @@ public class AiProfileServiceTests
         var act = () => _service.GetDefaultProfileAsync(AiCapability.Chat);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Default Chat profile with alias 'default-chat' not found*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Default Chat profile with alias 'default-chat' not found");
     }
 
     [Fact]
@@ -209,8 +209,10 @@ public class AiProfileServiceTests
         var act = () => _service.GetDefaultProfileAsync(unsupportedCapability);
 
         // Assert
-        await act.Should().ThrowAsync<NotSupportedException>()
-            .WithMessage("*AI capability*999*is not supported*");
+        var exception = await Should.ThrowAsync<NotSupportedException>(act);
+        exception.Message.ShouldContain("AI capability");
+        exception.Message.ShouldContain("999");
+        exception.Message.ShouldContain("is not supported");
     }
 
     #endregion

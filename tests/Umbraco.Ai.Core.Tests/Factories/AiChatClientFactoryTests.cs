@@ -78,8 +78,8 @@ public class AiChatClientFactoryTests
         var client = await _factory.CreateClientAsync(profile);
 
         // Assert
-        client.Should().NotBeNull();
-        client.Should().Be(fakeChatClient);
+        client.ShouldNotBeNull();
+        client.ShouldBe(fakeChatClient);
     }
 
     #endregion
@@ -100,8 +100,8 @@ public class AiChatClientFactoryTests
         var act = () => _factory.CreateClientAsync(profile);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*does not specify a valid ConnectionId*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("does not specify a valid ConnectionId");
     }
 
     #endregion
@@ -127,8 +127,8 @@ public class AiChatClientFactoryTests
         var act = () => _factory.CreateClientAsync(profile);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"*Connection with ID '{connectionId}' not found*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain($"Connection with ID '{connectionId}' not found");
     }
 
     #endregion
@@ -161,8 +161,8 @@ public class AiChatClientFactoryTests
         var act = () => _factory.CreateClientAsync(profile);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*is not active*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("is not active");
     }
 
     #endregion
@@ -195,8 +195,13 @@ public class AiChatClientFactoryTests
         var act = () => _factory.CreateClientAsync(profile);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Connection*is for provider*openai*but profile*requires provider*anthropic*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Connection");
+        exception.Message.ShouldContain("is for provider");
+        exception.Message.ShouldContain("openai");
+        exception.Message.ShouldContain("but profile");
+        exception.Message.ShouldContain("requires provider");
+        exception.Message.ShouldContain("anthropic");
     }
 
     #endregion
@@ -231,8 +236,10 @@ public class AiChatClientFactoryTests
         var act = () => _factory.CreateClientAsync(profile);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Provider*unknown-provider*not found in registry*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Provider");
+        exception.Message.ShouldContain("unknown-provider");
+        exception.Message.ShouldContain("not found in registry");
     }
 
     #endregion
@@ -279,8 +286,10 @@ public class AiChatClientFactoryTests
         var act = () => _factory.CreateClientAsync(profile);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Provider*embedding-only-provider*does not support chat capability*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Provider");
+        exception.Message.ShouldContain("embedding-only-provider");
+        exception.Message.ShouldContain("does not support chat capability");
     }
 
     #endregion
@@ -350,7 +359,7 @@ public class AiChatClientFactoryTests
         var client = await factoryWithMiddleware.CreateClientAsync(profile);
 
         // Assert
-        client.Should().Be(wrappedClient2);
+        client.ShouldBe(wrappedClient2);
         middleware1Mock.Verify(m => m.Apply(baseChatClient), Times.Once);
         middleware2Mock.Verify(m => m.Apply(wrappedClient1), Times.Once);
     }
@@ -397,7 +406,7 @@ public class AiChatClientFactoryTests
         var client = await _factory.CreateClientAsync(profile);
 
         // Assert
-        client.Should().Be(baseChatClient);
+        client.ShouldBe(baseChatClient);
     }
 
     #endregion
@@ -450,7 +459,7 @@ public class AiChatClientFactoryTests
         var client = await _factory.CreateClientAsync(profile);
 
         // Assert
-        client.Should().Be(fakeChatClient);
+        client.ShouldBe(fakeChatClient);
         fakeChatCapability.Verify(c => c.CreateClient(resolvedSettings), Times.Once);
         _settingsResolverMock.Verify(x => x.ResolveSettingsForProvider(fakeProvider, rawSettings), Times.Once);
     }

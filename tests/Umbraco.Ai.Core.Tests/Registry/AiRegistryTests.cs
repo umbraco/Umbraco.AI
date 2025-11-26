@@ -22,9 +22,9 @@ public class AiRegistryTests
         var providers = registry.Providers.ToList();
 
         // Assert
-        providers.Should().HaveCount(2);
-        providers.Should().Contain(provider1);
-        providers.Should().Contain(provider2);
+        providers.Count.ShouldBe(2);
+        providers.ShouldContain(provider1);
+        providers.ShouldContain(provider2);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class AiRegistryTests
         var providers = registry.Providers.ToList();
 
         // Assert
-        providers.Should().BeEmpty();
+        providers.ShouldBeEmpty();
     }
 
     #endregion
@@ -57,8 +57,8 @@ public class AiRegistryTests
         var result = registry.GetProvider("openai");
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().Be(provider);
+        result.ShouldNotBeNull();
+        result.ShouldBe(provider);
     }
 
     [Fact]
@@ -73,8 +73,8 @@ public class AiRegistryTests
         var result = registry.GetProvider("openai");
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().Be(provider);
+        result.ShouldNotBeNull();
+        result.ShouldBe(provider);
     }
 
     [Fact]
@@ -89,8 +89,8 @@ public class AiRegistryTests
         var result = registry.GetProvider("OPENAI");
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().Be(provider);
+        result.ShouldNotBeNull();
+        result.ShouldBe(provider);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class AiRegistryTests
         var result = registry.GetProvider("unknown-provider");
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class AiRegistryTests
         var result = registry.GetProvider("any-provider");
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     #endregion
@@ -150,10 +150,10 @@ public class AiRegistryTests
         var chatProviders = registry.GetProvidersWithCapability<IAiChatCapability>().ToList();
 
         // Assert
-        chatProviders.Should().HaveCount(2);
-        chatProviders.Should().Contain(chatProvider);
-        chatProviders.Should().Contain(mixedProvider);
-        chatProviders.Should().NotContain(embeddingProvider);
+        chatProviders.Count.ShouldBe(2);
+        chatProviders.ShouldContain(chatProvider);
+        chatProviders.ShouldContain(mixedProvider);
+        chatProviders.ShouldNotContain(embeddingProvider);
     }
 
     [Fact]
@@ -176,8 +176,8 @@ public class AiRegistryTests
         var embeddingProviders = registry.GetProvidersWithCapability<IAiEmbeddingCapability>().ToList();
 
         // Assert
-        embeddingProviders.Should().HaveCount(1);
-        embeddingProviders.Should().Contain(embeddingProvider);
+        embeddingProviders.Count.ShouldBe(1);
+        embeddingProviders.ShouldContain(embeddingProvider);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public class AiRegistryTests
         var chatProviders = registry.GetProvidersWithCapability<IAiChatCapability>().ToList();
 
         // Assert
-        chatProviders.Should().BeEmpty();
+        chatProviders.ShouldBeEmpty();
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public class AiRegistryTests
         var chatProviders = registry.GetProvidersWithCapability<IAiChatCapability>().ToList();
 
         // Assert
-        chatProviders.Should().BeEmpty();
+        chatProviders.ShouldBeEmpty();
     }
 
     #endregion
@@ -230,8 +230,8 @@ public class AiRegistryTests
         var result = registry.GetCapability<IAiChatCapability>("openai");
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().Be(chatCapability);
+        result.ShouldNotBeNull();
+        result.ShouldBe(chatCapability);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public class AiRegistryTests
         var result = registry.GetCapability<IAiChatCapability>("embedding-only");
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -265,7 +265,7 @@ public class AiRegistryTests
         var result = registry.GetCapability<IAiChatCapability>("unknown-provider");
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class AiRegistryTests
         var result = registry.GetCapability<IAiChatCapability>("any-provider");
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     #endregion

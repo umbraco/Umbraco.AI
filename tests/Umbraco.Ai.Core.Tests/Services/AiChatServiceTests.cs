@@ -63,8 +63,8 @@ public class AiChatServiceTests
         var response = await _service.GetResponseAsync(messages);
 
         // Assert
-        response.Should().NotBeNull();
-        response.Text.Should().Be("Hello! How can I help you?");
+        response.ShouldNotBeNull();
+        response.Text.ShouldBe("Hello! How can I help you?");
         _profileServiceMock.Verify(
             x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -104,8 +104,8 @@ public class AiChatServiceTests
         var response = await _service.GetResponseAsync(profileId, messages);
 
         // Assert
-        response.Should().NotBeNull();
-        response.Text.Should().Be("Response from specific profile");
+        response.ShouldNotBeNull();
+        response.Text.ShouldBe("Response from specific profile");
         _profileServiceMock.Verify(
             x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -129,8 +129,8 @@ public class AiChatServiceTests
         var act = () => _service.GetResponseAsync(profileId, messages);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"*AI profile with ID '{profileId}' not found*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain($"AI profile with ID '{profileId}' not found");
     }
 
     [Fact]
@@ -157,8 +157,8 @@ public class AiChatServiceTests
         var act = () => _service.GetResponseAsync(profileId, messages);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*does not support chat capability*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("does not support chat capability");
     }
 
     #endregion
@@ -201,13 +201,13 @@ public class AiChatServiceTests
         await _service.GetResponseAsync(messages, callerOptions);
 
         // Assert
-        fakeChatClient.ReceivedOptions.Should().HaveCount(1);
+        fakeChatClient.ReceivedOptions.Count.ShouldBe(1);
         var receivedOptions = fakeChatClient.ReceivedOptions[0];
-        receivedOptions.Should().NotBeNull();
-        receivedOptions!.Temperature.Should().Be(0.9f); // Caller options take precedence
-        receivedOptions.MaxOutputTokens.Should().Be(1000); // From profile
-        receivedOptions.TopP.Should().Be(0.95f); // From caller
-        receivedOptions.ModelId.Should().Be("gpt-4"); // From profile
+        receivedOptions.ShouldNotBeNull();
+        receivedOptions!.Temperature.ShouldBe(0.9f); // Caller options take precedence
+        receivedOptions.MaxOutputTokens.ShouldBe(1000); // From profile
+        receivedOptions.TopP.ShouldBe(0.95f); // From caller
+        receivedOptions.ModelId.ShouldBe("gpt-4"); // From profile
     }
 
     [Fact]
@@ -240,12 +240,12 @@ public class AiChatServiceTests
         await _service.GetResponseAsync(messages, null);
 
         // Assert
-        fakeChatClient.ReceivedOptions.Should().HaveCount(1);
+        fakeChatClient.ReceivedOptions.Count.ShouldBe(1);
         var receivedOptions = fakeChatClient.ReceivedOptions[0];
-        receivedOptions.Should().NotBeNull();
-        receivedOptions!.Temperature.Should().Be(0.5f);
-        receivedOptions.MaxOutputTokens.Should().Be(500);
-        receivedOptions.ModelId.Should().Be("gpt-4");
+        receivedOptions.ShouldNotBeNull();
+        receivedOptions!.Temperature.ShouldBe(0.5f);
+        receivedOptions.MaxOutputTokens.ShouldBe(500);
+        receivedOptions.ModelId.ShouldBe("gpt-4");
     }
 
     [Fact]
@@ -282,7 +282,7 @@ public class AiChatServiceTests
 
         // Assert
         var receivedOptions = fakeChatClient.ReceivedOptions[0];
-        receivedOptions!.ModelId.Should().Be("gpt-3.5-turbo");
+        receivedOptions!.ModelId.ShouldBe("gpt-3.5-turbo");
     }
 
     #endregion
@@ -321,9 +321,9 @@ public class AiChatServiceTests
         }
 
         // Assert
-        updates.Should().NotBeEmpty();
+        updates.ShouldNotBeEmpty();
         var fullResponse = string.Join("", updates.Select(u => u.Text));
-        fullResponse.Should().Contain("Hello");
+        fullResponse.ShouldContain("Hello");
     }
 
     [Fact]
@@ -360,7 +360,7 @@ public class AiChatServiceTests
         }
 
         // Assert
-        updates.Should().NotBeEmpty();
+        updates.ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -444,7 +444,7 @@ public class AiChatServiceTests
         var client = await _service.GetChatClientAsync();
 
         // Assert
-        client.Should().Be(fakeChatClient);
+        client.ShouldBe(fakeChatClient);
         _profileServiceMock.Verify(
             x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -475,7 +475,7 @@ public class AiChatServiceTests
         var client = await _service.GetChatClientAsync(profileId);
 
         // Assert
-        client.Should().Be(fakeChatClient);
+        client.ShouldBe(fakeChatClient);
         _profileServiceMock.Verify(
             x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -495,8 +495,8 @@ public class AiChatServiceTests
         var act = () => _service.GetChatClientAsync(profileId);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"*AI profile with ID '{profileId}' not found*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain($"AI profile with ID '{profileId}' not found");
     }
 
     [Fact]
@@ -518,8 +518,8 @@ public class AiChatServiceTests
         var act = () => _service.GetChatClientAsync(profileId);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*does not support chat capability*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("does not support chat capability");
     }
 
     #endregion

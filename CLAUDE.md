@@ -100,6 +100,16 @@ public async Task GetProfileAsync_WithExistingId_ReturnsProfile()
 }
 ```
 
+### Testing Philosophy
+
+We take a pragmatic approach to testing, focusing on value over coverage metrics:
+
+- **Test critical paths** - Prioritize tests for business logic, edge cases, and integration points
+- **Question every test** - Before writing a test, ask: What value does this provide? Is it arbitrary?
+- **Avoid passthrough tests** - Don't test methods that simply delegate to services already under test
+- **Skip trivial code** - Simple property mappings, constructors with no logic, and boilerplate don't need dedicated tests
+- **Focus on behavior** - Test what the code does, not how it's implemented
+
 ## Architecture Overview
 
 Umbraco.Ai is a provider-agnostic AI integration layer for Umbraco CMS built on Microsoft.Extensions.AI (M.E.AI). It uses a "thin wrapper" philosophy - exposing M.E.AI types directly (`IChatClient`, `ChatMessage`, `ChatResponse`) rather than creating proprietary abstractions.
@@ -109,11 +119,23 @@ Umbraco.Ai is a provider-agnostic AI integration layer for Umbraco CMS built on 
 | Project | Purpose |
 |---------|---------|
 | `Umbraco.Ai.Core` | Core abstractions, services, and models. All interfaces and base classes. |
+| `Umbraco.Ai.Persistence` | EF Core DbContext, entities, and repository implementations |
+| `Umbraco.Ai.Persistence.SqlServer` | SQL Server migrations for persistence layer |
+| `Umbraco.Ai.Persistence.Sqlite` | SQLite migrations for persistence layer |
 | `Umbraco.Ai.OpenAi` | Reference provider implementation for OpenAI |
 | `Umbraco.Ai.Web` | Management API layer for backoffice integration |
 | `Umbraco.Ai.Web.StaticAssets` | TypeScript/Lit frontend components for backoffice UI |
 | `Umbraco.Ai.Startup` | Umbraco Composer for auto-discovery and DI registration |
 | `Umbraco.Ai` | Meta-package that bundles all components |
+
+### Solution File Organization
+
+When adding new projects to `Umbraco.Ai.sln`:
+
+- **Public/deployable projects** (anything shipped with Umbraco.Ai NuGet packages) should be added to the **solution root** - not in a solution folder
+- **Supplementary projects** like tests belong in solution folders (e.g., `Tests/`)
+
+Do NOT add public projects to a `src/` solution folder - this is incorrect. The solution root is the correct location for all production code projects.
 
 ### Hierarchical Configuration Model
 
@@ -244,6 +266,20 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 
+## Database Migrations
+
+Umbraco.Ai uses EF Core with provider-specific migrations. To create new migrations after modifying entities:
+
+```bash
+# SQL Server
+dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+
+# SQLite
+dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+```
+
+See `docs/ef-core-migrations.md` for complete documentation.
+
 ## Documentation
 
 For deeper understanding, read these docs files:
@@ -252,4 +288,5 @@ For deeper understanding, read these docs files:
 - `docs/integration-philosophy.md` - Why M.E.AI was chosen and the "thin wrapper" approach
 - `docs/capabilities-feature.md` - Chat, Embedding, and planned capabilities (Media, Moderation)
 - `docs/core-implementation-details.md` - Comprehensive technical reference with code examples
+- `docs/ef-core-migrations.md` - How to create and manage EF Core database migrations
 - `docs/umbraco-ai-agents-design.md` - Future Agents feature design (tools, approval workflow, backoffice integration)

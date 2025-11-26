@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Enable multi-level merging - test package versions are inherited from root Directory.Packages.props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
+
+  <!-- Add test-specific package overrides here if needed -->
+</Project>

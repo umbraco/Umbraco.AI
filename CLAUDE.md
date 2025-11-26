@@ -36,7 +36,7 @@ dotnet test Umbraco.Ai.sln
 dotnet test Umbraco.Ai.sln --verbosity normal
 
 # Run specific test project
-dotnet test tests/Umbraco.Ai.Core.Tests/Umbraco.Ai.Core.Tests.csproj
+dotnet test tests/Umbraco.Ai.Tests.Unit/Umbraco.Ai.Tests.Unit.csproj
 
 # Run with code coverage
 dotnet test Umbraco.Ai.sln --collect:"XPlat Code Coverage" --results-directory ./coverage
@@ -46,9 +46,9 @@ dotnet test Umbraco.Ai.sln --collect:"XPlat Code Coverage" --results-directory .
 
 | Project | Purpose |
 |---------|---------|
-| `Umbraco.Ai.Core.Tests` | Unit tests for core services, providers, middleware, and registry |
-| `Umbraco.Ai.Web.Tests` | Integration tests for Management API endpoints |
-| `Umbraco.Ai.Tests.Common` | Shared test utilities, builders, and fakes (not executable) |
+| `Umbraco.Ai.Tests.Unit` | Unit tests for core services, providers, middleware, registry, API controllers, and EF Core repositories |
+| `Umbraco.Ai.Tests.Integration` | Integration tests for DI resolution and end-to-end service flows |
+| `Umbraco.Ai.Tests.Common` | Shared test utilities, builders, fakes, and fixtures (not executable) |
 
 ### Test Stack
 
@@ -78,6 +78,9 @@ var connection = new AiConnectionBuilder()
 - `FakeEmbeddingCapability` - Embedding capability implementation
 - `FakeProviderSettings` - Provider settings for testing
 
+**Fixtures** - Test infrastructure:
+- `EfCoreTestFixture` - In-memory SQLite database for EF Core repository tests
+
 ### Test Patterns
 
 Tests follow Arrange-Act-Assert with Shouldly assertions:
@@ -100,6 +103,16 @@ public async Task GetProfileAsync_WithExistingId_ReturnsProfile()
 }
 ```
 
+### Testing Philosophy
+
+We take a pragmatic approach to testing, focusing on value over coverage metrics:
+
+- **Test critical paths** - Prioritize tests for business logic, edge cases, and integration points
+- **Question every test** - Before writing a test, ask: What value does this provide? Is it arbitrary?
+- **Avoid passthrough tests** - Don't test methods that simply delegate to services already under test
+- **Skip trivial code** - Simple property mappings, constructors with no logic, and boilerplate don't need dedicated tests
+- **Focus on behavior** - Test what the code does, not how it's implemented
+
 ## Architecture Overview
 
 Umbraco.Ai is a provider-agnostic AI integration layer for Umbraco CMS built on Microsoft.Extensions.AI (M.E.AI). It uses a "thin wrapper" philosophy - exposing M.E.AI types directly (`IChatClient`, `ChatMessage`, `ChatResponse`) rather than creating proprietary abstractions.
@@ -109,11 +122,23 @@ Umbraco.Ai is a provider-agnostic AI integration layer for Umbraco CMS built on 
 | Project | Purpose |
 |---------|---------|
 | `Umbraco.Ai.Core` | Core abstractions, services, and models. All interfaces and base classes. |
+| `Umbraco.Ai.Persistence` | EF Core DbContext, entities, and repository implementations |
+| `Umbraco.Ai.Persistence.SqlServer` | SQL Server migrations for persistence layer |
+| `Umbraco.Ai.Persistence.Sqlite` | SQLite migrations for persistence layer |
 | `Umbraco.Ai.OpenAi` | Reference provider implementation for OpenAI |
 | `Umbraco.Ai.Web` | Management API layer for backoffice integration |
 | `Umbraco.Ai.Web.StaticAssets` | TypeScript/Lit frontend components for backoffice UI |
 | `Umbraco.Ai.Startup` | Umbraco Composer for auto-discovery and DI registration |
 | `Umbraco.Ai` | Meta-package that bundles all components |
+
+### Solution File Organization
+
+When adding new projects to `Umbraco.Ai.sln`:
+
+- **Public/deployable projects** (anything shipped with Umbraco.Ai NuGet packages) should be added to the **solution root** - not in a solution folder
+- **Supplementary projects** like tests belong in solution folders (e.g., `Tests/`)
+
+Do NOT add public projects to a `src/` solution folder - this is incorrect. The solution root is the correct location for all production code projects.
 
 ### Hierarchical Configuration Model
 
@@ -125,8 +150,8 @@ Provider (plugin with capabilities)
 ```
 
 - **Providers**: Installable NuGet packages supporting specific AI services. Discovered via `[AiProvider]` attribute and assembly scanning.
-- **Connections**: Store API keys and provider-specific settings. Currently in-memory, planned for persistent storage.
-- **Profiles**: Combine a connection with model settings for specific use cases (e.g., "content-assistant" with GPT-4 and creative settings).
+- **Connections**: Store API keys and provider-specific settings. Persisted to database via EF Core.
+- **Profiles**: Combine a connection with model settings for specific use cases (e.g., "content-assistant" with GPT-4 and creative settings). Persisted to database via EF Core.
 
 ### Capability System
 
@@ -224,6 +249,9 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 - `Umbraco.Ai.Core.Models` - Data models (`AiConnection`, `AiProfile`, `AiModelRef`)
 - `Umbraco.Ai.Core.Middleware` - Middleware pipeline system
 - `Umbraco.Ai.Core.Registry` - Provider registry
+- `Umbraco.Ai.Core.Repositories` - Repository interfaces (`IAiConnectionRepository`, `IAiProfileRepository`)
+- `Umbraco.Ai.Persistence` - EF Core DbContext and repository implementations
+- `Umbraco.Ai.Persistence.Entities` - Database entities (`AiConnectionEntity`, `AiProfileEntity`)
 
 ## Configuration
 
@@ -244,12 +272,36 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 
+## Database Migrations
+
+Umbraco.Ai uses EF Core with provider-specific migrations. To create new migrations after modifying entities:
+
+```bash
+# SQL Server
+dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+
+# SQLite
+dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+```
+
+See `docs/ef-core-migrations.md` for complete documentation.
+
 ## Documentation
 
 For deeper understanding, read these docs files:
 
+**Core Documentation:**
 - `docs/core-concepts.md` - Providers, Connections, Profiles, and Middleware explained
 - `docs/integration-philosophy.md` - Why M.E.AI was chosen and the "thin wrapper" approach
 - `docs/capabilities-feature.md` - Chat, Embedding, and planned capabilities (Media, Moderation)
 - `docs/core-implementation-details.md` - Comprehensive technical reference with code examples
+- `docs/ef-core-migrations.md` - How to create and manage EF Core database migrations
 - `docs/umbraco-ai-agents-design.md` - Future Agents feature design (tools, approval workflow, backoffice integration)
+
+**Planning Documents:**
+- `docs/plans/v1-core-implementation-plan.md` - V1 implementation roadmap
+- `docs/plans/testing-strategy.md` - Testing approach and strategy
+- `docs/plans/tools-and-agents-architecture.md` - Tools and agents system design
+
+**Ideas (Future Exploration):**
+- `docs/ideas/` - Exploratory design documents for future features (toolsets, MCP integration, workflows, etc.)

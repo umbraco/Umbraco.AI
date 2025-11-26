@@ -1,0 +1,81 @@
+using System.Text.Json;
+using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Persistence.Entities;
+
+namespace Umbraco.Ai.Persistence.Factories;
+
+/// <summary>
+/// Factory for mapping between <see cref="AiProfile"/> domain models and <see cref="AiProfileEntity"/> database entities.
+/// </summary>
+internal static class AiProfileFactory
+{
+    /// <summary>
+    /// Creates an <see cref="AiProfile"/> domain model from a database entity.
+    /// </summary>
+    /// <param name="entity">The database entity.</param>
+    /// <returns>The domain model.</returns>
+    public static AiProfile BuildDomain(AiProfileEntity entity)
+    {
+        IReadOnlyList<string> tags = Array.Empty<string>();
+        if (!string.IsNullOrEmpty(entity.TagsJson))
+        {
+            tags = JsonSerializer.Deserialize<string[]>(entity.TagsJson) ?? Array.Empty<string>();
+        }
+
+        return new AiProfile
+        {
+            Id = entity.Id,
+            Alias = entity.Alias,
+            Name = entity.Name,
+            Capability = (AiCapability)entity.Capability,
+            Model = new AiModelRef(entity.ProviderId, entity.ModelId),
+            ConnectionId = entity.ConnectionId,
+            Temperature = entity.Temperature,
+            MaxTokens = entity.MaxTokens,
+            SystemPromptTemplate = entity.SystemPromptTemplate,
+            Tags = tags
+        };
+    }
+
+    /// <summary>
+    /// Creates an <see cref="AiProfileEntity"/> database entity from a domain model.
+    /// </summary>
+    /// <param name="profile">The domain model.</param>
+    /// <returns>The database entity.</returns>
+    public static AiProfileEntity BuildEntity(AiProfile profile)
+    {
+        return new AiProfileEntity
+        {
+            Id = profile.Id,
+            Alias = profile.Alias,
+            Name = profile.Name,
+            Capability = (int)profile.Capability,
+            ProviderId = profile.Model.ProviderId,
+            ModelId = profile.Model.ModelId,
+            ConnectionId = profile.ConnectionId,
+            Temperature = profile.Temperature,
+            MaxTokens = profile.MaxTokens,
+            SystemPromptTemplate = profile.SystemPromptTemplate,
+            TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null
+        };
+    }
+
+    /// <summary>
+    /// Updates an existing <see cref="AiProfileEntity"/> with values from a domain model.
+    /// </summary>
+    /// <param name="entity">The entity to update.</param>
+    /// <param name="profile">The domain model with updated values.</param>
+    public static void UpdateEntity(AiProfileEntity entity, AiProfile profile)
+    {
+        entity.Alias = profile.Alias;
+        entity.Name = profile.Name;
+        entity.Capability = (int)profile.Capability;
+        entity.ProviderId = profile.Model.ProviderId;
+        entity.ModelId = profile.Model.ModelId;
+        entity.ConnectionId = profile.ConnectionId;
+        entity.Temperature = profile.Temperature;
+        entity.MaxTokens = profile.MaxTokens;
+        entity.SystemPromptTemplate = profile.SystemPromptTemplate;
+        entity.TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null;
+    }
+}

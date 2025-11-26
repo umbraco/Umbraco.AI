@@ -1,7 +1,7 @@
 {
   "id": "Umbraco.Ai",
   "name": "Umbraco Ai",
-  "version": "17.0.0--preview.27.ge460d0a",
+  "version": "17.0.0--preview.40.g75b8b19",
   "allowTelemetry": true,
   "extensions": [
     {

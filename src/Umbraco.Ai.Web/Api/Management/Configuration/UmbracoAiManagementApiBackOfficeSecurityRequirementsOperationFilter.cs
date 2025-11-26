@@ -1,6 +1,7 @@
-﻿using Umbraco.Cms.Api.Management.OpenApi;
+using Umbraco.Ai.Web.Api;
+using Umbraco.Cms.Api.Management.OpenApi;
 
-namespace Umbraco.Ai.Cms.Api.Management.Api.Management.Configuration;
+namespace Umbraco.Ai.Web.Api.Management.Configuration;
 
 /// <summary>
 /// Operation filter that applies back-office security requirements to the AI Management API.

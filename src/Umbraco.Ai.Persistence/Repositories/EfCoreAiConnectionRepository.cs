@@ -1,8 +1,8 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Persistence.Entities;
+using Umbraco.Ai.Persistence.Factories;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
 namespace Umbraco.Ai.Persistence.Repositories;
@@ -29,7 +29,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             await db.Connections.FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : MapToDomain(entity);
+        return entity is null ? null : AiConnectionFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -41,7 +41,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             await db.Connections.ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(MapToDomain);
+        return entities.Select(AiConnectionFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -55,7 +55,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(MapToDomain);
+        return entities.Select(AiConnectionFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -69,12 +69,12 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
 
             if (existing is null)
             {
-                AiConnectionEntity newEntity = MapToEntity(connection);
+                AiConnectionEntity newEntity = AiConnectionFactory.BuildEntity(connection);
                 db.Connections.Add(newEntity);
             }
             else
             {
-                UpdateEntity(existing, connection);
+                AiConnectionFactory.UpdateEntity(existing, connection);
             }
 
             await db.SaveChangesAsync(cancellationToken);
@@ -117,50 +117,5 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
 
         scope.Complete();
         return exists;
-    }
-
-    private static AiConnection MapToDomain(AiConnectionEntity entity)
-    {
-        object? settings = null;
-        if (!string.IsNullOrEmpty(entity.SettingsJson))
-        {
-            // Settings are stored as JSON, deserialize to dynamic object
-            // The actual typed deserialization happens at the service layer
-            settings = JsonSerializer.Deserialize<JsonElement>(entity.SettingsJson);
-        }
-
-        return new AiConnection
-        {
-            Id = entity.Id,
-            Name = entity.Name,
-            ProviderId = entity.ProviderId,
-            Settings = settings,
-            IsActive = entity.IsActive,
-            DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified
-        };
-    }
-
-    private static AiConnectionEntity MapToEntity(AiConnection connection)
-    {
-        return new AiConnectionEntity
-        {
-            Id = connection.Id,
-            Name = connection.Name,
-            ProviderId = connection.ProviderId,
-            SettingsJson = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings),
-            IsActive = connection.IsActive,
-            DateCreated = connection.DateCreated,
-            DateModified = connection.DateModified
-        };
-    }
-
-    private static void UpdateEntity(AiConnectionEntity entity, AiConnection connection)
-    {
-        entity.Name = connection.Name;
-        entity.ProviderId = connection.ProviderId;
-        entity.SettingsJson = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings);
-        entity.IsActive = connection.IsActive;
-        entity.DateModified = connection.DateModified;
     }
 }

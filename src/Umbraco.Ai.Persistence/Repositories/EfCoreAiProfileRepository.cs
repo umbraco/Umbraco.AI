@@ -1,8 +1,8 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Persistence.Entities;
+using Umbraco.Ai.Persistence.Factories;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
 namespace Umbraco.Ai.Persistence.Repositories;
@@ -29,7 +29,7 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
             await db.Profiles.FirstOrDefaultAsync(p => p.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : MapToDomain(entity);
+        return entity is null ? null : AiProfileFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -44,7 +44,7 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
                 cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : MapToDomain(entity);
+        return entity is null ? null : AiProfileFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -56,7 +56,7 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
             await db.Profiles.ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(MapToDomain);
+        return entities.Select(AiProfileFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -71,7 +71,7 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(MapToDomain);
+        return entities.Select(AiProfileFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -85,12 +85,12 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
 
             if (existing is null)
             {
-                AiProfileEntity newEntity = MapToEntity(profile);
+                AiProfileEntity newEntity = AiProfileFactory.BuildEntity(profile);
                 db.Profiles.Add(newEntity);
             }
             else
             {
-                UpdateEntity(existing, profile);
+                AiProfileFactory.UpdateEntity(existing, profile);
             }
 
             await db.SaveChangesAsync(cancellationToken);
@@ -121,60 +121,5 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
 
         scope.Complete();
         return deleted;
-    }
-
-    private static AiProfile MapToDomain(AiProfileEntity entity)
-    {
-        IReadOnlyList<string> tags = Array.Empty<string>();
-        if (!string.IsNullOrEmpty(entity.TagsJson))
-        {
-            tags = JsonSerializer.Deserialize<string[]>(entity.TagsJson) ?? Array.Empty<string>();
-        }
-
-        return new AiProfile
-        {
-            Id = entity.Id,
-            Alias = entity.Alias,
-            Name = entity.Name,
-            Capability = (AiCapability)entity.Capability,
-            Model = new AiModelRef(entity.ProviderId, entity.ModelId),
-            ConnectionId = entity.ConnectionId,
-            Temperature = entity.Temperature,
-            MaxTokens = entity.MaxTokens,
-            SystemPromptTemplate = entity.SystemPromptTemplate,
-            Tags = tags
-        };
-    }
-
-    private static AiProfileEntity MapToEntity(AiProfile profile)
-    {
-        return new AiProfileEntity
-        {
-            Id = profile.Id,
-            Alias = profile.Alias,
-            Name = profile.Name,
-            Capability = (int)profile.Capability,
-            ProviderId = profile.Model.ProviderId,
-            ModelId = profile.Model.ModelId,
-            ConnectionId = profile.ConnectionId,
-            Temperature = profile.Temperature,
-            MaxTokens = profile.MaxTokens,
-            SystemPromptTemplate = profile.SystemPromptTemplate,
-            TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null
-        };
-    }
-
-    private static void UpdateEntity(AiProfileEntity entity, AiProfile profile)
-    {
-        entity.Alias = profile.Alias;
-        entity.Name = profile.Name;
-        entity.Capability = (int)profile.Capability;
-        entity.ProviderId = profile.Model.ProviderId;
-        entity.ModelId = profile.Model.ModelId;
-        entity.ConnectionId = profile.ConnectionId;
-        entity.Temperature = profile.Temperature;
-        entity.MaxTokens = profile.MaxTokens;
-        entity.SystemPromptTemplate = profile.SystemPromptTemplate;
-        entity.TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null;
     }
 }

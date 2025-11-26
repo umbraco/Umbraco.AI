@@ -1,13 +1,27 @@
-using Umbraco.Ai.Core.Common;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Cms.Core.Composing;
 
 namespace Umbraco.Ai.Core.Providers;
 
 /// <summary>
 /// Base interface for all AI providers. Providers expose capabilities through capability-specific interfaces.
 /// </summary>
-public interface IAiProvider : IAiComponent
+/// <remarks>
+/// Providers are discovered via <see cref="IDiscoverable"/> and the <see cref="AiProviderAttribute"/>.
+/// Use the <c>AiProviders()</c> collection builder extension method to add or exclude providers.
+/// </remarks>
+public interface IAiProvider : IDiscoverable
 {
+    /// <summary>
+    /// The unique id of this AI component.
+    /// </summary>
+    string Id { get; }
+    
+    /// <summary>
+    /// The name of this AI component.
+    /// </summary>
+    string Name { get; }
+    
     /// <summary>
     /// Gets the type that represents the settings for this provider.
     /// </summary>

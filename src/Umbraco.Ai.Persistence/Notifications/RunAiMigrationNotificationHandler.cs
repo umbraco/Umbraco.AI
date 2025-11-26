@@ -10,23 +10,25 @@ namespace Umbraco.Ai.Persistence.Notifications;
 public class RunAiMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
-    private readonly UmbracoAiDbContext _dbContext;
+    private readonly IDbContextFactory<UmbracoAiDbContext> _dbContextFactory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="RunAiMigrationNotificationHandler"/>.
     /// </summary>
-    public RunAiMigrationNotificationHandler(UmbracoAiDbContext dbContext)
-        => _dbContext = dbContext;
+    public RunAiMigrationNotificationHandler(IDbContextFactory<UmbracoAiDbContext> dbContextFactory)
+        => _dbContextFactory = dbContextFactory;
 
     /// <inheritdoc />
     public async Task HandleAsync(
         UmbracoApplicationStartedNotification notification,
         CancellationToken cancellationToken)
     {
-        IEnumerable<string> pending = await _dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+        await using UmbracoAiDbContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        IEnumerable<string> pending = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
         if (pending.Any())
         {
-            await _dbContext.Database.MigrateAsync(cancellationToken);
+            await dbContext.Database.MigrateAsync(cancellationToken);
         }
     }
 }

@@ -3,26 +3,27 @@ using Umbraco.Ai.Core.Providers;
 namespace Umbraco.Ai.Core.Registry;
 
 /// <summary>
-/// Central registry for AI providers. Providers are injected via DI after assembly scanning.
+/// Central registry for AI providers. Providers are resolved via the <see cref="AiProviderCollection"/>.
 /// </summary>
 internal sealed class AiRegistry : IAiRegistry
 {
-    private readonly IReadOnlyDictionary<string, IAiProvider> _providers;
+    private readonly AiProviderCollection _providers;
 
-    public AiRegistry(IEnumerable<IAiProvider> providers)
+    public AiRegistry(AiProviderCollection providers)
     {
-        _providers = providers.ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
+        _providers = providers;
     }
 
-    public IEnumerable<IAiProvider> Providers => _providers.Values;
-    
+    public IEnumerable<IAiProvider> Providers => _providers;
+
     public IEnumerable<IAiProvider> GetProvidersWithCapability<TCapability>()
         where TCapability : class, IAiCapability
-        => _providers.Values.Where(x => x.HasCapability<TCapability>());
+        => _providers.GetWithCapability<TCapability>();
+
     public IAiProvider? GetProvider(string providerId)
-        => _providers.GetValueOrDefault(providerId);
+        => _providers.GetById(providerId);
 
     public TCapability? GetCapability<TCapability>(string providerId)
         where TCapability : class, IAiCapability
-        =>  GetProvider(providerId)?.GetCapability<TCapability>();
+        => GetProvider(providerId)?.GetCapability<TCapability>();
 }

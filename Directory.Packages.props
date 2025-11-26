@@ -16,6 +16,10 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.0, 10.999.999)" />
     <PackageVersion Include="Umbraco.Cms.Core" Version="[17.0.0-rc4, 17.999.999)" />
     <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.0.0-rc4, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.0.0-rc4, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.0.0-rc4, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.0.0-rc4, 17.999.999)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="[10.0.0, 10.999.999)" />
   </ItemGroup>
 
   <!-- Test dependencies -->

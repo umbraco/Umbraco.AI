@@ -24,6 +24,82 @@ npm run generate-client https://localhost:44331/umbraco/swagger/umbraco-ai/swagg
 # Then open Umbraco.Ai.local.sln to work with both package and demo site
 ```
 
+## Testing
+
+### Test Commands
+
+```bash
+# Run all tests
+dotnet test Umbraco.Ai.sln
+
+# Run tests with detailed output
+dotnet test Umbraco.Ai.sln --verbosity normal
+
+# Run specific test project
+dotnet test tests/Umbraco.Ai.Core.Tests/Umbraco.Ai.Core.Tests.csproj
+
+# Run with code coverage
+dotnet test Umbraco.Ai.sln --collect:"XPlat Code Coverage" --results-directory ./coverage
+```
+
+### Test Projects
+
+| Project | Purpose |
+|---------|---------|
+| `Umbraco.Ai.Core.Tests` | Unit tests for core services, providers, middleware, and registry |
+| `Umbraco.Ai.Web.Tests` | Integration tests for Management API endpoints |
+| `Umbraco.Ai.Tests.Common` | Shared test utilities, builders, and fakes (not executable) |
+
+### Test Stack
+
+- **Framework**: xUnit
+- **Assertions**: Shouldly (fluent assertions)
+- **Mocking**: Moq
+- **Snapshot Testing**: Verify.Xunit (for web tests)
+- **Coverage**: Coverlet
+
+### Test Utilities (Umbraco.Ai.Tests.Common)
+
+**Builders** - Fluent test data construction:
+```csharp
+var profile = new AiProfileBuilder()
+    .WithAlias("chat-1")
+    .WithCapability(AiCapability.Chat)
+    .Build();
+
+var connection = new AiConnectionBuilder()
+    .WithProviderAlias("openai")
+    .Build();
+```
+
+**Fakes** - Test doubles for isolated testing:
+- `FakeAiProvider` - Configurable provider for testing
+- `FakeChatCapability` / `FakeChatClient` - Chat without real API calls
+- `FakeEmbeddingCapability` - Embedding capability implementation
+- `FakeProviderSettings` - Provider settings for testing
+
+### Test Patterns
+
+Tests follow Arrange-Act-Assert with Shouldly assertions:
+```csharp
+[Fact]
+public async Task GetProfileAsync_WithExistingId_ReturnsProfile()
+{
+    // Arrange
+    var profileId = Guid.NewGuid();
+    var profile = new AiProfileBuilder().WithId(profileId).Build();
+    _repositoryMock.Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        .ReturnsAsync(profile);
+
+    // Act
+    var result = await _service.GetProfileAsync(profileId);
+
+    // Assert
+    result.ShouldNotBeNull();
+    result!.Id.ShouldBe(profileId);
+}
+```
+
 ## Architecture Overview
 
 Umbraco.Ai is a provider-agnostic AI integration layer for Umbraco CMS built on Microsoft.Extensions.AI (M.E.AI). It uses a "thin wrapper" philosophy - exposing M.E.AI types directly (`IChatClient`, `ChatMessage`, `ChatResponse`) rather than creating proprietary abstractions.

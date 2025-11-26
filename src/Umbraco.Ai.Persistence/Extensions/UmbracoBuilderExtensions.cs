@@ -26,14 +26,14 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAiPersistence(this IUmbracoBuilder builder)
     {
         // Register DbContext using Umbraco's database provider detection with migrations assembly config
-        builder.Services.AddUmbracoDbContext<UmbracoAiDbContext>((serviceProvider, options, connectionString, providerName) =>
+        builder.Services.AddUmbracoDbContext<UmbracoAiDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });
 
-        // Replace in-memory repositories with EF Core implementations
-        builder.Services.AddScoped<IAiConnectionRepository, EfCoreAiConnectionRepository>();
-        builder.Services.AddScoped<IAiProfileRepository, EfCoreAiProfileRepository>();
+        // Replace in-memory repositories with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
+        builder.Services.AddSingleton<IAiConnectionRepository, EfCoreAiConnectionRepository>();
+        builder.Services.AddSingleton<IAiProfileRepository, EfCoreAiProfileRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAiMigrationNotificationHandler>();

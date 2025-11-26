@@ -165,9 +165,17 @@ Providers are plugins that expose AI capabilities. They are automatically discov
 
 ### IAiProvider Interface
 
+Providers implement `IDiscoverable` for automatic discovery via Umbraco's TypeLoader:
+
 ```csharp
-public interface IAiProvider : IAiComponent
+public interface IAiProvider : IDiscoverable
 {
+    // The unique identifier for this provider (e.g., "openai")
+    string Id { get; }
+
+    // Display name (e.g., "OpenAI")
+    string Name { get; }
+
     // The type representing provider-specific settings
     Type? SettingsType { get; }
 
@@ -220,14 +228,40 @@ public class AiProviderAttribute : Attribute
 }
 ```
 
-### Provider Discovery
+### Provider Collection Builder
 
-During startup, Umbraco.Ai scans all loaded assemblies for types that:
-1. Have the `[AiProvider]` attribute
-2. Implement `IAiProvider`
-3. Are not abstract
+Providers are managed via `AiProviderCollectionBuilder`, which extends Umbraco's `LazyCollectionBuilderBase`. This provides:
 
-These types are registered as singletons with the DI container.
+- **Auto-discovery**: Providers with `[AiProvider]` attribute implementing `IDiscoverable` are automatically found via TypeLoader
+- **Extensibility**: Providers can be added or excluded in Composers
+- **Caching**: Uses Umbraco's TypeLoader caching for efficient type discovery
+
+```csharp
+// In AddUmbracoAiCore() - auto-discover providers
+builder.AiProviders()
+    .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
+
+// In a custom Composer - add or exclude providers
+builder.AiProviders()
+    .Add<MyCustomProvider>()
+    .Exclude<SomeUnwantedProvider>();
+```
+
+### AiProviderCollection
+
+The collection provides helper methods for accessing providers:
+
+```csharp
+public class AiProviderCollection : BuilderCollectionBase<IAiProvider>
+{
+    // Get a provider by its unique identifier
+    public IAiProvider? GetById(string providerId);
+
+    // Get all providers that support a specific capability
+    public IEnumerable<IAiProvider> GetWithCapability<TCapability>()
+        where TCapability : class, IAiCapability;
+}
+```
 
 ---
 
@@ -557,7 +591,7 @@ The factory:
 
 ### IAiChatMiddleware
 
-Middleware can wrap chat clients to add cross-cutting concerns:
+Middleware can wrap chat clients to add cross-cutting concerns. Note that the interface has no `Order` property - ordering is managed entirely via the collection builder.
 
 ```csharp
 public interface IAiChatMiddleware
@@ -566,6 +600,26 @@ public interface IAiChatMiddleware
     IChatClient Apply(IChatClient client);
 }
 ```
+
+### IAiEmbeddingMiddleware
+
+Similarly for embedding middleware:
+
+```csharp
+public interface IAiEmbeddingMiddleware
+{
+    // Wraps the generator with middleware behavior
+    IEmbeddingGenerator<string, Embedding<float>> Apply(
+        IEmbeddingGenerator<string, Embedding<float>> generator);
+}
+```
+
+### Middleware Collection Builders
+
+Both chat and embedding middleware use `OrderedCollectionBuilderBase` for explicit ordering:
+
+- `AiChatMiddlewareCollectionBuilder` - manages `IAiChatMiddleware` instances
+- `AiEmbeddingMiddlewareCollectionBuilder` - manages `IAiEmbeddingMiddleware` instances
 
 ### Middleware Ordering
 
@@ -795,34 +849,32 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 
 ### Provider Registration
 
-Providers are discovered via reflection:
+Providers are discovered via Umbraco's TypeLoader and registered using the collection builder pattern:
 
 ```csharp
-private static void RegisterProviders(IServiceCollection services)
-{
-    var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+// In AddUmbracoAiCore()
+builder.AiProviders()
+    .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
+```
 
-    foreach (var assembly in assemblies)
-    {
-        // Skip system assemblies
-        if (assembly.FullName?.StartsWith("System") == true ||
-            assembly.FullName?.StartsWith("Microsoft") == true)
-            continue;
+This approach:
+- Uses Umbraco's cached, efficient type discovery via `TypeLoader`
+- Allows providers to be added or excluded in Composers via `AiProviders().Add<T>()` / `AiProviders().Exclude<T>()`
+- Follows the standard Umbraco collection builder pattern
 
-        // Find types with [AiProvider] attribute
-        var providerTypes = assembly.GetTypes()
-            .Where(type =>
-                !type.IsAbstract &&
-                type.GetCustomAttribute<AiProviderAttribute>() != null &&
-                typeof(IAiProvider).IsAssignableFrom(type));
+### Middleware Registration
 
-        // Register as singleton
-        foreach (var providerType in providerTypes)
-        {
-            services.AddSingleton(typeof(IAiProvider), providerType);
-        }
-    }
-}
+Middleware collections are initialized (empty by default) and can be populated in Composers:
+
+```csharp
+// In AddUmbracoAiCore() - initialize empty collections
+_ = builder.AiChatMiddleware();
+_ = builder.AiEmbeddingMiddleware();
+
+// In a custom Composer - add middleware
+builder.AiChatMiddleware()
+    .Append<LoggingChatMiddleware>()
+    .InsertBefore<LoggingChatMiddleware, TracingMiddleware>();
 ```
 
 ---
@@ -886,8 +938,8 @@ OpenAPI documentation is automatically generated:
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 4. Apply middleware pipeline (ordered by Order property)         │
-│    [Logging] → [Caching] → [RateLimit] → [Provider]             │
+│ 4. Apply middleware pipeline (ordered by collection builder)     │
+│    [Middleware1] → [Middleware2] → ... → [Provider]             │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼

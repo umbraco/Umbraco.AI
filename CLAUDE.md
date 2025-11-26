@@ -61,6 +61,25 @@ Providers expose discrete capabilities:
 
 Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<string, Embedding<float>>`).
 
+### Collection Builder Pattern
+
+Umbraco.Ai uses Umbraco's collection builder pattern for extensibility:
+
+**Provider Collection** (`LazyCollectionBuilderBase`):
+- Providers are auto-discovered via `[AiProvider]` attribute and `IDiscoverable`
+- Use `AiProviders()` extension to add/exclude providers in a Composer
+
+```csharp
+// In a Composer - add or exclude providers
+builder.AiProviders()
+    .Add<CustomProvider>()
+    .Exclude<SomeUnwantedProvider>();
+```
+
+**Middleware Collections** (`OrderedCollectionBuilderBase`):
+- Middleware ordering is explicit via `Append()`, `InsertBefore<T>()`, `InsertAfter<T>()`
+- No `Order` property on middleware interfaces - ordering is purely via collection builder
+
 ### Key Services
 
 - `IAiChatService` - Primary developer interface for chat completions. Resolves profiles and creates configured clients automatically.

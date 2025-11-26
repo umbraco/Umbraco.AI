@@ -28,7 +28,7 @@ jobs:
         run: dotnet build Umbraco.Ai.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Umbraco.Ai.sln --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+        run: dotnet test Umbraco.Ai.sln --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage --settings coverage.runsettings
 
       - name: Code Coverage Summary
         uses: irongut/CodeCoverageSummary@v1.3.0

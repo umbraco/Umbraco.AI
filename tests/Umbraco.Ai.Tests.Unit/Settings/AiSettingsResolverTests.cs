@@ -6,7 +6,7 @@ using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Core.Tests.Settings;
+namespace Umbraco.Ai.Tests.Unit.Settings;
 
 public class AiSettingsResolverTests
 {

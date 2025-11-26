@@ -2,7 +2,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Middleware;
 using Umbraco.Ai.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Core.Tests.Middleware;
+namespace Umbraco.Ai.Tests.Unit.Middleware;
 
 public class MiddlewarePipelineTests
 {

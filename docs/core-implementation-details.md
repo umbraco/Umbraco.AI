@@ -564,26 +564,44 @@ public interface IAiChatMiddleware
 {
     // Wraps the client with middleware behavior
     IChatClient Apply(IChatClient client);
-
-    // Execution order (lower = applied first, closer to provider)
-    int Order { get; }
 }
 ```
 
-### Middleware Order
+### Middleware Ordering
 
-Middleware with lower `Order` values are applied first (closer to the provider). Higher values are applied last (closer to the caller).
+Middleware ordering is controlled via the `AiChatMiddlewareCollectionBuilder` using Umbraco's `OrderedCollectionBuilder` pattern. This provides explicit control with `Append()`, `InsertBefore<T>()`, and `InsertAfter<T>()` methods.
 
 ```
 Caller
   ↓
-[Order=1000] LoggingMiddleware
+LoggingMiddleware (added last via Append)
   ↓
-[Order=500] CachingMiddleware
+CachingMiddleware (inserted before Logging)
   ↓
-[Order=100] RateLimitMiddleware
+RateLimitMiddleware (added first via Append)
   ↓
 Provider
+```
+
+### Registering Middleware
+
+Register middleware in a Composer:
+
+```csharp
+public class MyComposer : IComposer
+{
+    public void Compose(IUmbracoBuilder builder)
+    {
+        builder.AiChatMiddleware()
+            .Append<RateLimitMiddleware>()
+            .Append<CachingMiddleware>()
+            .Append<LoggingMiddleware>();
+
+        // Or use InsertBefore/InsertAfter for precise ordering:
+        builder.AiChatMiddleware()
+            .InsertBefore<LoggingMiddleware, TracingMiddleware>();
+    }
+}
 ```
 
 ### Example: Logging Middleware
@@ -597,8 +615,6 @@ public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAiChatMiddle
             .UseLogging(loggerFactory)
             .Build();
     }
-
-    public int Order => 1000;  // Applied last (outer layer)
 }
 ```
 

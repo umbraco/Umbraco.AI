@@ -48,9 +48,9 @@ public class AiConnectionServiceTests
         var result = await _service.GetConnectionAsync(connectionId);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(connectionId);
-        result.Name.Should().Be("Test Connection");
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(connectionId);
+        result.Name.ShouldBe("Test Connection");
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class AiConnectionServiceTests
         var result = await _service.GetConnectionAsync(connectionId);
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     #endregion
@@ -92,7 +92,7 @@ public class AiConnectionServiceTests
         var result = await _service.GetConnectionsAsync();
 
         // Assert
-        result.Should().HaveCount(2);
+        result.Count().ShouldBe(2);
     }
 
     [Fact]
@@ -113,8 +113,8 @@ public class AiConnectionServiceTests
         var result = await _service.GetConnectionsAsync("openai");
 
         // Assert
-        result.Should().HaveCount(2);
-        result.Should().AllSatisfy(c => c.ProviderId.Should().Be("openai"));
+        result.Count().ShouldBe(2);
+        result.ShouldAllBe(c => c.ProviderId == "openai");
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public class AiConnectionServiceTests
         var result = await _service.GetConnectionsAsync("");
 
         // Assert
-        result.Should().HaveCount(1);
+        result.Count().ShouldBe(1);
         _repositoryMock.Verify(x => x.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -164,10 +164,10 @@ public class AiConnectionServiceTests
         var result = await _service.GetConnectionReferencesAsync("openai");
 
         // Assert
-        result.Should().HaveCount(1);
+        result.Count().ShouldBe(1);
         var reference = result.First();
-        reference.Id.Should().Be(connectionId);
-        reference.Name.Should().Be("OpenAI Connection");
+        reference.Id.ShouldBe(connectionId);
+        reference.Name.ShouldBe("OpenAI Connection");
     }
 
     #endregion
@@ -203,9 +203,9 @@ public class AiConnectionServiceTests
         var result = await _service.SaveConnectionAsync(connection);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Id.Should().NotBe(Guid.Empty);
-        result.Name.Should().Be("New Connection");
+        result.ShouldNotBeNull();
+        result.Id.ShouldNotBe(Guid.Empty);
+        result.Name.ShouldBe("New Connection");
         _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id != Guid.Empty), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -239,7 +239,7 @@ public class AiConnectionServiceTests
         var result = await _service.SaveConnectionAsync(connection);
 
         // Assert
-        result.Id.Should().Be(existingId);
+        result.Id.ShouldBe(existingId);
         _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id == existingId), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -259,8 +259,10 @@ public class AiConnectionServiceTests
         var act = () => _service.SaveConnectionAsync(connection);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Provider*unknown-provider*not found in registry*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Provider");
+        exception.Message.ShouldContain("unknown-provider");
+        exception.Message.ShouldContain("not found in registry");
     }
 
     [Fact]
@@ -320,7 +322,7 @@ public class AiConnectionServiceTests
         var result = await _service.SaveConnectionAsync(connection);
 
         // Assert
-        result.DateModified.Should().BeOnOrAfter(beforeSave);
+        result.DateModified.ShouldBeGreaterThanOrEqualTo(beforeSave);
     }
 
     #endregion
@@ -362,8 +364,8 @@ public class AiConnectionServiceTests
         var act = () => _service.DeleteConnectionAsync(connectionId);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"*Connection with ID '{connectionId}' not found*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain($"Connection with ID '{connectionId}' not found");
     }
 
     #endregion
@@ -389,7 +391,7 @@ public class AiConnectionServiceTests
         var result = await _service.ValidateConnectionAsync("fake-provider", settings);
 
         // Assert
-        result.Should().BeTrue();
+        result.ShouldBeTrue();
     }
 
     [Fact]
@@ -404,8 +406,10 @@ public class AiConnectionServiceTests
         var act = () => _service.ValidateConnectionAsync("unknown-provider", new { });
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Provider*unknown-provider*not found in registry*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Provider");
+        exception.Message.ShouldContain("unknown-provider");
+        exception.Message.ShouldContain("not found in registry");
     }
 
     [Fact]
@@ -427,8 +431,9 @@ public class AiConnectionServiceTests
         var act = () => _service.ValidateConnectionAsync("fake-provider", settings);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Validation failed*API Key is required*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Validation failed");
+        exception.Message.ShouldContain("API Key is required");
     }
 
     #endregion
@@ -462,7 +467,7 @@ public class AiConnectionServiceTests
         var result = await _service.TestConnectionAsync(connectionId);
 
         // Assert
-        result.Should().BeTrue();
+        result.ShouldBeTrue();
     }
 
     [Fact]
@@ -479,8 +484,8 @@ public class AiConnectionServiceTests
         var act = () => _service.TestConnectionAsync(connectionId);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"*Connection with ID '{connectionId}' not found*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain($"Connection with ID '{connectionId}' not found");
     }
 
     [Fact]
@@ -505,8 +510,10 @@ public class AiConnectionServiceTests
         var act = () => _service.TestConnectionAsync(connectionId);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Provider*unknown-provider*not found in registry*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Provider");
+        exception.Message.ShouldContain("unknown-provider");
+        exception.Message.ShouldContain("not found in registry");
     }
 
     [Fact]
@@ -534,8 +541,10 @@ public class AiConnectionServiceTests
         var act = () => _service.TestConnectionAsync(connectionId);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Provider*empty-provider*has no capabilities to test*");
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Provider");
+        exception.Message.ShouldContain("empty-provider");
+        exception.Message.ShouldContain("has no capabilities to test");
     }
 
     [Fact]
@@ -569,7 +578,7 @@ public class AiConnectionServiceTests
         var result = await _service.TestConnectionAsync(connectionId);
 
         // Assert
-        result.Should().BeFalse();
+        result.ShouldBeFalse();
     }
 
     #endregion

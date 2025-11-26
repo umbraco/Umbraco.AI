@@ -30,8 +30,8 @@ public class AiProviderBaseTests
         var provider = new TestProvider(_infrastructureMock.Object);
 
         // Assert
-        provider.Id.Should().Be("test-provider");
-        provider.Name.Should().Be("Test Provider");
+        provider.Id.ShouldBe("test-provider");
+        provider.Name.ShouldBe("Test Provider");
     }
 
     [Fact]
@@ -41,8 +41,8 @@ public class AiProviderBaseTests
         var act = () => new ProviderWithoutAttribute(_infrastructureMock.Object);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*missing the required AiProviderAttribute*");
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("missing the required AiProviderAttribute");
     }
 
     #endregion
@@ -70,9 +70,9 @@ public class AiProviderBaseTests
         var capabilities = provider.GetCapabilities();
 
         // Assert
-        capabilities.Should().HaveCount(2);
-        capabilities.Should().Contain(chatCapability);
-        capabilities.Should().Contain(embeddingCapability);
+        capabilities.Count().ShouldBe(2);
+        capabilities.ShouldContain(chatCapability);
+        capabilities.ShouldContain(embeddingCapability);
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class AiProviderBaseTests
         var capabilities = provider.GetCapabilities();
 
         // Assert
-        capabilities.Should().BeEmpty();
+        capabilities.ShouldBeEmpty();
     }
 
     #endregion
@@ -108,7 +108,7 @@ public class AiProviderBaseTests
         var result = provider.GetCapability<IAiChatCapability>();
 
         // Assert
-        result.Should().Be(chatCapability);
+        result.ShouldBe(chatCapability);
     }
 
     [Fact]
@@ -121,8 +121,8 @@ public class AiProviderBaseTests
         var act = () => provider.GetCapability<IAiChatCapability>();
 
         // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*does not support the capability*");
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("does not support the capability");
     }
 
     #endregion
@@ -145,8 +145,8 @@ public class AiProviderBaseTests
         var result = provider.TryGeCapability<IAiChatCapability>(out var capability);
 
         // Assert
-        result.Should().BeTrue();
-        capability.Should().Be(chatCapability);
+        result.ShouldBeTrue();
+        capability.ShouldBe(chatCapability);
     }
 
     [Fact]
@@ -159,8 +159,8 @@ public class AiProviderBaseTests
         var result = provider.TryGeCapability<IAiChatCapability>(out var capability);
 
         // Assert
-        result.Should().BeFalse();
-        capability.Should().BeNull();
+        result.ShouldBeFalse();
+        capability.ShouldBeNull();
     }
 
     #endregion
@@ -183,7 +183,7 @@ public class AiProviderBaseTests
         var result = provider.HasCapability<IAiChatCapability>();
 
         // Assert
-        result.Should().BeTrue();
+        result.ShouldBeTrue();
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class AiProviderBaseTests
         var result = provider.HasCapability<IAiChatCapability>();
 
         // Assert
-        result.Should().BeFalse();
+        result.ShouldBeFalse();
     }
 
     #endregion
@@ -213,7 +213,7 @@ public class AiProviderBaseTests
         var definitions = provider.GetSettingDefinitions();
 
         // Assert
-        definitions.Should().BeEmpty();
+        definitions.ShouldBeEmpty();
     }
 
     [Fact]
@@ -235,7 +235,7 @@ public class AiProviderBaseTests
         var definitions = provider.GetSettingDefinitions();
 
         // Assert
-        definitions.Should().BeEquivalentTo(expectedDefinitions);
+        definitions.ShouldBe(expectedDefinitions);
         _settingDefinitionBuilderMock.Verify(
             x => x.BuildForType<FakeProviderSettings>("typed-provider"),
             Times.Once);
@@ -252,7 +252,7 @@ public class AiProviderBaseTests
         var provider = new TestProvider(_infrastructureMock.Object);
 
         // Act & Assert
-        provider.SettingsType.Should().BeNull();
+        provider.SettingsType.ShouldBeNull();
     }
 
     [Fact]
@@ -262,7 +262,7 @@ public class AiProviderBaseTests
         var provider = new TypedSettingsProvider(_infrastructureMock.Object);
 
         // Act & Assert
-        provider.SettingsType.Should().Be(typeof(FakeProviderSettings));
+        provider.SettingsType.ShouldBe(typeof(FakeProviderSettings));
     }
 
     #endregion

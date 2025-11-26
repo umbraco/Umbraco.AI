@@ -35,10 +35,10 @@ public class MiddlewarePipelineTests
         }
 
         // Assert
-        applicationOrder.Should().HaveCount(3);
-        applicationOrder[0].Should().Be("First");
-        applicationOrder[1].Should().Be("Second");
-        applicationOrder[2].Should().Be("Third");
+        applicationOrder.Count.ShouldBe(3);
+        applicationOrder[0].ShouldBe("First");
+        applicationOrder[1].ShouldBe("Second");
+        applicationOrder[2].ShouldBe("Third");
     }
 
     #endregion
@@ -60,7 +60,7 @@ public class MiddlewarePipelineTests
         }
 
         // Assert
-        client.Should().BeSameAs(baseClient);
+        client.ShouldBeSameAs(baseClient);
     }
 
     #endregion
@@ -92,9 +92,9 @@ public class MiddlewarePipelineTests
         }
 
         // Assert
-        wrappedClients.Should().HaveCount(2);
-        wrappedClients[0].Should().BeSameAs(baseClient); // First middleware received base client
-        wrappedClients[1].Should().NotBeSameAs(baseClient); // Second middleware received wrapped client
+        wrappedClients.Count.ShouldBe(2);
+        wrappedClients[0].ShouldBeSameAs(baseClient); // First middleware received base client
+        wrappedClients[1].ShouldNotBeSameAs(baseClient); // Second middleware received wrapped client
     }
 
     #endregion
@@ -128,7 +128,7 @@ public class MiddlewarePipelineTests
         });
 
         // Assert
-        response.Text.Should().Be("Modified response");
+        response.Text.ShouldBe("Modified response");
     }
 
     #endregion
@@ -153,8 +153,8 @@ public class MiddlewarePipelineTests
         }
 
         // Assert
-        applicationOrder.Should().HaveCount(1);
-        applicationOrder[0].Should().Be("Only");
+        applicationOrder.Count.ShouldBe(1);
+        applicationOrder[0].ShouldBe("Only");
     }
 
     #endregion

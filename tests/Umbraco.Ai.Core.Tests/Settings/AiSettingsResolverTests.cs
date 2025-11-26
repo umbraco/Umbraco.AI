@@ -45,7 +45,7 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", null);
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     #endregion
@@ -63,7 +63,7 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
-        result.Should().BeSameAs(settings);
+        result.ShouldBeSameAs(settings);
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.ApiKey.Should().Be("sk-test-key-from-config");
+        result.ShouldNotBeNull();
+        result!.ApiKey.ShouldBe("sk-test-key-from-config");
     }
 
     #endregion
@@ -97,10 +97,10 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.ApiKey.Should().Be("direct-key");
-        result.BaseUrl.Should().Be("https://custom.api.com");
-        result.MaxRetries.Should().Be(10);
+        result.ShouldNotBeNull();
+        result!.ApiKey.ShouldBe("direct-key");
+        result.BaseUrl.ShouldBe("https://custom.api.com");
+        result.MaxRetries.ShouldBe(10);
     }
 
     [Fact]
@@ -115,9 +115,9 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.ApiKey.Should().Be("sk-test-key-from-config");
-        result.BaseUrl.Should().Be("https://api.openai.com");
+        result.ShouldNotBeNull();
+        result!.ApiKey.ShouldBe("sk-test-key-from-config");
+        result.BaseUrl.ShouldBe("https://api.openai.com");
     }
 
     [Fact]
@@ -133,8 +133,8 @@ public class AiSettingsResolverTests
         var act = () => _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert - Fails because JSON string cannot be deserialized to int
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Failed to deserialize JsonElement*");
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Failed to deserialize JsonElement");
     }
 
     [Fact]
@@ -154,9 +154,9 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert - Non-string values pass through unchanged
-        result.Should().NotBeNull();
-        result!.MaxRetries.Should().Be(10);
-        result.Enabled.Should().BeTrue();
+        result.ShouldNotBeNull();
+        result!.MaxRetries.ShouldBe(10);
+        result.Enabled.ShouldBeTrue();
     }
 
     #endregion
@@ -174,9 +174,9 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.ApiKey.Should().Be("anon-key");
-        result.BaseUrl.Should().Be("https://anon.api.com");
+        result.ShouldNotBeNull();
+        result!.ApiKey.ShouldBe("anon-key");
+        result.BaseUrl.ShouldBe("https://anon.api.com");
     }
 
     #endregion
@@ -194,8 +194,10 @@ public class AiSettingsResolverTests
         var act = () => _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Configuration key*NonExistent:Key*not found*");
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Configuration key");
+        exception.Message.ShouldContain("NonExistent:Key");
+        exception.Message.ShouldContain("not found");
     }
 
     #endregion
@@ -213,8 +215,10 @@ public class AiSettingsResolverTests
         var act = () => _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Validation failed*API Key*required*");
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Validation failed");
+        exception.Message.ShouldContain("API Key");
+        exception.Message.ShouldContain("required");
     }
 
     [Fact]
@@ -228,8 +232,8 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.ApiKey.Should().Be("valid-key");
+        result.ShouldNotBeNull();
+        result!.ApiKey.ShouldBe("valid-key");
     }
 
     #endregion
@@ -247,8 +251,10 @@ public class AiSettingsResolverTests
         var act = () => _resolver.ResolveSettings<FakeProviderSettings>("unknown-provider", settings);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Provider*unknown-provider*not found*");
+        var exception = Should.Throw<InvalidOperationException>(act);
+        exception.Message.ShouldContain("Provider");
+        exception.Message.ShouldContain("unknown-provider");
+        exception.Message.ShouldContain("not found");
     }
 
     #endregion
@@ -265,7 +271,7 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettingsForProvider(provider, null);
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -278,7 +284,7 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettingsForProvider(provider, new { ApiKey = "test" });
 
         // Assert
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -296,9 +302,9 @@ public class AiSettingsResolverTests
         var result = _resolver.ResolveSettingsForProvider(provider, jsonElement);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().BeOfType<FakeProviderSettings>();
-        ((FakeProviderSettings)result!).ApiKey.Should().Be("provider-key");
+        result.ShouldNotBeNull();
+        result.ShouldBeOfType<FakeProviderSettings>();
+        ((FakeProviderSettings)result!).ApiKey.ShouldBe("provider-key");
     }
 
     #endregion

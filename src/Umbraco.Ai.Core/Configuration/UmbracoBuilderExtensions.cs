@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Factories;
@@ -12,7 +11,10 @@ using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;
 
-public static class UmbracoBuilderExtensions
+/// <summary>
+/// Extension methods for <see cref="IUmbracoBuilder"/> for AI services registration.
+/// </summary>
+public static partial class UmbracoBuilderExtensions
 {
     internal static IUmbracoBuilder AddUmbracoAiCore(this IUmbracoBuilder builder)
     {
@@ -26,11 +28,14 @@ public static class UmbracoBuilderExtensions
         // Bind AiOptions from "Umbraco:Ai" section
         services.Configure<AiOptions>(config.GetSection("Umbraco:Ai"));
 
-        // Scan and register providers
+        // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
         services.AddSingleton<IAiSettingDefinitionBuilder, AiSettingDefinitionBuilder>();
         services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
-        RegisterProviders(services);
+
+        // Auto-discover providers using TypeLoader (uses Umbraco's cached, efficient type discovery)
+        builder.AiProviders()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
 
         // Registry
         services.AddSingleton<IAiRegistry, AiRegistry>();
@@ -56,45 +61,5 @@ public static class UmbracoBuilderExtensions
         // TODO: services.AddSingleton<IAiToolService, AiToolService>();
 
         return builder;
-    }
-
-    private static void RegisterProviders(IServiceCollection services)
-    {
-        // Get all assemblies in the current domain
-        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-        foreach (var assembly in assemblies)
-        {
-            // Skip system assemblies for performance
-            if (assembly.FullName?.StartsWith("System") == true ||
-                assembly.FullName?.StartsWith("Microsoft") == true ||
-                assembly.FullName?.StartsWith("netstandard") == true)
-            {
-                continue;
-            }
-
-            try
-            {
-                // Find all types decorated with [AiProvider]
-                var providerTypes = assembly.GetTypes()
-                    .Where(type =>
-                        !type.IsAbstract &&
-                        !type.IsInterface &&
-                        type.GetCustomAttribute<AiProviderAttribute>() != null &&
-                        typeof(IAiProvider).IsAssignableFrom(type))
-                    .ToList();
-
-                // Register each provider as singleton
-                foreach (var providerType in providerTypes)
-                {
-                    services.AddSingleton(typeof(IAiProvider), providerType);
-                }
-            }
-            catch (ReflectionTypeLoadException)
-            {
-                // Skip assemblies that fail to load types
-                continue;
-            }
-        }
     }
 }

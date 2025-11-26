@@ -103,9 +103,27 @@ builder.AiProviders()
 
 ---
 
-## Phase 1: Middleware Collection Builder
+## Phase 1: Middleware Collection Builder ✅ COMPLETED
 
 Convert middleware registration to use Umbraco's **OrderedCollectionBuilder** pattern (not weighted) to support explicit ordering with `InsertBefore`/`InsertAfter` methods.
+
+### Implementation Status: COMPLETE (2025-11-26)
+
+**Completed Changes:**
+- ✅ `AiChatMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAiChatMiddleware>`
+- ✅ `AiChatMiddlewareCollectionBuilder.cs` - Created extending `OrderedCollectionBuilderBase`
+- ✅ `AiEmbeddingMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAiEmbeddingMiddleware>`
+- ✅ `AiEmbeddingMiddlewareCollectionBuilder.cs` - Created extending `OrderedCollectionBuilderBase`
+- ✅ `UmbracoBuilderExtensions.Collections.cs` - Created with `AiChatMiddleware()` and `AiEmbeddingMiddleware()` extension methods
+- ✅ `IAiChatMiddleware.cs` - Removed `Order` property (ordering now managed by collection builder)
+- ✅ `IAiEmbeddingMiddleware.cs` - Removed `Order` property (ordering now managed by collection builder)
+- ✅ `AiChatClientFactory.cs` - Updated to inject `AiChatMiddlewareCollection`
+- ✅ `AiEmbeddingGeneratorFactory.cs` - Updated to inject `AiEmbeddingMiddlewareCollection`
+- ✅ `UmbracoBuilderExtensions.cs` - Updated to initialize middleware collections
+- ✅ `AiMiddlewareExtensions.cs` - Deleted (replaced by collection builders)
+- ✅ `LoggingChatMiddleware.cs` - Updated example to remove `Order` property
+
+**Branch:** `feature/phase-1-middleware-collection-builder`
 
 ### New Files
 

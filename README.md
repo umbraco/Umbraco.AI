@@ -1,7 +1,5 @@
 # Umbraco.Ai
 
-![Code Coverage](https://gist.githubusercontent.com/mattbrailsford/b54d9b1b62c50c438c273e4660f09d99/raw/code-coverage-results.svg)
-
 Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified way to connect and interact with AI providers. Built on top of `Microsoft.Extensions.AI`, it offers a provider-agnostic abstraction layer with Umbraco-specific features like connections, profiles, and configurable middleware.
 
 ## Features

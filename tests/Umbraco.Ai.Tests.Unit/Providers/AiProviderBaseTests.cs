@@ -3,7 +3,7 @@ using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Core.Tests.Providers;
+namespace Umbraco.Ai.Tests.Unit.Providers;
 
 public class AiProviderBaseTests
 {

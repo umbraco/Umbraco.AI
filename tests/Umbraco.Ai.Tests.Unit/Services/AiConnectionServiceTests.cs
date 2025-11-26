@@ -6,7 +6,7 @@ using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Core.Tests.Services;
+namespace Umbraco.Ai.Tests.Unit.Services;
 
 public class AiConnectionServiceTests
 {

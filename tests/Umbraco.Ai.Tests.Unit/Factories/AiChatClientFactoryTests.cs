@@ -9,7 +9,7 @@ using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Core.Tests.Factories;
+namespace Umbraco.Ai.Tests.Unit.Factories;
 
 public class AiChatClientFactoryTests
 {

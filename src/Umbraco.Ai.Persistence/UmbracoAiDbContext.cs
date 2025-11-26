@@ -11,12 +11,12 @@ public class UmbracoAiDbContext : DbContext
     /// <summary>
     /// AI provider connections.
     /// </summary>
-    public required DbSet<AiConnectionEntity> Connections { get; set; }
+    public DbSet<AiConnectionEntity> Connections { get; set; } = null!;
 
     /// <summary>
     /// AI profile configurations.
     /// </summary>
-    public required DbSet<AiProfileEntity> Profiles { get; set; }
+    public DbSet<AiProfileEntity> Profiles { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -44,8 +44,7 @@ public class UmbracoAiDbContext : DbContext
                 .HasMaxLength(100)
                 .IsRequired();
 
-            entity.Property(e => e.SettingsJson)
-                .HasColumnType("nvarchar(max)");
+            entity.Property(e => e.SettingsJson);
 
             entity.Property(e => e.IsActive)
                 .IsRequired();
@@ -86,8 +85,7 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.ConnectionId)
                 .IsRequired();
 
-            entity.Property(e => e.SystemPromptTemplate)
-                .HasColumnType("nvarchar(max)");
+            entity.Property(e => e.SystemPromptTemplate);
 
             entity.Property(e => e.TagsJson)
                 .HasMaxLength(2000);

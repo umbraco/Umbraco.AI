@@ -10,10 +10,12 @@
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+    <ProjectReference Include="..\..\src\Umbraco.Ai.Persistence\Umbraco.Ai.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

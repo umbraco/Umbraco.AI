@@ -44,13 +44,14 @@ jobs:
         if: success()
         run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload coverage badge
-        uses: actions/upload-artifact@v4
+      - name: Deploy coverage badge to Gist
         if: success() && github.ref == 'refs/heads/main'
+        uses: exuanbo/actions-deploy-gist@v1
         with:
-          name: coverage-badge
-          path: code-coverage-results.svg
-          retention-days: 90
+          token: ${{ secrets.GIST_TOKEN }}
+          gist_id: b54d9b1b62c50c438c273e4660f09d99
+          file_path: code-coverage-results.svg
+          file_type: text
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4

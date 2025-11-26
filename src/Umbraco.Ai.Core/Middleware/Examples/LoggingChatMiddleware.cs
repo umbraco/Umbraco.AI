@@ -8,9 +8,16 @@ namespace Umbraco.Ai.Core.Middleware.Examples;
 /// This demonstrates how to create custom middleware for cross-cutting concerns.
 /// </summary>
 /// <remarks>
-/// To use this middleware, register it in your Umbraco startup:
+/// To use this middleware, register it in a Composer:
 /// <code>
-/// builder.AddAiChatMiddleware&lt;LoggingChatMiddleware&gt;();
+/// public class MyComposer : IComposer
+/// {
+///     public void Compose(IUmbracoBuilder builder)
+///     {
+///         builder.AiChatMiddleware()
+///             .Append&lt;LoggingChatMiddleware&gt;();
+///     }
+/// }
 /// </code>
 /// </remarks>
 public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAiChatMiddleware
@@ -23,7 +30,4 @@ public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAiChatMiddle
             .UseLogging(loggerFactory)
             .Build();
     }
-
-    /// <inheritdoc />
-    public int Order => 1000; // High value = applied last (outer layer)
 }

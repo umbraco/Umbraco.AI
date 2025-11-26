@@ -37,6 +37,11 @@ public static partial class UmbracoBuilderExtensions
         builder.AiProviders()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
 
+        // Initialize middleware collection builders (empty by default, consumers can add via Composers)
+        // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add middleware
+        _ = builder.AiChatMiddleware();
+        _ = builder.AiEmbeddingMiddleware();
+
         // Registry
         services.AddSingleton<IAiRegistry, AiRegistry>();
 

@@ -13,13 +13,13 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
     private readonly IAiRegistry _registry;
     private readonly IAiConnectionService _connectionService;
     private readonly IAiSettingsResolver _settingsResolver;
-    private readonly IEnumerable<IAiChatMiddleware> _middleware;
+    private readonly AiChatMiddlewareCollection _middleware;
 
     public AiChatClientFactory(
         IAiRegistry registry,
         IAiConnectionService connectionService,
         IAiSettingsResolver settingsResolver,
-        IEnumerable<IAiChatMiddleware> middleware)
+        AiChatMiddlewareCollection middleware)
     {
         _registry = registry;
         _connectionService = connectionService;
@@ -51,8 +51,8 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
 
     private IChatClient ApplyMiddleware(IChatClient client)
     {
-        // Apply middleware in order (lowest Order value first)
-        foreach (var middleware in _middleware.OrderBy(m => m.Order))
+        // Apply middleware in collection order (controlled by AiChatMiddlewareCollectionBuilder)
+        foreach (var middleware in _middleware)
         {
             client = middleware.Apply(client);
         }

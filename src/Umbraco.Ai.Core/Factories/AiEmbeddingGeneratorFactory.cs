@@ -13,13 +13,13 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
     private readonly IAiRegistry _registry;
     private readonly IAiConnectionService _connectionService;
     private readonly IAiSettingsResolver _settingsResolver;
-    private readonly IEnumerable<IAiEmbeddingMiddleware> _middleware;
+    private readonly AiEmbeddingMiddlewareCollection _middleware;
 
     public AiEmbeddingGeneratorFactory(
         IAiRegistry registry,
         IAiConnectionService connectionService,
         IAiSettingsResolver settingsResolver,
-        IEnumerable<IAiEmbeddingMiddleware> middleware)
+        AiEmbeddingMiddlewareCollection middleware)
     {
         _registry = registry;
         _connectionService = connectionService;
@@ -54,8 +54,8 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
     private IEmbeddingGenerator<string, Embedding<float>> ApplyMiddleware(
         IEmbeddingGenerator<string, Embedding<float>> generator)
     {
-        // Apply middleware in order (lowest Order value first)
-        foreach (var middleware in _middleware.OrderBy(m => m.Order))
+        // Apply middleware in collection order (controlled by AiEmbeddingMiddlewareCollectionBuilder)
+        foreach (var middleware in _middleware)
         {
             generator = middleware.Apply(generator);
         }

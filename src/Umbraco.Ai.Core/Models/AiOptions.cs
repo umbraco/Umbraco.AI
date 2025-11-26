@@ -1,5 +1,8 @@
 ﻿namespace Umbraco.Ai.Core.Models;
 
+/// <summary>
+/// Configuration options for AI services.
+/// </summary>
 public class AiOptions
 {
     /// <summary>

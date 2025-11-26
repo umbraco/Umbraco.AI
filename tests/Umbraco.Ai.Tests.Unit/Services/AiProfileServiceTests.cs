@@ -3,7 +3,7 @@ using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Tests.Common.Builders;
 
-namespace Umbraco.Ai.Core.Tests.Services;
+namespace Umbraco.Ai.Tests.Unit.Services;
 
 public class AiProfileServiceTests
 {

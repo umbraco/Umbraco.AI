@@ -2,7 +2,7 @@ using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Core.Tests.Registry;
+namespace Umbraco.Ai.Tests.Unit.Registry;
 
 public class AiRegistryTests
 {

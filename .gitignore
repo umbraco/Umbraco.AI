@@ -9,4 +9,4 @@ nul
 .idea/
 .claude/
 *.local.sln
-.user
+*.user

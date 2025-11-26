@@ -36,7 +36,7 @@ dotnet test Umbraco.Ai.sln
 dotnet test Umbraco.Ai.sln --verbosity normal
 
 # Run specific test project
-dotnet test tests/Umbraco.Ai.Core.Tests/Umbraco.Ai.Core.Tests.csproj
+dotnet test tests/Umbraco.Ai.Tests.Unit/Umbraco.Ai.Tests.Unit.csproj
 
 # Run with code coverage
 dotnet test Umbraco.Ai.sln --collect:"XPlat Code Coverage" --results-directory ./coverage
@@ -46,9 +46,9 @@ dotnet test Umbraco.Ai.sln --collect:"XPlat Code Coverage" --results-directory .
 
 | Project | Purpose |
 |---------|---------|
-| `Umbraco.Ai.Core.Tests` | Unit tests for core services, providers, middleware, and registry |
-| `Umbraco.Ai.Web.Tests` | Integration tests for Management API endpoints |
-| `Umbraco.Ai.Tests.Common` | Shared test utilities, builders, and fakes (not executable) |
+| `Umbraco.Ai.Tests.Unit` | Unit tests for core services, providers, middleware, registry, API controllers, and EF Core repositories |
+| `Umbraco.Ai.Tests.Integration` | Integration tests for DI resolution and end-to-end service flows |
+| `Umbraco.Ai.Tests.Common` | Shared test utilities, builders, fakes, and fixtures (not executable) |
 
 ### Test Stack
 
@@ -77,6 +77,9 @@ var connection = new AiConnectionBuilder()
 - `FakeChatCapability` / `FakeChatClient` - Chat without real API calls
 - `FakeEmbeddingCapability` - Embedding capability implementation
 - `FakeProviderSettings` - Provider settings for testing
+
+**Fixtures** - Test infrastructure:
+- `EfCoreTestFixture` - In-memory SQLite database for EF Core repository tests
 
 ### Test Patterns
 
@@ -147,8 +150,8 @@ Provider (plugin with capabilities)
 ```
 
 - **Providers**: Installable NuGet packages supporting specific AI services. Discovered via `[AiProvider]` attribute and assembly scanning.
-- **Connections**: Store API keys and provider-specific settings. Currently in-memory, planned for persistent storage.
-- **Profiles**: Combine a connection with model settings for specific use cases (e.g., "content-assistant" with GPT-4 and creative settings).
+- **Connections**: Store API keys and provider-specific settings. Persisted to database via EF Core.
+- **Profiles**: Combine a connection with model settings for specific use cases (e.g., "content-assistant" with GPT-4 and creative settings). Persisted to database via EF Core.
 
 ### Capability System
 
@@ -246,6 +249,9 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 - `Umbraco.Ai.Core.Models` - Data models (`AiConnection`, `AiProfile`, `AiModelRef`)
 - `Umbraco.Ai.Core.Middleware` - Middleware pipeline system
 - `Umbraco.Ai.Core.Registry` - Provider registry
+- `Umbraco.Ai.Core.Repositories` - Repository interfaces (`IAiConnectionRepository`, `IAiProfileRepository`)
+- `Umbraco.Ai.Persistence` - EF Core DbContext and repository implementations
+- `Umbraco.Ai.Persistence.Entities` - Database entities (`AiConnectionEntity`, `AiProfileEntity`)
 
 ## Configuration
 
@@ -284,9 +290,18 @@ See `docs/ef-core-migrations.md` for complete documentation.
 
 For deeper understanding, read these docs files:
 
+**Core Documentation:**
 - `docs/core-concepts.md` - Providers, Connections, Profiles, and Middleware explained
 - `docs/integration-philosophy.md` - Why M.E.AI was chosen and the "thin wrapper" approach
 - `docs/capabilities-feature.md` - Chat, Embedding, and planned capabilities (Media, Moderation)
 - `docs/core-implementation-details.md` - Comprehensive technical reference with code examples
 - `docs/ef-core-migrations.md` - How to create and manage EF Core database migrations
 - `docs/umbraco-ai-agents-design.md` - Future Agents feature design (tools, approval workflow, backoffice integration)
+
+**Planning Documents:**
+- `docs/plans/v1-core-implementation-plan.md` - V1 implementation roadmap
+- `docs/plans/testing-strategy.md` - Testing approach and strategy
+- `docs/plans/tools-and-agents-architecture.md` - Tools and agents system design
+
+**Ideas (Future Exploration):**
+- `docs/ideas/` - Exploratory design documents for future features (toolsets, MCP integration, workflows, etc.)

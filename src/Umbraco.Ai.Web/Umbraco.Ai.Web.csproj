@@ -1,22 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Title>Umbraco Ai</Title>
-        <Description>Contains core logic for Umbraco Ai</Description>
-        <RootNamespace>Umbraco.Ai.Cms.Api.Management</RootNamespace>
+        <Title>Umbraco AI Web</Title>
+        <Description>Management API for Umbraco AI</Description>
+        <RootNamespace>Umbraco.Ai.Web</RootNamespace>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="Umbraco.Cms.Api.Management" />
     </ItemGroup>
-    
+
     <ItemGroup>
-      <Folder Include="Api\Management\Connection\Controllers\" />
-      <Folder Include="Api\Management\Connection\Models\" />
-      <Folder Include="Api\Management\Profile\Controllers\" />
-      <Folder Include="Api\Management\Profile\Models\" />
-      <Folder Include="Api\Management\Provider\Controllers\" />
-      <Folder Include="Api\Management\Provider\Models\" />
+        <ProjectReference Include="..\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

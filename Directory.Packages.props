@@ -24,6 +24,7 @@
 
   <!-- Test dependencies -->
   <ItemGroup>
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="[10.0.0, 10.999.999)" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="[10.0.0, 10.999.999)" />

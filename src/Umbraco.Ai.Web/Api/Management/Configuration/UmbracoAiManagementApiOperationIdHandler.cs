@@ -1,20 +1,22 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
+using Umbraco.Ai.Web.Api;
 using Umbraco.Cms.Api.Common.OpenApi;
 
-namespace Umbraco.Ai.Cms.Api.Management.Api.Management.Configuration;
+namespace Umbraco.Ai.Web.Api.Management.Configuration;
 
 /// <summary>
 /// Operation ID handler for the Umbraco AI Management API.
 /// </summary>
-internal sealed class UmbracoAiManagementApiOperationIdHandler: OperationIdHandler
+internal sealed class UmbracoAiManagementApiOperationIdHandler : OperationIdHandler
 {
     /// <inheritdoc />
     public UmbracoAiManagementApiOperationIdHandler(IOptions<ApiVersioningOptions> apiVersioningOptions)
         : base(apiVersioningOptions)
-    { }
+    {
+    }
 
     /// <inheritdoc />
     protected override bool CanHandle(ApiDescription apiDescription, ControllerActionDescriptor controllerActionDescriptor)

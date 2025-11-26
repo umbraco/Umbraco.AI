@@ -62,7 +62,7 @@ public static partial class UmbracoBuilderExtensions
 
         // High-level services
         services.AddSingleton<IAiChatService, AiChatService>();
-        // TODO: services.AddSingleton<IAiEmbeddingService, AiEmbeddingService>();
+        services.AddSingleton<IAiEmbeddingService, AiEmbeddingService>();
         // TODO: services.AddSingleton<IAiToolService, AiToolService>();
 
         return builder;

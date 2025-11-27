@@ -88,8 +88,8 @@ public class AiSettingsResolverTests
     [Fact]
     public void ResolveSettings_WithJsonElement_DeserializesCorrectly()
     {
-        // Arrange
-        var json = """{"ApiKey": "direct-key", "BaseUrl": "https://custom.api.com", "MaxRetries": 10}""";
+        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        var json = """{"apiKey": "direct-key", "baseUrl": "https://custom.api.com", "maxRetries": 10}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
 
@@ -106,8 +106,8 @@ public class AiSettingsResolverTests
     [Fact]
     public void ResolveSettings_WithJsonElement_ResolvesConfigurationVariables()
     {
-        // Arrange
-        var json = """{"ApiKey": "$OpenAI:ApiKey", "BaseUrl": "$OpenAI:BaseUrl"}""";
+        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        var json = """{"apiKey": "$OpenAI:ApiKey", "baseUrl": "$OpenAI:BaseUrl"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
 
@@ -125,7 +125,8 @@ public class AiSettingsResolverTests
     {
         // Arrange - Config vars in JsonElement for non-string properties fail at JSON parse time
         // because "$TestSettings:MaxRetries" (a string) cannot be parsed as int
-        var json = """{"ApiKey": "test-key", "MaxRetries": "$TestSettings:MaxRetries"}""";
+        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        var json = """{"apiKey": "test-key", "maxRetries": "$TestSettings:MaxRetries"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider", requireApiKey: false);
 
@@ -133,8 +134,9 @@ public class AiSettingsResolverTests
         var act = () => _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert - Fails because JSON string cannot be deserialized to int
-        var exception = Should.Throw<InvalidOperationException>(act);
-        exception.Message.ShouldContain("Failed to deserialize JsonElement");
+        // JsonException is thrown directly from JsonSerializer.Deserialize
+        var exception = Should.Throw<JsonException>(act);
+        exception.Message.ShouldContain("maxRetries");
     }
 
     [Fact]
@@ -295,7 +297,8 @@ public class AiSettingsResolverTests
             .WithSettingsType<FakeProviderSettings>();
         SetupProviderWithValidation("test-provider");
 
-        var json = """{"ApiKey": "provider-key"}""";
+        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        var json = """{"apiKey": "provider-key"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
 
         // Act

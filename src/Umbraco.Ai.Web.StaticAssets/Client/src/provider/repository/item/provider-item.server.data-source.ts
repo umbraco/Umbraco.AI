@@ -1,6 +1,7 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
 import { ProvidersService } from "../../../api/sdk.gen.js";
+import { UaiProviderTypeMapper } from "../../type-mapper.js";
 import type { UaiProviderItemModel } from "../../types.js";
 
 /**
@@ -26,12 +27,7 @@ export class UaiProviderItemServerDataSource {
             return { error };
         }
 
-        // Map API response to UI model
-        const items: UaiProviderItemModel[] = data.map((provider) => ({
-            id: provider.id,
-            name: provider.name,
-            capabilities: provider.capabilities,
-        }));
+        const items = data.map(UaiProviderTypeMapper.toItemModel);
 
         return { data: items };
     }

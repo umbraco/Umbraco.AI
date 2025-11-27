@@ -8,9 +8,12 @@ export const UAI_CONNECTION_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generate
     entityType: UAI_CONNECTION_ENTITY_TYPE,
 });
 
-export const UAI_CREATE_CONNECTION_WORKSPACE_PATH = `${UAI_CONNECTION_WORKSPACE_PATH}/create`;
+export const UAI_CREATE_CONNECTION_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ providerAlias: string }>(
+    "create/:providerAlias",
+    UAI_CONNECTION_WORKSPACE_PATH
+);
 
 export const UAI_EDIT_CONNECTION_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ unique: string }>(
-    'edit/:unique',
-    UAI_CONNECTION_WORKSPACE_PATH,
+    "edit/:unique",
+    UAI_CONNECTION_WORKSPACE_PATH
 );

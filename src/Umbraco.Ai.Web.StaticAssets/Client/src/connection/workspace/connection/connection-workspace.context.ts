@@ -47,10 +47,11 @@ export class UaiConnectionWorkspaceContext
 
         this.routes.setRoutes([
             {
-                path: "create",
+                path: "create/:providerAlias",
                 component: UaiConnectionWorkspaceEditorElement,
-                setup: async () => {
-                    await this.scaffold();
+                setup: async (_component, info) => {
+                    const providerAlias = info.match.params.providerAlias;
+                    await this.scaffold(providerAlias);
 
                     new UmbWorkspaceIsNewRedirectController(
                         this,

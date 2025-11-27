@@ -13,7 +13,7 @@ export const UAI_CONNECTION_CREATE_OPTIONS_MODAL = new UmbModalToken<
     UaiConnectionCreateOptionsModalValue
 >("UmbracoAi.Modal.Connection.CreateOptions", {
     modal: {
-        type: "sidebar",
+        type: "dialog",
         size: "small",
     },
 });

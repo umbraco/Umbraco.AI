@@ -1,7 +1,7 @@
 import { UmbDetailRepositoryBase as d } from "@umbraco-cms/backoffice/repository";
 import { tryExecuteAndNotify as r } from "@umbraco-cms/backoffice/resources";
-import { C as o, U as a } from "./type-mapper-DCb8TkKY.js";
-import { U as p } from "./bundle.manifests-B4-X66yr.js";
+import { C as o, U as a } from "./type-mapper-C18x2v2A.js";
+import { U as p } from "./bundle.manifests-BsBZQJMT.js";
 import { UAI_CONNECTION_DETAIL_STORE_CONTEXT as y } from "./connection-detail.store-Du8jOyAs.js";
 class l {
   #t;
@@ -29,7 +29,7 @@ class l {
   async read(t) {
     const { data: e, error: n } = await r(
       this.#t,
-      o.getConnectionsById({ path: { id: t } })
+      o.getConnectionById({ path: { id: t } })
     );
     return n || !e ? { error: n } : { data: a.toDetailModel(e) };
   }
@@ -39,7 +39,7 @@ class l {
   async create(t, e) {
     const n = a.toCreateRequest(t), { response: c, error: i } = await r(
       this.#t,
-      o.postConnections({ body: n })
+      o.postConnection({ body: n })
     );
     if (i)
       return { error: i };
@@ -57,7 +57,7 @@ class l {
   async update(t) {
     const e = a.toUpdateRequest(t), { error: n } = await r(
       this.#t,
-      o.putConnectionsById({
+      o.putConnectionById({
         path: { id: t.unique },
         body: e
       })
@@ -70,7 +70,7 @@ class l {
   async delete(t) {
     const { error: e } = await r(
       this.#t,
-      o.deleteConnectionsById({ path: { id: t } })
+      o.deleteConnectionById({ path: { id: t } })
     );
     return e ? { error: e } : {};
   }
@@ -87,4 +87,4 @@ export {
   I as UaiConnectionDetailRepository,
   I as api
 };
-//# sourceMappingURL=connection-detail.repository-nNZeF5Cf.js.map
+//# sourceMappingURL=connection-detail.repository-Bq4gwARE.js.map

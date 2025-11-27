@@ -2,12 +2,12 @@ import { UMB_WORKSPACE_PATH_PATTERN as k, UmbSubmittableWorkspaceContextBase as 
 import { UmbBasicState as O, UmbObjectState as P } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext as V } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext as I } from "@umbraco-cms/backoffice/validation";
-import { UaiConnectionDetailRepository as W } from "./connection-detail.repository-nNZeF5Cf.js";
-import { U as u } from "./bundle.manifests-B4-X66yr.js";
+import { UaiConnectionDetailRepository as W } from "./connection-detail.repository-Bq4gwARE.js";
+import { U as u } from "./bundle.manifests-BsBZQJMT.js";
 import { html as m, when as q, css as x, state as _, customElement as $ } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement as R } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles as L } from "@umbraco-cms/backoffice/style";
-import { U as M, a as p } from "./partial-update.command-08xLuxOX.js";
+import { U as M, a as p } from "./partial-update.command-CD7WOKi_.js";
 import { UMB_SETTINGS_SECTION_PATHNAME as B } from "@umbraco-cms/backoffice/settings";
 class D {
   #e = !1;
@@ -276,4 +276,4 @@ export {
   st as UaiConnectionWorkspaceContext,
   st as api
 };
-//# sourceMappingURL=connection-workspace.context-BsZ8I639.js.map
+//# sourceMappingURL=connection-workspace.context-BBIohkGB.js.map

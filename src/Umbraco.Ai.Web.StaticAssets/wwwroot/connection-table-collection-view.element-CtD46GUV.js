@@ -2,7 +2,7 @@ import { html as l, state as _, customElement as h } from "@umbraco-cms/backoffi
 import { UmbLitElement as d } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_COLLECTION_CONTEXT as f } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles as C } from "@umbraco-cms/backoffice/style";
-import { U as m } from "./bundle.manifests-B4-X66yr.js";
+import { U as m } from "./bundle.manifests-BsBZQJMT.js";
 var E = Object.defineProperty, b = Object.getOwnPropertyDescriptor, u = (t) => {
   throw TypeError(t);
 }, v = (t, e, a, s) => {
@@ -59,4 +59,4 @@ export {
   n as UaiConnectionTableCollectionViewElement,
   P as default
 };
-//# sourceMappingURL=connection-table-collection-view.element-CcDnCaWv.js.map
+//# sourceMappingURL=connection-table-collection-view.element-CtD46GUV.js.map

@@ -1,5 +1,5 @@
-import { UMB_WORKSPACE_PATH_PATTERN as m, UMB_WORKSPACE_CONDITION_ALIAS as e, UmbSubmitWorkspaceAction as C } from "@umbraco-cms/backoffice/workspace";
-import { UmbPathPattern as r } from "@umbraco-cms/backoffice/router";
+import { UMB_WORKSPACE_PATH_PATTERN as m, UMB_WORKSPACE_CONDITION_ALIAS as t, UmbSubmitWorkspaceAction as r } from "@umbraco-cms/backoffice/workspace";
+import { UmbPathPattern as C } from "@umbraco-cms/backoffice/router";
 import { UMB_SETTINGS_SECTION_PATHNAME as A } from "@umbraco-cms/backoffice/settings";
 const p = [
   {
@@ -27,10 +27,10 @@ const p = [
     },
     conditions: [{ alias: "Umb.Condition.SectionAlias", match: "Umb.Section.Settings" }]
   }
-], N = [...I, ..._], n = "UmbracoAi.Collection.Connection", T = "UmbracoAi.Repository.Connection.Detail", O = "UmbracoAi.Store.Connection.Detail", i = "UmbracoAi.Repository.Connection.Collection", a = "uai:connection", c = "uai:connection-root", o = "UmbracoAi.Workspace.Connection", t = "UmbracoAi.Workspace.ConnectionRoot", s = "icon-wall-plug", l = m.generateAbsolute({
+], N = [...I, ..._], n = "UmbracoAi.Collection.Connection", T = "UmbracoAi.Repository.Connection.Detail", O = "UmbracoAi.Store.Connection.Detail", a = "UmbracoAi.Repository.Connection.Collection", c = "uai:connection", e = "uai:connection-root", o = "UmbracoAi.Workspace.Connection", i = "UmbracoAi.Workspace.ConnectionRoot", s = "icon-wall-plug", l = m.generateAbsolute({
   sectionName: A,
-  entityType: a
-}), b = `${l}/create`, w = new r(
+  entityType: c
+}), b = `${l}/create`, W = new C(
   "edit/:unique",
   l
 ), E = [
@@ -45,21 +45,22 @@ const p = [
     },
     conditions: [{ alias: "Umb.Condition.CollectionAlias", match: n }]
   }
-], U = [
+], y = [
   {
     type: "collection",
     kind: "default",
     alias: n,
     name: "Connection Collection",
+    element: () => import("./connection-collection.element-BhrmeyJS.js"),
     meta: {
-      repositoryAlias: i
+      repositoryAlias: a
     }
   },
   {
     type: "collectionView",
     alias: "UmbracoAi.CollectionView.Connection.Table",
     name: "Connection Table View",
-    element: () => import("./connection-table-collection-view.element-Bcsg5fit.js"),
+    element: () => import("./connection-table-collection-view.element-DJEuwQrr.js"),
     meta: {
       label: "Table",
       icon: "icon-list",
@@ -68,6 +69,21 @@ const p = [
     conditions: [{ alias: "Umb.Condition.CollectionAlias", match: n }]
   },
   ...E
+], U = [
+  {
+    type: "entityAction",
+    kind: "default",
+    alias: "UmbracoAi.EntityAction.Connection.Create",
+    name: "Create Connection Entity Action",
+    weight: 1200,
+    api: () => import("./connection-create.action-CqR_jWoK.js"),
+    forEntityTypes: [e],
+    meta: {
+      icon: "icon-add",
+      label: "Create",
+      additionalOptions: !0
+    }
+  }
 ], S = [
   {
     type: "menuItem",
@@ -77,16 +93,16 @@ const p = [
     meta: {
       label: "Connections",
       icon: s,
-      entityType: c,
+      entityType: e,
       menus: ["UmbracoAi.Menu.Settings"]
     }
   }
-], y = [
+], d = [
   {
     type: "repository",
     alias: T,
     name: "Connection Detail Repository",
-    api: () => import("./connection-detail.repository-BAfg33E6.js")
+    api: () => import("./connection-detail.repository-gai7dQ-B.js")
   },
   {
     type: "store",
@@ -96,26 +112,26 @@ const p = [
   },
   {
     type: "repository",
-    alias: i,
+    alias: a,
     name: "Connection Collection Repository",
-    api: () => import("./connection-collection.repository-kxpVrCYp.js")
+    api: () => import("./connection-collection.repository-BbYjsdMG.js")
   }
-], d = [
+], u = [
   {
     type: "workspace",
     kind: "routable",
     alias: o,
     name: "Connection Workspace",
-    api: () => import("./connection-workspace.context-BSF8OLSu.js"),
+    api: () => import("./connection-workspace.context-CTquc_4b.js"),
     meta: {
-      entityType: a
+      entityType: c
     }
   },
   {
     type: "workspaceView",
     alias: "UmbracoAi.Workspace.Connection.View.Details",
     name: "Connection Details Workspace View",
-    js: () => import("./connection-details-workspace-view.element-CfcNJMkC.js"),
+    js: () => import("./connection-details-workspace-view.element-CtYVwKo2.js"),
     weight: 100,
     meta: {
       label: "Details",
@@ -124,7 +140,7 @@ const p = [
     },
     conditions: [
       {
-        alias: e,
+        alias: t,
         match: o
       }
     ]
@@ -134,7 +150,7 @@ const p = [
     kind: "default",
     alias: "UmbracoAi.WorkspaceAction.Connection.Save",
     name: "Save Connection",
-    api: C,
+    api: r,
     meta: {
       label: "Save",
       look: "primary",
@@ -142,19 +158,19 @@ const p = [
     },
     conditions: [
       {
-        alias: e,
+        alias: t,
         match: o
       }
     ]
   }
-], u = [
+], k = [
   {
     type: "workspace",
     kind: "default",
-    alias: t,
+    alias: i,
     name: "Connection Root Workspace",
     meta: {
-      entityType: c,
+      entityType: e,
       headline: "Connections"
     }
   },
@@ -171,30 +187,32 @@ const p = [
     },
     conditions: [
       {
-        alias: e,
-        match: t
+        alias: t,
+        match: i
       }
     ]
   }
 ], R = [
-  ...d,
-  ...u
-], k = [
+  ...u,
+  ...k
+], f = [
+  ...y,
   ...U,
   ...S,
-  ...y,
+  ...d,
   ...R
-], W = [
+], h = [
   ...p,
   ...N,
-  ...k
+  ...f
 ];
 export {
   s as U,
-  w as a,
-  c as b,
-  o as c,
-  a as d,
-  W as m
+  W as a,
+  b,
+  e as c,
+  o as d,
+  c as e,
+  h as m
 };
-//# sourceMappingURL=bundle.manifests-CiGQzgXI.js.map
+//# sourceMappingURL=bundle.manifests-BL8gZONS.js.map

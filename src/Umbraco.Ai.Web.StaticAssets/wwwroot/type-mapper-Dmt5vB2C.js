@@ -1,5 +1,5 @@
 import { c as i } from "./client.gen-CF69_sVb.js";
-import { d as n } from "./bundle.manifests-CiGQzgXI.js";
+import { e as n } from "./bundle.manifests-BL8gZONS.js";
 class c {
   static getConnections(t) {
     return (t?.client ?? i).get({
@@ -125,4 +125,4 @@ export {
   c as C,
   s as U
 };
-//# sourceMappingURL=type-mapper-YgfomMeJ.js.map
+//# sourceMappingURL=type-mapper-Dmt5vB2C.js.map

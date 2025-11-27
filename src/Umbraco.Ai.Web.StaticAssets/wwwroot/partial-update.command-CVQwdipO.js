@@ -1,9 +1,9 @@
-import { UmbContextToken as a } from "@umbraco-cms/backoffice/context-api";
-import { d as e } from "./bundle.manifests-CiGQzgXI.js";
-const n = new a(
+import { UmbContextToken as s } from "@umbraco-cms/backoffice/context-api";
+import { e as a } from "./bundle.manifests-BL8gZONS.js";
+const n = new s(
   "UmbWorkspaceContext",
   void 0,
-  (s) => s.getEntityType?.() === e
+  (e) => e.getEntityType?.() === a
 );
 class r {
   constructor(o) {
@@ -25,4 +25,4 @@ export {
   n as U,
   m as a
 };
-//# sourceMappingURL=partial-update.command-CxAnwBY1.js.map
+//# sourceMappingURL=partial-update.command-CVQwdipO.js.map

@@ -23,6 +23,7 @@ export class UaiConnectionCollectionServerDataSource implements UmbCollectionDat
             this.#host,
             ConnectionsService.getConnections({
                 query: {
+                    filter: filter.filter,
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },

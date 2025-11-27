@@ -4,7 +4,8 @@ import type { UmbTableColumn, UmbTableItem } from "@umbraco-cms/backoffice/compo
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiConnectionItemModel } from "../../../types.js";
-import { UAI_CONNECTION_ICON, UAI_CONNECTION_ENTITY_TYPE } from "../../../constants.js";
+import { UAI_CONNECTION_ICON } from "../../../constants.js";
+import { UAI_EDIT_CONNECTION_WORKSPACE_PATH_PATTERN } from "../../../workspace/connection/paths.js";
 
 /**
  * Table view for the Connection collection.
@@ -37,7 +38,7 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "name",
                     value: html`<a
-                        href="section/settings/workspace/${UAI_CONNECTION_ENTITY_TYPE}/${item.unique}"
+                        href=${UAI_EDIT_CONNECTION_WORKSPACE_PATH_PATTERN.generateAbsolute({ unique: item.unique })}
                         >${item.name}</a
                     >`,
                 },

@@ -1,18 +1,20 @@
-import { UMB_WORKSPACE_CONDITION_ALIAS as e, UmbSubmitWorkspaceAction as l } from "@umbraco-cms/backoffice/workspace";
-const m = [
+import { UMB_WORKSPACE_PATH_PATTERN as m, UMB_WORKSPACE_CONDITION_ALIAS as e, UmbSubmitWorkspaceAction as C } from "@umbraco-cms/backoffice/workspace";
+import { UmbPathPattern as r } from "@umbraco-cms/backoffice/router";
+import { UMB_SETTINGS_SECTION_PATHNAME as A } from "@umbraco-cms/backoffice/settings";
+const p = [
   {
     name: "Umbraco AI Entrypoint",
     alias: "UmbracoAi.Entrypoint",
     type: "backofficeEntryPoint",
     js: () => import("./entrypoint-BlMjOTp-.js")
   }
-], r = [
+], I = [
   {
     type: "menu",
     alias: "UmbracoAi.Menu.Settings",
     name: "AI Settings Menu"
   }
-], C = [
+], _ = [
   {
     type: "sectionSidebarApp",
     kind: "menuWithEntityActions",
@@ -25,7 +27,13 @@ const m = [
     },
     conditions: [{ alias: "Umb.Condition.SectionAlias", match: "Umb.Section.Settings" }]
   }
-], p = [...r, ...C], n = "UmbracoAi.Collection.Connection", A = "UmbracoAi.Repository.Connection.Detail", b = "UmbracoAi.Store.Connection.Detail", i = "UmbracoAi.Repository.Connection.Collection", a = "uai:connection", c = "uai:connection-root", o = "UmbracoAi.Workspace.Connection", t = "UmbracoAi.Workspace.ConnectionRoot", s = "icon-wall-plug", I = [
+], N = [...I, ..._], n = "UmbracoAi.Collection.Connection", T = "UmbracoAi.Repository.Connection.Detail", O = "UmbracoAi.Store.Connection.Detail", i = "UmbracoAi.Repository.Connection.Collection", a = "uai:connection", c = "uai:connection-root", o = "UmbracoAi.Workspace.Connection", t = "UmbracoAi.Workspace.ConnectionRoot", s = "icon-wall-plug", l = m.generateAbsolute({
+  sectionName: A,
+  entityType: a
+}), b = `${l}/create`, w = new r(
+  "edit/:unique",
+  l
+), E = [
   {
     type: "collectionAction",
     kind: "button",
@@ -33,11 +41,11 @@ const m = [
     name: "Create Connection",
     meta: {
       label: "Create",
-      href: `section/settings/workspace/${a}/create`
+      href: b
     },
     conditions: [{ alias: "Umb.Condition.CollectionAlias", match: n }]
   }
-], O = [
+], U = [
   {
     type: "collection",
     kind: "default",
@@ -51,7 +59,7 @@ const m = [
     type: "collectionView",
     alias: "UmbracoAi.CollectionView.Connection.Table",
     name: "Connection Table View",
-    element: () => import("./connection-table-collection-view.element-BdLWCxEa.js"),
+    element: () => import("./connection-table-collection-view.element-Bcsg5fit.js"),
     meta: {
       label: "Table",
       icon: "icon-list",
@@ -59,8 +67,8 @@ const m = [
     },
     conditions: [{ alias: "Umb.Condition.CollectionAlias", match: n }]
   },
-  ...I
-], N = [
+  ...E
+], S = [
   {
     type: "menuItem",
     alias: "UmbracoAi.MenuItem.Connections",
@@ -76,13 +84,13 @@ const m = [
 ], y = [
   {
     type: "repository",
-    alias: A,
+    alias: T,
     name: "Connection Detail Repository",
-    api: () => import("./connection-detail.repository-DU_QWilS.js")
+    api: () => import("./connection-detail.repository-BAfg33E6.js")
   },
   {
     type: "store",
-    alias: b,
+    alias: O,
     name: "Connection Detail Store",
     api: () => import("./connection-detail.store-Du8jOyAs.js")
   },
@@ -90,15 +98,15 @@ const m = [
     type: "repository",
     alias: i,
     name: "Connection Collection Repository",
-    api: () => import("./connection-collection.repository-Ccr9MQtn.js")
+    api: () => import("./connection-collection.repository-kxpVrCYp.js")
   }
-], U = [
+], d = [
   {
     type: "workspace",
     kind: "routable",
     alias: o,
     name: "Connection Workspace",
-    api: () => import("./connection-workspace.context-DXdyedOk.js"),
+    api: () => import("./connection-workspace.context-BSF8OLSu.js"),
     meta: {
       entityType: a
     }
@@ -107,7 +115,7 @@ const m = [
     type: "workspaceView",
     alias: "UmbracoAi.Workspace.Connection.View.Details",
     name: "Connection Details Workspace View",
-    js: () => import("./connection-details-workspace-view.element-Zwx3DHZB.js"),
+    js: () => import("./connection-details-workspace-view.element-CfcNJMkC.js"),
     weight: 100,
     meta: {
       label: "Details",
@@ -126,7 +134,7 @@ const m = [
     kind: "default",
     alias: "UmbracoAi.WorkspaceAction.Connection.Save",
     name: "Save Connection",
-    api: l,
+    api: C,
     meta: {
       label: "Save",
       look: "primary",
@@ -139,7 +147,7 @@ const m = [
       }
     ]
   }
-], _ = [
+], u = [
   {
     type: "workspace",
     kind: "default",
@@ -168,24 +176,25 @@ const m = [
       }
     ]
   }
-], S = [
-  ...U,
-  ..._
-], T = [
-  ...O,
-  ...N,
-  ...y,
-  ...S
+], R = [
+  ...d,
+  ...u
 ], k = [
-  ...m,
+  ...U,
+  ...S,
+  ...y,
+  ...R
+], W = [
   ...p,
-  ...T
+  ...N,
+  ...k
 ];
 export {
   s as U,
-  a,
+  w as a,
   c as b,
   o as c,
-  k as m
+  a as d,
+  W as m
 };
-//# sourceMappingURL=bundle.manifests-BwiwDf1o.js.map
+//# sourceMappingURL=bundle.manifests-CiGQzgXI.js.map

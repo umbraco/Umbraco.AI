@@ -50,8 +50,10 @@ export class UaiConnectionCreateOptionsModalElement extends UmbModalBaseElement<
                                         <uui-ref-node
                                             name=${provider.name}
                                             detail=${provider.capabilities.join(", ")}
-                                            @open=${() => this.#onSelect(provider.id)}
+                                            select-only
                                             selectable
+                                            @selected=${() => this.#onSelect(provider.id)}
+                                            @open=${() => this.#onSelect(provider.id)}
                                         >
                                             <umb-icon slot="icon" name="icon-cloud"></umb-icon>
                                         </uui-ref-node>

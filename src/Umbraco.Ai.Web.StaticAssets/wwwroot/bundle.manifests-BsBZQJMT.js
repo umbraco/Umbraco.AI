@@ -72,7 +72,7 @@ const e = [
     type: "collectionView",
     alias: "UmbracoAi.CollectionView.Connection.Table",
     name: "Connection Table View",
-    element: () => import("./connection-table-collection-view.element-CcDnCaWv.js"),
+    element: () => import("./connection-table-collection-view.element-CtD46GUV.js"),
     meta: {
       label: "Table",
       icon: "icon-list",
@@ -99,7 +99,7 @@ const e = [
     type: "repository",
     alias: o.Repository.Detail,
     name: "Connection Detail Repository",
-    api: () => import("./connection-detail.repository-nNZeF5Cf.js")
+    api: () => import("./connection-detail.repository-Bq4gwARE.js")
   },
   {
     type: "store",
@@ -111,7 +111,7 @@ const e = [
     type: "repository",
     alias: o.Repository.Collection,
     name: "Connection Collection Repository",
-    api: () => import("./connection-collection.repository-B24tvdF9.js")
+    api: () => import("./connection-collection.repository-BIulHNG8.js")
   }
 ], m = [
   {
@@ -119,7 +119,7 @@ const e = [
     kind: "routable",
     alias: o.Workspace.Entity,
     name: "Connection Workspace",
-    api: () => import("./connection-workspace.context-BsZ8I639.js"),
+    api: () => import("./connection-workspace.context-BBIohkGB.js"),
     meta: {
       entityType: o.EntityType.Entity
     }
@@ -128,7 +128,7 @@ const e = [
     type: "workspaceView",
     alias: "UmbracoAi.Workspace.Connection.View.Details",
     name: "Connection Details Workspace View",
-    js: () => import("./connection-details-workspace-view.element-CMx6ybv1.js"),
+    js: () => import("./connection-details-workspace-view.element-cQglr8oO.js"),
     weight: 100,
     meta: {
       label: "Details",
@@ -206,4 +206,4 @@ export {
   o as U,
   k as m
 };
-//# sourceMappingURL=bundle.manifests-B4-X66yr.js.map
+//# sourceMappingURL=bundle.manifests-BsBZQJMT.js.map

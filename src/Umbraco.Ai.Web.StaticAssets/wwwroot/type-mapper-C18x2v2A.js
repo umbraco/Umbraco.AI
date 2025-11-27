@@ -1,5 +1,5 @@
 import { c as i } from "./client.gen-CF69_sVb.js";
-import { U as n } from "./bundle.manifests-B4-X66yr.js";
+import { U as n } from "./bundle.manifests-BsBZQJMT.js";
 class r {
   static getConnections(e) {
     return (e?.client ?? i).get({
@@ -13,7 +13,7 @@ class r {
       ...e
     });
   }
-  static postConnections(e) {
+  static postConnection(e) {
     return (e?.client ?? i).post({
       security: [
         {
@@ -29,7 +29,7 @@ class r {
       }
     });
   }
-  static deleteConnectionsById(e) {
+  static deleteConnectionById(e) {
     return (e.client ?? i).delete({
       security: [
         {
@@ -41,7 +41,7 @@ class r {
       ...e
     });
   }
-  static getConnectionsById(e) {
+  static getConnectionById(e) {
     return (e.client ?? i).get({
       security: [
         {
@@ -53,7 +53,7 @@ class r {
       ...e
     });
   }
-  static putConnectionsById(e) {
+  static putConnectionById(e) {
     return (e.client ?? i).put({
       security: [
         {
@@ -125,4 +125,4 @@ export {
   r as C,
   s as U
 };
-//# sourceMappingURL=type-mapper-DCb8TkKY.js.map
+//# sourceMappingURL=type-mapper-C18x2v2A.js.map

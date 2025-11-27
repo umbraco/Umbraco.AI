@@ -1,10 +1,9 @@
 using System.Text.RegularExpressions;
 using Asp.Versioning;
+using Humanizer;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Web.Api;
-using Umbraco.Ai.Web.Extensions;
 using Umbraco.Cms.Api.Common.OpenApi;
 
 namespace Umbraco.Ai.Web.Api.Management.Configuration;
@@ -29,11 +28,9 @@ internal sealed partial class UmbracoAiManagementApiOperationIdHandler : Operati
     {
         var operationId = base.Handle(apiDescription);
 
-        // Check if this is a single-item endpoint
-        if (IsSingleItemEndpoint(apiDescription))
-        {
-            operationId = SingularizeFirstPluralWord(operationId);
-        }
+        // Normalize the first word after the HTTP verb to singular or plural based on endpoint type
+        var isSingleItem = IsSingleItemEndpoint(apiDescription);
+        operationId = NormalizeFirstWord(operationId, isSingleItem);
 
         return operationId;
     }
@@ -63,32 +60,37 @@ internal sealed partial class UmbracoAiManagementApiOperationIdHandler : Operati
     }
 
     /// <summary>
-    /// Singularizes the first plural word in an operation ID.
-    /// E.g., "GetConnectionsById" -> "GetConnectionById"
+    /// Normalizes the first word after the HTTP verb to singular or plural.
+    /// E.g., for single-item: "GetConnectionsById" -> "GetConnectionById"
+    /// E.g., for collection: "GetConnection" -> "GetConnections"
     /// </summary>
-    private static string SingularizeFirstPluralWord(string operationId)
+    private static string NormalizeFirstWord(string operationId, bool toSingular)
     {
-        // Match HTTP verb prefix followed by a capitalized plural word
-        // Pattern: (Get|Post|Put|Delete|Patch)(Word ending in s)(Rest of string)
-        var match = PluralWordPattern().Match(operationId);
+        // Match HTTP verb prefix followed by a capitalized word
+        // Pattern: (Get|Post|Put|Delete|Patch)(CapitalizedWord)(Rest of string)
+        var match = FirstWordPattern().Match(operationId);
         if (!match.Success)
         {
             return operationId;
         }
 
-        var prefix = match.Groups[1].Value;      // e.g., "Get"
-        var pluralWord = match.Groups[2].Value;  // e.g., "Connections"
-        var suffix = match.Groups[3].Value;      // e.g., "ById"
+        var prefix = match.Groups[1].Value;  // e.g., "Get"
+        var word = match.Groups[2].Value;    // e.g., "Connections" or "Connection"
+        var suffix = match.Groups[3].Value;  // e.g., "ById"
 
-        var singularWord = pluralWord.MakeSingularName();
+        // Use Humanizer to convert, with inputIsKnownToBePlural/Singular: false
+        // so it detects the current form and only converts if needed
+        var normalizedWord = toSingular
+            ? word.Singularize(inputIsKnownToBePlural: false)
+            : word.Pluralize(inputIsKnownToBeSingular: false);
 
-        return $"{prefix}{singularWord}{suffix}";
+        return $"{prefix}{normalizedWord}{suffix}";
     }
 
-    // Matches: HttpVerb + PluralWord + Rest
+    // Matches: HttpVerb + CapitalizedWord + Rest
     // e.g., "GetConnectionsById" captures ("Get", "Connections", "ById")
-    [GeneratedRegex(@"^(Get|Post|Put|Delete|Patch)([A-Z][a-z]+s)(.*)$")]
-    private static partial Regex PluralWordPattern();
+    [GeneratedRegex(@"^(Get|Post|Put|Delete|Patch)([A-Z][a-z]+[a-z]*)(.*)$")]
+    private static partial Regex FirstWordPattern();
 
     // Matches route parameters like {id}, {id:guid}, {alias}
     [GeneratedRegex(@"\{[^}]+\}")]

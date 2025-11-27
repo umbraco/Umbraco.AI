@@ -14,6 +14,12 @@ public class ConnectionItemResponseModel
     public Guid Id { get; set; }
 
     /// <summary>
+    /// The unique alias for the connection (used for programmatic lookup).
+    /// </summary>
+    [Required]
+    public string Alias { get; set; } = string.Empty;
+
+    /// <summary>
     /// The display name of the connection.
     /// </summary>
     [Required]

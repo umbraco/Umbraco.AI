@@ -15,6 +15,7 @@ export interface UaiConnectionDetailModel extends UmbEntityModel {
 export interface UaiConnectionItemModel extends UmbEntityModel {
     unique: string;
     entityType: string;
+    alias: string;
     name: string;
     providerId: string;
     isActive: boolean;

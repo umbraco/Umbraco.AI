@@ -33,6 +33,7 @@ public class UpdateConnectionControllerTests
 
         var requestModel = new UpdateConnectionRequestModel
         {
+            Alias = "updated-connection",
             Name = "Updated Name",
             Settings = new { ApiKey = "new-key" },
             IsActive = true
@@ -60,6 +61,7 @@ public class UpdateConnectionControllerTests
         var connectionId = Guid.NewGuid();
         var requestModel = new UpdateConnectionRequestModel
         {
+            Alias = "updated-connection",
             Name = "Updated Name",
             IsActive = true
         };
@@ -89,6 +91,7 @@ public class UpdateConnectionControllerTests
 
         var requestModel = new UpdateConnectionRequestModel
         {
+            Alias = "updated-connection",
             Name = "Updated Name",
             Settings = new { InvalidKey = "value" },
             IsActive = true
@@ -123,6 +126,7 @@ public class UpdateConnectionControllerTests
 
         var requestModel = new UpdateConnectionRequestModel
         {
+            Alias = "updated-connection",
             Name = "Updated Name",
             IsActive = true
         };
@@ -158,6 +162,7 @@ public class UpdateConnectionControllerTests
 
         var requestModel = new UpdateConnectionRequestModel
         {
+            Alias = "updated-connection",
             Name = "Updated Name",
             IsActive = true
         };

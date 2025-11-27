@@ -254,6 +254,7 @@ public class EndToEndServiceFlowTests : IDisposable
         var connection = new AiConnection
         {
             Id = Guid.Empty, // Service should generate ID
+            Alias = "new-connection",
             Name = "New Connection",
             ProviderId = "fake-provider",
             Settings = new FakeProviderSettings { ApiKey = "new-key" },

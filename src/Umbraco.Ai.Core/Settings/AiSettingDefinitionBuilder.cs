@@ -17,7 +17,7 @@ internal sealed class AiSettingDefinitionBuilder : IAiSettingDefinitionBuilder
     private AiSettingDefinition BuildForProperty(PropertyInfo property, string providerId)
     {
         var attr = property.GetCustomAttribute<AiSettingAttribute>();
-        var key = property.Name.ToLowerInvariant();
+        var key = property.Name.ToCamelCase();
         var providerKey = providerId.ToCamelCase();
 
         return new AiSettingDefinition

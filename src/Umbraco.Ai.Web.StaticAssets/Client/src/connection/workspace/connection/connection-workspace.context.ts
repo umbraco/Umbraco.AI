@@ -14,6 +14,7 @@ import { UAI_CONNECTION_WORKSPACE_ALIAS, UAI_CONNECTION_ENTITY_TYPE } from "../.
 import type { UaiConnectionDetailModel } from "../../types.js";
 import type { UaiCommand } from "../../../core/command/command.base.js";
 import { UaiCommandStore } from "../../../core/command/command.store.js";
+import { UAI_EMPTY_GUID } from "../../../core/index.js";
 import { UaiConnectionWorkspaceEditorElement } from "./connection-workspace-editor.element.js";
 
 /**
@@ -52,7 +53,6 @@ export class UaiConnectionWorkspaceContext
                 setup: async (_component, info) => {
                     const providerAlias = info.match.params.providerAlias;
                     await this.scaffold(providerAlias);
-
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
@@ -85,6 +85,7 @@ export class UaiConnectionWorkspaceContext
         this.resetState();
         const { data } = await this.#repository.createScaffold({ providerId });
         if (data) {
+            this.#unique.setValue(UAI_EMPTY_GUID);
             this.#model.setValue(data);
             this.setIsNew(true);
         }

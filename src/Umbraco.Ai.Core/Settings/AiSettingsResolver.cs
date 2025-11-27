@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Registry;
@@ -12,6 +13,17 @@ namespace Umbraco.Ai.Core.Settings;
 /// </summary>
 internal sealed class AiSettingsResolver : IAiSettingsResolver
 {
+    private static JsonSerializerOptions _defaultJsonSerializerOptions = new()
+    {
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        Converters =
+        {
+            new JsonStringEnumConverter()
+        }
+    };
+    
     private const string ConfigPrefix = "$";
     
     private readonly IAiRegistry _registry;
@@ -44,7 +56,7 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
         // Handle JsonElement deserialization
         if (settings is JsonElement jsonElement)
         {
-            var deserialized = DeserializeFromJsonElement<TSettings>(jsonElement);
+            var deserialized = jsonElement.Deserialize<TSettings>(_defaultJsonSerializerOptions);
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
@@ -56,8 +68,8 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
         // Try to serialize/deserialize through JSON as fallback
         try
         {
-            var json = JsonSerializer.Serialize(settings);
-            var deserialized = JsonSerializer.Deserialize<TSettings>(json);
+            var json = JsonSerializer.Serialize(settings,_defaultJsonSerializerOptions);
+            var deserialized = JsonSerializer.Deserialize<TSettings>(json, _defaultJsonSerializerOptions);
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
@@ -95,21 +107,6 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
 
         // Provider doesn't have settings, return null
         return null;
-    }
-
-    private TSettings? DeserializeFromJsonElement<TSettings>(JsonElement jsonElement)
-        where TSettings : class, new()
-    {
-        try
-        {
-            return JsonSerializer.Deserialize<TSettings>(jsonElement.GetRawText());
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Failed to deserialize JsonElement to {typeof(TSettings).Name}",
-                ex);
-        }
     }
 
     private void ResolveConfigurationVariablesInObject(object obj)

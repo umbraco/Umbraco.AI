@@ -5,6 +5,7 @@ import { ConnectionsService } from "../../../api/sdk.gen.js";
 import { UaiConnectionTypeMapper } from "../../type-mapper.js";
 import type { UaiConnectionDetailModel } from "../../types.js";
 import { UAI_CONNECTION_ENTITY_TYPE } from "../../constants.js";
+import { UAI_EMPTY_GUID } from "../../../core/index.js";
 
 /**
  * Server data source for Connection detail operations.
@@ -21,7 +22,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
      */
     async createScaffold(preset?: Partial<UaiConnectionDetailModel>) {
         const scaffold: UaiConnectionDetailModel = {
-            unique: "",
+            unique: UAI_EMPTY_GUID,
             entityType: UAI_CONNECTION_ENTITY_TYPE,
             alias: "",
             name: "",

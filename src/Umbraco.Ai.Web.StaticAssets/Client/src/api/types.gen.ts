@@ -35,6 +35,7 @@ export type ConnectionItemResponseModel = {
 
 export type ConnectionResponseModel = {
     id: string;
+    alias: string;
     name: string;
     providerId: string;
     settings?: unknown;

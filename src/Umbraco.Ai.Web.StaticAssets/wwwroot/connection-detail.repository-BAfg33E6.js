@@ -1,7 +1,7 @@
 import { UmbDetailRepositoryBase as d } from "@umbraco-cms/backoffice/repository";
 import { tryExecuteAndNotify as o } from "@umbraco-cms/backoffice/resources";
-import { C as a, U as n } from "./type-mapper-G4MX2UFa.js";
-import { a as p } from "./bundle.manifests-BwiwDf1o.js";
+import { C as n, U as a } from "./type-mapper-YgfomMeJ.js";
+import { d as p } from "./bundle.manifests-CiGQzgXI.js";
 import { UAI_CONNECTION_DETAIL_STORE_CONTEXT as y } from "./connection-detail.store-Du8jOyAs.js";
 class l {
   #t;
@@ -29,17 +29,17 @@ class l {
   async read(t) {
     const { data: e, error: r } = await o(
       this.#t,
-      a.getConnectionById({ path: { id: t } })
+      n.getConnectionById({ path: { id: t } })
     );
-    return r || !e ? { error: r } : { data: n.toDetailModel(e) };
+    return r || !e ? { error: r } : { data: a.toDetailModel(e) };
   }
   /**
    * Creates a new connection.
    */
   async create(t, e) {
-    const r = n.toCreateRequest(t), { response: c, error: i } = await o(
+    const r = a.toCreateRequest(t), { response: c, error: i } = await o(
       this.#t,
-      a.postConnection({ body: r })
+      n.postConnection({ body: r })
     );
     if (i)
       return { error: i };
@@ -55,9 +55,9 @@ class l {
    * Updates an existing connection.
    */
   async update(t) {
-    const e = n.toUpdateRequest(t), { error: r } = await o(
+    const e = a.toUpdateRequest(t), { error: r } = await o(
       this.#t,
-      a.putConnectionById({
+      n.putConnectionById({
         path: { id: t.unique },
         body: e
       })
@@ -70,7 +70,7 @@ class l {
   async delete(t) {
     const { error: e } = await o(
       this.#t,
-      a.deleteConnectionById({ path: { id: t } })
+      n.deleteConnectionById({ path: { id: t } })
     );
     return e ? { error: e } : {};
   }
@@ -87,4 +87,4 @@ export {
   N as UaiConnectionDetailRepository,
   N as api
 };
-//# sourceMappingURL=connection-detail.repository-DU_QWilS.js.map
+//# sourceMappingURL=connection-detail.repository-BAfg33E6.js.map

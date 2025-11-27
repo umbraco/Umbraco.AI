@@ -1,5 +1,6 @@
 import type { ManifestCollectionAction } from "@umbraco-cms/backoffice/collection";
-import { UAI_CONNECTION_ENTITY_TYPE, UAI_CONNECTION_COLLECTION_ALIAS } from "../../constants.js";
+import { UAI_CONNECTION_COLLECTION_ALIAS } from "../../constants.js";
+import { UAI_CREATE_CONNECTION_WORKSPACE_PATH } from "../../workspace/connection/paths.js";
 
 export const connectionCollectionActionManifests: ManifestCollectionAction[] = [
     {
@@ -9,7 +10,7 @@ export const connectionCollectionActionManifests: ManifestCollectionAction[] = [
         name: "Create Connection",
         meta: {
             label: "Create",
-            href: `section/settings/workspace/${UAI_CONNECTION_ENTITY_TYPE}/create`,
+            href: UAI_CREATE_CONNECTION_WORKSPACE_PATH,
         },
         conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_CONNECTION_COLLECTION_ALIAS }],
     },

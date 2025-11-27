@@ -1,6 +1,7 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import type { UmbPropertyValueData, UmbPropertyDatasetElement } from "@umbraco-cms/backoffice/property";
 import type { UaiConnectionDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
@@ -22,6 +23,9 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _provider?: UaiProviderDetailModel;
 
+    @state()
+    private _providerSettings: UmbPropertyValueData[] = [];
+
     constructor() {
         super();
         this.consumeContext(UAI_CONNECTION_WORKSPACE_CONTEXT, (context) => {
@@ -32,6 +36,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                     if (model?.providerId) {
                         this.#loadProviderDetails(model.providerId);
                     }
+                    this.#populateProviderSettings();
                 });
             }
         });
@@ -40,6 +45,15 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     async #loadProviderDetails(providerId: string) {
         const { data } = await this.#providerDetailRepository.requestById(providerId);
         this._provider = data;
+        this.#populateProviderSettings();
+    }
+
+    #populateProviderSettings() {
+        if (!this._model || !this._provider) return;
+        this._providerSettings = this._provider.settingDefinitions.map((setting) => ({
+            alias: setting.key,
+            value: this._model!.settings?.[setting.key] ?? setting.defaultValue,
+        }));
     }
 
     #onActiveChange(event: Event) {
@@ -48,6 +62,19 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: target.checked }, "isActive")
         );
+    }
+
+    #onSettingsChange(e: Event) {
+        const value = (e.target as UmbPropertyDatasetElement).value;
+        const settings = value.reduce((acc, curr) => ({ ...acc, [curr.alias]: curr.value }), {} as Record<string, unknown>);
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ settings }, "settings")
+        );
+    }
+
+    #toPropertyConfig(config: unknown): Array<{ alias: string; value: unknown }> {
+        if (!config || typeof config !== "object") return [];
+        return Object.entries(config).map(([alias, value]) => ({ alias, value }));
     }
 
     render() {
@@ -92,9 +119,20 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         }
 
         return html`
-            <p class="placeholder-text">
-                Provider settings: ${this._provider.settingDefinitions.map((s) => s.label).join(", ")}
-            </p>
+            <umb-property-dataset .value=${this._providerSettings} @change=${this.#onSettingsChange}>
+                ${this._provider.settingDefinitions.map(
+                    (setting) => html`
+                        <umb-property
+                            label=${setting.label}
+                            description=${setting.description ?? ""}
+                            alias=${setting.key}
+                            property-editor-ui-alias=${setting.editorUiAlias ?? "Umb.PropertyEditorUi.TextBox"}
+                            .config=${setting.editorConfig ? this.#toPropertyConfig(setting.editorConfig) : []}
+                            ?mandatory=${setting.isRequired}>
+                        </umb-property>
+                    `
+                )}
+            </umb-property-dataset>
         `;
     }
 

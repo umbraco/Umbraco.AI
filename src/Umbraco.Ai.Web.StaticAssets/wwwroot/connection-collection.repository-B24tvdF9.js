@@ -1,6 +1,6 @@
 import { UmbRepositoryBase as i } from "@umbraco-cms/backoffice/repository";
 import { tryExecuteAndNotify as r } from "@umbraco-cms/backoffice/resources";
-import { C as s, U as a } from "./type-mapper-C2YdcGsS.js";
+import { C as s, U as a } from "./type-mapper-DCb8TkKY.js";
 class c {
   #t;
   constructor(t) {
@@ -40,4 +40,4 @@ export {
   C as UaiConnectionCollectionRepository,
   C as api
 };
-//# sourceMappingURL=connection-collection.repository-DAwNjVVC.js.map
+//# sourceMappingURL=connection-collection.repository-B24tvdF9.js.map

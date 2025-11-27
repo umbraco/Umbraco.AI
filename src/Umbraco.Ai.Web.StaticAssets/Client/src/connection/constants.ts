@@ -4,8 +4,8 @@ export const UaiConnectionConstants = {
         Entity: "uai:connection",
     },
     Icon: {
-        Root: "icon-plug",
-        Entity: "icon-plug",
+        Root: "icon-wall-plug",
+        Entity: "icon-wall-plug",
     },
     Workspace: {
         Root: "UmbracoAi.Workspace.ConnectionRoot",

@@ -1,22 +1,20 @@
 import type { UmbRoutableWorkspaceContext } from "@umbraco-cms/backoffice/workspace";
-import { UmbWorkspaceRouteManager, UmbSubmittableWorkspaceContextBase } from "@umbraco-cms/backoffice/workspace";
-import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
+import {
+    UmbWorkspaceRouteManager,
+    UmbSubmittableWorkspaceContextBase,
+    UmbWorkspaceIsNewRedirectController,
+    UmbWorkspaceIsNewRedirectControllerAlias,
+} from "@umbraco-cms/backoffice/workspace";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
-import { UaiConnectionDetailRepository } from "../repository/detail/connection-detail.repository.js";
-import { UaiConnectionConstants } from "../constants.js";
-import type { UaiConnectionDetailModel } from "../types.js";
-import type { UaiCommand } from "../../core/command/command.base.js";
-import { UaiCommandStore } from "../../core/command/command.store.js";
-
-export const UAI_CONNECTION_WORKSPACE_CONTEXT = new UmbContextToken<UaiConnectionWorkspaceContext>(
-    "UmbWorkspaceContext",
-    undefined,
-    (context): context is UaiConnectionWorkspaceContext =>
-        context.getEntityType() === UaiConnectionConstants.EntityType.Entity
-);
+import { UaiConnectionDetailRepository } from "../../repository/detail/connection-detail.repository.js";
+import { UaiConnectionConstants } from "../../constants.js";
+import type { UaiConnectionDetailModel } from "../../types.js";
+import type { UaiCommand } from "../../../core/command/command.base.js";
+import { UaiCommandStore } from "../../../core/command/command.store.js";
+import { UaiConnectionWorkspaceEditorElement } from "./connection-workspace-editor.element.js";
 
 /**
  * Workspace context for editing Connection entities.
@@ -46,6 +44,30 @@ export class UaiConnectionWorkspaceContext
 
         this.#entityContext.setEntityType(UaiConnectionConstants.EntityType.Entity);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
+
+        this.routes.setRoutes([
+            {
+                path: "create",
+                component: UaiConnectionWorkspaceEditorElement,
+                setup: async () => {
+                    await this.scaffold();
+
+                    new UmbWorkspaceIsNewRedirectController(
+                        this,
+                        this,
+                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!
+                    );
+                },
+            },
+            {
+                path: "edit/:unique",
+                component: UaiConnectionWorkspaceEditorElement,
+                setup: (_component, info) => {
+                    this.removeUmbControllerByAlias(UmbWorkspaceIsNewRedirectControllerAlias);
+                    this.load(info.match.params.unique);
+                },
+            },
+        ]);
     }
 
     protected resetState(): void {

@@ -2,16 +2,15 @@ import { css, html, customElement, state, when } from "@umbraco-cms/backoffice/e
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { UaiConnectionWorkspaceContext } from "./connection-workspace.context.js";
-import { UaiConnectionConstants } from "../constants.js";
-import type { UaiConnectionDetailModel } from "../types.js";
-import { UaiPartialUpdateCommand } from "../../core/command/implement/partial-update.command.js";
-
-import "../views/connection-details.element.js";
+import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "./connection-workspace.context-token.js";
+import { UaiConnectionConstants } from "../../constants.js";
+import type { UaiConnectionDetailModel } from "../../types.js";
+import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
+import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../connection-root/paths.js";
 
 @customElement("uai-connection-workspace-editor")
 export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
-    #workspaceContext = new UaiConnectionWorkspaceContext(this);
+    #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
 
     @state()
     private _model?: UaiConnectionDetailModel;
@@ -25,17 +24,20 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
     constructor() {
         super();
 
-        this.observe(this.#workspaceContext.model, (model) => {
-            this._model = model;
-        });
-
-        this.observe(this.#workspaceContext.isNew, (isNew) => {
-            this._isNew = isNew;
-            if (isNew) {
-                requestAnimationFrame(() => {
-                    (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
-                });
-            }
+        this.consumeContext(UAI_CONNECTION_WORKSPACE_CONTEXT, (context) => {
+            if (!context) return;
+            this.#workspaceContext = context;
+            this.observe(context.model, (model) => {
+                this._model = model;
+            });
+            this.observe(context.isNew, (isNew) => {
+                this._isNew = isNew;
+                if (isNew) {
+                    requestAnimationFrame(() => {
+                        (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
+                    });
+                }
+            });
         });
     }
 
@@ -47,11 +49,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         // If alias is locked and creating new, generate alias from name
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
-            this.#workspaceContext.handleCommand(
+            this.#workspaceContext?.handleCommand(
                 new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias")
             );
         } else {
-            this.#workspaceContext.handleCommand(
+            this.#workspaceContext?.handleCommand(
                 new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name")
             );
         }
@@ -60,7 +62,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
     #onAliasChange(event: UUIInputEvent) {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
-        this.#workspaceContext.handleCommand(
+        this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias")
         );
     }
@@ -83,7 +85,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
             <umb-workspace-editor alias="${UaiConnectionConstants.Workspace.Entity}">
                 <div id="header" slot="header">
                     <uui-button
-                        href="section/settings/workspace/${UaiConnectionConstants.Workspace.Root}"
+                        href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}
                         label="Back to connections"
                         compact
                     >
@@ -117,10 +119,8 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                     () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
                 )}
 
-                <uai-connection-details></uai-connection-details>
-
                 <div slot="footer-info" id="footer">
-                    <a href="section/settings/workspace/${UaiConnectionConstants.Workspace.Root}">Connections</a>
+                    <a href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}>Connections</a>
                     / ${this._model.name || "Untitled"}
                 </div>
             </umb-workspace-editor>

@@ -5,6 +5,7 @@ import { connectionCollectionActionManifests } from "./action/manifests.js";
 export const connectionCollectionManifests: Array<ManifestCollection | ManifestCollectionView | ManifestCollectionAction> = [
     {
         type: "collection",
+        kind: "default",
         alias: UaiConnectionConstants.Collection,
         name: "Connection Collection",
         meta: {

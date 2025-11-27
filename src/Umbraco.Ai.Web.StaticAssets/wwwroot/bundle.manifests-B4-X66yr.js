@@ -1,4 +1,4 @@
-import { UmbSubmitWorkspaceAction as n } from "@umbraco-cms/backoffice/workspace";
+import { UMB_WORKSPACE_CONDITION_ALIAS as t, UmbSubmitWorkspaceAction as n } from "@umbraco-cms/backoffice/workspace";
 const e = [
   {
     name: "Umbraco AI Entrypoint",
@@ -31,8 +31,8 @@ const e = [
     Entity: "uai:connection"
   },
   Icon: {
-    Root: "icon-plug",
-    Entity: "icon-plug"
+    Root: "icon-wall-plug",
+    Entity: "icon-wall-plug"
   },
   Workspace: {
     Root: "UmbracoAi.Workspace.ConnectionRoot",
@@ -54,13 +54,14 @@ const e = [
     name: "Create Connection",
     meta: {
       label: "Create",
-      href: `section/settings/workspace/${o.Workspace.Entity}/create`
+      href: `section/settings/workspace/${o.EntityType.Entity}/create`
     },
     conditions: [{ alias: "Umb.Condition.CollectionAlias", match: o.Collection }]
   }
 ], l = [
   {
     type: "collection",
+    kind: "default",
     alias: o.Collection,
     name: "Connection Collection",
     meta: {
@@ -71,7 +72,7 @@ const e = [
     type: "collectionView",
     alias: "UmbracoAi.CollectionView.Connection.Table",
     name: "Connection Table View",
-    element: () => import("./connection-table-collection-view.element-C3cBIiVh.js"),
+    element: () => import("./connection-table-collection-view.element-CcDnCaWv.js"),
     meta: {
       label: "Table",
       icon: "icon-list",
@@ -98,7 +99,7 @@ const e = [
     type: "repository",
     alias: o.Repository.Detail,
     name: "Connection Detail Repository",
-    api: () => import("./connection-detail.repository-C1LvVqz5.js")
+    api: () => import("./connection-detail.repository-nNZeF5Cf.js")
   },
   {
     type: "store",
@@ -110,27 +111,15 @@ const e = [
     type: "repository",
     alias: o.Repository.Collection,
     name: "Connection Collection Repository",
-    api: () => import("./connection-collection.repository-DAwNjVVC.js")
+    api: () => import("./connection-collection.repository-B24tvdF9.js")
   }
 ], m = [
   {
     type: "workspace",
     kind: "routable",
-    alias: o.Workspace.Root,
-    name: "Connection Root Workspace",
-    api: () => import("./connection-root-workspace.context-Bh-x9y1e.js"),
-    element: () => import("./connection-root-workspace.element-BRgeuHi2.js"),
-    meta: {
-      entityType: o.EntityType.Root
-    }
-  },
-  {
-    type: "workspace",
-    kind: "routable",
     alias: o.Workspace.Entity,
     name: "Connection Workspace",
-    api: () => import("./connection-workspace.context-BuzkhfPG.js"),
-    element: () => import("./connection-workspace-editor.element-DSEBcRGT.js"),
+    api: () => import("./connection-workspace.context-BsZ8I639.js"),
     meta: {
       entityType: o.EntityType.Entity
     }
@@ -139,7 +128,7 @@ const e = [
     type: "workspaceView",
     alias: "UmbracoAi.Workspace.Connection.View.Details",
     name: "Connection Details Workspace View",
-    element: () => import("./connection-details.element-Dvtpfcim.js").then((t) => t.c),
+    js: () => import("./connection-details-workspace-view.element-CMx6ybv1.js"),
     weight: 100,
     meta: {
       label: "Details",
@@ -148,7 +137,7 @@ const e = [
     },
     conditions: [
       {
-        alias: "Umb.Condition.WorkspaceAlias",
+        alias: t,
         match: o.Workspace.Entity
       }
     ]
@@ -166,23 +155,55 @@ const e = [
     },
     conditions: [
       {
-        alias: "Umb.Condition.WorkspaceAlias",
+        alias: t,
         match: o.Workspace.Entity
       }
     ]
   }
+], C = [
+  {
+    type: "workspace",
+    kind: "default",
+    alias: o.Workspace.Root,
+    name: "Connection Root Workspace",
+    meta: {
+      entityType: o.EntityType.Root,
+      headline: "Connections"
+    }
+  },
+  {
+    type: "workspaceView",
+    kind: "collection",
+    alias: "UmbracoAi.WorkspaceView.ConnectionRoot.Collection",
+    name: "Connection Root Collection Workspace View",
+    meta: {
+      label: "Collection",
+      pathname: "collection",
+      icon: o.Icon.Root,
+      collectionAlias: o.Collection
+    },
+    conditions: [
+      {
+        alias: t,
+        match: o.Workspace.Root
+      }
+    ]
+  }
 ], y = [
+  ...m,
+  ...C
+], b = [
   ...l,
   ...r,
   ...p,
-  ...m
-], b = [
+  ...y
+], k = [
   ...e,
   ...c,
-  ...y
+  ...b
 ];
 export {
   o as U,
-  b as m
+  k as m
 };
-//# sourceMappingURL=bundle.manifests-D_6geKLR.js.map
+//# sourceMappingURL=bundle.manifests-B4-X66yr.js.map

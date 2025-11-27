@@ -4,38 +4,52 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiConnectionDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
+import { UaiProviderItemRepository } from "../../../../provider/repository/item/provider-item.repository.js";
+import type { UaiProviderItemModel } from "../../../../provider/types.js";
 
 /**
  * Workspace view for Connection details.
- * Displays provider selection, settings, and active toggle.
+ * Displays provider (read-only), settings, and active toggle.
  */
 @customElement("uai-connection-details-workspace-view")
 export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
+    #providerRepository = new UaiProviderItemRepository(this);
 
     @state()
     private _model?: UaiConnectionDetailModel;
 
     @state()
-    private _isNew?: boolean;
+    private _providerName?: string;
+
+    @state()
+    private _providerCapabilities?: string[];
 
     constructor() {
         super();
         this.consumeContext(UAI_CONNECTION_WORKSPACE_CONTEXT, (context) => {
             if (context) {
                 this.#workspaceContext = context;
-                this.observe(context.model, (model) => (this._model = model));
-                this.observe(context.isNew, (isNew) => (this._isNew = isNew));
+                this.observe(context.model, (model) => {
+                    this._model = model;
+                    if (model?.providerId) {
+                        this.#loadProviderDetails(model.providerId);
+                    }
+                });
             }
         });
     }
 
-    #onProviderChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ providerId: target.value }, "providerId")
-        );
+    async #loadProviderDetails(providerId: string) {
+        const { data } = await this.#providerRepository.requestItems();
+        const provider = data?.find((p: UaiProviderItemModel) => p.id === providerId);
+        if (provider) {
+            this._providerName = provider.name;
+            this._providerCapabilities = provider.capabilities;
+        } else {
+            this._providerName = undefined;
+            this._providerCapabilities = undefined;
+        }
     }
 
     #onActiveChange(event: Event) {
@@ -52,13 +66,15 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         return html`
             <uui-box headline="Connection Details">
                 <umb-property-layout label="Provider" description="AI provider for this connection">
-                    <uui-input
-                        slot="editor"
-                        .value=${this._model.providerId}
-                        @change=${this.#onProviderChange}
-                        placeholder="e.g., openai"
-                        ?disabled=${!this._isNew}
-                    ></uui-input>
+                    <div slot="editor" class="provider-display">
+                        <umb-icon name="icon-cloud"></umb-icon>
+                        <div class="provider-info">
+                            <strong>${this._providerName ?? this._model.providerId}</strong>
+                            ${this._providerCapabilities?.length
+                                ? html`<small>${this._providerCapabilities.join(", ")}</small>`
+                                : null}
+                        </div>
+                    </div>
                 </umb-property-layout>
 
                 <umb-property-layout label="Active" description="Enable or disable this connection">
@@ -95,6 +111,30 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 padding: var(--uui-size-space-5) 0;
                 color: var(--uui-color-text-alt);
                 font-style: italic;
+            }
+
+            .provider-display {
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-space-3);
+            }
+
+            .provider-display umb-icon {
+                font-size: 1.5em;
+                color: var(--uui-color-interactive);
+            }
+
+            .provider-info {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .provider-info strong {
+                color: var(--uui-color-text);
+            }
+
+            .provider-info small {
+                color: var(--uui-color-text-alt);
             }
         `,
     ];

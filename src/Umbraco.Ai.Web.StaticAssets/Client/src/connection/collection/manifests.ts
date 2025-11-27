@@ -1,9 +1,8 @@
-import type { ManifestCollection, ManifestCollectionView, ManifestCollectionAction } from "@umbraco-cms/backoffice/collection";
 import { UAI_CONNECTION_COLLECTION_ALIAS } from "./constants.js";
 import { UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS } from "../repository/constants.js";
 import { connectionCollectionActionManifests } from "./action/manifests.js";
 
-export const connectionCollectionManifests: Array<ManifestCollection | ManifestCollectionView | ManifestCollectionAction> = [
+export const connectionCollectionManifests: Array<UmbExtensionManifest> = [
     {
         type: "collection",
         kind: "default",

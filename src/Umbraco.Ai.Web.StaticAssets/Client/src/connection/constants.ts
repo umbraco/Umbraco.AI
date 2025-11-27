@@ -1,22 +1,8 @@
-export const UaiConnectionConstants = {
-    EntityType: {
-        Root: "uai:connection-root",
-        Entity: "uai:connection",
-    },
-    Icon: {
-        Root: "icon-wall-plug",
-        Entity: "icon-wall-plug",
-    },
-    Workspace: {
-        Root: "UmbracoAi.Workspace.ConnectionRoot",
-        Entity: "UmbracoAi.Workspace.Connection",
-    },
-    Store: {
-        Detail: "UmbracoAi.Store.Connection.Detail",
-    },
-    Repository: {
-        Detail: "UmbracoAi.Repository.Connection.Detail",
-        Collection: "UmbracoAi.Repository.Connection.Collection",
-    },
-    Collection: "UmbracoAi.Collection.Connection",
-};
+export { UAI_CONNECTION_ENTITY_TYPE, UAI_CONNECTION_ROOT_ENTITY_TYPE } from './entity.js';
+export type { UaiConnectionEntityType, UaiConnectionRootEntityType } from './entity.js';
+
+export * from './workspace/constants.js';
+export * from './repository/constants.js';
+export * from './collection/constants.js';
+
+export const UAI_CONNECTION_ICON = 'icon-wall-plug';

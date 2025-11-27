@@ -4,7 +4,7 @@ import type { UmbTableColumn, UmbTableItem } from "@umbraco-cms/backoffice/compo
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiConnectionItemModel } from "../../../types.js";
-import { UaiConnectionConstants } from "../../../constants.js";
+import { UAI_CONNECTION_ICON, UAI_CONNECTION_ENTITY_TYPE } from "../../../constants.js";
 
 /**
  * Table view for the Connection collection.
@@ -32,12 +32,12 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
     #createTableItems(items: UaiConnectionItemModel[]) {
         this._items = items.map((item) => ({
             id: item.unique,
-            icon: UaiConnectionConstants.Icon.Entity,
+            icon: UAI_CONNECTION_ICON,
             data: [
                 {
                     columnAlias: "name",
                     value: html`<a
-                        href="section/settings/workspace/${UaiConnectionConstants.Workspace.Entity}/${item.unique}"
+                        href="section/settings/workspace/${UAI_CONNECTION_ENTITY_TYPE}/${item.unique}"
                         >${item.name}</a
                     >`,
                 },

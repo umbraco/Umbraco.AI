@@ -1,8 +1,8 @@
 import { c as i } from "./client.gen-CF69_sVb.js";
-import { U as n } from "./bundle.manifests-BsBZQJMT.js";
-class r {
-  static getConnections(e) {
-    return (e?.client ?? i).get({
+import { a as n } from "./bundle.manifests-BwiwDf1o.js";
+class c {
+  static getConnections(t) {
+    return (t?.client ?? i).get({
       security: [
         {
           scheme: "bearer",
@@ -10,11 +10,11 @@ class r {
         }
       ],
       url: "/umbraco/ai/management/api/v1/connections",
-      ...e
+      ...t
     });
   }
-  static postConnection(e) {
-    return (e?.client ?? i).post({
+  static postConnection(t) {
+    return (t?.client ?? i).post({
       security: [
         {
           scheme: "bearer",
@@ -22,15 +22,15 @@ class r {
         }
       ],
       url: "/umbraco/ai/management/api/v1/connections",
-      ...e,
+      ...t,
       headers: {
         "Content-Type": "application/json",
-        ...e?.headers
+        ...t?.headers
       }
     });
   }
-  static deleteConnectionById(e) {
-    return (e.client ?? i).delete({
+  static deleteConnectionById(t) {
+    return (t.client ?? i).delete({
       security: [
         {
           scheme: "bearer",
@@ -38,11 +38,11 @@ class r {
         }
       ],
       url: "/umbraco/ai/management/api/v1/connections/{id}",
-      ...e
+      ...t
     });
   }
-  static getConnectionById(e) {
-    return (e.client ?? i).get({
+  static getConnectionById(t) {
+    return (t.client ?? i).get({
       security: [
         {
           scheme: "bearer",
@@ -50,11 +50,11 @@ class r {
         }
       ],
       url: "/umbraco/ai/management/api/v1/connections/{id}",
-      ...e
+      ...t
     });
   }
-  static putConnectionById(e) {
-    return (e.client ?? i).put({
+  static putConnectionById(t) {
+    return (t.client ?? i).put({
       security: [
         {
           scheme: "bearer",
@@ -62,15 +62,15 @@ class r {
         }
       ],
       url: "/umbraco/ai/management/api/v1/connections/{id}",
-      ...e,
+      ...t,
       headers: {
         "Content-Type": "application/json",
-        ...e.headers
+        ...t.headers
       }
     });
   }
-  static postConnectionsByIdTest(e) {
-    return (e.client ?? i).post({
+  static postConnectionsByIdTest(t) {
+    return (t.client ?? i).post({
       security: [
         {
           scheme: "bearer",
@@ -78,51 +78,51 @@ class r {
         }
       ],
       url: "/umbraco/ai/management/api/v1/connections/{id}/test",
-      ...e
+      ...t
     });
   }
 }
 const s = {
-  toDetailModel(t) {
+  toDetailModel(e) {
     return {
-      unique: t.id,
-      entityType: n.EntityType.Entity,
-      alias: t.alias,
-      name: t.name,
-      providerId: t.providerId,
-      settings: t.settings ?? null,
-      isActive: t.isActive
+      unique: e.id,
+      entityType: n,
+      alias: e.alias,
+      name: e.name,
+      providerId: e.providerId,
+      settings: e.settings ?? null,
+      isActive: e.isActive
     };
   },
-  toItemModel(t) {
+  toItemModel(e) {
     return {
-      unique: t.id,
-      entityType: n.EntityType.Entity,
-      name: t.name,
-      providerId: t.providerId,
-      isActive: t.isActive
+      unique: e.id,
+      entityType: n,
+      name: e.name,
+      providerId: e.providerId,
+      isActive: e.isActive
     };
   },
-  toCreateRequest(t) {
+  toCreateRequest(e) {
     return {
-      alias: t.alias,
-      name: t.name,
-      providerId: t.providerId,
-      settings: t.settings,
-      isActive: t.isActive
+      alias: e.alias,
+      name: e.name,
+      providerId: e.providerId,
+      settings: e.settings,
+      isActive: e.isActive
     };
   },
-  toUpdateRequest(t) {
+  toUpdateRequest(e) {
     return {
-      alias: t.alias,
-      name: t.name,
-      settings: t.settings,
-      isActive: t.isActive
+      alias: e.alias,
+      name: e.name,
+      settings: e.settings,
+      isActive: e.isActive
     };
   }
 };
 export {
-  r as C,
+  c as C,
   s as U
 };
-//# sourceMappingURL=type-mapper-C18x2v2A.js.map
+//# sourceMappingURL=type-mapper-G4MX2UFa.js.map

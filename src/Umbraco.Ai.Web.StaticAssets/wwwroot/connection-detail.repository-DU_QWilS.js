@@ -1,7 +1,7 @@
 import { UmbDetailRepositoryBase as d } from "@umbraco-cms/backoffice/repository";
-import { tryExecuteAndNotify as r } from "@umbraco-cms/backoffice/resources";
-import { C as o, U as a } from "./type-mapper-C18x2v2A.js";
-import { U as p } from "./bundle.manifests-BsBZQJMT.js";
+import { tryExecuteAndNotify as o } from "@umbraco-cms/backoffice/resources";
+import { C as a, U as n } from "./type-mapper-G4MX2UFa.js";
+import { a as p } from "./bundle.manifests-BwiwDf1o.js";
 import { UAI_CONNECTION_DETAIL_STORE_CONTEXT as y } from "./connection-detail.store-Du8jOyAs.js";
 class l {
   #t;
@@ -14,7 +14,7 @@ class l {
   async createScaffold(t) {
     return { data: {
       unique: "",
-      entityType: p.EntityType.Entity,
+      entityType: p,
       alias: "",
       name: "",
       providerId: t?.providerId ?? "",
@@ -27,19 +27,19 @@ class l {
    * Reads a connection by its unique identifier.
    */
   async read(t) {
-    const { data: e, error: n } = await r(
+    const { data: e, error: r } = await o(
       this.#t,
-      o.getConnectionById({ path: { id: t } })
+      a.getConnectionById({ path: { id: t } })
     );
-    return n || !e ? { error: n } : { data: a.toDetailModel(e) };
+    return r || !e ? { error: r } : { data: n.toDetailModel(e) };
   }
   /**
    * Creates a new connection.
    */
   async create(t, e) {
-    const n = a.toCreateRequest(t), { response: c, error: i } = await r(
+    const r = n.toCreateRequest(t), { response: c, error: i } = await o(
       this.#t,
-      o.postConnection({ body: n })
+      a.postConnection({ body: r })
     );
     if (i)
       return { error: i };
@@ -55,27 +55,27 @@ class l {
    * Updates an existing connection.
    */
   async update(t) {
-    const e = a.toUpdateRequest(t), { error: n } = await r(
+    const e = n.toUpdateRequest(t), { error: r } = await o(
       this.#t,
-      o.putConnectionById({
+      a.putConnectionById({
         path: { id: t.unique },
         body: e
       })
     );
-    return n ? { error: n } : { data: t };
+    return r ? { error: r } : { data: t };
   }
   /**
    * Deletes a connection by its unique identifier.
    */
   async delete(t) {
-    const { error: e } = await r(
+    const { error: e } = await o(
       this.#t,
-      o.deleteConnectionById({ path: { id: t } })
+      a.deleteConnectionById({ path: { id: t } })
     );
     return e ? { error: e } : {};
   }
 }
-class I extends d {
+class N extends d {
   constructor(t) {
     super(t, l, y);
   }
@@ -84,7 +84,7 @@ class I extends d {
   }
 }
 export {
-  I as UaiConnectionDetailRepository,
-  I as api
+  N as UaiConnectionDetailRepository,
+  N as api
 };
-//# sourceMappingURL=connection-detail.repository-Bq4gwARE.js.map
+//# sourceMappingURL=connection-detail.repository-DU_QWilS.js.map

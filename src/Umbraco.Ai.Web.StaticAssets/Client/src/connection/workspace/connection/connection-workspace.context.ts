@@ -10,7 +10,7 @@ import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observabl
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
 import { UaiConnectionDetailRepository } from "../../repository/detail/connection-detail.repository.js";
-import { UaiConnectionConstants } from "../../constants.js";
+import { UAI_CONNECTION_WORKSPACE_ALIAS, UAI_CONNECTION_ENTITY_TYPE } from "../../constants.js";
 import type { UaiConnectionDetailModel } from "../../types.js";
 import type { UaiCommand } from "../../../core/command/command.base.js";
 import { UaiCommandStore } from "../../../core/command/command.store.js";
@@ -37,12 +37,12 @@ export class UaiConnectionWorkspaceContext
     #entityContext = new UmbEntityContext(this);
 
     constructor(host: UmbControllerHost) {
-        super(host, UaiConnectionConstants.Workspace.Entity);
+        super(host, UAI_CONNECTION_WORKSPACE_ALIAS);
 
         this.#repository = new UaiConnectionDetailRepository(this);
         this.addValidationContext(new UmbValidationContext(this));
 
-        this.#entityContext.setEntityType(UaiConnectionConstants.EntityType.Entity);
+        this.#entityContext.setEntityType(UAI_CONNECTION_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
 
         this.routes.setRoutes([
@@ -139,7 +139,7 @@ export class UaiConnectionWorkspaceContext
     }
 
     getEntityType(): string {
-        return UaiConnectionConstants.EntityType.Entity;
+        return UAI_CONNECTION_ENTITY_TYPE;
     }
 
     /**

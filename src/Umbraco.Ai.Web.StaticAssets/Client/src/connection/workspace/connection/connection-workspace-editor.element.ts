@@ -151,6 +151,15 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
             #footer {
                 padding: 0 var(--uui-size-layout-1);
             }
+
+            uui-loader {
+                display: block;
+                margin: auto;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
         `,
     ];
 }

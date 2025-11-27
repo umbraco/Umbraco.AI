@@ -181,6 +181,15 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             .provider-info small {
                 color: var(--uui-color-text-alt);
             }
+
+            uui-loader {
+                display: block;
+                margin: auto;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
         `,
     ];
 }

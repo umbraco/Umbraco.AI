@@ -84,10 +84,15 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             }
 
             uui-box {
-                margin-bottom: var(--uui-size-layout-1);
+                --uui-box-default-padding: 0 var(--uui-size-space-5);
+            }
+            uui-box:not(:first-child) {
+                margin-top: var(--uui-size-layout-1);
             }
 
             .placeholder-text {
+                margin: 0;
+                padding: var(--uui-size-space-5) 0;
                 color: var(--uui-color-text-alt);
                 font-style: italic;
             }

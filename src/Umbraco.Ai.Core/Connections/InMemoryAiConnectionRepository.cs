@@ -19,6 +19,14 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
+    public Task<AiConnection?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    {
+        var connection = _connections.Values
+            .FirstOrDefault(c => string.Equals(c.Alias, alias, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(connection);
+    }
+
+    /// <inheritdoc />
     public Task<IEnumerable<AiConnection>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult<IEnumerable<AiConnection>>(_connections.Values.ToList());

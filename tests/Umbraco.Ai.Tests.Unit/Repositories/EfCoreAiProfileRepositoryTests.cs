@@ -28,6 +28,7 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         context.Connections.Add(new AiConnectionEntity
         {
             Id = connectionId,
+            Alias = $"test-connection-{connectionId:N}",
             Name = "Test Connection",
             ProviderId = "openai",
             IsActive = true,

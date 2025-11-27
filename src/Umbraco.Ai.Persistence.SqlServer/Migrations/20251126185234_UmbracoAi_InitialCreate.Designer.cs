@@ -12,8 +12,8 @@ using Umbraco.Ai.Persistence;
 namespace Umbraco.Ai.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAiDbContext))]
-    [Migration("20251126185234_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251126185234_UmbracoAi_InitialCreate")]
+    partial class UmbracoAi_InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,6 +30,11 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -54,6 +59,9 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique();
 
                     b.HasIndex("ProviderId");
 

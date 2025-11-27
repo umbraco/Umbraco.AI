@@ -274,14 +274,16 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 
 ## Database Migrations
 
-Umbraco.Ai uses EF Core with provider-specific migrations. To create new migrations after modifying entities:
+Umbraco.Ai uses EF Core with provider-specific migrations. All migrations MUST use the `UmbracoAi_` prefix to clearly identify them as belonging to Umbraco.Ai (e.g., `UmbracoAi_InitialCreate`, `UmbracoAi_AddNewEntity`).
+
+To create new migrations after modifying entities:
 
 ```bash
 # SQL Server
-dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
 
 # SQLite
-dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
 ```
 
 See `docs/ef-core-migrations.md` for complete documentation.

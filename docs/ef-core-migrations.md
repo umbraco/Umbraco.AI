@@ -18,6 +18,17 @@ src/
     └── UmbracoAiDbContextFactory.cs  # Design-time factory
 ```
 
+## Migration Naming Convention
+
+All migrations MUST use the `UmbracoAi_` prefix to clearly identify them as belonging to Umbraco.Ai. This is important because EF Core migrations can be used by multiple packages in the same Umbraco installation, and the prefix helps distinguish which migrations belong to which package.
+
+**Format:** `UmbracoAi_<DescriptiveName>`
+
+**Examples:**
+- `UmbracoAi_InitialCreate`
+- `UmbracoAi_AddUserPreferencesTable`
+- `UmbracoAi_AddIndexOnProfileAlias`
+
 ## Creating Migrations
 
 When you modify `UmbracoAiDbContext` or any entity classes, you need to generate new migrations for both SQL Server and SQLite.
@@ -25,13 +36,13 @@ When you modify `UmbracoAiDbContext` or any entity classes, you need to generate
 ### Generate SQL Server Migration
 
 ```bash
-dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
 ```
 
 ### Generate SQLite Migration
 
 ```bash
-dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
 ```
 
 ### Example: Adding a New Table
@@ -43,8 +54,8 @@ dotnet ef migrations add <MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c
 
 ```bash
 # From the repository root
-dotnet ef migrations add AddNewEntity -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
-dotnet ef migrations add AddNewEntity -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_AddNewEntity -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_AddNewEntity -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
 ```
 
 ## Removing Migrations
@@ -115,8 +126,9 @@ Stores AI profile configurations that link connections to specific models and se
 
 ## Best Practices
 
-1. **Always generate migrations for both providers** - SQL Server and SQLite may have different syntax requirements
-2. **Use descriptive migration names** - e.g., `AddUserPreferencesTable`, `AddIndexOnProfileAlias`
-3. **Review generated migrations** - Check the `Up()` and `Down()` methods before committing
-4. **Test migrations locally** - Run the application against both SQL Server and SQLite if possible
-5. **Don't modify existing migrations** - Create new migrations for schema changes instead
+1. **Always use the `UmbracoAi_` prefix** - This ensures migrations are clearly identifiable (e.g., `UmbracoAi_AddUserPreferencesTable`)
+2. **Always generate migrations for both providers** - SQL Server and SQLite may have different syntax requirements
+3. **Use descriptive migration names** - e.g., `UmbracoAi_AddUserPreferencesTable`, `UmbracoAi_AddIndexOnProfileAlias`
+4. **Review generated migrations** - Check the `Up()` and `Down()` methods before committing
+5. **Test migrations locally** - Run the application against both SQL Server and SQLite if possible
+6. **Don't modify existing migrations** - Create new migrations for schema changes instead

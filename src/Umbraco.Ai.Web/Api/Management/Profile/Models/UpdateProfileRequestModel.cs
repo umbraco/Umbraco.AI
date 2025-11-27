@@ -9,6 +9,12 @@ namespace Umbraco.Ai.Web.Api.Management.Profile.Models;
 public class UpdateProfileRequestModel
 {
     /// <summary>
+    /// The unique alias for the profile.
+    /// </summary>
+    [Required]
+    public required string Alias { get; init; }
+
+    /// <summary>
     /// The display name of the profile.
     /// </summary>
     [Required]

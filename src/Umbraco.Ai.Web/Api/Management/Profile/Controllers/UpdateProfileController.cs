@@ -76,7 +76,7 @@ public class UpdateProfileController : ProfileControllerBase
         var profile = new AiProfile
         {
             Id = existing.Id,
-            Alias = existing.Alias, // Alias cannot be changed after creation
+            Alias = requestModel.Alias,
             Name = requestModel.Name,
             Capability = existing.Capability, // Capability cannot be changed after creation
             Model = new AiModelRef(requestModel.Model.ProviderId, requestModel.Model.ModelId),

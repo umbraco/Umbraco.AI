@@ -52,6 +52,7 @@ public class UpdateConnectionController : ConnectionControllerBase
         var connection = new AiConnection
         {
             Id = existing.Id,
+            Alias = requestModel.Alias,
             Name = requestModel.Name,
             ProviderId = existing.ProviderId, // Provider cannot be changed after creation
             Settings = requestModel.Settings,

@@ -33,6 +33,20 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
+    public async Task<AiConnection?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        AiConnectionEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+            await db.Connections.FirstOrDefaultAsync(
+                c => c.Alias.ToLower() == alias.ToLower(),
+                cancellationToken));
+
+        scope.Complete();
+        return entity is null ? null : AiConnectionFactory.BuildDomain(entity);
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<AiConnection>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();

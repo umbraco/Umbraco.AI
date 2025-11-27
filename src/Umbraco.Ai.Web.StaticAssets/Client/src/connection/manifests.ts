@@ -1,0 +1,11 @@
+import { connectionCollectionManifests } from "./collection/manifests.js";
+import { connectionMenuManifests } from "./menu/manifests.js";
+import { connectionRepositoryManifests } from "./repository/manifests.js";
+import { connectionWorkspaceManifests } from "./workspace/manifests.js";
+
+export const connectionManifests = [
+    ...connectionCollectionManifests,
+    ...connectionMenuManifests,
+    ...connectionRepositoryManifests,
+    ...connectionWorkspaceManifests,
+];

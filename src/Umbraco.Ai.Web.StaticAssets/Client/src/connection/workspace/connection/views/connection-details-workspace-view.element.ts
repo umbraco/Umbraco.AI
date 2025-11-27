@@ -4,8 +4,8 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiConnectionDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
-import { UaiProviderItemRepository } from "../../../../provider/repository/item/provider-item.repository.js";
-import type { UaiProviderItemModel } from "../../../../provider/types.js";
+import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
+import type { UaiProviderDetailModel } from "../../../../provider/types.js";
 
 /**
  * Workspace view for Connection details.
@@ -14,16 +14,13 @@ import type { UaiProviderItemModel } from "../../../../provider/types.js";
 @customElement("uai-connection-details-workspace-view")
 export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
-    #providerRepository = new UaiProviderItemRepository(this);
+    #providerDetailRepository = new UaiProviderDetailRepository(this);
 
     @state()
     private _model?: UaiConnectionDetailModel;
 
     @state()
-    private _providerName?: string;
-
-    @state()
-    private _providerCapabilities?: string[];
+    private _provider?: UaiProviderDetailModel;
 
     constructor() {
         super();
@@ -41,15 +38,8 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     async #loadProviderDetails(providerId: string) {
-        const { data } = await this.#providerRepository.requestItems();
-        const provider = data?.find((p: UaiProviderItemModel) => p.id === providerId);
-        if (provider) {
-            this._providerName = provider.name;
-            this._providerCapabilities = provider.capabilities;
-        } else {
-            this._providerName = undefined;
-            this._providerCapabilities = undefined;
-        }
+        const { data } = await this.#providerDetailRepository.requestById(providerId);
+        this._provider = data;
     }
 
     #onActiveChange(event: Event) {
@@ -69,9 +59,9 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                     <div slot="editor" class="provider-display">
                         <umb-icon name="icon-cloud"></umb-icon>
                         <div class="provider-info">
-                            <strong>${this._providerName ?? this._model.providerId}</strong>
-                            ${this._providerCapabilities?.length
-                                ? html`<small>${this._providerCapabilities.join(", ")}</small>`
+                            <strong>${this._provider?.name ?? this._model.providerId}</strong>
+                            ${this._provider?.capabilities?.length
+                                ? html`<small>${this._provider.capabilities.join(", ")}</small>`
                                 : null}
                         </div>
                     </div>
@@ -83,11 +73,28 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             </uui-box>
 
             <uui-box headline="Provider Settings">
-                <p class="placeholder-text">
-                    Provider-specific settings will be displayed here once the provider is selected and saved. Future
-                    enhancement: Dynamic settings form based on provider's SettingDefinitions.
-                </p>
+                ${this.#renderProviderSettings()}
             </uui-box>
+        `;
+    }
+
+    #renderProviderSettings() {
+        if (!this._provider) {
+            return html`<uui-loader-bar></uui-loader-bar>`;
+        }
+
+        if (this._provider.settingDefinitions.length === 0) {
+            return html`
+                <p class="placeholder-text">
+                    This provider has no configurable settings.
+                </p>
+            `;
+        }
+
+        return html`
+            <p class="placeholder-text">
+                Provider settings: ${this._provider.settingDefinitions.map((s) => s.label).join(", ")}
+            </p>
         `;
     }
 

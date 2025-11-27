@@ -33,6 +33,7 @@ public class AllConnectionController : ConnectionControllerBase
     /// <summary>
     /// Get all connections.
     /// </summary>
+    /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>
     /// <param name="providerId">Optional provider ID to filter connections.</param>
     /// <param name="skip">Number of items to skip for pagination.</param>
     /// <param name="take">Number of items to take for pagination.</param>
@@ -42,19 +43,18 @@ public class AllConnectionController : ConnectionControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedViewModel<ConnectionItemResponseModel>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedViewModel<ConnectionItemResponseModel>>> GetAll(
+        string? filter = null,
         string? providerId = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        var connections = await _connectionService.GetConnectionsAsync(providerId, cancellationToken);
-        var connectionList = connections.ToList();
+        var (connections, total) = await _connectionService.GetConnectionsPagedAsync(filter, providerId, skip, take, cancellationToken);
 
         var viewModel = new PagedViewModel<ConnectionItemResponseModel>
         {
-            Total = connectionList.Count,
-            Items = _umbracoMapper.MapEnumerable<AiConnection, ConnectionItemResponseModel>(
-                connectionList.Skip(skip).Take(take))
+            Total = total,
+            Items = _umbracoMapper.MapEnumerable<AiConnection, ConnectionItemResponseModel>(connections)
         };
 
         return Ok(viewModel);

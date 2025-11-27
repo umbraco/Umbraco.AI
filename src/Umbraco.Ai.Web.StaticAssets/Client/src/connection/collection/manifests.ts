@@ -9,6 +9,7 @@ export const connectionCollectionManifests: Array<ManifestCollection | ManifestC
         kind: "default",
         alias: UAI_CONNECTION_COLLECTION_ALIAS,
         name: "Connection Collection",
+        element: () => import("./connection-collection.element.js"),
         meta: {
             repositoryAlias: UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS,
         },

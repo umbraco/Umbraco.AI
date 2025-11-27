@@ -23,6 +23,22 @@ public interface IAiConnectionService
     Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get connections with pagination and optional filtering.
+    /// </summary>
+    /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>
+    /// <param name="providerId">Optional provider ID to filter by.</param>
+    /// <param name="skip">Number of items to skip.</param>
+    /// <param name="take">Number of items to take.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the filtered/paginated connections and the total count.</returns>
+    Task<(IEnumerable<AiConnection> Items, int Total)> GetConnectionsPagedAsync(
+        string? filter = null,
+        string? providerId = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Get connection references for a provider (lightweight list for UI).
     /// </summary>
     Task<IEnumerable<AiConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default);

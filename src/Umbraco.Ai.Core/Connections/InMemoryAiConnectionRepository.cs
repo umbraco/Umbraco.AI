@@ -42,6 +42,35 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
+    public Task<(IEnumerable<AiConnection> Items, int Total)> GetPagedAsync(
+        string? filter = null,
+        string? providerId = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _connections.Values.AsEnumerable();
+
+        // Apply provider filter
+        if (!string.IsNullOrEmpty(providerId))
+        {
+            query = query.Where(c => string.Equals(c.ProviderId, providerId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Apply name filter (case-insensitive contains)
+        if (!string.IsNullOrEmpty(filter))
+        {
+            query = query.Where(c => c.Name.Contains(filter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var filtered = query.ToList();
+        var total = filtered.Count;
+        var items = filtered.OrderBy(c => c.Name).Skip(skip).Take(take);
+
+        return Task.FromResult<(IEnumerable<AiConnection> Items, int Total)>((items, total));
+    }
+
+    /// <inheritdoc />
     public Task<AiConnection> SaveAsync(AiConnection connection, CancellationToken cancellationToken = default)
     {
         var isUpdate = _connections.ContainsKey(connection.Id);

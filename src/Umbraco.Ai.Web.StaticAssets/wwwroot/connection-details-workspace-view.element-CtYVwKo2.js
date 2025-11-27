@@ -1,7 +1,7 @@
 import { html as u, css as C, state as m, customElement as b } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement as P } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles as E } from "@umbraco-cms/backoffice/style";
-import { U as x, a as _ } from "./partial-update.command-CxAnwBY1.js";
+import { U as x, a as _ } from "./partial-update.command-CVQwdipO.js";
 var A = Object.defineProperty, U = Object.getOwnPropertyDescriptor, f = (e) => {
   throw TypeError(e);
 }, p = (e, t, i, a) => {
@@ -90,4 +90,4 @@ export {
   r as UaiConnectionDetailsWorkspaceViewElement,
   W as default
 };
-//# sourceMappingURL=connection-details-workspace-view.element-CfcNJMkC.js.map
+//# sourceMappingURL=connection-details-workspace-view.element-CtYVwKo2.js.map

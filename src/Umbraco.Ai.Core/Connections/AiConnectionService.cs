@@ -47,6 +47,17 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
+    public Task<(IEnumerable<AiConnection> Items, int Total)> GetConnectionsPagedAsync(
+        string? filter = null,
+        string? providerId = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        return _repository.GetPagedAsync(filter, providerId, skip, take, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<AiConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default)
     {
         var connections = await _repository.GetByProviderAsync(providerId, cancellationToken);

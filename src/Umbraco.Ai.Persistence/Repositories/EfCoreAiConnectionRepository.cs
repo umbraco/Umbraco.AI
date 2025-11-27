@@ -73,6 +73,49 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
+    public async Task<(IEnumerable<AiConnection> Items, int Total)> GetPagedAsync(
+        string? filter = null,
+        string? providerId = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var result = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AiConnectionEntity> query = db.Connections;
+
+            // Apply provider filter
+            if (!string.IsNullOrEmpty(providerId))
+            {
+                query = query.Where(c => c.ProviderId == providerId);
+            }
+
+            // Apply name filter (case-insensitive contains)
+            if (!string.IsNullOrEmpty(filter))
+            {
+                query = query.Where(c => c.Name.ToLower().Contains(filter.ToLower()));
+            }
+
+            // Get total count before pagination
+            int total = await query.CountAsync(cancellationToken);
+
+            // Apply pagination and get items
+            List<AiConnectionEntity> items = await query
+                .OrderBy(c => c.Name)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+
+            return (items, total);
+        });
+
+        scope.Complete();
+        return (result.items.Select(AiConnectionFactory.BuildDomain), result.total);
+    }
+
+    /// <inheritdoc />
     public async Task<AiConnection> SaveAsync(AiConnection connection, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();

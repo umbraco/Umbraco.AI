@@ -1,6 +1,6 @@
-import { UmbRepositoryBase as i } from "@umbraco-cms/backoffice/repository";
+import { UmbRepositoryBase as n } from "@umbraco-cms/backoffice/repository";
 import { tryExecuteAndNotify as r } from "@umbraco-cms/backoffice/resources";
-import { C as s, U as a } from "./type-mapper-YgfomMeJ.js";
+import { C as s, U as a } from "./type-mapper-Dmt5vB2C.js";
 class c {
   #t;
   constructor(t) {
@@ -14,6 +14,7 @@ class c {
       this.#t,
       s.getConnections({
         query: {
+          filter: t.filter,
           skip: t.skip ?? 0,
           take: t.take ?? 100
         }
@@ -27,7 +28,7 @@ class c {
     };
   }
 }
-class C extends i {
+class C extends n {
   #t;
   constructor(t) {
     super(t), this.#t = new c(t);
@@ -40,4 +41,4 @@ export {
   C as UaiConnectionCollectionRepository,
   C as api
 };
-//# sourceMappingURL=connection-collection.repository-kxpVrCYp.js.map
+//# sourceMappingURL=connection-collection.repository-BbYjsdMG.js.map

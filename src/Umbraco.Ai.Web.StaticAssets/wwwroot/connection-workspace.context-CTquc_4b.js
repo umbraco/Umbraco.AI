@@ -2,12 +2,12 @@ import { UMB_WORKSPACE_PATH_PATTERN as T, UmbSubmittableWorkspaceContextBase as 
 import { UmbBasicState as I, UmbObjectState as P } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext as V } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext as q } from "@umbraco-cms/backoffice/validation";
-import { UaiConnectionDetailRepository as x } from "./connection-detail.repository-BAfg33E6.js";
-import { b as R, c as N, d as w } from "./bundle.manifests-CiGQzgXI.js";
+import { UaiConnectionDetailRepository as x } from "./connection-detail.repository-gai7dQ-B.js";
+import { c as R, d as N, e as w } from "./bundle.manifests-BL8gZONS.js";
 import { html as d, when as W, css as $, state as _, customElement as L } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement as M } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles as B } from "@umbraco-cms/backoffice/style";
-import { U as D, a as m } from "./partial-update.command-CxAnwBY1.js";
+import { U as D, a as m } from "./partial-update.command-CVQwdipO.js";
 import { UMB_SETTINGS_SECTION_PATHNAME as H } from "@umbraco-cms/backoffice/settings";
 class K {
   #t = !1;
@@ -44,7 +44,7 @@ var Y = Object.defineProperty, z = Object.getOwnPropertyDescriptor, g = (s) => {
   for (var a = i > 1 ? void 0 : i ? z(e, t) : e, r = s.length - 1, h; r >= 0; r--)
     (h = s[r]) && (a = (i ? h(e, t, a) : h(a)) || a);
   return i && a && Y(e, t, a), a;
-}, f = (s, e, t) => e.has(s) || g("Cannot " + t), p = (s, e, t) => (f(s, e, "read from private field"), e.get(s)), v = (s, e, t) => e.has(s) ? g("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(s) : e.set(s, t), G = (s, e, t, i) => (f(s, e, "write to private field"), e.set(s, t), t), u = (s, e, t) => (f(s, e, "access private method"), t), l, n, b, y, E, U;
+}, f = (s, e, t) => e.has(s) || g("Cannot " + t), p = (s, e, t) => (f(s, e, "read from private field"), e.get(s)), v = (s, e, t) => e.has(s) ? g("Cannot add the same private member more than once") : e instanceof WeakSet ? e.add(s) : e.set(s, t), G = (s, e, t, i) => (f(s, e, "write to private field"), e.set(s, t), t), u = (s, e, t) => (f(s, e, "access private method"), t), l, n, y, E, b, U;
 let o = class extends M {
   constructor() {
     super(), v(this, n), v(this, l), this._aliasLocked = !0, this.consumeContext(D, (s) => {
@@ -71,7 +71,7 @@ let o = class extends M {
                     <uui-input
                         id="name"
                         .value=${this._model.name}
-                        @input="${u(this, n, b)}"
+                        @input="${u(this, n, y)}"
                         label="Name"
                         placeholder="Enter connection name"
                     >
@@ -85,8 +85,8 @@ let o = class extends M {
                             ?auto-width=${!!this._model.name}
                             ?locked=${this._aliasLocked}
                             ?readonly=${this._aliasLocked || !this._isNew}
-                            @input=${u(this, n, y)}
-                            @lock-change=${u(this, n, E)}
+                            @input=${u(this, n, E)}
+                            @lock-change=${u(this, n, b)}
                         ></uui-input-lock>
                     </uui-input>
                 </div>
@@ -106,7 +106,7 @@ let o = class extends M {
 };
 l = /* @__PURE__ */ new WeakMap();
 n = /* @__PURE__ */ new WeakSet();
-b = function(s) {
+y = function(s) {
   s.stopPropagation();
   const t = s.composedPath()[0].value.toString();
   if (this._aliasLocked && this._isNew) {
@@ -119,14 +119,14 @@ b = function(s) {
       new m({ name: t }, "name")
     );
 };
-y = function(s) {
+E = function(s) {
   s.stopPropagation();
   const e = s.composedPath()[0];
   p(this, l)?.handleCommand(
     new m({ alias: e.value.toString() }, "alias")
   );
 };
-E = function() {
+b = function() {
   this._aliasLocked = !this._aliasLocked;
 };
 U = function(s) {
@@ -276,4 +276,4 @@ export {
   oe as UaiConnectionWorkspaceContext,
   oe as api
 };
-//# sourceMappingURL=connection-workspace.context-BSF8OLSu.js.map
+//# sourceMappingURL=connection-workspace.context-CTquc_4b.js.map

@@ -50,7 +50,7 @@ export class UaiConnectionCreateCollectionActionElement extends UmbLitElement {
                 Create
                 <uui-symbol-expand .open=${this._popoverOpen}></uui-symbol-expand>
             </uui-button>
-            <uui-popover-container id="uai-create-popover" placement="bottom-end">
+            <uui-popover-container id="uai-create-popover" placement="bottom-start">
                 <umb-popover-layout>
                     ${this._providers.length === 0
                         ? html`<div class="empty">No providers available</div>`

@@ -177,6 +177,7 @@ export type UpdateConnectionRequestModel = {
 };
 
 export type UpdateProfileRequestModel = {
+    alias: string;
     name: string;
     model: ModelRefModel;
     connectionId: string;

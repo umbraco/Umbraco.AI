@@ -1,7 +1,7 @@
-import { html, customElement, state, css, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { html, customElement, state, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaiConnectionCollectionRepository } from "../../../connection/repository/collection/connection-collection.repository.js";
-import { UaiProviderCollectionRepository } from "../../../provider/repository/collection/provider-collection.repository.js";
+import { UaiProviderItemRepository } from "../../../provider/repository/item/provider-item.repository.js";
 import type { UaiConnectionItemModel } from "../../../connection/types.js";
 import type { UaiProviderItemModel } from "../../../provider/types.js";
 import { UAI_CREATE_PROFILE_WORKSPACE_PATH_PATTERN } from "../../workspace/profile/paths.js";
@@ -20,7 +20,7 @@ interface CapabilityOption {
 @customElement("uai-profile-create-collection-action")
 export class UaiProfileCreateCollectionActionElement extends UmbLitElement {
     #connectionRepository = new UaiConnectionCollectionRepository(this);
-    #providerRepository = new UaiProviderCollectionRepository(this);
+    #providerRepository = new UaiProviderItemRepository(this);
 
     @state()
     private _connections: UaiConnectionItemModel[] = [];
@@ -58,11 +58,11 @@ export class UaiProfileCreateCollectionActionElement extends UmbLitElement {
 
         const [connectionsResult, providersResult] = await Promise.all([
             this.#connectionRepository.requestCollection({ skip: 0, take: 100 }),
-            this.#providerRepository.requestCollection({ skip: 0, take: 100 }),
+            this.#providerRepository.requestItems(),
         ]);
 
         this._connections = connectionsResult.data?.items ?? [];
-        this._providers = providersResult.data?.items ?? [];
+        this._providers = providersResult.data ?? [];
 
         // Determine which capabilities are available based on configured connections
         this.#updateAvailableCapabilities();
@@ -74,7 +74,7 @@ export class UaiProfileCreateCollectionActionElement extends UmbLitElement {
         const availableCapabilities = new Set<string>();
 
         for (const connection of this._connections) {
-            const provider = this._providers.find((p) => p.providerId === connection.providerId);
+            const provider = this._providers.find((p) => p.id === connection.providerId);
             if (provider?.capabilities) {
                 provider.capabilities.forEach((cap) => availableCapabilities.add(cap));
             }
@@ -87,7 +87,7 @@ export class UaiProfileCreateCollectionActionElement extends UmbLitElement {
 
     #filterConnectionsByCapability(capability: string) {
         this._filteredConnections = this._connections.filter((conn) => {
-            const provider = this._providers.find((p) => p.providerId === conn.providerId);
+            const provider = this._providers.find((p) => p.id === conn.providerId);
             return provider?.capabilities?.includes(capability);
         });
     }

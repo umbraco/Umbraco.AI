@@ -45,18 +45,16 @@ internal sealed partial class UmbracoAiManagementApiOperationIdHandler : Operati
             return false;
         }
 
-        // POST/PUT/DELETE to collection endpoints operate on single items
+        // POST/PUT/PATCH/DELETE to collection endpoints operate on single items
         // e.g., POST /connections creates one connection
-        if (httpMethod is "POST" or "PUT" or "DELETE")
+        if (httpMethod is "POST" or "PUT" or "PATCH" or "DELETE")
         {
-            // Exclude sub-resource collections like POST /providers/{id}/models
-            return !EndsWithSubCollection().IsMatch(relativePath);
+            return true;
         }
 
         // GET endpoints: single-item if they have route parameters
         // But exclude sub-resource collections (e.g., GET /providers/{id}/models returns multiple models)
-        return HasRouteParameter().IsMatch(relativePath)
-               && !EndsWithSubCollection().IsMatch(relativePath);
+        return HasRouteParameter().IsMatch(relativePath);
     }
 
     /// <summary>
@@ -96,8 +94,8 @@ internal sealed partial class UmbracoAiManagementApiOperationIdHandler : Operati
     [GeneratedRegex(@"\{[^}]+\}")]
     private static partial Regex HasRouteParameter();
 
-    // Matches paths ending with a sub-collection segment after a parameter
-    // e.g., /providers/{id}/models (models is a collection)
-    [GeneratedRegex(@"\{[^}]+\}/[^{/]+$")]
-    private static partial Regex EndsWithSubCollection();
+    // // Matches paths ending with a sub-collection segment after a parameter
+    // // e.g., /providers/{id}/models (models is a collection)
+    // [GeneratedRegex(@"\{[^}]+\}/[^{/]+$")]
+    // private static partial Regex EndsWithSubCollection();
 }

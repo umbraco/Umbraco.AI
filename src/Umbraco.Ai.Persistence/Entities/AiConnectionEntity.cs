@@ -11,6 +11,11 @@ public class AiConnectionEntity
     public Guid Id { get; set; }
 
     /// <summary>
+    /// Unique alias for the connection (used for programmatic lookup).
+    /// </summary>
+    public string Alias { get; set; } = string.Empty;
+
+    /// <summary>
     /// Display name for the connection.
     /// </summary>
     public string Name { get; set; } = string.Empty;

@@ -36,6 +36,10 @@ public class UmbracoAiDbContext : DbContext
             entity.ToTable("umbracoAiConnection");
             entity.HasKey(e => e.Id);
 
+            entity.Property(e => e.Alias)
+                .HasMaxLength(100)
+                .IsRequired();
+
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .IsRequired();
@@ -54,6 +58,9 @@ public class UmbracoAiDbContext : DbContext
 
             entity.Property(e => e.DateModified)
                 .IsRequired();
+
+            entity.HasIndex(e => e.Alias)
+                .IsUnique();
 
             entity.HasIndex(e => e.ProviderId);
         });

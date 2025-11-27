@@ -27,6 +27,7 @@ internal static class AiConnectionFactory
         return new AiConnection
         {
             Id = entity.Id,
+            Alias = entity.Alias,
             Name = entity.Name,
             ProviderId = entity.ProviderId,
             Settings = settings,
@@ -46,6 +47,7 @@ internal static class AiConnectionFactory
         return new AiConnectionEntity
         {
             Id = connection.Id,
+            Alias = connection.Alias,
             Name = connection.Name,
             ProviderId = connection.ProviderId,
             SettingsJson = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings),
@@ -62,6 +64,7 @@ internal static class AiConnectionFactory
     /// <param name="connection">The domain model with updated values.</param>
     public static void UpdateEntity(AiConnectionEntity entity, AiConnection connection)
     {
+        entity.Alias = connection.Alias;
         entity.Name = connection.Name;
         entity.ProviderId = connection.ProviderId;
         entity.SettingsJson = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings);

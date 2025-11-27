@@ -13,6 +13,11 @@ public interface IAiConnectionService
     Task<AiConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get a connection by alias (case-insensitive).
+    /// </summary>
+    Task<AiConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Get all connections, optionally filtered by provider.
     /// </summary>
     Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default);

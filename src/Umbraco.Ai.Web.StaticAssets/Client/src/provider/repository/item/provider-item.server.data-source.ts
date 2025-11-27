@@ -1,5 +1,5 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { ProvidersService } from "../../../api/sdk.gen.js";
 import { UaiProviderTypeMapper } from "../../type-mapper.js";
 import type { UaiProviderItemModel } from "../../types.js";
@@ -18,7 +18,7 @@ export class UaiProviderItemServerDataSource {
      * Fetches all available providers.
      */
     async getItems(): Promise<{ data?: UaiProviderItemModel[]; error?: unknown }> {
-        const { data, error } = await tryExecuteAndNotify(
+        const { data, error } = await tryExecute(
             this.#host,
             ProvidersService.getProviders()
         );

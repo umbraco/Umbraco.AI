@@ -1,6 +1,6 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbCollectionDataSource, UmbCollectionFilterModel } from "@umbraco-cms/backoffice/collection";
-import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { ConnectionsService } from "../../../api/sdk.gen.js";
 import { UaiConnectionTypeMapper } from "../../type-mapper.js";
 import type { UaiConnectionItemModel } from "../../types.js";
@@ -19,7 +19,7 @@ export class UaiConnectionCollectionServerDataSource implements UmbCollectionDat
      * Gets all connections as collection items.
      */
     async getCollection(filter: UmbCollectionFilterModel) {
-        const { data, error } = await tryExecuteAndNotify(
+        const { data, error } = await tryExecute(
             this.#host,
             ConnectionsService.getConnections({
                 query: {

@@ -33,6 +33,7 @@ public class ConnectionMapDefinition : IMapDefinition
     private static void Map(AiConnection source, ConnectionItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
+        target.Alias = source.Alias;
         target.Name = source.Name;
         target.ProviderId = source.ProviderId;
         target.IsActive = source.IsActive;

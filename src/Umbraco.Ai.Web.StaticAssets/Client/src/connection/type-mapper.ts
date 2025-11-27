@@ -19,6 +19,7 @@ export const UaiConnectionTypeMapper = {
         return {
             unique: response.id,
             entityType: UAI_CONNECTION_ENTITY_TYPE,
+            alias: response.alias,
             name: response.name,
             providerId: response.providerId,
             isActive: response.isActive,

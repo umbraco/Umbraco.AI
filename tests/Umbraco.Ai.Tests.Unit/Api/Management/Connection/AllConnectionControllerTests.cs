@@ -38,6 +38,7 @@ public class AllConnectionControllerTests
         var responseModels = connections.Select(c => new ConnectionItemResponseModel
         {
             Id = c.Id,
+            Alias = c.Alias,
             Name = c.Name,
             ProviderId = c.ProviderId,
             IsActive = c.IsActive
@@ -73,6 +74,7 @@ public class AllConnectionControllerTests
         var responseModels = connections.Select(c => new ConnectionItemResponseModel
         {
             Id = c.Id,
+            Alias = c.Alias,
             Name = c.Name,
             ProviderId = c.ProviderId,
             IsActive = c.IsActive
@@ -139,6 +141,7 @@ public class AllConnectionControllerTests
             .Returns((IEnumerable<AiConnection> items) => items.Select(c => new ConnectionItemResponseModel
             {
                 Id = c.Id,
+                Alias = c.Alias,
                 Name = c.Name,
                 ProviderId = c.ProviderId,
                 IsActive = c.IsActive

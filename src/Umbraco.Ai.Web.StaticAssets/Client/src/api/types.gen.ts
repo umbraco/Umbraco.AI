@@ -28,6 +28,7 @@ export type ChatUsageModel = {
 
 export type ConnectionItemResponseModel = {
     id: string;
+    alias: string;
     name: string;
     providerId: string;
     isActive: boolean;

@@ -253,6 +253,7 @@ export type GetConnectionsData = {
     body?: never;
     path?: never;
     query?: {
+        filter?: string;
         providerId?: string;
         skip?: number;
         take?: number;

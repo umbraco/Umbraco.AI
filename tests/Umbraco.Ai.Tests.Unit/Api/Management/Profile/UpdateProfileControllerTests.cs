@@ -48,6 +48,7 @@ public class UpdateProfileControllerTests
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId,
@@ -85,6 +86,7 @@ public class UpdateProfileControllerTests
         var profileId = Guid.NewGuid();
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = Guid.NewGuid()
@@ -113,6 +115,7 @@ public class UpdateProfileControllerTests
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId
@@ -146,6 +149,7 @@ public class UpdateProfileControllerTests
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "unknown-provider", ModelId = "model" },
             ConnectionId = connectionId
@@ -187,6 +191,7 @@ public class UpdateProfileControllerTests
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId
@@ -233,6 +238,7 @@ public class UpdateProfileControllerTests
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "model" },
             ConnectionId = connectionId

@@ -38,29 +38,27 @@ export class UaiConnectionCreateOptionsModalElement extends UmbModalBaseElement<
 
     override render() {
         return html`
-            <umb-body-layout headline=${this.data?.headline ?? "Select Provider"}>
-                <uui-box>
-                    ${this._loading
-                        ? html`<uui-loader></uui-loader>`
-                        : this._providers.length === 0
-                          ? html`<p>No providers available.</p>`
-                          : html`
-                                <uui-ref-list>
-                                    ${this._providers.map(
-                                        (provider) => html`
-                                            <uui-ref-node
-                                                name=${provider.name}
-                                                detail=${provider.capabilities.join(", ")}
-                                                @open=${() => this.#onSelect(provider.id)}
-                                                selectable
-                                            >
-                                                <umb-icon slot="icon" name="icon-cloud"></umb-icon>
-                                            </uui-ref-node>
-                                        `
-                                    )}
-                                </uui-ref-list>
-                            `}
-                </uui-box>
+            <uui-dialog-layout headline=${this.data?.headline ?? "Select Provider"}>
+                ${this._loading
+                    ? html`<uui-loader></uui-loader>`
+                    : this._providers.length === 0
+                      ? html`<p class="no-providers">No providers available.</p>`
+                      : html`
+                            <uui-ref-list>
+                                ${this._providers.map(
+                                    (provider) => html`
+                                        <uui-ref-node
+                                            name=${provider.name}
+                                            detail=${provider.capabilities.join(", ")}
+                                            @open=${() => this.#onSelect(provider.id)}
+                                            selectable
+                                        >
+                                            <umb-icon slot="icon" name="icon-cloud"></umb-icon>
+                                        </uui-ref-node>
+                                    `
+                                )}
+                            </uui-ref-list>
+                        `}
                 <uui-button
                     slot="actions"
                     label="Cancel"
@@ -68,7 +66,7 @@ export class UaiConnectionCreateOptionsModalElement extends UmbModalBaseElement<
                 >
                     Cancel
                 </uui-button>
-            </umb-body-layout>
+            </uui-dialog-layout>
         `;
     }
 
@@ -77,6 +75,16 @@ export class UaiConnectionCreateOptionsModalElement extends UmbModalBaseElement<
             uui-loader {
                 display: block;
                 margin: var(--uui-size-space-4) auto;
+            }
+
+            .no-providers {
+                color: var(--uui-color-text-alt);
+                margin: var(--uui-size-space-4) 0;
+            }
+
+            uui-ref-list {
+                display: block;
+                min-width: 300px;
             }
         `,
     ];

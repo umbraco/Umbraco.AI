@@ -1,3 +1,4 @@
-export { UaiConnectionWorkspaceContext, UAI_CONNECTION_WORKSPACE_CONTEXT } from "./connection-workspace.context.js";
-export { UaiConnectionRootWorkspaceContext } from "./connection-root-workspace.context.js";
+export { UaiConnectionWorkspaceContext } from "./connection/connection-workspace.context.js";
+export { UAI_CONNECTION_WORKSPACE_CONTEXT } from "./connection/connection-workspace.context-token.js";
 export { connectionWorkspaceManifests } from "./manifests.js";
+export * from "./connection-root/index.js";

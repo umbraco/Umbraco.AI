@@ -1,16 +1,16 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import type { UaiConnectionDetailModel } from "../types.js";
-import { UaiPartialUpdateCommand } from "../../core/command/implement/partial-update.command.js";
-import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../workspace/connection-workspace.context.js";
+import type { UaiConnectionDetailModel } from "../../../types.js";
+import { UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
 
 /**
  * Workspace view for Connection details.
  * Displays provider selection, settings, and active toggle.
  */
-@customElement("uai-connection-details")
-export class UaiConnectionDetailsElement extends UmbLitElement {
+@customElement("uai-connection-details-workspace-view")
+export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
 
     @state()
@@ -95,10 +95,10 @@ export class UaiConnectionDetailsElement extends UmbLitElement {
     ];
 }
 
-export default UaiConnectionDetailsElement;
+export default UaiConnectionDetailsWorkspaceViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-connection-details": UaiConnectionDetailsElement;
+        "uai-connection-details-workspace-view": UaiConnectionDetailsWorkspaceViewElement;
     }
 }

@@ -9,7 +9,7 @@ export const connectionCollectionActionManifests: ManifestCollectionAction[] = [
         name: "Create Connection",
         meta: {
             label: "Create",
-            href: `section/settings/workspace/${UaiConnectionConstants.Workspace.Entity}/create`,
+            href: `section/settings/workspace/${UaiConnectionConstants.EntityType.Entity}/create`,
         },
         conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UaiConnectionConstants.Collection }],
     },

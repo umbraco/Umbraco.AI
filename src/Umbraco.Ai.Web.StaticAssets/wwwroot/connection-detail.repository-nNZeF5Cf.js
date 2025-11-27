@@ -1,7 +1,7 @@
 import { UmbDetailRepositoryBase as d } from "@umbraco-cms/backoffice/repository";
 import { tryExecuteAndNotify as r } from "@umbraco-cms/backoffice/resources";
-import { C as o, U as a } from "./type-mapper-C2YdcGsS.js";
-import { U as p } from "./bundle.manifests-D_6geKLR.js";
+import { C as o, U as a } from "./type-mapper-DCb8TkKY.js";
+import { U as p } from "./bundle.manifests-B4-X66yr.js";
 import { UAI_CONNECTION_DETAIL_STORE_CONTEXT as y } from "./connection-detail.store-Du8jOyAs.js";
 class l {
   #t;
@@ -87,4 +87,4 @@ export {
   I as UaiConnectionDetailRepository,
   I as api
 };
-//# sourceMappingURL=connection-detail.repository-C1LvVqz5.js.map
+//# sourceMappingURL=connection-detail.repository-nNZeF5Cf.js.map

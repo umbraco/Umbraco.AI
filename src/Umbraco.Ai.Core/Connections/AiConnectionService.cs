@@ -30,6 +30,12 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
+    public Task<AiConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    {
+        return _repository.GetByAliasAsync(alias, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(providerId))
@@ -56,6 +62,7 @@ internal sealed class AiConnectionService : IAiConnectionService
             connection = new AiConnection
             {
                 Id = Guid.NewGuid(),
+                Alias = connection.Alias,
                 Name = connection.Name,
                 ProviderId = connection.ProviderId,
                 Settings = connection.Settings,
@@ -63,6 +70,13 @@ internal sealed class AiConnectionService : IAiConnectionService
                 DateCreated = connection.DateCreated,
                 DateModified = connection.DateModified
             };
+        }
+
+        // Check for alias uniqueness
+        var existingByAlias = await _repository.GetByAliasAsync(connection.Alias, cancellationToken);
+        if (existingByAlias is not null && existingByAlias.Id != connection.Id)
+        {
+            throw new InvalidOperationException($"A connection with alias '{connection.Alias}' already exists.");
         }
 
         // Validate provider exists

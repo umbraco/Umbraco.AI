@@ -11,6 +11,11 @@ public class AiConnection
     public required Guid Id { get; init; }
 
     /// <summary>
+    /// Unique alias for the connection (used for programmatic lookup).
+    /// </summary>
+    public required string Alias { get; init; }
+
+    /// <summary>
     /// Display name for the connection (shown in UI).
     /// </summary>
     public required string Name { get; set; }

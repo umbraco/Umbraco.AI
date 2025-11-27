@@ -26,6 +26,7 @@ public class CreateConnectionControllerTests
         // Arrange
         var requestModel = new CreateConnectionRequestModel
         {
+            Alias = "new-connection",
             Name = "New Connection",
             ProviderId = "openai",
             Settings = new { ApiKey = "test-key" },
@@ -58,6 +59,7 @@ public class CreateConnectionControllerTests
         // Arrange
         var requestModel = new CreateConnectionRequestModel
         {
+            Alias = "new-connection",
             Name = "New Connection",
             ProviderId = "unknown-provider",
             IsActive = true
@@ -82,6 +84,7 @@ public class CreateConnectionControllerTests
         // Arrange
         var requestModel = new CreateConnectionRequestModel
         {
+            Alias = "new-connection",
             Name = "New Connection",
             ProviderId = "openai",
             Settings = new { InvalidKey = "value" },
@@ -107,6 +110,7 @@ public class CreateConnectionControllerTests
         // Arrange
         var requestModel = new CreateConnectionRequestModel
         {
+            Alias = "new-connection",
             Name = "New Connection",
             ProviderId = "openai",
             IsActive = true
@@ -133,6 +137,7 @@ public class CreateConnectionControllerTests
         var settings = new { ApiKey = "test-key" };
         var requestModel = new CreateConnectionRequestModel
         {
+            Alias = "new-connection",
             Name = "New Connection",
             ProviderId = "openai",
             Settings = settings,

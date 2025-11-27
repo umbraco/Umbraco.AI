@@ -8,6 +8,12 @@ namespace Umbraco.Ai.Web.Api.Management.Connection.Models;
 public class CreateConnectionRequestModel
 {
     /// <summary>
+    /// Unique alias for the connection (used for programmatic lookup).
+    /// </summary>
+    [Required]
+    public required string Alias { get; init; }
+
+    /// <summary>
     /// The display name of the connection.
     /// </summary>
     [Required]

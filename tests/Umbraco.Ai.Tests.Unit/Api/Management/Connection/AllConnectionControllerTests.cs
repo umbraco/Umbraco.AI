@@ -44,8 +44,8 @@ public class AllConnectionControllerTests
         }).ToList();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionsAsync(null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connections);
+            .Setup(x => x.GetConnectionsPagedAsync(null, null, 0, 100, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((connections.AsEnumerable(), connections.Count));
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))
@@ -79,8 +79,8 @@ public class AllConnectionControllerTests
         }).ToList();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionsAsync("openai", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connections);
+            .Setup(x => x.GetConnectionsPagedAsync(null, "openai", 0, 100, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((connections.AsEnumerable(), connections.Count));
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))
@@ -102,8 +102,8 @@ public class AllConnectionControllerTests
         var connections = new List<AiConnection>();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionsAsync(null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connections);
+            .Setup(x => x.GetConnectionsPagedAsync(null, null, 0, 100, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((connections.AsEnumerable(), 0));
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))
@@ -123,14 +123,16 @@ public class AllConnectionControllerTests
     public async Task GetAll_WithPagination_ReturnsPagedResults()
     {
         // Arrange
-        var connections = Enumerable.Range(1, 10)
+        var allConnections = Enumerable.Range(1, 10)
             .Select(i => new AiConnectionBuilder().WithName($"Connection {i}").Build())
             .ToList();
 
-        // This will be called with the paginated subset
+        // The service returns the paginated subset but the total count of all items
+        var pagedConnections = allConnections.Skip(2).Take(3).ToList();
+
         _connectionServiceMock
-            .Setup(x => x.GetConnectionsAsync(null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connections);
+            .Setup(x => x.GetConnectionsPagedAsync(null, null, 2, 3, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((pagedConnections.AsEnumerable(), allConnections.Count));
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))

@@ -16,6 +16,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Alias = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ProviderId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     SettingsJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -54,6 +55,12 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_umbracoAiConnection_Alias",
+                table: "umbracoAiConnection",
+                column: "Alias",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_umbracoAiConnection_ProviderId",

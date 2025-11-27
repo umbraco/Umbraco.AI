@@ -11,8 +11,8 @@ using Umbraco.Ai.Persistence;
 namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAiDbContext))]
-    [Migration("20251126185254_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251126185254_UmbracoAi_InitialCreate")]
+    partial class UmbracoAi_InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,11 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
@@ -49,6 +54,9 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique();
 
                     b.HasIndex("ProviderId");
 

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class UmbracoAi_InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,6 +16,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Alias = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     ProviderId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     SettingsJson = table.Column<string>(type: "TEXT", nullable: true),
@@ -54,6 +55,12 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_umbracoAiConnection_Alias",
+                table: "umbracoAiConnection",
+                column: "Alias",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_umbracoAiConnection_ProviderId",

@@ -4,7 +4,7 @@ import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
 import { ConnectionsService } from "../../../api/sdk.gen.js";
 import { UaiConnectionTypeMapper } from "../../type-mapper.js";
 import type { UaiConnectionDetailModel } from "../../types.js";
-import { UaiConnectionConstants } from "../../constants.js";
+import { UAI_CONNECTION_ENTITY_TYPE } from "../../constants.js";
 
 /**
  * Server data source for Connection detail operations.
@@ -22,7 +22,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
     async createScaffold(preset?: Partial<UaiConnectionDetailModel>) {
         const scaffold: UaiConnectionDetailModel = {
             unique: "",
-            entityType: UaiConnectionConstants.EntityType.Entity,
+            entityType: UAI_CONNECTION_ENTITY_TYPE,
             alias: "",
             name: "",
             providerId: preset?.providerId ?? "",

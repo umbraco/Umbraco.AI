@@ -1,12 +1,12 @@
 import type { ConnectionResponseModel, ConnectionItemResponseModel } from "../api/types.gen.js";
-import { UaiConnectionConstants } from "./constants.js";
+import { UAI_CONNECTION_ENTITY_TYPE } from "./constants.js";
 import type { UaiConnectionDetailModel, UaiConnectionItemModel } from "./types.js";
 
 export const UaiConnectionTypeMapper = {
     toDetailModel(response: ConnectionResponseModel): UaiConnectionDetailModel {
         return {
             unique: response.id,
-            entityType: UaiConnectionConstants.EntityType.Entity,
+            entityType: UAI_CONNECTION_ENTITY_TYPE,
             alias: response.alias,
             name: response.name,
             providerId: response.providerId,
@@ -18,7 +18,7 @@ export const UaiConnectionTypeMapper = {
     toItemModel(response: ConnectionItemResponseModel): UaiConnectionItemModel {
         return {
             unique: response.id,
-            entityType: UaiConnectionConstants.EntityType.Entity,
+            entityType: UAI_CONNECTION_ENTITY_TYPE,
             name: response.name,
             providerId: response.providerId,
             isActive: response.isActive,

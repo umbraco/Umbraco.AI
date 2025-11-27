@@ -1,16 +1,16 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
-import { UaiConnectionConstants } from "../../constants.js";
+import { UAI_CONNECTION_WORKSPACE_ALIAS, UAI_CONNECTION_ENTITY_TYPE } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
 
 export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspace",
         kind: "routable",
-        alias: UaiConnectionConstants.Workspace.Entity,
+        alias: UAI_CONNECTION_WORKSPACE_ALIAS,
         name: "Connection Workspace",
         api: () => import("./connection-workspace.context.js"),
         meta: {
-            entityType: UaiConnectionConstants.EntityType.Entity,
+            entityType: UAI_CONNECTION_ENTITY_TYPE,
         },
     },
     {
@@ -27,7 +27,7 @@ export const manifests: Array<UmbExtensionManifest> = [
         conditions: [
             {
                 alias: UMB_WORKSPACE_CONDITION_ALIAS,
-                match: UaiConnectionConstants.Workspace.Entity,
+                match: UAI_CONNECTION_WORKSPACE_ALIAS,
             },
         ],
     },
@@ -45,7 +45,7 @@ export const manifests: Array<UmbExtensionManifest> = [
         conditions: [
             {
                 alias: UMB_WORKSPACE_CONDITION_ALIAS,
-                match: UaiConnectionConstants.Workspace.Entity,
+                match: UAI_CONNECTION_WORKSPACE_ALIAS,
             },
         ],
     },

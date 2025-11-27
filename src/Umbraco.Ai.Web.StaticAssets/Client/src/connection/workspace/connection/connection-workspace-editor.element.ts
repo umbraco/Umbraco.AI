@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "./connection-workspace.context-token.js";
-import { UaiConnectionConstants } from "../../constants.js";
+import { UAI_CONNECTION_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UaiConnectionDetailModel } from "../../types.js";
 import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
 import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../connection-root/paths.js";
@@ -82,7 +82,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <umb-workspace-editor alias="${UaiConnectionConstants.Workspace.Entity}">
+            <umb-workspace-editor alias="${UAI_CONNECTION_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
                     <uui-button
                         href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}

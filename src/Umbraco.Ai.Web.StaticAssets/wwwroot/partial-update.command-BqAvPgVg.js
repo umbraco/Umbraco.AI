@@ -1,16 +1,16 @@
-import { UmbContextToken as a } from "@umbraco-cms/backoffice/context-api";
-import { U as e } from "./bundle.manifests-BsBZQJMT.js";
-const c = new a(
+import { UmbContextToken as s } from "@umbraco-cms/backoffice/context-api";
+import { a as e } from "./bundle.manifests-BwiwDf1o.js";
+const n = new s(
   "UmbWorkspaceContext",
   void 0,
-  (s) => s.getEntityType?.() === e.EntityType.Entity
+  (a) => a.getEntityType?.() === e
 );
-class i {
+class r {
   constructor(o) {
     this.correlationId = o;
   }
 }
-class m extends i {
+class m extends r {
   #t;
   constructor(o, t) {
     super(t), this.#t = o;
@@ -22,7 +22,7 @@ class m extends i {
   }
 }
 export {
-  c as U,
+  n as U,
   m as a
 };
-//# sourceMappingURL=partial-update.command-CD7WOKi_.js.map
+//# sourceMappingURL=partial-update.command-BqAvPgVg.js.map

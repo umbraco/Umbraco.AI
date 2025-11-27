@@ -1,15 +1,16 @@
 import type { ManifestCollection, ManifestCollectionView, ManifestCollectionAction } from "@umbraco-cms/backoffice/collection";
-import { UaiConnectionConstants } from "../constants.js";
+import { UAI_CONNECTION_COLLECTION_ALIAS } from "./constants.js";
+import { UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS } from "../repository/constants.js";
 import { connectionCollectionActionManifests } from "./action/manifests.js";
 
 export const connectionCollectionManifests: Array<ManifestCollection | ManifestCollectionView | ManifestCollectionAction> = [
     {
         type: "collection",
         kind: "default",
-        alias: UaiConnectionConstants.Collection,
+        alias: UAI_CONNECTION_COLLECTION_ALIAS,
         name: "Connection Collection",
         meta: {
-            repositoryAlias: UaiConnectionConstants.Repository.Collection,
+            repositoryAlias: UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS,
         },
     },
     {
@@ -22,7 +23,7 @@ export const connectionCollectionManifests: Array<ManifestCollection | ManifestC
             icon: "icon-list",
             pathName: "table",
         },
-        conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UaiConnectionConstants.Collection }],
+        conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_CONNECTION_COLLECTION_ALIAS }],
     },
     ...connectionCollectionActionManifests,
 ];

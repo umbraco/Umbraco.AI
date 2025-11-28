@@ -23,10 +23,10 @@ public class AllProfileControllerTests
         _controller = new AllProfileController(_profileRepositoryMock.Object, _mapperMock.Object);
     }
 
-    #region GetAll
+    #region GetAllProfiles
 
     [Fact]
-    public async Task GetAll_WithNoFilter_ReturnsAllProfiles()
+    public async Task GetAllProfiles_WithNoFilter_ReturnsAllProfiles()
     {
         // Arrange
         var profiles = new List<AiProfile>
@@ -52,7 +52,7 @@ public class AllProfileControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAllProfiles();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -61,7 +61,7 @@ public class AllProfileControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithCapabilityFilter_ReturnsFilteredProfiles()
+    public async Task GetAllProfiles_WithCapabilityFilter_ReturnsFilteredProfiles()
     {
         // Arrange
         var chatProfiles = new List<AiProfile>
@@ -86,7 +86,7 @@ public class AllProfileControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAll(capability: "Chat");
+        var result = await _controller.GetAllProfiles(capability: "Chat");
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -95,7 +95,7 @@ public class AllProfileControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithInvalidCapabilityFilter_ReturnsAllProfiles()
+    public async Task GetAllProfiles_WithInvalidCapabilityFilter_ReturnsAllProfiles()
     {
         // Arrange
         var profiles = new List<AiProfile>
@@ -112,7 +112,7 @@ public class AllProfileControllerTests
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act - passing invalid capability falls back to GetAllAsync
-        var result = await _controller.GetAll(capability: "InvalidCapability");
+        var result = await _controller.GetAllProfiles(capability: "InvalidCapability");
 
         // Assert
         _profileRepositoryMock.Verify(x => x.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -120,7 +120,7 @@ public class AllProfileControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithCaseInsensitiveCapability_ReturnsFilteredProfiles()
+    public async Task GetAllProfiles_WithCaseInsensitiveCapability_ReturnsFilteredProfiles()
     {
         // Arrange
         var embeddingProfiles = new List<AiProfile>
@@ -137,14 +137,14 @@ public class AllProfileControllerTests
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act - using lowercase
-        await _controller.GetAll(capability: "embedding");
+        await _controller.GetAllProfiles(capability: "embedding");
 
         // Assert
         _profileRepositoryMock.Verify(x => x.GetByCapability(AiCapability.Embedding, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task GetAll_WithEmptyList_ReturnsEmptyPagedViewModel()
+    public async Task GetAllProfiles_WithEmptyList_ReturnsEmptyPagedViewModel()
     {
         // Arrange
         _profileRepositoryMock
@@ -156,7 +156,7 @@ public class AllProfileControllerTests
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAllProfiles();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -166,7 +166,7 @@ public class AllProfileControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithPagination_ReturnsPagedResults()
+    public async Task GetAllProfiles_WithPagination_ReturnsPagedResults()
     {
         // Arrange
         var profiles = Enumerable.Range(1, 10)
@@ -188,7 +188,7 @@ public class AllProfileControllerTests
             }).ToList());
 
         // Act
-        var result = await _controller.GetAll(skip: 2, take: 3);
+        var result = await _controller.GetAllProfiles(skip: 2, take: 3);
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();

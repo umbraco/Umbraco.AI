@@ -22,10 +22,10 @@ public class ByIdConnectionControllerTests
         _controller = new ByIdConnectionController(_connectionServiceMock.Object, _mapperMock.Object);
     }
 
-    #region ById
+    #region GetConnectionById
 
     [Fact]
-    public async Task ById_WithExistingId_ReturnsConnection()
+    public async Task GetConnectionById_WithExistingId_ReturnsConnection()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -53,7 +53,7 @@ public class ByIdConnectionControllerTests
             .Returns(responseModel);
 
         // Act
-        var result = await _controller.ById(connectionId);
+        var result = await _controller.GetConnectionById(connectionId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -63,7 +63,7 @@ public class ByIdConnectionControllerTests
     }
 
     [Fact]
-    public async Task ById_WithNonExistingId_Returns404NotFound()
+    public async Task GetConnectionById_WithNonExistingId_Returns404NotFound()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -73,7 +73,7 @@ public class ByIdConnectionControllerTests
             .ReturnsAsync((AiConnection?)null);
 
         // Act
-        var result = await _controller.ById(connectionId);
+        var result = await _controller.GetConnectionById(connectionId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -82,7 +82,7 @@ public class ByIdConnectionControllerTests
     }
 
     [Fact]
-    public async Task ById_CallsServiceWithCorrectId()
+    public async Task GetConnectionById_CallsServiceWithCorrectId()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -97,7 +97,7 @@ public class ByIdConnectionControllerTests
             .Returns(new ConnectionResponseModel());
 
         // Act
-        await _controller.ById(connectionId);
+        await _controller.GetConnectionById(connectionId);
 
         // Assert
         _connectionServiceMock.Verify(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);

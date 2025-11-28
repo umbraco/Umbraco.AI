@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
@@ -38,7 +40,7 @@ public class ByAliasProfileController : ProfileControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(ProfileResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ByAlias(
+    public async Task<IActionResult> GetProfileByAlias(
         string alias,
         CancellationToken cancellationToken = default)
     {

@@ -6,7 +6,9 @@ using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Web.Common.Authorization;
 
@@ -47,7 +49,7 @@ public class CreateProfileController : ProfileControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Create(
+    public async Task<IActionResult> CreateProfile(
         CreateProfileRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
@@ -95,7 +97,7 @@ public class CreateProfileController : ProfileControllerBase
         var created = await _profileRepository.SaveAsync(profile, cancellationToken);
 
         return CreatedAtAction(
-            nameof(ByIdProfileController.ById),
+            nameof(ByIdProfileController.GetProfileById),
             nameof(ByIdProfileController).Replace("Controller", string.Empty),
             new { id = created.Id },
             created.Id.ToString());

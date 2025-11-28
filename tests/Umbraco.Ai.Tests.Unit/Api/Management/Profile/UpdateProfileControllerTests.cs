@@ -30,10 +30,10 @@ public class UpdateProfileControllerTests
             _registryMock.Object);
     }
 
-    #region Update
+    #region UpdateProfileById
 
     [Fact]
-    public async Task Update_WithValidRequest_ReturnsOk()
+    public async Task UpdateProfileById_WithValidRequest_ReturnsOk()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -73,14 +73,14 @@ public class UpdateProfileControllerTests
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
         // Act
-        var result = await _controller.Update(profileId, requestModel);
+        var result = await _controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         result.ShouldBeOfType<OkResult>();
     }
 
     [Fact]
-    public async Task Update_WithNonExistingProfile_Returns404NotFound()
+    public async Task UpdateProfileById_WithNonExistingProfile_Returns404NotFound()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -97,7 +97,7 @@ public class UpdateProfileControllerTests
             .ReturnsAsync((AiProfile?)null);
 
         // Act
-        var result = await _controller.Update(profileId, requestModel);
+        var result = await _controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -106,7 +106,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task Update_WithNonExistingConnection_Returns400BadRequest()
+    public async Task UpdateProfileById_WithNonExistingConnection_Returns400BadRequest()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -130,7 +130,7 @@ public class UpdateProfileControllerTests
             .ReturnsAsync((AiConnection?)null);
 
         // Act
-        var result = await _controller.Update(profileId, requestModel);
+        var result = await _controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -139,7 +139,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task Update_WithNonExistingProvider_Returns404NotFound()
+    public async Task UpdateProfileById_WithNonExistingProvider_Returns404NotFound()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -168,7 +168,7 @@ public class UpdateProfileControllerTests
             .Returns((FakeAiProvider?)null);
 
         // Act
-        var result = await _controller.Update(profileId, requestModel);
+        var result = await _controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -177,7 +177,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task Update_PreservesAliasFromExisting()
+    public async Task UpdateProfileById_PreservesAliasFromExisting()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -216,7 +216,7 @@ public class UpdateProfileControllerTests
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
         // Act
-        await _controller.Update(profileId, requestModel);
+        await _controller.UpdateProfileById(profileId, requestModel);
 
         // Assert - Alias should be preserved from existing profile
         capturedProfile.ShouldNotBeNull();
@@ -224,7 +224,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task Update_PreservesCapabilityFromExisting()
+    public async Task UpdateProfileById_PreservesCapabilityFromExisting()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -263,7 +263,7 @@ public class UpdateProfileControllerTests
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
         // Act
-        await _controller.Update(profileId, requestModel);
+        await _controller.UpdateProfileById(profileId, requestModel);
 
         // Assert - Capability should be preserved from existing profile
         capturedProfile.ShouldNotBeNull();

@@ -18,10 +18,10 @@ public class UpdateConnectionControllerTests
         _controller = new UpdateConnectionController(_connectionServiceMock.Object);
     }
 
-    #region Update
+    #region UpdateConnectionById
 
     [Fact]
-    public async Task Update_WithExistingConnection_ReturnsOk()
+    public async Task UpdateConnectionById_WithExistingConnection_ReturnsOk()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -48,14 +48,14 @@ public class UpdateConnectionControllerTests
             .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
 
         // Act
-        var result = await _controller.Update(connectionId, requestModel);
+        var result = await _controller.UpdateConnectionById(connectionId, requestModel);
 
         // Assert
         result.ShouldBeOfType<OkResult>();
     }
 
     [Fact]
-    public async Task Update_WithNonExistingConnection_Returns404NotFound()
+    public async Task UpdateConnectionById_WithNonExistingConnection_Returns404NotFound()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -71,7 +71,7 @@ public class UpdateConnectionControllerTests
             .ReturnsAsync((AiConnection?)null);
 
         // Act
-        var result = await _controller.Update(connectionId, requestModel);
+        var result = await _controller.UpdateConnectionById(connectionId, requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -80,7 +80,7 @@ public class UpdateConnectionControllerTests
     }
 
     [Fact]
-    public async Task Update_WithInvalidSettings_Returns400BadRequest()
+    public async Task UpdateConnectionById_WithInvalidSettings_Returns400BadRequest()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -106,7 +106,7 @@ public class UpdateConnectionControllerTests
             .ThrowsAsync(new InvalidOperationException("Settings validation failed"));
 
         // Act
-        var result = await _controller.Update(connectionId, requestModel);
+        var result = await _controller.UpdateConnectionById(connectionId, requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -115,7 +115,7 @@ public class UpdateConnectionControllerTests
     }
 
     [Fact]
-    public async Task Update_PreservesProviderIdFromExisting()
+    public async Task UpdateConnectionById_PreservesProviderIdFromExisting()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -142,7 +142,7 @@ public class UpdateConnectionControllerTests
             .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
 
         // Act
-        await _controller.Update(connectionId, requestModel);
+        await _controller.UpdateConnectionById(connectionId, requestModel);
 
         // Assert - ProviderId should be preserved from existing connection
         capturedConnection.ShouldNotBeNull();
@@ -150,7 +150,7 @@ public class UpdateConnectionControllerTests
     }
 
     [Fact]
-    public async Task Update_PreservesDateCreatedFromExisting()
+    public async Task UpdateConnectionById_PreservesDateCreatedFromExisting()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -178,7 +178,7 @@ public class UpdateConnectionControllerTests
             .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
 
         // Act
-        await _controller.Update(connectionId, requestModel);
+        await _controller.UpdateConnectionById(connectionId, requestModel);
 
         // Assert - DateCreated should be preserved from existing connection
         capturedConnection.ShouldNotBeNull();

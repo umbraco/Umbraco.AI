@@ -18,10 +18,10 @@ public class CreateConnectionControllerTests
         _controller = new CreateConnectionController(_connectionServiceMock.Object);
     }
 
-    #region Create
+    #region CreateConnection
 
     [Fact]
-    public async Task Create_WithValidRequest_ReturnsCreatedWithId()
+    public async Task CreateConnection_WithValidRequest_ReturnsCreatedWithId()
     {
         // Arrange
         var requestModel = new CreateConnectionRequestModel
@@ -45,16 +45,16 @@ public class CreateConnectionControllerTests
             .ReturnsAsync(createdConnection);
 
         // Act
-        var result = await _controller.Create(requestModel);
+        var result = await _controller.CreateConnection(requestModel);
 
         // Assert
         var createdResult = result.ShouldBeOfType<CreatedAtActionResult>();
-        createdResult.ActionName.ShouldBe(nameof(ByIdConnectionController.ById));
+        createdResult.ActionName.ShouldBe(nameof(ByIdConnectionController.GetConnectionById));
         createdResult.Value.ShouldBe(createdId.ToString());
     }
 
     [Fact]
-    public async Task Create_WithProviderNotFound_Returns404NotFound()
+    public async Task CreateConnection_WithProviderNotFound_Returns404NotFound()
     {
         // Arrange
         var requestModel = new CreateConnectionRequestModel
@@ -70,7 +70,7 @@ public class CreateConnectionControllerTests
             .ThrowsAsync(new InvalidOperationException("Provider 'unknown-provider' not found in registry"));
 
         // Act
-        var result = await _controller.Create(requestModel);
+        var result = await _controller.CreateConnection(requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -79,7 +79,7 @@ public class CreateConnectionControllerTests
     }
 
     [Fact]
-    public async Task Create_WithInvalidSettings_Returns400BadRequest()
+    public async Task CreateConnection_WithInvalidSettings_Returns400BadRequest()
     {
         // Arrange
         var requestModel = new CreateConnectionRequestModel
@@ -96,7 +96,7 @@ public class CreateConnectionControllerTests
             .ThrowsAsync(new InvalidOperationException("Settings validation failed: API Key is required"));
 
         // Act
-        var result = await _controller.Create(requestModel);
+        var result = await _controller.CreateConnection(requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -105,7 +105,7 @@ public class CreateConnectionControllerTests
     }
 
     [Fact]
-    public async Task Create_SetsConnectionIdToEmpty()
+    public async Task CreateConnection_SetsConnectionIdToEmpty()
     {
         // Arrange
         var requestModel = new CreateConnectionRequestModel
@@ -123,7 +123,7 @@ public class CreateConnectionControllerTests
             .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
 
         // Act
-        await _controller.Create(requestModel);
+        await _controller.CreateConnection(requestModel);
 
         // Assert - Controller should pass Guid.Empty, service generates the ID
         capturedConnection.ShouldNotBeNull();
@@ -131,7 +131,7 @@ public class CreateConnectionControllerTests
     }
 
     [Fact]
-    public async Task Create_MapsRequestModelToConnection()
+    public async Task CreateConnection_MapsRequestModelToConnection()
     {
         // Arrange
         var settings = new { ApiKey = "test-key" };
@@ -151,7 +151,7 @@ public class CreateConnectionControllerTests
             .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
 
         // Act
-        await _controller.Create(requestModel);
+        await _controller.CreateConnection(requestModel);
 
         // Assert
         capturedConnection.ShouldNotBeNull();

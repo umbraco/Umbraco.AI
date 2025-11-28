@@ -22,10 +22,10 @@ public class ByIdProfileControllerTests
         _controller = new ByIdProfileController(_profileRepositoryMock.Object, _mapperMock.Object);
     }
 
-    #region ById
+    #region GetProfileById
 
     [Fact]
-    public async Task ById_WithExistingId_ReturnsProfile()
+    public async Task GetProfileById_WithExistingId_ReturnsProfile()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -53,7 +53,7 @@ public class ByIdProfileControllerTests
             .Returns(responseModel);
 
         // Act
-        var result = await _controller.ById(profileId);
+        var result = await _controller.GetProfileById(profileId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -63,7 +63,7 @@ public class ByIdProfileControllerTests
     }
 
     [Fact]
-    public async Task ById_WithNonExistingId_Returns404NotFound()
+    public async Task GetProfileById_WithNonExistingId_Returns404NotFound()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -73,7 +73,7 @@ public class ByIdProfileControllerTests
             .ReturnsAsync((AiProfile?)null);
 
         // Act
-        var result = await _controller.ById(profileId);
+        var result = await _controller.GetProfileById(profileId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -82,7 +82,7 @@ public class ByIdProfileControllerTests
     }
 
     [Fact]
-    public async Task ById_CallsRepositoryWithCorrectId()
+    public async Task GetProfileById_CallsRepositoryWithCorrectId()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -97,7 +97,7 @@ public class ByIdProfileControllerTests
             .Returns(new ProfileResponseModel());
 
         // Act
-        await _controller.ById(profileId);
+        await _controller.GetProfileById(profileId);
 
         // Assert
         _profileRepositoryMock.Verify(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()), Times.Once);

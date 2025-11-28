@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
@@ -44,7 +46,7 @@ public class ModelsByProviderController : ProviderControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<ModelDescriptorResponseModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetModels(
+    public async Task<IActionResult> GetModelsByProviderId(
         string id,
         [FromQuery] Guid connectionId,
         [FromQuery] string? capability = null,

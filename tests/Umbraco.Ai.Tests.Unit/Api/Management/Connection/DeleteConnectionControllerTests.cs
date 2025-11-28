@@ -15,10 +15,10 @@ public class DeleteConnectionControllerTests
         _controller = new DeleteConnectionController(_connectionServiceMock.Object);
     }
 
-    #region Delete
+    #region DeleteConnectionById
 
     [Fact]
-    public async Task Delete_WithExistingConnection_ReturnsOk()
+    public async Task DeleteConnectionById_WithExistingConnection_ReturnsOk()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -28,14 +28,14 @@ public class DeleteConnectionControllerTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _controller.Delete(connectionId);
+        var result = await _controller.DeleteConnectionById(connectionId);
 
         // Assert
         result.ShouldBeOfType<OkResult>();
     }
 
     [Fact]
-    public async Task Delete_WithNonExistingConnection_Returns404NotFound()
+    public async Task DeleteConnectionById_WithNonExistingConnection_Returns404NotFound()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -45,7 +45,7 @@ public class DeleteConnectionControllerTests
             .ThrowsAsync(new InvalidOperationException($"Connection with ID '{connectionId}' not found"));
 
         // Act
-        var result = await _controller.Delete(connectionId);
+        var result = await _controller.DeleteConnectionById(connectionId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -54,7 +54,7 @@ public class DeleteConnectionControllerTests
     }
 
     [Fact]
-    public async Task Delete_WithConnectionInUse_Returns400BadRequest()
+    public async Task DeleteConnectionById_WithConnectionInUse_Returns400BadRequest()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -64,7 +64,7 @@ public class DeleteConnectionControllerTests
             .ThrowsAsync(new InvalidOperationException("Connection is in use by one or more profiles"));
 
         // Act
-        var result = await _controller.Delete(connectionId);
+        var result = await _controller.DeleteConnectionById(connectionId);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -73,7 +73,7 @@ public class DeleteConnectionControllerTests
     }
 
     [Fact]
-    public async Task Delete_CallsServiceWithCorrectId()
+    public async Task DeleteConnectionById_CallsServiceWithCorrectId()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -83,7 +83,7 @@ public class DeleteConnectionControllerTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await _controller.Delete(connectionId);
+        await _controller.DeleteConnectionById(connectionId);
 
         // Assert
         _connectionServiceMock.Verify(x => x.DeleteConnectionAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);

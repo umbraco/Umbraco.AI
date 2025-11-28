@@ -22,10 +22,10 @@ public class ByAliasProfileControllerTests
         _controller = new ByAliasProfileController(_profileRepositoryMock.Object, _mapperMock.Object);
     }
 
-    #region ByAlias
+    #region GetProfileByAlias
 
     [Fact]
-    public async Task ByAlias_WithExistingAlias_ReturnsProfile()
+    public async Task GetProfileByAlias_WithExistingAlias_ReturnsProfile()
     {
         // Arrange
         var alias = "my-chat-profile";
@@ -52,7 +52,7 @@ public class ByAliasProfileControllerTests
             .Returns(responseModel);
 
         // Act
-        var result = await _controller.ByAlias(alias);
+        var result = await _controller.GetProfileByAlias(alias);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -62,7 +62,7 @@ public class ByAliasProfileControllerTests
     }
 
     [Fact]
-    public async Task ByAlias_WithNonExistingAlias_Returns404NotFound()
+    public async Task GetProfileByAlias_WithNonExistingAlias_Returns404NotFound()
     {
         // Arrange
         var alias = "non-existent-alias";
@@ -72,7 +72,7 @@ public class ByAliasProfileControllerTests
             .ReturnsAsync((AiProfile?)null);
 
         // Act
-        var result = await _controller.ByAlias(alias);
+        var result = await _controller.GetProfileByAlias(alias);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -81,7 +81,7 @@ public class ByAliasProfileControllerTests
     }
 
     [Fact]
-    public async Task ByAlias_CallsRepositoryWithCorrectAlias()
+    public async Task GetProfileByAlias_CallsRepositoryWithCorrectAlias()
     {
         // Arrange
         var alias = "my-chat-profile";
@@ -96,7 +96,7 @@ public class ByAliasProfileControllerTests
             .Returns(new ProfileResponseModel());
 
         // Act
-        await _controller.ByAlias(alias);
+        await _controller.GetProfileByAlias(alias);
 
         // Assert
         _profileRepositoryMock.Verify(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()), Times.Once);

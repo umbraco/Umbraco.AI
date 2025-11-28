@@ -6,6 +6,11 @@
 public class Constants
 {
     /// <summary>
+    /// Defines the root namespace for the application.
+    /// </summary>
+    public const string AppNamespaceRoot = "Umbraco.Ai";
+    
+    /// <summary>
     /// Defines constants for the AI Management API.
     /// </summary>
     public static class ManagementApi
@@ -29,12 +34,7 @@ public class Constants
         /// <summary>
         /// The namespace prefix for AI Management API.
         /// </summary>
-        public const string ApiNamespacePrefix = "Umbraco.Ai.Web.Api.Management";
-
-        /// <summary>
-        /// The name of the API group for version 1.0.
-        /// </summary>
-        public const string GroupNameV1 = "1.0";
+        public const string ApiNamespacePrefix = $"{AppNamespaceRoot}.Web.Api.Management";
         
         /// <summary>
         /// Defines constants for different feature areas within the Management API.

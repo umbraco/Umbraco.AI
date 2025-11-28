@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Web.Common.Authorization;
 
@@ -37,7 +39,7 @@ public class CreateConnectionController : ConnectionControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Create(
+    public async Task<IActionResult> CreateConnection(
         CreateConnectionRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
@@ -55,7 +57,7 @@ public class CreateConnectionController : ConnectionControllerBase
         {
             var created = await _connectionService.SaveConnectionAsync(connection, cancellationToken);
             return CreatedAtAction(
-                nameof(ByIdConnectionController.ById),
+                nameof(ByIdConnectionController.GetConnectionById),
                 nameof(ByIdConnectionController).Replace("Controller", string.Empty),
                 new { id = created.Id },
                 created.Id.ToString());

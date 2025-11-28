@@ -22,10 +22,10 @@ public class CompleteChatControllerTests
         _controller = new CompleteChatController(_chatServiceMock.Object, _mapperMock.Object);
     }
 
-    #region Complete
+    #region CompleteChat
 
     [Fact]
-    public async Task Complete_WithValidRequest_ReturnsOkWithResponse()
+    public async Task CompleteChat_WithValidRequest_ReturnsOkWithResponse()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -64,7 +64,7 @@ public class CompleteChatControllerTests
             .Returns(responseModel);
 
         // Act
-        var result = await _controller.Complete(requestModel);
+        var result = await _controller.CompleteChat(requestModel);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -73,7 +73,7 @@ public class CompleteChatControllerTests
     }
 
     [Fact]
-    public async Task Complete_WithProfileId_CallsServiceWithProfileId()
+    public async Task CompleteChat_WithProfileId_CallsServiceWithProfileId()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -110,7 +110,7 @@ public class CompleteChatControllerTests
             .Returns(new ChatResponseModel());
 
         // Act
-        await _controller.Complete(requestModel);
+        await _controller.CompleteChat(requestModel);
 
         // Assert
         _chatServiceMock.Verify(x => x.GetResponseAsync(
@@ -121,7 +121,7 @@ public class CompleteChatControllerTests
     }
 
     [Fact]
-    public async Task Complete_WithoutProfileId_CallsServiceWithDefaultProfile()
+    public async Task CompleteChat_WithoutProfileId_CallsServiceWithDefaultProfile()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -155,7 +155,7 @@ public class CompleteChatControllerTests
             .Returns(new ChatResponseModel());
 
         // Act
-        await _controller.Complete(requestModel);
+        await _controller.CompleteChat(requestModel);
 
         // Assert - Should call the overload without profileId
         _chatServiceMock.Verify(x => x.GetResponseAsync(
@@ -165,7 +165,7 @@ public class CompleteChatControllerTests
     }
 
     [Fact]
-    public async Task Complete_WithProfileNotFound_Returns404NotFound()
+    public async Task CompleteChat_WithProfileNotFound_Returns404NotFound()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -196,7 +196,7 @@ public class CompleteChatControllerTests
             .ThrowsAsync(new InvalidOperationException($"Profile with ID '{profileId}' not found"));
 
         // Act
-        var result = await _controller.Complete(requestModel);
+        var result = await _controller.CompleteChat(requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -205,7 +205,7 @@ public class CompleteChatControllerTests
     }
 
     [Fact]
-    public async Task Complete_WithChatCompletionFailure_Returns400BadRequest()
+    public async Task CompleteChat_WithChatCompletionFailure_Returns400BadRequest()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -233,7 +233,7 @@ public class CompleteChatControllerTests
             .ThrowsAsync(new InvalidOperationException("API quota exceeded"));
 
         // Act
-        var result = await _controller.Complete(requestModel);
+        var result = await _controller.CompleteChat(requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -244,7 +244,7 @@ public class CompleteChatControllerTests
     }
 
     [Fact]
-    public async Task Complete_MapsRequestMessagesToService()
+    public async Task CompleteChat_MapsRequestMessagesToService()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -282,7 +282,7 @@ public class CompleteChatControllerTests
             .Returns(new ChatResponseModel());
 
         // Act
-        await _controller.Complete(requestModel);
+        await _controller.CompleteChat(requestModel);
 
         // Assert
         capturedMessages.ShouldNotBeNull();

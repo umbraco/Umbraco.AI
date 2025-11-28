@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Services;
+using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
@@ -40,7 +42,7 @@ public class GenerateEmbeddingController : EmbeddingControllerBase
     [ProducesResponseType(typeof(EmbeddingResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Generate(
+    public async Task<IActionResult> GenerateEmbeddings(
         GenerateEmbeddingRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {

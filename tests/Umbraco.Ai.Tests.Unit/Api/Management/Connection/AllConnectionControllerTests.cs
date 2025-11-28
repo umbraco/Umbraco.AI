@@ -23,10 +23,10 @@ public class AllConnectionControllerTests
         _controller = new AllConnectionController(_connectionServiceMock.Object, _mapperMock.Object);
     }
 
-    #region GetAll
+    #region GetAllConnections
 
     [Fact]
-    public async Task GetAll_WithNoFilter_ReturnsAllConnections()
+    public async Task GetAllConnections_WithNoFilter_ReturnsAllConnections()
     {
         // Arrange
         var connections = new List<AiConnection>
@@ -53,7 +53,7 @@ public class AllConnectionControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAllConnections();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -63,7 +63,7 @@ public class AllConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithProviderFilter_ReturnsFilteredConnections()
+    public async Task GetAllConnections_WithProviderFilter_ReturnsFilteredConnections()
     {
         // Arrange
         var connections = new List<AiConnection>
@@ -89,7 +89,7 @@ public class AllConnectionControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAll(providerId: "openai");
+        var result = await _controller.GetAllConnections(providerId: "openai");
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -98,7 +98,7 @@ public class AllConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithEmptyList_ReturnsEmptyPagedViewModel()
+    public async Task GetAllConnections_WithEmptyList_ReturnsEmptyPagedViewModel()
     {
         // Arrange
         var connections = new List<AiConnection>();
@@ -112,7 +112,7 @@ public class AllConnectionControllerTests
             .Returns(new List<ConnectionItemResponseModel>());
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAllConnections();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -122,7 +122,7 @@ public class AllConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithPagination_ReturnsPagedResults()
+    public async Task GetAllConnections_WithPagination_ReturnsPagedResults()
     {
         // Arrange
         var allConnections = Enumerable.Range(1, 10)
@@ -148,7 +148,7 @@ public class AllConnectionControllerTests
             }).ToList());
 
         // Act
-        var result = await _controller.GetAll(skip: 2, take: 3);
+        var result = await _controller.GetAllConnections(skip: 2, take: 3);
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();

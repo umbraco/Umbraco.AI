@@ -31,10 +31,10 @@ public class StreamChatControllerTests
         };
     }
 
-    #region Stream
+    #region StreamChat
 
     [Fact]
-    public async Task Stream_WithValidRequest_SetsCorrectContentType()
+    public async Task StreamChat_WithValidRequest_SetsCorrectContentType()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -66,14 +66,14 @@ public class StreamChatControllerTests
             .Returns(new ChatStreamChunkModel());
 
         // Act
-        await _controller.Stream(requestModel);
+        await _controller.StreamChat(requestModel);
 
         // Assert
         _httpContext.Response.ContentType.ShouldBe("text/event-stream");
     }
 
     [Fact]
-    public async Task Stream_WithValidRequest_SetsNoCacheHeader()
+    public async Task StreamChat_WithValidRequest_SetsNoCacheHeader()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -101,14 +101,14 @@ public class StreamChatControllerTests
             .Returns(AsyncEnumerable.Empty<ChatResponseUpdate>());
 
         // Act
-        await _controller.Stream(requestModel);
+        await _controller.StreamChat(requestModel);
 
         // Assert
         _httpContext.Response.Headers.CacheControl.ToString().ShouldBe("no-cache");
     }
 
     [Fact]
-    public async Task Stream_WithProfileId_CallsServiceWithProfileId()
+    public async Task StreamChat_WithProfileId_CallsServiceWithProfileId()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -139,7 +139,7 @@ public class StreamChatControllerTests
             .Returns(AsyncEnumerable.Empty<ChatResponseUpdate>());
 
         // Act
-        await _controller.Stream(requestModel);
+        await _controller.StreamChat(requestModel);
 
         // Assert
         _chatServiceMock.Verify(x => x.GetStreamingResponseAsync(
@@ -150,7 +150,7 @@ public class StreamChatControllerTests
     }
 
     [Fact]
-    public async Task Stream_WithoutProfileId_CallsServiceWithDefaultProfile()
+    public async Task StreamChat_WithoutProfileId_CallsServiceWithDefaultProfile()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -178,7 +178,7 @@ public class StreamChatControllerTests
             .Returns(AsyncEnumerable.Empty<ChatResponseUpdate>());
 
         // Act
-        await _controller.Stream(requestModel);
+        await _controller.StreamChat(requestModel);
 
         // Assert - Should call the overload without profileId
         _chatServiceMock.Verify(x => x.GetStreamingResponseAsync(
@@ -188,7 +188,7 @@ public class StreamChatControllerTests
     }
 
     [Fact]
-    public async Task Stream_WritesChunksToResponse()
+    public async Task StreamChat_WritesChunksToResponse()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -226,7 +226,7 @@ public class StreamChatControllerTests
             .Returns(new ChatStreamChunkModel { Content = "chunk" });
 
         // Act
-        await _controller.Stream(requestModel);
+        await _controller.StreamChat(requestModel);
 
         // Assert
         _httpContext.Response.Body.Position = 0;
@@ -239,7 +239,7 @@ public class StreamChatControllerTests
     }
 
     [Fact]
-    public async Task Stream_WithProfileNotFound_SetsNotFoundStatusCode()
+    public async Task StreamChat_WithProfileNotFound_SetsNotFoundStatusCode()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -270,14 +270,14 @@ public class StreamChatControllerTests
             .Returns(ThrowingAsyncEnumerable($"Profile with ID '{profileId}' not found"));
 
         // Act
-        await _controller.Stream(requestModel);
+        await _controller.StreamChat(requestModel);
 
         // Assert
         _httpContext.Response.StatusCode.ShouldBe(StatusCodes.Status404NotFound);
     }
 
     [Fact]
-    public async Task Stream_WithStreamingFailure_SetsBadRequestStatusCode()
+    public async Task StreamChat_WithStreamingFailure_SetsBadRequestStatusCode()
     {
         // Arrange
         var requestModel = new ChatRequestModel
@@ -305,7 +305,7 @@ public class StreamChatControllerTests
             .Returns(ThrowingAsyncEnumerable("Connection timeout", isNotFound: false));
 
         // Act
-        await _controller.Stream(requestModel);
+        await _controller.StreamChat(requestModel);
 
         // Assert
         _httpContext.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);

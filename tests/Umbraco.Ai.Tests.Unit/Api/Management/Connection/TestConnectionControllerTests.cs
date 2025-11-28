@@ -16,10 +16,10 @@ public class TestConnectionControllerTests
         _controller = new TestConnectionController(_connectionServiceMock.Object);
     }
 
-    #region Test
+    #region TestConnectionById
 
     [Fact]
-    public async Task Test_WithValidConnection_ReturnsSuccessResult()
+    public async Task TestConnectionById_WithValidConnection_ReturnsSuccessResult()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -29,7 +29,7 @@ public class TestConnectionControllerTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _controller.Test(connectionId);
+        var result = await _controller.TestConnectionById(connectionId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -39,7 +39,7 @@ public class TestConnectionControllerTests
     }
 
     [Fact]
-    public async Task Test_WithFailingConnection_ReturnsFailureResult()
+    public async Task TestConnectionById_WithFailingConnection_ReturnsFailureResult()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -49,7 +49,7 @@ public class TestConnectionControllerTests
             .ReturnsAsync(false);
 
         // Act
-        var result = await _controller.Test(connectionId);
+        var result = await _controller.TestConnectionById(connectionId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -59,7 +59,7 @@ public class TestConnectionControllerTests
     }
 
     [Fact]
-    public async Task Test_WithNonExistingConnection_Returns404NotFound()
+    public async Task TestConnectionById_WithNonExistingConnection_Returns404NotFound()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -69,7 +69,7 @@ public class TestConnectionControllerTests
             .ThrowsAsync(new InvalidOperationException($"Connection with ID '{connectionId}' not found"));
 
         // Act
-        var result = await _controller.Test(connectionId);
+        var result = await _controller.TestConnectionById(connectionId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -78,7 +78,7 @@ public class TestConnectionControllerTests
     }
 
     [Fact]
-    public async Task Test_WithProviderException_ReturnsFailureWithMessage()
+    public async Task TestConnectionById_WithProviderException_ReturnsFailureWithMessage()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -89,7 +89,7 @@ public class TestConnectionControllerTests
             .ThrowsAsync(new Exception(errorMessage));
 
         // Act
-        var result = await _controller.Test(connectionId);
+        var result = await _controller.TestConnectionById(connectionId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -99,7 +99,7 @@ public class TestConnectionControllerTests
     }
 
     [Fact]
-    public async Task Test_CallsServiceWithCorrectId()
+    public async Task TestConnectionById_CallsServiceWithCorrectId()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -109,7 +109,7 @@ public class TestConnectionControllerTests
             .ReturnsAsync(true);
 
         // Act
-        await _controller.Test(connectionId);
+        await _controller.TestConnectionById(connectionId);
 
         // Assert
         _connectionServiceMock.Verify(x => x.TestConnectionAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);

@@ -31,10 +31,10 @@ public class ModelsByProviderControllerTests
             _mapperMock.Object);
     }
 
-    #region GetModels
+    #region GetModelsByProviderId
 
     [Fact]
-    public async Task GetModels_WithValidProviderAndConnection_ReturnsModels()
+    public async Task GetModelsByProviderId_WithValidProviderAndConnection_ReturnsModels()
     {
         // Arrange
         var providerId = "openai";
@@ -61,7 +61,7 @@ public class ModelsByProviderControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetModels(providerId, connectionId);
+        var result = await _controller.GetModelsByProviderId(providerId, connectionId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -70,7 +70,7 @@ public class ModelsByProviderControllerTests
     }
 
     [Fact]
-    public async Task GetModels_WithNonExistingProvider_Returns404NotFound()
+    public async Task GetModelsByProviderId_WithNonExistingProvider_Returns404NotFound()
     {
         // Arrange
         var providerId = "unknown-provider";
@@ -81,7 +81,7 @@ public class ModelsByProviderControllerTests
             .Returns((IAiProvider?)null);
 
         // Act
-        var result = await _controller.GetModels(providerId, connectionId);
+        var result = await _controller.GetModelsByProviderId(providerId, connectionId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -90,7 +90,7 @@ public class ModelsByProviderControllerTests
     }
 
     [Fact]
-    public async Task GetModels_WithNonExistingConnection_Returns404NotFound()
+    public async Task GetModelsByProviderId_WithNonExistingConnection_Returns404NotFound()
     {
         // Arrange
         var providerId = "openai";
@@ -106,7 +106,7 @@ public class ModelsByProviderControllerTests
             .ReturnsAsync((AiConnection?)null);
 
         // Act
-        var result = await _controller.GetModels(providerId, connectionId);
+        var result = await _controller.GetModelsByProviderId(providerId, connectionId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -115,7 +115,7 @@ public class ModelsByProviderControllerTests
     }
 
     [Fact]
-    public async Task GetModels_WithCapabilityFilter_ReturnsFilteredModels()
+    public async Task GetModelsByProviderId_WithCapabilityFilter_ReturnsFilteredModels()
     {
         // Arrange
         var providerId = "openai";
@@ -140,7 +140,7 @@ public class ModelsByProviderControllerTests
             .Returns(new List<ModelDescriptorResponseModel>());
 
         // Act - Filter by Chat capability
-        await _controller.GetModels(providerId, connectionId, capability: "Chat");
+        await _controller.GetModelsByProviderId(providerId, connectionId, capability: "Chat");
 
         // Assert - GetModelsAsync should only be called on Chat capability
         // The provider has 2 capabilities, but only Chat should be queried
@@ -150,7 +150,7 @@ public class ModelsByProviderControllerTests
     }
 
     [Fact]
-    public async Task GetModels_WithProviderWithNoCapabilities_ReturnsEmptyList()
+    public async Task GetModelsByProviderId_WithProviderWithNoCapabilities_ReturnsEmptyList()
     {
         // Arrange
         var providerId = "empty-provider";
@@ -172,7 +172,7 @@ public class ModelsByProviderControllerTests
             .Returns(new List<ModelDescriptorResponseModel>());
 
         // Act
-        var result = await _controller.GetModels(providerId, connectionId);
+        var result = await _controller.GetModelsByProviderId(providerId, connectionId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -181,7 +181,7 @@ public class ModelsByProviderControllerTests
     }
 
     [Fact]
-    public async Task GetModels_WithInvalidCapabilityFilter_ReturnsAllModels()
+    public async Task GetModelsByProviderId_WithInvalidCapabilityFilter_ReturnsAllModels()
     {
         // Arrange
         var providerId = "openai";
@@ -203,7 +203,7 @@ public class ModelsByProviderControllerTests
             .Returns(new List<ModelDescriptorResponseModel>());
 
         // Act - Invalid capability falls back to all capabilities
-        await _controller.GetModels(providerId, connectionId, capability: "InvalidCapability");
+        await _controller.GetModelsByProviderId(providerId, connectionId, capability: "InvalidCapability");
 
         // Assert - Should still return OK (models from all capabilities)
         _mapperMock.Verify(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(
@@ -211,7 +211,7 @@ public class ModelsByProviderControllerTests
     }
 
     [Fact]
-    public async Task GetModels_DeduplicatesModelsByModelId()
+    public async Task GetModelsByProviderId_DeduplicatesModelsByModelId()
     {
         // Arrange
         var providerId = "openai";
@@ -243,7 +243,7 @@ public class ModelsByProviderControllerTests
             .Returns(new List<ModelDescriptorResponseModel>());
 
         // Act
-        await _controller.GetModels(providerId, connectionId);
+        await _controller.GetModelsByProviderId(providerId, connectionId);
 
         // Assert - Should only have 1 model after deduplication
         capturedModels.ShouldNotBeNull();

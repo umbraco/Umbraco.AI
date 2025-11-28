@@ -22,10 +22,10 @@ public class GenerateEmbeddingControllerTests
         _controller = new GenerateEmbeddingController(_embeddingServiceMock.Object, _mapperMock.Object);
     }
 
-    #region Generate
+    #region GenerateEmbeddings
 
     [Fact]
-    public async Task Generate_WithValidRequest_ReturnsEmbeddings()
+    public async Task GenerateEmbeddings_WithValidRequest_ReturnsEmbeddings()
     {
         // Arrange
         var requestModel = new GenerateEmbeddingRequestModel
@@ -51,7 +51,7 @@ public class GenerateEmbeddingControllerTests
             .Returns((Embedding<float> e) => new EmbeddingItemModel { Vector = e.Vector.ToArray() });
 
         // Act
-        var result = await _controller.Generate(requestModel);
+        var result = await _controller.GenerateEmbeddings(requestModel);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -62,7 +62,7 @@ public class GenerateEmbeddingControllerTests
     }
 
     [Fact]
-    public async Task Generate_WithProfileId_CallsServiceWithProfileId()
+    public async Task GenerateEmbeddings_WithProfileId_CallsServiceWithProfileId()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -90,7 +90,7 @@ public class GenerateEmbeddingControllerTests
             .Returns(new EmbeddingItemModel { Vector = new[] { 0.1f } });
 
         // Act
-        await _controller.Generate(requestModel);
+        await _controller.GenerateEmbeddings(requestModel);
 
         // Assert
         _embeddingServiceMock.Verify(x => x.GenerateEmbeddingsAsync(
@@ -101,7 +101,7 @@ public class GenerateEmbeddingControllerTests
     }
 
     [Fact]
-    public async Task Generate_WithoutProfileId_CallsServiceWithDefaultProfile()
+    public async Task GenerateEmbeddings_WithoutProfileId_CallsServiceWithDefaultProfile()
     {
         // Arrange
         var requestModel = new GenerateEmbeddingRequestModel
@@ -126,7 +126,7 @@ public class GenerateEmbeddingControllerTests
             .Returns(new EmbeddingItemModel { Vector = new[] { 0.1f } });
 
         // Act
-        await _controller.Generate(requestModel);
+        await _controller.GenerateEmbeddings(requestModel);
 
         // Assert - Should call the overload without profileId
         _embeddingServiceMock.Verify(x => x.GenerateEmbeddingsAsync(
@@ -136,7 +136,7 @@ public class GenerateEmbeddingControllerTests
     }
 
     [Fact]
-    public async Task Generate_WithProfileNotFound_Returns404NotFound()
+    public async Task GenerateEmbeddings_WithProfileNotFound_Returns404NotFound()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -155,7 +155,7 @@ public class GenerateEmbeddingControllerTests
             .ThrowsAsync(new InvalidOperationException($"Profile with ID '{profileId}' not found"));
 
         // Act
-        var result = await _controller.Generate(requestModel);
+        var result = await _controller.GenerateEmbeddings(requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -164,7 +164,7 @@ public class GenerateEmbeddingControllerTests
     }
 
     [Fact]
-    public async Task Generate_WithEmbeddingGenerationFailure_Returns400BadRequest()
+    public async Task GenerateEmbeddings_WithEmbeddingGenerationFailure_Returns400BadRequest()
     {
         // Arrange
         var requestModel = new GenerateEmbeddingRequestModel
@@ -180,7 +180,7 @@ public class GenerateEmbeddingControllerTests
             .ThrowsAsync(new InvalidOperationException("API rate limit exceeded"));
 
         // Act
-        var result = await _controller.Generate(requestModel);
+        var result = await _controller.GenerateEmbeddings(requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -191,7 +191,7 @@ public class GenerateEmbeddingControllerTests
     }
 
     [Fact]
-    public async Task Generate_SetsCorrectIndexOnEachEmbedding()
+    public async Task GenerateEmbeddings_SetsCorrectIndexOnEachEmbedding()
     {
         // Arrange
         var requestModel = new GenerateEmbeddingRequestModel
@@ -218,7 +218,7 @@ public class GenerateEmbeddingControllerTests
             .Returns((Embedding<float> e) => new EmbeddingItemModel { Vector = e.Vector.ToArray() });
 
         // Act
-        var result = await _controller.Generate(requestModel);
+        var result = await _controller.GenerateEmbeddings(requestModel);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();

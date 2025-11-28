@@ -22,10 +22,10 @@ public class AllProviderControllerTests
         _controller = new AllProviderController(_registryMock.Object, _mapperMock.Object);
     }
 
-    #region GetAll
+    #region GetAllProviders
 
     [Fact]
-    public async Task GetAll_ReturnsAllProviders()
+    public async Task GetAllProviders_ReturnsAllProviders()
     {
         // Arrange
         var providers = new List<IAiProvider>
@@ -49,7 +49,7 @@ public class AllProviderControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAllProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -58,7 +58,7 @@ public class AllProviderControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithNoProviders_ReturnsEmptyList()
+    public async Task GetAllProviders_WithNoProviders_ReturnsEmptyList()
     {
         // Arrange
         _registryMock
@@ -70,7 +70,7 @@ public class AllProviderControllerTests
             .Returns(new List<ProviderItemResponseModel>());
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAllProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -79,7 +79,7 @@ public class AllProviderControllerTests
     }
 
     [Fact]
-    public async Task GetAll_CallsMapperWithProvidersFromRegistry()
+    public async Task GetAllProviders_CallsMapperWithProvidersFromRegistry()
     {
         // Arrange
         var providers = new List<IAiProvider>
@@ -96,7 +96,7 @@ public class AllProviderControllerTests
             .Returns(new List<ProviderItemResponseModel>());
 
         // Act
-        await _controller.GetAll();
+        await _controller.GetAllProviders();
 
         // Assert
         _mapperMock.Verify(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(providers), Times.Once);

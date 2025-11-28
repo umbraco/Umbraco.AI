@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Web.Common.Authorization;
 
@@ -35,7 +37,7 @@ public class TestConnectionController : ConnectionControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(ConnectionTestResultModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Test(
+    public async Task<IActionResult> TestConnectionById(
         Guid id,
         CancellationToken cancellationToken = default)
     {

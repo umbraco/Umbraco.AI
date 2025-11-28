@@ -22,10 +22,10 @@ public class ByIdProviderControllerTests
         _controller = new ByIdProviderController(_registryMock.Object, _mapperMock.Object);
     }
 
-    #region ById
+    #region GetProviderById
 
     [Fact]
-    public async Task ById_WithExistingProvider_ReturnsProvider()
+    public async Task GetProviderById_WithExistingProvider_ReturnsProvider()
     {
         // Arrange
         var providerId = "openai";
@@ -50,7 +50,7 @@ public class ByIdProviderControllerTests
             .Returns(responseModel);
 
         // Act
-        var result = await _controller.ById(providerId);
+        var result = await _controller.GetProviderById(providerId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -61,7 +61,7 @@ public class ByIdProviderControllerTests
     }
 
     [Fact]
-    public async Task ById_WithNonExistingProvider_Returns404NotFound()
+    public async Task GetProviderById_WithNonExistingProvider_Returns404NotFound()
     {
         // Arrange
         var providerId = "unknown-provider";
@@ -71,7 +71,7 @@ public class ByIdProviderControllerTests
             .Returns((IAiProvider?)null);
 
         // Act
-        var result = await _controller.ById(providerId);
+        var result = await _controller.GetProviderById(providerId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -80,7 +80,7 @@ public class ByIdProviderControllerTests
     }
 
     [Fact]
-    public async Task ById_CallsRegistryWithCorrectId()
+    public async Task GetProviderById_CallsRegistryWithCorrectId()
     {
         // Arrange
         var providerId = "openai";
@@ -95,7 +95,7 @@ public class ByIdProviderControllerTests
             .Returns(new ProviderResponseModel());
 
         // Act
-        await _controller.ById(providerId);
+        await _controller.GetProviderById(providerId);
 
         // Assert
         _registryMock.Verify(x => x.GetProvider(providerId), Times.Once);

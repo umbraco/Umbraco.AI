@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Services;
+using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
@@ -40,7 +42,7 @@ public class CompleteChatController : ChatControllerBase
     [ProducesResponseType(typeof(ChatResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Complete(
+    public async Task<IActionResult> CompleteChat(
         ChatRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {

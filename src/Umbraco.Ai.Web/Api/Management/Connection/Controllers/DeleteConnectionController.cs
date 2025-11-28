@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
@@ -36,7 +38,7 @@ public class DeleteConnectionController : ConnectionControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(
+    public async Task<IActionResult> DeleteConnectionById(
         Guid id,
         CancellationToken cancellationToken = default)
     {

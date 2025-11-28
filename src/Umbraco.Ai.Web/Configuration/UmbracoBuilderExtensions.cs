@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Umbraco.Ai.Web.Api;
+using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Chat.Mapping;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
@@ -60,10 +61,11 @@ public static class UmbracoBuilderExtensions
 
             options.DocumentFilter<MimeTypeDocumentFilter>(Constants.ManagementApi.ApiTitle);
             options.OperationFilter<UmbracoAiManagementApiBackOfficeSecurityRequirementsOperationFilter>();
+            options.OperationFilter<SwaggerOperationFilter>(Constants.ManagementApi.ApiName);
         });
 
-        builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAiManagementApiSchemaIdHandler>();
-        builder.Services.AddSingleton<IOperationIdHandler, UmbracoAiManagementApiOperationIdHandler>();
+        builder.Services.AddSingleton<IOperationIdHandler, UmbracoAiApiOperationIdHandler>();
+        builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAiApiSchemaIdHandler>();
 
         return builder;
     }

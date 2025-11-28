@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
 using Umbraco.Cms.Core.Mapping;
@@ -41,7 +43,7 @@ public class AllProfileController : ProfileControllerBase
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedViewModel<ProfileItemResponseModel>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedViewModel<ProfileItemResponseModel>>> GetAll(
+    public async Task<ActionResult<PagedViewModel<ProfileItemResponseModel>>> GetAllProfiles(
         string? capability = null,
         int skip = 0,
         int take = 100,

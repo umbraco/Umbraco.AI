@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
@@ -37,7 +39,7 @@ public class AllProviderController : ProviderControllerBase
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<ProviderItemResponseModel>), StatusCodes.Status200OK)]
-    public Task<ActionResult<IEnumerable<ProviderItemResponseModel>>> GetAll(
+    public Task<ActionResult<IEnumerable<ProviderItemResponseModel>>> GetAllProviders(
         CancellationToken cancellationToken = default)
     {
         var providers = _umbracoMapper.MapEnumerable<IAiProvider, ProviderItemResponseModel>(_registry.Providers);

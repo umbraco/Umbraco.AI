@@ -22,17 +22,17 @@ internal static class AiProfileFactory
             tags = JsonSerializer.Deserialize<string[]>(entity.TagsJson) ?? Array.Empty<string>();
         }
 
+        var capability = (AiCapability)entity.Capability;
+
         return new AiProfile
         {
             Id = entity.Id,
             Alias = entity.Alias,
             Name = entity.Name,
-            Capability = (AiCapability)entity.Capability,
+            Capability = capability,
             Model = new AiModelRef(entity.ProviderId, entity.ModelId),
             ConnectionId = entity.ConnectionId,
-            Temperature = entity.Temperature,
-            MaxTokens = entity.MaxTokens,
-            SystemPromptTemplate = entity.SystemPromptTemplate,
+            Settings = AiProfileSettingsSerializer.Deserialize(capability, entity.SettingsJson),
             Tags = tags
         };
     }
@@ -53,9 +53,7 @@ internal static class AiProfileFactory
             ProviderId = profile.Model.ProviderId,
             ModelId = profile.Model.ModelId,
             ConnectionId = profile.ConnectionId,
-            Temperature = profile.Temperature,
-            MaxTokens = profile.MaxTokens,
-            SystemPromptTemplate = profile.SystemPromptTemplate,
+            SettingsJson = AiProfileSettingsSerializer.Serialize(profile.Settings),
             TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null
         };
     }
@@ -73,9 +71,7 @@ internal static class AiProfileFactory
         entity.ProviderId = profile.Model.ProviderId;
         entity.ModelId = profile.Model.ModelId;
         entity.ConnectionId = profile.ConnectionId;
-        entity.Temperature = profile.Temperature;
-        entity.MaxTokens = profile.MaxTokens;
-        entity.SystemPromptTemplate = profile.SystemPromptTemplate;
+        entity.SettingsJson = AiProfileSettingsSerializer.Serialize(profile.Settings);
         entity.TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null;
     }
 }

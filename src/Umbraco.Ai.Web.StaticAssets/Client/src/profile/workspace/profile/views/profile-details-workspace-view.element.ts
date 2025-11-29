@@ -2,16 +2,14 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
-import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import type { UaiProfileDetailModel, UaiModelRef } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import { UaiConnectionCollectionRepository } from "../../../../connection/repository/collection/connection-collection.repository.js";
 import { UaiProviderItemRepository } from "../../../../provider/repository/item/provider-item.repository.js";
+import { UaiProviderModelsRepository } from "../../../../provider/repository/models/provider-models.repository.js";
 import type { UaiConnectionItemModel } from "../../../../connection/types.js";
-import type { UaiProviderItemModel } from "../../../../provider/types.js";
-import { ProvidersService } from "../../../../api/sdk.gen.js";
-import type { ModelDescriptorResponseModel } from "../../../../api/types.gen.js";
+import type { UaiProviderItemModel, UaiModelDescriptorModel } from "../../../../provider/types.js";
 
 /**
  * Workspace view for Profile details.
@@ -22,6 +20,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_PROFILE_WORKSPACE_CONTEXT.TYPE;
     #connectionRepository = new UaiConnectionCollectionRepository(this);
     #providerRepository = new UaiProviderItemRepository(this);
+    #providerModelsRepository = new UaiProviderModelsRepository(this);
 
     @state()
     private _model?: UaiProfileDetailModel;
@@ -36,7 +35,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     private _providers: UaiProviderItemModel[] = [];
 
     @state()
-    private _availableModels: ModelDescriptorResponseModel[] = [];
+    private _availableModels: UaiModelDescriptorModel[] = [];
 
     @state()
     private _loadingModels = false;
@@ -103,13 +102,11 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         this._loadingModels = true;
 
-        const { data, error } = await tryExecute(
-            this,
-            ProvidersService.getModelsByProviderId({
-                path: { id: connection.providerId },
-                query: { connectionId, capability },
-            })
-        );
+        const { data, error } = await this.#providerModelsRepository.requestModels({
+            providerId: connection.providerId,
+            connectionId,
+            capability,
+        });
 
         this._loadingModels = false;
 

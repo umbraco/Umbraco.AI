@@ -55,8 +55,7 @@ public class UpdateProfileControllerTests
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId,
-            Temperature = 0.8f,
-            MaxTokens = 2000
+            Settings = new ChatProfileSettingsModel { Temperature = 0.8f, MaxTokens = 2000 }
         };
 
         _profileRepositoryMock

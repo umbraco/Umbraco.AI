@@ -84,7 +84,7 @@ public class EndToEndServiceFlowTests : IDisposable
             .WithCapability(AiCapability.Chat)
             .WithConnectionId(connectionId)
             .WithModel("fake-provider", "fake-model")
-            .WithTemperature(0.7f)
+            .WithChatSettings(temperature: 0.7f)
             .Build();
 
         await _profileRepository.SaveAsync(profile);

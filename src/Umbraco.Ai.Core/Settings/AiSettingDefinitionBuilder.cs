@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Extensions;
 
 namespace Umbraco.Ai.Core.Settings;
 
@@ -58,9 +58,9 @@ internal sealed class AiSettingDefinitionBuilder : IAiSettingDefinitionBuilder
     private static IEnumerable<ValidationAttribute> InferValidationAttributes(PropertyInfo property)
     {
         var validationAttributes = property.GetCustomAttributes<ValidationAttribute>().ToList();
-        
+
         // If the property is non-nullable and doesn't already have a Required attribute, add one
-        if (!property.PropertyType.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any())
+        if (!property.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any())
         {
             validationAttributes.Add(new RequiredAttribute());
         }

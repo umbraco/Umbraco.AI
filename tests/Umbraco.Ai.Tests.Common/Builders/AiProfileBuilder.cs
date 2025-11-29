@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Profiles;
 
 namespace Umbraco.Ai.Tests.Common.Builders;
 

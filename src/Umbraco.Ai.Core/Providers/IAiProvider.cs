@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Settings;
 using Umbraco.Cms.Core.Composing;
 
 namespace Umbraco.Ai.Core.Providers;

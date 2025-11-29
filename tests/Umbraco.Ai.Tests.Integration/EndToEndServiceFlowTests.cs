@@ -1,14 +1,13 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Factories;
-using Umbraco.Ai.Core.Middleware;
+using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Registry;
-using Umbraco.Ai.Core.Services;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;

@@ -1,4 +1,5 @@
-using Umbraco.Ai.Core.Middleware;
+using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;

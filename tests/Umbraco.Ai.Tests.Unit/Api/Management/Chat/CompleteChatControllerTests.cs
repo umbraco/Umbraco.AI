@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Services;
+using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
 using Umbraco.Cms.Core.Mapping;

@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Connections;
 

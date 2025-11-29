@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Services;
+using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
 using Umbraco.Ai.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;

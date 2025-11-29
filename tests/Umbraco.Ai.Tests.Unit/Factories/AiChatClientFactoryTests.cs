@@ -1,7 +1,7 @@
 using Microsoft.Extensions.AI;
+using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Factories;
-using Umbraco.Ai.Core.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Registry;

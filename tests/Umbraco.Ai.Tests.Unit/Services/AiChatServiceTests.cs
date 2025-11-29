@@ -1,9 +1,8 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Factories;
+using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Services;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 

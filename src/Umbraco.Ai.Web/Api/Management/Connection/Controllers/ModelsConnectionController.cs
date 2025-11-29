@@ -20,7 +20,6 @@ namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ModelsConnectionController : ConnectionControllerBase
 {
-    private readonly AiProviderCollection _providers;
     private readonly IAiConnectionService _connectionService;
     private readonly IUmbracoMapper _umbracoMapper;
 
@@ -28,11 +27,9 @@ public class ModelsConnectionController : ConnectionControllerBase
     /// Initializes a new instance of the <see cref="ModelsConnectionController"/> class.
     /// </summary>
     public ModelsConnectionController(
-        AiProviderCollection providers,
         IAiConnectionService connectionService,
         IUmbracoMapper umbracoMapper)
     {
-        _providers = providers;
         _connectionService = connectionService;
         _umbracoMapper = umbracoMapper;
     }
@@ -53,23 +50,17 @@ public class ModelsConnectionController : ConnectionControllerBase
         [FromQuery] string? capability = null,
         CancellationToken cancellationToken = default)
     {
-        var connection = await _connectionService.GetConnectionAsync(id, cancellationToken);
-        if (connection is null)
+        var configured = await _connectionService.GetConfiguredProviderAsync(id, cancellationToken);
+        if (configured is null)
         {
             return ConnectionNotFound();
         }
 
-        var provider = _providers.GetById(connection.ProviderId);
-        if (provider is null)
-        {
-            return ProviderNotFound();
-        }
-
         // Get capabilities filtered by requested capability
-        var capabilities = provider.GetCapabilities();
+        IEnumerable<IConfiguredCapability> capabilities = configured.GetCapabilities();
         if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AiCapability>(capability, true, out var capFilter))
         {
-            capabilities = capabilities.Where(c => c.Kind == capFilter).ToList();
+            capabilities = capabilities.Where(c => c.Kind == capFilter);
         }
 
         // Fetch models from all matching capabilities
@@ -78,7 +69,7 @@ public class ModelsConnectionController : ConnectionControllerBase
         {
             try
             {
-                var models = await cap.GetModelsAsync(connection.Settings, cancellationToken);
+                var models = await cap.GetModelsAsync(cancellationToken);
                 allModels.AddRange(models);
             }
             catch

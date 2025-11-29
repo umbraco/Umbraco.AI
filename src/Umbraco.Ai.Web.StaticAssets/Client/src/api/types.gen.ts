@@ -257,6 +257,7 @@ export type GetConnectionsData = {
     query?: {
         filter?: string;
         providerId?: string;
+        capability?: string;
         skip?: number;
         take?: number;
     };
@@ -437,6 +438,29 @@ export type TestConnectionByIdResponses = {
 };
 
 export type TestConnectionByIdResponse = TestConnectionByIdResponses[keyof TestConnectionByIdResponses];
+
+export type GetAvailableCapabilitiesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/connections/capabilities';
+};
+
+export type GetAvailableCapabilitiesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAvailableCapabilitiesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetAvailableCapabilitiesResponse = GetAvailableCapabilitiesResponses[keyof GetAvailableCapabilitiesResponses];
 
 export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;

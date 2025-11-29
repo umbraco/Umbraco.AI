@@ -2,7 +2,6 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Fakes;
 
@@ -10,14 +9,11 @@ namespace Umbraco.Ai.Tests.Unit.Settings;
 
 public class AiSettingsResolverTests
 {
-    private readonly Mock<IAiRegistry> _registryMock;
-    private readonly AiSettingsResolver _resolver;
     private readonly IConfiguration _configuration;
+    private List<IAiProvider> _providers = new();
 
     public AiSettingsResolverTests()
     {
-        _registryMock = new Mock<IAiRegistry>();
-
         var configData = new Dictionary<string, string?>
         {
             { "OpenAI:ApiKey", "sk-test-key-from-config" },
@@ -29,8 +25,12 @@ public class AiSettingsResolverTests
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(configData)
             .Build();
+    }
 
-        _resolver = new AiSettingsResolver(_registryMock.Object, _configuration);
+    private AiSettingsResolver CreateResolver()
+    {
+        var collection = new AiProviderCollection(() => _providers);
+        return new AiSettingsResolver(collection, _configuration);
     }
 
     #region ResolveSettings<TSettings> - Null handling
@@ -40,9 +40,10 @@ public class AiSettingsResolverTests
     {
         // Arrange
         SetupProviderWithValidation("fake-provider");
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", null);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", null);
 
         // Assert
         result.ShouldBeNull();
@@ -58,9 +59,10 @@ public class AiSettingsResolverTests
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
         SetupProviderWithValidation("fake-provider");
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldBeSameAs(settings);
@@ -72,9 +74,10 @@ public class AiSettingsResolverTests
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "$OpenAI:ApiKey" };
         SetupProviderWithValidation("fake-provider");
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -92,9 +95,10 @@ public class AiSettingsResolverTests
         var json = """{"apiKey": "direct-key", "baseUrl": "https://custom.api.com", "maxRetries": 10}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert
         result.ShouldNotBeNull();
@@ -110,9 +114,10 @@ public class AiSettingsResolverTests
         var json = """{"apiKey": "$OpenAI:ApiKey", "baseUrl": "$OpenAI:BaseUrl"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert
         result.ShouldNotBeNull();
@@ -129,9 +134,10 @@ public class AiSettingsResolverTests
         var json = """{"apiKey": "test-key", "maxRetries": "$TestSettings:MaxRetries"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider", requireApiKey: false);
+        var resolver = CreateResolver();
 
         // Act
-        var act = () => _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
+        var act = () => resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert - Fails because JSON string cannot be deserialized to int
         // JsonException is thrown directly from JsonSerializer.Deserialize
@@ -151,9 +157,10 @@ public class AiSettingsResolverTests
             Enabled = true
         };
         SetupProviderWithValidation("fake-provider", requireApiKey: false);
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert - Non-string values pass through unchanged
         result.ShouldNotBeNull();
@@ -171,9 +178,10 @@ public class AiSettingsResolverTests
         // Arrange
         var settings = new { ApiKey = "anon-key", BaseUrl = "https://anon.api.com" };
         SetupProviderWithValidation("fake-provider");
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -191,9 +199,10 @@ public class AiSettingsResolverTests
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "$NonExistent:Key" };
         SetupProviderWithValidation("fake-provider", requireApiKey: false);
+        var resolver = CreateResolver();
 
         // Act
-        var act = () => _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var act = () => resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -212,9 +221,10 @@ public class AiSettingsResolverTests
         // Arrange - ApiKey is required
         var settings = new FakeProviderSettings { ApiKey = null };
         SetupProviderWithValidation("fake-provider", requireApiKey: true);
+        var resolver = CreateResolver();
 
         // Act
-        var act = () => _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var act = () => resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -229,9 +239,10 @@ public class AiSettingsResolverTests
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "valid-key" };
         SetupProviderWithValidation("fake-provider", requireApiKey: true);
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -247,10 +258,11 @@ public class AiSettingsResolverTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "test" };
-        _registryMock.Setup(r => r.GetProvider("unknown-provider")).Returns((IAiProvider?)null);
+        // No providers registered
+        var resolver = CreateResolver();
 
         // Act
-        var act = () => _resolver.ResolveSettings<FakeProviderSettings>("unknown-provider", settings);
+        var act = () => resolver.ResolveSettings<FakeProviderSettings>("unknown-provider", settings);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -268,9 +280,10 @@ public class AiSettingsResolverTests
     {
         // Arrange
         var provider = new FakeAiProvider().WithSettingsType<FakeProviderSettings>();
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettingsForProvider(provider, null);
+        var result = resolver.ResolveSettingsForProvider(provider, null);
 
         // Assert
         result.ShouldBeNull();
@@ -281,9 +294,10 @@ public class AiSettingsResolverTests
     {
         // Arrange
         var provider = new FakeAiProvider { SettingsType = null };
+        var resolver = CreateResolver();
 
         // Act
-        var result = _resolver.ResolveSettingsForProvider(provider, new { ApiKey = "test" });
+        var result = resolver.ResolveSettingsForProvider(provider, new { ApiKey = "test" });
 
         // Assert
         result.ShouldBeNull();
@@ -296,13 +310,14 @@ public class AiSettingsResolverTests
         var provider = new FakeAiProvider("test-provider", "Test Provider")
             .WithSettingsType<FakeProviderSettings>();
         SetupProviderWithValidation("test-provider");
+        var resolver = CreateResolver();
 
         // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
         var json = """{"apiKey": "provider-key"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
 
         // Act
-        var result = _resolver.ResolveSettingsForProvider(provider, jsonElement);
+        var result = resolver.ResolveSettingsForProvider(provider, jsonElement);
 
         // Assert
         result.ShouldNotBeNull();
@@ -334,7 +349,7 @@ public class AiSettingsResolverTests
         }
 
         provider.SettingDefinitions = definitions;
-        _registryMock.Setup(r => r.GetProvider(providerId)).Returns(provider);
+        _providers.Add(provider);
     }
 
     #endregion

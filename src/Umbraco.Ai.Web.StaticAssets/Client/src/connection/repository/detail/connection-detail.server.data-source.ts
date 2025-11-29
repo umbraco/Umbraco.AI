@@ -1,6 +1,6 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbDetailDataSource } from "@umbraco-cms/backoffice/repository";
-import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { ConnectionsService } from "../../../api/sdk.gen.js";
 import { UaiConnectionTypeMapper } from "../../type-mapper.js";
 import type { UaiConnectionDetailModel } from "../../types.js";
@@ -39,7 +39,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
      * Reads a connection by its unique identifier.
      */
     async read(unique: string) {
-        const { data, error } = await tryExecuteAndNotify(
+        const { data, error } = await tryExecute(
             this.#host,
             ConnectionsService.getConnectionById({ path: { id: unique } })
         );
@@ -57,9 +57,9 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
     async create(model: UaiConnectionDetailModel, _parentUnique: string | null) {
         const requestBody = UaiConnectionTypeMapper.toCreateRequest(model);
 
-        const { response, error } = await tryExecuteAndNotify(
+        const { response, error } = await tryExecute(
             this.#host,
-            ConnectionsService.postConnection({ body: requestBody })
+            ConnectionsService.createConnection({ body: requestBody })
         );
 
         if (error) {
@@ -84,9 +84,9 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
     async update(model: UaiConnectionDetailModel) {
         const requestBody = UaiConnectionTypeMapper.toUpdateRequest(model);
 
-        const { error } = await tryExecuteAndNotify(
+        const { error } = await tryExecute(
             this.#host,
-            ConnectionsService.putConnectionById({
+            ConnectionsService.updateConnectionById({
                 path: { id: model.unique },
                 body: requestBody,
             })
@@ -103,7 +103,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
      * Deletes a connection by its unique identifier.
      */
     async delete(unique: string) {
-        const { error } = await tryExecuteAndNotify(
+        const { error } = await tryExecute(
             this.#host,
             ConnectionsService.deleteConnectionById({ path: { id: unique } })
         );

@@ -31,4 +31,14 @@ public sealed class AiProviderCollection : BuilderCollectionBase<IAiProvider>
     public IEnumerable<IAiProvider> GetWithCapability<TCapability>()
         where TCapability : class, IAiCapability
         => this.Where(p => p.HasCapability<TCapability>());
+
+    /// <summary>
+    /// Gets a specific capability from a provider by its ID.
+    /// </summary>
+    /// <typeparam name="TCapability">The capability type.</typeparam>
+    /// <param name="providerId">The provider identifier.</param>
+    /// <returns>The capability, or <c>null</c> if the provider doesn't exist or doesn't support the capability.</returns>
+    public TCapability? GetCapability<TCapability>(string providerId)
+        where TCapability : class, IAiCapability
+        => GetById(providerId)?.GetCapability<TCapability>();
 }

@@ -2,7 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
@@ -18,15 +18,15 @@ namespace Umbraco.Ai.Web.Api.Management.Provider.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ByIdProviderController : ProviderControllerBase
 {
-    private readonly IAiRegistry _registry;
+    private readonly AiProviderCollection _providers;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ByIdProviderController"/> class.
     /// </summary>
-    public ByIdProviderController(IAiRegistry registry, IUmbracoMapper umbracoMapper)
+    public ByIdProviderController(AiProviderCollection providers, IUmbracoMapper umbracoMapper)
     {
-        _registry = registry;
+        _providers = providers;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -44,7 +44,7 @@ public class ByIdProviderController : ProviderControllerBase
         string id,
         CancellationToken cancellationToken = default)
     {
-        var provider = _registry.GetProvider(id);
+        var provider = _providers.GetById(id);
         if (provider is null)
         {
             return Task.FromResult(ProviderNotFound());

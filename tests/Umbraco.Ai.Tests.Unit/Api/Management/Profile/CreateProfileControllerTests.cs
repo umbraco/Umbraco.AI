@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
@@ -15,19 +15,21 @@ public class CreateProfileControllerTests
 {
     private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
-    private readonly Mock<IAiRegistry> _registryMock;
-    private readonly CreateProfileController _controller;
+    private List<IAiProvider> _providers = new();
 
     public CreateProfileControllerTests()
     {
         _profileRepositoryMock = new Mock<IAiProfileRepository>();
         _connectionServiceMock = new Mock<IAiConnectionService>();
-        _registryMock = new Mock<IAiRegistry>();
+    }
 
-        _controller = new CreateProfileController(
+    private CreateProfileController CreateController()
+    {
+        var collection = new AiProviderCollection(() => _providers);
+        return new CreateProfileController(
             _profileRepositoryMock.Object,
             _connectionServiceMock.Object,
-            _registryMock.Object);
+            collection);
     }
 
     #region CreateProfile
@@ -39,6 +41,7 @@ public class CreateProfileControllerTests
         var connectionId = Guid.NewGuid();
         var connection = new AiConnectionBuilder().WithId(connectionId).Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
+        _providers.Add(provider);
 
         var requestModel = new CreateProfileRequestModel
         {
@@ -60,16 +63,14 @@ public class CreateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("openai"))
-            .Returns(provider);
-
         _profileRepositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.CreateProfile(requestModel);
+        var result = await controller.CreateProfile(requestModel);
 
         // Assert
         var createdResult = result.ShouldBeOfType<CreatedAtActionResult>();
@@ -94,8 +95,10 @@ public class CreateProfileControllerTests
             .Setup(x => x.GetByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.CreateProfile(requestModel);
+        var result = await controller.CreateProfile(requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -116,8 +119,10 @@ public class CreateProfileControllerTests
             ConnectionId = Guid.NewGuid()
         };
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.CreateProfile(requestModel);
+        var result = await controller.CreateProfile(requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -147,8 +152,10 @@ public class CreateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiConnection?)null);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.CreateProfile(requestModel);
+        var result = await controller.CreateProfile(requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -179,12 +186,12 @@ public class CreateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("unknown-provider"))
-            .Returns((FakeAiProvider?)null);
+        // No providers added
+
+        var controller = CreateController();
 
         // Act
-        var result = await _controller.CreateProfile(requestModel);
+        var result = await controller.CreateProfile(requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -199,6 +206,7 @@ public class CreateProfileControllerTests
         var connectionId = Guid.NewGuid();
         var connection = new AiConnectionBuilder().WithId(connectionId).Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
+        _providers.Add(provider);
 
         var requestModel = new CreateProfileRequestModel
         {
@@ -222,17 +230,15 @@ public class CreateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("openai"))
-            .Returns(provider);
-
         _profileRepositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .Callback<AiProfile, CancellationToken>((p, _) => capturedProfile = p)
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
+        var controller = CreateController();
+
         // Act
-        await _controller.CreateProfile(requestModel);
+        await controller.CreateProfile(requestModel);
 
         // Assert
         capturedProfile.ShouldNotBeNull();

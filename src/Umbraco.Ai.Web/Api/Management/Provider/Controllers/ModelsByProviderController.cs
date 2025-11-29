@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
@@ -20,16 +20,16 @@ namespace Umbraco.Ai.Web.Api.Management.Provider.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ModelsByProviderController : ProviderControllerBase
 {
-    private readonly IAiRegistry _registry;
+    private readonly AiProviderCollection _providers;
     private readonly IAiConnectionService _connectionService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ModelsByProviderController"/> class.
     /// </summary>
-    public ModelsByProviderController(IAiRegistry registry, IAiConnectionService connectionService, IUmbracoMapper umbracoMapper)
+    public ModelsByProviderController(AiProviderCollection providers, IAiConnectionService connectionService, IUmbracoMapper umbracoMapper)
     {
-        _registry = registry;
+        _providers = providers;
         _connectionService = connectionService;
         _umbracoMapper = umbracoMapper;
     }
@@ -52,7 +52,7 @@ public class ModelsByProviderController : ProviderControllerBase
         [FromQuery] string? capability = null,
         CancellationToken cancellationToken = default)
     {
-        var provider = _registry.GetProvider(id);
+        var provider = _providers.GetById(id);
         if (provider is null)
         {
             return ProviderNotFound();

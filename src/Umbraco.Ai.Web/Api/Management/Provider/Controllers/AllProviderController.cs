@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
@@ -19,15 +18,15 @@ namespace Umbraco.Ai.Web.Api.Management.Provider.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class AllProviderController : ProviderControllerBase
 {
-    private readonly IAiRegistry _registry;
+    private readonly AiProviderCollection _providers;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AllProviderController"/> class.
     /// </summary>
-    public AllProviderController(IAiRegistry registry, IUmbracoMapper umbracoMapper)
+    public AllProviderController(AiProviderCollection providers, IUmbracoMapper umbracoMapper)
     {
-        _registry = registry;
+        _providers = providers;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -39,10 +38,10 @@ public class AllProviderController : ProviderControllerBase
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<ProviderItemResponseModel>), StatusCodes.Status200OK)]
-    public Task<ActionResult<IEnumerable<ProviderItemResponseModel>>> GetAllProviders(
+    public Task<ActionResult<IEnumerable<ProviderItemResponseModel>>> GetProviders(
         CancellationToken cancellationToken = default)
     {
-        var providers = _umbracoMapper.MapEnumerable<IAiProvider, ProviderItemResponseModel>(_registry.Providers);
+        var providers = _umbracoMapper.MapEnumerable<IAiProvider, ProviderItemResponseModel>(_providers);
         return Task.FromResult<ActionResult<IEnumerable<ProviderItemResponseModel>>>(Ok(providers));
     }
 }

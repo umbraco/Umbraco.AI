@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
@@ -15,19 +15,21 @@ public class UpdateProfileControllerTests
 {
     private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
-    private readonly Mock<IAiRegistry> _registryMock;
-    private readonly UpdateProfileController _controller;
+    private List<IAiProvider> _providers = new();
 
     public UpdateProfileControllerTests()
     {
         _profileRepositoryMock = new Mock<IAiProfileRepository>();
         _connectionServiceMock = new Mock<IAiConnectionService>();
-        _registryMock = new Mock<IAiRegistry>();
+    }
 
-        _controller = new UpdateProfileController(
+    private UpdateProfileController CreateController()
+    {
+        var collection = new AiProviderCollection(() => _providers);
+        return new UpdateProfileController(
             _profileRepositoryMock.Object,
             _connectionServiceMock.Object,
-            _registryMock.Object);
+            collection);
     }
 
     #region UpdateProfileById
@@ -45,9 +47,11 @@ public class UpdateProfileControllerTests
             .Build();
         var connection = new AiConnectionBuilder().WithId(connectionId).Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
+        _providers.Add(provider);
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId,
@@ -63,16 +67,14 @@ public class UpdateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("openai"))
-            .Returns(provider);
-
         _profileRepositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         result.ShouldBeOfType<OkResult>();
@@ -85,6 +87,7 @@ public class UpdateProfileControllerTests
         var profileId = Guid.NewGuid();
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = Guid.NewGuid()
@@ -94,8 +97,10 @@ public class UpdateProfileControllerTests
             .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -113,6 +118,7 @@ public class UpdateProfileControllerTests
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId
@@ -126,8 +132,10 @@ public class UpdateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiConnection?)null);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -146,6 +154,7 @@ public class UpdateProfileControllerTests
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "unknown-provider", ModelId = "model" },
             ConnectionId = connectionId
@@ -159,12 +168,12 @@ public class UpdateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("unknown-provider"))
-            .Returns((FakeAiProvider?)null);
+        // No providers added
+
+        var controller = CreateController();
 
         // Act
-        var result = await _controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfileById(profileId, requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -173,7 +182,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task UpdateProfileById_PreservesAliasFromExisting()
+    public async Task UpdateProfileById_UpdatesAliasFromRequest()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -184,9 +193,11 @@ public class UpdateProfileControllerTests
             .Build();
         var connection = new AiConnectionBuilder().WithId(connectionId).Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
+        _providers.Add(provider);
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId
@@ -201,21 +212,19 @@ public class UpdateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("openai"))
-            .Returns(provider);
-
         _profileRepositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .Callback<AiProfile, CancellationToken>((p, _) => capturedProfile = p)
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
-        // Act
-        await _controller.UpdateProfileById(profileId, requestModel);
+        var controller = CreateController();
 
-        // Assert - Alias should be preserved from existing profile
+        // Act
+        await controller.UpdateProfileById(profileId, requestModel);
+
+        // Assert - Alias is updated from request
         capturedProfile.ShouldNotBeNull();
-        capturedProfile!.Alias.ShouldBe("original-alias");
+        capturedProfile!.Alias.ShouldBe("updated-alias");
     }
 
     [Fact]
@@ -230,9 +239,11 @@ public class UpdateProfileControllerTests
             .Build();
         var connection = new AiConnectionBuilder().WithId(connectionId).Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
+        _providers.Add(provider);
 
         var requestModel = new UpdateProfileRequestModel
         {
+            Alias = "updated-alias",
             Name = "Updated Name",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "model" },
             ConnectionId = connectionId
@@ -247,17 +258,15 @@ public class UpdateProfileControllerTests
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("openai"))
-            .Returns(provider);
-
         _profileRepositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .Callback<AiProfile, CancellationToken>((p, _) => capturedProfile = p)
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
+        var controller = CreateController();
+
         // Act
-        await _controller.UpdateProfileById(profileId, requestModel);
+        await controller.UpdateProfileById(profileId, requestModel);
 
         // Assert - Capability should be preserved from existing profile
         capturedProfile.ShouldNotBeNull();

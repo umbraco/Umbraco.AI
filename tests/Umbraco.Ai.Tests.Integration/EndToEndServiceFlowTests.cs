@@ -7,7 +7,6 @@ using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
@@ -422,9 +421,6 @@ public class EndToEndServiceFlowTests : IDisposable
             _ => new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>()));
         services.AddSingleton<AiEmbeddingMiddlewareCollection>(
             _ => new AiEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAiEmbeddingMiddleware>()));
-
-        // Registry
-        services.AddSingleton<IAiRegistry, AiRegistry>();
 
         // Settings resolution
         services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();

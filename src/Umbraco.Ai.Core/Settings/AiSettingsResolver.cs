@@ -4,7 +4,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 
 namespace Umbraco.Ai.Core.Settings;
 
@@ -23,15 +22,15 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
             new JsonStringEnumConverter()
         }
     };
-    
+
     private const string ConfigPrefix = "$";
-    
-    private readonly IAiRegistry _registry;
+
+    private readonly AiProviderCollection _providers;
     private readonly IConfiguration _configuration;
 
-    public AiSettingsResolver(IAiRegistry registry, IConfiguration configuration)
+    public AiSettingsResolver(AiProviderCollection providers, IConfiguration configuration)
     {
-        _registry = registry;
+        _providers = providers;
         _configuration = configuration;
     }
 
@@ -197,10 +196,10 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
 
     private void ValidateSettings(string providerId, object settings)
     {
-        var provider = _registry.GetProvider(providerId);
+        var provider = _providers.GetById(providerId);
         if (provider is null)
         {
-            throw new InvalidOperationException($"Provider '{providerId}' not found in registry.");
+            throw new InvalidOperationException($"Provider '{providerId}' not found.");
         }
 
         var settingDefinitions = provider.GetSettingDefinitions();

@@ -1,7 +1,6 @@
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
@@ -11,19 +10,20 @@ namespace Umbraco.Ai.Tests.Unit.Services;
 public class AiConnectionServiceTests
 {
     private readonly Mock<IAiConnectionRepository> _repositoryMock;
-    private readonly Mock<IAiRegistry> _registryMock;
     private readonly Mock<IAiSettingsResolver> _settingsResolverMock;
-    private readonly AiConnectionService _service;
 
     public AiConnectionServiceTests()
     {
         _repositoryMock = new Mock<IAiConnectionRepository>();
-        _registryMock = new Mock<IAiRegistry>();
         _settingsResolverMock = new Mock<IAiSettingsResolver>();
+    }
 
-        _service = new AiConnectionService(
+    private AiConnectionService CreateService(params IAiProvider[] providers)
+    {
+        var collection = new AiProviderCollection(() => providers);
+        return new AiConnectionService(
             _repositoryMock.Object,
-            _registryMock.Object,
+            collection,
             _settingsResolverMock.Object);
     }
 
@@ -40,12 +40,14 @@ public class AiConnectionServiceTests
             .WithProviderId("fake-provider")
             .Build();
 
+        var service = CreateService();
+
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
         // Act
-        var result = await _service.GetConnectionAsync(connectionId);
+        var result = await service.GetConnectionAsync(connectionId);
 
         // Assert
         result.ShouldNotBeNull();
@@ -58,13 +60,14 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
+        var service = CreateService();
 
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiConnection?)null);
 
         // Act
-        var result = await _service.GetConnectionAsync(connectionId);
+        var result = await service.GetConnectionAsync(connectionId);
 
         // Assert
         result.ShouldBeNull();
@@ -84,12 +87,14 @@ public class AiConnectionServiceTests
             new AiConnectionBuilder().WithName("Connection 2").Build()
         };
 
+        var service = CreateService();
+
         _repositoryMock
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(connections);
 
         // Act
-        var result = await _service.GetConnectionsAsync();
+        var result = await service.GetConnectionsAsync();
 
         // Assert
         result.Count().ShouldBe(2);
@@ -105,12 +110,14 @@ public class AiConnectionServiceTests
             new AiConnectionBuilder().WithName("OpenAI 2").WithProviderId("openai").Build()
         };
 
+        var service = CreateService();
+
         _repositoryMock
             .Setup(x => x.GetByProviderAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(openAiConnections);
 
         // Act
-        var result = await _service.GetConnectionsAsync("openai");
+        var result = await service.GetConnectionsAsync("openai");
 
         // Assert
         result.Count().ShouldBe(2);
@@ -126,12 +133,14 @@ public class AiConnectionServiceTests
             new AiConnectionBuilder().WithName("Connection 1").Build()
         };
 
+        var service = CreateService();
+
         _repositoryMock
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(connections);
 
         // Act
-        var result = await _service.GetConnectionsAsync("");
+        var result = await service.GetConnectionsAsync("");
 
         // Assert
         result.Count().ShouldBe(1);
@@ -156,12 +165,14 @@ public class AiConnectionServiceTests
                 .Build()
         };
 
+        var service = CreateService();
+
         _repositoryMock
             .Setup(x => x.GetByProviderAsync("openai", It.IsAny<CancellationToken>()))
             .ReturnsAsync(connections);
 
         // Act
-        var result = await _service.GetConnectionReferencesAsync("openai");
+        var result = await service.GetConnectionReferencesAsync("openai");
 
         // Assert
         result.Count().ShouldBe(1);
@@ -186,10 +197,7 @@ public class AiConnectionServiceTests
             .Build();
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
-
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
+        var service = CreateService(fakeProvider);
 
         _settingsResolverMock
             .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
@@ -200,7 +208,7 @@ public class AiConnectionServiceTests
             .ReturnsAsync((AiConnection c, CancellationToken _) => c);
 
         // Act
-        var result = await _service.SaveConnectionAsync(connection);
+        var result = await service.SaveConnectionAsync(connection);
 
         // Assert
         result.ShouldNotBeNull();
@@ -222,10 +230,7 @@ public class AiConnectionServiceTests
             .Build();
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
-
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
+        var service = CreateService(fakeProvider);
 
         _settingsResolverMock
             .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
@@ -236,7 +241,7 @@ public class AiConnectionServiceTests
             .ReturnsAsync((AiConnection c, CancellationToken _) => c);
 
         // Act
-        var result = await _service.SaveConnectionAsync(connection);
+        var result = await service.SaveConnectionAsync(connection);
 
         // Assert
         result.Id.ShouldBe(existingId);
@@ -251,18 +256,16 @@ public class AiConnectionServiceTests
             .WithProviderId("unknown-provider")
             .Build();
 
-        _registryMock
-            .Setup(x => x.GetProvider("unknown-provider"))
-            .Returns((IAiProvider?)null);
+        var service = CreateService(); // Empty collection - no providers
 
         // Act
-        var act = () => _service.SaveConnectionAsync(connection);
+        var act = () => service.SaveConnectionAsync(connection);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("Provider");
         exception.Message.ShouldContain("unknown-provider");
-        exception.Message.ShouldContain("not found in registry");
+        exception.Message.ShouldContain("not found");
     }
 
     [Fact]
@@ -275,10 +278,7 @@ public class AiConnectionServiceTests
             .Build();
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
-
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
+        var service = CreateService(fakeProvider);
 
         _settingsResolverMock
             .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
@@ -289,7 +289,7 @@ public class AiConnectionServiceTests
             .ReturnsAsync((AiConnection c, CancellationToken _) => c);
 
         // Act
-        await _service.SaveConnectionAsync(connection);
+        await service.SaveConnectionAsync(connection);
 
         // Assert - Settings resolver should be called to validate
         _settingsResolverMock.Verify(
@@ -307,10 +307,7 @@ public class AiConnectionServiceTests
             .Build();
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
-
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
+        var service = CreateService(fakeProvider);
 
         _repositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
@@ -319,7 +316,7 @@ public class AiConnectionServiceTests
         var beforeSave = DateTime.UtcNow;
 
         // Act
-        var result = await _service.SaveConnectionAsync(connection);
+        var result = await service.SaveConnectionAsync(connection);
 
         // Assert
         result.DateModified.ShouldBeGreaterThanOrEqualTo(beforeSave);
@@ -334,6 +331,7 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
+        var service = CreateService();
 
         _repositoryMock
             .Setup(x => x.ExistsAsync(connectionId, It.IsAny<CancellationToken>()))
@@ -344,7 +342,7 @@ public class AiConnectionServiceTests
             .ReturnsAsync(true);
 
         // Act
-        await _service.DeleteConnectionAsync(connectionId);
+        await service.DeleteConnectionAsync(connectionId);
 
         // Assert
         _repositoryMock.Verify(x => x.DeleteAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);
@@ -355,13 +353,14 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
+        var service = CreateService();
 
         _repositoryMock
             .Setup(x => x.ExistsAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
-        var act = () => _service.DeleteConnectionAsync(connectionId);
+        var act = () => service.DeleteConnectionAsync(connectionId);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -378,17 +377,14 @@ public class AiConnectionServiceTests
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "valid-key" };
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
-
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
+        var service = CreateService(fakeProvider);
 
         _settingsResolverMock
             .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
             .Returns(settings);
 
         // Act
-        var result = await _service.ValidateConnectionAsync("fake-provider", settings);
+        var result = await service.ValidateConnectionAsync("fake-provider", settings);
 
         // Assert
         result.ShouldBeTrue();
@@ -398,18 +394,16 @@ public class AiConnectionServiceTests
     public async Task ValidateConnectionAsync_WithUnknownProvider_ThrowsInvalidOperationException()
     {
         // Arrange
-        _registryMock
-            .Setup(x => x.GetProvider("unknown-provider"))
-            .Returns((IAiProvider?)null);
+        var service = CreateService(); // Empty collection - no providers
 
         // Act
-        var act = () => _service.ValidateConnectionAsync("unknown-provider", new { });
+        var act = () => service.ValidateConnectionAsync("unknown-provider", new { });
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("Provider");
         exception.Message.ShouldContain("unknown-provider");
-        exception.Message.ShouldContain("not found in registry");
+        exception.Message.ShouldContain("not found");
     }
 
     [Fact]
@@ -418,17 +412,14 @@ public class AiConnectionServiceTests
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = null };
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
-
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
+        var service = CreateService(fakeProvider);
 
         _settingsResolverMock
             .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
             .Throws(new InvalidOperationException("Validation failed: API Key is required"));
 
         // Act
-        var act = () => _service.ValidateConnectionAsync("fake-provider", settings);
+        var act = () => service.ValidateConnectionAsync("fake-provider", settings);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -455,16 +446,14 @@ public class AiConnectionServiceTests
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
             .WithChatCapability(fakeChatCapability);
 
+        var service = CreateService(fakeProvider);
+
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
-
         // Act
-        var result = await _service.TestConnectionAsync(connectionId);
+        var result = await service.TestConnectionAsync(connectionId);
 
         // Assert
         result.ShouldBeTrue();
@@ -475,13 +464,14 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
+        var service = CreateService();
 
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiConnection?)null);
 
         // Act
-        var act = () => _service.TestConnectionAsync(connectionId);
+        var act = () => service.TestConnectionAsync(connectionId);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -498,22 +488,20 @@ public class AiConnectionServiceTests
             .WithProviderId("unknown-provider")
             .Build();
 
+        var service = CreateService(); // Empty collection - no providers
+
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("unknown-provider"))
-            .Returns((IAiProvider?)null);
-
         // Act
-        var act = () => _service.TestConnectionAsync(connectionId);
+        var act = () => service.TestConnectionAsync(connectionId);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("Provider");
         exception.Message.ShouldContain("unknown-provider");
-        exception.Message.ShouldContain("not found in registry");
+        exception.Message.ShouldContain("not found");
     }
 
     [Fact]
@@ -529,16 +517,14 @@ public class AiConnectionServiceTests
         var fakeProvider = new FakeAiProvider("empty-provider", "Empty Provider");
         // No capabilities added
 
+        var service = CreateService(fakeProvider);
+
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("empty-provider"))
-            .Returns(fakeProvider);
-
         // Act
-        var act = () => _service.TestConnectionAsync(connectionId);
+        var act = () => service.TestConnectionAsync(connectionId);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -562,20 +548,21 @@ public class AiConnectionServiceTests
         failingCapability
             .Setup(c => c.GetModelsAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Authentication failed"));
+        failingCapability
+            .Setup(c => c.Kind)
+            .Returns(AiCapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
             .WithCapability(failingCapability.Object);
+
+        var service = CreateService(fakeProvider);
 
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _registryMock
-            .Setup(x => x.GetProvider("fake-provider"))
-            .Returns(fakeProvider);
-
         // Act
-        var result = await _service.TestConnectionAsync(connectionId);
+        var result = await service.TestConnectionAsync(connectionId);
 
         // Assert
         result.ShouldBeFalse();

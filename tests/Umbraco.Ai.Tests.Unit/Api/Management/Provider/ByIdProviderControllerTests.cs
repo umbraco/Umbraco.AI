@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Tests.Common.Fakes;
 using Umbraco.Ai.Web.Api.Management.Provider.Controllers;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
@@ -10,16 +9,18 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Provider;
 
 public class ByIdProviderControllerTests
 {
-    private readonly Mock<IAiRegistry> _registryMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
-    private readonly ByIdProviderController _controller;
+    private List<IAiProvider> _providers = new();
 
     public ByIdProviderControllerTests()
     {
-        _registryMock = new Mock<IAiRegistry>();
         _mapperMock = new Mock<IUmbracoMapper>();
+    }
 
-        _controller = new ByIdProviderController(_registryMock.Object, _mapperMock.Object);
+    private ByIdProviderController CreateController()
+    {
+        var collection = new AiProviderCollection(() => _providers);
+        return new ByIdProviderController(collection, _mapperMock.Object);
     }
 
     #region GetProviderById
@@ -30,6 +31,7 @@ public class ByIdProviderControllerTests
         // Arrange
         var providerId = "openai";
         var provider = new FakeAiProvider(providerId, "OpenAI");
+        _providers.Add(provider);
 
         var responseModel = new ProviderResponseModel
         {
@@ -41,16 +43,14 @@ public class ByIdProviderControllerTests
             }
         };
 
-        _registryMock
-            .Setup(x => x.GetProvider(providerId))
-            .Returns(provider);
-
         _mapperMock
             .Setup(x => x.Map<ProviderResponseModel>(provider))
             .Returns(responseModel);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.GetProviderById(providerId);
+        var result = await controller.GetProviderById(providerId);
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -65,13 +65,12 @@ public class ByIdProviderControllerTests
     {
         // Arrange
         var providerId = "unknown-provider";
+        // No providers added
 
-        _registryMock
-            .Setup(x => x.GetProvider(providerId))
-            .Returns((IAiProvider?)null);
+        var controller = CreateController();
 
         // Act
-        var result = await _controller.GetProviderById(providerId);
+        var result = await controller.GetProviderById(providerId);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -80,25 +79,25 @@ public class ByIdProviderControllerTests
     }
 
     [Fact]
-    public async Task GetProviderById_CallsRegistryWithCorrectId()
+    public async Task GetProviderById_CallsMapperWithCorrectProvider()
     {
         // Arrange
         var providerId = "openai";
         var provider = new FakeAiProvider(providerId, "OpenAI");
-
-        _registryMock
-            .Setup(x => x.GetProvider(providerId))
-            .Returns(provider);
+        _providers.Add(provider);
 
         _mapperMock
             .Setup(x => x.Map<ProviderResponseModel>(It.IsAny<IAiProvider>()))
             .Returns(new ProviderResponseModel());
 
+        var controller = CreateController();
+
         // Act
-        await _controller.GetProviderById(providerId);
+        await controller.GetProviderById(providerId);
 
         // Assert
-        _registryMock.Verify(x => x.GetProvider(providerId), Times.Once);
+        _mapperMock.Verify(x => x.Map<ProviderResponseModel>(
+            It.Is<IAiProvider>(p => p.Id == providerId)), Times.Once);
     }
 
     #endregion

@@ -8,8 +8,8 @@ export const UAI_PROFILE_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generateAbs
     entityType: UAI_PROFILE_ENTITY_TYPE,
 });
 
-export const UAI_CREATE_PROFILE_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ capability: string; connectionId: string }>(
-    "create/:capability/:connectionId",
+export const UAI_CREATE_PROFILE_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ capability: string }>(
+    "create/:capability",
     UAI_PROFILE_WORKSPACE_PATH
 );
 

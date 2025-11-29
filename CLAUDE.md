@@ -215,6 +215,75 @@ Provider settings use `[AiSetting]` attributes for UI generation. Values prefixe
 - Uses Umbraco backoffice security
 - OpenAPI/Swagger documentation auto-generated
 
+## Project Organization (Feature-Sliced Architecture)
+
+### Core Principles
+
+1. **Feature folders are flat** - All files for a feature live at the folder root
+   - NO `Services/`, `Repositories/`, `Factories/` subfolders within features
+   - Interfaces and implementations live side-by-side
+
+2. **Only create subfolders for conceptually different content**
+   - `Examples/` for sample code is acceptable
+   - NOT for grouping by implementation type
+
+3. **Shared code lives at the project root level**
+   - `Models/` - Shared domain models used across features
+   - `Providers/` - Provider SDK (base classes, interfaces, collections)
+   - `Registry/` - Provider discovery
+   - `Settings/` - Settings infrastructure
+   - `Extensions/` - Utility extensions
+   - `Configuration/` - DI registration
+
+4. **Feature folders contain everything for that feature**
+   - Domain models specific to the feature
+   - Service interfaces and implementations
+   - Repository interfaces and implementations
+   - Factory interfaces and implementations
+   - Middleware interfaces, collections, and builders
+
+### When to Create a New Folder
+
+| Scenario | Action |
+|----------|--------|
+| New capability (e.g., Media generation) | Create new feature folder: `Media/` |
+| New shared infrastructure | Create root-level folder |
+| Sample/example code within a feature | Create `Examples/` subfolder |
+| More files of same type in a feature | Keep flat - do NOT create subfolders |
+
+### Naming Conventions
+
+- Interfaces: `I{Name}.cs` (e.g., `IAiChatService.cs`)
+- Implementations: `{Name}.cs` (e.g., `AiChatService.cs`)
+- Collections: `{Name}Collection.cs` and `{Name}CollectionBuilder.cs`
+
+### Exception: API Projects (Umbraco.Ai.Web)
+
+Web follows Umbraco CMS Management API conventions with subfolders:
+- `Controllers/` - API endpoints
+- `Models/` - Request/response DTOs
+- `Mapping/` - UmbracoMapper definitions
+
+This is acceptable because:
+- Higher file counts per feature
+- Matches CMS patterns developers expect
+- Not a direct code extension point
+
+### Exception: Test Projects
+
+Test projects use **layer-based organization**, not feature-sliced:
+- `Services/` - Service tests (AiChatServiceTests, AiProfileServiceTests)
+- `Repositories/` - EF Core repository tests
+- `Factories/` - Factory tests
+- `Providers/` - Provider base class tests
+- `Api/Management/{Feature}/` - API controller tests (grouped by feature within Api)
+
+This is intentional because:
+- Tests are located by *what they test* (class type), not by domain feature
+- When builds fail, developers look for "ServiceTests" not "ChatTests"
+- Direct mapping: `Services/AiChatServiceTests.cs` tests `AiChatService`
+- API tests are the exception - they mirror the Web project's feature structure
+
 ## Frontend Architecture
 
 Located in `src/Umbraco.Ai.Web.StaticAssets/Client/`:
@@ -244,14 +313,21 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 
 ## Key Namespaces
 
-- `Umbraco.Ai.Core.Providers` - Provider and capability interfaces/base classes
-- `Umbraco.Ai.Core.Services` - High-level services (`IAiChatService`)
-- `Umbraco.Ai.Core.Models` - Data models (`AiConnection`, `AiProfile`, `AiModelRef`)
-- `Umbraco.Ai.Core.Middleware` - Middleware pipeline system
-- `Umbraco.Ai.Core.Registry` - Provider registry
-- `Umbraco.Ai.Core.Repositories` - Repository interfaces (`IAiConnectionRepository`, `IAiProfileRepository`)
-- `Umbraco.Ai.Persistence` - EF Core DbContext and repository implementations
-- `Umbraco.Ai.Persistence.Entities` - Database entities (`AiConnectionEntity`, `AiProfileEntity`)
+**Feature namespaces (Umbraco.Ai.Core):**
+- `Umbraco.Ai.Core.Chat` - Chat service, factory, middleware (`IAiChatService`, `IAiChatClientFactory`)
+- `Umbraco.Ai.Core.Embeddings` - Embedding service, factory, middleware (`IAiEmbeddingService`)
+- `Umbraco.Ai.Core.Connections` - Connection model, service, repository (`AiConnection`, `IAiConnectionService`)
+- `Umbraco.Ai.Core.Profiles` - Profile model, service, repository (`AiProfile`, `IAiProfileService`)
+
+**Shared namespaces (Umbraco.Ai.Core):**
+- `Umbraco.Ai.Core.Providers` - Provider SDK (base classes, capabilities, collections)
+- `Umbraco.Ai.Core.Models` - Shared domain models (`AiCapability`, `AiModelRef`, `AiOptions`)
+- `Umbraco.Ai.Core.Registry` - Provider registry (`IAiRegistry`)
+- `Umbraco.Ai.Core.Settings` - Settings infrastructure (`AiSettingAttribute`)
+
+**Persistence namespaces:**
+- `Umbraco.Ai.Persistence.Connections` - EF Core connection repository and entity
+- `Umbraco.Ai.Persistence.Profiles` - EF Core profile repository and entity
 
 ## Configuration
 

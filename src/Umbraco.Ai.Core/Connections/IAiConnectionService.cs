@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.Providers;
+
 namespace Umbraco.Ai.Core.Connections;
 
 /// <summary>
@@ -76,4 +78,13 @@ public interface IAiConnectionService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Connections whose providers support the specified capability.</returns>
     Task<IEnumerable<AiConnection>> GetConnectionsByCapabilityAsync(Models.AiCapability capability, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a configured provider for a connection with resolved settings.
+    /// This is the primary way to interact with provider capabilities.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured provider with resolved settings, or null if connection/provider not found.</returns>
+    Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
 }

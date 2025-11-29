@@ -436,10 +436,11 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
+        var settings = new FakeProviderSettings { ApiKey = "test-key" };
         var connection = new AiConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
-            .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
+            .WithSettings(settings)
             .Build();
 
         var fakeChatCapability = new FakeChatCapability();
@@ -451,6 +452,10 @@ public class AiConnectionServiceTests
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
+
+        _settingsResolverMock
+            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Returns(settings);
 
         // Act
         var result = await service.TestConnectionAsync(connectionId);
@@ -498,10 +503,9 @@ public class AiConnectionServiceTests
         var act = () => service.TestConnectionAsync(connectionId);
 
         // Assert
+        // GetConfiguredProviderAsync returns null when provider not found
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
-        exception.Message.ShouldContain("Provider");
-        exception.Message.ShouldContain("unknown-provider");
-        exception.Message.ShouldContain("not found");
+        exception.Message.ShouldContain($"Connection with ID '{connectionId}' not found or provider unavailable");
     }
 
     [Fact]
@@ -509,9 +513,11 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
+        var settings = new FakeProviderSettings { ApiKey = "test-key" };
         var connection = new AiConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("empty-provider")
+            .WithSettings(settings)
             .Build();
 
         var fakeProvider = new FakeAiProvider("empty-provider", "Empty Provider");
@@ -522,6 +528,10 @@ public class AiConnectionServiceTests
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
+
+        _settingsResolverMock
+            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Returns(settings);
 
         // Act
         var act = () => service.TestConnectionAsync(connectionId);
@@ -538,10 +548,11 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
+        var settings = new FakeProviderSettings { ApiKey = "invalid-key" };
         var connection = new AiConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
-            .WithSettings(new FakeProviderSettings { ApiKey = "invalid-key" })
+            .WithSettings(settings)
             .Build();
 
         var failingCapability = new Mock<IAiChatCapability>();
@@ -561,11 +572,200 @@ public class AiConnectionServiceTests
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
+        _settingsResolverMock
+            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Returns(settings);
+
         // Act
         var result = await service.TestConnectionAsync(connectionId);
 
         // Assert
         result.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region GetConfiguredProviderAsync
+
+    [Fact]
+    public async Task GetConfiguredProviderAsync_WithValidConnection_ReturnsConfiguredProvider()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var settings = new FakeProviderSettings { ApiKey = "test-key" };
+        var connection = new AiConnectionBuilder()
+            .WithId(connectionId)
+            .WithProviderId("fake-provider")
+            .WithSettings(settings)
+            .Build();
+
+        var fakeChatCapability = new FakeChatCapability();
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+            .WithChatCapability(fakeChatCapability);
+
+        var service = CreateService(fakeProvider);
+
+        _repositoryMock
+            .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+
+        _settingsResolverMock
+            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Returns(settings);
+
+        // Act
+        var result = await service.GetConfiguredProviderAsync(connectionId);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result!.Provider.ShouldBe(fakeProvider);
+    }
+
+    [Fact]
+    public async Task GetConfiguredProviderAsync_WithConnectionNotFound_ReturnsNull()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var service = CreateService();
+
+        _repositoryMock
+            .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiConnection?)null);
+
+        // Act
+        var result = await service.GetConfiguredProviderAsync(connectionId);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetConfiguredProviderAsync_WithProviderNotFound_ReturnsNull()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var connection = new AiConnectionBuilder()
+            .WithId(connectionId)
+            .WithProviderId("unknown-provider")
+            .Build();
+
+        var service = CreateService(); // Empty collection - no providers
+
+        _repositoryMock
+            .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+
+        // Act
+        var result = await service.GetConfiguredProviderAsync(connectionId);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetConfiguredProviderAsync_WithSettingsResolutionFailed_ReturnsNull()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var settings = new FakeProviderSettings { ApiKey = "test-key" };
+        var connection = new AiConnectionBuilder()
+            .WithId(connectionId)
+            .WithProviderId("fake-provider")
+            .WithSettings(settings)
+            .Build();
+
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var service = CreateService(fakeProvider);
+
+        _repositoryMock
+            .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+
+        _settingsResolverMock
+            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Returns((object?)null); // Settings resolution failed
+
+        // Act
+        var result = await service.GetConfiguredProviderAsync(connectionId);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetConfiguredProviderAsync_ReturnsConfiguredCapabilities()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var settings = new FakeProviderSettings { ApiKey = "test-key" };
+        var connection = new AiConnectionBuilder()
+            .WithId(connectionId)
+            .WithProviderId("fake-provider")
+            .WithSettings(settings)
+            .Build();
+
+        var fakeChatCapability = new FakeChatCapability();
+        var fakeEmbeddingCapability = new FakeEmbeddingCapability();
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+            .WithChatCapability(fakeChatCapability)
+            .WithEmbeddingCapability(fakeEmbeddingCapability);
+
+        var service = CreateService(fakeProvider);
+
+        _repositoryMock
+            .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+
+        _settingsResolverMock
+            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Returns(settings);
+
+        // Act
+        var result = await service.GetConfiguredProviderAsync(connectionId);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result!.GetCapabilities().Count.ShouldBe(2);
+        result.HasCapability<IAiConfiguredChatCapability>().ShouldBeTrue();
+        result.HasCapability<IAiConfiguredEmbeddingCapability>().ShouldBeTrue();
+        result.GetCapability<IAiConfiguredChatCapability>().ShouldNotBeNull();
+        result.GetCapability<IAiConfiguredEmbeddingCapability>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GetConfiguredProviderAsync_ConfiguredCapabilitiesHaveSettingsBakedIn()
+    {
+        // Arrange
+        var connectionId = Guid.NewGuid();
+        var settings = new FakeProviderSettings { ApiKey = "test-key" };
+        var connection = new AiConnectionBuilder()
+            .WithId(connectionId)
+            .WithProviderId("fake-provider")
+            .WithSettings(settings)
+            .Build();
+
+        var fakeChatClient = new FakeChatClient();
+        var fakeChatCapability = new FakeChatCapability(fakeChatClient);
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+            .WithChatCapability(fakeChatCapability);
+
+        var service = CreateService(fakeProvider);
+
+        _repositoryMock
+            .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+
+        _settingsResolverMock
+            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Returns(settings);
+
+        // Act
+        var result = await service.GetConfiguredProviderAsync(connectionId);
+        var chatCapability = result!.GetCapability<IAiConfiguredChatCapability>();
+
+        // Assert - CreateClient() has no settings parameter, settings are baked in
+        var client = chatCapability!.CreateClient();
+        client.ShouldBe(fakeChatClient);
     }
 
     #endregion

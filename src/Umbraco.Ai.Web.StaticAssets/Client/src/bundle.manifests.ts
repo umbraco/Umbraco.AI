@@ -3,6 +3,7 @@ import { sectionManifests } from "./section/manifests.js";
 import { connectionManifests } from "./connection/manifests.js";
 import { profileManifests } from "./profile/manifests.js";
 import { providerManifests } from "./provider/manifests.js";
+import { manifests as langManifests } from "./lang/manifests.js";
 
 // Job of the bundle is to collate all the manifests from different parts of the extension and load other manifests
 // We load this bundle from umbraco-package.json
@@ -12,4 +13,5 @@ export const manifests: Array<UmbExtensionManifest> = [
   ...connectionManifests,
   ...profileManifests,
   ...providerManifests,
+  ...langManifests,
 ];

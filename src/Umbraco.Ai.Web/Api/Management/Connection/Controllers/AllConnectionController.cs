@@ -37,6 +37,7 @@ public class AllConnectionController : ConnectionControllerBase
     /// </summary>
     /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>
     /// <param name="providerId">Optional provider ID to filter connections.</param>
+    /// <param name="capability">Optional capability to filter connections by (e.g., "Chat", "Embedding").</param>
     /// <param name="skip">Number of items to skip for pagination.</param>
     /// <param name="take">Number of items to take for pagination.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -47,11 +48,38 @@ public class AllConnectionController : ConnectionControllerBase
     public async Task<ActionResult<PagedViewModel<ConnectionItemResponseModel>>> GetConnections(
         string? filter = null,
         string? providerId = null,
+        string? capability = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        var (connections, total) = await _connectionService.GetConnectionsPagedAsync(filter, providerId, skip, take, cancellationToken);
+        IEnumerable<AiConnection> connections;
+        int total;
+
+        // If capability filter is provided, use the capability-based query
+        if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AiCapability>(capability, ignoreCase: true, out var cap))
+        {
+            var capabilityConnections = await _connectionService.GetConnectionsByCapabilityAsync(cap, cancellationToken);
+            var connectionsList = capabilityConnections.ToList();
+
+            // Apply additional filters if provided
+            if (!string.IsNullOrEmpty(filter))
+            {
+                connectionsList = connectionsList.Where(c => c.Name.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(providerId))
+            {
+                connectionsList = connectionsList.Where(c => c.ProviderId == providerId).ToList();
+            }
+
+            total = connectionsList.Count;
+            connections = connectionsList.Skip(skip).Take(take);
+        }
+        else
+        {
+            (connections, total) = await _connectionService.GetConnectionsPagedAsync(filter, providerId, skip, take, cancellationToken);
+        }
 
         var viewModel = new PagedViewModel<ConnectionItemResponseModel>
         {

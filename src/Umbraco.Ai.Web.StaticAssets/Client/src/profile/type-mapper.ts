@@ -1,6 +1,7 @@
-import type { ProfileResponseModel, ProfileItemResponseModel } from "../api/types.gen.js";
+import type { ProfileResponseModel, ProfileItemResponseModel, ChatProfileSettingsModel, EmbeddingProfileSettingsModel } from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
-import type { UaiProfileDetailModel, UaiProfileItemModel } from "./types.js";
+import type { UaiProfileDetailModel, UaiProfileItemModel, UaiProfileSettings, UaiChatProfileSettings } from "./types.js";
+import { isChatSettings } from "./types.js";
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
@@ -12,9 +13,7 @@ export const UaiProfileTypeMapper = {
             capability: response.capability,
             model: response.model ? { providerId: response.model.providerId, modelId: response.model.modelId } : null,
             connectionId: response.connectionId,
-            temperature: response.temperature ?? null,
-            maxTokens: response.maxTokens ?? null,
-            systemPromptTemplate: response.systemPromptTemplate ?? null,
+            settings: this.mapResponseSettings(response),
             tags: response.tags ?? [],
         };
     },
@@ -37,9 +36,7 @@ export const UaiProfileTypeMapper = {
             capability: model.capability,
             model: model.model!,
             connectionId: model.connectionId,
-            temperature: model.temperature,
-            maxTokens: model.maxTokens,
-            systemPromptTemplate: model.systemPromptTemplate,
+            settings: this.mapRequestSettings(model.settings),
             tags: model.tags,
         };
     },
@@ -50,10 +47,57 @@ export const UaiProfileTypeMapper = {
             name: model.name,
             model: model.model!,
             connectionId: model.connectionId,
-            temperature: model.temperature,
-            maxTokens: model.maxTokens,
-            systemPromptTemplate: model.systemPromptTemplate,
+            settings: this.mapRequestSettings(model.settings),
             tags: model.tags,
         };
+    },
+
+    /**
+     * Maps API response settings to internal model.
+     * The API uses polymorphic JSON with $type discriminator.
+     * Note: Uses 'any' cast because generated types may not include 'settings' until regenerated.
+     */
+    mapResponseSettings(response: ProfileResponseModel): UaiProfileSettings | null {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const settings = (response as any).settings as Record<string, unknown> | undefined;
+        if (!settings) return null;
+
+        // The API returns settings with $type discriminator
+        const type = settings.$type as string;
+        if (type === "chat") {
+            return {
+                $type: "chat",
+                temperature: (settings.temperature as number) ?? null,
+                maxTokens: (settings.maxTokens as number) ?? null,
+                systemPromptTemplate: (settings.systemPromptTemplate as string) ?? null,
+            } as UaiChatProfileSettings;
+        }
+
+        if (type === "embedding") {
+            return { $type: "embedding" };
+        }
+
+        return null;
+    },
+
+    /**
+     * Maps internal model settings to API request format.
+     */
+    mapRequestSettings(settings: UaiProfileSettings | null): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null {
+        if (!settings) return null;
+
+        if (isChatSettings(settings)) {
+            return {
+                $type: "chat",
+                temperature: settings.temperature,
+                maxTokens: settings.maxTokens,
+                systemPromptTemplate: settings.systemPromptTemplate,
+            } as ChatProfileSettingsModel;
+        }
+
+        // Embedding settings
+        return {
+            $type: "embedding",
+        } as EmbeddingProfileSettingsModel;
     },
 };

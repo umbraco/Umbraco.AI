@@ -9,6 +9,13 @@ export type ChatMessageModel = {
     content: string;
 };
 
+export type ChatProfileSettingsModel = ProfileSettingsModel & {
+    $type: string;
+    temperature?: number | null;
+    maxTokens?: number | null;
+    systemPromptTemplate?: string | null;
+};
+
 export type ChatRequestModel = {
     profileId?: string | null;
     messages: Array<ChatMessageModel>;
@@ -64,15 +71,17 @@ export type CreateProfileRequestModel = {
     capability: string;
     model: ModelRefModel;
     connectionId: string;
-    temperature?: number | null;
-    maxTokens?: number | null;
-    systemPromptTemplate?: string | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
 };
 
 export type EmbeddingItemModel = {
     index: number;
     vector: Array<number>;
+};
+
+export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
+    $type: string;
 };
 
 export type EmbeddingResponseModel = {
@@ -139,10 +148,12 @@ export type ProfileResponseModel = {
     capability: string;
     model?: ModelRefModel | null;
     connectionId: string;
-    temperature?: number | null;
-    maxTokens?: number | null;
-    systemPromptTemplate?: string | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
+};
+
+export type ProfileSettingsModel = {
+    [key: string]: never;
 };
 
 export type ProviderItemResponseModel = {
@@ -181,9 +192,7 @@ export type UpdateProfileRequestModel = {
     name: string;
     model: ModelRefModel;
     connectionId: string;
-    temperature?: number | null;
-    maxTokens?: number | null;
-    systemPromptTemplate?: string | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
 };
 

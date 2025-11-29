@@ -21,22 +21,46 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
      * Creates a scaffold for a new profile.
      */
     async createScaffold(preset?: Partial<UaiProfileDetailModel>) {
+        const capability = preset?.capability ?? "";
+
+        // Create capability-appropriate default settings
+        const settings = this.#createDefaultSettings(capability);
+
         const scaffold: UaiProfileDetailModel = {
             unique: UAI_EMPTY_GUID,
             entityType: UAI_PROFILE_ENTITY_TYPE,
             alias: "",
             name: "",
-            capability: preset?.capability ?? "",
+            capability,
             model: null,
             connectionId: "",
-            temperature: null,
-            maxTokens: null,
-            systemPromptTemplate: null,
+            settings,
             tags: [],
             ...preset,
         };
 
         return { data: scaffold };
+    }
+
+    /**
+     * Creates default settings based on capability.
+     */
+    #createDefaultSettings(capability: string): UaiProfileDetailModel["settings"] {
+        switch (capability.toLowerCase()) {
+            case "chat":
+                return {
+                    $type: "chat",
+                    temperature: null,
+                    maxTokens: null,
+                    systemPromptTemplate: null,
+                } as UaiProfileDetailModel["settings"];
+            case "embedding":
+                return {
+                    $type: "embedding",
+                } as UaiProfileDetailModel["settings"];
+            default:
+                return null;
+        }
     }
 
     /**

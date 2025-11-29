@@ -176,8 +176,7 @@ public class AiChatServiceTests
         var profile = new AiProfileBuilder()
             .WithCapability(AiCapability.Chat)
             .WithModel("openai", "gpt-4")
-            .WithTemperature(0.7f)
-            .WithMaxTokens(1000)
+            .WithChatSettings(temperature: 0.7f, maxTokens: 1000)
             .Build();
 
         var callerOptions = new ChatOptions
@@ -221,8 +220,7 @@ public class AiChatServiceTests
         var profile = new AiProfileBuilder()
             .WithCapability(AiCapability.Chat)
             .WithModel("openai", "gpt-4")
-            .WithTemperature(0.5f)
-            .WithMaxTokens(500)
+            .WithChatSettings(temperature: 0.5f, maxTokens: 500)
             .Build();
 
         var fakeChatClient = new FakeChatClient();

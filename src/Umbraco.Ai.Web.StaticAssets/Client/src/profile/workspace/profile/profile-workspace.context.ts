@@ -48,12 +48,11 @@ export class UaiProfileWorkspaceContext
 
         this.routes.setRoutes([
             {
-                path: "create/:capability/:connectionId",
+                path: "create/:capability",
                 component: UaiProfileWorkspaceEditorElement,
                 setup: async (_component, info) => {
                     const capability = info.match.params.capability;
-                    const connectionId = info.match.params.connectionId;
-                    await this.scaffold(capability, connectionId);
+                    await this.scaffold(capability);
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
@@ -82,9 +81,9 @@ export class UaiProfileWorkspaceContext
     /**
      * Creates a scaffold for a new profile.
      */
-    async scaffold(capability?: string, connectionId?: string) {
+    async scaffold(capability?: string) {
         this.resetState();
-        const { data } = await this.#repository.createScaffold({ capability, connectionId });
+        const { data } = await this.#repository.createScaffold({ capability });
         if (data) {
             this.#unique.setValue(UAI_EMPTY_GUID);
             this.#model.setValue(data);

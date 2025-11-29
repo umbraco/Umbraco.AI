@@ -6,7 +6,6 @@ export interface UaiProfileCreateOptionsModalData {
 
 export interface UaiProfileCreateOptionsModalValue {
     capability: string;
-    connectionId: string;
 }
 
 export const UAI_PROFILE_CREATE_OPTIONS_MODAL = new UmbModalToken<

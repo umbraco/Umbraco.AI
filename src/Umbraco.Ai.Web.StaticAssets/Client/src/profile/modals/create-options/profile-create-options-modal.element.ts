@@ -1,8 +1,7 @@
-import { html, customElement, state, css, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { html, customElement, state, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import { UaiConnectionCapabilityRepository } from "../../../connection/repository/capability/connection-capability.repository.js";
-import type { UaiConnectionItemModel } from "../../../connection/types.js";
 import type {
     UaiProfileCreateOptionsModalData,
     UaiProfileCreateOptionsModalValue,
@@ -21,12 +20,6 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
     private _availableCapabilities: string[] = [];
 
     @state()
-    private _selectedCapability: string | null = null;
-
-    @state()
-    private _filteredConnections: UaiConnectionItemModel[] = [];
-
-    @state()
     private _loading = true;
 
     override async firstUpdated() {
@@ -40,39 +33,13 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
         this._loading = false;
     }
 
-    async #loadConnectionsForCapability(capability: string) {
-        const result = await this.#capabilityRepository.requestConnectionsByCapability(capability);
-        this._filteredConnections = result.data ?? [];
-    }
-
-    async #onSelectCapability(capability: string) {
-        this._selectedCapability = capability;
-        await this.#loadConnectionsForCapability(capability);
+    #onSelectCapability(capability: string) {
+        this.value = { capability };
+        this.modalContext?.submit();
     }
 
     #getCapabilityLabel(capability: string): string {
         return this.#localize.term(`uaiCapabilities_${capability.toLowerCase()}`);
-    }
-
-    #onSelectConnection(connectionId: string) {
-        if (!this._selectedCapability) return;
-        this.value = {
-            capability: this._selectedCapability,
-            connectionId: connectionId,
-        };
-        this.modalContext?.submit();
-    }
-
-    #onBack() {
-        this._selectedCapability = null;
-        this._filteredConnections = [];
-    }
-
-    #getHeadline(): string {
-        if (this._selectedCapability) {
-            return "Select Connection";
-        }
-        return this.data?.headline ?? "Select Capability";
     }
 
     #renderContent() {
@@ -90,41 +57,18 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
             `;
         }
 
-        // Step 1: Select capability
-        if (!this._selectedCapability) {
-            return html`
-                <uui-ref-list>
-                    ${this._availableCapabilities.map(
-                        (cap) => html`
-                            <uui-ref-node
-                                name=${this.#getCapabilityLabel(cap)}
-                                select-only
-                                selectable
-                                @selected=${() => this.#onSelectCapability(cap)}
-                                @open=${() => this.#onSelectCapability(cap)}
-                            >
-                                <umb-icon slot="icon" name="icon-wand"></umb-icon>
-                            </uui-ref-node>
-                        `
-                    )}
-                </uui-ref-list>
-            `;
-        }
-
-        // Step 2: Select connection
         return html`
             <uui-ref-list>
-                ${this._filteredConnections.map(
-                    (conn) => html`
+                ${this._availableCapabilities.map(
+                    (cap) => html`
                         <uui-ref-node
-                            name=${conn.name}
-                            detail=${conn.providerId}
+                            name=${this.#getCapabilityLabel(cap)}
                             select-only
                             selectable
-                            @selected=${() => this.#onSelectConnection(conn.unique)}
-                            @open=${() => this.#onSelectConnection(conn.unique)}
+                            @selected=${() => this.#onSelectCapability(cap)}
+                            @open=${() => this.#onSelectCapability(cap)}
                         >
-                            <umb-icon slot="icon" name="icon-plug"></umb-icon>
+                            <umb-icon slot="icon" name="icon-wand"></umb-icon>
                         </uui-ref-node>
                     `
                 )}
@@ -134,12 +78,9 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
 
     override render() {
         return html`
-            <uui-dialog-layout headline=${this.#getHeadline()}>
+            <uui-dialog-layout headline=${this.data?.headline ?? "Select Capability"}>
                 ${this.#renderContent()}
                 <div slot="actions">
-                    ${this._selectedCapability
-                        ? html`<uui-button label="Back" @click=${this.#onBack}>Back</uui-button>`
-                        : nothing}
                     <uui-button label="Cancel" @click=${() => this.modalContext?.reject()}>Cancel</uui-button>
                 </div>
             </uui-dialog-layout>

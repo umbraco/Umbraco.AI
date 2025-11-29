@@ -7,7 +7,7 @@ import { UAI_PROFILE_CREATE_OPTIONS_MODAL } from "../modals/create-options/profi
 
 /**
  * Entity action for creating a new profile.
- * Opens the capability/connection selection modal before navigating to the create workspace.
+ * Opens the capability selection modal before navigating to the create workspace.
  */
 export class UaiProfileCreateEntityAction extends UmbEntityActionBase<never> {
     constructor(host: UmbControllerHost, args: UmbEntityActionArgs<never>) {
@@ -25,11 +25,10 @@ export class UaiProfileCreateEntityAction extends UmbEntityActionBase<never> {
             .onSubmit()
             .catch(() => undefined);
 
-        if (!result?.capability || !result?.connectionId) return;
+        if (!result?.capability) return;
 
         const path = UAI_CREATE_PROFILE_WORKSPACE_PATH_PATTERN.generateAbsolute({
             capability: result.capability,
-            connectionId: result.connectionId,
         });
 
         history.pushState(null, "", path);

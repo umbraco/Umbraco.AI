@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteConnectionByIdData, DeleteConnectionByIdErrors, DeleteConnectionByIdResponses, DeleteProfileByIdData, DeleteProfileByIdErrors, DeleteProfileByIdResponses, GetConnectionByIdData, GetConnectionByIdErrors, GetConnectionByIdResponses, GetConnectionsData, GetConnectionsErrors, GetConnectionsResponses, GetProfileAliasByAliasData, GetProfileAliasByAliasErrors, GetProfileAliasByAliasResponses, GetProfileByIdData, GetProfileByIdErrors, GetProfileByIdResponses, GetProfilesData, GetProfilesErrors, GetProfilesResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetProvidersByIdModelsData, GetProvidersByIdModelsErrors, GetProvidersByIdModelsResponses, GetProvidersData, GetProvidersErrors, GetProvidersResponses, PostChatCompleteData, PostChatCompleteErrors, PostChatCompleteResponses, PostChatStreamData, PostChatStreamErrors, PostChatStreamResponses, PostConnectionData, PostConnectionErrors, PostConnectionResponses, PostConnectionsByIdTestData, PostConnectionsByIdTestErrors, PostConnectionsByIdTestResponses, PostEmbeddingGenerateData, PostEmbeddingGenerateErrors, PostEmbeddingGenerateResponses, PostProfileData, PostProfileErrors, PostProfileResponses, PutConnectionByIdData, PutConnectionByIdErrors, PutConnectionByIdResponses, PutProfileByIdData, PutProfileByIdErrors, PutProfileByIdResponses } from './types.gen';
+import type { CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteConnectionByIdData, DeleteConnectionByIdErrors, DeleteConnectionByIdResponses, DeleteProfileByIdData, DeleteProfileByIdErrors, DeleteProfileByIdResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetConnectionByIdData, GetConnectionByIdErrors, GetConnectionByIdResponses, GetConnectionsData, GetConnectionsErrors, GetConnectionsResponses, GetModelsByProviderIdData, GetModelsByProviderIdErrors, GetModelsByProviderIdResponses, GetProfileByAliasData, GetProfileByAliasErrors, GetProfileByAliasResponses, GetProfileByIdData, GetProfileByIdErrors, GetProfileByIdResponses, GetProfilesData, GetProfilesErrors, GetProfilesResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetProvidersData, GetProvidersErrors, GetProvidersResponses, StreamChatData, StreamChatErrors, StreamChatResponses, TestConnectionByIdData, TestConnectionByIdErrors, TestConnectionByIdResponses, UpdateConnectionByIdData, UpdateConnectionByIdErrors, UpdateConnectionByIdResponses, UpdateProfileByIdData, UpdateProfileByIdErrors, UpdateProfileByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -19,8 +19,8 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 export class ChatService {
-    public static postChatComplete<ThrowOnError extends boolean = false>(options?: Options<PostChatCompleteData, ThrowOnError>) {
-        return (options?.client ?? client).post<PostChatCompleteResponses, PostChatCompleteErrors, ThrowOnError>({
+    public static completeChat<ThrowOnError extends boolean = false>(options?: Options<CompleteChatData, ThrowOnError>) {
+        return (options?.client ?? client).post<CompleteChatResponses, CompleteChatErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -36,8 +36,8 @@ export class ChatService {
         });
     }
     
-    public static postChatStream<ThrowOnError extends boolean = false>(options?: Options<PostChatStreamData, ThrowOnError>) {
-        return (options?.client ?? client).post<PostChatStreamResponses, PostChatStreamErrors, ThrowOnError>({
+    public static streamChat<ThrowOnError extends boolean = false>(options?: Options<StreamChatData, ThrowOnError>) {
+        return (options?.client ?? client).post<StreamChatResponses, StreamChatErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -68,8 +68,8 @@ export class ConnectionsService {
         });
     }
     
-    public static postConnection<ThrowOnError extends boolean = false>(options?: Options<PostConnectionData, ThrowOnError>) {
-        return (options?.client ?? client).post<PostConnectionResponses, PostConnectionErrors, ThrowOnError>({
+    public static createConnection<ThrowOnError extends boolean = false>(options?: Options<CreateConnectionData, ThrowOnError>) {
+        return (options?.client ?? client).post<CreateConnectionResponses, CreateConnectionErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -111,8 +111,8 @@ export class ConnectionsService {
         });
     }
     
-    public static putConnectionById<ThrowOnError extends boolean = false>(options: Options<PutConnectionByIdData, ThrowOnError>) {
-        return (options.client ?? client).put<PutConnectionByIdResponses, PutConnectionByIdErrors, ThrowOnError>({
+    public static updateConnectionById<ThrowOnError extends boolean = false>(options: Options<UpdateConnectionByIdData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateConnectionByIdResponses, UpdateConnectionByIdErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -128,8 +128,8 @@ export class ConnectionsService {
         });
     }
     
-    public static postConnectionsByIdTest<ThrowOnError extends boolean = false>(options: Options<PostConnectionsByIdTestData, ThrowOnError>) {
-        return (options.client ?? client).post<PostConnectionsByIdTestResponses, PostConnectionsByIdTestErrors, ThrowOnError>({
+    public static testConnectionById<ThrowOnError extends boolean = false>(options: Options<TestConnectionByIdData, ThrowOnError>) {
+        return (options.client ?? client).post<TestConnectionByIdResponses, TestConnectionByIdErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -143,8 +143,8 @@ export class ConnectionsService {
 }
 
 export class EmbeddingService {
-    public static postEmbeddingGenerate<ThrowOnError extends boolean = false>(options?: Options<PostEmbeddingGenerateData, ThrowOnError>) {
-        return (options?.client ?? client).post<PostEmbeddingGenerateResponses, PostEmbeddingGenerateErrors, ThrowOnError>({
+    public static generateEmbeddings<ThrowOnError extends boolean = false>(options?: Options<GenerateEmbeddingsData, ThrowOnError>) {
+        return (options?.client ?? client).post<GenerateEmbeddingsResponses, GenerateEmbeddingsErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -175,8 +175,8 @@ export class ProfilesService {
         });
     }
     
-    public static postProfile<ThrowOnError extends boolean = false>(options?: Options<PostProfileData, ThrowOnError>) {
-        return (options?.client ?? client).post<PostProfileResponses, PostProfileErrors, ThrowOnError>({
+    public static createProfile<ThrowOnError extends boolean = false>(options?: Options<CreateProfileData, ThrowOnError>) {
+        return (options?.client ?? client).post<CreateProfileResponses, CreateProfileErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -218,8 +218,8 @@ export class ProfilesService {
         });
     }
     
-    public static putProfileById<ThrowOnError extends boolean = false>(options: Options<PutProfileByIdData, ThrowOnError>) {
-        return (options.client ?? client).put<PutProfileByIdResponses, PutProfileByIdErrors, ThrowOnError>({
+    public static updateProfileById<ThrowOnError extends boolean = false>(options: Options<UpdateProfileByIdData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateProfileByIdResponses, UpdateProfileByIdErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -235,8 +235,8 @@ export class ProfilesService {
         });
     }
     
-    public static getProfileAliasByAlias<ThrowOnError extends boolean = false>(options: Options<GetProfileAliasByAliasData, ThrowOnError>) {
-        return (options.client ?? client).get<GetProfileAliasByAliasResponses, GetProfileAliasByAliasErrors, ThrowOnError>({
+    public static getProfileByAlias<ThrowOnError extends boolean = false>(options: Options<GetProfileByAliasData, ThrowOnError>) {
+        return (options.client ?? client).get<GetProfileByAliasResponses, GetProfileByAliasErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -276,8 +276,8 @@ export class ProvidersService {
         });
     }
     
-    public static getProvidersByIdModels<ThrowOnError extends boolean = false>(options: Options<GetProvidersByIdModelsData, ThrowOnError>) {
-        return (options.client ?? client).get<GetProvidersByIdModelsResponses, GetProvidersByIdModelsErrors, ThrowOnError>({
+    public static getModelsByProviderId<ThrowOnError extends boolean = false>(options: Options<GetModelsByProviderIdData, ThrowOnError>) {
+        return (options.client ?? client).get<GetModelsByProviderIdResponses, GetModelsByProviderIdErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',

@@ -39,7 +39,7 @@ public class AllProviderController : ProviderControllerBase
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<ProviderItemResponseModel>), StatusCodes.Status200OK)]
-    public Task<ActionResult<IEnumerable<ProviderItemResponseModel>>> GetAllProviders(
+    public Task<ActionResult<IEnumerable<ProviderItemResponseModel>>> GetProviders(
         CancellationToken cancellationToken = default)
     {
         var providers = _umbracoMapper.MapEnumerable<IAiProvider, ProviderItemResponseModel>(_registry.Providers);

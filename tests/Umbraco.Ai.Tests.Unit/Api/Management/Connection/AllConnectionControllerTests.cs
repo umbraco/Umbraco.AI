@@ -53,7 +53,7 @@ public class AllConnectionControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAllConnections();
+        var result = await _controller.GetConnections();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -89,7 +89,7 @@ public class AllConnectionControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAllConnections(providerId: "openai");
+        var result = await _controller.GetConnections(providerId: "openai");
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -112,7 +112,7 @@ public class AllConnectionControllerTests
             .Returns(new List<ConnectionItemResponseModel>());
 
         // Act
-        var result = await _controller.GetAllConnections();
+        var result = await _controller.GetConnections();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -148,7 +148,7 @@ public class AllConnectionControllerTests
             }).ToList());
 
         // Act
-        var result = await _controller.GetAllConnections(skip: 2, take: 3);
+        var result = await _controller.GetConnections(skip: 2, take: 3);
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();

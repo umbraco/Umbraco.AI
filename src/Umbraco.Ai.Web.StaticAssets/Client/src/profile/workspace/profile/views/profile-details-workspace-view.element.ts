@@ -105,7 +105,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         const { data, error } = await tryExecute(
             this,
-            ProvidersService.getProvidersByIdModels({
+            ProvidersService.getModelsByProviderId({
                 path: { id: connection.providerId },
                 query: { connectionId, capability },
             })

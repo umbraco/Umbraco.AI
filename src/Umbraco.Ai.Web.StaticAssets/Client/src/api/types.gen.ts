@@ -187,14 +187,14 @@ export type UpdateProfileRequestModel = {
     tags: Array<string>;
 };
 
-export type PostChatCompleteData = {
+export type CompleteChatData = {
     body?: ChatRequestModel;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/chat/complete';
 };
 
-export type PostChatCompleteErrors = {
+export type CompleteChatErrors = {
     /**
      * Bad Request
      */
@@ -209,25 +209,25 @@ export type PostChatCompleteErrors = {
     404: ProblemDetails;
 };
 
-export type PostChatCompleteError = PostChatCompleteErrors[keyof PostChatCompleteErrors];
+export type CompleteChatError = CompleteChatErrors[keyof CompleteChatErrors];
 
-export type PostChatCompleteResponses = {
+export type CompleteChatResponses = {
     /**
      * OK
      */
     200: ChatResponseModel;
 };
 
-export type PostChatCompleteResponse = PostChatCompleteResponses[keyof PostChatCompleteResponses];
+export type CompleteChatResponse = CompleteChatResponses[keyof CompleteChatResponses];
 
-export type PostChatStreamData = {
+export type StreamChatData = {
     body?: ChatRequestModel;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/chat/stream';
 };
 
-export type PostChatStreamErrors = {
+export type StreamChatErrors = {
     /**
      * Bad Request
      */
@@ -242,9 +242,9 @@ export type PostChatStreamErrors = {
     404: ProblemDetails;
 };
 
-export type PostChatStreamError = PostChatStreamErrors[keyof PostChatStreamErrors];
+export type StreamChatError = StreamChatErrors[keyof StreamChatErrors];
 
-export type PostChatStreamResponses = {
+export type StreamChatResponses = {
     /**
      * OK
      */
@@ -279,14 +279,14 @@ export type GetConnectionsResponses = {
 
 export type GetConnectionsResponse = GetConnectionsResponses[keyof GetConnectionsResponses];
 
-export type PostConnectionData = {
+export type CreateConnectionData = {
     body?: CreateConnectionRequestModel;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/connections';
 };
 
-export type PostConnectionErrors = {
+export type CreateConnectionErrors = {
     /**
      * Bad Request
      */
@@ -301,9 +301,9 @@ export type PostConnectionErrors = {
     404: ProblemDetails;
 };
 
-export type PostConnectionError = PostConnectionErrors[keyof PostConnectionErrors];
+export type CreateConnectionError = CreateConnectionErrors[keyof CreateConnectionErrors];
 
-export type PostConnectionResponses = {
+export type CreateConnectionResponses = {
     /**
      * Created
      */
@@ -374,7 +374,7 @@ export type GetConnectionByIdResponses = {
 
 export type GetConnectionByIdResponse = GetConnectionByIdResponses[keyof GetConnectionByIdResponses];
 
-export type PutConnectionByIdData = {
+export type UpdateConnectionByIdData = {
     body?: UpdateConnectionRequestModel;
     path: {
         id: string;
@@ -383,7 +383,7 @@ export type PutConnectionByIdData = {
     url: '/umbraco/ai/management/api/v1/connections/{id}';
 };
 
-export type PutConnectionByIdErrors = {
+export type UpdateConnectionByIdErrors = {
     /**
      * Bad Request
      */
@@ -398,16 +398,16 @@ export type PutConnectionByIdErrors = {
     404: ProblemDetails;
 };
 
-export type PutConnectionByIdError = PutConnectionByIdErrors[keyof PutConnectionByIdErrors];
+export type UpdateConnectionByIdError = UpdateConnectionByIdErrors[keyof UpdateConnectionByIdErrors];
 
-export type PutConnectionByIdResponses = {
+export type UpdateConnectionByIdResponses = {
     /**
      * OK
      */
     200: unknown;
 };
 
-export type PostConnectionsByIdTestData = {
+export type TestConnectionByIdData = {
     body?: never;
     path: {
         id: string;
@@ -416,7 +416,7 @@ export type PostConnectionsByIdTestData = {
     url: '/umbraco/ai/management/api/v1/connections/{id}/test';
 };
 
-export type PostConnectionsByIdTestErrors = {
+export type TestConnectionByIdErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -427,25 +427,25 @@ export type PostConnectionsByIdTestErrors = {
     404: ProblemDetails;
 };
 
-export type PostConnectionsByIdTestError = PostConnectionsByIdTestErrors[keyof PostConnectionsByIdTestErrors];
+export type TestConnectionByIdError = TestConnectionByIdErrors[keyof TestConnectionByIdErrors];
 
-export type PostConnectionsByIdTestResponses = {
+export type TestConnectionByIdResponses = {
     /**
      * OK
      */
     200: ConnectionTestResultModel;
 };
 
-export type PostConnectionsByIdTestResponse = PostConnectionsByIdTestResponses[keyof PostConnectionsByIdTestResponses];
+export type TestConnectionByIdResponse = TestConnectionByIdResponses[keyof TestConnectionByIdResponses];
 
-export type PostEmbeddingGenerateData = {
+export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/embedding/generate';
 };
 
-export type PostEmbeddingGenerateErrors = {
+export type GenerateEmbeddingsErrors = {
     /**
      * Bad Request
      */
@@ -460,16 +460,16 @@ export type PostEmbeddingGenerateErrors = {
     404: ProblemDetails;
 };
 
-export type PostEmbeddingGenerateError = PostEmbeddingGenerateErrors[keyof PostEmbeddingGenerateErrors];
+export type GenerateEmbeddingsError = GenerateEmbeddingsErrors[keyof GenerateEmbeddingsErrors];
 
-export type PostEmbeddingGenerateResponses = {
+export type GenerateEmbeddingsResponses = {
     /**
      * OK
      */
     200: EmbeddingResponseModel;
 };
 
-export type PostEmbeddingGenerateResponse = PostEmbeddingGenerateResponses[keyof PostEmbeddingGenerateResponses];
+export type GenerateEmbeddingsResponse = GenerateEmbeddingsResponses[keyof GenerateEmbeddingsResponses];
 
 export type GetProfilesData = {
     body?: never;
@@ -498,14 +498,14 @@ export type GetProfilesResponses = {
 
 export type GetProfilesResponse = GetProfilesResponses[keyof GetProfilesResponses];
 
-export type PostProfileData = {
+export type CreateProfileData = {
     body?: CreateProfileRequestModel;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/profiles';
 };
 
-export type PostProfileErrors = {
+export type CreateProfileErrors = {
     /**
      * Bad Request
      */
@@ -520,9 +520,9 @@ export type PostProfileErrors = {
     404: ProblemDetails;
 };
 
-export type PostProfileError = PostProfileErrors[keyof PostProfileErrors];
+export type CreateProfileError = CreateProfileErrors[keyof CreateProfileErrors];
 
-export type PostProfileResponses = {
+export type CreateProfileResponses = {
     /**
      * Created
      */
@@ -589,7 +589,7 @@ export type GetProfileByIdResponses = {
 
 export type GetProfileByIdResponse = GetProfileByIdResponses[keyof GetProfileByIdResponses];
 
-export type PutProfileByIdData = {
+export type UpdateProfileByIdData = {
     body?: UpdateProfileRequestModel;
     path: {
         id: string;
@@ -598,7 +598,7 @@ export type PutProfileByIdData = {
     url: '/umbraco/ai/management/api/v1/profiles/{id}';
 };
 
-export type PutProfileByIdErrors = {
+export type UpdateProfileByIdErrors = {
     /**
      * Bad Request
      */
@@ -613,16 +613,16 @@ export type PutProfileByIdErrors = {
     404: ProblemDetails;
 };
 
-export type PutProfileByIdError = PutProfileByIdErrors[keyof PutProfileByIdErrors];
+export type UpdateProfileByIdError = UpdateProfileByIdErrors[keyof UpdateProfileByIdErrors];
 
-export type PutProfileByIdResponses = {
+export type UpdateProfileByIdResponses = {
     /**
      * OK
      */
     200: unknown;
 };
 
-export type GetProfileAliasByAliasData = {
+export type GetProfileByAliasData = {
     body?: never;
     path: {
         alias: string;
@@ -631,7 +631,7 @@ export type GetProfileAliasByAliasData = {
     url: '/umbraco/ai/management/api/v1/profiles/alias/{alias}';
 };
 
-export type GetProfileAliasByAliasErrors = {
+export type GetProfileByAliasErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -642,16 +642,16 @@ export type GetProfileAliasByAliasErrors = {
     404: ProblemDetails;
 };
 
-export type GetProfileAliasByAliasError = GetProfileAliasByAliasErrors[keyof GetProfileAliasByAliasErrors];
+export type GetProfileByAliasError = GetProfileByAliasErrors[keyof GetProfileByAliasErrors];
 
-export type GetProfileAliasByAliasResponses = {
+export type GetProfileByAliasResponses = {
     /**
      * OK
      */
     200: ProfileResponseModel;
 };
 
-export type GetProfileAliasByAliasResponse = GetProfileAliasByAliasResponses[keyof GetProfileAliasByAliasResponses];
+export type GetProfileByAliasResponse = GetProfileByAliasResponses[keyof GetProfileByAliasResponses];
 
 export type GetProvidersData = {
     body?: never;
@@ -707,7 +707,7 @@ export type GetProviderByIdResponses = {
 
 export type GetProviderByIdResponse = GetProviderByIdResponses[keyof GetProviderByIdResponses];
 
-export type GetProvidersByIdModelsData = {
+export type GetModelsByProviderIdData = {
     body?: never;
     path: {
         id: string;
@@ -719,7 +719,7 @@ export type GetProvidersByIdModelsData = {
     url: '/umbraco/ai/management/api/v1/providers/{id}/models';
 };
 
-export type GetProvidersByIdModelsErrors = {
+export type GetModelsByProviderIdErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -730,13 +730,13 @@ export type GetProvidersByIdModelsErrors = {
     404: ProblemDetails;
 };
 
-export type GetProvidersByIdModelsError = GetProvidersByIdModelsErrors[keyof GetProvidersByIdModelsErrors];
+export type GetModelsByProviderIdError = GetModelsByProviderIdErrors[keyof GetModelsByProviderIdErrors];
 
-export type GetProvidersByIdModelsResponses = {
+export type GetModelsByProviderIdResponses = {
     /**
      * OK
      */
     200: Array<ModelDescriptorResponseModel>;
 };
 
-export type GetProvidersByIdModelsResponse = GetProvidersByIdModelsResponses[keyof GetProvidersByIdModelsResponses];
+export type GetModelsByProviderIdResponse = GetModelsByProviderIdResponses[keyof GetModelsByProviderIdResponses];

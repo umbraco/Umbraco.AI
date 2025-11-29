@@ -1,7 +1,28 @@
-﻿using Microsoft.Extensions.AI;
+using System.Text.Json;
+using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Providers;
+
+/// <summary>
+/// Helper methods for capability runtime validation.
+/// </summary>
+internal static class CapabilityGuards
+{
+    /// <summary>
+    /// Throws if settings are still in unresolved JsonElement form.
+    /// This catches cases where callers bypass the configured provider pattern.
+    /// </summary>
+    internal static void ThrowIfUnresolvedSettings(object? settings, string methodName)
+    {
+        if (settings is JsonElement)
+        {
+            throw new InvalidOperationException(
+                $"Settings must be resolved before calling {methodName}. " +
+                "Use IConfiguredProvider from IAiConnectionService.GetConfiguredProviderAsync().");
+        }
+    }
+}
 
 /// <summary>
 /// Defines a generic AI capability.
@@ -107,7 +128,11 @@ public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCap
     protected abstract Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(TSettings settings, CancellationToken cancellationToken = default);
     
     Task<IReadOnlyList<AiModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
-        => settings != null ? GetModelsAsync((TSettings)settings, cancellationToken) : throw new ArgumentNullException(nameof(settings));
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(GetModelsAsync));
+        return GetModelsAsync((TSettings)settings, cancellationToken);
+    }
 }
 
 /// <summary>
@@ -147,7 +172,11 @@ public abstract class AiChatCapabilityBase<TSettings>(IAiProvider provider) : Ai
 
     /// <inheritdoc />
     IChatClient IAiChatCapability.CreateClient(object? settings)
-        => settings != null ? CreateClient((TSettings)settings) : throw new ArgumentNullException(nameof(settings));
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        return CreateClient((TSettings)settings);
+    }
 }
 
 /// <summary>
@@ -188,5 +217,9 @@ public abstract class AiEmbeddingCapabilityBase<TSettings>(IAiProvider provider)
 
     /// <inheritdoc />
     IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings)
-        => settings != null ? CreateGenerator((TSettings)settings!) : throw new ArgumentNullException(nameof(settings));
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
+        return CreateGenerator((TSettings)settings);
+    }
 }

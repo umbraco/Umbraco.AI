@@ -4,7 +4,6 @@ using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 
@@ -13,33 +12,49 @@ namespace Umbraco.Ai.Tests.Unit.Factories;
 public class AiChatClientFactoryTests
 {
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
-    private readonly Mock<IAiSettingsResolver> _settingsResolverMock;
     private readonly AiChatMiddlewareCollection _middleware;
 
     public AiChatClientFactoryTests()
     {
         _connectionServiceMock = new Mock<IAiConnectionService>();
-        _settingsResolverMock = new Mock<IAiSettingsResolver>();
         _middleware = new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
     }
 
-    private AiChatClientFactory CreateFactory(params IAiProvider[] providers)
+    private AiChatClientFactory CreateFactory()
     {
-        var collection = new AiProviderCollection(() => providers);
         return new AiChatClientFactory(
-            collection,
             _connectionServiceMock.Object,
-            _settingsResolverMock.Object,
             _middleware);
     }
 
-    private AiChatClientFactory CreateFactory(AiProviderCollection providers, AiChatMiddlewareCollection middleware)
+    private AiChatClientFactory CreateFactory(AiChatMiddlewareCollection middleware)
     {
         return new AiChatClientFactory(
-            providers,
             _connectionServiceMock.Object,
-            _settingsResolverMock.Object,
             middleware);
+    }
+
+    private static Mock<IConfiguredProvider> CreateConfiguredProviderMock(
+        AiConnection connection,
+        IAiProvider provider,
+        IConfiguredChatCapability? chatCapability = null)
+    {
+        var mock = new Mock<IConfiguredProvider>();
+        mock.Setup(x => x.Connection).Returns(connection);
+        mock.Setup(x => x.Provider).Returns(provider);
+
+        if (chatCapability is not null)
+        {
+            mock.Setup(x => x.GetCapability<IConfiguredChatCapability>()).Returns(chatCapability);
+            mock.Setup(x => x.GetCapabilities()).Returns(new[] { chatCapability });
+        }
+        else
+        {
+            mock.Setup(x => x.GetCapability<IConfiguredChatCapability>()).Returns((IConfiguredChatCapability?)null);
+            mock.Setup(x => x.GetCapabilities()).Returns(Array.Empty<IConfiguredCapability>());
+        }
+
+        return mock;
     }
 
     #region CreateClientAsync - Valid profile and connection
@@ -63,19 +78,21 @@ public class AiChatClientFactoryTests
             .Build();
 
         var fakeChatClient = new FakeChatClient();
-        var fakeChatCapability = new FakeChatCapability(fakeChatClient);
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
-            .WithChatCapability(fakeChatCapability);
+        var configuredCapabilityMock = new Mock<IConfiguredChatCapability>();
+        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(fakeChatClient);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
-        var factory = CreateFactory(fakeProvider);
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var configuredProviderMock = CreateConfiguredProviderMock(
+            connection,
+            fakeProvider,
+            configuredCapabilityMock.Object);
+
+        var factory = CreateFactory();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
-
-        _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
-            .Returns(connection.Settings);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         // Act
         var client = await factory.CreateClientAsync(profile);
@@ -127,8 +144,8 @@ public class AiChatClientFactoryTests
         var factory = CreateFactory();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IConfiguredProvider?)null);
 
         // Act
         var act = () => factory.CreateClientAsync(profile);
@@ -160,11 +177,14 @@ public class AiChatClientFactoryTests
             .WithName("Test Profile")
             .Build();
 
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, fakeProvider);
+
         var factory = CreateFactory();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         // Act
         var act = () => factory.CreateClientAsync(profile);
@@ -196,11 +216,14 @@ public class AiChatClientFactoryTests
             .WithName("Anthropic Profile")
             .Build();
 
+        var fakeProvider = new FakeAiProvider("openai", "OpenAI"); // Connection's provider
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, fakeProvider);
+
         var factory = CreateFactory();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         // Act
         var act = () => factory.CreateClientAsync(profile);
@@ -213,42 +236,6 @@ public class AiChatClientFactoryTests
         exception.Message.ShouldContain("but profile");
         exception.Message.ShouldContain("requires provider");
         exception.Message.ShouldContain("anthropic");
-    }
-
-    #endregion
-
-    #region CreateClientAsync - Provider not found
-
-    [Fact]
-    public async Task CreateClientAsync_WithProviderNotFound_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
-            .WithId(connectionId)
-            .WithProviderId("unknown-provider")
-            .IsActive(true)
-            .Build();
-
-        var profile = new AiProfileBuilder()
-            .WithConnectionId(connectionId)
-            .WithModel("unknown-provider", "some-model")
-            .Build();
-
-        var factory = CreateFactory(); // Empty collection - no providers
-
-        _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
-
-        // Act
-        var act = () => factory.CreateClientAsync(profile);
-
-        // Assert
-        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
-        exception.Message.ShouldContain("Provider");
-        exception.Message.ShouldContain("unknown-provider");
-        exception.Message.ShouldContain("not found");
     }
 
     #endregion
@@ -272,18 +259,15 @@ public class AiChatClientFactoryTests
             .WithModel("embedding-only-provider", "embed-model")
             .Build();
 
-        var fakeProvider = new FakeAiProvider("embedding-only-provider", "Embedding Only Provider")
-            .WithEmbeddingCapability(); // No chat capability
+        var fakeProvider = new FakeAiProvider("embedding-only-provider", "Embedding Only Provider");
+        // No chat capability - configured provider mock will return null for GetCapability<IConfiguredChatCapability>()
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, fakeProvider, chatCapability: null);
 
-        var factory = CreateFactory(fakeProvider);
+        var factory = CreateFactory();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
-
-        _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
-            .Returns(connection.Settings);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         // Act
         var act = () => factory.CreateClientAsync(profile);
@@ -332,20 +316,21 @@ public class AiChatClientFactoryTests
             middleware2Mock.Object
         });
 
-        var fakeChatCapability = new FakeChatCapability(baseChatClient);
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
-            .WithChatCapability(fakeChatCapability);
+        var configuredCapabilityMock = new Mock<IConfiguredChatCapability>();
+        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(baseChatClient);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
-        var providers = new AiProviderCollection(() => new[] { fakeProvider });
-        var factoryWithMiddleware = CreateFactory(providers, middlewareWithItems);
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var configuredProviderMock = CreateConfiguredProviderMock(
+            connection,
+            fakeProvider,
+            configuredCapabilityMock.Object);
+
+        var factoryWithMiddleware = CreateFactory(middlewareWithItems);
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
-
-        _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
-            .Returns(connection.Settings);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         // Act
         var client = await factoryWithMiddleware.CreateClientAsync(profile);
@@ -374,19 +359,21 @@ public class AiChatClientFactoryTests
             .Build();
 
         var baseChatClient = new FakeChatClient();
-        var fakeChatCapability = new FakeChatCapability(baseChatClient);
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
-            .WithChatCapability(fakeChatCapability);
+        var configuredCapabilityMock = new Mock<IConfiguredChatCapability>();
+        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(baseChatClient);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
-        var factory = CreateFactory(fakeProvider);
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var configuredProviderMock = CreateConfiguredProviderMock(
+            connection,
+            fakeProvider,
+            configuredCapabilityMock.Object);
+
+        var factory = CreateFactory();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
-
-        _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
-            .Returns(connection.Settings);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         // Act
         var client = await factory.CreateClientAsync(profile);
@@ -397,20 +384,16 @@ public class AiChatClientFactoryTests
 
     #endregion
 
-    #region CreateClientAsync - Settings resolved before creating client
+    #region CreateClientAsync - Settings already resolved by configured provider
 
     [Fact]
-    public async Task CreateClientAsync_ResolvesSettingsBeforeCreatingClient()
+    public async Task CreateClientAsync_UsesConfiguredProviderWithResolvedSettings()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var rawSettings = new FakeProviderSettings { ApiKey = "$Config:ApiKey" };
-        var resolvedSettings = new FakeProviderSettings { ApiKey = "resolved-api-key" };
-
         var connection = new AiConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
-            .WithSettings(rawSettings)
             .IsActive(true)
             .Build();
 
@@ -420,30 +403,31 @@ public class AiChatClientFactoryTests
             .Build();
 
         var fakeChatClient = new FakeChatClient();
-        var fakeChatCapability = new Mock<IAiChatCapability>();
-        fakeChatCapability.Setup(c => c.CreateClient(resolvedSettings)).Returns(fakeChatClient);
-        fakeChatCapability.Setup(c => c.Kind).Returns(AiCapability.Chat);
+        var configuredCapabilityMock = new Mock<IConfiguredChatCapability>();
+        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(fakeChatClient);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
-            .WithCapability(fakeChatCapability.Object);
+        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var configuredProviderMock = CreateConfiguredProviderMock(
+            connection,
+            fakeProvider,
+            configuredCapabilityMock.Object);
 
-        var factory = CreateFactory(fakeProvider);
+        var factory = CreateFactory();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
-
-        _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, rawSettings))
-            .Returns(resolvedSettings);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         // Act
         var client = await factory.CreateClientAsync(profile);
 
         // Assert
         client.ShouldBe(fakeChatClient);
-        fakeChatCapability.Verify(c => c.CreateClient(resolvedSettings), Times.Once);
-        _settingsResolverMock.Verify(x => x.ResolveSettingsForProvider(fakeProvider, rawSettings), Times.Once);
+        // Verify that CreateClient was called on the configured capability (no settings parameter)
+        configuredCapabilityMock.Verify(c => c.CreateClient(), Times.Once);
+        // Verify that GetConfiguredProviderAsync was called (which handles settings resolution)
+        _connectionServiceMock.Verify(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

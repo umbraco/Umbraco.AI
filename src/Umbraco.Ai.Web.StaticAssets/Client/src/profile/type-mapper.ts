@@ -1,4 +1,4 @@
-import type { ProfileResponseModel, ProfileItemResponseModel } from "../api/types.gen.js";
+import type { ProfileResponseModel, ProfileItemResponseModel, ChatProfileSettingsModel, EmbeddingProfileSettingsModel } from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
 import type { UaiProfileDetailModel, UaiProfileItemModel, UaiProfileSettings, UaiChatProfileSettings } from "./types.js";
 import { isChatSettings } from "./types.js";
@@ -83,7 +83,7 @@ export const UaiProfileTypeMapper = {
     /**
      * Maps internal model settings to API request format.
      */
-    mapRequestSettings(settings: UaiProfileSettings | null): Record<string, unknown> | null {
+    mapRequestSettings(settings: UaiProfileSettings | null): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null {
         if (!settings) return null;
 
         if (isChatSettings(settings)) {
@@ -92,12 +92,12 @@ export const UaiProfileTypeMapper = {
                 temperature: settings.temperature,
                 maxTokens: settings.maxTokens,
                 systemPromptTemplate: settings.systemPromptTemplate,
-            };
+            } as ChatProfileSettingsModel;
         }
 
         // Embedding settings
         return {
             $type: "embedding",
-        };
+        } as EmbeddingProfileSettingsModel;
     },
 };

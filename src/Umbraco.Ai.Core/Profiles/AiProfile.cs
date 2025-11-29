@@ -47,14 +47,4 @@ public sealed class AiProfile
     /// A list of tags associated with the AI profile for categorization and filtering.
     /// </summary>
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
-
-    /// <summary>
-    /// Gets the settings as <see cref="AiChatProfileSettings"/> if this is a Chat profile.
-    /// </summary>
-    public AiChatProfileSettings? ChatSettings => Settings as AiChatProfileSettings;
-
-    /// <summary>
-    /// Gets the settings as <see cref="AiEmbeddingProfileSettings"/> if this is an Embedding profile.
-    /// </summary>
-    public AiEmbeddingProfileSettings? EmbeddingSettings => Settings as AiEmbeddingProfileSettings; 
 }

@@ -1,5 +1,6 @@
 import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UmbTableColumn, UmbTableItem } from "@umbraco-cms/backoffice/components";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -12,6 +13,8 @@ import { UAI_EDIT_PROFILE_WORKSPACE_PATH_PATTERN } from "../../../workspace/prof
  */
 @customElement("uai-profile-table-collection-view")
 export class UaiProfileTableCollectionViewElement extends UmbLitElement {
+    #localize = new UmbLocalizationController(this);
+
     @state()
     private _items: UmbTableItem[] = [];
 
@@ -32,11 +35,7 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
     }
 
     #getCapabilityLabel(capability: string): string {
-        const labels: Record<string, string> = {
-            chat: "Chat",
-            embedding: "Embedding",
-        };
-        return labels[capability] ?? capability;
+        return this.#localize.term(`uaiCapabilities_${capability.toLowerCase()}`);
     }
 
     #createTableItems(items: UaiProfileItemModel[]) {

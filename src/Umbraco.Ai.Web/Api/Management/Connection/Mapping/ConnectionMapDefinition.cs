@@ -1,3 +1,4 @@
+using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Core.Mapping;

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Persistence.Entities;
+using Umbraco.Ai.Persistence.Connections;
+using Umbraco.Ai.Persistence.Profiles;
 
 namespace Umbraco.Ai.Persistence;
 

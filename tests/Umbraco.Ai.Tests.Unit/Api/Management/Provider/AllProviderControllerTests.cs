@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Tests.Common.Fakes;
 using Umbraco.Ai.Web.Api.Management.Provider.Controllers;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
@@ -10,16 +9,18 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Provider;
 
 public class AllProviderControllerTests
 {
-    private readonly Mock<IAiRegistry> _registryMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
-    private readonly AllProviderController _controller;
+    private List<IAiProvider> _providers = new();
 
     public AllProviderControllerTests()
     {
-        _registryMock = new Mock<IAiRegistry>();
         _mapperMock = new Mock<IUmbracoMapper>();
+    }
 
-        _controller = new AllProviderController(_registryMock.Object, _mapperMock.Object);
+    private AllProviderController CreateController()
+    {
+        var collection = new AiProviderCollection(() => _providers);
+        return new AllProviderController(collection, _mapperMock.Object);
     }
 
     #region GetAllProviders
@@ -28,28 +29,26 @@ public class AllProviderControllerTests
     public async Task GetAllProviders_ReturnsAllProviders()
     {
         // Arrange
-        var providers = new List<IAiProvider>
+        _providers = new List<IAiProvider>
         {
             new FakeAiProvider("openai", "OpenAI"),
             new FakeAiProvider("anthropic", "Anthropic")
         };
 
-        var responseModels = providers.Select(p => new ProviderItemResponseModel
+        var responseModels = _providers.Select(p => new ProviderItemResponseModel
         {
             Id = p.Id,
             Name = p.Name
         }).ToList();
 
-        _registryMock
-            .Setup(x => x.Providers)
-            .Returns(providers);
-
         _mapperMock
             .Setup(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(It.IsAny<IEnumerable<IAiProvider>>()))
             .Returns(responseModels);
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.GetAllProviders();
+        var result = await controller.GetProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -61,16 +60,16 @@ public class AllProviderControllerTests
     public async Task GetAllProviders_WithNoProviders_ReturnsEmptyList()
     {
         // Arrange
-        _registryMock
-            .Setup(x => x.Providers)
-            .Returns(new List<IAiProvider>());
+        _providers = new List<IAiProvider>();
 
         _mapperMock
             .Setup(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(It.IsAny<IEnumerable<IAiProvider>>()))
             .Returns(new List<ProviderItemResponseModel>());
 
+        var controller = CreateController();
+
         // Act
-        var result = await _controller.GetAllProviders();
+        var result = await controller.GetProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -79,27 +78,26 @@ public class AllProviderControllerTests
     }
 
     [Fact]
-    public async Task GetAllProviders_CallsMapperWithProvidersFromRegistry()
+    public async Task GetAllProviders_CallsMapperWithProvidersFromCollection()
     {
         // Arrange
-        var providers = new List<IAiProvider>
+        _providers = new List<IAiProvider>
         {
             new FakeAiProvider("test", "Test Provider")
         };
-
-        _registryMock
-            .Setup(x => x.Providers)
-            .Returns(providers);
 
         _mapperMock
             .Setup(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(It.IsAny<IEnumerable<IAiProvider>>()))
             .Returns(new List<ProviderItemResponseModel>());
 
+        var controller = CreateController();
+
         // Act
-        await _controller.GetAllProviders();
+        await controller.GetProviders();
 
         // Assert
-        _mapperMock.Verify(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(providers), Times.Once);
+        _mapperMock.Verify(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(
+            It.Is<IEnumerable<IAiProvider>>(p => p.Count() == 1 && p.First().Id == "test")), Times.Once);
     }
 
     #endregion

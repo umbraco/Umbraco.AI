@@ -2,25 +2,24 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 
 namespace Umbraco.Ai.Core.Embeddings;
 
 internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
 {
-    private readonly IAiRegistry _registry;
+    private readonly AiProviderCollection _providers;
     private readonly IAiConnectionService _connectionService;
     private readonly IAiSettingsResolver _settingsResolver;
     private readonly AiEmbeddingMiddlewareCollection _middleware;
 
     public AiEmbeddingGeneratorFactory(
-        IAiRegistry registry,
+        AiProviderCollection providers,
         IAiConnectionService connectionService,
         IAiSettingsResolver settingsResolver,
         AiEmbeddingMiddlewareCollection middleware)
     {
-        _registry = registry;
+        _providers = providers;
         _connectionService = connectionService;
         _settingsResolver = settingsResolver;
         _middleware = middleware;
@@ -33,8 +32,8 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         // Resolve connection settings
         var connectionSettings = await ResolveConnectionSettingsAsync(profile, cancellationToken);
 
-        // Get embedding capability from registry
-        var embeddingCapability = _registry.GetCapability<IAiEmbeddingCapability>(profile.Model.ProviderId);
+        // Get embedding capability from provider
+        var embeddingCapability = _providers.GetCapability<IAiEmbeddingCapability>(profile.Model.ProviderId);
         if (embeddingCapability == null)
         {
             throw new InvalidOperationException(
@@ -97,11 +96,11 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         }
 
         // Get provider and resolve settings to typed format
-        var provider = _registry.GetProvider(connection.ProviderId);
+        var provider = _providers.GetById(connection.ProviderId);
         if (provider is null)
         {
             throw new InvalidOperationException(
-                $"Provider '{connection.ProviderId}' not found in registry.");
+                $"Provider '{connection.ProviderId}' not found.");
         }
 
         // Resolve settings (handles JsonElement deserialization, env vars, validation)

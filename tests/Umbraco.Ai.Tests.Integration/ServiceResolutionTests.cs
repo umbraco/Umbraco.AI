@@ -6,7 +6,6 @@ using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Fakes;
 
@@ -60,11 +59,11 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiRegistry_CanBeResolved()
+    public void AiProviderCollection_CanBeResolved()
     {
-        var registry = _serviceProvider.GetService<IAiRegistry>();
+        var providers = _serviceProvider.GetService<AiProviderCollection>();
 
-        registry.ShouldNotBeNull();
+        providers.ShouldNotBeNull();
     }
 
     [Fact]
@@ -149,14 +148,14 @@ public class ServiceResolutionTests : IDisposable
 
     #endregion
 
-    #region Registry Contains Fake Provider
+    #region Provider Collection Contains Fake Provider
 
     [Fact]
-    public void IAiRegistry_ContainsRegisteredProvider()
+    public void AiProviderCollection_ContainsRegisteredProvider()
     {
-        var registry = _serviceProvider.GetRequiredService<IAiRegistry>();
+        var providers = _serviceProvider.GetRequiredService<AiProviderCollection>();
 
-        var provider = registry.GetProvider("fake-provider");
+        var provider = providers.GetById("fake-provider");
 
         provider.ShouldNotBeNull();
         provider!.Id.ShouldBe("fake-provider");
@@ -164,11 +163,11 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiRegistry_CanGetChatCapabilityFromProvider()
+    public void AiProviderCollection_CanGetChatCapabilityFromProvider()
     {
-        var registry = _serviceProvider.GetRequiredService<IAiRegistry>();
+        var providers = _serviceProvider.GetRequiredService<AiProviderCollection>();
 
-        var capability = registry.GetCapability<IAiChatCapability>("fake-provider");
+        var capability = providers.GetCapability<IAiChatCapability>("fake-provider");
 
         capability.ShouldNotBeNull();
     }
@@ -210,9 +209,6 @@ public class ServiceResolutionTests : IDisposable
             _ => new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>()));
         services.AddSingleton<AiEmbeddingMiddlewareCollection>(
             _ => new AiEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAiEmbeddingMiddleware>()));
-
-        // Registry
-        services.AddSingleton<IAiRegistry, AiRegistry>();
 
         // Settings resolution
         services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();

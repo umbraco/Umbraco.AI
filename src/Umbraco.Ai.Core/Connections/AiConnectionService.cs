@@ -1,4 +1,4 @@
-using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Settings;
 
 namespace Umbraco.Ai.Core.Connections;
@@ -9,16 +9,16 @@ namespace Umbraco.Ai.Core.Connections;
 internal sealed class AiConnectionService : IAiConnectionService
 {
     private readonly IAiConnectionRepository _repository;
-    private readonly IAiRegistry _registry;
+    private readonly AiProviderCollection _providers;
     private readonly IAiSettingsResolver _settingsResolver;
 
     public AiConnectionService(
         IAiConnectionRepository repository,
-        IAiRegistry registry,
+        AiProviderCollection providers,
         IAiSettingsResolver settingsResolver)
     {
         _repository = repository;
-        _registry = registry;
+        _providers = providers;
         _settingsResolver = settingsResolver;
     }
 
@@ -90,10 +90,10 @@ internal sealed class AiConnectionService : IAiConnectionService
         }
 
         // Validate provider exists
-        var provider = _registry.GetProvider(connection.ProviderId);
+        var provider = _providers.GetById(connection.ProviderId);
         if (provider is null)
         {
-            throw new InvalidOperationException($"Provider '{connection.ProviderId}' not found in registry.");
+            throw new InvalidOperationException($"Provider '{connection.ProviderId}' not found.");
         }
 
         // Validate settings type if settings provided
@@ -131,10 +131,10 @@ internal sealed class AiConnectionService : IAiConnectionService
         // This will deserialize, resolve env vars, and validate in one step
         try
         {
-            var provider = _registry.GetProvider(providerId);
+            var provider = _providers.GetById(providerId);
             if (provider is null)
             {
-                throw new InvalidOperationException($"Provider '{providerId}' not found in registry.");
+                throw new InvalidOperationException($"Provider '{providerId}' not found.");
             }
 
             // ResolveSettingsForProvider will validate the settings
@@ -164,10 +164,10 @@ internal sealed class AiConnectionService : IAiConnectionService
         }
 
         // Get provider
-        var provider = _registry.GetProvider(connection.ProviderId);
+        var provider = _providers.GetById(connection.ProviderId);
         if (provider is null)
         {
-            throw new InvalidOperationException($"Provider '{connection.ProviderId}' not found in registry.");
+            throw new InvalidOperationException($"Provider '{connection.ProviderId}' not found.");
         }
 
         // Try to get any capability to test

@@ -39,11 +39,11 @@ public class AllProfileController : ProfileControllerBase
     /// <param name="skip">Number of items to skip for pagination.</param>
     /// <param name="take">Number of items to take for pagination.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A paginated list of profiles.</returns>
+    /// <returns>A paginated list of profiles.</returns> 
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedViewModel<ProfileItemResponseModel>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedViewModel<ProfileItemResponseModel>>> GetAllProfiles(
+    public async Task<ActionResult<PagedViewModel<ProfileItemResponseModel>>> GetProfiles(
         string? capability = null,
         int skip = 0,
         int take = 100,

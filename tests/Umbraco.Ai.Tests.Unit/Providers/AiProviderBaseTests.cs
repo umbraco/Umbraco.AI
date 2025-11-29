@@ -142,7 +142,7 @@ public class AiProviderBaseTests
         var provider = new ProviderWithChatCapability(_infrastructureMock.Object);
 
         // Act
-        var result = provider.TryGeCapability<IAiChatCapability>(out var capability);
+        var result = provider.TryGetCapability<IAiChatCapability>(out var capability);
 
         // Assert
         result.ShouldBeTrue();
@@ -156,7 +156,7 @@ public class AiProviderBaseTests
         var provider = new TestProvider(_infrastructureMock.Object);
 
         // Act
-        var result = provider.TryGeCapability<IAiChatCapability>(out var capability);
+        var result = provider.TryGetCapability<IAiChatCapability>(out var capability);
 
         // Assert
         result.ShouldBeFalse();

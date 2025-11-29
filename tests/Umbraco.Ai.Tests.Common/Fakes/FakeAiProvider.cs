@@ -75,7 +75,7 @@ public class FakeAiProvider : IAiProvider
 
     public IReadOnlyCollection<IAiCapability> GetCapabilities() => _capabilities.Values.ToList();
 
-    public bool TryGeCapability<TCapability>(out TCapability? capability) where TCapability : class, IAiCapability
+    public bool TryGetCapability<TCapability>(out TCapability? capability) where TCapability : class, IAiCapability
     {
         if (_capabilities.TryGetValue(typeof(TCapability), out var cap) && cap is TCapability typed)
         {

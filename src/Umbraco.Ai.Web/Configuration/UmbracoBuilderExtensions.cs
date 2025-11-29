@@ -4,6 +4,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Umbraco.Ai.Web.Api;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Chat.Mapping;
+using Umbraco.Ai.Web.Api.Management.Common.Mapping;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
 using Umbraco.Ai.Web.Api.Management.Embedding.Mapping;
@@ -36,6 +37,7 @@ public static class UmbracoBuilderExtensions
     private static IUmbracoBuilder AddUmbracoAiMapDefinitions(this IUmbracoBuilder builder)
     {
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
+            .Add<CommonMapDefinition>()
             .Add<ConnectionMapDefinition>()
             .Add<ProfileMapDefinition>()
             .Add<ProviderMapDefinition>()

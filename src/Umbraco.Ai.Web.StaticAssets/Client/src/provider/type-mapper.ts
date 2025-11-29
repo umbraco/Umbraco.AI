@@ -1,5 +1,5 @@
-import type { ModelDescriptorResponseModel, ProviderItemResponseModel, ProviderResponseModel, SettingDefinitionModel } from "../api/types.gen.js";
-import type { UaiModelDescriptorModel, UaiProviderDetailModel, UaiProviderItemModel, UaiSettingDefinitionModel } from "./types.js";
+import type { ProviderItemResponseModel, ProviderResponseModel, SettingDefinitionModel } from "../api/types.gen.js";
+import type { UaiProviderDetailModel, UaiProviderItemModel, UaiSettingDefinitionModel } from "./types.js";
 
 export const UaiProviderTypeMapper = {
     toItemModel(response: ProviderItemResponseModel): UaiProviderItemModel {
@@ -29,17 +29,6 @@ export const UaiProviderTypeMapper = {
             defaultValue: response.defaultValue ?? undefined,
             sortOrder: response.sortOrder,
             isRequired: response.isRequired,
-        };
-    },
-
-    toModelDescriptorModel(response: ModelDescriptorResponseModel): UaiModelDescriptorModel {
-        return {
-            model: {
-                providerId: response.model.providerId,
-                modelId: response.model.modelId,
-            },
-            name: response.name,
-            metadata: response.metadata ?? undefined,
         };
     },
 };

@@ -6,11 +6,8 @@ import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
-import { UaiConnectionCollectionRepository } from "../../../../connection/repository/collection/connection-collection.repository.js";
-import { UaiProviderItemRepository } from "../../../../provider/repository/item/provider-item.repository.js";
-import { UaiProviderModelsRepository } from "../../../../provider/repository/models/provider-models.repository.js";
-import type { UaiConnectionItemModel } from "../../../../connection/types.js";
-import type { UaiProviderItemModel, UaiModelDescriptorModel } from "../../../../provider/types.js";
+import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
+import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
 
 /**
  * Workspace view for Profile details.
@@ -19,9 +16,8 @@ import type { UaiProviderItemModel, UaiModelDescriptorModel } from "../../../../
 @customElement("uai-profile-details-workspace-view")
 export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_PROFILE_WORKSPACE_CONTEXT.TYPE;
-    #connectionRepository = new UaiConnectionCollectionRepository(this);
-    #providerRepository = new UaiProviderItemRepository(this);
-    #providerModelsRepository = new UaiProviderModelsRepository(this);
+    #connectionRepository = new UaiConnectionCapabilityRepository(this);
+    #connectionModelsRepository = new UaiConnectionModelsRepository(this);
     #localize = new UmbLocalizationController(this);
 
     @state()
@@ -29,12 +25,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
     @state()
     private _connections: UaiConnectionItemModel[] = [];
-
-    @state()
-    private _filteredConnections: UaiConnectionItemModel[] = [];
-
-    @state()
-    private _providers: UaiProviderItemModel[] = [];
 
     @state()
     private _availableModels: UaiModelDescriptorModel[] = [];
@@ -48,64 +38,41 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             if (context) {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
+                    const previousCapability = this._model?.capability;
                     const previousConnectionId = this._model?.connectionId;
                     this._model = model;
-                    this.#filterConnectionsByCapability();
-                    // Only load models if connection changed
-                    if (model?.connectionId && model.connectionId !== previousConnectionId) {
+
+                    // Reload connections if capability changed (or first load)
+                    if (model?.capability && model.capability !== previousCapability) {
+                        this.#loadConnectionsAndModels(model.connectionId, model.capability);
+                    } else if (model?.connectionId && model.connectionId !== previousConnectionId) {
+                        // Only load models if connection changed (and connections already loaded)
                         this.#loadModelsForConnection(model.connectionId, model.capability);
                     }
                 });
             }
         });
-        this.#loadConnections();
-        this.#loadProviders();
     }
 
-    async #loadConnections() {
-        const { data } = await this.#connectionRepository.requestCollection({ skip: 0, take: 100 });
+    /**
+     * Loads connections for the current capability, then loads models if a connection is selected.
+     */
+    async #loadConnectionsAndModels(connectionId: string | undefined, capability: string) {
+        const { data } = await this.#connectionRepository.requestConnectionsByCapability(capability);
         if (data) {
-            this._connections = data.items;
-            this.#filterConnectionsByCapability();
-        }
-    }
+            this._connections = data;
 
-    async #loadProviders() {
-        const { data } = await this.#providerRepository.requestItems();
-        if (data) {
-            this._providers = data;
-            this.#filterConnectionsByCapability();
-            // If we have a connection already selected, load its models
-            if (this._model?.connectionId) {
-                this.#loadModelsForConnection(this._model.connectionId, this._model.capability);
+            // If a connection is already selected, load its models
+            if (connectionId) {
+                await this.#loadModelsForConnection(connectionId, capability);
             }
         }
     }
 
-    #filterConnectionsByCapability() {
-        if (!this._model?.capability || this._connections.length === 0 || this._providers.length === 0) {
-            this._filteredConnections = this._connections;
-            return;
-        }
-
-        // Filter connections by those whose provider supports the required capability
-        this._filteredConnections = this._connections.filter((conn) => {
-            const provider = this._providers.find((p) => p.id === conn.providerId);
-            return provider?.capabilities?.includes(this._model!.capability);
-        });
-    }
-
     async #loadModelsForConnection(connectionId: string, capability: string) {
-        const connection = this._connections.find((c) => c.unique === connectionId);
-        if (!connection) {
-            this._availableModels = [];
-            return;
-        }
-
         this._loadingModels = true;
 
-        const { data, error } = await this.#providerModelsRepository.requestModels({
-            providerId: connection.providerId,
+        const { data, error } = await this.#connectionModelsRepository.requestModels({
             connectionId,
             capability,
         });
@@ -154,8 +121,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #onTemperatureChange(event: Event) {
         event.stopPropagation();
         const target = event.target as HTMLInputElement;
-        const value = target.value;
-        const temperature = value ? parseFloat(value) : null;
+        const temperature = target.value ? parseFloat(target.value) : null;
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiProfileDetailModel>({ temperature }, "temperature")
         );
@@ -189,6 +155,41 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         return `${this._model.model.providerId}|${this._model.model.modelId}`;
     }
 
+    #getConnectionOptions(): Array<{ name: string; value: string; selected?: boolean }> {
+        const options: Array<{ name: string; value: string; selected?: boolean }> = [
+            { name: "-- Select Connection --", value: "" },
+        ];
+
+        for (const conn of this._connections) {
+            options.push({
+                name: conn.name,
+                value: conn.unique,
+                selected: conn.unique === this._model?.connectionId,
+            });
+        }
+
+        return options;
+    }
+
+    #getModelOptions(): Array<{ name: string; value: string; selected?: boolean }> {
+        const options: Array<{ name: string; value: string; selected?: boolean }> = [
+            { name: "-- Select Model --", value: "" },
+        ];
+
+        const currentValue = this.#getCurrentModelValue();
+
+        for (const modelDesc of this._availableModels) {
+            const value = `${modelDesc.model.providerId}|${modelDesc.model.modelId}`;
+            options.push({
+                name: modelDesc.name,
+                value,
+                selected: value === currentValue,
+            });
+        }
+
+        return options;
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -204,16 +205,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                     <uui-select
                         slot="editor"
                         .value=${this._model.connectionId}
+                        .options=${this.#getConnectionOptions()}
                         @change=${this.#onConnectionChange}
                         placeholder="Select a connection"
-                    >
-                        <uui-select-option value="">-- Select Connection --</uui-select-option>
-                        ${this._filteredConnections.map(
-                            (conn) => html`
-                                <uui-select-option value=${conn.unique}>${conn.name}</uui-select-option>
-                            `
-                        )}
-                    </uui-select>
+                    ></uui-select>
                 </umb-property-layout>
 
                 <umb-property-layout label="Model" description="Select the AI model to use">
@@ -223,35 +218,26 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                             <uui-select
                                 slot="editor"
                                 .value=${this.#getCurrentModelValue()}
+                                .options=${this.#getModelOptions()}
                                 @change=${this.#onModelChange}
                                 placeholder="Select a model"
                                 ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
-                            >
-                                <uui-select-option value="">-- Select Model --</uui-select-option>
-                                ${this._availableModels.map(
-                                    (modelDesc) => html`
-                                        <uui-select-option value="${modelDesc.model.providerId}|${modelDesc.model.modelId}">
-                                            ${modelDesc.name}
-                                        </uui-select-option>
-                                    `
-                                )}
-                            </uui-select>
+                            ></uui-select>
                         `}
                 </umb-property-layout>
             </uui-box>
 
             <uui-box headline="Advanced Settings">
                 <umb-property-layout label="Temperature" description="Controls randomness (0.0 = deterministic, 2.0 = very random)">
-                    <uui-input
+                    <umb-input-slider
                         slot="editor"
-                        type="number"
-                        min="0"
-                        max="2"
-                        step="0.1"
-                        .value=${this._model.temperature?.toString() ?? ""}
-                        @input=${this.#onTemperatureChange}
-                        placeholder="Default"
-                    ></uui-input>
+                        label="Temperature"
+                        .valueLow=${this._model.temperature ?? 1}
+                        .min=${0}
+                        .max=${2}
+                        .step=${0.1}
+                        @change=${this.#onTemperatureChange}
+                    ></umb-input-slider>
                 </umb-property-layout>
 
                 <umb-property-layout label="Max Tokens" description="Maximum number of tokens to generate">
@@ -310,7 +296,8 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 width: 100%;
             }
 
-            uui-input {
+            uui-input,
+            umb-input-slider {
                 width: 100%;
             }
 

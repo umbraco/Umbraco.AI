@@ -408,6 +408,39 @@ export type UpdateConnectionByIdResponses = {
     200: unknown;
 };
 
+export type GetModelsByConnectionIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        capability?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/connections/{id}/models';
+};
+
+export type GetModelsByConnectionIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetModelsByConnectionIdError = GetModelsByConnectionIdErrors[keyof GetModelsByConnectionIdErrors];
+
+export type GetModelsByConnectionIdResponses = {
+    /**
+     * OK
+     */
+    200: Array<ModelDescriptorResponseModel>;
+};
+
+export type GetModelsByConnectionIdResponse = GetModelsByConnectionIdResponses[keyof GetModelsByConnectionIdResponses];
+
 export type TestConnectionByIdData = {
     body?: never;
     path: {
@@ -466,7 +499,7 @@ export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/embedding/generate';
+    url: '/umbraco/ai/management/api/v1/embeddings/generate';
 };
 
 export type GenerateEmbeddingsErrors = {
@@ -730,37 +763,3 @@ export type GetProviderByIdResponses = {
 };
 
 export type GetProviderByIdResponse = GetProviderByIdResponses[keyof GetProviderByIdResponses];
-
-export type GetModelsByProviderIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: {
-        connectionId?: string;
-        capability?: string;
-    };
-    url: '/umbraco/ai/management/api/v1/providers/{id}/models';
-};
-
-export type GetModelsByProviderIdErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type GetModelsByProviderIdError = GetModelsByProviderIdErrors[keyof GetModelsByProviderIdErrors];
-
-export type GetModelsByProviderIdResponses = {
-    /**
-     * OK
-     */
-    200: Array<ModelDescriptorResponseModel>;
-};
-
-export type GetModelsByProviderIdResponse = GetModelsByProviderIdResponses[keyof GetModelsByProviderIdResponses];

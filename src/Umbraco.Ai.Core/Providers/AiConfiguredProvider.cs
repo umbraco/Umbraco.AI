@@ -1,5 +1,3 @@
-using Umbraco.Ai.Core.Connections;
-
 namespace Umbraco.Ai.Core.Providers;
 
 /// <summary>

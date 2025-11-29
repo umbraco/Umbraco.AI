@@ -127,7 +127,7 @@ internal sealed class AiChatService : IAiChatService
 
     private static ChatOptions MergeOptions(AiProfile profile, ChatOptions? callerOptions)
     {
-        var chatSettings = profile.ChatSettings;
+        var chatSettings = profile.Settings as AiChatProfileSettings;
 
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings

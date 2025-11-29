@@ -251,10 +251,14 @@ public class CreateProfileControllerTests
         capturedProfile.Model.ProviderId.ShouldBe("openai");
         capturedProfile.Model.ModelId.ShouldBe("gpt-4");
         capturedProfile.ConnectionId.ShouldBe(connectionId);
-        capturedProfile.ChatSettings.ShouldNotBeNull();
-        capturedProfile.ChatSettings!.Temperature.ShouldBe(0.5f);
-        capturedProfile.ChatSettings.MaxTokens.ShouldBe(500);
-        capturedProfile.ChatSettings.SystemPromptTemplate.ShouldBe("You are a helpful assistant");
+        capturedProfile.Settings.ShouldNotBeNull();
+        
+        var chatSettings = capturedProfile.Settings as AiChatProfileSettings;
+        chatSettings.ShouldNotBeNull();
+        chatSettings!.Temperature.ShouldBe(0.5f);
+        chatSettings.MaxTokens.ShouldBe(500);
+        chatSettings.SystemPromptTemplate.ShouldBe("You are a helpful assistant");
+        
         capturedProfile.Tags.ShouldBe(new[] { "tag1", "tag2" });
     }
 

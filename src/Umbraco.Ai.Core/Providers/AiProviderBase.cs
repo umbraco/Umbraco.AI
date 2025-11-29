@@ -76,7 +76,7 @@ public abstract class AiProviderBase : IAiProvider
         => Capabilities.AsReadOnly();
 
     /// <inheritdoc />
-    public bool TryGeCapability<TCapability>(out TCapability? capability)
+    public bool TryGetCapability<TCapability>(out TCapability? capability)
         where TCapability : class, IAiCapability
     {
         capability = Capabilities.OfType<TCapability>().FirstOrDefault();
@@ -86,14 +86,14 @@ public abstract class AiProviderBase : IAiProvider
     /// <inheritdoc />
     public TCapability GetCapability<TCapability>()
         where TCapability : class, IAiCapability
-        => TryGeCapability<TCapability>(out var capability) 
+        => TryGetCapability<TCapability>(out var capability) 
             ? capability! 
             : throw new InvalidOperationException($"The AI provider '{Id}' does not support the capability '{typeof(TCapability).FullName}'.");
 
     /// <inheritdoc />
     public bool HasCapability<TCapability>()
         where TCapability : class, IAiCapability
-        => TryGeCapability<TCapability>(out _);
+        => TryGetCapability<TCapability>(out _);
 
     /// <inheritdoc />
     public virtual IReadOnlyList<AiSettingDefinition> GetSettingDefinitions()

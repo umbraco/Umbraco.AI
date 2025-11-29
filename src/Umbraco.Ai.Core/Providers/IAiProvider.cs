@@ -47,7 +47,7 @@ public interface IAiProvider : IDiscoverable
     /// <param name="capability"></param>
     /// <typeparam name="TCapability"></typeparam>
     /// <returns></returns>
-    public bool TryGeCapability<TCapability>(out TCapability? capability) where TCapability : class, IAiCapability;
+    public bool TryGetCapability<TCapability>(out TCapability? capability) where TCapability : class, IAiCapability;
 
     /// <summary>
     /// Gets the capabilities supported by this provider.

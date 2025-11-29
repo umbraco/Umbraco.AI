@@ -93,7 +93,7 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.ConnectionId)
                 .IsRequired();
 
-            entity.Property(e => e.SystemPromptTemplate);
+            entity.Property(e => e.SettingsJson);
 
             entity.Property(e => e.TagsJson)
                 .HasMaxLength(2000);

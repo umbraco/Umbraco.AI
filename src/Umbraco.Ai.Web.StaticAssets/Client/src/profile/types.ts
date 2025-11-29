@@ -9,6 +9,30 @@ export interface UaiModelRef {
 }
 
 /**
+ * Base interface for profile settings.
+ */
+export interface UaiProfileSettings {
+    $type: string;
+}
+
+/**
+ * Chat-specific profile settings.
+ */
+export interface UaiChatProfileSettings extends UaiProfileSettings {
+    $type: "chat";
+    temperature: number | null;
+    maxTokens: number | null;
+    systemPromptTemplate: string | null;
+}
+
+/**
+ * Embedding-specific profile settings.
+ */
+export interface UaiEmbeddingProfileSettings extends UaiProfileSettings {
+    $type: "embedding";
+}
+
+/**
  * Detail model for workspace editing.
  */
 export interface UaiProfileDetailModel extends UmbEntityModel {
@@ -19,9 +43,7 @@ export interface UaiProfileDetailModel extends UmbEntityModel {
     capability: string;
     model: UaiModelRef | null;
     connectionId: string;
-    temperature: number | null;
-    maxTokens: number | null;
-    systemPromptTemplate: string | null;
+    settings: UaiProfileSettings | null;
     tags: string[];
 }
 
@@ -35,4 +57,18 @@ export interface UaiProfileItemModel extends UmbEntityModel {
     name: string;
     capability: string;
     model: UaiModelRef | null;
+}
+
+/**
+ * Type guard for chat settings.
+ */
+export function isChatSettings(settings: UaiProfileSettings | null): settings is UaiChatProfileSettings {
+    return settings?.$type === "chat";
+}
+
+/**
+ * Type guard for embedding settings.
+ */
+export function isEmbeddingSettings(settings: UaiProfileSettings | null): settings is UaiEmbeddingProfileSettings {
+    return settings?.$type === "embedding";
 }

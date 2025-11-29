@@ -50,8 +50,7 @@ public class CreateProfileControllerTests
             Capability = "Chat",
             Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId,
-            Temperature = 0.7f,
-            MaxTokens = 1000,
+            Settings = new ChatProfileSettingsModel { Temperature = 0.7f, MaxTokens = 1000 },
             Tags = new List<string> { "tag1" }
         };
 
@@ -212,12 +211,15 @@ public class CreateProfileControllerTests
         {
             Alias = "test-alias",
             Name = "Test Name",
-            Capability = "Embedding",
-            Model = new ModelRefModel { ProviderId = "openai", ModelId = "text-embedding-3-small" },
+            Capability = "Chat",
+            Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
             ConnectionId = connectionId,
-            Temperature = 0.5f,
-            MaxTokens = 500,
-            SystemPromptTemplate = "You are a helpful assistant",
+            Settings = new ChatProfileSettingsModel
+            {
+                Temperature = 0.5f,
+                MaxTokens = 500,
+                SystemPromptTemplate = "You are a helpful assistant"
+            },
             Tags = new List<string> { "tag1", "tag2" }
         };
 
@@ -245,13 +247,18 @@ public class CreateProfileControllerTests
         capturedProfile!.Id.ShouldNotBe(Guid.Empty);
         capturedProfile.Alias.ShouldBe("test-alias");
         capturedProfile.Name.ShouldBe("Test Name");
-        capturedProfile.Capability.ShouldBe(AiCapability.Embedding);
+        capturedProfile.Capability.ShouldBe(AiCapability.Chat);
         capturedProfile.Model.ProviderId.ShouldBe("openai");
-        capturedProfile.Model.ModelId.ShouldBe("text-embedding-3-small");
+        capturedProfile.Model.ModelId.ShouldBe("gpt-4");
         capturedProfile.ConnectionId.ShouldBe(connectionId);
-        capturedProfile.Temperature.ShouldBe(0.5f);
-        capturedProfile.MaxTokens.ShouldBe(500);
-        capturedProfile.SystemPromptTemplate.ShouldBe("You are a helpful assistant");
+        capturedProfile.Settings.ShouldNotBeNull();
+        
+        var chatSettings = capturedProfile.Settings as AiChatProfileSettings;
+        chatSettings.ShouldNotBeNull();
+        chatSettings!.Temperature.ShouldBe(0.5f);
+        chatSettings.MaxTokens.ShouldBe(500);
+        chatSettings.SystemPromptTemplate.ShouldBe("You are a helpful assistant");
+        
         capturedProfile.Tags.ShouldBe(new[] { "tag1", "tag2" });
     }
 

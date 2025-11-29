@@ -17,7 +17,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiConnectionEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -60,7 +60,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiConnection", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -77,9 +77,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<Guid>("ConnectionId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("MaxTokens")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("ModelId")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -95,15 +92,12 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SystemPromptTemplate")
+                    b.Property<string>("SettingsJson")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TagsJson")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
-
-                    b.Property<float?>("Temperature")
-                        .HasColumnType("REAL");
 
                     b.HasKey("Id");
 
@@ -117,9 +111,9 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiProfile", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
-                    b.HasOne("Umbraco.Ai.Persistence.Entities.AiConnectionEntity", null)
+                    b.HasOne("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", null)
                         .WithMany()
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)

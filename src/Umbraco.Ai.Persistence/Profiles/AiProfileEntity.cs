@@ -41,19 +41,9 @@ public class AiProfileEntity
     public Guid ConnectionId { get; set; }
 
     /// <summary>
-    /// Temperature setting for the model (0.0-2.0 typically).
+    /// JSON-serialized capability-specific settings.
     /// </summary>
-    public float? Temperature { get; set; }
-
-    /// <summary>
-    /// Maximum tokens for model responses.
-    /// </summary>
-    public int? MaxTokens { get; set; }
-
-    /// <summary>
-    /// System prompt template.
-    /// </summary>
-    public string? SystemPromptTemplate { get; set; }
+    public string? SettingsJson { get; set; }
 
     /// <summary>
     /// JSON-serialized array of tags.

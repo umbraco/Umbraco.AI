@@ -26,10 +26,23 @@ public class ProfileMapDefinition : IMapDefinition
         target.ConnectionId = source.ConnectionId;
         target.Capability = source.Capability.ToString();
         target.Model = context.Map<ModelRefModel>(source.Model);
-        target.SystemPromptTemplate = source.SystemPromptTemplate;
-        target.Temperature = source.Temperature;
-        target.MaxTokens = source.MaxTokens;
+        target.Settings = MapSettings(source);
         target.Tags = source.Tags;
+    }
+
+    private static ProfileSettingsModel? MapSettings(AiProfile source)
+    {
+        return source.Settings switch
+        {
+            AiChatProfileSettings chat => new ChatProfileSettingsModel
+            {
+                Temperature = chat.Temperature,
+                MaxTokens = chat.MaxTokens,
+                SystemPromptTemplate = chat.SystemPromptTemplate
+            },
+            AiEmbeddingProfileSettings => new EmbeddingProfileSettingsModel(),
+            _ => null
+        };
     }
 
     // Umbraco.Code.MapAll

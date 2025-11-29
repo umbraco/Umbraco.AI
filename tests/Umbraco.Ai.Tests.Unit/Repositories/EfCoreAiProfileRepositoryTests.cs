@@ -366,9 +366,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
             Capability = AiCapability.Chat,
             Model = new AiModelRef("openai", "gpt-4"),
             ConnectionId = connectionId,
-            Temperature = 0.7f,
-            MaxTokens = 2000,
-            SystemPromptTemplate = "You are a helpful assistant."
+            Settings = new AiChatProfileSettings
+            {
+                Temperature = 0.7f,
+                MaxTokens = 2000,
+                SystemPromptTemplate = "You are a helpful assistant."
+            }
         };
 
         // Act
@@ -378,9 +381,10 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var verifyContext = _fixture.CreateContext();
         var saved = await verifyContext.Profiles.FindAsync(profile.Id);
         saved.ShouldNotBeNull();
-        saved!.Temperature.ShouldBe(0.7f);
-        saved.MaxTokens.ShouldBe(2000);
-        saved.SystemPromptTemplate.ShouldBe("You are a helpful assistant.");
+        saved!.SettingsJson.ShouldNotBeNull();
+        saved.SettingsJson.ShouldContain("0.7");
+        saved.SettingsJson.ShouldContain("2000");
+        saved.SettingsJson.ShouldContain("You are a helpful assistant.");
     }
 
     #endregion

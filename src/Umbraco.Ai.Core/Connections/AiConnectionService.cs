@@ -1,3 +1,4 @@
+using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Settings;
 
@@ -188,5 +189,38 @@ internal sealed class AiConnectionService : IAiConnectionService
         {
             return false;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<AiCapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default)
+    {
+        var connections = await _repository.GetAllAsync(cancellationToken);
+        var capabilities = new HashSet<AiCapability>();
+
+        foreach (var connection in connections)
+        {
+            var provider = _providers.GetById(connection.ProviderId);
+            if (provider is not null)
+            {
+                foreach (var cap in provider.GetCapabilities())
+                {
+                    capabilities.Add(cap.Kind);
+                }
+            }
+        }
+
+        return capabilities;
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<AiConnection>> GetConnectionsByCapabilityAsync(AiCapability capability, CancellationToken cancellationToken = default)
+    {
+        var connections = await _repository.GetAllAsync(cancellationToken);
+
+        return connections.Where(conn =>
+        {
+            var provider = _providers.GetById(conn.ProviderId);
+            return provider?.GetCapabilities().Any(c => c.Kind == capability) ?? false;
+        });
     }
 }

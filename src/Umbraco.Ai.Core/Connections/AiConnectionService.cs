@@ -157,38 +157,51 @@ internal sealed class AiConnectionService : IAiConnectionService
     /// <inheritdoc />
     public async Task<bool> TestConnectionAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        // Get connection
-        var connection = await _repository.GetAsync(id, cancellationToken);
-        if (connection is null)
+        var configured = await GetConfiguredProviderAsync(id, cancellationToken);
+        if (configured is null)
         {
-            throw new InvalidOperationException($"Connection with ID '{id}' not found.");
+            throw new InvalidOperationException($"Connection with ID '{id}' not found or provider unavailable.");
         }
 
-        // Get provider
-        var provider = _providers.GetById(connection.ProviderId);
-        if (provider is null)
+        var capability = configured.GetCapabilities().FirstOrDefault();
+        if (capability is null)
         {
-            throw new InvalidOperationException($"Provider '{connection.ProviderId}' not found.");
+            throw new InvalidOperationException($"Provider '{configured.Provider.Id}' has no capabilities to test.");
         }
 
-        // Try to get any capability to test
-        var capabilities = provider.GetCapabilities();
-        if (!capabilities.Any())
-        {
-            throw new InvalidOperationException($"Provider '{connection.ProviderId}' has no capabilities to test.");
-        }
-
-        // Try to call GetModelsAsync to verify authentication
         try
         {
-            var capability = capabilities.First();
-            await capability.GetModelsAsync(connection.Settings, cancellationToken);
+            await capability.GetModelsAsync(cancellationToken);
             return true;
         }
         catch
         {
             return false;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<IConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    {
+        var connection = await _repository.GetAsync(connectionId, cancellationToken);
+        if (connection is null)
+        {
+            return null;
+        }
+
+        var provider = _providers.GetById(connection.ProviderId);
+        if (provider is null)
+        {
+            return null;
+        }
+
+        var resolvedSettings = _settingsResolver.ResolveSettingsForProvider(provider, connection.Settings);
+        if (resolvedSettings is null)
+        {
+            return null;
+        }
+
+        return new ConfiguredProvider(provider, resolvedSettings);
     }
 
     /// <inheritdoc />

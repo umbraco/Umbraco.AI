@@ -123,8 +123,8 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 ${this._provider.settingDefinitions.map(
                     (setting) => html`
                         <umb-property
-                            label=${setting.label}
-                            description=${setting.description ?? ""}
+                            label=${this.localize.string(setting.label)}
+                            description=${this.localize.string(setting.description ?? "")}
                             alias=${setting.key}
                             property-editor-ui-alias=${setting.editorUiAlias ?? "Umb.PropertyEditorUi.TextBox"}
                             .config=${setting.editorConfig ? this.#toPropertyConfig(setting.editorConfig) : []}

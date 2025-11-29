@@ -5,4 +5,4 @@ export * from './repository/constants.js';
 export * from './workspace/constants.js';
 export * from './collection/constants.js';
 
-export const UAI_PROFILE_ICON = 'icon-autofill';
+export const UAI_PROFILE_ICON = 'icon-equalizer';

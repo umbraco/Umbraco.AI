@@ -1,7 +1,8 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Persistence;
-using Umbraco.Ai.Persistence.Entities;
-using Umbraco.Ai.Persistence.Repositories;
+using Umbraco.Ai.Persistence.Connections;
+using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fixtures;
 

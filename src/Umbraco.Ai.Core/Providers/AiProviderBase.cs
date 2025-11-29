@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Settings;
 using Umbraco.Extensions;
 
 namespace Umbraco.Ai.Core.Providers;

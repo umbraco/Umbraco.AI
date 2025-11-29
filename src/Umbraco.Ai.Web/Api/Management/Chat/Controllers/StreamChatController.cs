@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Services;
+using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;

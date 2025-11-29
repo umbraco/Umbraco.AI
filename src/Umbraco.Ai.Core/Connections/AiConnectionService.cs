@@ -1,4 +1,3 @@
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 

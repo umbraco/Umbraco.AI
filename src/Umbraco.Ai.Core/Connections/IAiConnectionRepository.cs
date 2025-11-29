@@ -1,5 +1,3 @@
-using Umbraco.Ai.Core.Models;
-
 namespace Umbraco.Ai.Core.Connections;
 
 /// <summary>

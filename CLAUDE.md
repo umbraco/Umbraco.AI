@@ -272,6 +272,10 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 
+## Coding Standard
+
+- All extensions live in Umbraci.Ai.Extensions namespace for ease of discovery
+
 ## Database Migrations
 
 Umbraco.Ai uses EF Core with provider-specific migrations. All migrations MUST use the `UmbracoAi_` prefix to clearly identify them as belonging to Umbraco.Ai (e.g., `UmbracoAi_InitialCreate`, `UmbracoAi_AddNewEntity`).

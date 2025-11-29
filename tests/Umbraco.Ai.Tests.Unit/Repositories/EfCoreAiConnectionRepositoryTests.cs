@@ -1,6 +1,7 @@
+using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Persistence;
-using Umbraco.Ai.Persistence.Repositories;
+using Umbraco.Ai.Persistence.Connections;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fixtures;
 
@@ -43,7 +44,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = connectionId,
             Alias = $"test-connection-{connectionId:N}",
@@ -98,7 +99,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         context.Connections.RemoveRange(context.Connections);
         var conn1Id = Guid.NewGuid();
         var conn2Id = Guid.NewGuid();
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = conn1Id,
             Alias = $"connection-1-{conn1Id:N}",
@@ -108,7 +109,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow
         });
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = conn2Id,
             Alias = $"connection-2-{conn2Id:N}",
@@ -142,7 +143,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         context.Connections.RemoveRange(context.Connections);
         var openaiId = Guid.NewGuid();
         var azureId = Guid.NewGuid();
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = openaiId,
             Alias = $"openai-connection-{openaiId:N}",
@@ -152,7 +153,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow
         });
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = azureId,
             Alias = $"azure-connection-{azureId:N}",
@@ -208,7 +209,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = connectionId,
             Alias = "original-connection",
@@ -278,7 +279,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = connectionId,
             Alias = $"to-delete-{connectionId:N}",
@@ -327,7 +328,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new Umbraco.Ai.Persistence.Entities.AiConnectionEntity
+        context.Connections.Add(new AiConnectionEntity
         {
             Id = connectionId,
             Alias = $"existing-{connectionId:N}",

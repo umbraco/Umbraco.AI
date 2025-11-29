@@ -1,5 +1,4 @@
 using Umbraco.Ai.Core.Registry;
-using Umbraco.Ai.Persistence.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;

@@ -1,3 +1,4 @@
+using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Tests.Common.Builders;

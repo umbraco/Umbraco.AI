@@ -43,7 +43,7 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         return client;
     }
 
-    private async Task<IConfiguredChatCapability> GetConfiguredChatCapabilityAsync(
+    private async Task<IAiConfiguredChatCapability> GetConfiguredChatCapabilityAsync(
         AiProfile profile,
         CancellationToken cancellationToken)
     {
@@ -86,7 +86,7 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
                 $"but profile '{profile.Name}' requires provider '{profile.Model.ProviderId}'.");
         }
 
-        var chatCapability = configured.GetCapability<IConfiguredChatCapability>();
+        var chatCapability = configured.GetCapability<IAiConfiguredChatCapability>();
         if (chatCapability is null)
         {
             throw new InvalidOperationException(

@@ -46,7 +46,7 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         return generator;
     }
 
-    private async Task<IConfiguredEmbeddingCapability> GetConfiguredEmbeddingCapabilityAsync(
+    private async Task<IAiConfiguredEmbeddingCapability> GetConfiguredEmbeddingCapabilityAsync(
         AiProfile profile,
         CancellationToken cancellationToken)
     {
@@ -54,6 +54,21 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         {
             throw new InvalidOperationException(
                 $"Profile '{profile.Name}' does not specify a valid ConnectionId.");
+        }
+        
+        var connection = await _connectionService.GetConnectionAsync(
+            profile.ConnectionId,
+            cancellationToken);
+        if (connection is null)
+        {
+            throw new InvalidOperationException(
+                $"Connection with ID '{profile.ConnectionId}' not found for profile '{profile.Name}'.");
+        }
+
+        if (!connection.IsActive)
+        {
+            throw new InvalidOperationException(
+                $"Connection '{connection.Name}' (ID: {profile.ConnectionId}) is not active.");
         }
 
         var configured = await _connectionService.GetConfiguredProviderAsync(
@@ -66,12 +81,6 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
                 $"Connection with ID '{profile.ConnectionId}' not found for profile '{profile.Name}'.");
         }
 
-        if (!configured.Connection.IsActive)
-        {
-            throw new InvalidOperationException(
-                $"Connection '{configured.Connection.Name}' (ID: {profile.ConnectionId}) is not active.");
-        }
-
         // Validate connection provider matches profile's model provider
         if (!string.Equals(configured.Provider.Id, profile.Model.ProviderId, StringComparison.OrdinalIgnoreCase))
         {
@@ -80,7 +89,7 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
                 $"but profile '{profile.Name}' requires provider '{profile.Model.ProviderId}'.");
         }
 
-        var embeddingCapability = configured.GetCapability<IConfiguredEmbeddingCapability>();
+        var embeddingCapability = configured.GetCapability<IAiConfiguredEmbeddingCapability>();
         if (embeddingCapability is null)
         {
             throw new InvalidOperationException(

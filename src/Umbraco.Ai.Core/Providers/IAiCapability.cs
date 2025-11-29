@@ -19,7 +19,7 @@ internal static class CapabilityGuards
         {
             throw new InvalidOperationException(
                 $"Settings must be resolved before calling {methodName}. " +
-                "Use IConfiguredProvider from IAiConnectionService.GetConfiguredProviderAsync().");
+                "Use IAiConfiguredProvider from IAiConnectionService.GetConfiguredProviderAsync().");
         }
     }
 }

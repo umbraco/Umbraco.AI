@@ -57,7 +57,7 @@ public class ModelsConnectionController : ConnectionControllerBase
         }
 
         // Get capabilities filtered by requested capability
-        IEnumerable<IConfiguredCapability> capabilities = configured.GetCapabilities();
+        IEnumerable<IAiConfiguredCapability> capabilities = configured.GetCapabilities();
         if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AiCapability>(capability, true, out var capFilter))
         {
             capabilities = capabilities.Where(c => c.Kind == capFilter);

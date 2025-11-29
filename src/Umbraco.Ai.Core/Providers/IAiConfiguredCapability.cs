@@ -7,7 +7,7 @@ namespace Umbraco.Ai.Core.Providers;
 /// Base interface for capabilities with resolved settings.
 /// Settings are baked in - no settings parameters needed.
 /// </summary>
-public interface IConfiguredCapability
+public interface IAiConfiguredCapability
 {
     /// <summary>
     /// Gets the kind of AI capability.
@@ -23,7 +23,7 @@ public interface IConfiguredCapability
 /// <summary>
 /// Chat capability with resolved settings.
 /// </summary>
-public interface IConfiguredChatCapability : IConfiguredCapability
+public interface IAiConfiguredChatCapability : IAiConfiguredCapability
 {
     /// <summary>
     /// Creates a chat client with the baked-in settings.
@@ -34,7 +34,7 @@ public interface IConfiguredChatCapability : IConfiguredCapability
 /// <summary>
 /// Embedding capability with resolved settings.
 /// </summary>
-public interface IConfiguredEmbeddingCapability : IConfiguredCapability
+public interface IAiConfiguredEmbeddingCapability : IAiConfiguredCapability
 {
     /// <summary>
     /// Creates an embedding generator with the baked-in settings.

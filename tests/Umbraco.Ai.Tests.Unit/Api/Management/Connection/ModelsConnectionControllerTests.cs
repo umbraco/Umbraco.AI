@@ -28,23 +28,22 @@ public class ModelsConnectionControllerTests
             _mapperMock.Object);
     }
 
-    private static Mock<IConfiguredProvider> CreateConfiguredProviderMock(
+    private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(
         AiConnection connection,
         IAiProvider provider,
-        params IConfiguredCapability[] capabilities)
+        params IAiConfiguredCapability[] capabilities)
     {
-        var mock = new Mock<IConfiguredProvider>();
-        mock.Setup(x => x.Connection).Returns(connection);
+        var mock = new Mock<IAiConfiguredProvider>();
         mock.Setup(x => x.Provider).Returns(provider);
         mock.Setup(x => x.GetCapabilities()).Returns(capabilities);
         return mock;
     }
 
-    private static Mock<IConfiguredCapability> CreateConfiguredCapabilityMock(
+    private static Mock<IAiConfiguredCapability> CreateConfiguredCapabilityMock(
         AiCapability kind,
         IReadOnlyList<AiModelDescriptor> models)
     {
-        var mock = new Mock<IConfiguredCapability>();
+        var mock = new Mock<IAiConfiguredCapability>();
         mock.Setup(x => x.Kind).Returns(kind);
         mock.Setup(x => x.GetModelsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(models);
         return mock;
@@ -104,7 +103,7 @@ public class ModelsConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IConfiguredProvider?)null);
+            .ReturnsAsync((IAiConfiguredProvider?)null);
 
         var controller = CreateController();
 

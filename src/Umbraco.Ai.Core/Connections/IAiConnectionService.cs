@@ -86,5 +86,5 @@ public interface IAiConnectionService
     /// <param name="connectionId">The connection ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured provider with resolved settings, or null if connection/provider not found.</returns>
-    Task<IConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
+    Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
 }

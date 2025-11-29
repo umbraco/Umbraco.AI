@@ -619,7 +619,6 @@ public class AiConnectionServiceTests
         // Assert
         result.ShouldNotBeNull();
         result!.Provider.ShouldBe(fakeProvider);
-        result.Connection.ShouldBe(connection);
     }
 
     [Fact]
@@ -727,10 +726,10 @@ public class AiConnectionServiceTests
         // Assert
         result.ShouldNotBeNull();
         result!.GetCapabilities().Count.ShouldBe(2);
-        result.HasCapability<IConfiguredChatCapability>().ShouldBeTrue();
-        result.HasCapability<IConfiguredEmbeddingCapability>().ShouldBeTrue();
-        result.GetCapability<IConfiguredChatCapability>().ShouldNotBeNull();
-        result.GetCapability<IConfiguredEmbeddingCapability>().ShouldNotBeNull();
+        result.HasCapability<IAiConfiguredChatCapability>().ShouldBeTrue();
+        result.HasCapability<IAiConfiguredEmbeddingCapability>().ShouldBeTrue();
+        result.GetCapability<IAiConfiguredChatCapability>().ShouldNotBeNull();
+        result.GetCapability<IAiConfiguredEmbeddingCapability>().ShouldNotBeNull();
     }
 
     [Fact]
@@ -762,7 +761,7 @@ public class AiConnectionServiceTests
 
         // Act
         var result = await service.GetConfiguredProviderAsync(connectionId);
-        var chatCapability = result!.GetCapability<IConfiguredChatCapability>();
+        var chatCapability = result!.GetCapability<IAiConfiguredChatCapability>();
 
         // Assert - CreateClient() has no settings parameter, settings are baked in
         var client = chatCapability!.CreateClient();

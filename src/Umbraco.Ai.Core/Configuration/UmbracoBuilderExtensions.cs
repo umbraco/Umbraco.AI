@@ -5,7 +5,6 @@ using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Registry;
 using Umbraco.Ai.Core.Settings;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -22,7 +21,7 @@ public static partial class UmbracoBuilderExtensions
         var config = builder.Config;
 
         // Prevent multiple registrations
-        if (services.Any(x => x.ServiceType == typeof(IAiRegistry)))
+        if (services.Any(x => x.ServiceType == typeof(AiProviderCollection)))
             return builder;
 
         // Bind AiOptions from "Umbraco:Ai" section
@@ -41,9 +40,6 @@ public static partial class UmbracoBuilderExtensions
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add middleware
         _ = builder.AiChatMiddleware();
         _ = builder.AiEmbeddingMiddleware();
-
-        // Registry
-        services.AddSingleton<IAiRegistry, AiRegistry>();
 
         // Settings resolution
         services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();

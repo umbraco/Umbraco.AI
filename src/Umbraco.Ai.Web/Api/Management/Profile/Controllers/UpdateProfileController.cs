@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Registry;
+using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
 using Umbraco.Ai.Web.Api.Management.Configuration;
@@ -23,7 +23,7 @@ public class UpdateProfileController : ProfileControllerBase
 {
     private readonly IAiProfileRepository _profileRepository;
     private readonly IAiConnectionService _connectionService;
-    private readonly IAiRegistry _registry;
+    private readonly AiProviderCollection _providers;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateProfileController"/> class.
@@ -31,11 +31,11 @@ public class UpdateProfileController : ProfileControllerBase
     public UpdateProfileController(
         IAiProfileRepository profileRepository,
         IAiConnectionService connectionService,
-        IAiRegistry registry)
+        AiProviderCollection providers)
     {
         _profileRepository = profileRepository;
         _connectionService = connectionService;
-        _registry = registry;
+        _providers = providers;
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public class UpdateProfileController : ProfileControllerBase
         }
 
         // Validate provider exists
-        var provider = _registry.GetProvider(requestModel.Model.ProviderId);
+        var provider = _providers.GetById(requestModel.Model.ProviderId);
         if (provider is null)
         {
             return ProfileOperationStatusResult(ProfileOperationStatus.ProviderNotFound);

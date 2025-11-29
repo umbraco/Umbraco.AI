@@ -6,7 +6,7 @@ namespace Umbraco.Ai.Core.Providers;
 /// A provider with resolved settings. Mirrors IAiProvider API but
 /// returns configured capabilities with settings baked in.
 /// </summary>
-public interface IConfiguredProvider
+public interface IAiConfiguredProvider
 {
     /// <summary>
     /// The underlying provider.
@@ -14,22 +14,17 @@ public interface IConfiguredProvider
     IAiProvider Provider { get; }
 
     /// <summary>
-    /// The connection this configured provider was created from.
-    /// </summary>
-    AiConnection Connection { get; }
-
-    /// <summary>
     /// Gets all configured capabilities.
     /// </summary>
-    IReadOnlyList<IConfiguredCapability> GetCapabilities();
+    IReadOnlyList<IAiConfiguredCapability> GetCapabilities();
 
     /// <summary>
     /// Gets a specific configured capability by type.
     /// </summary>
-    TCapability? GetCapability<TCapability>() where TCapability : class, IConfiguredCapability;
+    TCapability? GetCapability<TCapability>() where TCapability : class, IAiConfiguredCapability;
 
     /// <summary>
     /// Checks if the provider has a specific capability.
     /// </summary>
-    bool HasCapability<TCapability>() where TCapability : class, IConfiguredCapability;
+    bool HasCapability<TCapability>() where TCapability : class, IAiConfiguredCapability;
 }

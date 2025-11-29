@@ -24,7 +24,7 @@ public class CapabilityGuardsTests
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("GetModelsAsync");
-        exception.Message.ShouldContain("IConfiguredProvider");
+        exception.Message.ShouldContain("IAiConfiguredProvider");
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class CapabilityGuardsTests
         var exception = Should.Throw<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("CreateClient");
-        exception.Message.ShouldContain("IConfiguredProvider");
+        exception.Message.ShouldContain("IAiConfiguredProvider");
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class CapabilityGuardsTests
         var exception = Should.Throw<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("CreateGenerator");
-        exception.Message.ShouldContain("IConfiguredProvider");
+        exception.Message.ShouldContain("IAiConfiguredProvider");
     }
 
     [Fact]

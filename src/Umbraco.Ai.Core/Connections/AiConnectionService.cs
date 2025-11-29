@@ -181,7 +181,7 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public async Task<IConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    public async Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         var connection = await _repository.GetAsync(connectionId, cancellationToken);
         if (connection is null)
@@ -201,7 +201,7 @@ internal sealed class AiConnectionService : IAiConnectionService
             return null;
         }
 
-        return new ConfiguredProvider(provider, connection, resolvedSettings);
+        return new AiConfiguredProvider(provider, resolvedSettings);
     }
 
     /// <inheritdoc />

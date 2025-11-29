@@ -52,7 +52,22 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
             throw new InvalidOperationException(
                 $"Profile '{profile.Name}' does not specify a valid ConnectionId.");
         }
+        
+        var connection = await _connectionService.GetConnectionAsync(
+            profile.ConnectionId,
+            cancellationToken);
+        if (connection is null)
+        {
+            throw new InvalidOperationException(
+                $"Connection with ID '{profile.ConnectionId}' not found for profile '{profile.Name}'.");
+        }
 
+        if (!connection.IsActive)
+        {
+            throw new InvalidOperationException(
+                $"Connection '{connection.Name}' (ID: {profile.ConnectionId}) is not active.");
+        }
+        
         var configured = await _connectionService.GetConfiguredProviderAsync(
             profile.ConnectionId,
             cancellationToken);
@@ -61,12 +76,6 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         {
             throw new InvalidOperationException(
                 $"Connection with ID '{profile.ConnectionId}' not found for profile '{profile.Name}'.");
-        }
-
-        if (!configured.Connection.IsActive)
-        {
-            throw new InvalidOperationException(
-                $"Connection '{configured.Connection.Name}' (ID: {profile.ConnectionId}) is not active.");
         }
 
         // Validate connection provider matches profile's model provider

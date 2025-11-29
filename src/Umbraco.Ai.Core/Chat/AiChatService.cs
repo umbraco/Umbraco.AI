@@ -127,6 +127,8 @@ internal sealed class AiChatService : IAiChatService
 
     private static ChatOptions MergeOptions(AiProfile profile, ChatOptions? callerOptions)
     {
+        var chatSettings = profile.ChatSettings;
+
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings
         if (callerOptions != null)
@@ -134,8 +136,8 @@ internal sealed class AiChatService : IAiChatService
             return new ChatOptions
             {
                 ModelId = callerOptions.ModelId ?? profile.Model.ModelId,
-                Temperature = callerOptions.Temperature ?? (float?)profile.Temperature,
-                MaxOutputTokens = callerOptions.MaxOutputTokens ?? profile.MaxTokens,
+                Temperature = callerOptions.Temperature ?? chatSettings?.Temperature,
+                MaxOutputTokens = callerOptions.MaxOutputTokens ?? chatSettings?.MaxTokens,
                 // Copy other properties from caller options
                 TopP = callerOptions.TopP,
                 FrequencyPenalty = callerOptions.FrequencyPenalty,
@@ -152,8 +154,8 @@ internal sealed class AiChatService : IAiChatService
         return new ChatOptions
         {
             ModelId = profile.Model.ModelId,
-            Temperature = (float?)profile.Temperature,
-            MaxOutputTokens = profile.MaxTokens
+            Temperature = chatSettings?.Temperature,
+            MaxOutputTokens = chatSettings?.MaxTokens
         };
     }
     

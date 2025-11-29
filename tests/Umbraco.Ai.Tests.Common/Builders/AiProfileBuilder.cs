@@ -14,9 +14,7 @@ public class AiProfileBuilder
     private AiCapability _capability = AiCapability.Chat;
     private AiModelRef _model = new("test-provider", "test-model");
     private Guid _connectionId = Guid.NewGuid();
-    private float? _temperature;
-    private int? _maxTokens;
-    private string? _systemPromptTemplate;
+    private IAiProfileSettings? _settings;
     private IReadOnlyList<string> _tags = Array.Empty<string>();
 
     public AiProfileBuilder WithId(Guid id)
@@ -61,21 +59,28 @@ public class AiProfileBuilder
         return this;
     }
 
-    public AiProfileBuilder WithTemperature(float? temperature)
+    public AiProfileBuilder WithSettings(IAiProfileSettings? settings)
     {
-        _temperature = temperature;
+        _settings = settings;
         return this;
     }
 
-    public AiProfileBuilder WithMaxTokens(int? maxTokens)
+    public AiProfileBuilder WithChatSettings(float? temperature = null, int? maxTokens = null, string? systemPromptTemplate = null)
     {
-        _maxTokens = maxTokens;
+        _capability = AiCapability.Chat;
+        _settings = new AiChatProfileSettings
+        {
+            Temperature = temperature,
+            MaxTokens = maxTokens,
+            SystemPromptTemplate = systemPromptTemplate
+        };
         return this;
     }
 
-    public AiProfileBuilder WithSystemPromptTemplate(string? systemPromptTemplate)
+    public AiProfileBuilder WithEmbeddingSettings()
     {
-        _systemPromptTemplate = systemPromptTemplate;
+        _capability = AiCapability.Embedding;
+        _settings = new AiEmbeddingProfileSettings();
         return this;
     }
 
@@ -95,9 +100,7 @@ public class AiProfileBuilder
             Capability = _capability,
             Model = _model,
             ConnectionId = _connectionId,
-            Temperature = _temperature,
-            MaxTokens = _maxTokens,
-            SystemPromptTemplate = _systemPromptTemplate,
+            Settings = _settings,
             Tags = _tags
         };
     }

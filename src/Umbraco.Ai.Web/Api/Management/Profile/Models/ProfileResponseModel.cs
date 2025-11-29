@@ -44,19 +44,9 @@ public class ProfileResponseModel
     public Guid ConnectionId { get; set; }
 
     /// <summary>
-    /// The temperature setting for the AI model.
+    /// Capability-specific settings for the profile.
     /// </summary>
-    public float? Temperature { get; set; }
-
-    /// <summary>
-    /// The maximum number of tokens the AI model can generate.
-    /// </summary>
-    public int? MaxTokens { get; set; }
-
-    /// <summary>
-    /// The system prompt template to be used with the AI model.
-    /// </summary>
-    public string? SystemPromptTemplate { get; set; }
+    public ProfileSettingsModel? Settings { get; set; }
 
     /// <summary>
     /// Tags associated with the profile.

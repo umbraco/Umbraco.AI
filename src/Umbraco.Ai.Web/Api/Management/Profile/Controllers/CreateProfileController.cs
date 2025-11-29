@@ -88,9 +88,7 @@ public class CreateProfileController : ProfileControllerBase
             Capability = capability,
             Model = new AiModelRef(requestModel.Model.ProviderId, requestModel.Model.ModelId),
             ConnectionId = requestModel.ConnectionId,
-            Temperature = requestModel.Temperature,
-            MaxTokens = requestModel.MaxTokens,
-            SystemPromptTemplate = requestModel.SystemPromptTemplate,
+            Settings = MapSettingsFromRequest(capability, requestModel.Settings),
             Tags = requestModel.Tags
         };
 
@@ -101,5 +99,21 @@ public class CreateProfileController : ProfileControllerBase
             nameof(ByIdProfileController).Replace("Controller", string.Empty),
             new { id = created.Id },
             created.Id.ToString());
+    }
+
+    private static IAiProfileSettings? MapSettingsFromRequest(AiCapability capability, ProfileSettingsModel? settings)
+    {
+        return capability switch
+        {
+            AiCapability.Chat when settings is ChatProfileSettingsModel chat => new AiChatProfileSettings
+            {
+                Temperature = chat.Temperature,
+                MaxTokens = chat.MaxTokens,
+                SystemPromptTemplate = chat.SystemPromptTemplate
+            },
+            AiCapability.Chat => new AiChatProfileSettings(), // Default empty chat settings
+            AiCapability.Embedding => new AiEmbeddingProfileSettings(),
+            _ => null
+        };
     }
 }

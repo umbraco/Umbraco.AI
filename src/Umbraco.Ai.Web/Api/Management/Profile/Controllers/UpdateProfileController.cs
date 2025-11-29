@@ -83,13 +83,27 @@ public class UpdateProfileController : ProfileControllerBase
             Capability = existing.Capability, // Capability cannot be changed after creation
             Model = new AiModelRef(requestModel.Model.ProviderId, requestModel.Model.ModelId),
             ConnectionId = requestModel.ConnectionId,
-            Temperature = requestModel.Temperature,
-            MaxTokens = requestModel.MaxTokens,
-            SystemPromptTemplate = requestModel.SystemPromptTemplate,
+            Settings = MapSettingsFromRequest(existing.Capability, requestModel.Settings),
             Tags = requestModel.Tags
         };
 
         await _profileRepository.SaveAsync(profile, cancellationToken);
         return Ok();
+    }
+
+    private static IAiProfileSettings? MapSettingsFromRequest(AiCapability capability, ProfileSettingsModel? settings)
+    {
+        return capability switch
+        {
+            AiCapability.Chat when settings is ChatProfileSettingsModel chat => new AiChatProfileSettings
+            {
+                Temperature = chat.Temperature,
+                MaxTokens = chat.MaxTokens,
+                SystemPromptTemplate = chat.SystemPromptTemplate
+            },
+            AiCapability.Chat => new AiChatProfileSettings(), // Default empty chat settings
+            AiCapability.Embedding => new AiEmbeddingProfileSettings(),
+            _ => null
+        };
     }
 }

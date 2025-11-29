@@ -49,7 +49,7 @@ public class AllProviderControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetAllProviders();
+        var result = await _controller.GetProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -70,7 +70,7 @@ public class AllProviderControllerTests
             .Returns(new List<ProviderItemResponseModel>());
 
         // Act
-        var result = await _controller.GetAllProviders();
+        var result = await _controller.GetProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -96,7 +96,7 @@ public class AllProviderControllerTests
             .Returns(new List<ProviderItemResponseModel>());
 
         // Act
-        await _controller.GetAllProviders();
+        await _controller.GetProviders();
 
         // Assert
         _mapperMock.Verify(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(providers), Times.Once);

@@ -1,6 +1,6 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbDetailDataSource } from "@umbraco-cms/backoffice/repository";
-import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { ProfilesService } from "../../../api/sdk.gen.js";
 import { UaiProfileTypeMapper } from "../../type-mapper.js";
 import type { UaiProfileDetailModel } from "../../types.js";
@@ -43,7 +43,7 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
      * Reads a profile by its unique identifier.
      */
     async read(unique: string) {
-        const { data, error } = await tryExecuteAndNotify(
+        const { data, error } = await tryExecute(
             this.#host,
             ProfilesService.getProfileById({ path: { id: unique } })
         );
@@ -61,9 +61,9 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
     async create(model: UaiProfileDetailModel, _parentUnique: string | null) {
         const requestBody = UaiProfileTypeMapper.toCreateRequest(model);
 
-        const { response, error } = await tryExecuteAndNotify(
+        const { response, error } = await tryExecute(
             this.#host,
-            ProfilesService.postProfile({ body: requestBody })
+            ProfilesService.createProfile({ body: requestBody })
         );
 
         if (error) {
@@ -88,9 +88,9 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
     async update(model: UaiProfileDetailModel) {
         const requestBody = UaiProfileTypeMapper.toUpdateRequest(model);
 
-        const { error } = await tryExecuteAndNotify(
+        const { error } = await tryExecute(
             this.#host,
-            ProfilesService.putProfileById({
+            ProfilesService.updateProfileById({
                 path: { id: model.unique },
                 body: requestBody,
             })
@@ -107,7 +107,7 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
      * Deletes a profile by its unique identifier.
      */
     async delete(unique: string) {
-        const { error } = await tryExecuteAndNotify(
+        const { error } = await tryExecute(
             this.#host,
             ProfilesService.deleteProfileById({ path: { id: unique } })
         );

@@ -3,7 +3,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
-import type { UaiProfileDetailModel, UaiModelRef } from "../../../types.js";
+import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings } from "../../../types.js";
+import { isChatSettings } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import { UaiConnectionCollectionRepository } from "../../../../connection/repository/collection/connection-collection.repository.js";
@@ -156,9 +157,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const target = event.target as HTMLInputElement;
         const value = target.value;
         const temperature = value ? parseFloat(value) : null;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ temperature }, "temperature")
-        );
+        this.#updateChatSettings({ temperature });
     }
 
     #onMaxTokensChange(event: Event) {
@@ -166,22 +165,105 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const target = event.target as HTMLInputElement;
         const value = target.value;
         const maxTokens = value ? parseInt(value, 10) : null;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ maxTokens }, "maxTokens")
-        );
+        this.#updateChatSettings({ maxTokens });
     }
 
     #onSystemPromptChange(event: Event) {
         event.stopPropagation();
         const value = (event.target as HTMLTextAreaElement).value;
         const systemPromptTemplate = value || null;
+        this.#updateChatSettings({ systemPromptTemplate });
+    }
+
+    /**
+     * Updates chat-specific settings while preserving other settings values.
+     */
+    #updateChatSettings(updates: Partial<UaiChatProfileSettings>) {
+        const currentSettings = this._model?.settings ?? null;
+        const chatSettings: UaiChatProfileSettings = isChatSettings(currentSettings)
+            ? { ...currentSettings, ...updates }
+            : {
+                $type: "chat",
+                temperature: updates.temperature ?? null,
+                maxTokens: updates.maxTokens ?? null,
+                systemPromptTemplate: updates.systemPromptTemplate ?? null,
+            };
+
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ systemPromptTemplate }, "systemPromptTemplate")
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings")
         );
+    }
+
+    /**
+     * Gets the current chat settings, or null if not a chat profile.
+     */
+    #getChatSettings(): UaiChatProfileSettings | null {
+        return isChatSettings(this._model?.settings ?? null) ? this._model!.settings as UaiChatProfileSettings : null;
     }
 
     #getCapabilityLabel(capability: string): string {
         return this.#localize.term(`uaiCapabilities_${capability.toLowerCase()}`);
+    }
+
+    /**
+     * Renders capability-specific settings based on the profile's capability.
+     */
+    #renderCapabilitySettings() {
+        if (!this._model) return nothing;
+
+        const capability = this._model.capability.toLowerCase();
+
+        if (capability === "chat") {
+            return this.#renderChatSettings();
+        }
+
+        // Embedding profiles have no additional settings currently
+        return nothing;
+    }
+
+    /**
+     * Renders chat-specific settings (temperature, max tokens, system prompt).
+     */
+    #renderChatSettings() {
+        const chatSettings = this.#getChatSettings();
+
+        return html`
+            <uui-box headline="Chat Settings">
+                <umb-property-layout label="Temperature" description="Controls randomness (0.0 = deterministic, 2.0 = very random)">
+                    <uui-input
+                        slot="editor"
+                        type="number"
+                        min="0"
+                        max="2"
+                        step="0.1"
+                        .value=${chatSettings?.temperature?.toString() ?? ""}
+                        @input=${this.#onTemperatureChange}
+                        placeholder="Default"
+                    ></uui-input>
+                </umb-property-layout>
+
+                <umb-property-layout label="Max Tokens" description="Maximum number of tokens to generate">
+                    <uui-input
+                        slot="editor"
+                        type="number"
+                        min="1"
+                        .value=${chatSettings?.maxTokens?.toString() ?? ""}
+                        @input=${this.#onMaxTokensChange}
+                        placeholder="Default"
+                    ></uui-input>
+                </umb-property-layout>
+
+                <umb-property-layout label="System Prompt" description="System prompt template for this profile">
+                    <uui-textarea
+                        slot="editor"
+                        .value=${chatSettings?.systemPromptTemplate ?? ""}
+                        @input=${this.#onSystemPromptChange}
+                        placeholder="Enter system prompt template..."
+                        rows="6"
+                    ></uui-textarea>
+                </umb-property-layout>
+            </uui-box>
+        `;
     }
 
     #getCurrentModelValue(): string {
@@ -240,41 +322,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
             </uui-box>
 
-            <uui-box headline="Advanced Settings">
-                <umb-property-layout label="Temperature" description="Controls randomness (0.0 = deterministic, 2.0 = very random)">
-                    <uui-input
-                        slot="editor"
-                        type="number"
-                        min="0"
-                        max="2"
-                        step="0.1"
-                        .value=${this._model.temperature?.toString() ?? ""}
-                        @input=${this.#onTemperatureChange}
-                        placeholder="Default"
-                    ></uui-input>
-                </umb-property-layout>
-
-                <umb-property-layout label="Max Tokens" description="Maximum number of tokens to generate">
-                    <uui-input
-                        slot="editor"
-                        type="number"
-                        min="1"
-                        .value=${this._model.maxTokens?.toString() ?? ""}
-                        @input=${this.#onMaxTokensChange}
-                        placeholder="Default"
-                    ></uui-input>
-                </umb-property-layout>
-
-                <umb-property-layout label="System Prompt" description="System prompt template for this profile">
-                    <uui-textarea
-                        slot="editor"
-                        .value=${this._model.systemPromptTemplate ?? ""}
-                        @input=${this.#onSystemPromptChange}
-                        placeholder="Enter system prompt template..."
-                        rows="6"
-                    ></uui-textarea>
-                </umb-property-layout>
-            </uui-box>
+            ${this.#renderCapabilitySettings()}
 
             ${this._model.tags.length > 0 ? html`
                 <uui-box headline="Tags">

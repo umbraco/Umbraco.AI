@@ -61,4 +61,19 @@ public interface IAiConnectionService
     /// Test a connection by attempting to fetch models (if supported).
     /// </summary>
     Task<bool> TestConnectionAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the unique capabilities available across all configured connections.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A collection of capabilities that are available from at least one connection.</returns>
+    Task<IEnumerable<Models.AiCapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets connections that support a specific capability.
+    /// </summary>
+    /// <param name="capability">The capability to filter by.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Connections whose providers support the specified capability.</returns>
+    Task<IEnumerable<AiConnection>> GetConnectionsByCapabilityAsync(Models.AiCapability capability, CancellationToken cancellationToken = default);
 }

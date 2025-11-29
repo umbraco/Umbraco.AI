@@ -366,24 +366,31 @@ dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence
 dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
 ```
 
-See `docs/ef-core-migrations.md` for complete documentation.
+See `docs/internal/ef-core-migrations.md` for complete documentation.
 
 ## Documentation
+
+Documentation is organized into two categories:
+
+- `docs/public/` - User-facing documentation (guides, tutorials, API reference)
+- `docs/internal/` - Maintainer documentation, architecture decisions, and AI context
+
+### Internal Documentation
 
 For deeper understanding, read these docs files:
 
 **Core Documentation:**
-- `docs/core-concepts.md` - Providers, Connections, Profiles, and Middleware explained
-- `docs/integration-philosophy.md` - Why M.E.AI was chosen and the "thin wrapper" approach
-- `docs/capabilities-feature.md` - Chat, Embedding, and planned capabilities (Media, Moderation)
-- `docs/core-implementation-details.md` - Comprehensive technical reference with code examples
-- `docs/ef-core-migrations.md` - How to create and manage EF Core database migrations
-- `docs/umbraco-ai-agents-design.md` - Future Agents feature design (tools, approval workflow, backoffice integration)
+- `docs/internal/core-concepts.md` - Providers, Connections, Profiles, and Middleware explained
+- `docs/internal/integration-philosophy.md` - Why M.E.AI was chosen and the "thin wrapper" approach
+- `docs/internal/capabilities-feature.md` - Chat, Embedding, and planned capabilities (Media, Moderation)
+- `docs/internal/core-implementation-details.md` - Comprehensive technical reference with code examples
+- `docs/internal/ef-core-migrations.md` - How to create and manage EF Core database migrations
+- `docs/internal/umbraco-ai-agents-design.md` - Future Agents feature design (tools, approval workflow, backoffice integration)
 
 **Planning Documents:**
-- `docs/plans/v1-core-implementation-plan.md` - V1 implementation roadmap
-- `docs/plans/testing-strategy.md` - Testing approach and strategy
-- `docs/plans/tools-and-agents-architecture.md` - Tools and agents system design
+- `docs/internal/plans/v1-core-implementation-plan.md` - V1 implementation roadmap
+- `docs/internal/plans/testing-strategy.md` - Testing approach and strategy
+- `docs/internal/plans/tools-and-agents-architecture.md` - Tools and agents system design
 
 **Ideas (Future Exploration):**
-- `docs/ideas/` - Exploratory design documents for future features (toolsets, MCP integration, workflows, etc.)
+- `docs/internal/ideas/` - Exploratory design documents for future features (toolsets, MCP integration, workflows, etc.)

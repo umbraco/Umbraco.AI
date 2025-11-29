@@ -1,6 +1,7 @@
 import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/index.js";
@@ -21,6 +22,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #connectionRepository = new UaiConnectionCollectionRepository(this);
     #providerRepository = new UaiProviderItemRepository(this);
     #providerModelsRepository = new UaiProviderModelsRepository(this);
+    #localize = new UmbLocalizationController(this);
 
     @state()
     private _model?: UaiProfileDetailModel;
@@ -179,11 +181,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     }
 
     #getCapabilityLabel(capability: string): string {
-        const labels: Record<string, string> = {
-            chat: "Chat",
-            embedding: "Embedding",
-        };
-        return labels[capability] ?? capability;
+        return this.#localize.term(`uaiCapabilities_${capability.toLowerCase()}`);
     }
 
     #getCurrentModelValue(): string {

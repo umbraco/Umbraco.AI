@@ -1,37 +1,24 @@
 import { html, customElement, state, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
-import { UaiConnectionCollectionRepository } from "../../../connection/repository/collection/connection-collection.repository.js";
-import { UaiProviderItemRepository } from "../../../provider/repository/item/provider-item.repository.js";
+import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
+import { UaiConnectionCapabilityRepository } from "../../../connection/repository/capability/connection-capability.repository.js";
 import type { UaiConnectionItemModel } from "../../../connection/types.js";
-import type { UaiProviderItemModel } from "../../../provider/types.js";
 import type {
     UaiProfileCreateOptionsModalData,
     UaiProfileCreateOptionsModalValue,
 } from "./profile-create-options-modal.token.js";
 import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../../../connection/workspace/connection-root/paths.js";
 
-interface CapabilityOption {
-    id: string;
-    label: string;
-    icon: string;
-}
-
 @customElement("uai-profile-create-options-modal")
 export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
     UaiProfileCreateOptionsModalData,
     UaiProfileCreateOptionsModalValue
 > {
-    #connectionRepository = new UaiConnectionCollectionRepository(this);
-    #providerRepository = new UaiProviderItemRepository(this);
+    #capabilityRepository = new UaiConnectionCapabilityRepository(this);
+    #localize = new UmbLocalizationController(this);
 
     @state()
-    private _connections: UaiConnectionItemModel[] = [];
-
-    @state()
-    private _providers: UaiProviderItemModel[] = [];
-
-    @state()
-    private _availableCapabilities: CapabilityOption[] = [];
+    private _availableCapabilities: string[] = [];
 
     @state()
     private _selectedCapability: string | null = null;
@@ -42,55 +29,29 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
     @state()
     private _loading = true;
 
-    private readonly _capabilityOptions: CapabilityOption[] = [
-        { id: "chat", label: "Chat", icon: "icon-chat" },
-        { id: "embedding", label: "Embedding", icon: "icon-nodes" },
-    ];
-
     override async firstUpdated() {
-        await this.#loadData();
+        await this.#loadCapabilities();
     }
 
-    async #loadData() {
+    async #loadCapabilities() {
         this._loading = true;
-
-        const [connectionsResult, providersResult] = await Promise.all([
-            this.#connectionRepository.requestCollection({ skip: 0, take: 100 }),
-            this.#providerRepository.requestItems(),
-        ]);
-
-        this._connections = connectionsResult.data?.items ?? [];
-        this._providers = providersResult.data ?? [];
-
-        this.#updateAvailableCapabilities();
+        const result = await this.#capabilityRepository.requestAvailableCapabilities();
+        this._availableCapabilities = result.data ?? [];
         this._loading = false;
     }
 
-    #updateAvailableCapabilities() {
-        const availableCapabilities = new Set<string>();
-
-        for (const connection of this._connections) {
-            const provider = this._providers.find((p) => p.id === connection.providerId);
-            if (provider?.capabilities) {
-                provider.capabilities.forEach((cap) => availableCapabilities.add(cap));
-            }
-        }
-
-        this._availableCapabilities = this._capabilityOptions.filter((opt) =>
-            availableCapabilities.has(opt.id)
-        );
+    async #loadConnectionsForCapability(capability: string) {
+        const result = await this.#capabilityRepository.requestConnectionsByCapability(capability);
+        this._filteredConnections = result.data ?? [];
     }
 
-    #filterConnectionsByCapability(capability: string) {
-        this._filteredConnections = this._connections.filter((conn) => {
-            const provider = this._providers.find((p) => p.id === conn.providerId);
-            return provider?.capabilities?.includes(capability);
-        });
-    }
-
-    #onSelectCapability(capability: string) {
+    async #onSelectCapability(capability: string) {
         this._selectedCapability = capability;
-        this.#filterConnectionsByCapability(capability);
+        await this.#loadConnectionsForCapability(capability);
+    }
+
+    #getCapabilityLabel(capability: string): string {
+        return this.#localize.term(`uaiCapabilities_${capability.toLowerCase()}`);
     }
 
     #onSelectConnection(connectionId: string) {
@@ -119,21 +80,12 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
             return html`<uui-loader></uui-loader>`;
         }
 
-        // No connections configured at all
-        if (this._connections.length === 0) {
-            return html`
-                <div class="empty-state">
-                    <p>No connections configured.</p>
-                    <p>Please <a href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} @click=${() => this.modalContext?.reject()}>create a connection</a> first.</p>
-                </div>
-            `;
-        }
-
         // No capabilities available
         if (this._availableCapabilities.length === 0) {
             return html`
                 <div class="empty-state">
                     <p>No capabilities available from your connections.</p>
+                    <p>Please <a href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} @click=${() => this.modalContext?.reject()}>create a connection</a> first.</p>
                 </div>
             `;
         }
@@ -145,13 +97,13 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
                     ${this._availableCapabilities.map(
                         (cap) => html`
                             <uui-ref-node
-                                name=${cap.label}
+                                name=${this.#getCapabilityLabel(cap)}
                                 select-only
                                 selectable
-                                @selected=${() => this.#onSelectCapability(cap.id)}
-                                @open=${() => this.#onSelectCapability(cap.id)}
+                                @selected=${() => this.#onSelectCapability(cap)}
+                                @open=${() => this.#onSelectCapability(cap)}
                             >
-                                <umb-icon slot="icon" name=${cap.icon}></umb-icon>
+                                <umb-icon slot="icon" name="icon-wand"></umb-icon>
                             </uui-ref-node>
                         `
                     )}

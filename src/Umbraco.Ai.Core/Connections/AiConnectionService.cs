@@ -201,7 +201,7 @@ internal sealed class AiConnectionService : IAiConnectionService
             return null;
         }
 
-        return new ConfiguredProvider(provider, resolvedSettings);
+        return new ConfiguredProvider(provider, connection, resolvedSettings);
     }
 
     /// <inheritdoc />

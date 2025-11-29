@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.Connections;
+
 namespace Umbraco.Ai.Core.Providers;
 
 /// <summary>
@@ -10,6 +12,11 @@ public interface IConfiguredProvider
     /// The underlying provider.
     /// </summary>
     IAiProvider Provider { get; }
+
+    /// <summary>
+    /// The connection this configured provider was created from.
+    /// </summary>
+    AiConnection Connection { get; }
 
     /// <summary>
     /// Gets all configured capabilities.

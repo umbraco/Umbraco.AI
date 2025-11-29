@@ -2,26 +2,19 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
 
 namespace Umbraco.Ai.Core.Embeddings;
 
 internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
 {
-    private readonly AiProviderCollection _providers;
     private readonly IAiConnectionService _connectionService;
-    private readonly IAiSettingsResolver _settingsResolver;
     private readonly AiEmbeddingMiddlewareCollection _middleware;
 
     public AiEmbeddingGeneratorFactory(
-        AiProviderCollection providers,
         IAiConnectionService connectionService,
-        IAiSettingsResolver settingsResolver,
         AiEmbeddingMiddlewareCollection middleware)
     {
-        _providers = providers;
         _connectionService = connectionService;
-        _settingsResolver = settingsResolver;
         _middleware = middleware;
     }
 
@@ -29,19 +22,11 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         AiProfile profile,
         CancellationToken cancellationToken = default)
     {
-        // Resolve connection settings
-        var connectionSettings = await ResolveConnectionSettingsAsync(profile, cancellationToken);
+        // Get configured provider with resolved settings
+        var embeddingCapability = await GetConfiguredEmbeddingCapabilityAsync(profile, cancellationToken);
 
-        // Get embedding capability from provider
-        var embeddingCapability = _providers.GetCapability<IAiEmbeddingCapability>(profile.Model.ProviderId);
-        if (embeddingCapability == null)
-        {
-            throw new InvalidOperationException(
-                $"Provider '{profile.Model.ProviderId}' does not support embedding capability.");
-        }
-
-        // Create base generator from provider
-        var generator = embeddingCapability.CreateGenerator(connectionSettings);
+        // Create base generator from provider (settings already resolved)
+        var generator = embeddingCapability.CreateGenerator();
 
         // Apply middleware in order
         generator = ApplyMiddleware(generator);
@@ -61,7 +46,7 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         return generator;
     }
 
-    private async Task<object?> ResolveConnectionSettingsAsync(
+    private async Task<IConfiguredEmbeddingCapability> GetConfiguredEmbeddingCapabilityAsync(
         AiProfile profile,
         CancellationToken cancellationToken)
     {
@@ -71,40 +56,37 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
                 $"Profile '{profile.Name}' does not specify a valid ConnectionId.");
         }
 
-        var connection = await _connectionService.GetConnectionAsync(
+        var configured = await _connectionService.GetConfiguredProviderAsync(
             profile.ConnectionId,
             cancellationToken);
 
-        if (connection is null)
+        if (configured is null)
         {
             throw new InvalidOperationException(
                 $"Connection with ID '{profile.ConnectionId}' not found for profile '{profile.Name}'.");
         }
 
-        if (!connection.IsActive)
+        if (!configured.Connection.IsActive)
         {
             throw new InvalidOperationException(
-                $"Connection '{connection.Name}' (ID: {profile.ConnectionId}) is not active.");
+                $"Connection '{configured.Connection.Name}' (ID: {profile.ConnectionId}) is not active.");
         }
 
         // Validate connection provider matches profile's model provider
-        if (!string.Equals(connection.ProviderId, profile.Model.ProviderId, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(configured.Provider.Id, profile.Model.ProviderId, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"Connection '{connection.Name}' is for provider '{connection.ProviderId}' " +
+                $"Connection is for provider '{configured.Provider.Id}' " +
                 $"but profile '{profile.Name}' requires provider '{profile.Model.ProviderId}'.");
         }
 
-        // Get provider and resolve settings to typed format
-        var provider = _providers.GetById(connection.ProviderId);
-        if (provider is null)
+        var embeddingCapability = configured.GetCapability<IConfiguredEmbeddingCapability>();
+        if (embeddingCapability is null)
         {
             throw new InvalidOperationException(
-                $"Provider '{connection.ProviderId}' not found.");
+                $"Provider '{profile.Model.ProviderId}' does not support embedding capability.");
         }
 
-        // Resolve settings (handles JsonElement deserialization, env vars, validation)
-        var resolvedSettings = _settingsResolver.ResolveSettingsForProvider(provider, connection.Settings);
-        return resolvedSettings;
+        return embeddingCapability;
     }
 }

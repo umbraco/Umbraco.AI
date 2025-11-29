@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.Connections;
+
 namespace Umbraco.Ai.Core.Providers;
 
 /// <summary>
@@ -7,14 +9,18 @@ internal sealed class ConfiguredProvider : IConfiguredProvider
 {
     private readonly IReadOnlyList<IConfiguredCapability> _capabilities;
 
-    public ConfiguredProvider(IAiProvider provider, object resolvedSettings)
+    public ConfiguredProvider(IAiProvider provider, AiConnection connection, object resolvedSettings)
     {
         Provider = provider;
+        Connection = connection;
         _capabilities = WrapCapabilities(provider.GetCapabilities(), resolvedSettings);
     }
 
     /// <inheritdoc />
     public IAiProvider Provider { get; }
+
+    /// <inheritdoc />
+    public AiConnection Connection { get; }
 
     /// <inheritdoc />
     public IReadOnlyList<IConfiguredCapability> GetCapabilities() => _capabilities;

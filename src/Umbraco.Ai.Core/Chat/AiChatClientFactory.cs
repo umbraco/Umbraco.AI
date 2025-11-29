@@ -2,44 +2,29 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
 
 namespace Umbraco.Ai.Core.Chat;
 
 internal sealed class AiChatClientFactory : IAiChatClientFactory
 {
-    private readonly AiProviderCollection _providers;
     private readonly IAiConnectionService _connectionService;
-    private readonly IAiSettingsResolver _settingsResolver;
     private readonly AiChatMiddlewareCollection _middleware;
 
     public AiChatClientFactory(
-        AiProviderCollection providers,
         IAiConnectionService connectionService,
-        IAiSettingsResolver settingsResolver,
         AiChatMiddlewareCollection middleware)
     {
-        _providers = providers;
         _connectionService = connectionService;
-        _settingsResolver = settingsResolver;
         _middleware = middleware;
     }
 
     public async Task<IChatClient> CreateClientAsync(AiProfile profile, CancellationToken cancellationToken = default)
     {
-        // Resolve connection settings
-        var connectionSettings = await ResolveConnectionSettingsAsync(profile, cancellationToken);
+        // Get configured provider with resolved settings
+        var chatCapability = await GetConfiguredChatCapabilityAsync(profile, cancellationToken);
 
-        // Get chat capability from provider
-        var chatCapability = _providers.GetCapability<IAiChatCapability>(profile.Model.ProviderId);
-        if (chatCapability == null)
-        {
-            throw new InvalidOperationException(
-                $"Provider '{profile.Model.ProviderId}' does not support chat capability.");
-        }
-
-        // Create base client from provider
-        var chatClient = chatCapability.CreateClient(connectionSettings);
+        // Create base client from provider (settings already resolved)
+        var chatClient = chatCapability.CreateClient();
 
         // Apply middleware in order
         chatClient = ApplyMiddleware(chatClient);
@@ -58,7 +43,7 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         return client;
     }
 
-    private async Task<object?> ResolveConnectionSettingsAsync(
+    private async Task<IAiConfiguredChatCapability> GetConfiguredChatCapabilityAsync(
         AiProfile profile,
         CancellationToken cancellationToken)
     {
@@ -67,11 +52,10 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
             throw new InvalidOperationException(
                 $"Profile '{profile.Name}' does not specify a valid ConnectionId.");
         }
-
+        
         var connection = await _connectionService.GetConnectionAsync(
             profile.ConnectionId,
             cancellationToken);
-
         if (connection is null)
         {
             throw new InvalidOperationException(
@@ -83,25 +67,32 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
             throw new InvalidOperationException(
                 $"Connection '{connection.Name}' (ID: {profile.ConnectionId}) is not active.");
         }
+        
+        var configured = await _connectionService.GetConfiguredProviderAsync(
+            profile.ConnectionId,
+            cancellationToken);
 
-        // Validate connection provider matches profile's model provider
-        if (!string.Equals(connection.ProviderId, profile.Model.ProviderId, StringComparison.OrdinalIgnoreCase))
+        if (configured is null)
         {
             throw new InvalidOperationException(
-                $"Connection '{connection.Name}' is for provider '{connection.ProviderId}' " +
+                $"Connection with ID '{profile.ConnectionId}' not found for profile '{profile.Name}'.");
+        }
+
+        // Validate connection provider matches profile's model provider
+        if (!string.Equals(configured.Provider.Id, profile.Model.ProviderId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Connection is for provider '{configured.Provider.Id}' " +
                 $"but profile '{profile.Name}' requires provider '{profile.Model.ProviderId}'.");
         }
 
-        // Get provider and resolve settings to typed format
-        var provider = _providers.GetById(connection.ProviderId);
-        if (provider is null)
+        var chatCapability = configured.GetCapability<IAiConfiguredChatCapability>();
+        if (chatCapability is null)
         {
             throw new InvalidOperationException(
-                $"Provider '{connection.ProviderId}' not found.");
+                $"Provider '{profile.Model.ProviderId}' does not support chat capability.");
         }
 
-        // Resolve settings (handles JsonElement deserialization, env vars, validation)
-        var resolvedSettings = _settingsResolver.ResolveSettingsForProvider(provider, connection.Settings);
-        return resolvedSettings;
+        return chatCapability;
     }
 }

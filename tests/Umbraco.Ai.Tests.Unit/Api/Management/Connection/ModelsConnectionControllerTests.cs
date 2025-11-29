@@ -14,7 +14,6 @@ public class ModelsConnectionControllerTests
 {
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
-    private List<IAiProvider> _providers = new();
 
     public ModelsConnectionControllerTests()
     {
@@ -24,11 +23,30 @@ public class ModelsConnectionControllerTests
 
     private ModelsConnectionController CreateController()
     {
-        var collection = new AiProviderCollection(() => _providers);
         return new ModelsConnectionController(
-            collection,
             _connectionServiceMock.Object,
             _mapperMock.Object);
+    }
+
+    private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(
+        AiConnection connection,
+        IAiProvider provider,
+        params IAiConfiguredCapability[] capabilities)
+    {
+        var mock = new Mock<IAiConfiguredProvider>();
+        mock.Setup(x => x.Provider).Returns(provider);
+        mock.Setup(x => x.GetCapabilities()).Returns(capabilities);
+        return mock;
+    }
+
+    private static Mock<IAiConfiguredCapability> CreateConfiguredCapabilityMock(
+        AiCapability kind,
+        IReadOnlyList<AiModelDescriptor> models)
+    {
+        var mock = new Mock<IAiConfiguredCapability>();
+        mock.Setup(x => x.Kind).Returns(kind);
+        mock.Setup(x => x.GetModelsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(models);
+        return mock;
     }
 
     #region GetModelsByConnectionId
@@ -43,9 +61,15 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "OpenAI")
-            .WithChatCapability();
-        _providers.Add(provider);
+        var provider = new FakeAiProvider(providerId, "OpenAI");
+
+        var models = new List<AiModelDescriptor>
+        {
+            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+        };
+
+        var capabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, models);
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, capabilityMock.Object);
 
         var responseModels = new List<ModelDescriptorResponseModel>
         {
@@ -53,8 +77,8 @@ public class ModelsConnectionControllerTests
         };
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
@@ -67,8 +91,8 @@ public class ModelsConnectionControllerTests
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
-        var models = okResult.Value.ShouldBeAssignableTo<IEnumerable<ModelDescriptorResponseModel>>();
-        models!.ShouldNotBeEmpty();
+        var returnedModels = okResult.Value.ShouldBeAssignableTo<IEnumerable<ModelDescriptorResponseModel>>();
+        returnedModels!.ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -78,8 +102,8 @@ public class ModelsConnectionControllerTests
         var connectionId = Guid.NewGuid();
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IAiConfiguredProvider?)null);
 
         var controller = CreateController();
 
@@ -93,32 +117,6 @@ public class ModelsConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetModelsByConnectionId_WithNonExistingProvider_Returns404NotFound()
-    {
-        // Arrange
-        var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
-            .WithId(connectionId)
-            .WithProviderId("unknown-provider")
-            .Build();
-        // No providers added
-
-        _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
-
-        var controller = CreateController();
-
-        // Act
-        var result = await controller.GetModelsByConnectionId(connectionId);
-
-        // Assert
-        var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
-        var problemDetails = notFoundResult.Value.ShouldBeOfType<ProblemDetails>();
-        problemDetails.Title.ShouldBe("Provider not found");
-    }
-
-    [Fact]
     public async Task GetModelsByConnectionId_WithCapabilityFilter_ReturnsFilteredModels()
     {
         // Arrange
@@ -128,16 +126,30 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
+        var provider = new FakeAiProvider(providerId, "OpenAI");
 
         // Provider with both Chat and Embedding capabilities
-        var provider = new FakeAiProvider(providerId, "OpenAI")
-            .WithChatCapability(new FakeChatCapability())
-            .WithEmbeddingCapability(new FakeEmbeddingCapability());
-        _providers.Add(provider);
+        var chatModels = new List<AiModelDescriptor>
+        {
+            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+        };
+        var embeddingModels = new List<AiModelDescriptor>
+        {
+            new(new AiModelRef(providerId, "text-embedding-3-small"), "Embedding Model")
+        };
+
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, chatModels);
+        var embeddingCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Embedding, embeddingModels);
+
+        var configuredProviderMock = CreateConfiguredProviderMock(
+            connection,
+            provider,
+            chatCapabilityMock.Object,
+            embeddingCapabilityMock.Object);
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
@@ -148,11 +160,9 @@ public class ModelsConnectionControllerTests
         // Act - Filter by Chat capability
         await controller.GetModelsByConnectionId(connectionId, capability: "Chat");
 
-        // Assert - GetModelsAsync should only be called on Chat capability
-        // The provider has 2 capabilities, but only Chat should be queried
-        _mapperMock.Verify(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(
-            It.Is<IEnumerable<AiModelDescriptor>>(models =>
-                models.All(m => m.Model.ProviderId == "fake-provider"))), Times.Once);
+        // Assert - Only chat capability's GetModelsAsync should be called
+        chatCapabilityMock.Verify(c => c.GetModelsAsync(It.IsAny<CancellationToken>()), Times.Once);
+        embeddingCapabilityMock.Verify(c => c.GetModelsAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -166,12 +176,13 @@ public class ModelsConnectionControllerTests
             .WithProviderId(providerId)
             .Build();
         var provider = new FakeAiProvider(providerId, "Empty Provider");
-        // No capabilities added
-        _providers.Add(provider);
+
+        // No capabilities
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, provider);
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
@@ -198,13 +209,19 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "OpenAI")
-            .WithChatCapability();
-        _providers.Add(provider);
+        var provider = new FakeAiProvider(providerId, "OpenAI");
+
+        var chatModels = new List<AiModelDescriptor>
+        {
+            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+        };
+
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, chatModels);
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, chatCapabilityMock.Object);
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
@@ -230,21 +247,20 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
+        var provider = new FakeAiProvider(providerId, "OpenAI");
 
-        // Create chat capability that returns same model twice
+        // Create capability that returns same model twice
         var duplicateModels = new List<AiModelDescriptor>
         {
             new(new AiModelRef("openai", "gpt-4"), "GPT-4"),
             new(new AiModelRef("openai", "gpt-4"), "GPT-4 Duplicate")
         };
-        var chatCapability = new FakeChatCapability(null, duplicateModels);
-        var provider = new FakeAiProvider(providerId, "OpenAI")
-            .WithChatCapability(chatCapability);
-        _providers.Add(provider);
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, duplicateModels);
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, chatCapabilityMock.Object);
 
         _connectionServiceMock
-            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(connection);
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
 
         IEnumerable<AiModelDescriptor>? capturedModels = null;
         _mapperMock

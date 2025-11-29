@@ -50,6 +50,10 @@ public static class UmbracoBuilderExtensions
         // Generate Swagger documentation for the management API
         builder.Services.Configure<SwaggerGenOptions>(options =>
         {
+            // Only add the swagger doc if it hasn't been added already
+            if (options.SwaggerGeneratorOptions.SwaggerDocs.ContainsKey(Constants.ManagementApi.ApiName))
+                return;
+
             options.SwaggerDoc(
                 Constants.ManagementApi.ApiName,
                 new OpenApiInfo

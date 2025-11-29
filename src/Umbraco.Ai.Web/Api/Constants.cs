@@ -97,12 +97,12 @@ public class Constants
                 /// <summary>
                 /// The route segment for Embedding features.
                 /// </summary>
-                public const string RouteSegment = "embedding";
+                public const string RouteSegment = "embeddings";
 
                 /// <summary>
                 /// The Swagger group name for Embedding features.
                 /// </summary>
-                public const string GroupName = "Embedding";
+                public const string GroupName = "Embeddings";
             }
 
             /// <summary>

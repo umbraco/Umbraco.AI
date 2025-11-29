@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteConnectionByIdData, DeleteConnectionByIdErrors, DeleteConnectionByIdResponses, DeleteProfileByIdData, DeleteProfileByIdErrors, DeleteProfileByIdResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAvailableCapabilitiesData, GetAvailableCapabilitiesErrors, GetAvailableCapabilitiesResponses, GetConnectionByIdData, GetConnectionByIdErrors, GetConnectionByIdResponses, GetConnectionsData, GetConnectionsErrors, GetConnectionsResponses, GetModelsByProviderIdData, GetModelsByProviderIdErrors, GetModelsByProviderIdResponses, GetProfileByAliasData, GetProfileByAliasErrors, GetProfileByAliasResponses, GetProfileByIdData, GetProfileByIdErrors, GetProfileByIdResponses, GetProfilesData, GetProfilesErrors, GetProfilesResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetProvidersData, GetProvidersErrors, GetProvidersResponses, StreamChatData, StreamChatErrors, StreamChatResponses, TestConnectionByIdData, TestConnectionByIdErrors, TestConnectionByIdResponses, UpdateConnectionByIdData, UpdateConnectionByIdErrors, UpdateConnectionByIdResponses, UpdateProfileByIdData, UpdateProfileByIdErrors, UpdateProfileByIdResponses } from './types.gen';
+import type { CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteConnectionByIdData, DeleteConnectionByIdErrors, DeleteConnectionByIdResponses, DeleteProfileByIdData, DeleteProfileByIdErrors, DeleteProfileByIdResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAvailableCapabilitiesData, GetAvailableCapabilitiesErrors, GetAvailableCapabilitiesResponses, GetConnectionByIdData, GetConnectionByIdErrors, GetConnectionByIdResponses, GetConnectionsData, GetConnectionsErrors, GetConnectionsResponses, GetModelsByConnectionIdData, GetModelsByConnectionIdErrors, GetModelsByConnectionIdResponses, GetProfileByAliasData, GetProfileByAliasErrors, GetProfileByAliasResponses, GetProfileByIdData, GetProfileByIdErrors, GetProfileByIdResponses, GetProfilesData, GetProfilesErrors, GetProfilesResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetProvidersData, GetProvidersErrors, GetProvidersResponses, StreamChatData, StreamChatErrors, StreamChatResponses, TestConnectionByIdData, TestConnectionByIdErrors, TestConnectionByIdResponses, UpdateConnectionByIdData, UpdateConnectionByIdErrors, UpdateConnectionByIdResponses, UpdateProfileByIdData, UpdateProfileByIdErrors, UpdateProfileByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -128,6 +128,19 @@ export class ConnectionsService {
         });
     }
     
+    public static getModelsByConnectionId<ThrowOnError extends boolean = false>(options: Options<GetModelsByConnectionIdData, ThrowOnError>) {
+        return (options.client ?? client).get<GetModelsByConnectionIdResponses, GetModelsByConnectionIdErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/connections/{id}/models',
+            ...options
+        });
+    }
+    
     public static testConnectionById<ThrowOnError extends boolean = false>(options: Options<TestConnectionByIdData, ThrowOnError>) {
         return (options.client ?? client).post<TestConnectionByIdResponses, TestConnectionByIdErrors, ThrowOnError>({
             security: [
@@ -155,7 +168,7 @@ export class ConnectionsService {
     }
 }
 
-export class EmbeddingService {
+export class EmbeddingsService {
     public static generateEmbeddings<ThrowOnError extends boolean = false>(options?: Options<GenerateEmbeddingsData, ThrowOnError>) {
         return (options?.client ?? client).post<GenerateEmbeddingsResponses, GenerateEmbeddingsErrors, ThrowOnError>({
             security: [
@@ -164,7 +177,7 @@ export class EmbeddingService {
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/embedding/generate',
+            url: '/umbraco/ai/management/api/v1/embeddings/generate',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -285,19 +298,6 @@ export class ProvidersService {
                 }
             ],
             url: '/umbraco/ai/management/api/v1/providers/{id}',
-            ...options
-        });
-    }
-    
-    public static getModelsByProviderId<ThrowOnError extends boolean = false>(options: Options<GetModelsByProviderIdData, ThrowOnError>) {
-        return (options.client ?? client).get<GetModelsByProviderIdResponses, GetModelsByProviderIdErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/providers/{id}/models',
             ...options
         });
     }

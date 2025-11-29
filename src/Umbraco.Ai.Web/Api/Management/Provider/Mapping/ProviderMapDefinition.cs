@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Settings;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 
@@ -19,7 +17,6 @@ public class ProviderMapDefinition : IMapDefinition
         mapper.Define<IAiProvider, ProviderItemResponseModel>((_, _) => new ProviderItemResponseModel(), Map);
         mapper.Define<IAiProvider, ProviderResponseModel>((_, _) => new ProviderResponseModel(), Map);
         mapper.Define<AiSettingDefinition, SettingDefinitionModel>((_, _) => new SettingDefinitionModel(), Map);
-        mapper.Define<AiModelDescriptor, ModelDescriptorResponseModel>((_, _) => new ModelDescriptorResponseModel(), Map);
     }
 
     // Umbraco.Code.MapAll
@@ -50,13 +47,5 @@ public class ProviderMapDefinition : IMapDefinition
         target.DefaultValue = source.DefaultValue;
         target.SortOrder = source.SortOrder;
         target.IsRequired = source.ValidationRules.OfType<RequiredAttribute>().Any();
-    }
-
-    // Umbraco.Code.MapAll
-    private static void Map(AiModelDescriptor source, ModelDescriptorResponseModel target, MapperContext context)
-    {
-        target.Model = context.Map<ModelRefModel>(source.Model);
-        target.Name = source.Name;
-        target.Metadata = source.Metadata;
     }
 }

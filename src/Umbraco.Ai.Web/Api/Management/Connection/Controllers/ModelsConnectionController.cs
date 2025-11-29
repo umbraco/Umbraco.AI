@@ -6,28 +6,31 @@ using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Provider.Controllers;
+namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 
 /// <summary>
-/// Controller to get available models for a provider.
+/// Controller to get available models for a connection.
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
-public class ModelsByProviderController : ProviderControllerBase
+public class ModelsConnectionController : ConnectionControllerBase
 {
     private readonly AiProviderCollection _providers;
     private readonly IAiConnectionService _connectionService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ModelsByProviderController"/> class.
+    /// Initializes a new instance of the <see cref="ModelsConnectionController"/> class.
     /// </summary>
-    public ModelsByProviderController(AiProviderCollection providers, IAiConnectionService connectionService, IUmbracoMapper umbracoMapper)
+    public ModelsConnectionController(
+        AiProviderCollection providers,
+        IAiConnectionService connectionService,
+        IUmbracoMapper umbracoMapper)
     {
         _providers = providers;
         _connectionService = connectionService;
@@ -35,34 +38,31 @@ public class ModelsByProviderController : ProviderControllerBase
     }
 
     /// <summary>
-    /// Get available models for a provider using a specific connection.
+    /// Get available models for a connection.
     /// </summary>
-    /// <param name="id">The unique identifier of the provider.</param>
-    /// <param name="connectionId">The connection ID to use for fetching models.</param>
+    /// <param name="id">The unique identifier of the connection.</param>
     /// <param name="capability">Optional capability filter (Chat, Embedding, etc.).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of available models.</returns>
-    [HttpGet($"{{{nameof(id)}}}/models")]
+    [HttpGet($"{{{nameof(id)}:guid}}/models")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<ModelDescriptorResponseModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetModelsByProviderId(
-        string id,
-        [FromQuery] Guid connectionId,
+    public async Task<IActionResult> GetModelsByConnectionId(
+        Guid id,
         [FromQuery] string? capability = null,
         CancellationToken cancellationToken = default)
     {
-        var provider = _providers.GetById(id);
-        if (provider is null)
-        {
-            return ProviderNotFound();
-        }
-
-        // Get connection to get settings
-        var connection = await _connectionService.GetConnectionAsync(connectionId, cancellationToken);
+        var connection = await _connectionService.GetConnectionAsync(id, cancellationToken);
         if (connection is null)
         {
             return ConnectionNotFound();
+        }
+
+        var provider = _providers.GetById(connection.ProviderId);
+        if (provider is null)
+        {
+            return ProviderNotFound();
         }
 
         // Get capabilities filtered by requested capability

@@ -1,6 +1,6 @@
-import type { ConnectionResponseModel, ConnectionItemResponseModel } from "../api/types.gen.js";
+import type { ConnectionResponseModel, ConnectionItemResponseModel, ModelDescriptorResponseModel } from "../api/types.gen.js";
 import { UAI_CONNECTION_ENTITY_TYPE } from "./constants.js";
-import type { UaiConnectionDetailModel, UaiConnectionItemModel } from "./types.js";
+import type { UaiConnectionDetailModel, UaiConnectionItemModel, UaiModelDescriptorModel } from "./types.js";
 
 export const UaiConnectionTypeMapper = {
     toDetailModel(response: ConnectionResponseModel): UaiConnectionDetailModel {
@@ -42,6 +42,17 @@ export const UaiConnectionTypeMapper = {
             name: model.name,
             settings: model.settings,
             isActive: model.isActive,
+        };
+    },
+
+    toModelDescriptorModel(response: ModelDescriptorResponseModel): UaiModelDescriptorModel {
+        return {
+            model: {
+                providerId: response.model.providerId,
+                modelId: response.model.modelId,
+            },
+            name: response.name,
+            metadata: response.metadata ?? undefined,
         };
     },
 };

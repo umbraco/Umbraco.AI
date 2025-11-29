@@ -34,22 +34,3 @@ export interface UaiProviderDetailModel {
     capabilities: string[];
     settingDefinitions: UaiSettingDefinitionModel[];
 }
-
-/**
- * Model reference for UI consumption.
- * Maps from API's ModelRefModel.
- */
-export interface UaiModelRefModel {
-    providerId: string;
-    modelId: string;
-}
-
-/**
- * Model descriptor for UI consumption.
- * Maps from API's ModelDescriptorResponseModel.
- */
-export interface UaiModelDescriptorModel {
-    model: UaiModelRefModel;
-    name: string;
-    metadata?: Record<string, string>;
-}

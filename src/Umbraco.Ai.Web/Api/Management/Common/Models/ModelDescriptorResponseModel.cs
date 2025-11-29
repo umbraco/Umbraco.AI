@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
 
-namespace Umbraco.Ai.Web.Api.Management.Provider.Models;
+namespace Umbraco.Ai.Web.Api.Management.Common.Models;
 
 /// <summary>
 /// Response model for a model descriptor.

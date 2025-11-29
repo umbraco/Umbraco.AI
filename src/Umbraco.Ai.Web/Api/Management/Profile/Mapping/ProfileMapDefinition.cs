@@ -1,4 +1,3 @@
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
@@ -16,7 +15,6 @@ public class ProfileMapDefinition : IMapDefinition
     {
         mapper.Define<AiProfile, ProfileResponseModel>((_, _) => new ProfileResponseModel(), Map);
         mapper.Define<AiProfile, ProfileItemResponseModel>((_, _) => new ProfileItemResponseModel(), Map);
-        mapper.Define<AiModelRef, ModelRefModel>((_, _) => new ModelRefModel(), Map);
     }
 
     // Umbraco.Code.MapAll
@@ -42,12 +40,5 @@ public class ProfileMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Capability = source.Capability.ToString();
         target.Model = context.Map<ModelRefModel>(source.Model);
-    }
-
-    // Umbraco.Code.MapAll
-    private static void Map(AiModelRef source, ModelRefModel target, MapperContext context)
-    {
-        target.ProviderId = source.ProviderId;
-        target.ModelId = source.ModelId;
     }
 }

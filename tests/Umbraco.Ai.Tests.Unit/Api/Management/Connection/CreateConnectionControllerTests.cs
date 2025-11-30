@@ -49,7 +49,7 @@ public class CreateConnectionControllerTests
 
         // Assert
         var createdResult = result.ShouldBeOfType<CreatedAtActionResult>();
-        createdResult.ActionName.ShouldBe(nameof(ByIdConnectionController.GetConnectionById));
+        createdResult.ActionName.ShouldBe(nameof(ByIdOrAliasConnectionController.GetConnectionByIdOrAlias));
         createdResult.Value.ShouldBe(createdId.ToString());
     }
 

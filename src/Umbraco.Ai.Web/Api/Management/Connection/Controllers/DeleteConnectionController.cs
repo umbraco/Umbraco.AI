@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Cms.Web.Common.Authorization;
@@ -30,21 +32,28 @@ public class DeleteConnectionController : ConnectionControllerBase
     /// <summary>
     /// Delete a connection.
     /// </summary>
-    /// <param name="id">The unique identifier of the connection to delete.</param>
+    /// <param name="connectionIdOrAlias">The unique identifier or alias of the connection to delete.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content on success.</returns>
-    [HttpDelete($"{{{nameof(id)}:guid}}")]
+    [HttpDelete($"{{{nameof(connectionIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteConnectionById(
-        Guid id,
+    public async Task<IActionResult> DeleteConnection(
+        IdOrAlias connectionIdOrAlias,
         CancellationToken cancellationToken = default)
     {
+        // Resolve to ID first since DeleteConnectionAsync requires Guid
+        var connectionId = await _connectionService.TryGetConnectionIdAsync(connectionIdOrAlias, cancellationToken);
+        if (connectionId is null)
+        {
+            return ConnectionNotFound();
+        }
+
         try
         {
-            await _connectionService.DeleteConnectionAsync(id, cancellationToken);
+            await _connectionService.DeleteConnectionAsync(connectionId.Value, cancellationToken);
             return Ok();
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))

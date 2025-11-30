@@ -25,8 +25,8 @@ export class UaiConnectionModelsServerDataSource {
     async getModels(args: UaiConnectionModelsRequestArgs): Promise<{ data?: UaiModelDescriptorModel[]; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            ConnectionsService.getModelsByConnectionId({
-                path: { id: args.connectionId },
+            ConnectionsService.getModels({
+                path: { connectionIdOrAlias: args.connectionId },
                 query: { capability: args.capability },
             })
         );

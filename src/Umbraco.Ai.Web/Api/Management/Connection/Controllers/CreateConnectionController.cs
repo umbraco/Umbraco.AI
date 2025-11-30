@@ -57,9 +57,9 @@ public class CreateConnectionController : ConnectionControllerBase
         {
             var created = await _connectionService.SaveConnectionAsync(connection, cancellationToken);
             return CreatedAtAction(
-                nameof(ByIdConnectionController.GetConnectionById),
-                nameof(ByIdConnectionController).Replace("Controller", string.Empty),
-                new { id = created.Id },
+                nameof(ByIdOrAliasConnectionController.GetConnectionByIdOrAlias),
+                nameof(ByIdOrAliasConnectionController).Replace("Controller", string.Empty),
+                new { connectionIdOrAlias = created.Id },
                 created.Id.ToString());
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("not found in registry"))

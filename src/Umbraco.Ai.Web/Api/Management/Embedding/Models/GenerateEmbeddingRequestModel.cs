@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Web.Api.Management.Embedding.Models;
 
@@ -8,10 +9,10 @@ namespace Umbraco.Ai.Web.Api.Management.Embedding.Models;
 public class GenerateEmbeddingRequestModel
 {
     /// <summary>
-    /// The profile ID to use for embedding generation.
+    /// The profile to use for embedding generation, specified by ID or alias.
     /// If not specified, the default embedding profile will be used.
     /// </summary>
-    public Guid? ProfileId { get; init; }
+    public IdOrAlias? ProfileIdOrAlias { get; init; }
 
     /// <summary>
     /// The text values to generate embeddings for.

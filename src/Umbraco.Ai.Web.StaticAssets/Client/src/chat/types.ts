@@ -47,7 +47,7 @@ export interface UaiChatStreamChunk {
  * @internal
  */
 export interface UaiChatRequest {
-    profileId?: string | null;
+    profileIdOrAlias?: string | null;
     messages: UaiChatMessage[];
     signal?: AbortSignal;
 }
@@ -58,7 +58,7 @@ export interface UaiChatRequest {
  */
 export interface UaiChatOptions {
     /** Profile ID (GUID) or alias. If omitted, uses the default chat profile. */
-    profile?: string;
+    profileIdOrAlias?: string;
     /** AbortSignal for cancellation. */
     signal?: AbortSignal;
 }

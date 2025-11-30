@@ -20,10 +20,10 @@ export class UaiConnectionCapabilityServerDataSource {
     async getAvailableCapabilities() {
         const { data, error } = await tryExecute(
             this.#host,
-            ConnectionsService.getAvailableCapabilities()
+            ConnectionsService.getAllCapabilities()
         );
 
-        if (error || !data) {
+        if (error) {
             return { error };
         }
 
@@ -36,7 +36,7 @@ export class UaiConnectionCapabilityServerDataSource {
     async getConnectionsByCapability(capability: string): Promise<{ data?: UaiConnectionItemModel[]; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            ConnectionsService.getConnections({
+            ConnectionsService.getAllConnections({
                 query: {
                     capability,
                 },

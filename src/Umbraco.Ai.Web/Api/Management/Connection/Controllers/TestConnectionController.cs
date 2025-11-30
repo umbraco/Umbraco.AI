@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Web.Common.Authorization;
@@ -30,20 +32,27 @@ public class TestConnectionController : ConnectionControllerBase
     /// <summary>
     /// Test a connection by verifying credentials with the provider.
     /// </summary>
-    /// <param name="id">The unique identifier of the connection to test.</param>
+    /// <param name="connectionIdOrAlias">The unique identifier or alias of the connection to test.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The test result.</returns>
-    [HttpPost($"{{{nameof(id)}:guid}}/test")]
+    [HttpPost($"{{{nameof(connectionIdOrAlias)}}}/test")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(ConnectionTestResultModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> TestConnectionById(
-        Guid id,
+    public async Task<IActionResult> TestConnection(
+        IdOrAlias connectionIdOrAlias,
         CancellationToken cancellationToken = default)
     {
+        // Resolve to ID first since TestConnectionAsync requires Guid
+        var connectionId = await _connectionService.TryGetConnectionIdAsync(connectionIdOrAlias, cancellationToken);
+        if (connectionId is null)
+        {
+            return ConnectionNotFound();
+        }
+
         try
         {
-            var success = await _connectionService.TestConnectionAsync(id, cancellationToken);
+            var success = await _connectionService.TestConnectionAsync(connectionId.Value, cancellationToken);
             return Ok(new ConnectionTestResultModel
             {
                 Success = success,

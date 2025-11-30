@@ -21,7 +21,7 @@ export class UaiChatServerDataSource {
             this.#host,
             ChatService.completeChat({
                 body: {
-                    profileId: request.profileId ?? null,
+                    profileIdOrAlias: request.profileIdOrAlias ?? null,
                     messages: request.messages.map(m => ({ role: m.role, content: m.content }))
                 },
                 signal: request.signal

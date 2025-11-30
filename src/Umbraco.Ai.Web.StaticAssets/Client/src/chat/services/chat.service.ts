@@ -26,7 +26,7 @@ export class UaiChatService extends UmbControllerBase {
         options?: UaiChatOptions
     ): Promise<{ data?: UaiChatResult; error?: unknown }> {
         return this.#repository.complete({
-            profileId: options?.profile,
+            profileIdOrAlias: options?.profileIdOrAlias,
             messages,
             signal: options?.signal
         });
@@ -43,7 +43,7 @@ export class UaiChatService extends UmbControllerBase {
         options?: UaiChatOptions
     ): AsyncGenerator<UaiChatStreamChunk> {
         return this.#repository.stream({
-            profileId: options?.profile,
+            profileIdOrAlias: options?.profileIdOrAlias,
             messages,
             signal: options?.signal
         });

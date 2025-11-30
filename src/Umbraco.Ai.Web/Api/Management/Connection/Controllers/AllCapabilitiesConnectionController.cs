@@ -13,20 +13,20 @@ namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
-public class CapabilitiesConnectionController : ConnectionControllerBase
+public class AllCapabilitiesConnectionController : ConnectionControllerBase
 {
     private readonly IAiConnectionService _connectionService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CapabilitiesConnectionController"/> class.
+    /// Initializes a new instance of the <see cref="AllCapabilitiesConnectionController"/> class.
     /// </summary>
-    public CapabilitiesConnectionController(IAiConnectionService connectionService)
+    public AllCapabilitiesConnectionController(IAiConnectionService connectionService)
     {
         _connectionService = connectionService;
     }
 
     /// <summary>
-    /// Get all available capabilities from configured connections.
+    /// Get all capabilities from configured connections.
     /// </summary>
     /// <remarks>
     /// Returns the unique set of capabilities that are supported by at least one configured connection.
@@ -36,7 +36,7 @@ public class CapabilitiesConnectionController : ConnectionControllerBase
     [HttpGet("capabilities")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<string>>> GetAvailableCapabilities(CancellationToken cancellationToken = default)
+    public async Task<ActionResult<IEnumerable<string>>> GetAllCapabilities(CancellationToken cancellationToken = default)
     {
         var capabilities = await _connectionService.GetAvailableCapabilitiesAsync(cancellationToken);
         return Ok(capabilities.Select(c => c.ToString()));

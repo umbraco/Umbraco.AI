@@ -43,7 +43,7 @@ public class AllProfileController : ProfileControllerBase
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedViewModel<ProfileItemResponseModel>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedViewModel<ProfileItemResponseModel>>> GetProfiles(
+    public async Task<ActionResult<PagedViewModel<ProfileItemResponseModel>>> GetAllProfiles(
         string? capability = null,
         int skip = 0,
         int take = 100,

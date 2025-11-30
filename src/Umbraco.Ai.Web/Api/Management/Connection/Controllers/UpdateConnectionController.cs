@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Web.Common.Authorization;
@@ -31,21 +33,21 @@ public class UpdateConnectionController : ConnectionControllerBase
     /// <summary>
     /// Update an existing connection.
     /// </summary>
-    /// <param name="id">The unique identifier of the connection to update.</param>
+    /// <param name="connectionIdOrAlias">The unique identifier or alias of the connection to update.</param>
     /// <param name="requestModel">The updated connection data.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content on success.</returns>
-    [HttpPut($"{{{nameof(id)}:guid}}")]
+    [HttpPut($"{{{nameof(connectionIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateConnectionById(
-        Guid id,
+    public async Task<IActionResult> UpdateConnection(
+        IdOrAlias connectionIdOrAlias,
         UpdateConnectionRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var existing = await _connectionService.GetConnectionAsync(id, cancellationToken);
+        var existing = await _connectionService.GetConnectionAsync(connectionIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return ConnectionNotFound();

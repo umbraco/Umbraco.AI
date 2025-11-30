@@ -17,7 +17,7 @@ export type ChatProfileSettingsModel = ProfileSettingsModel & {
 };
 
 export type ChatRequestModel = {
-    profileId?: string | null;
+    profileIdOrAlias?: string | null;
     messages: Array<ChatMessageModel>;
 };
 
@@ -91,7 +91,7 @@ export type EmbeddingResponseModel = {
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
 
 export type GenerateEmbeddingRequestModel = {
-    profileId?: string | null;
+    profileIdOrAlias?: string | null;
     values: Array<string>;
 };
 
@@ -260,7 +260,7 @@ export type StreamChatResponses = {
     200: unknown;
 };
 
-export type GetConnectionsData = {
+export type GetAllConnectionsData = {
     body?: never;
     path?: never;
     query?: {
@@ -273,21 +273,21 @@ export type GetConnectionsData = {
     url: '/umbraco/ai/management/api/v1/connections';
 };
 
-export type GetConnectionsErrors = {
+export type GetAllConnectionsErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type GetConnectionsResponses = {
+export type GetAllConnectionsResponses = {
     /**
      * OK
      */
     200: PagedConnectionItemResponseModel;
 };
 
-export type GetConnectionsResponse = GetConnectionsResponses[keyof GetConnectionsResponses];
+export type GetAllConnectionsResponse = GetAllConnectionsResponses[keyof GetAllConnectionsResponses];
 
 export type CreateConnectionData = {
     body?: CreateConnectionRequestModel;
@@ -320,16 +320,16 @@ export type CreateConnectionResponses = {
     201: unknown;
 };
 
-export type DeleteConnectionByIdData = {
+export type DeleteConnectionData = {
     body?: never;
     path: {
-        id: string;
+        connectionIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/connections/{id}';
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}';
 };
 
-export type DeleteConnectionByIdErrors = {
+export type DeleteConnectionErrors = {
     /**
      * Bad Request
      */
@@ -344,25 +344,25 @@ export type DeleteConnectionByIdErrors = {
     404: ProblemDetails;
 };
 
-export type DeleteConnectionByIdError = DeleteConnectionByIdErrors[keyof DeleteConnectionByIdErrors];
+export type DeleteConnectionError = DeleteConnectionErrors[keyof DeleteConnectionErrors];
 
-export type DeleteConnectionByIdResponses = {
+export type DeleteConnectionResponses = {
     /**
      * OK
      */
     200: unknown;
 };
 
-export type GetConnectionByIdData = {
+export type GetConnectionByIdOrAliasData = {
     body?: never;
     path: {
-        id: string;
+        connectionIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/connections/{id}';
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}';
 };
 
-export type GetConnectionByIdErrors = {
+export type GetConnectionByIdOrAliasErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -373,27 +373,27 @@ export type GetConnectionByIdErrors = {
     404: ProblemDetails;
 };
 
-export type GetConnectionByIdError = GetConnectionByIdErrors[keyof GetConnectionByIdErrors];
+export type GetConnectionByIdOrAliasError = GetConnectionByIdOrAliasErrors[keyof GetConnectionByIdOrAliasErrors];
 
-export type GetConnectionByIdResponses = {
+export type GetConnectionByIdOrAliasResponses = {
     /**
      * OK
      */
     200: ConnectionResponseModel;
 };
 
-export type GetConnectionByIdResponse = GetConnectionByIdResponses[keyof GetConnectionByIdResponses];
+export type GetConnectionByIdOrAliasResponse = GetConnectionByIdOrAliasResponses[keyof GetConnectionByIdOrAliasResponses];
 
-export type UpdateConnectionByIdData = {
+export type UpdateConnectionData = {
     body?: UpdateConnectionRequestModel;
     path: {
-        id: string;
+        connectionIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/connections/{id}';
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}';
 };
 
-export type UpdateConnectionByIdErrors = {
+export type UpdateConnectionErrors = {
     /**
      * Bad Request
      */
@@ -408,27 +408,25 @@ export type UpdateConnectionByIdErrors = {
     404: ProblemDetails;
 };
 
-export type UpdateConnectionByIdError = UpdateConnectionByIdErrors[keyof UpdateConnectionByIdErrors];
+export type UpdateConnectionError = UpdateConnectionErrors[keyof UpdateConnectionErrors];
 
-export type UpdateConnectionByIdResponses = {
+export type UpdateConnectionResponses = {
     /**
      * OK
      */
     200: unknown;
 };
 
-export type GetModelsByConnectionIdData = {
+export type GetCapabilitiesData = {
     body?: never;
     path: {
-        id: string;
+        connectionIdOrAlias: string;
     };
-    query?: {
-        capability?: string;
-    };
-    url: '/umbraco/ai/management/api/v1/connections/{id}/models';
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/capabilities';
 };
 
-export type GetModelsByConnectionIdErrors = {
+export type GetCapabilitiesErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -439,70 +437,103 @@ export type GetModelsByConnectionIdErrors = {
     404: ProblemDetails;
 };
 
-export type GetModelsByConnectionIdError = GetModelsByConnectionIdErrors[keyof GetModelsByConnectionIdErrors];
+export type GetCapabilitiesError = GetCapabilitiesErrors[keyof GetCapabilitiesErrors];
 
-export type GetModelsByConnectionIdResponses = {
-    /**
-     * OK
-     */
-    200: Array<ModelDescriptorResponseModel>;
-};
-
-export type GetModelsByConnectionIdResponse = GetModelsByConnectionIdResponses[keyof GetModelsByConnectionIdResponses];
-
-export type TestConnectionByIdData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/connections/{id}/test';
-};
-
-export type TestConnectionByIdErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type TestConnectionByIdError = TestConnectionByIdErrors[keyof TestConnectionByIdErrors];
-
-export type TestConnectionByIdResponses = {
-    /**
-     * OK
-     */
-    200: ConnectionTestResultModel;
-};
-
-export type TestConnectionByIdResponse = TestConnectionByIdResponses[keyof TestConnectionByIdResponses];
-
-export type GetAvailableCapabilitiesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/connections/capabilities';
-};
-
-export type GetAvailableCapabilitiesErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type GetAvailableCapabilitiesResponses = {
+export type GetCapabilitiesResponses = {
     /**
      * OK
      */
     200: Array<string>;
 };
 
-export type GetAvailableCapabilitiesResponse = GetAvailableCapabilitiesResponses[keyof GetAvailableCapabilitiesResponses];
+export type GetCapabilitiesResponse = GetCapabilitiesResponses[keyof GetCapabilitiesResponses];
+
+export type GetModelsData = {
+    body?: never;
+    path: {
+        connectionIdOrAlias: string;
+    };
+    query?: {
+        capability?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/models';
+};
+
+export type GetModelsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetModelsError = GetModelsErrors[keyof GetModelsErrors];
+
+export type GetModelsResponses = {
+    /**
+     * OK
+     */
+    200: Array<ModelDescriptorResponseModel>;
+};
+
+export type GetModelsResponse = GetModelsResponses[keyof GetModelsResponses];
+
+export type TestConnectionData = {
+    body?: never;
+    path: {
+        connectionIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/test';
+};
+
+export type TestConnectionErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type TestConnectionError = TestConnectionErrors[keyof TestConnectionErrors];
+
+export type TestConnectionResponses = {
+    /**
+     * OK
+     */
+    200: ConnectionTestResultModel;
+};
+
+export type TestConnectionResponse = TestConnectionResponses[keyof TestConnectionResponses];
+
+export type GetAllCapabilitiesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/connections/capabilities';
+};
+
+export type GetAllCapabilitiesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllCapabilitiesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetAllCapabilitiesResponse = GetAllCapabilitiesResponses[keyof GetAllCapabilitiesResponses];
 
 export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;
@@ -537,7 +568,7 @@ export type GenerateEmbeddingsResponses = {
 
 export type GenerateEmbeddingsResponse = GenerateEmbeddingsResponses[keyof GenerateEmbeddingsResponses];
 
-export type GetProfilesData = {
+export type GetAllProfilesData = {
     body?: never;
     path?: never;
     query?: {
@@ -548,21 +579,21 @@ export type GetProfilesData = {
     url: '/umbraco/ai/management/api/v1/profiles';
 };
 
-export type GetProfilesErrors = {
+export type GetAllProfilesErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type GetProfilesResponses = {
+export type GetAllProfilesResponses = {
     /**
      * OK
      */
     200: PagedProfileItemResponseModel;
 };
 
-export type GetProfilesResponse = GetProfilesResponses[keyof GetProfilesResponses];
+export type GetAllProfilesResponse = GetAllProfilesResponses[keyof GetAllProfilesResponses];
 
 export type CreateProfileData = {
     body?: CreateProfileRequestModel;
@@ -595,16 +626,16 @@ export type CreateProfileResponses = {
     201: unknown;
 };
 
-export type DeleteProfileByIdData = {
+export type DeleteProfileData = {
     body?: never;
     path: {
-        id: string;
+        profileIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/profiles/{id}';
+    url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}';
 };
 
-export type DeleteProfileByIdErrors = {
+export type DeleteProfileErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -615,25 +646,25 @@ export type DeleteProfileByIdErrors = {
     404: ProblemDetails;
 };
 
-export type DeleteProfileByIdError = DeleteProfileByIdErrors[keyof DeleteProfileByIdErrors];
+export type DeleteProfileError = DeleteProfileErrors[keyof DeleteProfileErrors];
 
-export type DeleteProfileByIdResponses = {
+export type DeleteProfileResponses = {
     /**
      * OK
      */
     200: unknown;
 };
 
-export type GetProfileByIdData = {
+export type GetProfileByIdOrAliasData = {
     body?: never;
     path: {
-        id: string;
+        profileIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/profiles/{id}';
+    url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}';
 };
 
-export type GetProfileByIdErrors = {
+export type GetProfileByIdOrAliasErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -644,27 +675,27 @@ export type GetProfileByIdErrors = {
     404: ProblemDetails;
 };
 
-export type GetProfileByIdError = GetProfileByIdErrors[keyof GetProfileByIdErrors];
+export type GetProfileByIdOrAliasError = GetProfileByIdOrAliasErrors[keyof GetProfileByIdOrAliasErrors];
 
-export type GetProfileByIdResponses = {
+export type GetProfileByIdOrAliasResponses = {
     /**
      * OK
      */
     200: ProfileResponseModel;
 };
 
-export type GetProfileByIdResponse = GetProfileByIdResponses[keyof GetProfileByIdResponses];
+export type GetProfileByIdOrAliasResponse = GetProfileByIdOrAliasResponses[keyof GetProfileByIdOrAliasResponses];
 
-export type UpdateProfileByIdData = {
+export type UpdateProfileData = {
     body?: UpdateProfileRequestModel;
     path: {
-        id: string;
+        profileIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/profiles/{id}';
+    url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}';
 };
 
-export type UpdateProfileByIdErrors = {
+export type UpdateProfileErrors = {
     /**
      * Bad Request
      */
@@ -679,68 +710,37 @@ export type UpdateProfileByIdErrors = {
     404: ProblemDetails;
 };
 
-export type UpdateProfileByIdError = UpdateProfileByIdErrors[keyof UpdateProfileByIdErrors];
+export type UpdateProfileError = UpdateProfileErrors[keyof UpdateProfileErrors];
 
-export type UpdateProfileByIdResponses = {
+export type UpdateProfileResponses = {
     /**
      * OK
      */
     200: unknown;
 };
 
-export type GetProfileByAliasData = {
-    body?: never;
-    path: {
-        alias: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/profiles/alias/{alias}';
-};
-
-export type GetProfileByAliasErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type GetProfileByAliasError = GetProfileByAliasErrors[keyof GetProfileByAliasErrors];
-
-export type GetProfileByAliasResponses = {
-    /**
-     * OK
-     */
-    200: ProfileResponseModel;
-};
-
-export type GetProfileByAliasResponse = GetProfileByAliasResponses[keyof GetProfileByAliasResponses];
-
-export type GetProvidersData = {
+export type GetAllProvidersData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/providers';
 };
 
-export type GetProvidersErrors = {
+export type GetAllProvidersErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type GetProvidersResponses = {
+export type GetAllProvidersResponses = {
     /**
      * OK
      */
     200: Array<ProviderItemResponseModel>;
 };
 
-export type GetProvidersResponse = GetProvidersResponses[keyof GetProvidersResponses];
+export type GetAllProvidersResponse = GetAllProvidersResponses[keyof GetAllProvidersResponses];
 
 export type GetProviderByIdData = {
     body?: never;

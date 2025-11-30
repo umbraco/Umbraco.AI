@@ -95,9 +95,9 @@ public class CreateProfileController : ProfileControllerBase
         var created = await _profileRepository.SaveAsync(profile, cancellationToken);
 
         return CreatedAtAction(
-            nameof(ByIdProfileController.GetProfileById),
-            nameof(ByIdProfileController).Replace("Controller", string.Empty),
-            new { id = created.Id },
+            nameof(ByIdOrAliasProfileController.GetProfileByIdOrAlias),
+            nameof(ByIdOrAliasProfileController).Replace("Controller", string.Empty),
+            new { profileIdOrAlias = created.Id },
             created.Id.ToString());
     }
 

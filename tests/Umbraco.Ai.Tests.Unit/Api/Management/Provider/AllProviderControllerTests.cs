@@ -48,7 +48,7 @@ public class AllProviderControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.GetProviders();
+        var result = await controller.GetAllProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -69,7 +69,7 @@ public class AllProviderControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.GetProviders();
+        var result = await controller.GetAllProviders();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -93,7 +93,7 @@ public class AllProviderControllerTests
         var controller = CreateController();
 
         // Act
-        await controller.GetProviders();
+        await controller.GetAllProviders();
 
         // Assert
         _mapperMock.Verify(x => x.MapEnumerable<IAiProvider, ProviderItemResponseModel>(

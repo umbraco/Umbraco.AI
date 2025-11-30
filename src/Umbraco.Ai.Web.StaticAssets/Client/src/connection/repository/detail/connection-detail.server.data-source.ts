@@ -41,7 +41,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            ConnectionsService.getConnectionById({ path: { id: unique } })
+            ConnectionsService.getConnectionByIdOrAlias({ path: { connectionIdOrAlias: unique } })
         );
 
         if (error || !data) {
@@ -86,8 +86,8 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
 
         const { error } = await tryExecute(
             this.#host,
-            ConnectionsService.updateConnectionById({
-                path: { id: model.unique },
+            ConnectionsService.updateConnection({
+                path: { connectionIdOrAlias: model.unique },
                 body: requestBody,
             })
         );
@@ -105,7 +105,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
     async delete(unique: string) {
         const { error } = await tryExecute(
             this.#host,
-            ConnectionsService.deleteConnectionById({ path: { id: unique } })
+            ConnectionsService.deleteConnection({ path: { connectionIdOrAlias: unique } })
         );
 
         if (error) {

@@ -4,6 +4,7 @@ using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 using Umbraco.Cms.Core.Mapping;
@@ -49,10 +50,10 @@ public class ModelsConnectionControllerTests
         return mock;
     }
 
-    #region GetModelsByConnectionId
+    #region GetModels - By ID
 
     [Fact]
-    public async Task GetModelsByConnectionId_WithValidConnection_ReturnsModels()
+    public async Task GetModels_WithValidId_ReturnsModels()
     {
         // Arrange
         var providerId = "openai";
@@ -87,7 +88,7 @@ public class ModelsConnectionControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.GetModelsByConnectionId(connectionId);
+        var result = await controller.GetModels(new IdOrAlias(connectionId));
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -96,7 +97,7 @@ public class ModelsConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetModelsByConnectionId_WithNonExistingConnection_Returns404NotFound()
+    public async Task GetModels_WithNonExistingId_Returns404NotFound()
     {
         // Arrange
         var connectionId = Guid.NewGuid();
@@ -108,7 +109,7 @@ public class ModelsConnectionControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.GetModelsByConnectionId(connectionId);
+        var result = await controller.GetModels(new IdOrAlias(connectionId));
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -117,7 +118,7 @@ public class ModelsConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetModelsByConnectionId_WithCapabilityFilter_ReturnsFilteredModels()
+    public async Task GetModels_WithCapabilityFilter_ReturnsFilteredModels()
     {
         // Arrange
         var providerId = "openai";
@@ -158,7 +159,7 @@ public class ModelsConnectionControllerTests
         var controller = CreateController();
 
         // Act - Filter by Chat capability
-        await controller.GetModelsByConnectionId(connectionId, capability: "Chat");
+        await controller.GetModels(new IdOrAlias(connectionId), capability: "Chat");
 
         // Assert - Only chat capability's GetModelsAsync should be called
         chatCapabilityMock.Verify(c => c.GetModelsAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -166,7 +167,7 @@ public class ModelsConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetModelsByConnectionId_WithProviderWithNoCapabilities_ReturnsEmptyList()
+    public async Task GetModels_WithProviderWithNoCapabilities_ReturnsEmptyList()
     {
         // Arrange
         var providerId = "empty-provider";
@@ -191,7 +192,7 @@ public class ModelsConnectionControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.GetModelsByConnectionId(connectionId);
+        var result = await controller.GetModels(new IdOrAlias(connectionId));
 
         // Assert
         var okResult = result.ShouldBeOfType<OkObjectResult>();
@@ -200,7 +201,7 @@ public class ModelsConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetModelsByConnectionId_WithInvalidCapabilityFilter_ReturnsAllModels()
+    public async Task GetModels_WithInvalidCapabilityFilter_ReturnsAllModels()
     {
         // Arrange
         var providerId = "openai";
@@ -230,7 +231,7 @@ public class ModelsConnectionControllerTests
         var controller = CreateController();
 
         // Act - Invalid capability falls back to all capabilities
-        await controller.GetModelsByConnectionId(connectionId, capability: "InvalidCapability");
+        await controller.GetModels(new IdOrAlias(connectionId), capability: "InvalidCapability");
 
         // Assert - Should still return OK (models from all capabilities)
         _mapperMock.Verify(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(
@@ -238,7 +239,7 @@ public class ModelsConnectionControllerTests
     }
 
     [Fact]
-    public async Task GetModelsByConnectionId_DeduplicatesModelsByModelId()
+    public async Task GetModels_DeduplicatesModelsByModelId()
     {
         // Arrange
         var providerId = "openai";
@@ -271,11 +272,86 @@ public class ModelsConnectionControllerTests
         var controller = CreateController();
 
         // Act
-        await controller.GetModelsByConnectionId(connectionId);
+        await controller.GetModels(new IdOrAlias(connectionId));
 
         // Assert - Should only have 1 model after deduplication
         capturedModels.ShouldNotBeNull();
         capturedModels!.Count().ShouldBe(1);
+    }
+
+    #endregion
+
+    #region GetModels - By Alias
+
+    [Fact]
+    public async Task GetModels_WithValidAlias_ReturnsModels()
+    {
+        // Arrange
+        var alias = "my-connection";
+        var providerId = "openai";
+        var connectionId = Guid.NewGuid();
+        var connection = new AiConnectionBuilder()
+            .WithId(connectionId)
+            .WithAlias(alias)
+            .WithProviderId(providerId)
+            .Build();
+        var provider = new FakeAiProvider(providerId, "OpenAI");
+
+        var models = new List<AiModelDescriptor>
+        {
+            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+        };
+
+        var capabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, models);
+        var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, capabilityMock.Object);
+
+        var responseModels = new List<ModelDescriptorResponseModel>
+        {
+            new() { Model = new ModelRefModel { ProviderId = providerId, ModelId = "gpt-4" }, Name = "GPT-4" }
+        };
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+
+        _connectionServiceMock
+            .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuredProviderMock.Object);
+
+        _mapperMock
+            .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
+            .Returns(responseModels);
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.GetModels(new IdOrAlias(alias));
+
+        // Assert
+        var okResult = result.ShouldBeOfType<OkObjectResult>();
+        var returnedModels = okResult.Value.ShouldBeAssignableTo<IEnumerable<ModelDescriptorResponseModel>>();
+        returnedModels!.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetModels_WithNonExistingAlias_Returns404NotFound()
+    {
+        // Arrange
+        var alias = "non-existing";
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiConnection?)null);
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.GetModels(new IdOrAlias(alias));
+
+        // Assert
+        var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
+        var problemDetails = notFoundResult.Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Title.ShouldBe("Connection not found");
     }
 
     #endregion

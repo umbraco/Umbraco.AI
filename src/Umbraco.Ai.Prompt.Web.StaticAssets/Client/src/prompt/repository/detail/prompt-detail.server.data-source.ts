@@ -1,6 +1,8 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbDetailDataSource } from "@umbraco-cms/backoffice/repository";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { PromptsService } from "../../../api/index.js";
+import { UaiPromptTypeMapper } from "../../type-mapper.js";
 import type { UaiPromptDetailModel } from "../../types.js";
 import { UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
 
@@ -42,37 +44,33 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            fetch(`/umbraco/ai/management/api/v1/prompts/${unique}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            }).then(res => res.ok ? res.json() : Promise.reject(res))
+            PromptsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } })
         );
 
         if (error || !data) {
             return { error };
         }
 
-        return { data: this.#mapResponseToModel(data) };
+        return { data: UaiPromptTypeMapper.toDetailModel(data) };
     }
 
     /**
      * Creates a new prompt.
      */
     async create(model: UaiPromptDetailModel, _parentUnique: string | null) {
-        const requestBody = this.#mapModelToCreateRequest(model);
+        const requestBody = UaiPromptTypeMapper.toCreateRequest(model);
 
-        const response = await fetch('/umbraco/ai/management/api/v1/prompts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody),
-        });
+        const { response, error } = await tryExecute(
+            this.#host,
+            PromptsService.create({ body: requestBody })
+        );
 
-        if (!response.ok) {
-            return { error: new Error('Failed to create prompt') };
+        if (error) {
+            return { error };
         }
 
         // Extract the ID from the Location header
-        const locationHeader = response.headers?.get("Location") ?? "";
+        const locationHeader = response?.headers?.get("Location") ?? "";
         const unique = locationHeader.split("/").pop() ?? "";
 
         return {
@@ -87,14 +85,13 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
      * Updates an existing prompt.
      */
     async update(model: UaiPromptDetailModel) {
-        const requestBody = this.#mapModelToUpdateRequest(model);
+        const requestBody = UaiPromptTypeMapper.toUpdateRequest(model);
 
         const { error } = await tryExecute(
             this.#host,
-            fetch(`/umbraco/ai/management/api/v1/prompts/${model.unique}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody),
+            PromptsService.update({
+                path: { promptIdOrAlias: model.unique },
+                body: requestBody,
             })
         );
 
@@ -111,9 +108,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
     async delete(unique: string) {
         const { error } = await tryExecute(
             this.#host,
-            fetch(`/umbraco/ai/management/api/v1/prompts/${unique}`, {
-                method: 'DELETE',
-            })
+            PromptsService.delete({ path: { promptIdOrAlias: unique } })
         );
 
         if (error) {
@@ -121,43 +116,5 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
         }
 
         return {};
-    }
-
-    #mapResponseToModel(response: Record<string, unknown>): UaiPromptDetailModel {
-        return {
-            unique: response.id as string,
-            entityType: UAI_PROMPT_ENTITY_TYPE,
-            alias: response.alias as string,
-            name: response.name as string,
-            description: (response.description as string) ?? null,
-            content: response.content as string,
-            profileId: (response.profileId as string) ?? null,
-            tags: (response.tags as string[]) ?? [],
-            isActive: response.isActive as boolean,
-        };
-    }
-
-    #mapModelToCreateRequest(model: UaiPromptDetailModel) {
-        return {
-            alias: model.alias,
-            name: model.name,
-            description: model.description,
-            content: model.content,
-            profileId: model.profileId,
-            tags: model.tags,
-            isActive: model.isActive,
-        };
-    }
-
-    #mapModelToUpdateRequest(model: UaiPromptDetailModel) {
-        return {
-            alias: model.alias,
-            name: model.name,
-            description: model.description,
-            content: model.content,
-            profileId: model.profileId,
-            tags: model.tags,
-            isActive: model.isActive,
-        };
     }
 }

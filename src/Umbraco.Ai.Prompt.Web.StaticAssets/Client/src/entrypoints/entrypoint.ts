@@ -11,9 +11,9 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
     if (!authContext) return;
     const config = authContext?.getOpenApiConfiguration();
     client.setConfig({
-      baseUrl: config.base,
-      auth: async () => await authContext.getLatestToken(),
-      credentials: config.credentials ?? "same-origin",
+      auth: config?.token ?? undefined,
+      baseUrl: config?.base ?? "",
+      credentials: config?.credentials ?? "same-origin",
     });
   });
 };

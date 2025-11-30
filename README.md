@@ -18,11 +18,13 @@ Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified 
 - **Umbraco.Ai.Persistence** - EF Core DbContext, entities, and repository implementations
 - **Umbraco.Ai.Persistence.SqlServer** - SQL Server migrations for persistence layer
 - **Umbraco.Ai.Persistence.Sqlite** - SQLite migrations for persistence layer
-- **Umbraco.Ai.OpenAi** - OpenAI provider implementation
 - **Umbraco.Ai.Web** - Management API and backoffice endpoints
 - **Umbraco.Ai.Web.StaticAssets** - Frontend assets for backoffice UI
 - **Umbraco.Ai.Startup** - Composition and startup configuration
 - **Umbraco.Ai** - Meta-package that references all components
+
+Provider packages (separate repositories):
+- **Umbraco.Ai.OpenAi** - OpenAI provider implementation
 
 ## Getting Started
 

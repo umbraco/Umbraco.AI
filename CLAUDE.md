@@ -125,11 +125,12 @@ Umbraco.Ai is a provider-agnostic AI integration layer for Umbraco CMS built on 
 | `Umbraco.Ai.Persistence` | EF Core DbContext, entities, and repository implementations |
 | `Umbraco.Ai.Persistence.SqlServer` | SQL Server migrations for persistence layer |
 | `Umbraco.Ai.Persistence.Sqlite` | SQLite migrations for persistence layer |
-| `Umbraco.Ai.OpenAi` | Reference provider implementation for OpenAI |
 | `Umbraco.Ai.Web` | Management API layer for backoffice integration |
 | `Umbraco.Ai.Web.StaticAssets` | TypeScript/Lit frontend components for backoffice UI |
 | `Umbraco.Ai.Startup` | Umbraco Composer for auto-discovery and DI registration |
 | `Umbraco.Ai` | Meta-package that bundles all components |
+
+Provider packages are maintained separately (e.g., `Umbraco.Ai.OpenAi`).
 
 ### Solution File Organization
 
@@ -214,6 +215,34 @@ Provider settings use `[AiSetting]` attributes for UI generation. Values prefixe
 - Root path: `/umbraco/ai/management/api`
 - Uses Umbraco backoffice security
 - OpenAPI/Swagger documentation auto-generated
+
+### IdOrAlias Pattern
+
+API endpoints that reference profiles accept an `IdOrAlias` type, allowing identification by either GUID or string alias:
+
+```csharp
+// In API request models
+public IdOrAlias? ProfileIdOrAlias { get; set; }
+
+// Usage - accepts either format
+new IdOrAlias(Guid.Parse("..."))  // By ID
+new IdOrAlias("my-chat-profile")  // By alias
+```
+
+The `IdOrAlias` class:
+- Implements `IParsable<IdOrAlias>` for model binding
+- Has a custom JSON converter for serialization
+- Provides `IsId` and `IsAlias` properties to check which format was provided
+- Located in `Umbraco.Ai.Web.Api.Common.Models`
+
+Resolution is handled via extension methods on `IAiProfileService`:
+```csharp
+// Returns Guid? - null if not found
+await profileService.TryGetProfileIdAsync(idOrAlias, cancellationToken);
+
+// Returns Guid - throws if not found
+await profileService.GetProfileIdAsync(idOrAlias, cancellationToken);
+```
 
 ## Project Organization (Feature-Sliced Architecture)
 

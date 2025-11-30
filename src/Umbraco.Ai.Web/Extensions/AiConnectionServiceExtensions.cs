@@ -1,5 +1,5 @@
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
+using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Extensions;
 

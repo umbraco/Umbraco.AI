@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Web.Api.Management.Common.Json;
+using Umbraco.Ai.Web.Api.Common.Json;
 
-namespace Umbraco.Ai.Web.Api.Management.Common.Models;
+namespace Umbraco.Ai.Web.Api.Common.Models;
 
 /// <summary>
 /// Represents a value that can be either a GUID ID or a string alias.

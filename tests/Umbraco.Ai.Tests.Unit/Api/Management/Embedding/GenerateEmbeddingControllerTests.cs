@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
 using Umbraco.Ai.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;

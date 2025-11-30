@@ -1,11 +1,14 @@
 {
   "name": "@umbraco-ai/prompt",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "watch": "vite build --watch",
-    "dev": "vite"
+    "watch": "tsc && vite build --watch",
+    "build": "npm run build:app",
+    "build:app": "tsc -p tsconfig.app.json && vite build"
+  },
+  "peerDependencies": {
+    "@umbraco-cms/backoffice": "^17.0.0"
   },
   "devDependencies": {
     "@umbraco-cms/backoffice": "^17.0.0",

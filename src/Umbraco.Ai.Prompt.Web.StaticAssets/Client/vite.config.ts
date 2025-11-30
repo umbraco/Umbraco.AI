@@ -1,17 +1,17 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 export default defineConfig({
   build: {
     lib: {
-      entry: 'src/index.ts',
-      formats: ['es'],
-      fileName: () => 'umbraco-ai-prompt.js',
+      entry: "src/bundle.manifests.ts",
+      formats: ["es"],
+      fileName: "umbraco-ai-prompt",
     },
-    outDir: '../wwwroot',
+    outDir: "../wwwroot",
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
-      external: [/^@umbraco-cms/],
+      external: [/^@umbraco/],
     },
   },
 });

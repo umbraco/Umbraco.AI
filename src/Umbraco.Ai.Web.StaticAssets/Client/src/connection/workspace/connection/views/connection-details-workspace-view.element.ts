@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UmbPropertyValueData, UmbPropertyDatasetElement } from "@umbraco-cms/backoffice/property";
 import type { UaiConnectionDetailModel } from "../../../types.js";
-import { UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
 import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
@@ -81,28 +81,47 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <uui-box headline="Connection Details">
-                <umb-property-layout label="Provider" description="AI provider for this connection">
-                    <div slot="editor" class="provider-display">
-                        <umb-icon name="icon-cloud"></umb-icon>
-                        <div class="provider-info">
-                            <strong>${this._provider?.name ?? this._model.providerId}</strong>
-                            ${this._provider?.capabilities?.length
-                                ? html`<small>${this._provider.capabilities.join(", ")}</small>`
-                                : null}
-                        </div>
-                    </div>
-                </umb-property-layout>
-
-                <umb-property-layout label="Active" description="Enable or disable this connection">
-                    <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
-                </umb-property-layout>
-            </uui-box>
-
-            <uui-box headline="Provider Settings">
-                ${this.#renderProviderSettings()}
-            </uui-box>
+            <uai-workspace-editor-layout>
+                <div>${this.#renderLeftColumn()}</div>
+                <div slot="aside">${this.#renderRightColumn()}</div>
+            </uai-workspace-editor-layout>
         `;
+    }
+
+    #renderLeftColumn() {
+        if (!this._model) return null;
+
+        return html`<uui-box headline="Provider Settings">
+            ${this.#renderProviderSettings()}
+        </uui-box>`;
+    }
+
+    #renderRightColumn() {
+        if (!this._model) return null;
+
+        return html`<uui-box headline="Info">
+            <umb-property-layout label="Id"  orientation="vertical">
+               <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
+            ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
+            : this._model.unique}</div>
+            </umb-property-layout>
+            
+            <umb-property-layout label="Provider"  orientation="vertical">
+                <div slot="editor">${this._provider?.name ?? this._model.providerId}</div>
+            </umb-property-layout>
+
+            <umb-property-layout label="Capabilities"  orientation="vertical">
+                <div slot="editor">
+                    ${this._provider?.capabilities?.length
+            ? html`<span>${this._provider.capabilities.join(", ")}</span>`
+            : null}
+                </div>
+            </umb-property-layout>
+
+            <umb-property-layout label="Active" orientation="vertical">
+                <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
+            </umb-property-layout>
+        </uui-box>`;
     }
 
     #renderProviderSettings() {
@@ -180,6 +199,10 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
 
             .provider-info small {
                 color: var(--uui-color-text-alt);
+            }
+
+            umb-property-layout[orientation="vertical"]:not(:last-child) {
+                padding-bottom: 0;
             }
 
             uui-loader {

@@ -9,8 +9,10 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
+    "noEmit": true,
 
     /* Linting */
     "strict": true,
@@ -20,5 +22,5 @@
 
     "types": [ "@umbraco-cms/backoffice/extension-types" ]
   },
-  "include": [ "src/**/*.ts" ]
+  "include": [ "src" ]
 }

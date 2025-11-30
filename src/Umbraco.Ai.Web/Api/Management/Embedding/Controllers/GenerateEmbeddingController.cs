@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Embeddings;
+using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Embedding.Models;
@@ -20,14 +22,19 @@ namespace Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
 public class GenerateEmbeddingController : EmbeddingControllerBase
 {
     private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAiProfileRepository _profileRepository;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GenerateEmbeddingController"/> class.
     /// </summary>
-    public GenerateEmbeddingController(IAiEmbeddingService embeddingService, IUmbracoMapper umbracoMapper)
+    public GenerateEmbeddingController(
+        IAiEmbeddingService embeddingService,
+        IAiProfileRepository profileRepository,
+        IUmbracoMapper umbracoMapper)
     {
         _embeddingService = embeddingService;
+        _profileRepository = profileRepository;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -48,9 +55,14 @@ public class GenerateEmbeddingController : EmbeddingControllerBase
     {
         try
         {
-            var embeddings = requestModel.ProfileId.HasValue
+            // Resolve profile ID from IdOrAlias
+            var profileId = requestModel.ProfileIdOrAlias != null
+                ? await _profileRepository.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
+                : null;
+
+            var embeddings = profileId.HasValue
                 ? await _embeddingService.GenerateEmbeddingsAsync(
-                    requestModel.ProfileId.Value,
+                    profileId.Value,
                     requestModel.Values,
                     cancellationToken: cancellationToken)
                 : await _embeddingService.GenerateEmbeddingsAsync(

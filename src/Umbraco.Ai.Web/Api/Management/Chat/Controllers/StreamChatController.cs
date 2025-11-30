@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
@@ -21,14 +23,19 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 public class StreamChatController : ChatControllerBase
 {
     private readonly IAiChatService _chatService;
+    private readonly IAiProfileRepository _profileRepository;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamChatController"/> class.
     /// </summary>
-    public StreamChatController(IAiChatService chatService, IUmbracoMapper umbracoMapper)
+    public StreamChatController(
+        IAiChatService chatService,
+        IAiProfileRepository profileRepository,
+        IUmbracoMapper umbracoMapper)
     {
         _chatService = chatService;
+        _profileRepository = profileRepository;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -57,10 +64,15 @@ public class StreamChatController : ChatControllerBase
             // Convert request messages to ChatMessage list
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
 
+            // Resolve profile ID from IdOrAlias
+            var profileId = requestModel.ProfileIdOrAlias != null
+                ? await _profileRepository.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
+                : null;
+
             // Get streaming chat response
-            var stream = requestModel.ProfileId.HasValue
+            var stream = profileId.HasValue
                 ? _chatService.GetStreamingResponseAsync(
-                    requestModel.ProfileId.Value,
+                    profileId.Value,
                     messages,
                     cancellationToken: cancellationToken)
                 : _chatService.GetStreamingResponseAsync(

@@ -32,10 +32,10 @@ public class UpdateProfileControllerTests
             collection);
     }
 
-    #region UpdateProfileById
+    #region UpdateProfile - By ID
 
     [Fact]
-    public async Task UpdateProfileById_WithValidRequest_ReturnsOk()
+    public async Task UpdateProfile_WithValidId_ReturnsOk()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -73,14 +73,14 @@ public class UpdateProfileControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfile(new IdOrAlias(profileId), requestModel);
 
         // Assert
         result.ShouldBeOfType<OkResult>();
     }
 
     [Fact]
-    public async Task UpdateProfileById_WithNonExistingProfile_Returns404NotFound()
+    public async Task UpdateProfile_WithNonExistingId_Returns404NotFound()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -99,7 +99,7 @@ public class UpdateProfileControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfile(new IdOrAlias(profileId), requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -108,7 +108,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task UpdateProfileById_WithNonExistingConnection_Returns400BadRequest()
+    public async Task UpdateProfile_WithNonExistingConnection_Returns400BadRequest()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -134,7 +134,7 @@ public class UpdateProfileControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfile(new IdOrAlias(profileId), requestModel);
 
         // Assert
         var badRequestResult = result.ShouldBeOfType<BadRequestObjectResult>();
@@ -143,7 +143,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task UpdateProfileById_WithNonExistingProvider_Returns404NotFound()
+    public async Task UpdateProfile_WithNonExistingProvider_Returns404NotFound()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -172,7 +172,7 @@ public class UpdateProfileControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateProfileById(profileId, requestModel);
+        var result = await controller.UpdateProfile(new IdOrAlias(profileId), requestModel);
 
         // Assert
         var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
@@ -181,7 +181,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task UpdateProfileById_UpdatesAliasFromRequest()
+    public async Task UpdateProfile_UpdatesAliasFromRequest()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -219,7 +219,7 @@ public class UpdateProfileControllerTests
         var controller = CreateController();
 
         // Act
-        await controller.UpdateProfileById(profileId, requestModel);
+        await controller.UpdateProfile(new IdOrAlias(profileId), requestModel);
 
         // Assert - Alias is updated from request
         capturedProfile.ShouldNotBeNull();
@@ -227,7 +227,7 @@ public class UpdateProfileControllerTests
     }
 
     [Fact]
-    public async Task UpdateProfileById_PreservesCapabilityFromExisting()
+    public async Task UpdateProfile_PreservesCapabilityFromExisting()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -265,11 +265,89 @@ public class UpdateProfileControllerTests
         var controller = CreateController();
 
         // Act
-        await controller.UpdateProfileById(profileId, requestModel);
+        await controller.UpdateProfile(new IdOrAlias(profileId), requestModel);
 
         // Assert - Capability should be preserved from existing profile
         capturedProfile.ShouldNotBeNull();
         capturedProfile!.Capability.ShouldBe(AiCapability.Embedding);
+    }
+
+    #endregion
+
+    #region UpdateProfile - By Alias
+
+    [Fact]
+    public async Task UpdateProfile_WithValidAlias_ReturnsOk()
+    {
+        // Arrange
+        var alias = "my-profile";
+        var profileId = Guid.NewGuid();
+        var connectionId = Guid.NewGuid();
+        var existingProfile = new AiProfileBuilder()
+            .WithId(profileId)
+            .WithAlias(alias)
+            .WithCapability(AiCapability.Chat)
+            .Build();
+        var connection = new AiConnectionBuilder().WithId(connectionId).Build();
+        var provider = new FakeAiProvider("openai", "OpenAI");
+        _providers.Add(provider);
+
+        var requestModel = new UpdateProfileRequestModel
+        {
+            Alias = "updated-alias",
+            Name = "Updated Name",
+            Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
+            ConnectionId = connectionId,
+            Settings = new ChatProfileSettingsModel { Temperature = 0.8f, MaxTokens = 2000 }
+        };
+
+        _profileRepositoryMock
+            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingProfile);
+
+        _connectionServiceMock
+            .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(connection);
+
+        _profileRepositoryMock
+            .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiProfile p, CancellationToken _) => p);
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.UpdateProfile(new IdOrAlias(alias), requestModel);
+
+        // Assert
+        result.ShouldBeOfType<OkResult>();
+    }
+
+    [Fact]
+    public async Task UpdateProfile_WithNonExistingAlias_Returns404NotFound()
+    {
+        // Arrange
+        var alias = "non-existing";
+        var requestModel = new UpdateProfileRequestModel
+        {
+            Alias = "updated-alias",
+            Name = "Updated Name",
+            Model = new ModelRefModel { ProviderId = "openai", ModelId = "gpt-4" },
+            ConnectionId = Guid.NewGuid()
+        };
+
+        _profileRepositoryMock
+            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiProfile?)null);
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.UpdateProfile(new IdOrAlias(alias), requestModel);
+
+        // Assert
+        var notFoundResult = result.ShouldBeOfType<NotFoundObjectResult>();
+        var problemDetails = notFoundResult.Value.ShouldBeOfType<ProblemDetails>();
+        problemDetails.Title.ShouldBe("Profile not found");
     }
 
     #endregion

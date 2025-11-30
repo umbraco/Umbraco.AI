@@ -6,7 +6,9 @@ using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
@@ -41,21 +43,21 @@ public class UpdateProfileController : ProfileControllerBase
     /// <summary>
     /// Update an existing profile.
     /// </summary>
-    /// <param name="id">The unique identifier of the profile to update.</param>
+    /// <param name="profileIdOrAlias">The unique identifier or alias of the profile to update.</param>
     /// <param name="requestModel">The updated profile data.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content on success.</returns>
-    [HttpPut($"{{{nameof(id)}:guid}}")]
+    [HttpPut($"{{{nameof(profileIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateProfileById(
-        Guid id,
+    public async Task<IActionResult> UpdateProfile(
+        IdOrAlias profileIdOrAlias,
         UpdateProfileRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var existing = await _profileRepository.GetByIdAsync(id, cancellationToken);
+        var existing = await _profileRepository.GetProfileAsync(profileIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return ProfileNotFound();

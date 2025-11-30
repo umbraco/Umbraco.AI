@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
+using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Web.Api.Management.Embedding.Models;
 

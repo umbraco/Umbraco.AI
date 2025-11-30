@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
 

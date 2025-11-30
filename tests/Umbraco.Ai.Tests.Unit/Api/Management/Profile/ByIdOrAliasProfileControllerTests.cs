@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Core.Mapping;

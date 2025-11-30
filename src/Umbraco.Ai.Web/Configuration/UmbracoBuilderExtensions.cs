@@ -1,8 +1,14 @@
+using System.ComponentModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Umbraco.Ai.Web.Api;
 using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Common.Json;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Chat.Mapping;
 using Umbraco.Ai.Web.Api.Management.Common.Mapping;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
@@ -11,6 +17,7 @@ using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
 using Umbraco.Ai.Web.Api.Management.Embedding.Mapping;
 using Umbraco.Ai.Web.Api.Management.Profile.Mapping;
 using Umbraco.Ai.Web.Api.Management.Provider.Mapping;
+using Umbraco.Cms.Api.Common.DependencyInjection;
 using Umbraco.Cms.Api.Common.OpenApi;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
@@ -29,6 +36,7 @@ public static class UmbracoBuilderExtensions
     /// <returns>The Umbraco builder for chaining.</returns>
     internal static IUmbracoBuilder AddUmbracoAiWeb(this IUmbracoBuilder builder)
     {
+        builder.AddJsonOptions(Constants.ManagementApi.ApiName);
         builder.AddUmbracoAiManagementApi();
         builder.AddUmbracoAiMapDefinitions();
 

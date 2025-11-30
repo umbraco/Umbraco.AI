@@ -112,9 +112,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
 
             <umb-property-layout label="Capabilities"  orientation="vertical">
                 <div slot="editor">
-                    ${this._provider?.capabilities?.length
-            ? html`<span>${this._provider.capabilities.join(", ")}</span>`
-            : null}
+                    ${this._provider?.capabilities.map(cap => html`<uui-tag color="default" look="outline">${cap}</uui-tag> `)}
                 </div>
             </umb-property-layout>
 

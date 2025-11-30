@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco Ai Prompt Web</Title>
+        <Description>Management API for Umbraco Ai Prompt</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Umbraco.Cms.Api.Management" />
+        <PackageReference Include="Umbraco.Ai.Web" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.Ai.Prompt.Core\Umbraco.Ai.Prompt.Core.csproj" />
+    </ItemGroup>
+</Project>

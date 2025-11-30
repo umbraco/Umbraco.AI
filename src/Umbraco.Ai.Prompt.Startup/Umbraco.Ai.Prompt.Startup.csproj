@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco Ai Prompt Startup</Title>
+        <Description>Startup and DI registration for Umbraco Ai Prompt</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Umbraco.Ai.Startup" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.Ai.Prompt.Core\Umbraco.Ai.Prompt.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.Ai.Prompt.Persistence\Umbraco.Ai.Prompt.Persistence.csproj" />
+        <ProjectReference Include="..\Umbraco.Ai.Prompt.Persistence.SqlServer\Umbraco.Ai.Prompt.Persistence.SqlServer.csproj" />
+        <ProjectReference Include="..\Umbraco.Ai.Prompt.Persistence.Sqlite\Umbraco.Ai.Prompt.Persistence.Sqlite.csproj" />
+        <ProjectReference Include="..\Umbraco.Ai.Prompt.Web\Umbraco.Ai.Prompt.Web.csproj" />
+    </ItemGroup>
+</Project>

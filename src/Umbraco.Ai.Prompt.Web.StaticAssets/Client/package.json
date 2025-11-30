@@ -1,0 +1,15 @@
+{
+  "name": "@umbraco-ai/prompt",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "@umbraco-cms/backoffice": "^17.0.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3"
+  }
+}

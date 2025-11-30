@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Umbraco.Ai.Web.Api.Management.Common.Models;
 
 namespace Umbraco.Ai.Web.Api.Management.Chat.Models;
 
@@ -8,10 +9,10 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Models;
 public class ChatRequestModel
 {
     /// <summary>
-    /// The profile ID to use for chat completion.
+    /// The profile to use for chat completion, specified by ID or alias.
     /// If not specified, the default chat profile will be used.
     /// </summary>
-    public Guid? ProfileId { get; set; }
+    public IdOrAlias? ProfileIdOrAlias { get; set; }
 
     /// <summary>
     /// The chat messages to send.

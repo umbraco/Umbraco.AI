@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
@@ -20,14 +22,19 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 public class CompleteChatController : ChatControllerBase
 {
     private readonly IAiChatService _chatService;
+    private readonly IAiProfileRepository _profileRepository;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CompleteChatController"/> class.
     /// </summary>
-    public CompleteChatController(IAiChatService chatService, IUmbracoMapper umbracoMapper)
+    public CompleteChatController(
+        IAiChatService chatService,
+        IAiProfileRepository profileRepository,
+        IUmbracoMapper umbracoMapper)
     {
         _chatService = chatService;
+        _profileRepository = profileRepository;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -51,10 +58,15 @@ public class CompleteChatController : ChatControllerBase
             // Convert request messages to ChatMessage list
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
 
+            // Resolve profile ID from IdOrAlias
+            var profileId = requestModel.ProfileIdOrAlias != null
+                ? await _profileRepository.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
+                : null;
+
             // Get chat response
-            var response = requestModel.ProfileId.HasValue
+            var response = profileId.HasValue
                 ? await _chatService.GetResponseAsync(
-                    requestModel.ProfileId.Value,
+                    profileId.Value,
                     messages,
                     cancellationToken: cancellationToken)
                 : await _chatService.GetResponseAsync(

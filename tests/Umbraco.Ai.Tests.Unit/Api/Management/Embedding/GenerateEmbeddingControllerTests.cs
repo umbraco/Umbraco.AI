@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Embeddings;
+using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
 using Umbraco.Ai.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;
@@ -11,15 +13,20 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Embedding;
 public class GenerateEmbeddingControllerTests
 {
     private readonly Mock<IAiEmbeddingService> _embeddingServiceMock;
+    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly GenerateEmbeddingController _controller;
 
     public GenerateEmbeddingControllerTests()
     {
         _embeddingServiceMock = new Mock<IAiEmbeddingService>();
+        _profileRepositoryMock = new Mock<IAiProfileRepository>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
-        _controller = new GenerateEmbeddingController(_embeddingServiceMock.Object, _mapperMock.Object);
+        _controller = new GenerateEmbeddingController(
+            _embeddingServiceMock.Object,
+            _profileRepositoryMock.Object,
+            _mapperMock.Object);
     }
 
     #region GenerateEmbeddings
@@ -68,7 +75,7 @@ public class GenerateEmbeddingControllerTests
         var profileId = Guid.NewGuid();
         var requestModel = new GenerateEmbeddingRequestModel
         {
-            ProfileId = profileId,
+            ProfileIdOrAlias = new IdOrAlias(profileId),
             Values = new[] { "Test text" }
         };
 
@@ -142,7 +149,7 @@ public class GenerateEmbeddingControllerTests
         var profileId = Guid.NewGuid();
         var requestModel = new GenerateEmbeddingRequestModel
         {
-            ProfileId = profileId,
+            ProfileIdOrAlias = new IdOrAlias(profileId),
             Values = new[] { "Test text" }
         };
 

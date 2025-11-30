@@ -5,6 +5,7 @@ using Umbraco.Ai.Web.Api;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Management.Chat.Mapping;
 using Umbraco.Ai.Web.Api.Management.Common.Mapping;
+using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
 using Umbraco.Ai.Web.Api.Management.Embedding.Mapping;
@@ -68,6 +69,12 @@ public static class UmbracoBuilderExtensions
             options.DocumentFilter<MimeTypeDocumentFilter>(Constants.ManagementApi.ApiTitle);
             options.OperationFilter<UmbracoAiManagementApiBackOfficeSecurityRequirementsOperationFilter>();
             options.OperationFilter<SwaggerOperationFilter>(Constants.ManagementApi.ApiName);
+
+            // Map IdOrAlias to string in OpenAPI schema for cleaner client generation
+            if (!options.SchemaGeneratorOptions.CustomTypeMappings.ContainsKey(typeof(IdOrAlias)))
+            {
+                options.MapType<IdOrAlias>(() => new OpenApiSchema { Type = JsonSchemaType.String });
+            }
         });
 
         builder.Services.AddSingleton<IOperationIdHandler, UmbracoAiApiOperationIdHandler>();

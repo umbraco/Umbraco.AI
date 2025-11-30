@@ -73,7 +73,7 @@ public class CreateProfileControllerTests
 
         // Assert
         var createdResult = result.ShouldBeOfType<CreatedAtActionResult>();
-        createdResult.ActionName.ShouldBe(nameof(ByIdProfileController.GetProfileById));
+        createdResult.ActionName.ShouldBe(nameof(ByIdOrAliasProfileController.GetProfileByIdOrAlias));
     }
 
     [Fact]

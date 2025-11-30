@@ -23,7 +23,7 @@ namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class UpdateProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileRepository _profileRepository;
+    private readonly IAiProfileService _profileService;
     private readonly IAiConnectionService _connectionService;
     private readonly AiProviderCollection _providers;
 
@@ -31,11 +31,11 @@ public class UpdateProfileController : ProfileControllerBase
     /// Initializes a new instance of the <see cref="UpdateProfileController"/> class.
     /// </summary>
     public UpdateProfileController(
-        IAiProfileRepository profileRepository,
+        IAiProfileService profileService,
         IAiConnectionService connectionService,
         AiProviderCollection providers)
     {
-        _profileRepository = profileRepository;
+        _profileService = profileService;
         _connectionService = connectionService;
         _providers = providers;
     }
@@ -57,7 +57,7 @@ public class UpdateProfileController : ProfileControllerBase
         UpdateProfileRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var existing = await _profileRepository.GetProfileAsync(profileIdOrAlias, cancellationToken);
+        var existing = await _profileService.GetProfileAsync(profileIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return ProfileNotFound();
@@ -89,7 +89,7 @@ public class UpdateProfileController : ProfileControllerBase
             Tags = requestModel.Tags
         };
 
-        await _profileRepository.SaveAsync(profile, cancellationToken);
+        await _profileService.SaveProfileAsync(profile, cancellationToken);
         return Ok();
     }
 

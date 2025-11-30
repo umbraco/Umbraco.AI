@@ -23,7 +23,7 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 public class StreamChatController : ChatControllerBase
 {
     private readonly IAiChatService _chatService;
-    private readonly IAiProfileRepository _profileRepository;
+    private readonly IAiProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -31,11 +31,11 @@ public class StreamChatController : ChatControllerBase
     /// </summary>
     public StreamChatController(
         IAiChatService chatService,
-        IAiProfileRepository profileRepository,
+        IAiProfileService profileService,
         IUmbracoMapper umbracoMapper)
     {
         _chatService = chatService;
-        _profileRepository = profileRepository;
+        _profileService = profileService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -66,7 +66,7 @@ public class StreamChatController : ChatControllerBase
 
             // Resolve profile ID from IdOrAlias
             var profileId = requestModel.ProfileIdOrAlias != null
-                ? await _profileRepository.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
+                ? await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
                 : null;
 
             // Get streaming chat response

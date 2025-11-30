@@ -22,7 +22,7 @@ namespace Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
 public class GenerateEmbeddingController : EmbeddingControllerBase
 {
     private readonly IAiEmbeddingService _embeddingService;
-    private readonly IAiProfileRepository _profileRepository;
+    private readonly IAiProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -30,11 +30,11 @@ public class GenerateEmbeddingController : EmbeddingControllerBase
     /// </summary>
     public GenerateEmbeddingController(
         IAiEmbeddingService embeddingService,
-        IAiProfileRepository profileRepository,
+        IAiProfileService profileService,
         IUmbracoMapper umbracoMapper)
     {
         _embeddingService = embeddingService;
-        _profileRepository = profileRepository;
+        _profileService = profileService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -57,7 +57,7 @@ public class GenerateEmbeddingController : EmbeddingControllerBase
         {
             // Resolve profile ID from IdOrAlias
             var profileId = requestModel.ProfileIdOrAlias != null
-                ? await _profileRepository.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
+                ? await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
                 : null;
 
             var embeddings = profileId.HasValue

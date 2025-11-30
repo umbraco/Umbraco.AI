@@ -13,19 +13,19 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Embedding;
 public class GenerateEmbeddingControllerTests
 {
     private readonly Mock<IAiEmbeddingService> _embeddingServiceMock;
-    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
+    private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly GenerateEmbeddingController _controller;
 
     public GenerateEmbeddingControllerTests()
     {
         _embeddingServiceMock = new Mock<IAiEmbeddingService>();
-        _profileRepositoryMock = new Mock<IAiProfileRepository>();
+        _profileServiceMock = new Mock<IAiProfileService>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
         _controller = new GenerateEmbeddingController(
             _embeddingServiceMock.Object,
-            _profileRepositoryMock.Object,
+            _profileServiceMock.Object,
             _mapperMock.Object);
     }
 

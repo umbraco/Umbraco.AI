@@ -216,4 +216,150 @@ public class AiProfileServiceTests
     }
 
     #endregion
+
+    #region GetProfileByAliasAsync
+
+    [Fact]
+    public async Task GetProfileByAliasAsync_WithExistingAlias_ReturnsProfile()
+    {
+        // Arrange
+        var profile = new AiProfileBuilder()
+            .WithAlias("test-profile")
+            .WithName("Test Profile")
+            .Build();
+
+        _repositoryMock
+            .Setup(x => x.GetByAliasAsync("test-profile", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+
+        // Act
+        var result = await _service.GetProfileByAliasAsync("test-profile");
+
+        // Assert
+        result.ShouldNotBeNull();
+        result!.Alias.ShouldBe("test-profile");
+    }
+
+    [Fact]
+    public async Task GetProfileByAliasAsync_WithNonExistingAlias_ReturnsNull()
+    {
+        // Arrange
+        _repositoryMock
+            .Setup(x => x.GetByAliasAsync("non-existent", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiProfile?)null);
+
+        // Act
+        var result = await _service.GetProfileByAliasAsync("non-existent");
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    #endregion
+
+    #region GetAllProfilesAsync
+
+    [Fact]
+    public async Task GetAllProfilesAsync_ReturnsAllProfiles()
+    {
+        // Arrange
+        var profiles = new List<AiProfile>
+        {
+            new AiProfileBuilder().WithAlias("profile-1").Build(),
+            new AiProfileBuilder().WithAlias("profile-2").Build(),
+            new AiProfileBuilder().WithAlias("profile-3").Build()
+        };
+
+        _repositoryMock
+            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profiles);
+
+        // Act
+        var result = await _service.GetAllProfilesAsync();
+
+        // Assert
+        result.Count().ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task GetAllProfilesAsync_WithNoProfiles_ReturnsEmptyCollection()
+    {
+        // Arrange
+        _repositoryMock
+            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Empty<AiProfile>());
+
+        // Act
+        var result = await _service.GetAllProfilesAsync();
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    #endregion
+
+    #region SaveProfileAsync
+
+    [Fact]
+    public async Task SaveProfileAsync_SavesAndReturnsProfile()
+    {
+        // Arrange
+        var profile = new AiProfileBuilder()
+            .WithAlias("new-profile")
+            .WithName("New Profile")
+            .Build();
+
+        _repositoryMock
+            .Setup(x => x.SaveAsync(profile, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
+
+        // Act
+        var result = await _service.SaveProfileAsync(profile);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Alias.ShouldBe("new-profile");
+        _repositoryMock.Verify(x => x.SaveAsync(profile, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
+    #region DeleteProfileAsync
+
+    [Fact]
+    public async Task DeleteProfileAsync_WithExistingId_ReturnsTrue()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+
+        _repositoryMock
+            .Setup(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _service.DeleteProfileAsync(profileId);
+
+        // Assert
+        result.ShouldBeTrue();
+        _repositoryMock.Verify(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteProfileAsync_WithNonExistingId_ReturnsFalse()
+    {
+        // Arrange
+        var profileId = Guid.NewGuid();
+
+        _repositoryMock
+            .Setup(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _service.DeleteProfileAsync(profileId);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    #endregion
 }

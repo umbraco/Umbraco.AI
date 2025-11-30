@@ -11,16 +11,16 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
 
 public class ByIdOrAliasProfileControllerTests
 {
-    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
+    private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly ByIdOrAliasProfileController _controller;
 
     public ByIdOrAliasProfileControllerTests()
     {
-        _profileRepositoryMock = new Mock<IAiProfileRepository>();
+        _profileServiceMock = new Mock<IAiProfileService>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
-        _controller = new ByIdOrAliasProfileController(_profileRepositoryMock.Object, _mapperMock.Object);
+        _controller = new ByIdOrAliasProfileController(_profileServiceMock.Object, _mapperMock.Object);
     }
 
     #region GetProfileByIdOrAlias - With ID
@@ -45,8 +45,8 @@ public class ByIdOrAliasProfileControllerTests
             ConnectionId = profile.ConnectionId
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _mapperMock
@@ -71,8 +71,8 @@ public class ByIdOrAliasProfileControllerTests
         // Arrange
         var profileId = Guid.NewGuid();
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         var idOrAlias = new IdOrAlias(profileId);
@@ -87,14 +87,14 @@ public class ByIdOrAliasProfileControllerTests
     }
 
     [Fact]
-    public async Task GetProfileByIdOrAlias_WithId_CallsRepositoryGetByIdAsync()
+    public async Task GetProfileByIdOrAlias_WithId_CallsServiceGetProfileAsync()
     {
         // Arrange
         var profileId = Guid.NewGuid();
         var profile = new AiProfileBuilder().WithId(profileId).Build();
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _mapperMock
@@ -107,7 +107,7 @@ public class ByIdOrAliasProfileControllerTests
         await _controller.GetProfileByIdOrAlias(idOrAlias);
 
         // Assert
-        _profileRepositoryMock.Verify(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()), Times.Once);
+        _profileServiceMock.Verify(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -133,8 +133,8 @@ public class ByIdOrAliasProfileControllerTests
             ConnectionId = profile.ConnectionId
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _mapperMock
@@ -159,8 +159,8 @@ public class ByIdOrAliasProfileControllerTests
         // Arrange
         var alias = "non-existent-alias";
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         var idOrAlias = new IdOrAlias(alias);
@@ -175,14 +175,14 @@ public class ByIdOrAliasProfileControllerTests
     }
 
     [Fact]
-    public async Task GetProfileByIdOrAlias_WithAlias_CallsRepositoryGetByAliasAsync()
+    public async Task GetProfileByIdOrAlias_WithAlias_CallsServiceGetProfileByAliasAsync()
     {
         // Arrange
         var alias = "my-chat-profile";
         var profile = new AiProfileBuilder().WithAlias(alias).Build();
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _mapperMock
@@ -195,7 +195,7 @@ public class ByIdOrAliasProfileControllerTests
         await _controller.GetProfileByIdOrAlias(idOrAlias);
 
         // Assert
-        _profileRepositoryMock.Verify(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()), Times.Once);
+        _profileServiceMock.Verify(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

@@ -20,10 +20,22 @@ internal sealed class AiProfileService : IAiProfileService
         CancellationToken cancellationToken = default)
         => await _repository.GetByIdAsync(id, cancellationToken);
 
-    public async Task<IEnumerable<AiProfile>> GetProfilesAsync(AiCapability capability, CancellationToken cancellationToken = default)
+    public async Task<AiProfile?> GetProfileByAliasAsync(
+        string alias,
+        CancellationToken cancellationToken = default)
+        => await _repository.GetByAliasAsync(alias, cancellationToken);
+
+    public async Task<IEnumerable<AiProfile>> GetAllProfilesAsync(
+        CancellationToken cancellationToken = default)
+        => await _repository.GetAllAsync(cancellationToken);
+
+    public async Task<IEnumerable<AiProfile>> GetProfilesAsync(
+        AiCapability capability,
+        CancellationToken cancellationToken = default)
         => await _repository.GetByCapability(capability, cancellationToken);
 
-    public async Task<AiProfile> GetDefaultProfileAsync(AiCapability capability,
+    public async Task<AiProfile> GetDefaultProfileAsync(
+        AiCapability capability,
         CancellationToken cancellationToken = default)
     {
         var defaultProfileAlias = capability switch
@@ -37,7 +49,7 @@ internal sealed class AiProfileService : IAiProfileService
         {
             throw new InvalidOperationException($"Default {capability} profile alias is not configured.");
         }
-        
+
         var profile = await _repository.GetByAliasAsync(defaultProfileAlias, cancellationToken);
         if (profile is null)
         {
@@ -46,4 +58,14 @@ internal sealed class AiProfileService : IAiProfileService
 
         return profile;
     }
+
+    public async Task<AiProfile> SaveProfileAsync(
+        AiProfile profile,
+        CancellationToken cancellationToken = default)
+        => await _repository.SaveAsync(profile, cancellationToken);
+
+    public async Task<bool> DeleteProfileAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+        => await _repository.DeleteAsync(id, cancellationToken);
 }

@@ -22,7 +22,7 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 public class CompleteChatController : ChatControllerBase
 {
     private readonly IAiChatService _chatService;
-    private readonly IAiProfileRepository _profileRepository;
+    private readonly IAiProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -30,11 +30,11 @@ public class CompleteChatController : ChatControllerBase
     /// </summary>
     public CompleteChatController(
         IAiChatService chatService,
-        IAiProfileRepository profileRepository,
+        IAiProfileService profileService,
         IUmbracoMapper umbracoMapper)
     {
         _chatService = chatService;
-        _profileRepository = profileRepository;
+        _profileService = profileService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -60,7 +60,7 @@ public class CompleteChatController : ChatControllerBase
 
             // Resolve profile ID from IdOrAlias
             var profileId = requestModel.ProfileIdOrAlias != null
-                ? await _profileRepository.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
+                ? await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
                 : null;
 
             // Get chat response

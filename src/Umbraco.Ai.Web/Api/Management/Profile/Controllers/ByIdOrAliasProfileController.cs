@@ -20,15 +20,15 @@ namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ByIdOrAliasProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileRepository _profileRepository;
+    private readonly IAiProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ByIdOrAliasProfileController"/> class.
     /// </summary>
-    public ByIdOrAliasProfileController(IAiProfileRepository profileRepository, IUmbracoMapper umbracoMapper)
+    public ByIdOrAliasProfileController(IAiProfileService profileService, IUmbracoMapper umbracoMapper)
     {
-        _profileRepository = profileRepository;
+        _profileService = profileService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -46,7 +46,7 @@ public class ByIdOrAliasProfileController : ProfileControllerBase
         [FromRoute] IdOrAlias profileIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var profile = await _profileRepository.GetProfileAsync(profileIdOrAlias, cancellationToken);
+        var profile = await _profileService.GetProfileAsync(profileIdOrAlias, cancellationToken);
         if (profile is null)
         {
             return ProfileNotFound();

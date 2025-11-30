@@ -8,13 +8,13 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
 
 public class DeleteProfileControllerTests
 {
-    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
+    private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly DeleteProfileController _controller;
 
     public DeleteProfileControllerTests()
     {
-        _profileRepositoryMock = new Mock<IAiProfileRepository>();
-        _controller = new DeleteProfileController(_profileRepositoryMock.Object);
+        _profileServiceMock = new Mock<IAiProfileService>();
+        _controller = new DeleteProfileController(_profileServiceMock.Object);
     }
 
     #region DeleteProfile - By ID
@@ -25,8 +25,8 @@ public class DeleteProfileControllerTests
         // Arrange
         var profileId = Guid.NewGuid();
 
-        _profileRepositoryMock
-            .Setup(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.DeleteProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -43,9 +43,9 @@ public class DeleteProfileControllerTests
         var profileId = Guid.NewGuid();
 
         // TryGetProfileIdAsync returns the ID directly (no lookup for IDs)
-        // DeleteAsync returns false when profile doesn't exist
-        _profileRepositoryMock
-            .Setup(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()))
+        // DeleteProfileAsync returns false when profile doesn't exist
+        _profileServiceMock
+            .Setup(x => x.DeleteProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
@@ -58,20 +58,20 @@ public class DeleteProfileControllerTests
     }
 
     [Fact]
-    public async Task DeleteProfile_WithId_CallsRepositoryWithCorrectId()
+    public async Task DeleteProfile_WithId_CallsServiceWithCorrectId()
     {
         // Arrange
         var profileId = Guid.NewGuid();
 
-        _profileRepositoryMock
-            .Setup(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.DeleteProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
         await _controller.DeleteProfile(new IdOrAlias(profileId));
 
         // Assert
-        _profileRepositoryMock.Verify(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()), Times.Once);
+        _profileServiceMock.Verify(x => x.DeleteProfileAsync(profileId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -86,12 +86,12 @@ public class DeleteProfileControllerTests
         var profileId = Guid.NewGuid();
         var profile = new AiProfileBuilder().WithId(profileId).WithAlias(alias).Build();
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
-        _profileRepositoryMock
-            .Setup(x => x.DeleteAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.DeleteProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -107,8 +107,8 @@ public class DeleteProfileControllerTests
         // Arrange
         var alias = "non-existing";
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         // Act

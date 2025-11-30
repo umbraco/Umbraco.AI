@@ -14,13 +14,13 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
 
 public class CreateProfileControllerTests
 {
-    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
+    private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
     private List<IAiProvider> _providers = new();
 
     public CreateProfileControllerTests()
     {
-        _profileRepositoryMock = new Mock<IAiProfileRepository>();
+        _profileServiceMock = new Mock<IAiProfileService>();
         _connectionServiceMock = new Mock<IAiConnectionService>();
     }
 
@@ -28,7 +28,7 @@ public class CreateProfileControllerTests
     {
         var collection = new AiProviderCollection(() => _providers);
         return new CreateProfileController(
-            _profileRepositoryMock.Object,
+            _profileServiceMock.Object,
             _connectionServiceMock.Object,
             collection);
     }
@@ -55,16 +55,16 @@ public class CreateProfileControllerTests
             Tags = new List<string> { "tag1" }
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _profileRepositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
         var controller = CreateController();
@@ -91,8 +91,8 @@ public class CreateProfileControllerTests
             ConnectionId = Guid.NewGuid()
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
         var controller = CreateController();
@@ -144,8 +144,8 @@ public class CreateProfileControllerTests
             ConnectionId = connectionId
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         _connectionServiceMock
@@ -178,8 +178,8 @@ public class CreateProfileControllerTests
             ConnectionId = connectionId
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         _connectionServiceMock
@@ -225,16 +225,16 @@ public class CreateProfileControllerTests
         };
 
         AiProfile? capturedProfile = null;
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _profileRepositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .Callback<AiProfile, CancellationToken>((p, _) => capturedProfile = p)
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 

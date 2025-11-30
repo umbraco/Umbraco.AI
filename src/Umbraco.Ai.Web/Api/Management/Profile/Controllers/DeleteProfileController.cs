@@ -18,14 +18,14 @@ namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class DeleteProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileRepository _profileRepository;
+    private readonly IAiProfileService _profileService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteProfileController"/> class.
     /// </summary>
-    public DeleteProfileController(IAiProfileRepository profileRepository)
+    public DeleteProfileController(IAiProfileService profileService)
     {
-        _profileRepository = profileRepository;
+        _profileService = profileService;
     }
 
     /// <summary>
@@ -42,14 +42,14 @@ public class DeleteProfileController : ProfileControllerBase
         IdOrAlias profileIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        // Resolve to ID first since DeleteAsync requires Guid
-        var profileId = await _profileRepository.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken);
+        // Resolve to ID first since DeleteProfileAsync requires Guid
+        var profileId = await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken);
         if (profileId is null)
         {
             return ProfileNotFound();
         }
 
-        var deleted = await _profileRepository.DeleteAsync(profileId.Value, cancellationToken);
+        var deleted = await _profileService.DeleteProfileAsync(profileId.Value, cancellationToken);
         if (!deleted)
         {
             return ProfileNotFound();

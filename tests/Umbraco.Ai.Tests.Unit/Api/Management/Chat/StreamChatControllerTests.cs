@@ -13,7 +13,7 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Chat;
 public class StreamChatControllerTests
 {
     private readonly Mock<IAiChatService> _chatServiceMock;
-    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
+    private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly StreamChatController _controller;
     private readonly DefaultHttpContext _httpContext;
@@ -21,12 +21,12 @@ public class StreamChatControllerTests
     public StreamChatControllerTests()
     {
         _chatServiceMock = new Mock<IAiChatService>();
-        _profileRepositoryMock = new Mock<IAiProfileRepository>();
+        _profileServiceMock = new Mock<IAiProfileService>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
         _controller = new StreamChatController(
             _chatServiceMock.Object,
-            _profileRepositoryMock.Object,
+            _profileServiceMock.Object,
             _mapperMock.Object);
 
         // Set up HTTP context for SSE response

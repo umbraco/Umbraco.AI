@@ -52,7 +52,7 @@ public class AllProfileControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetProfiles();
+        var result = await _controller.GetAllProfiles();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -86,7 +86,7 @@ public class AllProfileControllerTests
             .Returns(responseModels);
 
         // Act
-        var result = await _controller.GetProfiles(capability: "Chat");
+        var result = await _controller.GetAllProfiles(capability: "Chat");
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -112,7 +112,7 @@ public class AllProfileControllerTests
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act - passing invalid capability falls back to GetAllAsync
-        var result = await _controller.GetProfiles(capability: "InvalidCapability");
+        var result = await _controller.GetAllProfiles(capability: "InvalidCapability");
 
         // Assert
         _profileRepositoryMock.Verify(x => x.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -137,7 +137,7 @@ public class AllProfileControllerTests
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act - using lowercase
-        await _controller.GetProfiles(capability: "embedding");
+        await _controller.GetAllProfiles(capability: "embedding");
 
         // Assert
         _profileRepositoryMock.Verify(x => x.GetByCapability(AiCapability.Embedding, It.IsAny<CancellationToken>()), Times.Once);
@@ -156,7 +156,7 @@ public class AllProfileControllerTests
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act
-        var result = await _controller.GetProfiles();
+        var result = await _controller.GetAllProfiles();
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
@@ -188,7 +188,7 @@ public class AllProfileControllerTests
             }).ToList());
 
         // Act
-        var result = await _controller.GetProfiles(skip: 2, take: 3);
+        var result = await _controller.GetAllProfiles(skip: 2, take: 3);
 
         // Assert
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();

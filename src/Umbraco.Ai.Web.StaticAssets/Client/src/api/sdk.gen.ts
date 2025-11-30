@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteConnectionByIdData, DeleteConnectionByIdErrors, DeleteConnectionByIdResponses, DeleteProfileByIdData, DeleteProfileByIdErrors, DeleteProfileByIdResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAvailableCapabilitiesData, GetAvailableCapabilitiesErrors, GetAvailableCapabilitiesResponses, GetConnectionByIdData, GetConnectionByIdErrors, GetConnectionByIdResponses, GetConnectionsData, GetConnectionsErrors, GetConnectionsResponses, GetModelsByConnectionIdData, GetModelsByConnectionIdErrors, GetModelsByConnectionIdResponses, GetProfileByAliasData, GetProfileByAliasErrors, GetProfileByAliasResponses, GetProfileByIdData, GetProfileByIdErrors, GetProfileByIdResponses, GetProfilesData, GetProfilesErrors, GetProfilesResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetProvidersData, GetProvidersErrors, GetProvidersResponses, StreamChatData, StreamChatErrors, StreamChatResponses, TestConnectionByIdData, TestConnectionByIdErrors, TestConnectionByIdResponses, UpdateConnectionByIdData, UpdateConnectionByIdErrors, UpdateConnectionByIdResponses, UpdateProfileByIdData, UpdateProfileByIdErrors, UpdateProfileByIdResponses } from './types.gen';
+import type { CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, StreamChatData, StreamChatErrors, StreamChatResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -55,8 +55,8 @@ export class ChatService {
 }
 
 export class ConnectionsService {
-    public static getConnections<ThrowOnError extends boolean = false>(options?: Options<GetConnectionsData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetConnectionsResponses, GetConnectionsErrors, ThrowOnError>({
+    public static getAllConnections<ThrowOnError extends boolean = false>(options?: Options<GetAllConnectionsData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAllConnectionsResponses, GetAllConnectionsErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -85,41 +85,41 @@ export class ConnectionsService {
         });
     }
     
-    public static deleteConnectionById<ThrowOnError extends boolean = false>(options: Options<DeleteConnectionByIdData, ThrowOnError>) {
-        return (options.client ?? client).delete<DeleteConnectionByIdResponses, DeleteConnectionByIdErrors, ThrowOnError>({
+    public static deleteConnection<ThrowOnError extends boolean = false>(options: Options<DeleteConnectionData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteConnectionResponses, DeleteConnectionErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/connections/{id}',
+            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}',
             ...options
         });
     }
     
-    public static getConnectionById<ThrowOnError extends boolean = false>(options: Options<GetConnectionByIdData, ThrowOnError>) {
-        return (options.client ?? client).get<GetConnectionByIdResponses, GetConnectionByIdErrors, ThrowOnError>({
+    public static getConnectionByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetConnectionByIdOrAliasData, ThrowOnError>) {
+        return (options.client ?? client).get<GetConnectionByIdOrAliasResponses, GetConnectionByIdOrAliasErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/connections/{id}',
+            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}',
             ...options
         });
     }
     
-    public static updateConnectionById<ThrowOnError extends boolean = false>(options: Options<UpdateConnectionByIdData, ThrowOnError>) {
-        return (options.client ?? client).put<UpdateConnectionByIdResponses, UpdateConnectionByIdErrors, ThrowOnError>({
+    public static updateConnection<ThrowOnError extends boolean = false>(options: Options<UpdateConnectionData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateConnectionResponses, UpdateConnectionErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/connections/{id}',
+            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -128,34 +128,47 @@ export class ConnectionsService {
         });
     }
     
-    public static getModelsByConnectionId<ThrowOnError extends boolean = false>(options: Options<GetModelsByConnectionIdData, ThrowOnError>) {
-        return (options.client ?? client).get<GetModelsByConnectionIdResponses, GetModelsByConnectionIdErrors, ThrowOnError>({
+    public static getCapabilities<ThrowOnError extends boolean = false>(options: Options<GetCapabilitiesData, ThrowOnError>) {
+        return (options.client ?? client).get<GetCapabilitiesResponses, GetCapabilitiesErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/connections/{id}/models',
+            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/capabilities',
             ...options
         });
     }
     
-    public static testConnectionById<ThrowOnError extends boolean = false>(options: Options<TestConnectionByIdData, ThrowOnError>) {
-        return (options.client ?? client).post<TestConnectionByIdResponses, TestConnectionByIdErrors, ThrowOnError>({
+    public static getModels<ThrowOnError extends boolean = false>(options: Options<GetModelsData, ThrowOnError>) {
+        return (options.client ?? client).get<GetModelsResponses, GetModelsErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/connections/{id}/test',
+            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/models',
             ...options
         });
     }
     
-    public static getAvailableCapabilities<ThrowOnError extends boolean = false>(options?: Options<GetAvailableCapabilitiesData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetAvailableCapabilitiesResponses, GetAvailableCapabilitiesErrors, ThrowOnError>({
+    public static testConnection<ThrowOnError extends boolean = false>(options: Options<TestConnectionData, ThrowOnError>) {
+        return (options.client ?? client).post<TestConnectionResponses, TestConnectionErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/test',
+            ...options
+        });
+    }
+    
+    public static getAllCapabilities<ThrowOnError extends boolean = false>(options?: Options<GetAllCapabilitiesData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAllCapabilitiesResponses, GetAllCapabilitiesErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -188,8 +201,8 @@ export class EmbeddingsService {
 }
 
 export class ProfilesService {
-    public static getProfiles<ThrowOnError extends boolean = false>(options?: Options<GetProfilesData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetProfilesResponses, GetProfilesErrors, ThrowOnError>({
+    public static getAllProfiles<ThrowOnError extends boolean = false>(options?: Options<GetAllProfilesData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAllProfilesResponses, GetAllProfilesErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -218,41 +231,41 @@ export class ProfilesService {
         });
     }
     
-    public static deleteProfileById<ThrowOnError extends boolean = false>(options: Options<DeleteProfileByIdData, ThrowOnError>) {
-        return (options.client ?? client).delete<DeleteProfileByIdResponses, DeleteProfileByIdErrors, ThrowOnError>({
+    public static deleteProfile<ThrowOnError extends boolean = false>(options: Options<DeleteProfileData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteProfileResponses, DeleteProfileErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/profiles/{id}',
+            url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}',
             ...options
         });
     }
     
-    public static getProfileById<ThrowOnError extends boolean = false>(options: Options<GetProfileByIdData, ThrowOnError>) {
-        return (options.client ?? client).get<GetProfileByIdResponses, GetProfileByIdErrors, ThrowOnError>({
+    public static getProfileByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetProfileByIdOrAliasData, ThrowOnError>) {
+        return (options.client ?? client).get<GetProfileByIdOrAliasResponses, GetProfileByIdOrAliasErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/profiles/{id}',
+            url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}',
             ...options
         });
     }
     
-    public static updateProfileById<ThrowOnError extends boolean = false>(options: Options<UpdateProfileByIdData, ThrowOnError>) {
-        return (options.client ?? client).put<UpdateProfileByIdResponses, UpdateProfileByIdErrors, ThrowOnError>({
+    public static updateProfile<ThrowOnError extends boolean = false>(options: Options<UpdateProfileData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateProfileResponses, UpdateProfileErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/profiles/{id}',
+            url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -260,24 +273,11 @@ export class ProfilesService {
             }
         });
     }
-    
-    public static getProfileByAlias<ThrowOnError extends boolean = false>(options: Options<GetProfileByAliasData, ThrowOnError>) {
-        return (options.client ?? client).get<GetProfileByAliasResponses, GetProfileByAliasErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/profiles/alias/{alias}',
-            ...options
-        });
-    }
 }
 
 export class ProvidersService {
-    public static getProviders<ThrowOnError extends boolean = false>(options?: Options<GetProvidersData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetProvidersResponses, GetProvidersErrors, ThrowOnError>({
+    public static getAllProviders<ThrowOnError extends boolean = false>(options?: Options<GetAllProvidersData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetAllProvidersResponses, GetAllProvidersErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',

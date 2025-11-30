@@ -69,7 +69,7 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            ProfilesService.getProfileById({ path: { id: unique } })
+            ProfilesService.getProfileByIdOrAlias({ path: { profileIdOrAlias: unique } })
         );
 
         if (error || !data) {
@@ -114,8 +114,8 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
 
         const { error } = await tryExecute(
             this.#host,
-            ProfilesService.updateProfileById({
-                path: { id: model.unique },
+            ProfilesService.updateProfile({
+                path: { profileIdOrAlias: model.unique },
                 body: requestBody,
             })
         );
@@ -133,7 +133,7 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
     async delete(unique: string) {
         const { error } = await tryExecute(
             this.#host,
-            ProfilesService.deleteProfileById({ path: { id: unique } })
+            ProfilesService.deleteProfile({ path: { profileIdOrAlias: unique } })
         );
 
         if (error) {

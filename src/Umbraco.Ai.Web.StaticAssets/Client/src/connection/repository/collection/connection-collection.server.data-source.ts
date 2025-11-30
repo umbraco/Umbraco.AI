@@ -21,7 +21,7 @@ export class UaiConnectionCollectionServerDataSource implements UmbCollectionDat
     async getCollection(filter: UmbCollectionFilterModel) {
         const { data, error } = await tryExecute(
             this.#host,
-            ConnectionsService.getConnections({
+            ConnectionsService.getAllConnections({
                 query: {
                     filter: filter.filter,
                     skip: filter.skip ?? 0,

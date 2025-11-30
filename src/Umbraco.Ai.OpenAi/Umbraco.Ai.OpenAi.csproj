@@ -1,8 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <Title>Umbraco Ai OpenAI Provider</Title>
     <Description>OpenAI provider for Umbraco Ai</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAiOpenAi</StaticWebAssetBasePath>
+    <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,50 +1,8 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
+using System.ClientModel;
+using Microsoft.Extensions.Caching.Memory;
 using Umbraco.Ai.Core.Providers;
 
 namespace Umbraco.Ai.OpenAi;
-
-/// <summary>
-/// Settings for the OpenAI provider.
-/// </summary>
-public class OpenAiProviderSettings
-{
-    /// <summary>
-    /// The API key for authenticating with OpenAI services.
-    /// </summary>
-    [AiSetting(
-        Label = "API Key",
-        Description = "Your OpenAI API key from platform.openai.com",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
-        SortOrder = 1
-    )]
-    [Required]
-    public string? ApiKey { get; set; }
-
-    /// <summary>
-    /// Optional organization ID for OpenAI API requests.
-    /// </summary>
-    [AiSetting(
-        Label = "Organization ID",
-        Description = "Optional: Your OpenAI organization ID",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
-        SortOrder = 2
-    )]
-    public string? OrganizationId { get; set; }
-
-    /// <summary>
-    /// Custom API endpoint URL.
-    /// </summary>
-    [AiSetting(
-        Label = "API Endpoint",
-        Description = "Custom API endpoint (leave empty for default)",
-        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
-        DefaultValue = "https://api.openai.com/v1",
-        SortOrder = 3
-    )]
-    public string? Endpoint { get; set; }
-}
 
 /// <summary>
 /// AI provider for OpenAI services.
@@ -52,87 +10,83 @@ public class OpenAiProviderSettings
 [AiProvider("openai", "OpenAI")]
 public class OpenAiProvider : AiProviderBase<OpenAiProviderSettings>
 {
+    private const string CacheKeyPrefix = "OpenAi_Models_";
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
+
+    private readonly IMemoryCache _cache;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenAiProvider"/> class.
     /// </summary>
-    /// <param name="infrastructure"></param>
-    public OpenAiProvider(IAiProviderInfrastructure infrastructure)
+    /// <param name="infrastructure">The provider infrastructure.</param>
+    /// <param name="cache">The memory cache.</param>
+    public OpenAiProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
+        _cache = cache;
         WithCapability<OpenAiChatCapability>();
         WithCapability<OpenAiEmbeddingCapability>();
     }
-}
 
-/// <summary>
-/// AI chat feature for OpenAI provider.
-/// </summary>
-public class OpenAiChatCapability(OpenAiProvider provider) : AiChatCapabilityBase<OpenAiProviderSettings>(provider)
-{
-    /// <inheritdoc />
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    /// <summary>
+    /// Gets all available models from the OpenAI API with caching.
+    /// </summary>
+    /// <param name="settings">The provider settings containing API credentials.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of all available model IDs.</returns>
+    internal async Task<IReadOnlyList<string>> GetAvailableModelIdsAsync(
         OpenAiProviderSettings settings,
         CancellationToken cancellationToken = default)
-    {
-        // Return commonly used OpenAI models
-        // In the future, this could call the OpenAI API to get the current list
-        var models = new List<AiModelDescriptor>
-        {
-            new(new AiModelRef(Provider.Id, "gpt-4o"), "GPT-4o"),
-            new(new AiModelRef(Provider.Id, "gpt-4o-mini"), "GPT-4o Mini"),
-            new(new AiModelRef(Provider.Id, "gpt-4-turbo"), "GPT-4 Turbo"),
-            new(new AiModelRef(Provider.Id, "gpt-4"), "GPT-4"),
-            new(new AiModelRef(Provider.Id, "gpt-3.5-turbo"), "GPT-3.5 Turbo")
-        };
-
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(models);
-    }
-
-    /// <inheritdoc />
-    protected override IChatClient CreateClient(OpenAiProviderSettings settings)
     {
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
         {
             throw new InvalidOperationException("OpenAI API key is required.");
         }
 
-        return new OpenAI.OpenAIClient(settings.ApiKey)
-            .GetChatClient("gpt-4o")
-            .AsIChatClient();
-    }
-}
+        var cacheKey = GetCacheKey(settings);
 
-/// <summary>
-/// AI embedding feature for OpenAI provider.
-/// </summary>
-public class OpenAiEmbeddingCapability(OpenAiProvider provider) : AiEmbeddingCapabilityBase<OpenAiProviderSettings>(provider)
-{
-    /// <inheritdoc />
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
-        OpenAiProviderSettings settings,
-        CancellationToken cancellationToken = default)
-    {
-        // Return commonly used OpenAI embedding models
-        var models = new List<AiModelDescriptor>
+        if (_cache.TryGetValue<IReadOnlyList<string>>(cacheKey, out var cachedModels) && cachedModels is not null)
         {
-            new(new AiModelRef(Provider.Id, "text-embedding-3-large"), "Text Embedding 3 Large"),
-            new(new AiModelRef(Provider.Id, "text-embedding-3-small"), "Text Embedding 3 Small"),
-            new(new AiModelRef(Provider.Id, "text-embedding-ada-002"), "Ada 002")
-        };
+            return cachedModels;
+        }
 
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(models);
+        var client = CreateOpenAiClient(settings).GetOpenAIModelClient();
+        var result = await client.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+
+        var modelIds = result.Value
+            .Select(m => m.Id)
+            .OrderBy(id => id)
+            .ToList();
+
+        _cache.Set(cacheKey, (IReadOnlyList<string>)modelIds, CacheDuration);
+
+        return modelIds;
     }
 
-    /// <inheritdoc />
-    protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(OpenAiProviderSettings settings)
+    /// <summary>
+    /// Creates an OpenAI client configured with the provided settings.
+    /// </summary>
+    internal static OpenAI.OpenAIClient CreateOpenAiClient(OpenAiProviderSettings settings)
     {
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
         {
             throw new InvalidOperationException("OpenAI API key is required.");
         }
 
-        return new OpenAI.OpenAIClient(settings.ApiKey)
-            .GetEmbeddingClient("text-embedding-3-small")
-            .AsIEmbeddingGenerator();
+        var credential = new ApiKeyCredential(settings.ApiKey);
+
+        return string.IsNullOrWhiteSpace(settings.Endpoint)
+            ? new OpenAI.OpenAIClient(credential)
+            : new OpenAI.OpenAIClient(credential, new OpenAI.OpenAIClientOptions
+            {
+                Endpoint = new Uri(settings.Endpoint)
+            });
+    }
+
+    private static string GetCacheKey(OpenAiProviderSettings settings)
+    {
+        // Cache per API key + endpoint combination
+        var endpoint = settings.Endpoint ?? "default";
+        return $"{CacheKeyPrefix}{settings.ApiKey?.GetHashCode()}:{endpoint}";
     }
 }

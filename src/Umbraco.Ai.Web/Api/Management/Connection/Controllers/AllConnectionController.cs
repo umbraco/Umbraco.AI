@@ -45,7 +45,7 @@ public class AllConnectionController : ConnectionControllerBase
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedViewModel<ConnectionItemResponseModel>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedViewModel<ConnectionItemResponseModel>>> GetConnections(
+    public async Task<ActionResult<PagedViewModel<ConnectionItemResponseModel>>> GetAllConnections(
         string? filter = null,
         string? providerId = null,
         string? capability = null,

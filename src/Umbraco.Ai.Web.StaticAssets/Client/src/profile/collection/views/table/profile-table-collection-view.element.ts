@@ -50,7 +50,10 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
                         >${item.name}</a
                     >`,
                 },
-                { columnAlias: "alias", value: item.alias },
+                { 
+                    columnAlias: "alias",
+                    value: html`<uui-tag color="primary" look="secondary">${item.alias}</uui-tag>`,
+                },
                 {
                     columnAlias: "capability",
                     value: html`<uui-tag color="primary">${this.#getCapabilityLabel(item.capability)}</uui-tag>`,

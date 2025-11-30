@@ -10,5 +10,10 @@
       "type": "bundle",
       "js": "/App_Plugins/UmbracoAi/umbraco-ai.js"
     }
-  ]
+  ],
+  "importmap": {
+    "imports": {
+      "@umbraco-ai/core": "/App_Plugins/UmbracoAi/umbraco-ai.js"
+    }
+  }
 }

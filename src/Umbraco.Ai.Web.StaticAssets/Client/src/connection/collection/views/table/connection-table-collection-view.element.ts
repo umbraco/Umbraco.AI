@@ -6,7 +6,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiConnectionItemModel } from "../../../types.js";
 import { UAI_CONNECTION_ICON } from "../../../constants.js";
 import { UAI_EDIT_CONNECTION_WORKSPACE_PATH_PATTERN } from "../../../workspace/connection/paths.js";
-import { uaiWithProvider } from "../../../../provider/directives/with-provider.directive.ts";
+import { uaiWithProvider } from "../../../../provider/directives/with-provider.directive.js";
 import { UaiProviderDetailModel } from "../../../../provider";
 
 /**

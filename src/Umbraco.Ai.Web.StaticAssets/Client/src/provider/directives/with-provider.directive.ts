@@ -1,7 +1,7 @@
 import { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { directive } from "@umbraco-cms/backoffice/external/lit";
 import { UaiProviderDetailRepository } from "../repository";
-import { UaiWithEntityBaseDirective } from "../../core/directives/with-entity-directive-base.directive.ts";
+import { UaiWithEntityBaseDirective } from "../../core/directives/with-entity-directive-base.directive.js";
 import type { UaiProviderDetailModel } from "../types.ts";
 
 export class WithProviderDirective extends UaiWithEntityBaseDirective<UaiProviderDetailModel> {

@@ -5,8 +5,10 @@ import { profileManifests } from "./profile/manifests.js";
 import { providerManifests } from "./provider/manifests.js";
 import { manifests as langManifests } from "./lang/manifests.js";
 
-// Job of the bundle is to collate all the manifests from different parts of the extension and load other manifests
-// We load this bundle from umbraco-package.json
+// Public API exports for @umbraco-ai/core import map
+export * from './exports.js';
+
+// Aggregate all manifests into a single bundle
 export const manifests: Array<UmbExtensionManifest> = [
   ...entrypoints,
   ...sectionManifests,

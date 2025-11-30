@@ -2,8 +2,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
+using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.Ai.Tests.Unit.Api.Management.Chat;
@@ -11,15 +14,20 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Chat;
 public class CompleteChatControllerTests
 {
     private readonly Mock<IAiChatService> _chatServiceMock;
+    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly CompleteChatController _controller;
 
     public CompleteChatControllerTests()
     {
         _chatServiceMock = new Mock<IAiChatService>();
+        _profileRepositoryMock = new Mock<IAiProfileRepository>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
-        _controller = new CompleteChatController(_chatServiceMock.Object, _mapperMock.Object);
+        _controller = new CompleteChatController(
+            _chatServiceMock.Object,
+            _profileRepositoryMock.Object,
+            _mapperMock.Object);
     }
 
     #region CompleteChat
@@ -79,7 +87,7 @@ public class CompleteChatControllerTests
         var profileId = Guid.NewGuid();
         var requestModel = new ChatRequestModel
         {
-            ProfileId = profileId,
+            ProfileIdOrAlias = new IdOrAlias(profileId),
             Messages = new[]
             {
                 new ChatMessageModel { Role = "user", Content = "Hello" }
@@ -171,7 +179,7 @@ public class CompleteChatControllerTests
         var profileId = Guid.NewGuid();
         var requestModel = new ChatRequestModel
         {
-            ProfileId = profileId,
+            ProfileIdOrAlias = new IdOrAlias(profileId),
             Messages = new[]
             {
                 new ChatMessageModel { Role = "user", Content = "Hello" }

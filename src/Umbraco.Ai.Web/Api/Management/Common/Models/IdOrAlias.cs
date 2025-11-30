@@ -50,7 +50,7 @@ public class IdOrAlias : IParsable<IdOrAlias>
     public bool IsAlias => !string.IsNullOrEmpty(Alias);
 
     /// <inheritdoc />
-    public override string? ToString() => IsId ? Id.Value.ToString() : Alias;
+    public override string? ToString() => IsId ? Id!.Value.ToString() : Alias;
 
     /// <summary>
     /// Implicitly converts a GUID to an IdOrAlias.

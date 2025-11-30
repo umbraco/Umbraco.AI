@@ -28,25 +28,50 @@ internal sealed class SwaggerOperationFilter : IOperationFilter
             return;
         }
 
-        var attribute = context.MethodInfo.GetCustomAttribute<SwaggerOperationAttribute>();
-        if (attribute is null)
+        // Get attribute from method first, then fall back to declaring class (with inheritance)
+        var methodAttribute = context.MethodInfo.GetCustomAttribute<SwaggerOperationAttribute>();
+        var classAttribute = context.MethodInfo.DeclaringType?.GetCustomAttribute<SwaggerOperationAttribute>(inherit: true);
+
+        // Apply method-level properties (Id, Summary, Description)
+        if (methodAttribute is not null)
         {
-            return;
+            if (!string.IsNullOrWhiteSpace(methodAttribute.Id))
+            {
+                operation.OperationId = methodAttribute.Id;
+            }
+
+            if (!string.IsNullOrWhiteSpace(methodAttribute.Summary))
+            {
+                operation.Summary = methodAttribute.Summary;
+            }
+
+            if (!string.IsNullOrWhiteSpace(methodAttribute.Description))
+            {
+                operation.Description = methodAttribute.Description;
+            }
         }
 
-        if (!string.IsNullOrWhiteSpace(attribute.Id))
+        // Collect tags from both class and method (class tags first, then method tags)
+        var tags = new List<string>();
+
+        if (classAttribute?.Tags is { Length: > 0 })
         {
-            operation.OperationId = attribute.Id;
+            tags.AddRange(classAttribute.Tags);
         }
 
-        if (!string.IsNullOrWhiteSpace(attribute.Summary))
+        if (methodAttribute?.Tags is { Length: > 0 })
         {
-            operation.Summary = attribute.Summary;
+            tags.AddRange(methodAttribute.Tags);
         }
 
-        if (!string.IsNullOrWhiteSpace(attribute.Description))
+        // Add unique tags to the operation
+        operation.Tags ??= new HashSet<OpenApiTagReference>();
+        foreach (var tag in tags.Distinct())
         {
-            operation.Description = attribute.Description;
+            if (operation.Tags.All(t => t.Name != tag))
+            {
+                operation.Tags.Add(new OpenApiTagReference(tag));
+            }
         }
     }
 }

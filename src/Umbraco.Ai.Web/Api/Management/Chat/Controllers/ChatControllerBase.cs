@@ -10,6 +10,6 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Chat.GroupName)]
 [UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Chat.RouteSegment)]
-public abstract class ChatControllerBase : UmbracoAiManagementControllerBase
+public abstract class ChatControllerBase : UmbracoAiCoreManagementControllerBase
 {
 }

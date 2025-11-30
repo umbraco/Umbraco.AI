@@ -11,7 +11,7 @@ namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Profile.GroupName)]
 [UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Profile.RouteSegment)]
-public abstract class ProfileControllerBase : UmbracoAiManagementControllerBase
+public abstract class ProfileControllerBase : UmbracoAiCoreManagementControllerBase
 {
     /// <summary>
     /// Maps a profile operation status to an appropriate action result.

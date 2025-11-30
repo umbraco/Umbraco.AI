@@ -10,6 +10,6 @@ namespace Umbraco.Ai.Web.Api.Management.Provider.Controllers;
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Provider.GroupName)]
 [UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Provider.RouteSegment)]
-public abstract class ProviderControllerBase : UmbracoAiManagementControllerBase
+public abstract class ProviderControllerBase : UmbracoAiCoreManagementControllerBase
 {
 }

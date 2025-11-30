@@ -12,9 +12,9 @@
     "build": "npm run build:api && npm run build:app",
     "build:app": "tsc -p tsconfig.app.json && vite build",
     "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript --verbose || exit 0)",
-    "prepack:api": "node ./devops/sync-package-version.js && node ./devops/cleanse-pkg.js && npx mkdirp ./artifacts",
+    "prepack:api": "node ./scripts/sync-package-version.js && node ./scripts/cleanse-pkg.js && npx mkdirp ./artifacts",
     "pack:api": "npm pack --pack-destination ./artifacts",
-    "postpack:api": "node ./devops/copy-package-to-output-dir.js",
+    "postpack:api": "node ./scripts/copy-package-to-output-dir.js",
     "build-and-pack:api": "npm run build:api && npm run pack:api",
     "generate-client": "node scripts/generate-openapi.js https://localhost:44363/umbraco/swagger/ai-management/swagger.json"
   },

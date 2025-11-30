@@ -61,21 +61,18 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
     async create(model: UaiPromptDetailModel, _parentUnique: string | null) {
         const requestBody = this.#mapModelToCreateRequest(model);
 
-        const { response, error } = await tryExecute(
-            this.#host,
-            fetch('/umbraco/ai/management/api/v1/prompts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody),
-            })
-        );
+        const response = await fetch('/umbraco/ai/management/api/v1/prompts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+        });
 
-        if (error) {
-            return { error };
+        if (!response.ok) {
+            return { error: new Error('Failed to create prompt') };
         }
 
         // Extract the ID from the Location header
-        const locationHeader = response?.headers?.get("Location") ?? "";
+        const locationHeader = response.headers?.get("Location") ?? "";
         const unique = locationHeader.split("/").pop() ?? "";
 
         return {

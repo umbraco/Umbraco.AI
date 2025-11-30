@@ -2,9 +2,20 @@
   "name": "@umbraco-ai/core",
   "version": "0.0.0",
   "type": "module",
+  "types": "./types/umbraco-ai-public.d.ts",
+  "files": [
+    "types/umbraco-ai-public.d.ts",
+    "README.md"
+  ],
   "scripts": {
     "watch": "tsc && vite build --watch",
-    "build": "tsc && vite build",
+    "build": "npm run build:api && npm run build:app",
+    "build:app": "tsc -p tsconfig.app.json && vite build",
+    "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --typescript-compiler-folder ./node_modules/typescript --verbose || exit 0)",
+    "prepack:api": "node ./devops/sync-package-version.js && node ./devops/cleanse-pkg.js && npx mkdirp ./artifacts",
+    "pack:api": "npm pack --pack-destination ./artifacts",
+    "postpack:api": "node ./devops/copy-package-to-output-dir.js",
+    "build-and-pack:api": "npm run build:api && npm run pack:api",
     "generate-client": "node scripts/generate-openapi.js https://localhost:44363/umbraco/swagger/ai-management/swagger.json"
   },
   "peerDependencies": {
@@ -13,6 +24,7 @@
   "devDependencies": {
     "@hey-api/openapi-ts": "0.85.0",
     "@umbraco-cms/backoffice": "^17.0.0",
+    "@microsoft/api-extractor": "^7.55.1",
     "chalk": "^5.6.0",
     "cross-env": "^10.0.0",
     "node-fetch": "^3.3.2",

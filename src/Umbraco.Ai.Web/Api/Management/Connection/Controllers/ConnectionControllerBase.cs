@@ -11,7 +11,7 @@ namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Connection.GroupName)]
 [UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Connection.RouteSegment)]
-public abstract class ConnectionControllerBase : UmbracoAiManagementControllerBase
+public abstract class ConnectionControllerBase : UmbracoAiCoreManagementControllerBase
 {
     /// <summary>
     /// Maps a connection operation status to an appropriate action result.

@@ -10,6 +10,6 @@ namespace Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Embedding.GroupName)]
 [UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Embedding.RouteSegment)]
-public abstract class EmbeddingControllerBase : UmbracoAiManagementControllerBase
+public abstract class EmbeddingControllerBase : UmbracoAiCoreManagementControllerBase
 {
 }

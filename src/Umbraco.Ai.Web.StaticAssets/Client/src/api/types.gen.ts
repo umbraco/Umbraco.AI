@@ -4,9 +4,21 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44363' | (string & {});
 };
 
-export type ChatMessageModel = {
-    role: string;
-    content: string;
+export type UpdateProfileRequestModel = {
+    alias: string;
+    name: string;
+    model: ModelRefModel;
+    connectionId: string;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    tags: Array<string>;
+};
+
+export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
+    $type: string;
+};
+
+export type ProfileSettingsModel = {
+    [key: string]: never;
 };
 
 export type ChatProfileSettingsModel = ProfileSettingsModel & {
@@ -16,157 +28,16 @@ export type ChatProfileSettingsModel = ProfileSettingsModel & {
     systemPromptTemplate?: string | null;
 };
 
-export type ChatRequestModel = {
-    profileIdOrAlias?: string | null;
-    messages: Array<ChatMessageModel>;
-};
-
-export type ChatResponseModel = {
-    message: ChatMessageModel;
-    finishReason?: string | null;
-    usage?: ChatUsageModel | null;
-};
-
-export type ChatUsageModel = {
-    inputTokens?: number | null;
-    outputTokens?: number | null;
-    totalTokens?: number | null;
-};
-
-export type ConnectionItemResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    providerId: string;
-    isActive: boolean;
-};
-
-export type ConnectionResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    providerId: string;
-    settings?: unknown;
-    isActive: boolean;
-    dateCreated: string;
-    dateModified: string;
-};
-
-export type ConnectionTestResultModel = {
-    success: boolean;
-    errorMessage?: string | null;
-};
-
-export type CreateConnectionRequestModel = {
-    alias: string;
-    name: string;
-    providerId: string;
-    settings?: unknown;
-    isActive: boolean;
-};
-
-export type CreateProfileRequestModel = {
-    alias: string;
-    name: string;
-    capability: string;
-    model: ModelRefModel;
-    connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
-    tags: Array<string>;
-};
-
-export type EmbeddingItemModel = {
-    index: number;
-    vector: Array<number>;
-};
-
-export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
-    $type: string;
-};
-
-export type EmbeddingResponseModel = {
-    embeddings: Array<EmbeddingItemModel>;
-};
-
-export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
-
-export type GenerateEmbeddingRequestModel = {
-    profileIdOrAlias?: string | null;
-    values: Array<string>;
-};
-
-export type ModelDescriptorResponseModel = {
-    model: ModelRefModel;
-    name: string;
-    metadata?: {
-        [key: string]: string;
-    } | null;
-};
-
 export type ModelRefModel = {
     providerId: string;
     modelId: string;
 };
 
-export type NotificationHeaderModel = {
-    message: string;
-    category: string;
-    type: EventMessageTypeModel;
-};
-
-export type PagedConnectionItemResponseModel = {
-    total: number;
-    items: Array<ConnectionItemResponseModel>;
-};
-
-export type PagedProfileItemResponseModel = {
-    total: number;
-    items: Array<ProfileItemResponseModel>;
-};
-
-export type ProblemDetails = {
-    type?: string | null;
-    title?: string | null;
-    status?: number | null;
-    detail?: string | null;
-    instance?: string | null;
-    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
-};
-
-export type ProfileItemResponseModel = {
-    id: string;
+export type UpdateConnectionRequestModel = {
     alias: string;
     name: string;
-    capability: string;
-    model?: ModelRefModel | null;
-};
-
-export type ProfileResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    capability: string;
-    model?: ModelRefModel | null;
-    connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
-    tags: Array<string>;
-};
-
-export type ProfileSettingsModel = {
-    [key: string]: never;
-};
-
-export type ProviderItemResponseModel = {
-    id: string;
-    name: string;
-    capabilities: Array<string>;
-};
-
-export type ProviderResponseModel = {
-    id: string;
-    name: string;
-    capabilities: Array<string>;
-    settingDefinitions: Array<SettingDefinitionModel>;
+    settings?: unknown;
+    isActive: boolean;
 };
 
 export type SettingDefinitionModel = {
@@ -180,20 +51,149 @@ export type SettingDefinitionModel = {
     isRequired: boolean;
 };
 
-export type UpdateConnectionRequestModel = {
+export type ProviderResponseModel = {
+    id: string;
+    name: string;
+    capabilities: Array<string>;
+    settingDefinitions: Array<SettingDefinitionModel>;
+};
+
+export type ProviderItemResponseModel = {
+    id: string;
+    name: string;
+    capabilities: Array<string>;
+};
+
+export type ProfileResponseModel = {
+    id: string;
     alias: string;
     name: string;
-    settings?: unknown;
+    capability: string;
+    model?: ModelRefModel | null;
+    connectionId: string;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    tags: Array<string>;
+};
+
+export type ProfileItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    capability: string;
+    model?: ModelRefModel | null;
+};
+
+export type ProblemDetails = {
+    type?: string | null;
+    title?: string | null;
+    status?: number | null;
+    detail?: string | null;
+    instance?: string | null;
+    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
+};
+
+export type PagedProfileItemResponseModel = {
+    total: number;
+    items: Array<ProfileItemResponseModel>;
+};
+
+export type PagedConnectionItemResponseModel = {
+    total: number;
+    items: Array<ConnectionItemResponseModel>;
+};
+
+export type ConnectionItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    providerId: string;
     isActive: boolean;
 };
 
-export type UpdateProfileRequestModel = {
+export type NotificationHeaderModel = {
+    message: string;
+    category: string;
+    type: EventMessageTypeModel;
+};
+
+export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
+
+export type ModelDescriptorResponseModel = {
+    model: ModelRefModel;
+    name: string;
+    metadata?: {
+        [key: string]: string;
+    } | null;
+};
+
+export type GenerateEmbeddingRequestModel = {
+    profileIdOrAlias?: string | null;
+    values: Array<string>;
+};
+
+export type EmbeddingResponseModel = {
+    embeddings: Array<EmbeddingItemModel>;
+};
+
+export type EmbeddingItemModel = {
+    index: number;
+    vector: Array<number>;
+};
+
+export type CreateProfileRequestModel = {
     alias: string;
     name: string;
+    capability: string;
     model: ModelRefModel;
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
+};
+
+export type CreateConnectionRequestModel = {
+    alias: string;
+    name: string;
+    providerId: string;
+    settings?: unknown;
+    isActive: boolean;
+};
+
+export type ConnectionTestResultModel = {
+    success: boolean;
+    errorMessage?: string | null;
+};
+
+export type ConnectionResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    providerId: string;
+    settings?: unknown;
+    isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
+};
+
+export type ChatUsageModel = {
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    totalTokens?: number | null;
+};
+
+export type ChatResponseModel = {
+    message: ChatMessageModel;
+    finishReason?: string | null;
+    usage?: ChatUsageModel | null;
+};
+
+export type ChatMessageModel = {
+    role: string;
+    content: string;
+};
+
+export type ChatRequestModel = {
+    profileIdOrAlias?: string | null;
+    messages: Array<ChatMessageModel>;
 };
 
 export type CompleteChatData = {

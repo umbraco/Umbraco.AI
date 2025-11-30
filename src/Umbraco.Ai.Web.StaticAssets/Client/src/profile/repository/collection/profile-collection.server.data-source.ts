@@ -21,7 +21,7 @@ export class UaiProfileCollectionServerDataSource implements UmbCollectionDataSo
     async getCollection(filter: UmbCollectionFilterModel) {
         const { data, error } = await tryExecute(
             this.#host,
-            ProfilesService.getProfiles({
+            ProfilesService.getAllProfiles({
                 query: {
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,

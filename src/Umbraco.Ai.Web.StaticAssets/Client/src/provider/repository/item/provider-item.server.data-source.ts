@@ -20,7 +20,7 @@ export class UaiProviderItemServerDataSource {
     async getItems(): Promise<{ data?: UaiProviderItemModel[]; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            ProvidersService.getProviders()
+            ProvidersService.getAllProviders()
         );
 
         if (error || !data) {

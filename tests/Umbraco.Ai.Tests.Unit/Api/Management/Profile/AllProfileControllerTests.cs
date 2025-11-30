@@ -11,16 +11,16 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
 
 public class AllProfileControllerTests
 {
-    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
+    private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly AllProfileController _controller;
 
     public AllProfileControllerTests()
     {
-        _profileRepositoryMock = new Mock<IAiProfileRepository>();
+        _profileServiceMock = new Mock<IAiProfileService>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
-        _controller = new AllProfileController(_profileRepositoryMock.Object, _mapperMock.Object);
+        _controller = new AllProfileController(_profileServiceMock.Object, _mapperMock.Object);
     }
 
     #region GetAllProfiles
@@ -43,8 +43,8 @@ public class AllProfileControllerTests
             Capability = p.Capability.ToString()
         }).ToList();
 
-        _profileRepositoryMock
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetAllProfilesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(profiles);
 
         _mapperMock
@@ -77,8 +77,8 @@ public class AllProfileControllerTests
             Capability = p.Capability.ToString()
         }).ToList();
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByCapability(AiCapability.Chat, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfilesAsync(AiCapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatProfiles);
 
         _mapperMock
@@ -103,20 +103,20 @@ public class AllProfileControllerTests
             new AiProfileBuilder().Build()
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetAllProfilesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(profiles);
 
         _mapperMock
             .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
             .Returns(new List<ProfileItemResponseModel>());
 
-        // Act - passing invalid capability falls back to GetAllAsync
+        // Act - passing invalid capability falls back to GetAllProfilesAsync
         var result = await _controller.GetAllProfiles(capability: "InvalidCapability");
 
         // Assert
-        _profileRepositoryMock.Verify(x => x.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _profileRepositoryMock.Verify(x => x.GetByCapability(It.IsAny<AiCapability>(), It.IsAny<CancellationToken>()), Times.Never);
+        _profileServiceMock.Verify(x => x.GetAllProfilesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _profileServiceMock.Verify(x => x.GetProfilesAsync(It.IsAny<AiCapability>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -128,8 +128,8 @@ public class AllProfileControllerTests
             new AiProfileBuilder().WithCapability(AiCapability.Embedding).Build()
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByCapability(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfilesAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(embeddingProfiles);
 
         _mapperMock
@@ -140,15 +140,15 @@ public class AllProfileControllerTests
         await _controller.GetAllProfiles(capability: "embedding");
 
         // Assert
-        _profileRepositoryMock.Verify(x => x.GetByCapability(AiCapability.Embedding, It.IsAny<CancellationToken>()), Times.Once);
+        _profileServiceMock.Verify(x => x.GetProfilesAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task GetAllProfiles_WithEmptyList_ReturnsEmptyPagedViewModel()
     {
         // Arrange
-        _profileRepositoryMock
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetAllProfilesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<AiProfile>());
 
         _mapperMock
@@ -173,8 +173,8 @@ public class AllProfileControllerTests
             .Select(i => new AiProfileBuilder().WithAlias($"profile-{i}").Build())
             .ToList();
 
-        _profileRepositoryMock
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetAllProfilesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(profiles);
 
         _mapperMock

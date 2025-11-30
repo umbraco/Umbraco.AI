@@ -21,7 +21,7 @@ namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class CreateProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileRepository _profileRepository;
+    private readonly IAiProfileService _profileService;
     private readonly IAiConnectionService _connectionService;
     private readonly AiProviderCollection _providers;
 
@@ -29,11 +29,11 @@ public class CreateProfileController : ProfileControllerBase
     /// Initializes a new instance of the <see cref="CreateProfileController"/> class.
     /// </summary>
     public CreateProfileController(
-        IAiProfileRepository profileRepository,
+        IAiProfileService profileService,
         IAiConnectionService connectionService,
         AiProviderCollection providers)
     {
-        _profileRepository = profileRepository;
+        _profileService = profileService;
         _connectionService = connectionService;
         _providers = providers;
     }
@@ -60,7 +60,7 @@ public class CreateProfileController : ProfileControllerBase
         }
 
         // Check for duplicate alias
-        var existingByAlias = await _profileRepository.GetByAliasAsync(requestModel.Alias, cancellationToken);
+        var existingByAlias = await _profileService.GetProfileByAliasAsync(requestModel.Alias, cancellationToken);
         if (existingByAlias is not null)
         {
             return ProfileOperationStatusResult(ProfileOperationStatus.DuplicateAlias);
@@ -92,7 +92,7 @@ public class CreateProfileController : ProfileControllerBase
             Tags = requestModel.Tags
         };
 
-        var created = await _profileRepository.SaveAsync(profile, cancellationToken);
+        var created = await _profileService.SaveProfileAsync(profile, cancellationToken);
 
         return CreatedAtAction(
             nameof(ByIdOrAliasProfileController.GetProfileByIdOrAlias),

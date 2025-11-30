@@ -14,13 +14,13 @@ namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
 
 public class UpdateProfileControllerTests
 {
-    private readonly Mock<IAiProfileRepository> _profileRepositoryMock;
+    private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
     private List<IAiProvider> _providers = new();
 
     public UpdateProfileControllerTests()
     {
-        _profileRepositoryMock = new Mock<IAiProfileRepository>();
+        _profileServiceMock = new Mock<IAiProfileService>();
         _connectionServiceMock = new Mock<IAiConnectionService>();
     }
 
@@ -28,7 +28,7 @@ public class UpdateProfileControllerTests
     {
         var collection = new AiProviderCollection(() => _providers);
         return new UpdateProfileController(
-            _profileRepositoryMock.Object,
+            _profileServiceMock.Object,
             _connectionServiceMock.Object,
             collection);
     }
@@ -59,16 +59,16 @@ public class UpdateProfileControllerTests
             Settings = new ChatProfileSettingsModel { Temperature = 0.8f, MaxTokens = 2000 }
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _profileRepositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
         var controller = CreateController();
@@ -93,8 +93,8 @@ public class UpdateProfileControllerTests
             ConnectionId = Guid.NewGuid()
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         var controller = CreateController();
@@ -124,8 +124,8 @@ public class UpdateProfileControllerTests
             ConnectionId = connectionId
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
         _connectionServiceMock
@@ -160,8 +160,8 @@ public class UpdateProfileControllerTests
             ConnectionId = connectionId
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
         _connectionServiceMock
@@ -204,16 +204,16 @@ public class UpdateProfileControllerTests
         };
 
         AiProfile? capturedProfile = null;
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _profileRepositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .Callback<AiProfile, CancellationToken>((p, _) => capturedProfile = p)
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
@@ -250,16 +250,16 @@ public class UpdateProfileControllerTests
         };
 
         AiProfile? capturedProfile = null;
-        _profileRepositoryMock
-            .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _profileRepositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .Callback<AiProfile, CancellationToken>((p, _) => capturedProfile = p)
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
@@ -302,16 +302,16 @@ public class UpdateProfileControllerTests
             Settings = new ChatProfileSettingsModel { Temperature = 0.8f, MaxTokens = 2000 }
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingProfile);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        _profileRepositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile p, CancellationToken _) => p);
 
         var controller = CreateController();
@@ -336,8 +336,8 @@ public class UpdateProfileControllerTests
             ConnectionId = Guid.NewGuid()
         };
 
-        _profileRepositoryMock
-            .Setup(x => x.GetByAliasAsync(alias, It.IsAny<CancellationToken>()))
+        _profileServiceMock
+            .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AiProfile?)null);
 
         var controller = CreateController();

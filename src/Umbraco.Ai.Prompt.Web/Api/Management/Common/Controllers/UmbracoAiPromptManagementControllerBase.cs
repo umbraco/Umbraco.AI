@@ -10,6 +10,6 @@ namespace Umbraco.Ai.Web.Api.Management.Common.Controllers;
 /// rather than <see cref="UmbracoAiManagementControllerBase"/> directly. This ensures
 /// all core endpoints are tagged with "Umbraco Ai" for API client generation filtering.
 /// </remarks>
-[SwaggerOperation(Tags = ["UmbracoAiCore"])]
-public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagementControllerBase
+[SwaggerOperation(Tags = ["UmbracoAiPrompt"])]
+public abstract class UmbracoAiPromptManagementControllerBase : UmbracoAiManagementControllerBase
 { }

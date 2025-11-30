@@ -18,10 +18,10 @@ export class UaiPromptCreateCollectionActionElement extends UmbLitElement {
             <uui-button
                 color="default"
                 look="outline"
-                label="Create Prompt"
+                label="Create"
                 @click=${this.#onClick}
             >
-                Create Prompt
+                Create
             </uui-button>
         `;
     }

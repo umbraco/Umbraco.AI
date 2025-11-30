@@ -5,16 +5,15 @@ import type {
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 import { client } from "../api/client.gen.js";
 
-// load up the manifests here
-
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
-  console.log("Umbraco AI Entrypoint initialized");
+  console.log("Umbraco AI Prompt Entrypoint initialized");
   _host.consumeContext(UMB_AUTH_CONTEXT, async (authContext) => {
+    if (!authContext) return;
     const config = authContext?.getOpenApiConfiguration();
     client.setConfig({
-      auth: config?.token ?? undefined,
-      baseUrl: config?.base ?? "",
-      credentials: config?.credentials ?? "same-origin",
+      baseUrl: config.base,
+      auth: async () => await authContext.getLatestToken(),
+      credentials: config.credentials ?? "same-origin",
     });
   });
 };

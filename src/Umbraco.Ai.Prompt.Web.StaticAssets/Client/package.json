@@ -4,14 +4,21 @@
   "type": "module",
   "scripts": {
     "watch": "tsc && vite build --watch",
-    "build": "npm run build:app",
-    "build:app": "tsc -p tsconfig.app.json && vite build"
+    "build": "tsc -p tsconfig.json && vite build",
+    "build:app": "tsc -p tsconfig.app.json && vite build",
+    "generate-client": "node scripts/generate-openapi.js https://localhost:44363/umbraco/swagger/ai-management/swagger.json"
   },
   "peerDependencies": {
-    "@umbraco-cms/backoffice": "^17.0.0"
+    "@umbraco-cms/backoffice": "^17.0.0",
+    "@umbraco-ai/core": "^17.0.0"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "0.85.0",
     "@umbraco-cms/backoffice": "^17.0.0",
+    "@umbraco-ai/core": "file:../../../../Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
+    "chalk": "^5.6.0",
+    "cross-env": "^10.0.0",
+    "node-fetch": "^3.3.2",
     "typescript": "^5.9.2",
     "vite": "^7.1.3"
   }

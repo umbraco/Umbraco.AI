@@ -10,7 +10,7 @@ namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
 /// </summary>
 [ApiExplorerSettings(GroupName = Api.Constants.ManagementApi.Feature.Prompt.GroupName)]
 [UmbracoAiVersionedManagementApiRoute(Api.Constants.ManagementApi.Feature.Prompt.RouteSegment)]
-public abstract class PromptControllerBase : UmbracoAiManagementControllerBase
+public abstract class PromptControllerBase : UmbracoAiPromptManagementControllerBase
 {
     /// <summary>
     /// Returns a 404 Not Found response for a prompt.

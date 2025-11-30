@@ -16,11 +16,11 @@ internal static class PromptEntityFactory
     /// <summary>
     /// Builds a domain model from an entity.
     /// </summary>
-    public static Prompt BuildDomain(PromptEntity entity)
+    public static Core.Prompts.Prompt BuildDomain(PromptEntity entity)
     {
         var tags = DeserializeTags(entity.TagsJson);
 
-        return new Prompt
+        return new Core.Prompts.Prompt
         {
             Id = entity.Id,
             Alias = entity.Alias,
@@ -38,7 +38,7 @@ internal static class PromptEntityFactory
     /// <summary>
     /// Builds an entity from a domain model.
     /// </summary>
-    public static PromptEntity BuildEntity(Prompt prompt)
+    public static PromptEntity BuildEntity(Core.Prompts.Prompt prompt)
     {
         return new PromptEntity
         {
@@ -58,7 +58,7 @@ internal static class PromptEntityFactory
     /// <summary>
     /// Updates an existing entity from a domain model.
     /// </summary>
-    public static void UpdateEntity(PromptEntity entity, Prompt prompt)
+    public static void UpdateEntity(PromptEntity entity, Core.Prompts.Prompt prompt)
     {
         entity.Name = prompt.Name;
         entity.Description = prompt.Description;

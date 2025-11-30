@@ -4,7 +4,15 @@
         <Description>Startup and DI registration for Umbraco Ai Prompt</Description>
     </PropertyGroup>
 
-    <ItemGroup>
+    <PropertyGroup>
+        <UseLocalUmbracoAi Condition="'$(UseLocalUmbracoAi)' == ''">false</UseLocalUmbracoAi>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseLocalUmbracoAi)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Startup\Umbraco.Ai.Startup.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalUmbracoAi)' != 'true'">
         <PackageReference Include="Umbraco.Ai.Startup" />
     </ItemGroup>
 

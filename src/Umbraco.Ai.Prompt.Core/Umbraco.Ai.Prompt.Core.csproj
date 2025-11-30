@@ -4,8 +4,19 @@
         <Description>Core domain models and services for Umbraco Ai Prompt</Description>
     </PropertyGroup>
 
-    <ItemGroup>
+    <PropertyGroup>
+        <UseLocalUmbracoAi Condition="'$(UseLocalUmbracoAi)' == ''">false</UseLocalUmbracoAi>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseLocalUmbracoAi)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalUmbracoAi)' != 'true'">
         <PackageReference Include="Umbraco.Ai.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Umbraco.Cms.Core" />
     </ItemGroup>
 

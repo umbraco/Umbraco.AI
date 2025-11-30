@@ -14,7 +14,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- NuGet -->
+  <!-- Local Dev -->
+  <PropertyGroup>
+    <UseLocalUmbracoAi>true</UseLocalUmbracoAi>
+  </PropertyGroup>
+
+    <!-- NuGet -->
   <PropertyGroup>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>

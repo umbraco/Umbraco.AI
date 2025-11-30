@@ -18,7 +18,7 @@ internal sealed class EfCorePromptRepository : IPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<Prompt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Core.Prompts.Prompt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
 
@@ -31,7 +31,7 @@ internal sealed class EfCorePromptRepository : IPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<Prompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public async Task<Core.Prompts.Prompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
 
@@ -45,7 +45,7 @@ internal sealed class EfCorePromptRepository : IPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Prompt>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Core.Prompts.Prompt>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
 
@@ -58,7 +58,7 @@ internal sealed class EfCorePromptRepository : IPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Prompt>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Core.Prompts.Prompt>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
 
@@ -74,7 +74,7 @@ internal sealed class EfCorePromptRepository : IPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<PagedModel<Prompt>> GetPagedAsync(
+    public async Task<PagedModel<Core.Prompts.Prompt>> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -113,11 +113,11 @@ internal sealed class EfCorePromptRepository : IPromptRepository
         scope.Complete();
 
         var prompts = result.items.Select(PromptEntityFactory.BuildDomain).ToList();
-        return new PagedModel<Prompt>(result.total, prompts);
+        return new PagedModel<Core.Prompts.Prompt>(result.total, prompts);
     }
 
     /// <inheritdoc />
-    public async Task<Prompt> SaveAsync(Prompt prompt, CancellationToken cancellationToken = default)
+    public async Task<Core.Prompts.Prompt> SaveAsync(Core.Prompts.Prompt prompt, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
 

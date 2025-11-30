@@ -56,7 +56,7 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
                 },
                 {
                     columnAlias: "capability",
-                    value: html`<uui-tag color="primary">${this.#getCapabilityLabel(item.capability)}</uui-tag>`,
+                    value: html`<uui-tag color="primary" look="outline">${this.#getCapabilityLabel(item.capability)}</uui-tag>`,
                 },
                 {
                     columnAlias: "model",

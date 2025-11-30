@@ -337,7 +337,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             </umb-property-layout>
             <umb-property-layout label="Capability"  orientation="vertical">
                 <div slot="editor">
-                    ${this.#getCapabilityLabel(this._model.capability)}
+                    <uui-tag color="default" look="outline">${this.#getCapabilityLabel(this._model.capability)}</uui-tag>
                 </div>
             </umb-property-layout>
         </uui-box>`; 

@@ -9,12 +9,12 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
+import type { UaiCommand } from "@umbraco-ai/core";
+import { UaiCommandStore, UAI_EMPTY_GUID } from "@umbraco-ai/core";
 import { UaiPromptDetailRepository } from "../../repository/detail/prompt-detail.repository.js";
 import { UAI_PROMPT_WORKSPACE_ALIAS, UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
 import type { UaiPromptDetailModel } from "../../types.js";
 import { UaiPromptWorkspaceEditorElement } from "./prompt-workspace-editor.element.js";
-
-const UAI_EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * Workspace context for editing Prompt entities.
@@ -34,6 +34,7 @@ export class UaiPromptWorkspaceContext
     readonly model = this.#model.asObservable();
 
     #repository: UaiPromptDetailRepository;
+    #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
 
     constructor(host: UmbControllerHost) {
@@ -73,6 +74,7 @@ export class UaiPromptWorkspaceContext
         super.resetState();
         this.#unique.setValue(undefined);
         this.#model.setValue(undefined);
+        this.#commandStore.reset();
     }
 
     /**
@@ -101,7 +103,10 @@ export class UaiPromptWorkspaceContext
                 (model) => {
                     if (model) {
                         this.#unique.setValue(model.unique);
-                        this.#model.setValue(structuredClone(model));
+                        const newModel = structuredClone(model);
+                        // Replay any pending commands
+                        this.#commandStore.getAll().forEach((command) => command.execute(newModel));
+                        this.#model.setValue(newModel);
                         this.setIsNew(false);
                     }
                 },
@@ -113,15 +118,16 @@ export class UaiPromptWorkspaceContext
     }
 
     /**
-     * Updates a property of the model.
+     * Handles a command to update the model.
+     * Commands are tracked for replay after model refresh.
      */
-    updateProperty<K extends keyof UaiPromptDetailModel>(key: K, value: UaiPromptDetailModel[K]) {
+    handleCommand(command: UaiCommand) {
         const currentValue = this.#model.getValue();
         if (currentValue) {
-            this.#model.setValue({
-                ...currentValue,
-                [key]: value,
-            });
+            const newValue = structuredClone(currentValue);
+            command.execute(newValue);
+            this.#model.setValue(newValue);
+            this.#commandStore.add(command);
         }
     }
 
@@ -144,26 +150,34 @@ export class UaiPromptWorkspaceContext
         const model = this.#model.getValue();
         if (!model) return;
 
-        if (this.getIsNew()) {
-            const { data, error } = await this.#repository.create(model);
+        // Mute command store during submit
+        this.#commandStore.mute();
 
-            if (error) {
-                throw error;
+        try {
+            if (this.getIsNew()) {
+                const { data, error } = await this.#repository.create(model);
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data) {
+                    this.#unique.setValue(data.unique);
+                    this.#model.setValue(data);
+                }
+            } else {
+                const { error } = await this.#repository.save(model);
+
+                if (error) {
+                    throw error;
+                }
             }
 
-            if (data) {
-                this.#unique.setValue(data.unique);
-                this.#model.setValue(data);
-            }
-        } else {
-            const { error } = await this.#repository.save(model);
-
-            if (error) {
-                throw error;
-            }
+            this.#commandStore.reset();
+            this.setIsNew(false);
+        } finally {
+            this.#commandStore.unmute();
         }
-
-        this.setIsNew(false);
     }
 }
 

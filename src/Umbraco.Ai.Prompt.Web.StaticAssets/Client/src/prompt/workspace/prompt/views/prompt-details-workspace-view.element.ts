@@ -1,12 +1,11 @@
 import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import type { UaiSelectedEvent } from "@umbraco-ai/core";
+import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
+import "@umbraco-ai/core";
 import type { UaiPromptDetailModel } from "../../../types.js";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
-import type { UaiSelectedEvent } from "@umbraco-ai/core";
-import "@umbraco-ai/core";
-
-const UAI_EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * Workspace view for Prompt details.
@@ -34,24 +33,32 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
     #onDescriptionChange(event: Event) {
         event.stopPropagation();
         const value = (event.target as HTMLInputElement).value;
-        this.#workspaceContext?.updateProperty("description", value || null);
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ description: value || null }, "description")
+        );
     }
 
     #onContentChange(event: Event) {
         event.stopPropagation();
         const value = (event.target as HTMLTextAreaElement).value;
-        this.#workspaceContext?.updateProperty("content", value);
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ content: value }, "content")
+        );
     }
 
     #onIsActiveChange(event: Event) {
         event.stopPropagation();
         const checked = (event.target as HTMLInputElement).checked;
-        this.#workspaceContext?.updateProperty("isActive", checked);
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ isActive: checked }, "isActive")
+        );
     }
 
     #onProfileChange(event: UaiSelectedEvent) {
         event.stopPropagation();
-        this.#workspaceContext?.updateProperty("profileId", event.unique);
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ profileId: event.unique }, "profileId")
+        );
     }
 
     render() {

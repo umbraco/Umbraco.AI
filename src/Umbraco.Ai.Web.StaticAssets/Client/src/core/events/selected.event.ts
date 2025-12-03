@@ -1,3 +1,7 @@
+/**
+ * Event emitted when an item is selected.
+ * @public
+ */
 export class UaiSelectedEvent extends Event {
 	public static readonly TYPE = 'selected';
 	public unique: string | null;

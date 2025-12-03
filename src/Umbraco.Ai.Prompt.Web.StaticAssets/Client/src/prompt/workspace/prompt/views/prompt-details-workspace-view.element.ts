@@ -3,6 +3,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiPromptDetailModel } from "../../../types.js";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
+import type { UaiSelectedEvent } from "@umbraco-ai/core";
+import "@umbraco-ai/core";
 
 const UAI_EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -45,6 +47,11 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const checked = (event.target as HTMLInputElement).checked;
         this.#workspaceContext?.updateProperty("isActive", checked);
+    }
+
+    #onProfileChange(event: UaiSelectedEvent) {
+        event.stopPropagation();
+        this.#workspaceContext?.updateProperty("profileId", event.unique);
     }
 
     render() {
@@ -97,6 +104,17 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return null;
 
         return html`
+            <uui-box headline="Profile">
+                <umb-property-layout label="AI Profile" description="Optional AI profile this prompt is designed for" orientation="vertical">
+                    <uai-profile-picker
+                        slot="editor"
+                        .value=${this._model.profileId ?? undefined}
+                        placeholder="-- No Profile --"
+                        @selected=${this.#onProfileChange}
+                    ></uai-profile-picker>
+                </umb-property-layout>
+            </uui-box>
+
             <uui-box headline="Info">
                 <umb-property-layout label="Id" orientation="vertical">
                     <div slot="editor">${this._model.unique === UAI_EMPTY_GUID

@@ -5,6 +5,7 @@
     "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
-    "emitDeclarationOnly" : true
+    "emitDeclarationOnly" : true,
+    "noEmit": false
   }
 }

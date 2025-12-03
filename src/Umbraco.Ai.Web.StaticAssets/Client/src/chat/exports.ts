@@ -1,2 +1,2 @@
-export * from './services/exports.js';
+export * from './controllers/exports.js';
 export * from './types.js';

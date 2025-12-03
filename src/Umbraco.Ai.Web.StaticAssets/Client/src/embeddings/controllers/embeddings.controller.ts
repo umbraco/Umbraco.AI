@@ -7,7 +7,7 @@ import type { UaiEmbeddingOptions, UaiEmbeddingResult } from "../types.js";
  * Public API for generating embeddings.
  * @public
  */
-export class UaiEmbeddingsService extends UmbControllerBase {
+export class UaiEmbeddingsController extends UmbControllerBase {
     #repository: UaiEmbeddingsRepository;
 
     constructor(host: UmbControllerHost) {

@@ -7,7 +7,7 @@ import type { UaiChatMessage, UaiChatOptions, UaiChatResult, UaiChatStreamChunk 
  * Public API for performing chat completions.
  * @public
  */
-export class UaiChatService extends UmbControllerBase {
+export class UaiChatController extends UmbControllerBase {
     #repository: UaiChatRepository;
 
     constructor(host: UmbControllerHost) {

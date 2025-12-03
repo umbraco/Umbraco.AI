@@ -4,6 +4,7 @@ import type {
 } from "@umbraco-cms/backoffice/extension-api";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 import { client } from "../api/client.gen.js";
+import { UmbPromptRegistrarController } from "../prompt/controllers/prompt-registrar.controller.js";
 
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
   console.log("Umbraco AI Prompt Entrypoint initialized");
@@ -15,6 +16,10 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
       baseUrl: config?.base ?? "",
       credentials: config?.credentials ?? "same-origin",
     });
+
+    // Register prompt property actions after authentication is established
+    const registrar = new UmbPromptRegistrarController(_host);
+    await registrar.registerPrompts();
   });
 };
 

@@ -3,6 +3,7 @@ import { promptEntityActionManifests } from "./entity-actions/manifests.js";
 import { promptMenuManifests } from "./menu/manifests.js";
 import { promptRepositoryManifests } from "./repository/manifests.js";
 import { promptWorkspaceManifests } from "./workspace/manifests.js";
+import { promptPropertyActionManifests } from "./property-actions/manifests.js";
 
 export const promptManifests = [
     ...promptCollectionManifests,
@@ -10,4 +11,5 @@ export const promptManifests = [
     ...promptMenuManifests,
     ...promptRepositoryManifests,
     ...promptWorkspaceManifests,
+    ...promptPropertyActionManifests,
 ];

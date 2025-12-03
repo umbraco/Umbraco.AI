@@ -2,7 +2,8 @@
   "permissions": {
     "additionalDirectories": [
       "D:\\Work\\Umbraco\\Umbraco.Ai\\Umbraco.Ai",
-      "D:\\Work\\Umbraco\\Umbraco.CMS\\Umbraco.CMS"
+      "D:\\Work\\Umbraco\\Umbraco.CMS\\Umbraco.CMS",
+      "D:\\Work\\Umbraco\\Umbraco.UIBuilder\\Umbraco.UIBuilder"
     ]
   }
 }

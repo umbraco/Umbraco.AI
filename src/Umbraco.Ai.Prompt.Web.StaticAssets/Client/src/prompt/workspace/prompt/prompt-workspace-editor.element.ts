@@ -2,6 +2,7 @@ import { css, html, customElement, state, when } from "@umbraco-cms/backoffice/e
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "./prompt-workspace.context-token.js";
 import { UAI_PROMPT_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UaiPromptDetailModel } from "../../types.js";
@@ -48,17 +49,22 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
         // If alias is locked and creating new, generate alias from name
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
-            this.#workspaceContext?.updateProperty("name", name);
-            this.#workspaceContext?.updateProperty("alias", alias);
+            this.#workspaceContext?.handleCommand(
+                new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name, alias }, "name-alias")
+            );
         } else {
-            this.#workspaceContext?.updateProperty("name", name);
+            this.#workspaceContext?.handleCommand(
+                new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name }, "name")
+            );
         }
     }
 
     #onAliasChange(event: UUIInputEvent) {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
-        this.#workspaceContext?.updateProperty("alias", target.value.toString());
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ alias: target.value.toString() }, "alias")
+        );
     }
 
     #onToggleAliasLock() {

@@ -1,5 +1,9 @@
 import { UaiCommandBase } from "../command.base.js";
 
+/**
+ * A command that updates a receiver object with a partial set of properties.
+ * @public
+ */
 export class UaiPartialUpdateCommand<TReceiver> extends UaiCommandBase<TReceiver> {
     #partial: Partial<TReceiver>;
 

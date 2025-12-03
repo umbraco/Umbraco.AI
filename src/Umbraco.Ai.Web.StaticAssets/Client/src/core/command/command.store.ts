@@ -1,5 +1,9 @@
 import type { UaiCommand } from "./command.base.js";
 
+/**
+ * A store for UaiCommand instances, allowing addition, retrieval, muting, and clearing of commands.
+ * @public
+ */
 export class UaiCommandStore {
     #muted = false;
     #commands: UaiCommand[] = [];

@@ -77,6 +77,15 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="Prompt Configuration">
+                <umb-property-layout label="AI Profile" description="Optional AI profile this prompt is designed for">
+                    <uai-profile-picker
+                            slot="editor"
+                            .value=${this._model.profileId ?? undefined}
+                            placeholder="-- No Profile --"
+                            @selected=${this.#onProfileChange}
+                    ></uai-profile-picker>
+                </umb-property-layout>
+                
                 <umb-property-layout label="Description" description="Brief description of this prompt">
                     <uui-input
                         slot="editor"
@@ -111,17 +120,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return null;
 
         return html`
-            <uui-box headline="Profile">
-                <umb-property-layout label="AI Profile" description="Optional AI profile this prompt is designed for" orientation="vertical">
-                    <uai-profile-picker
-                        slot="editor"
-                        .value=${this._model.profileId ?? undefined}
-                        placeholder="-- No Profile --"
-                        @selected=${this.#onProfileChange}
-                    ></uai-profile-picker>
-                </umb-property-layout>
-            </uui-box>
-
             <uui-box headline="Info">
                 <umb-property-layout label="Id" orientation="vertical">
                     <div slot="editor">${this._model.unique === UAI_EMPTY_GUID

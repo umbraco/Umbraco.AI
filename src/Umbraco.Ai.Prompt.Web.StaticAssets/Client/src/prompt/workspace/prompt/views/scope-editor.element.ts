@@ -49,30 +49,12 @@ export class UaiScopeEditorElement extends UmbLitElement {
     scope: UaiPromptScope | null = null;
 
     @state()
-    private _isEnabled = false;
-
-    @state()
     private _localScope: UaiPromptScope = createDefaultScope();
 
     updated(changedProperties: Map<string, unknown>) {
         if (changedProperties.has("scope")) {
-            this._isEnabled = this.scope !== null;
+            // Sync local scope with incoming scope property
             this._localScope = this.scope ?? createDefaultScope();
-        }
-    }
-
-    #onEnabledChange(event: Event) {
-        const checked = (event.target as HTMLInputElement).checked;
-        this._isEnabled = checked;
-
-        if (checked) {
-            // Enable scope with default rules if none exist
-            if (this._localScope.includeRules.length === 0) {
-                this._localScope = createDefaultScope();
-            }
-            this.#dispatchChange(this._localScope);
-        } else {
-            this.#dispatchChange(null);
         }
     }
 
@@ -134,29 +116,7 @@ export class UaiScopeEditorElement extends UmbLitElement {
 
     render() {
         return html`
-            <div class="scope-header">
-                <uui-toggle
-                    ?checked=${this._isEnabled}
-                    @change=${this.#onEnabledChange}
-                    label="Enable scope filtering"
-                ></uui-toggle>
-                <span class="scope-status">
-                    ${this._isEnabled
-                        ? html`<uui-tag color="positive" look="secondary">Scoped</uui-tag>`
-                        : html`<uui-tag color="warning" look="secondary">Hidden (no scope)</uui-tag>`}
-                </span>
-            </div>
-
-            ${this._isEnabled ? this.#renderScopeConfig() : this.#renderDisabledMessage()}
-        `;
-    }
-
-    #renderDisabledMessage() {
-        return html`
-            <div class="disabled-message">
-                <uui-icon name="icon-alert"></uui-icon>
-                <p>This prompt will not appear anywhere until scope is configured.</p>
-            </div>
+            ${this.#renderScopeConfig()}
         `;
     }
 

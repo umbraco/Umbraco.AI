@@ -1,6 +1,6 @@
-using UmbracoAiConstants = Umbraco.Ai.Web.Api.Constants;
+using UmbracoAiConstants = Umbraco.Ai.Web.Constants;
 
-namespace Umbraco.Ai.Prompt.Web.Api;
+namespace Umbraco.Ai.Prompt.Web;
 
 /// <summary>
 /// Constants for Umbraco AI AiPrompt Management API.
@@ -13,10 +13,15 @@ public class Constants
     public static class ManagementApi
     {
         /// <summary>
-        /// The API name - shared with Umbraco.Ai for same Swagger group.
+        /// The API name.
         /// </summary>
-        public const string ApiName = UmbracoAiConstants.ManagementApi.ApiName; // "ai-management"
-
+        public const string ApiName = "ai-prompt-management";
+        
+        /// <summary>
+        /// The API name.
+        /// </summary>
+        public const string ApiTitle = "Umbraco AI Prompt Management API";
+        
         /// <summary>
         /// The backoffice API path - shared with Umbraco.Ai.
         /// </summary>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Prompt.Web.Api;
+using Umbraco.Ai.Prompt.Web.Api.Management.Common.Controllers;
 using Umbraco.Ai.Web.Api.Management.Common.Controllers;
 using Umbraco.Ai.Web.Api.Management.Common.Routing;
 

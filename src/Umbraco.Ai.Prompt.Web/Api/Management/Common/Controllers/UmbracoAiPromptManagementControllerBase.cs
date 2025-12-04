@@ -1,15 +1,13 @@
-using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Management.Common.Controllers;
+using Umbraco.Cms.Api.Common.Attributes;
+using Umbraco.Cms.Api.Common.Filters;
 
-namespace Umbraco.Ai.Web.Api.Management.Common.Controllers;
+namespace Umbraco.Ai.Prompt.Web.Api.Management.Common.Controllers;
 
 /// <summary>
-/// Base controller for Umbraco.Ai core package endpoints.
+/// Base controller for Umbraco AI Prompt Management API controllers.
 /// </summary>
-/// <remarks>
-/// All feature controllers in the Umbraco.Ai.Web project should inherit from this class
-/// rather than <see cref="UmbracoAiManagementControllerBase"/> directly. This ensures
-/// all core endpoints are tagged with "Umbraco Ai" for API client generation filtering.
-/// </remarks>
-[SwaggerOperation(Tags = ["UmbracoAiPrompt"])]
+[MapToApi(Constants.ManagementApi.ApiName)]
+[JsonOptionsName(Constants.ManagementApi.ApiName)]
 public abstract class UmbracoAiPromptManagementControllerBase : UmbracoAiManagementControllerBase
 { }

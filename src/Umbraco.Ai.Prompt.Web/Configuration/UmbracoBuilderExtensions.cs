@@ -1,6 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi;
 using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
+using Umbraco.Ai.Extensions;
 
 namespace Umbraco.Ai.Prompt.Web.Configuration;
 
@@ -20,6 +23,18 @@ public static class UmbracoBuilderExtensions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<PromptMapDefinition>();
 
+        builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>
+        {
+            options.SwaggerDoc(
+                Constants.ManagementApi.ApiName,
+                new OpenApiInfo
+                {
+                    Title = Constants.ManagementApi.ApiTitle,
+                    Version = "Latest",
+                    Description = $"Describes the {Constants.ManagementApi.ApiTitle} available for managing AI connections, profiles, and providers when authenticated as a backoffice user."
+                });
+        });
+        
         return builder;
     }
 }

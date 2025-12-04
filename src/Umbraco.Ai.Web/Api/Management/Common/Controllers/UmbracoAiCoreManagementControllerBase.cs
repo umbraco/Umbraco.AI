@@ -1,15 +1,54 @@
-using Umbraco.Ai.Web.Api.Common.Configuration;
+using Microsoft.AspNetCore.Mvc;
+using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
+using Umbraco.Cms.Api.Common.Attributes;
+using Umbraco.Cms.Api.Common.Filters;
 
 namespace Umbraco.Ai.Web.Api.Management.Common.Controllers;
 
 /// <summary>
-/// Base controller for Umbraco.Ai core package endpoints.
+/// Base controller for Umbraco AI Management API controllers.
 /// </summary>
-/// <remarks>
-/// All feature controllers in the Umbraco.Ai.Web project should inherit from this class
-/// rather than <see cref="UmbracoAiManagementControllerBase"/> directly. This ensures
-/// all core endpoints are tagged with "Umbraco Ai" for API client generation filtering.
-/// </remarks>
-[SwaggerOperation(Tags = ["UmbracoAiCore"])]
+[MapToApi(Constants.ManagementApi.ApiName)]
+[JsonOptionsName(Constants.ManagementApi.ApiName)]
 public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagementControllerBase
-{ }
+{
+    /// <summary>
+    /// Returns a 404 Not Found response for a connection.
+    /// </summary>
+    protected IActionResult ConnectionNotFound()
+        => OperationStatusResult(ConnectionOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Connection not found")
+                .WithDetail("The specified connection could not be found.")
+                .Build()));
+
+    /// <summary>
+    /// Returns a 404 Not Found response for a profile.
+    /// </summary>
+    protected IActionResult ProfileNotFound()
+        => OperationStatusResult(ProfileOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Profile not found")
+                .WithDetail("The specified profile could not be found.")
+                .Build()));
+
+    /// <summary>
+    /// Returns a 404 Not Found response for a provider.
+    /// </summary>
+    protected IActionResult ProviderNotFound()
+        => OperationStatusResult(ProviderOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Provider not found")
+                .WithDetail("The specified provider could not be found.")
+                .Build()));
+
+    /// <summary>
+    /// Returns a 400 Bad Request response for invalid settings.
+    /// </summary>
+    protected IActionResult InvalidSettings(string detail)
+        => OperationStatusResult(ConnectionOperationStatus.InvalidSettings, problemDetailsBuilder
+            => BadRequest(problemDetailsBuilder
+                .WithTitle("Invalid settings")
+                .WithDetail(detail)
+                .Build()));
+}

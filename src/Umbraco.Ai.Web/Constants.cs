@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Ai.Web.Api;
+﻿namespace Umbraco.Ai.Web;
 
 /// <summary>
 /// Defines constants for the Umbraco AI Management API.

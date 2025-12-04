@@ -42,14 +42,7 @@ fetch(swaggerUrl).then(async (response) => {
         asClass: true,
         classNameBuilder: '{{name}}Service',
       }
-    ],
-    parser: {
-      filters: {
-        tags: {
-          include: ['UmbracoAiCore'],  // Only build the Umbraco AI Core APIs
-        },
-      },
-    }
+    ]
   });
 
 })

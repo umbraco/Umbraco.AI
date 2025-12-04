@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
@@ -21,13 +21,17 @@ namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 public class UpdateConnectionController : ConnectionControllerBase
 {
     private readonly IAiConnectionService _connectionService;
+    private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateConnectionController"/> class.
     /// </summary>
-    public UpdateConnectionController(IAiConnectionService connectionService)
+    public UpdateConnectionController(
+        IAiConnectionService connectionService,
+        IUmbracoMapper umbracoMapper)
     {
         _connectionService = connectionService;
+        _umbracoMapper = umbracoMapper;
     }
 
     /// <summary>
@@ -53,16 +57,7 @@ public class UpdateConnectionController : ConnectionControllerBase
             return ConnectionNotFound();
         }
 
-        var connection = new AiConnection
-        {
-            Id = existing.Id,
-            Alias = requestModel.Alias,
-            Name = requestModel.Name,
-            ProviderId = existing.ProviderId, // Provider cannot be changed after creation
-            Settings = requestModel.Settings,
-            IsActive = requestModel.IsActive,
-            DateCreated = existing.DateCreated
-        };
+        AiConnection connection = _umbracoMapper.Map(requestModel, existing);
 
         try
         {

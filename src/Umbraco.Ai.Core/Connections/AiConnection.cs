@@ -6,7 +6,7 @@ namespace Umbraco.Ai.Core.Connections;
 public class AiConnection
 {
     /// <summary>
-    /// Unique identifier for the connection (Guid string).
+    /// Unique identifier for the connection.
     /// </summary>
     public required Guid Id { get; init; }
 
@@ -24,7 +24,7 @@ public class AiConnection
     /// The ID of the provider this connection is for (e.g., "openai", "azure").
     /// Must match a registered provider's ID.
     /// </summary>
-    public required string ProviderId { get; set; }
+    public required string ProviderId { get; init; }
 
     /// <summary>
     /// Provider-specific settings (credentials, endpoints, etc.).

@@ -1,22 +1,37 @@
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
 
 public class UpdateConnectionControllerTests
 {
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IUmbracoMapper> _umbracoMapperMock;
     private readonly UpdateConnectionController _controller;
 
     public UpdateConnectionControllerTests()
     {
         _connectionServiceMock = new Mock<IAiConnectionService>();
-        _controller = new UpdateConnectionController(_connectionServiceMock.Object);
+        _umbracoMapperMock = new Mock<IUmbracoMapper>();
+
+        // Setup mapper to simulate Map(source, target) behavior
+        _umbracoMapperMock
+            .Setup(m => m.Map(It.IsAny<UpdateConnectionRequestModel>(), It.IsAny<AiConnection>()))
+            .Returns((UpdateConnectionRequestModel request, AiConnection existing) =>
+            {
+                // Simulate mapping: update mutable properties, preserve init-only properties
+                existing.Name = request.Name;
+                existing.Settings = request.Settings;
+                existing.IsActive = request.IsActive;
+                return existing;
+            });
+
+        _controller = new UpdateConnectionController(_connectionServiceMock.Object, _umbracoMapperMock.Object);
     }
 
     #region UpdateConnection - By ID

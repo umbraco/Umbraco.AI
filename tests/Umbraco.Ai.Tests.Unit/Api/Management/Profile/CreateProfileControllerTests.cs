@@ -5,10 +5,10 @@ using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
-using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
+using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
 
@@ -16,12 +16,51 @@ public class CreateProfileControllerTests
 {
     private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IUmbracoMapper> _umbracoMapperMock;
     private List<IAiProvider> _providers = new();
 
     public CreateProfileControllerTests()
     {
         _profileServiceMock = new Mock<IAiProfileService>();
         _connectionServiceMock = new Mock<IAiConnectionService>();
+        _umbracoMapperMock = new Mock<IUmbracoMapper>();
+
+        // Setup mapper to use real mapping logic
+        _umbracoMapperMock
+            .Setup(m => m.Map<AiProfile>(It.IsAny<CreateProfileRequestModel>()))
+            .Returns((CreateProfileRequestModel request) =>
+            {
+                var capability = Enum.TryParse<AiCapability>(request.Capability, true, out var cap)
+                    ? cap
+                    : AiCapability.Chat;
+                return new AiProfile
+                {
+                    Id = Guid.Empty,
+                    Alias = request.Alias,
+                    Name = request.Name,
+                    Capability = capability,
+                    Model = new AiModelRef(request.Model.ProviderId, request.Model.ModelId),
+                    ConnectionId = request.ConnectionId,
+                    Settings = MapSettingsFromRequest(capability, request.Settings),
+                    Tags = request.Tags
+                };
+            });
+    }
+
+    private static IAiProfileSettings? MapSettingsFromRequest(AiCapability capability, ProfileSettingsModel? settings)
+    {
+        return capability switch
+        {
+            AiCapability.Chat when settings is ChatProfileSettingsModel chat => new AiChatProfileSettings
+            {
+                Temperature = chat.Temperature,
+                MaxTokens = chat.MaxTokens,
+                SystemPromptTemplate = chat.SystemPromptTemplate
+            },
+            AiCapability.Chat => new AiChatProfileSettings(),
+            AiCapability.Embedding => new AiEmbeddingProfileSettings(),
+            _ => null
+        };
     }
 
     private CreateProfileController CreateController()
@@ -30,7 +69,8 @@ public class CreateProfileControllerTests
         return new CreateProfileController(
             _profileServiceMock.Object,
             _connectionServiceMock.Object,
-            collection);
+            collection,
+            _umbracoMapperMock.Object);
     }
 
     #region CreateProfile
@@ -243,9 +283,9 @@ public class CreateProfileControllerTests
         // Act
         await controller.CreateProfile(requestModel);
 
-        // Assert
+        // Assert - Controller passes Guid.Empty, service/repository generates the ID
         capturedProfile.ShouldNotBeNull();
-        capturedProfile!.Id.ShouldNotBe(Guid.Empty);
+        capturedProfile!.Id.ShouldBe(Guid.Empty);
         capturedProfile.Alias.ShouldBe("test-alias");
         capturedProfile.Name.ShouldBe("Test Name");
         capturedProfile.Capability.ShouldBe(AiCapability.Chat);

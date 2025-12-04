@@ -62,8 +62,6 @@ public static class UmbracoBuilderExtensions
                     Version = "Latest",
                     Description = $"Describes the {Constants.ManagementApi.ApiTitle} available for managing AI connections, profiles, and providers when authenticated as a backoffice user."
                 });
-            
-            
         });
 
         return builder;

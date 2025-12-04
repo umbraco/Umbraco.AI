@@ -19,6 +19,7 @@ internal static class AiPromptEntityFactory
     public static Core.Prompts.AiPrompt BuildDomain(AiPromptEntity entity)
     {
         var tags = DeserializeTags(entity.TagsJson);
+        var scope = DeserializeScope(entity.ScopeJson);
 
         return new Core.Prompts.AiPrompt
         {
@@ -30,6 +31,7 @@ internal static class AiPromptEntityFactory
             ProfileId = entity.ProfileId,
             Tags = tags,
             IsActive = entity.IsActive,
+            Scope = scope,
             DateCreated = entity.DateCreated,
             DateModified = entity.DateModified
         };
@@ -50,6 +52,7 @@ internal static class AiPromptEntityFactory
             ProfileId = aiPrompt.ProfileId,
             TagsJson = SerializeTags(aiPrompt.Tags),
             IsActive = aiPrompt.IsActive,
+            ScopeJson = SerializeScope(aiPrompt.Scope),
             DateCreated = aiPrompt.DateCreated,
             DateModified = aiPrompt.DateModified
         };
@@ -67,6 +70,7 @@ internal static class AiPromptEntityFactory
         entity.ProfileId = aiPrompt.ProfileId;
         entity.TagsJson = SerializeTags(aiPrompt.Tags);
         entity.IsActive = aiPrompt.IsActive;
+        entity.ScopeJson = SerializeScope(aiPrompt.Scope);
         entity.DateModified = aiPrompt.DateModified;
     }
 
@@ -94,6 +98,39 @@ internal static class AiPromptEntityFactory
         catch
         {
             return [];
+        }
+    }
+
+    private static string? SerializeScope(AiPromptScope? scope)
+    {
+        if (scope is null)
+        {
+            return null;
+        }
+
+        // Don't store empty scopes as JSON - treat as null
+        if (scope.IncludeRules.Count == 0 && scope.ExcludeRules.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(scope, JsonOptions);
+    }
+
+    private static AiPromptScope? DeserializeScope(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<AiPromptScope>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
         }
     }
 }

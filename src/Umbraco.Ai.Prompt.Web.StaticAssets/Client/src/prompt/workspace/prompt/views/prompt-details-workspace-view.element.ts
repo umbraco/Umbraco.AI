@@ -6,6 +6,8 @@ import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
 import type { UaiPromptDetailModel } from "../../../types.js";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
+import "./scope-editor.element.js";
+import type { UaiScopeChangeEvent } from "./scope-editor.element.js";
 
 /**
  * Workspace view for Prompt details.
@@ -61,6 +63,13 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onScopeChange(event: UaiScopeChangeEvent) {
+        event.stopPropagation();
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ scope: event.scope }, "scope")
+        );
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -103,6 +112,19 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         placeholder="Enter prompt content..."
                         rows="12"
                     ></uui-textarea>
+                </umb-property-layout>
+            </uui-box>
+
+            <uui-box headline="Scope Configuration">
+                <umb-property-layout
+                    label="Visibility Scope"
+                    description="Configure where this prompt appears as a property action"
+                >
+                    <uai-scope-editor
+                        slot="editor"
+                        .scope=${this._model.scope}
+                        @scope-change=${this.#onScopeChange}
+                    ></uai-scope-editor>
                 </umb-property-layout>
             </uui-box>
 

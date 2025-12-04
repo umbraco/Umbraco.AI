@@ -47,6 +47,12 @@ public class AiPrompt
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Scope configuration defining where this prompt appears as a property action.
+    /// If null, the prompt does not appear anywhere (scoped by default).
+    /// </summary>
+    public AiPromptScope? Scope { get; set; }
+
+    /// <summary>
     /// When the prompt was created.
     /// </summary>
     public DateTime DateCreated { get; init; }

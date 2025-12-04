@@ -57,6 +57,18 @@ export class UaiPromptRegistrarServerDataSource {
                     description: detail.description ?? null,
                     content: detail.content,
                     profileId: detail.profileId ?? null,
+                    scope: detail.scope ? {
+                        includeRules: detail.scope.includeRules?.map(r => ({
+                            propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
+                            propertyAliases: r.propertyAliases ?? null,
+                            documentTypeAliases: r.documentTypeAliases ?? null,
+                        })) ?? [],
+                        excludeRules: detail.scope.excludeRules?.map(r => ({
+                            propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
+                            propertyAliases: r.propertyAliases ?? null,
+                            documentTypeAliases: r.documentTypeAliases ?? null,
+                        })) ?? [],
+                    } : null,
                 } satisfies UaiPromptRegistrationModel;
             })
         );

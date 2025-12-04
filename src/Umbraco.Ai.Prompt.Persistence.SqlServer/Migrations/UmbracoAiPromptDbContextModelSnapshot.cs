@@ -60,6 +60,10 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
                     b.Property<Guid?>("ProfileId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ScopeJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
                     b.Property<string>("TagsJson")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");

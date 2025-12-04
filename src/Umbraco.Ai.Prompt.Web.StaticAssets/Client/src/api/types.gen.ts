@@ -11,6 +11,7 @@ export type CreatePromptRequestModel = {
     description?: string | null;
     profileId?: string | null;
     tags?: Array<string> | null;
+    scope?: ScopeModel | null;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -53,8 +54,20 @@ export type PromptResponseModel = {
     profileId?: string | null;
     tags: Array<string>;
     isActive: boolean;
+    scope?: ScopeModel | null;
     dateCreated: string;
     dateModified: string;
+};
+
+export type ScopeModel = {
+    includeRules: Array<ScopeRuleModel>;
+    excludeRules: Array<ScopeRuleModel>;
+};
+
+export type ScopeRuleModel = {
+    propertyEditorUiAliases?: Array<string> | null;
+    propertyAliases?: Array<string> | null;
+    documentTypeAliases?: Array<string> | null;
 };
 
 export type UpdatePromptRequestModel = {
@@ -65,6 +78,7 @@ export type UpdatePromptRequestModel = {
     profileId?: string | null;
     tags?: Array<string> | null;
     isActive: boolean;
+    scope?: ScopeModel | null;
 };
 
 export type ValidationProblemDetails = {

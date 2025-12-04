@@ -43,4 +43,10 @@ public class CreatePromptRequestModel
     /// Optional tags for categorization.
     /// </summary>
     public IEnumerable<string>? Tags { get; init; }
+
+    /// <summary>
+    /// Optional scope configuration defining where this prompt appears.
+    /// Null means the prompt does not appear anywhere.
+    /// </summary>
+    public ScopeModel? Scope { get; init; }
 }

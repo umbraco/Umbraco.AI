@@ -48,4 +48,10 @@ public class UpdatePromptRequestModel
     /// Whether the prompt is active.
     /// </summary>
     public bool IsActive { get; init; } = true;
+
+    /// <summary>
+    /// Optional scope configuration defining where this prompt appears.
+    /// Null means the prompt does not appear anywhere.
+    /// </summary>
+    public ScopeModel? Scope { get; init; }
 }

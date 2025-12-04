@@ -46,6 +46,12 @@ public class PromptResponseModel
     public bool IsActive { get; set; }
 
     /// <summary>
+    /// Scope configuration defining where this prompt appears.
+    /// Null means the prompt does not appear anywhere.
+    /// </summary>
+    public ScopeModel? Scope { get; set; }
+
+    /// <summary>
     /// Creation timestamp.
     /// </summary>
     public DateTime DateCreated { get; set; }

@@ -55,6 +55,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.ProfileId = source.ProfileId;
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = true;
+        target.Scope = MapScopeModelToDomain(source.Scope);
         target.DateModified = DateTime.UtcNow;
     }
 
@@ -70,6 +71,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.ProfileId = source.ProfileId;
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = source.IsActive;
+        target.Scope = MapScopeModelToDomain(source.Scope);
     }
 
     // Umbraco.Code.MapAll
@@ -83,6 +85,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.ProfileId = source.ProfileId;
         target.Tags = source.Tags;
         target.IsActive = source.IsActive;
+        target.Scope = MapScopeDomainToModel(source.Scope);
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
     }
@@ -96,5 +99,53 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.IsActive = source.IsActive;
+    }
+
+    private static AiPromptScope? MapScopeModelToDomain(ScopeModel? model)
+    {
+        if (model is null)
+        {
+            return null;
+        }
+
+        return new AiPromptScope
+        {
+            IncludeRules = model.IncludeRules.Select(MapScopeRuleModelToDomain).ToList(),
+            ExcludeRules = model.ExcludeRules.Select(MapScopeRuleModelToDomain).ToList()
+        };
+    }
+
+    private static AiPromptScopeRule MapScopeRuleModelToDomain(ScopeRuleModel model)
+    {
+        return new AiPromptScopeRule
+        {
+            PropertyEditorUiAliases = model.PropertyEditorUiAliases?.ToList(),
+            PropertyAliases = model.PropertyAliases?.ToList(),
+            DocumentTypeAliases = model.DocumentTypeAliases?.ToList()
+        };
+    }
+
+    private static ScopeModel? MapScopeDomainToModel(AiPromptScope? scope)
+    {
+        if (scope is null)
+        {
+            return null;
+        }
+
+        return new ScopeModel
+        {
+            IncludeRules = scope.IncludeRules.Select(MapScopeRuleDomainToModel),
+            ExcludeRules = scope.ExcludeRules.Select(MapScopeRuleDomainToModel)
+        };
+    }
+
+    private static ScopeRuleModel MapScopeRuleDomainToModel(AiPromptScopeRule rule)
+    {
+        return new ScopeRuleModel
+        {
+            PropertyEditorUiAliases = rule.PropertyEditorUiAliases,
+            PropertyAliases = rule.PropertyAliases,
+            DocumentTypeAliases = rule.DocumentTypeAliases
+        };
     }
 }

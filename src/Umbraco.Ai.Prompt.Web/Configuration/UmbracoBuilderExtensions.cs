@@ -23,6 +23,7 @@ public static class UmbracoBuilderExtensions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<PromptMapDefinition>();
 
+        // Configure Management API
         builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>
         {
             options.SwaggerDoc(

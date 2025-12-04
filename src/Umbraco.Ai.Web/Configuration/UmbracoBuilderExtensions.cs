@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -67,15 +68,17 @@ public static class UmbracoBuilderExtensions
 
         return builder;
     }
-    
+
     /// <summary>
     /// Configures an Umbraco AI Management API with optional Swagger configuration.
     /// </summary>
     /// <param name="builder"></param>
     /// <param name="apiName"></param>
     /// <param name="configureSwagger"></param>
+    /// <param name="configureJson"></param>
     /// <returns></returns>
-    public static IUmbracoBuilder WithUmbracoAiManagementApi(this IUmbracoBuilder builder, string apiName, Action<SwaggerGenOptions>? configureSwagger = null)
+    public static IUmbracoBuilder WithUmbracoAiManagementApi(this IUmbracoBuilder builder, string apiName, Action<SwaggerGenOptions>? configureSwagger = null,
+        Action<JsonSerializerOptions>? configureJson = null)
     {
         if (configureSwagger != null)
         {
@@ -102,7 +105,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IOperationIdHandler, UmbracoAiApiOperationIdHandler>();
         builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAiApiSchemaIdHandler>();
         
-        builder.AddJsonOptions(apiName);
+        builder.AddJsonOptions(apiName, configureJson);
         
         return builder;
     }

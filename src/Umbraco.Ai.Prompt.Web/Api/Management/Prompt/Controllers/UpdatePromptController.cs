@@ -5,6 +5,7 @@ using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Ai.Prompt.Extensions;
 using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
 
@@ -15,13 +16,15 @@ namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
 public class UpdatePromptController : PromptControllerBase
 {
     private readonly IAiPromptService _aiPromptService;
+    private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public UpdatePromptController(IAiPromptService aiPromptService)
+    public UpdatePromptController(IAiPromptService aiPromptService, IUmbracoMapper umbracoMapper)
     {
         _aiPromptService = aiPromptService;
+        _umbracoMapper = umbracoMapper;
     }
 
     /// <summary>
@@ -41,24 +44,13 @@ public class UpdatePromptController : PromptControllerBase
         [FromBody] UpdatePromptRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        var existing = await _aiPromptService.GetPromptAsync(promptIdOrAlias, cancellationToken);
+        AiPrompt? existing = await _aiPromptService.GetPromptAsync(promptIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return PromptNotFound();
         }
 
-        var prompt = new AiPrompt
-        {
-            Id = existing.Id,
-            Alias = existing.Alias, // Alias cannot be changed after creation
-            Name = model.Name,
-            Content = model.Content,
-            Description = model.Description,
-            ProfileId = model.ProfileId,
-            Tags = model.Tags?.ToList() ?? [],
-            IsActive = model.IsActive,
-            DateCreated = existing.DateCreated // Preserve original creation date
-        };
+        AiPrompt prompt = _umbracoMapper.Map(model, existing);
 
         await _aiPromptService.SavePromptAsync(prompt, cancellationToken);
         return Ok();

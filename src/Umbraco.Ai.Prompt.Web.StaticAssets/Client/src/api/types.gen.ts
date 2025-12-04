@@ -4,6 +4,17 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44363' | (string & {});
 };
 
+export type ScopeRuleModel = {
+    propertyEditorUiAliases?: Array<string> | null;
+    propertyAliases?: Array<string> | null;
+    documentTypeAliases?: Array<string> | null;
+};
+
+export type ScopeModel = {
+    includeRules?: Array<ScopeRuleModel> | null;
+    excludeRules?: Array<ScopeRuleModel> | null;
+};
+
 export type CreatePromptRequestModel = {
     alias: string;
     name: string;
@@ -11,6 +22,7 @@ export type CreatePromptRequestModel = {
     description?: string | null;
     profileId?: string | null;
     tags?: Array<string> | null;
+    scope?: ScopeModel | null;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -52,6 +64,7 @@ export type PromptResponseModel = {
     content: string;
     profileId?: string | null;
     tags: Array<string>;
+    scope?: ScopeModel | null;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -64,6 +77,7 @@ export type UpdatePromptRequestModel = {
     description?: string | null;
     profileId?: string | null;
     tags?: Array<string> | null;
+    scope?: ScopeModel | null;
     isActive: boolean;
 };
 

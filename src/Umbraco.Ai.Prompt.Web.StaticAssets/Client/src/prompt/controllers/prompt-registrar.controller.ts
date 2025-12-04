@@ -32,9 +32,10 @@ export class UmbPromptRegistrarController extends UmbControllerBase {
         }
 
         // Generate manifests for each prompt with descending weight so they appear in order
-        const manifests = data.map((prompt, index) =>
-            generatePromptPropertyActionManifest(prompt, 100 - index)
-        );
+        // Filter out null manifests (prompts without valid scope)
+        const manifests = data
+            .map((prompt, index) => generatePromptPropertyActionManifest(prompt, 100 - index))
+            .filter((manifest): manifest is NonNullable<typeof manifest> => manifest !== null);
 
         // Register each manifest, checking for duplicates
         manifests.forEach((manifest) => {

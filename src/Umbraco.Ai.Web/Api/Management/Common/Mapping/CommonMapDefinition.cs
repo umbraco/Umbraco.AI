@@ -12,8 +12,12 @@ public class CommonMapDefinition : IMapDefinition
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)
     {
+        // Response mappings (domain -> response)
         mapper.Define<AiModelRef, ModelRefModel>((_, _) => new ModelRefModel(), Map);
         mapper.Define<AiModelDescriptor, ModelDescriptorResponseModel>((_, _) => new ModelDescriptorResponseModel(), Map);
+
+        // Request mappings (request -> domain)
+        mapper.Define<ModelRefModel, AiModelRef>((source, _) => new AiModelRef(source.ProviderId, source.ModelId));
     }
 
     // Umbraco.Code.MapAll

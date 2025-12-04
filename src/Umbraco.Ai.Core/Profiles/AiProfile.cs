@@ -1,4 +1,4 @@
-﻿using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Profiles;
 
@@ -11,40 +11,41 @@ public sealed class AiProfile
     /// The unique identifier of the AI profile.
     /// </summary>
     public required Guid Id { get; init; }
-    
+
     /// <summary>
     /// The alias of the AI profile.
     /// </summary>
-    public required string Alias { get; init; }
-    
+    public required string Alias { get; set; }
+
     /// <summary>
     /// The name of the AI profile.
     /// </summary>
-    public required string Name { get; init; }
+    public required string Name { get; set; }
 
     /// <summary>
-    /// The capability of the AI profile (e.g., Text, Image, etc.).
+    /// The capability of the AI profile (e.g., Chat, Embedding, etc.).
+    /// Cannot be changed after creation.
     /// </summary>
     public AiCapability Capability { get; init; } = AiCapability.Chat;
-    
+
     /// <summary>
     /// The AI model reference associated with this profile.
     /// </summary>
-    public AiModelRef Model { get; init; }
+    public AiModelRef Model { get; set; }
 
     /// <summary>
     /// The ID of the connection to use for this profile.
     /// Must reference a valid AiConnection.Id that matches the provider in Model.ProviderId.
     /// </summary>
-    public required Guid ConnectionId { get; init; }
+    public required Guid ConnectionId { get; set; }
 
     /// <summary>
     /// Capability-specific settings. Type depends on <see cref="Capability"/> value.
     /// </summary>
-    public IAiProfileSettings? Settings { get; init; }
+    public IAiProfileSettings? Settings { get; set; }
 
     /// <summary>
     /// A list of tags associated with the AI profile for categorization and filtering.
     /// </summary>
-    public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Extensions;
@@ -12,6 +11,7 @@ using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
+using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
@@ -26,6 +26,7 @@ public class UpdateProfileController : ProfileControllerBase
     private readonly IAiProfileService _profileService;
     private readonly IAiConnectionService _connectionService;
     private readonly AiProviderCollection _providers;
+    private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateProfileController"/> class.
@@ -33,11 +34,13 @@ public class UpdateProfileController : ProfileControllerBase
     public UpdateProfileController(
         IAiProfileService profileService,
         IAiConnectionService connectionService,
-        AiProviderCollection providers)
+        AiProviderCollection providers,
+        IUmbracoMapper umbracoMapper)
     {
         _profileService = profileService;
         _connectionService = connectionService;
         _providers = providers;
+        _umbracoMapper = umbracoMapper;
     }
 
     /// <summary>
@@ -77,35 +80,8 @@ public class UpdateProfileController : ProfileControllerBase
             return ProfileOperationStatusResult(ProfileOperationStatus.ProviderNotFound);
         }
 
-        var profile = new AiProfile
-        {
-            Id = existing.Id,
-            Alias = requestModel.Alias,
-            Name = requestModel.Name,
-            Capability = existing.Capability, // Capability cannot be changed after creation
-            Model = new AiModelRef(requestModel.Model.ProviderId, requestModel.Model.ModelId),
-            ConnectionId = requestModel.ConnectionId,
-            Settings = MapSettingsFromRequest(existing.Capability, requestModel.Settings),
-            Tags = requestModel.Tags
-        };
-
+        AiProfile profile = _umbracoMapper.Map(requestModel, existing);
         await _profileService.SaveProfileAsync(profile, cancellationToken);
         return Ok();
-    }
-
-    private static IAiProfileSettings? MapSettingsFromRequest(AiCapability capability, ProfileSettingsModel? settings)
-    {
-        return capability switch
-        {
-            AiCapability.Chat when settings is ChatProfileSettingsModel chat => new AiChatProfileSettings
-            {
-                Temperature = chat.Temperature,
-                MaxTokens = chat.MaxTokens,
-                SystemPromptTemplate = chat.SystemPromptTemplate
-            },
-            AiCapability.Chat => new AiChatProfileSettings(), // Default empty chat settings
-            AiCapability.Embedding => new AiEmbeddingProfileSettings(),
-            _ => null
-        };
     }
 }

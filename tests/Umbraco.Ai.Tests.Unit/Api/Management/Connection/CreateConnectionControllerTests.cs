@@ -1,21 +1,38 @@
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
 using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
 
 public class CreateConnectionControllerTests
 {
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IUmbracoMapper> _umbracoMapperMock;
     private readonly CreateConnectionController _controller;
 
     public CreateConnectionControllerTests()
     {
         _connectionServiceMock = new Mock<IAiConnectionService>();
-        _controller = new CreateConnectionController(_connectionServiceMock.Object);
+        _umbracoMapperMock = new Mock<IUmbracoMapper>();
+
+        // Setup mapper to use real mapping logic
+        _umbracoMapperMock
+            .Setup(m => m.Map<AiConnection>(It.IsAny<CreateConnectionRequestModel>()))
+            .Returns((CreateConnectionRequestModel request) => new AiConnection
+            {
+                Id = Guid.Empty,
+                Alias = request.Alias,
+                Name = request.Name,
+                ProviderId = request.ProviderId,
+                Settings = request.Settings,
+                IsActive = request.IsActive
+            });
+
+        _controller = new CreateConnectionController(_connectionServiceMock.Object, _umbracoMapperMock.Object);
     }
 
     #region CreateConnection

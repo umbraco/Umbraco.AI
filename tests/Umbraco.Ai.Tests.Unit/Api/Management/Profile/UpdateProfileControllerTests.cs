@@ -9,6 +9,7 @@ using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Profile.Controllers;
 using Umbraco.Ai.Web.Api.Management.Profile.Models;
+using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
 
@@ -16,12 +17,28 @@ public class UpdateProfileControllerTests
 {
     private readonly Mock<IAiProfileService> _profileServiceMock;
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IUmbracoMapper> _umbracoMapperMock;
     private List<IAiProvider> _providers = new();
 
     public UpdateProfileControllerTests()
     {
         _profileServiceMock = new Mock<IAiProfileService>();
         _connectionServiceMock = new Mock<IAiConnectionService>();
+        _umbracoMapperMock = new Mock<IUmbracoMapper>();
+
+        // Setup mapper to simulate Map(source, target) behavior
+        _umbracoMapperMock
+            .Setup(m => m.Map(It.IsAny<UpdateProfileRequestModel>(), It.IsAny<AiProfile>()))
+            .Returns((UpdateProfileRequestModel request, AiProfile existing) =>
+            {
+                // Simulate mapping: update mutable properties, preserve init-only properties (Id, Capability)
+                existing.Alias = request.Alias;
+                existing.Name = request.Name;
+                existing.Model = new AiModelRef(request.Model.ProviderId, request.Model.ModelId);
+                existing.ConnectionId = request.ConnectionId;
+                existing.Tags = request.Tags ?? Array.Empty<string>();
+                return existing;
+            });
     }
 
     private UpdateProfileController CreateController()
@@ -30,7 +47,8 @@ public class UpdateProfileControllerTests
         return new UpdateProfileController(
             _profileServiceMock.Object,
             _connectionServiceMock.Object,
-            collection);
+            collection,
+            _umbracoMapperMock.Object);
     }
 
     #region UpdateProfile - By ID

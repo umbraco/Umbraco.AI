@@ -38,6 +38,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
                     promptName: meta.label,
                     promptDescription: meta.promptDescription,
                     promptContent: meta.promptContent,
+                    promptProfileId: meta.promptProfileId,
                 },
             });
 

@@ -7,6 +7,7 @@ export interface UaiPromptRegistrationModel {
     name: string;
     description: string | null;
     content: string;
+    profileId: string | null;
 }
 
 /**
@@ -19,6 +20,7 @@ export interface UaiPromptPropertyActionMeta {
     promptAlias: string;
     promptContent: string;
     promptDescription: string | null;
+    promptProfileId: string | null;
 }
 
 /**
@@ -28,6 +30,7 @@ export interface UaiPromptPreviewModalData {
     promptName: string;
     promptDescription: string | null;
     promptContent: string;
+    promptProfileId: string | null;
 }
 
 /**

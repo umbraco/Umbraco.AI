@@ -26,6 +26,7 @@ export function generatePromptPropertyActionManifest(
             promptAlias: prompt.alias,
             promptContent: prompt.content,
             promptDescription: prompt.description,
+            promptProfileId: prompt.profileId,
         },
     };
 }

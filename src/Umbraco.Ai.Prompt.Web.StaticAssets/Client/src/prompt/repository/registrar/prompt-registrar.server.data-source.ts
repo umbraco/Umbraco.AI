@@ -56,6 +56,7 @@ export class UaiPromptRegistrarServerDataSource {
                     name: detail.name,
                     description: detail.description ?? null,
                     content: detail.content,
+                    profileId: detail.profileId ?? null,
                 } satisfies UaiPromptRegistrationModel;
             })
         );

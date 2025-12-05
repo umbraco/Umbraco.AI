@@ -83,6 +83,7 @@ export class UaiPropertyTagsInputElement extends UmbLitElement {
                 .placeholder=${this.placeholder}
                 ?readonly=${this.readonly}
                 @change=${this.#onChange}
+                strict
             ></uai-tags-input>
         `;
     }

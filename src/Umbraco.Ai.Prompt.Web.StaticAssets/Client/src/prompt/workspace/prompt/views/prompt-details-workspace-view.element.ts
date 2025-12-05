@@ -8,8 +8,7 @@ import type { UaiPromptDetailModel } from "../../../types.js";
 import type { UaiPromptScope, UaiScopeRule } from "../../../property-actions/types.js";
 import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../../property-actions/constants.js";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
-import { createEmptyRule } from "../../../components/scope-rule-editor/scope-rule-editor.element.js";
-import "../../../components/scope-rule-editor/scope-rule-editor.element.js";
+import "../../../components/scope-rules-editor/scope-rules-editor.element.js";
 
 /**
  * Creates a default scope with one include rule for all text-based editors.
@@ -89,57 +88,21 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    // Include rules handlers
-    #onAddIncludeRule() {
+    #onIncludeRulesChange(event: CustomEvent<UaiScopeRule[]>) {
+        event.stopPropagation();
         const scope = this.#getScope();
         this.#updateScope({
             ...scope,
-            includeRules: [...scope.includeRules, createEmptyRule()],
+            includeRules: event.detail,
         });
     }
 
-    #onRemoveIncludeRule(index: number) {
+    #onExcludeRulesChange(event: CustomEvent<UaiScopeRule[]>) {
+        event.stopPropagation();
         const scope = this.#getScope();
         this.#updateScope({
             ...scope,
-            includeRules: scope.includeRules.filter((_, i) => i !== index),
-        });
-    }
-
-    #onIncludeRuleChange(index: number, rule: UaiScopeRule) {
-        const scope = this.#getScope();
-        const newRules = [...scope.includeRules];
-        newRules[index] = rule;
-        this.#updateScope({
-            ...scope,
-            includeRules: newRules,
-        });
-    }
-
-    // Exclude rules handlers
-    #onAddExcludeRule() {
-        const scope = this.#getScope();
-        this.#updateScope({
-            ...scope,
-            excludeRules: [...scope.excludeRules, createEmptyRule()],
-        });
-    }
-
-    #onRemoveExcludeRule(index: number) {
-        const scope = this.#getScope();
-        this.#updateScope({
-            ...scope,
-            excludeRules: scope.excludeRules.filter((_, i) => i !== index),
-        });
-    }
-
-    #onExcludeRuleChange(index: number, rule: UaiScopeRule) {
-        const scope = this.#getScope();
-        const newRules = [...scope.excludeRules];
-        newRules[index] = rule;
-        this.#updateScope({
-            ...scope,
-            excludeRules: newRules,
+            excludeRules: event.detail,
         });
     }
 
@@ -160,7 +123,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         const scope = this.#getScope();
 
         return html`
-            <uui-box headline="Prompt Configuration">
+            <uui-box headline="General">
                 <umb-property-layout label="AI Profile" description="Optional AI profile this prompt is designed for">
                     <uai-profile-picker
                         slot="editor"
@@ -190,52 +153,30 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
             </uui-box>
 
-            <uui-box headline="Scope Configuration">
-                
+            <uui-box headline="Scope">
                 <umb-property-layout
                     label="Include Rules"
                     description="Prompt appears where ANY rule matches (OR logic between rules)"
                 >
-                    <div slot="editor" class="rules-container">
-                        ${scope.includeRules.map((rule, index) => html`
-                            <uai-scope-rule-editor
-                                .rule=${rule}
-                                @rule-change=${(e: CustomEvent<UaiScopeRule>) => this.#onIncludeRuleChange(index, e.detail)}
-                                @remove=${() => this.#onRemoveIncludeRule(index)}
-                            ></uai-scope-rule-editor>
-                        `)}
-                        <uui-button
-                            look="placeholder"
-                            @click=${this.#onAddIncludeRule}
-                        >
-                            <uui-icon name="icon-add"></uui-icon>
-                            Add Include Rule
-                        </uui-button>
-                    </div>
+                    <uai-scope-rules-editor
+                        slot="editor"
+                        .rules=${scope.includeRules}
+                        addButtonLabel="Add Include Rule"
+                        @rules-change=${this.#onIncludeRulesChange}
+                    ></uai-scope-rules-editor>
                 </umb-property-layout>
 
                 <umb-property-layout
-                        label="Exclude Rules"
-                        description="Prompt is hidden where ANY rule matches (overrides includes)"
+                    label="Exclude Rules"
+                    description="Prompt is hidden where ANY rule matches (overrides includes)"
                 >
-                    <div slot="editor" class="rules-container">
-                        ${scope.excludeRules.map((rule, index) => html`
-                            <uai-scope-rule-editor
-                                .rule=${rule}
-                                @rule-change=${(e: CustomEvent<UaiScopeRule>) => this.#onExcludeRuleChange(index, e.detail)}
-                                @remove=${() => this.#onRemoveExcludeRule(index)}
-                            ></uai-scope-rule-editor>
-                        `)}
-                        <uui-button
-                                look="placeholder"
-                                @click=${this.#onAddExcludeRule}
-                        >
-                            <uui-icon name="icon-add"></uui-icon>
-                            Add Exclude Rule
-                        </uui-button>
-                    </div>
+                    <uai-scope-rules-editor
+                        slot="editor"
+                        .rules=${scope.excludeRules}
+                        addButtonLabel="Add Exclude Rule"
+                        @rules-change=${this.#onExcludeRulesChange}
+                    ></uai-scope-rules-editor>
                 </umb-property-layout>
-                
             </uui-box>
 
             ${this._model.tags.length > 0 ? html`
@@ -310,16 +251,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
 
             uui-input,
             uui-textarea {
-                width: 100%;
-            }
-
-            .rules-container {
-                display: flex;
-                flex-direction: column;
-                gap: var(--uui-size-space-3);
-            }
-
-            .rules-container uui-button[look="placeholder"] {
                 width: 100%;
             }
 

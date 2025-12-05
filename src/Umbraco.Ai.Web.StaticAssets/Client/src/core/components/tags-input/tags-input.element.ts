@@ -52,6 +52,15 @@ export type UaiTagLookupCallback = (query: string) => Promise<UaiTagItem[]>;
  *   @change=${(e) => console.log(e.target.items)}
  * ></uai-tags-input>
  * ```
+ *
+ * @example Strict mode - only allow values from suggestions
+ * ```html
+ * <uai-tags-input
+ *   strict
+ *   .lookup=${async (query) => fetchAllowedTags(query)}
+ *   @change=${(e) => console.log(e.target.items)}
+ * ></uai-tags-input>
+ * ```
  * @public
  */
 @customElement('uai-tags-input')
@@ -96,6 +105,16 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 	 */
 	@property({ type: String })
 	placeholder = 'Enter tag';
+
+	/**
+	 * When enabled, only allows values that come from the lookup suggestions.
+	 * Users cannot create arbitrary tags - they must select from the dropdown.
+	 * @type {boolean}
+	 * @attr
+	 * @default false
+	 */
+	@property({ type: Boolean, reflect: true })
+	strict = false;
 
 	@state()
 	private _matches: Array<UaiTagItem> = [];
@@ -159,25 +178,31 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 	#onInputKeydown(e: KeyboardEvent) {
 		const inputLength = (this._tagInput.value as string).trim().length;
 
-		//Prevent tab away if there is a text in the input.
+		// Prevent tab away if there is text in the input
+		// In strict mode, only create tag if there are matches
 		if (e.key === 'Tab' && inputLength && !this._matches.length) {
+			if (this.strict) {
+				// In strict mode, allow tab away without creating tag
+				return;
+			}
 			e.preventDefault();
 			this.#createTag();
 			return;
 		}
 
-		//If the input is empty we can navigate out of it using tab
+		// If the input is empty we can navigate out of it using tab
 		if (e.key === 'Tab' && !inputLength) {
 			return;
 		}
 
-		//Create a new tag when enter to the input
+		// Create a new tag when enter is pressed
+		// In strict mode, this will only succeed if value is in matches
 		if (e.key === 'Enter') {
 			this.#createTag();
 			return;
 		}
 
-		//This one to show option collection if there is any
+		// This one to show option collection if there is any
 		if (e.key === 'ArrowDown') {
 			e.preventDefault();
 			this._currentInput = this._optionCollection?.item(0)?.value ?? this._currentInput;
@@ -254,13 +279,29 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 
 	#onBlur() {
 		if (this._matches.length) return;
-		else this.#createTag();
+		// In strict mode, don't auto-create tag on blur - user must select from dropdown
+		if (this.strict) {
+			this._tagInput.value = '';
+			this._currentInput = '';
+			this.#inputError(false);
+			return;
+		}
+		this.#createTag();
 	}
 
 	#createTag() {
 		this.#inputError(false);
 		const newTag = (this._tagInput.value as string).trim();
 		if (!newTag) return;
+
+		// In strict mode, only allow values from suggestions
+		if (this.strict) {
+			const matchedTag = this._matches.find((match) => match.text === newTag);
+			if (!matchedTag) {
+				this.#inputError(true);
+				return;
+			}
+		}
 
 		const tagExists = this.items.find((tag) => tag === newTag);
 		if (tagExists) return this.#inputError(true);
@@ -269,6 +310,7 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 		this.items = [...this.items, newTag];
 		this._tagInput.value = '';
 		this._currentInput = '';
+		this._matches = [];
 		this.dispatchEvent(new UmbChangeEvent());
 	}
 
@@ -291,6 +333,8 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 		} else {
 			this.items = [];
 		}
+		// Remove focus from the tags container to clear focus ring
+		(document.activeElement as HTMLElement)?.blur();
 		this.dispatchEvent(new UmbChangeEvent());
 	}
 

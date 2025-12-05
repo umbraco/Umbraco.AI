@@ -245,7 +245,11 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 	}
 
 	protected override updated(): void {
-		this._mainTag.style.width = `${this._widthTracker.offsetWidth - 4}px`;
+		if (this._currentInput) {
+			this._mainTag.style.width = `${this._widthTracker.offsetWidth - 4}px`;
+		} else {
+			this._mainTag.style.width = '';
+		}
 	}
 
 	#onBlur() {
@@ -398,7 +402,7 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 					aria-label="tag input"
 					autocomplete="off"
 					placeholder="${this.placeholder}"
-					.value="${this._currentInput || nothing}"
+					.value="${this._currentInput}"
 					@keydown="${this.#onInputKeydown}"
 					@input="${this.#onInput}"
 					@blur="${this.#onBlur}" />
@@ -518,6 +522,8 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 
 			#main-tag:not(:focus-within) #tag-input:placeholder-shown {
 				opacity: 0;
+				width: 0;
+				padding: 0;
 			}
 
 			#main-tag:has(#tag-input:focus),

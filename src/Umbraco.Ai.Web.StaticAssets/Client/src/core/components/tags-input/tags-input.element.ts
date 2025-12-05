@@ -16,6 +16,7 @@ import { UUIFormControlMixin } from '@umbraco-cms/backoffice/external/uui';
 
 /**
  * Response model for tag lookup results.
+ * @public
  */
 export interface UaiTagItem {
 	/** Unique identifier for the tag */
@@ -30,6 +31,7 @@ export interface UaiTagItem {
  * Callback type for looking up existing tags.
  * @param query - The search query string
  * @returns Promise resolving to an array of matching tag items
+ * @public
  */
 export type UaiTagLookupCallback = (query: string) => Promise<UaiTagItem[]>;
 
@@ -115,6 +117,24 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 
 	@queryAll('.tag')
 	private _tagEls?: NodeListOf<HTMLElement>;
+
+	override connectedCallback() {
+		super.connectedCallback();
+		document.addEventListener('click', this.#onDocumentClick);
+	}
+
+	override disconnectedCallback() {
+		super.disconnectedCallback();
+		document.removeEventListener('click', this.#onDocumentClick);
+	}
+
+	#onDocumentClick = (e: MouseEvent) => {
+		if (!this._matches.length) return;
+		const path = e.composedPath();
+		if (!path.includes(this)) {
+			this._matches = [];
+		}
+	};
 
 	public override focus() {
 		this._tagInput.focus();
@@ -275,6 +295,7 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 	#optionClick(index: number) {
 		this._tagInput.value = this._optionCollection?.item(index)?.value ?? '';
 		this.#createTag();
+		this._matches = [];
 		this.focus();
 		return;
 	}
@@ -284,6 +305,7 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 			e.preventDefault();
 			this._currentInput = this._optionCollection?.item(index)?.value ?? '';
 			this.#createTag();
+			this._matches = [];
 			this.focus();
 			return;
 		}
@@ -376,7 +398,7 @@ export class UaiTagsInputElement extends UUIFormControlMixin(UmbLitElement, '') 
 					aria-label="tag input"
 					autocomplete="off"
 					placeholder="${this.placeholder}"
-					.value="${this._currentInput ?? undefined}"
+					.value="${this._currentInput || nothing}"
 					@keydown="${this.#onInputKeydown}"
 					@input="${this.#onInput}"
 					@blur="${this.#onBlur}" />

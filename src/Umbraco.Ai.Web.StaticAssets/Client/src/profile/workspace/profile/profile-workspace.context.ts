@@ -16,6 +16,8 @@ import type { UaiCommand } from "../../../core/command/command.base.js";
 import { UaiCommandStore } from "../../../core/command/command.store.js";
 import { UAI_EMPTY_GUID } from "../../../core/index.js";
 import { UaiProfileWorkspaceEditorElement } from "./profile-workspace-editor.element.js";
+import { UaiEntityDeletedRedirectController } from "../../../core/workspace/entity-deleted-redirect.controller.js";
+import { UAI_PROFILE_ROOT_WORKSPACE_PATH } from "../profile-root/paths.js";
 
 /**
  * Workspace context for editing Profile entities.
@@ -66,6 +68,13 @@ export class UaiProfileWorkspaceContext
                 setup: (_component, info) => {
                     this.removeUmbControllerByAlias(UmbWorkspaceIsNewRedirectControllerAlias);
                     this.load(info.match.params.unique);
+
+                    // Redirect to collection view when entity is deleted
+                    new UaiEntityDeletedRedirectController(this, {
+                        getUnique: () => this.getUnique(),
+                        getEntityType: () => this.getEntityType(),
+                        collectionPath: UAI_PROFILE_ROOT_WORKSPACE_PATH,
+                    });
                 },
             },
         ]);

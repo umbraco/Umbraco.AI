@@ -1,6 +1,7 @@
 import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UmbTableColumn, UmbTableItem } from "@umbraco-cms/backoffice/components";
+import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEvent, UmbTableDeselectedEvent, UmbTableElement } from "@umbraco-cms/backoffice/components";
+import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiConnectionItemModel } from "../../../types.js";
@@ -15,7 +16,17 @@ import { UaiProviderDetailModel } from "../../../../provider";
 @customElement("uai-connection-table-collection-view")
 export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
     @state()
+    private _tableConfig: UmbTableConfig = {
+        allowSelection: true,
+    };
+
+    @state()
     private _items: UmbTableItem[] = [];
+
+    @state()
+    private _selection: Array<string> = [];
+
+    #collectionContext?: UmbDefaultCollectionContext<UaiConnectionItemModel>;
 
     private _columns: UmbTableColumn[] = [
         { name: "Name", alias: "name" },
@@ -25,11 +36,29 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
 
     constructor() {
         super();
-        this.consumeContext(UMB_COLLECTION_CONTEXT, (ctx) => {
-            if (ctx) {
-                this.observe(ctx.items, (items) => this.#createTableItems(items as UaiConnectionItemModel[]));
-            }
+        this.consumeContext(UMB_COLLECTION_CONTEXT, (instance) => {
+            this.#collectionContext = instance;
+            this.#collectionContext?.selection.setSelectable(true);
+            this.#observeCollectionItems();
         });
+    }
+
+    #observeCollectionItems() {
+        if (!this.#collectionContext) return;
+
+        this.observe(
+            this.#collectionContext.items,
+            (items) => this.#createTableItems(items as UaiConnectionItemModel[]),
+            "umbCollectionItemsObserver"
+        );
+
+        this.observe(
+            this.#collectionContext.selection.selection,
+            (selection) => {
+                this._selection = selection as string[];
+            },
+            "umbCollectionSelectionObserver"
+        );
     }
 
     #createTableItems(items: UaiConnectionItemModel[]) {
@@ -60,8 +89,26 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
         }));
     }
 
+    #handleSelect(event: UmbTableSelectedEvent) {
+        event.stopPropagation();
+        const table = event.target as UmbTableElement;
+        this.#collectionContext?.selection.setSelection(table.selection);
+    }
+
+    #handleDeselect(event: UmbTableDeselectedEvent) {
+        event.stopPropagation();
+        const table = event.target as UmbTableElement;
+        this.#collectionContext?.selection.setSelection(table.selection);
+    }
+
     render() {
-        return html`<umb-table .columns=${this._columns} .items=${this._items}></umb-table>`;
+        return html`<umb-table
+            .config=${this._tableConfig}
+            .columns=${this._columns}
+            .items=${this._items}
+            .selection=${this._selection}
+            @selected=${this.#handleSelect}
+            @deselected=${this.#handleDeselect}></umb-table>`;
     }
 
     static styles = [UmbTextStyles];

@@ -1,5 +1,6 @@
 import { UmbEntityBulkActionBase } from '@umbraco-cms/backoffice/entity-bulk-action';
 import { umbConfirmModal } from '@umbraco-cms/backoffice/modal';
+import { UmbLocalizationController } from '@umbraco-cms/backoffice/localization-api';
 import type { UmbDetailRepository } from '@umbraco-cms/backoffice/repository';
 import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
 
@@ -10,8 +11,8 @@ import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
 export interface UaiBulkDeleteActionArgs {
     /** Localization key or text for the dialog headline */
     headline: string;
-    /** Function to generate the confirmation message based on selection count */
-    getConfirmMessage: (count: number) => string;
+    /** Localization key for the confirmation message (will be interpolated with count) */
+    confirmMessage: string;
     /** Factory function to create the detail repository */
     getRepository: (host: UmbControllerHost) => UmbDetailRepository<unknown>;
 }
@@ -24,6 +25,8 @@ export interface UaiBulkDeleteActionArgs {
  * @public
  */
 export abstract class UaiBulkDeleteActionBase extends UmbEntityBulkActionBase<never> {
+    #localize = new UmbLocalizationController(this);
+
     /**
      * Override this method to provide the bulk delete action configuration.
      */
@@ -34,11 +37,11 @@ export abstract class UaiBulkDeleteActionBase extends UmbEntityBulkActionBase<ne
             throw new Error('No items selected.');
         }
 
-        const { headline, getConfirmMessage, getRepository } = this.getArgs();
+        const { headline, confirmMessage, getRepository } = this.getArgs();
 
         await umbConfirmModal(this, {
             headline,
-            content: getConfirmMessage(this.selection.length),
+            content: this.#localize.string(confirmMessage, this.selection.length),
             color: 'danger',
             confirmLabel: '#actions_delete',
         });

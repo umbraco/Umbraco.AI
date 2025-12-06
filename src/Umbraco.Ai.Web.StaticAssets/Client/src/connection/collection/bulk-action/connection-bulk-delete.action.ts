@@ -5,7 +5,7 @@ export class UaiConnectionBulkDeleteAction extends UaiBulkDeleteActionBase {
     protected getArgs(): UaiBulkDeleteActionArgs {
         return {
             headline: '#actions_delete',
-            getConfirmMessage: (count) => `Are you sure you want to delete ${count} connection(s)? This cannot be undone.`,
+            confirmMessage: '#uaiConnection_bulkDeleteConfirm',
             getRepository: (host) => new UaiConnectionDetailRepository(host),
         };
     }

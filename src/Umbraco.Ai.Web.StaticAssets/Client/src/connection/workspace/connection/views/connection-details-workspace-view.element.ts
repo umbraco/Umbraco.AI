@@ -91,7 +91,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #renderLeftColumn() {
         if (!this._model) return null;
 
-        return html`<uui-box headline="Provider Settings">
+        return html`<uui-box headline="General">
             ${this.#renderProviderSettings()}
         </uui-box>`;
     }

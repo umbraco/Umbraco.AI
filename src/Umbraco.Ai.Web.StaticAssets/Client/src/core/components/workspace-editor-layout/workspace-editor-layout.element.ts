@@ -15,7 +15,6 @@ export class UaiWorkspaceEditorLayoutElement extends UmbLitElement
         css`
             :host {
 				display: block;
-				padding: var(--uui-size-space-6);
 			}
 
             #main {

@@ -19,7 +19,6 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 /// Controller for streaming chat completion using Server-Sent Events (SSE).
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class StreamChatController : ChatControllerBase
 {
     private readonly IAiChatService _chatService;

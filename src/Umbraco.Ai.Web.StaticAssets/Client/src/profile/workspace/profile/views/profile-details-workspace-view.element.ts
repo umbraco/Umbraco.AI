@@ -194,7 +194,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const chatSettings = this.#getChatSettings();
 
         return html`
-            <uui-box headline="Chat Settings">
+            <uui-box headline="Settings">
                 <umb-property-layout label="Temperature" description="Controls randomness (0.0 = deterministic, 2.0 = very random)">
                     <umb-input-slider
                         slot="editor"
@@ -286,7 +286,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <uui-box headline="Profile Configuration">
+            <uui-box headline="General">
 
                 <umb-property-layout label="Connection" description="Select the AI connection to use">
                     <uui-select

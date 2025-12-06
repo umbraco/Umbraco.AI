@@ -1,4 +1,4 @@
-import { UaiDeleteActionBase, type UaiDeleteActionArgs } from '../../core/entity-action/delete/uai-delete.action.js';
+import { UaiDeleteActionBase, type UaiDeleteActionArgs } from '../../core/entity-action/delete/delete.action.js';
 import { UaiConnectionDetailRepository } from '../repository/detail/connection-detail.repository.js';
 
 export class UaiConnectionDeleteAction extends UaiDeleteActionBase {

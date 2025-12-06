@@ -1,7 +1,7 @@
 import { UmbControllerBase } from '@umbraco-cms/backoffice/class-api';
 import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
 import { UMB_ACTION_EVENT_CONTEXT } from '@umbraco-cms/backoffice/action';
-import { UaiEntityActionEvent } from '../events/uai-entity-action.event.js';
+import { UaiEntityActionEvent } from '../events/entity-action.event.js';
 
 /**
  * Configuration for the entity deleted redirect controller.

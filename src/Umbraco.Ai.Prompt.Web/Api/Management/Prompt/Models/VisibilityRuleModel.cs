@@ -1,9 +1,9 @@
 namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
 
 /// <summary>
-/// API model for a scope rule that determines where a prompt can appear.
+/// API model for a visibility rule that determines where a prompt can appear.
 /// </summary>
-public class ScopeRuleModel
+public class VisibilityRuleModel
 {
     /// <summary>
     /// Property Editor UI aliases to match (e.g., 'Umb.PropertyEditorUi.TextBox').

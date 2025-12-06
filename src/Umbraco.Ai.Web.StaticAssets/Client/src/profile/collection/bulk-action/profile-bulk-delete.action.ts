@@ -5,7 +5,7 @@ export class UaiProfileBulkDeleteAction extends UaiBulkDeleteActionBase {
     protected getArgs(): UaiBulkDeleteActionArgs {
         return {
             headline: '#actions_delete',
-            getConfirmMessage: (count) => `Are you sure you want to delete ${count} profile(s)? This cannot be undone.`,
+            confirmMessage: '#uaiProfile_bulkDeleteConfirm',
             getRepository: (host) => new UaiProfileDetailRepository(host),
         };
     }

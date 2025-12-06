@@ -1,6 +1,7 @@
 export * from "./command/index.js";
 export * from './components/index.js';
 export * from './events/index.js';
+export * from './utils/index.js';
 
 /**
  * A constant representing an empty GUID.

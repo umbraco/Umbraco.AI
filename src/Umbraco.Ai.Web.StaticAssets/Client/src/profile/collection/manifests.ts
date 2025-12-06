@@ -1,6 +1,7 @@
 import { UAI_PROFILE_COLLECTION_ALIAS } from "./constants.js";
 import { UAI_PROFILE_COLLECTION_REPOSITORY_ALIAS } from "../repository/constants.js";
 import { profileCollectionActionManifests } from "./action/manifests.js";
+import { profileBulkActionManifests } from "./bulk-action/manifests.js";
 
 export const profileCollectionManifests: Array<UmbExtensionManifest> = [
     {
@@ -26,4 +27,5 @@ export const profileCollectionManifests: Array<UmbExtensionManifest> = [
         conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_PROFILE_COLLECTION_ALIAS }],
     },
     ...profileCollectionActionManifests,
+    ...profileBulkActionManifests,
 ];

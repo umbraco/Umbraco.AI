@@ -73,6 +73,50 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
     }
 
     /// <inheritdoc />
+    public async Task<(IEnumerable<AiProfile> Items, int Total)> GetPagedAsync(
+        string? filter = null,
+        AiCapability? capability = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var result = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AiProfileEntity> query = db.Profiles;
+
+            // Apply capability filter
+            if (capability.HasValue)
+            {
+                int capabilityValue = (int)capability.Value;
+                query = query.Where(p => p.Capability == capabilityValue);
+            }
+
+            // Apply name filter (case-insensitive contains)
+            if (!string.IsNullOrEmpty(filter))
+            {
+                query = query.Where(p => p.Name.ToLower().Contains(filter.ToLower()));
+            }
+
+            // Get total count before pagination
+            int total = await query.CountAsync(cancellationToken);
+
+            // Apply pagination and get items
+            List<AiProfileEntity> items = await query
+                .OrderBy(p => p.Name)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+
+            return (items, total);
+        });
+
+        scope.Complete();
+        return (result.items.Select(AiProfileFactory.BuildDomain), result.total);
+    }
+
+    /// <inheritdoc />
     public async Task<AiProfile> SaveAsync(AiProfile profile, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();

@@ -71,4 +71,16 @@ public interface IAiPromptService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if alias exists.</returns>
     Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a prompt and returns the AI response.
+    /// </summary>
+    /// <param name="promptId">The prompt ID to execute.</param>
+    /// <param name="request">The execution request containing context.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The execution result containing the AI response.</returns>
+    Task<AiPromptExecutionResult> ExecuteAsync(
+        Guid promptId,
+        AiPromptExecutionRequest request,
+        CancellationToken cancellationToken = default);
 }

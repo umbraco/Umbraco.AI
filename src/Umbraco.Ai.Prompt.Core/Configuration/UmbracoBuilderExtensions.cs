@@ -30,8 +30,11 @@ public static class UmbracoBuilderExtensions
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAiPromptRepository, InMemoryAiPromptRepository>();
 
+        // Register template service
+        builder.Services.AddSingleton<IAiPromptTemplateService, AiPromptTemplateService>();
+
         // Register service
-        builder.Services.AddSingleton<IAiPromptService, AiPromptService>();
+        builder.Services.AddScoped<IAiPromptService, AiPromptService>();
 
         return builder;
     }

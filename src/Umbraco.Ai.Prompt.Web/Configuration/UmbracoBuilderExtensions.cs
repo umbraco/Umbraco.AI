@@ -21,7 +21,8 @@ public static class UmbracoBuilderExtensions
     {
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
-            .Add<PromptMapDefinition>();
+            .Add<PromptMapDefinition>()
+            .Add<PromptExecutionMapDefinition>(); 
 
         // Configure Management API
         builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>

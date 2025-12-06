@@ -1,4 +1,4 @@
-using Umbraco.Ai.Core.Models;
+﻿using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Profiles;
 
@@ -10,7 +10,7 @@ public sealed class AiProfile
     /// <summary>
     /// The unique identifier of the AI profile.
     /// </summary>
-    public required Guid Id { get; init; }
+    public Guid Id { get; internal set; }
 
     /// <summary>
     /// The alias of the AI profile.

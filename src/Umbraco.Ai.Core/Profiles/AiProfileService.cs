@@ -62,7 +62,22 @@ internal sealed class AiProfileService : IAiProfileService
     public async Task<AiProfile> SaveProfileAsync(
         AiProfile profile,
         CancellationToken cancellationToken = default)
-        => await _repository.SaveAsync(profile, cancellationToken);
+    {
+        // Generate new ID if needed
+        if (profile.Id == Guid.Empty)
+        {
+            profile.Id = Guid.NewGuid();
+        }
+
+        // Check for alias uniqueness
+        var existingByAlias = await _repository.GetByAliasAsync(profile.Alias, cancellationToken);
+        if (existingByAlias is not null && existingByAlias.Id != profile.Id)
+        {
+            throw new InvalidOperationException($"A profile with alias '{profile.Alias}' already exists.");
+        }
+        
+        return await _repository.SaveAsync(profile, cancellationToken);
+    }
 
     public async Task<bool> DeleteProfileAsync(
         Guid id,

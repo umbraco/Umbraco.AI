@@ -19,7 +19,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     Alias = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ProviderId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    SettingsJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -43,7 +43,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     Temperature = table.Column<float>(type: "real", nullable: true),
                     MaxTokens = table.Column<int>(type: "int", nullable: true),
                     SystemPromptTemplate = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TagsJson = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true)
+                    Settings = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Tags = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true)
                 },
                 constraints: table =>
                 {

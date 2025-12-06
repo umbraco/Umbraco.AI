@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
 using Umbraco.Cms.Core.Mapping;
 
@@ -15,7 +16,6 @@ public class ChatMapDefinition : IMapDefinition
         mapper.Define<ChatMessageModel, ChatMessage>(Map);
         mapper.Define<ChatResponse, ChatResponseModel>((_, _) => new ChatResponseModel(), Map);
         mapper.Define<ChatResponseUpdate, ChatStreamChunkModel>((_, _) => new ChatStreamChunkModel(), Map);
-        mapper.Define<UsageDetails, ChatUsageModel>((_, _) => new ChatUsageModel(), Map);
     }
 
     // Umbraco.Code.MapAll
@@ -41,7 +41,7 @@ public class ChatMapDefinition : IMapDefinition
             Content = source.Text ?? string.Empty
         };
         target.FinishReason = source.FinishReason?.ToString();
-        target.Usage = source.Usage is not null ? context.Map<ChatUsageModel>(source.Usage) : null;
+        target.Usage = source.Usage is not null ? context.Map<UsageModel>(source.Usage) : null;
     }
 
     // Umbraco.Code.MapAll
@@ -50,13 +50,5 @@ public class ChatMapDefinition : IMapDefinition
         target.Content = source.Text;
         target.FinishReason = source.FinishReason?.ToString();
         target.IsComplete = source.FinishReason is not null;
-    }
-
-    // Umbraco.Code.MapAll
-    private static void Map(UsageDetails source, ChatUsageModel target, MapperContext context)
-    {
-        target.InputTokens = source.InputTokenCount;
-        target.OutputTokens = source.OutputTokenCount;
-        target.TotalTokens = source.TotalTokenCount;
     }
 }

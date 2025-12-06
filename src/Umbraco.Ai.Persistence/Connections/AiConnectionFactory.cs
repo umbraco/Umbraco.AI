@@ -16,11 +16,11 @@ internal static class AiConnectionFactory
     public static AiConnection BuildDomain(AiConnectionEntity entity)
     {
         object? settings = null;
-        if (!string.IsNullOrEmpty(entity.SettingsJson))
+        if (!string.IsNullOrEmpty(entity.Settings))
         {
             // Settings are stored as JSON, deserialize to dynamic object
             // The actual typed deserialization happens at the service layer
-            settings = JsonSerializer.Deserialize<JsonElement>(entity.SettingsJson);
+            settings = JsonSerializer.Deserialize<JsonElement>(entity.Settings);
         }
 
         return new AiConnection
@@ -49,7 +49,7 @@ internal static class AiConnectionFactory
             Alias = connection.Alias,
             Name = connection.Name,
             ProviderId = connection.ProviderId,
-            SettingsJson = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings),
+            Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings),
             IsActive = connection.IsActive,
             DateCreated = connection.DateCreated,
             DateModified = connection.DateModified
@@ -66,7 +66,7 @@ internal static class AiConnectionFactory
         entity.Alias = connection.Alias;
         entity.Name = connection.Name;
         entity.ProviderId = connection.ProviderId;
-        entity.SettingsJson = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings);
+        entity.Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings);
         entity.IsActive = connection.IsActive;
         entity.DateModified = connection.DateModified;
     }

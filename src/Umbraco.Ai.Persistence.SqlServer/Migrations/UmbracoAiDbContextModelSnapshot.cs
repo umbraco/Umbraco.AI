@@ -52,7 +52,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("SettingsJson")
+                    b.Property<string>("Settings")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -97,10 +97,10 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("SettingsJson")
+                    b.Property<string>("Settings")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TagsJson")
+                    b.Property<string>("Tags")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 

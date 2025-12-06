@@ -345,9 +345,9 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var verifyContext = _fixture.CreateContext();
         var saved = await verifyContext.Profiles.FindAsync(profile.Id);
         saved.ShouldNotBeNull();
-        saved!.TagsJson.ShouldNotBeNullOrEmpty();
-        saved.TagsJson.ShouldContain("tag1");
-        saved.TagsJson.ShouldContain("tag2");
+        saved!.Tags.ShouldNotBeNullOrEmpty();
+        saved.Tags.ShouldContain("tag1");
+        saved.Tags.ShouldContain("tag2");
     }
 
     [Fact]
@@ -381,10 +381,10 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var verifyContext = _fixture.CreateContext();
         var saved = await verifyContext.Profiles.FindAsync(profile.Id);
         saved.ShouldNotBeNull();
-        saved!.SettingsJson.ShouldNotBeNull();
-        saved.SettingsJson.ShouldContain("0.7");
-        saved.SettingsJson.ShouldContain("2000");
-        saved.SettingsJson.ShouldContain("You are a helpful assistant.");
+        saved!.Settings.ShouldNotBeNull();
+        saved.Settings.ShouldContain("0.7");
+        saved.Settings.ShouldContain("2000");
+        saved.Settings.ShouldContain("You are a helpful assistant.");
     }
 
     #endregion

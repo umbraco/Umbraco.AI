@@ -28,7 +28,7 @@ public class AiConnectionEntity
     /// <summary>
     /// JSON-serialized provider-specific settings.
     /// </summary>
-    public string? SettingsJson { get; set; }
+    public string? Settings { get; set; }
 
     /// <summary>
     /// Whether this connection is currently active.

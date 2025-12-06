@@ -43,10 +43,10 @@ public class AiProfileEntity
     /// <summary>
     /// JSON-serialized capability-specific settings.
     /// </summary>
-    public string? SettingsJson { get; set; }
+    public string? Settings { get; set; }
 
     /// <summary>
-    /// JSON-serialized array of tags.
+    /// Tags array serialized as a comma-separated string.
     /// </summary>
-    public string? TagsJson { get; set; }
+    public string? Tags { get; set; }
 }

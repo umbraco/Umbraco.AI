@@ -49,7 +49,7 @@ public class UmbracoAiDbContext : DbContext
                 .HasMaxLength(100)
                 .IsRequired();
 
-            entity.Property(e => e.SettingsJson);
+            entity.Property(e => e.Settings);
 
             entity.Property(e => e.IsActive)
                 .IsRequired();
@@ -93,9 +93,9 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.ConnectionId)
                 .IsRequired();
 
-            entity.Property(e => e.SettingsJson);
+            entity.Property(e => e.Settings);
 
-            entity.Property(e => e.TagsJson)
+            entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 
             entity.HasIndex(e => e.Alias)

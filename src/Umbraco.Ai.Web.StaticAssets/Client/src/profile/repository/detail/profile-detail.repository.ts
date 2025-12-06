@@ -1,9 +1,10 @@
 import { UmbDetailRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UmbRequestReloadChildrenOfEntityEvent } from "@umbraco-cms/backoffice/entity-action";
 import { UaiProfileDetailServerDataSource } from "./profile-detail.server.data-source.js";
 import { UAI_PROFILE_DETAIL_STORE_CONTEXT } from "./profile-detail.store.js";
 import type { UaiProfileDetailModel } from "../../types.js";
-import { UAI_PROFILE_ENTITY_TYPE } from "../../constants.js";
+import { UAI_PROFILE_ENTITY_TYPE, UAI_PROFILE_ROOT_ENTITY_TYPE } from "../../constants.js";
 import { UaiEntityActionEvent, dispatchActionEvent } from "../../../core/index.js";
 
 /**
@@ -20,6 +21,10 @@ export class UaiProfileDetailRepository extends UmbDetailRepositoryBase<UaiProfi
         const result = await super.create(model, null);
         if (!result.error && result.data) {
             dispatchActionEvent(this, UaiEntityActionEvent.created(result.data.unique, UAI_PROFILE_ENTITY_TYPE));
+            dispatchActionEvent(this, new UmbRequestReloadChildrenOfEntityEvent({
+                entityType: UAI_PROFILE_ROOT_ENTITY_TYPE,
+                unique: null,
+            }));
         }
         return result;
     }
@@ -36,6 +41,10 @@ export class UaiProfileDetailRepository extends UmbDetailRepositoryBase<UaiProfi
         const result = await super.delete(unique);
         if (!result.error) {
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_PROFILE_ENTITY_TYPE));
+            dispatchActionEvent(this, new UmbRequestReloadChildrenOfEntityEvent({
+                entityType: UAI_PROFILE_ROOT_ENTITY_TYPE,
+                unique: null,
+            }));
         }
         return result;
     }

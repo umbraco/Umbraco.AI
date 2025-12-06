@@ -18,7 +18,6 @@ namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 /// Controller for non-streaming chat completion.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class CompleteChatController : ChatControllerBase
 {
     private readonly IAiChatService _chatService;

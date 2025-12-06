@@ -18,7 +18,6 @@ namespace Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
 /// Controller to generate embeddings.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class GenerateEmbeddingController : EmbeddingControllerBase
 {
     private readonly IAiEmbeddingService _embeddingService;

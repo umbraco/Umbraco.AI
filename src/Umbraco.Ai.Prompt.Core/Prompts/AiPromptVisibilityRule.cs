@@ -1,11 +1,11 @@
 namespace Umbraco.Ai.Prompt.Core.Prompts;
 
 /// <summary>
-/// Defines a single scope rule that determines where a prompt can appear.
+/// Defines a single visibility rule that determines where a prompt can appear.
 /// All non-null properties use AND logic between them.
 /// Values within each array use OR logic.
 /// </summary>
-public class AiPromptScopeRule
+public class AiPromptVisibilityRule
 {
     /// <summary>
     /// Property Editor UI aliases to match (e.g., 'Umb.PropertyEditorUi.TextBox').

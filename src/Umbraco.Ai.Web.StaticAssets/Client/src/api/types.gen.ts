@@ -572,6 +572,7 @@ export type GetAllProfilesData = {
     body?: never;
     path?: never;
     query?: {
+        filter?: string;
         capability?: string;
         skip?: number;
         take?: number;

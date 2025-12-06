@@ -37,7 +37,23 @@ public interface IAiProfileRepository
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<IEnumerable<AiProfile>> GetByCapability(AiCapability capability, CancellationToken cancellationToken = default);
-    
+
+    /// <summary>
+    /// Gets AI profiles with pagination and optional filtering.
+    /// </summary>
+    /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>
+    /// <param name="capability">Optional capability to filter by.</param>
+    /// <param name="skip">Number of items to skip.</param>
+    /// <param name="take">Number of items to take.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the filtered/paginated profiles and the total count.</returns>
+    Task<(IEnumerable<AiProfile> Items, int Total)> GetPagedAsync(
+        string? filter = null,
+        AiCapability? capability = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Saves an AI profile.
     /// </summary>

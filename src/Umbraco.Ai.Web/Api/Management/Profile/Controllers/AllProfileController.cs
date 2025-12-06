@@ -35,6 +35,7 @@ public class AllProfileController : ProfileControllerBase
     /// <summary>
     /// Get all profiles.
     /// </summary>
+    /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>
     /// <param name="capability">Optional capability filter (Chat, Embedding, etc.).</param>
     /// <param name="skip">Number of items to skip for pagination.</param>
     /// <param name="take">Number of items to take for pagination.</param>
@@ -44,29 +45,29 @@ public class AllProfileController : ProfileControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedViewModel<ProfileItemResponseModel>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedViewModel<ProfileItemResponseModel>>> GetAllProfiles(
+        string? filter = null,
         string? capability = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        IEnumerable<AiProfile> profiles;
-
+        AiCapability? capabilityFilter = null;
         if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AiCapability>(capability, true, out var cap))
         {
-            profiles = await _profileService.GetProfilesAsync(cap, cancellationToken);
-        }
-        else
-        {
-            profiles = await _profileService.GetAllProfilesAsync(cancellationToken);
+            capabilityFilter = cap;
         }
 
-        var profileList = profiles.ToList();
+        var (profiles, total) = await _profileService.GetProfilesPagedAsync(
+            filter,
+            capabilityFilter,
+            skip,
+            take,
+            cancellationToken);
 
         var viewModel = new PagedViewModel<ProfileItemResponseModel>
         {
-            Total = profileList.Count,
-            Items = _umbracoMapper.MapEnumerable<AiProfile, ProfileItemResponseModel>(
-                profileList.Skip(skip).Take(take))
+            Total = total,
+            Items = _umbracoMapper.MapEnumerable<AiProfile, ProfileItemResponseModel>(profiles)
         };
 
         return Ok(viewModel);

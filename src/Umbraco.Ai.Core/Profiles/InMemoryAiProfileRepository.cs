@@ -30,6 +30,32 @@ internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
         return Task.FromResult<IEnumerable<AiProfile>>(_profiles.Values.Where(x => x.Capability == capability).ToList());
     }
 
+    public Task<(IEnumerable<AiProfile> Items, int Total)> GetPagedAsync(
+        string? filter = null,
+        AiCapability? capability = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        IEnumerable<AiProfile> query = _profiles.Values;
+
+        if (capability.HasValue)
+        {
+            query = query.Where(p => p.Capability == capability.Value);
+        }
+
+        if (!string.IsNullOrEmpty(filter))
+        {
+            query = query.Where(p => p.Name.Contains(filter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var items = query.OrderBy(p => p.Name).ToList();
+        var total = items.Count;
+        var pagedItems = items.Skip(skip).Take(take);
+
+        return Task.FromResult<(IEnumerable<AiProfile> Items, int Total)>((pagedItems, total));
+    }
+
     public Task<AiProfile> SaveAsync(AiProfile profile, CancellationToken cancellationToken = default)
     {
         _profiles[profile.Id] = profile;

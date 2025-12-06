@@ -23,6 +23,7 @@ export class UaiProfileCollectionServerDataSource implements UmbCollectionDataSo
             this.#host,
             ProfilesService.getAllProfiles({
                 query: {
+                    filter: filter.filter,
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },

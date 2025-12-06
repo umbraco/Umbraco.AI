@@ -34,6 +34,14 @@ internal sealed class AiProfileService : IAiProfileService
         CancellationToken cancellationToken = default)
         => await _repository.GetByCapability(capability, cancellationToken);
 
+    public Task<(IEnumerable<AiProfile> Items, int Total)> GetProfilesPagedAsync(
+        string? filter = null,
+        AiCapability? capability = null,
+        int skip = 0,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+        => _repository.GetPagedAsync(filter, capability, skip, take, cancellationToken);
+
     public async Task<AiProfile> GetDefaultProfileAsync(
         AiCapability capability,
         CancellationToken cancellationToken = default)

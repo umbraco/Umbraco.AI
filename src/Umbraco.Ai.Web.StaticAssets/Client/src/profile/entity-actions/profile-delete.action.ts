@@ -1,4 +1,4 @@
-import { UaiDeleteActionBase, type UaiDeleteActionArgs } from '../../core/entity-action/delete/uai-delete.action.js';
+import { UaiDeleteActionBase, type UaiDeleteActionArgs } from '../../core/entity-action/delete/delete.action.js';
 import { UaiProfileDetailRepository } from '../repository/detail/profile-detail.repository.js';
 
 export class UaiProfileDeleteAction extends UaiDeleteActionBase {

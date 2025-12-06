@@ -1,4 +1,4 @@
-import { UaiBulkDeleteActionBase, type UaiBulkDeleteActionArgs } from '../../../core/entity-bulk-action/delete/uai-bulk-delete.action.js';
+import { UaiBulkDeleteActionBase, type UaiBulkDeleteActionArgs } from '../../../core/entity-bulk-action/delete/bulk-delete.action.js';
 import { UaiConnectionDetailRepository } from '../../repository/detail/connection-detail.repository.js';
 
 export class UaiConnectionBulkDeleteAction extends UaiBulkDeleteActionBase {

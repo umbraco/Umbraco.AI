@@ -1,1 +1,1 @@
-export * from './uai-delete.action.js';
+export * from './delete.action.js';

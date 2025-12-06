@@ -17,9 +17,9 @@ internal static class AiProfileFactory
     public static AiProfile BuildDomain(AiProfileEntity entity)
     {
         IReadOnlyList<string> tags = Array.Empty<string>();
-        if (!string.IsNullOrEmpty(entity.TagsJson))
+        if (!string.IsNullOrEmpty(entity.Tags))
         {
-            tags = JsonSerializer.Deserialize<string[]>(entity.TagsJson) ?? Array.Empty<string>();
+            tags = entity.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
 
         var capability = (AiCapability)entity.Capability;
@@ -32,7 +32,7 @@ internal static class AiProfileFactory
             Capability = capability,
             Model = new AiModelRef(entity.ProviderId, entity.ModelId),
             ConnectionId = entity.ConnectionId,
-            Settings = AiProfileSettingsSerializer.Deserialize(capability, entity.SettingsJson),
+            Settings = AiProfileSettingsSerializer.Deserialize(capability, entity.Settings),
             Tags = tags
         };
     }
@@ -53,8 +53,8 @@ internal static class AiProfileFactory
             ProviderId = profile.Model.ProviderId,
             ModelId = profile.Model.ModelId,
             ConnectionId = profile.ConnectionId,
-            SettingsJson = AiProfileSettingsSerializer.Serialize(profile.Settings),
-            TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null
+            Settings = AiProfileSettingsSerializer.Serialize(profile.Settings),
+            Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null
         };
     }
 
@@ -71,7 +71,7 @@ internal static class AiProfileFactory
         entity.ProviderId = profile.Model.ProviderId;
         entity.ModelId = profile.Model.ModelId;
         entity.ConnectionId = profile.ConnectionId;
-        entity.SettingsJson = AiProfileSettingsSerializer.Serialize(profile.Settings);
-        entity.TagsJson = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null;
+        entity.Settings = AiProfileSettingsSerializer.Serialize(profile.Settings);
+        entity.Tags = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null;
     }
 }

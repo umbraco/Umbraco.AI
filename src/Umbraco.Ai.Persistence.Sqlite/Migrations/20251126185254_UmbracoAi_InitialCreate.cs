@@ -19,7 +19,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     Alias = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     ProviderId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    SettingsJson = table.Column<string>(type: "TEXT", nullable: true),
+                    Settings = table.Column<string>(type: "TEXT", nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
                     DateModified = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -43,7 +43,8 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     Temperature = table.Column<float>(type: "REAL", nullable: true),
                     MaxTokens = table.Column<int>(type: "INTEGER", nullable: true),
                     SystemPromptTemplate = table.Column<string>(type: "TEXT", nullable: true),
-                    TagsJson = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true)
+                    Settings = table.Column<string>(type: "TEXT", nullable: true),
+                    Tags = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true)
                 },
                 constraints: table =>
                 {

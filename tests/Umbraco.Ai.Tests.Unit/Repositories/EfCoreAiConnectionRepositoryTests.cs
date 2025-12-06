@@ -264,9 +264,9 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         await using var verifyContext = _fixture.CreateContext();
         var saved = await verifyContext.Connections.FindAsync(connection.Id);
         saved.ShouldNotBeNull();
-        saved!.SettingsJson.ShouldNotBeNullOrEmpty();
-        saved.SettingsJson.ShouldContain("ApiKey");
-        saved.SettingsJson.ShouldContain("test-key");
+        saved!.Settings.ShouldNotBeNullOrEmpty();
+        saved.Settings.ShouldContain("ApiKey");
+        saved.Settings.ShouldContain("test-key");
     }
 
     #endregion

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Web.Api.Management.Chat.Models;
 
@@ -21,26 +22,5 @@ public class ChatResponseModel
     /// <summary>
     /// Usage statistics for the request.
     /// </summary>
-    public ChatUsageModel? Usage { get; set; }
-}
-
-/// <summary>
-/// Usage statistics for a chat completion.
-/// </summary>
-public class ChatUsageModel
-{
-    /// <summary>
-    /// The number of tokens in the input.
-    /// </summary>
-    public long? InputTokens { get; set; }
-
-    /// <summary>
-    /// The number of tokens in the output.
-    /// </summary>
-    public long? OutputTokens { get; set; }
-
-    /// <summary>
-    /// The total number of tokens used.
-    /// </summary>
-    public long? TotalTokens { get; set; }
+    public UsageModel? Usage { get; set; }
 }

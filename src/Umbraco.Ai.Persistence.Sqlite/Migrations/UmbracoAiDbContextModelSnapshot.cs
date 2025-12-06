@@ -47,7 +47,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SettingsJson")
+                    b.Property<string>("Settings")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -92,10 +92,10 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SettingsJson")
+                    b.Property<string>("Settings")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("TagsJson")
+                    b.Property<string>("Tags")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 

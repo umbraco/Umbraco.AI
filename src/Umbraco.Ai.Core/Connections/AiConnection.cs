@@ -8,7 +8,7 @@ public class AiConnection
     /// <summary>
     /// Unique identifier for the connection.
     /// </summary>
-    public required Guid Id { get; init; }
+    public Guid Id { get; internal set; }
 
     /// <summary>
     /// Unique alias for the connection (used for programmatic lookup).

@@ -1,6 +1,7 @@
 import { UAI_CONNECTION_COLLECTION_ALIAS } from "./constants.js";
 import { UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS } from "../repository/constants.js";
 import { connectionCollectionActionManifests } from "./action/manifests.js";
+import { connectionBulkActionManifests } from "./bulk-action/manifests.js";
 
 export const connectionCollectionManifests: Array<UmbExtensionManifest> = [
     {
@@ -26,4 +27,5 @@ export const connectionCollectionManifests: Array<UmbExtensionManifest> = [
         conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_CONNECTION_COLLECTION_ALIAS }],
     },
     ...connectionCollectionActionManifests,
+    ...connectionBulkActionManifests,
 ];

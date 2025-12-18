@@ -1,0 +1,12 @@
+# .NET
+appsettings.Development.json
+appsettings.Local.json
+*.user
+
+# Typescript
+.env*
+!.env.template
+
+# Demo
+demo/*
+*.local.sln

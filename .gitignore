@@ -10,3 +10,4 @@ nul
 .claude/
 *.local.sln
 *.user
+.worktrees

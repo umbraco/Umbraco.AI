@@ -2,7 +2,12 @@
 
 ## Overview
 
-This plan introduces AG-UI (Agent User Interface Protocol) event patterns into Umbraco.Ai's streaming APIs. By adopting AG-UI conventions now, we create consistency between the existing Management API and future Agent API, enabling a natural progression as agentic features are added.
+This plan introduces AG-UI (Agent User Interface Protocol) event patterns into Umbraco.Ai using a **two-tier approach**:
+
+- **Core (Umbraco.Ai.Web)**: Lightweight AG-UI subset for streaming endpoints - no external dependencies
+- **Agents (Umbraco.Ai.Agents)**: Full AG-UI with Microsoft Agent Framework
+
+This ensures consistency so developers learn one event pattern and can transition seamlessly from Core to Agents.
 
 ## Background
 
@@ -18,78 +23,76 @@ AG-UI is an open, event-based protocol that standardizes communication between A
 
 Documentation: https://docs.ag-ui.com
 
-### .NET SDK Options
-
-There are two emerging .NET implementations for AG-UI:
-
-#### Option A: AG-UI Community SDK (PR #38)
-
-**Source:** https://github.com/ag-ui-protocol/ag-ui/pull/38
-
-The community SDK provides:
-- **All event types** as C# records with proper JSON polymorphic serialization
-- **`IAGUIAgent` interface** - Simple contract for agent implementations
-- **`ChatClientAgent`** - Full implementation wrapping M.E.AI's `IChatClient`
-- **ASP.NET integration** - `MapAgentEndpoint()` route builder extension
-- **Frontend/backend tool support** - Distinguishes tools executed by UI vs agent
-
-**Relevance to Umbraco.Ai:**
-- Built directly on M.E.AI's `IChatClient` - exact match for our architecture
-- `ChatClientAgent` handles all streaming → AG-UI event conversion
-- No additional abstraction layers
-
-**Event naming:** `SCREAMING_CASE` (e.g., `TEXT_MESSAGE_CONTENT`)
-
-#### Option B: Microsoft Agent Framework AG-UI
-
-**Source:** https://github.com/microsoft/agent-framework/issues/1774
-
-Microsoft is adding official AG-UI support via two packages:
-- **`Microsoft.Agents.AI.AGUI`** - Client for consuming AG-UI servers
-- **`Microsoft.Agents.AI.Hosting.AGUI.AspNetCore`** - Server-side ASP.NET Core integration
-
-**Key Components:**
-- **`AGUIAgent`** - Client implementation that communicates with AG-UI servers
-- **`AGUIAgentThread`** - Conversation thread with persistent ID
-- **`MapAGUIAgent()`** - ASP.NET Core endpoint extension
-
-**Relevance to Umbraco.Ai:**
-- Official Microsoft support (likely long-term investment)
-- Built on M.E.AI, but via `AIAgent` abstraction (not `IChatClient` directly)
-- `AIAgent` wraps `IChatClient`, adding conversation management and tool orchestration
-- May become the standard .NET approach for agents
-- Adds another abstraction layer between us and `IChatClient`
-
-**Event naming:** `snake_case` (e.g., `text_message_content`)
-
-#### Comparison
-
-**Important:** Both SDKs are built on M.E.AI (`Microsoft.Extensions.AI`). The difference is the abstraction level, not the foundation.
-
-| Aspect | Community SDK (PR #38) | Microsoft Agent Framework |
-|--------|------------------------|---------------------------|
-| Foundation | M.E.AI | M.E.AI |
-| Primary abstraction | `IChatClient` directly | `AIAgent` (wraps `IChatClient`) |
-| Abstraction level | Thin - minimal overhead | Thicker - additional concepts |
-| Maturity | PR pending | Issue tracking, early |
-| Maintenance | Community | Microsoft |
-| Event naming | `SCREAMING_CASE` | `snake_case` |
-| Package | `AGUIDotnet` | `Microsoft.Agents.AI.*` |
-
-**Recommendation:** Use the **Microsoft Agent Framework** because:
-1. **Both SDKs provide `ChatClientAgent`** that wraps `IChatClient` directly - same integration effort
-2. Official Microsoft support with long-term investment
-3. Umbraco is a Microsoft ecosystem product - consistent tooling for .NET developers
-4. Additional features included: OpenTelemetry, memory providers, workflow support
-5. Broader ecosystem integration (Copilot Studio, Azure AI, A2A protocol)
-
 ### Why Adopt AG-UI Patterns?
 
 1. **Future-proofing** - Agent API will need these patterns; adopt them now
-2. **Single vocabulary** - Management API and Agent API speak the same language
-3. **Official SDK** - Use maintained types rather than rolling our own
-4. **M.E.AI integration** - SDK already integrates with `IChatClient`
-5. **Ecosystem alignment** - Compatible with AG-UI tooling and frontends
+2. **Single vocabulary** - Core and Agents speak the same language
+3. **Easy transition** - Developers learn one pattern, add capabilities incrementally
+4. **Ecosystem alignment** - Compatible with AG-UI tooling and frontends
+
+## Two-Tier Architecture
+
+### Layer Stack
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Umbraco Backoffice UI                        │
+│   (Handles AG-UI events via SSE)                                │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ AG-UI Events (SSE)
+                            │ - text_message_* (streaming chat)
+                            │ - tool_call_* (tool execution)
+                            │ - run_started/finished/error
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│   Core: Custom AiStreamEvent types (lightweight)                │
+│   Agents: Microsoft.Agents.AI.Hosting.AGUI.AspNetCore           │
+│           MapAGUI() - converts AIAgent streams to AG-UI SSE     │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│          Microsoft.Agents.AI.ChatClientAgent                    │
+│   - Wraps IChatClient (M.E.AI)                                  │
+│   - Handles tool invocation                                     │
+│   - Thread/conversation management                              │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Umbraco.Ai IChatClient (existing)                  │
+│   - Created via IAiChatClientFactory                            │
+│   - Profile-configured (model, temperature, etc.)               │
+│   - Middleware pipeline applied                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Event Types by Layer
+
+| Event | Core | Agents |
+|-------|:----:|:------:|
+| `run_started` | ✓ | ✓ |
+| `run_finished` | ✓ | ✓ |
+| `run_error` | ✓ | ✓ |
+| `text_message_start` | ✓ | ✓ |
+| `text_message_content` | ✓ | ✓ |
+| `text_message_end` | ✓ | ✓ |
+| `tool_call_*` | - | ✓ |
+| `state_snapshot` | - | ✓ |
+| `state_delta` | - | ✓ |
+| `messages_snapshot` | - | ✓ |
+| `approval_*` (custom) | - | ✓ |
+
+### Package Dependencies
+
+```
+Umbraco.Ai.Core
+└── No AG-UI dependency (custom event types)
+
+Umbraco.Ai.Agents
+├── Microsoft.Agents.AI
+└── Microsoft.Agents.AI.Hosting.AGUI.AspNetCore
+```
 
 ## Current State
 
@@ -113,149 +116,181 @@ await Response.WriteAsync("data: [DONE]\n\n", cancellationToken);
 - No correlation IDs for multi-message scenarios
 - Different vocabulary than AG-UI agents will use
 
-## Implementation Options
+## Tier 1: Core Implementation (Umbraco.Ai.Web)
 
-### Option A: Microsoft Agent Framework (Recommended)
+### Target State
 
-```xml
-<PackageReference Include="Microsoft.Agents.AI" Version="x.x.x" />
-<PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="x.x.x" />
-```
+- Same endpoint, AG-UI event envelope
+- Uses `snake_case` event types matching AG-UI spec
+- **No external AG-UI package dependency** (custom lightweight types)
 
-**Advantages:**
-- **`ChatClientAgent` wraps `IChatClient` directly** - same pattern as Umbraco.Ai
-- Official Microsoft support with long-term investment
-- Consistent with Microsoft/.NET ecosystem (natural for Umbraco developers)
-- Built-in OpenTelemetry, logging, memory providers
-- Broader ecosystem: Copilot Studio, Azure AI, A2A protocol support
-- ASP.NET integration via `MapAGUI()` extension
+### Event Types
 
-**Disadvantages:**
-- Still in active development
-- Event naming uses `snake_case` (AG-UI spec prefers this)
-
-### Option B: AG-UI Community SDK
-
-Once PR #38 is merged and package is published:
-
-```xml
-<PackageReference Include="AGUIDotnet" Version="1.0.0" />
-```
-
-**Advantages:**
-- `ChatClientAgent` also wraps `IChatClient` directly
-- Simpler, focused solely on AG-UI
-- Lighter weight (fewer dependencies)
-
-**Disadvantages:**
-- Community maintained (not Microsoft)
-- May need to track upstream changes
-- Event naming uses `SCREAMING_CASE` (differs from AG-UI spec)
-
-### Option C: Custom Implementation (Fallback)
-
-Implement our own AG-UI-compatible event types. Use this if:
-- Neither SDK is available when we need to ship
-- SDKs don't meet specific Umbraco requirements
-- We need full control over the implementation
-
-**Note:** If using custom implementation, align with one of the SDK's event naming conventions to ease future migration.
-
-## Proposed Design (Microsoft Agent Framework)
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Umbraco Backoffice UI                        │
-│   (Handles AG-UI events via SSE)                                │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │ AG-UI Events (SSE)
-                            │ - text_message_* (streaming chat)
-                            │ - tool_call_* (tool execution)
-                            │ - run_started/finished/error
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│     Microsoft.Agents.AI.Hosting.AGUI.AspNetCore                 │
-│   MapAGUI() - converts AIAgent streams to AG-UI SSE             │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│          Microsoft.Agents.AI.ChatClientAgent                    │
-│   - Wraps IChatClient (M.E.AI)                                  │
-│   - Handles tool invocation                                     │
-│   - Thread/conversation management                              │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Umbraco.Ai IChatClient (existing)                  │
-│   - Created via IAiChatClientFactory                            │
-│   - Profile-configured (model, temperature, etc.)               │
-│   - Middleware pipeline applied                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**Key insight:** Microsoft's `ChatClientAgent` wraps `IChatClient` directly, so Umbraco.Ai's existing architecture remains unchanged. We simply wrap our `IChatClient` instances when exposing AG-UI endpoints.
-
-### Microsoft ChatClientAgent
-
-Microsoft's `ChatClientAgent` wraps `IChatClient` directly:
+**File:** `src/Umbraco.Ai.Web/Api/Common/Events/AiStreamEvent.cs`
 
 ```csharp
-public sealed class ChatClientAgent : AIAgent
+using System.Text.Json.Serialization;
+
+namespace Umbraco.Ai.Web.Api.Common.Events;
+
+/// <summary>
+/// Base type for AG-UI compatible streaming events.
+/// Uses snake_case naming per AG-UI specification.
+/// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(RunStartedEvent), "run_started")]
+[JsonDerivedType(typeof(RunFinishedEvent), "run_finished")]
+[JsonDerivedType(typeof(RunErrorEvent), "run_error")]
+[JsonDerivedType(typeof(TextMessageStartEvent), "text_message_start")]
+[JsonDerivedType(typeof(TextMessageContentEvent), "text_message_content")]
+[JsonDerivedType(typeof(TextMessageEndEvent), "text_message_end")]
+public abstract record AiStreamEvent
 {
-    // Constructor takes IChatClient directly - exactly what Umbraco.Ai uses
-    public ChatClientAgent(
-        IChatClient chatClient,
-        string? instructions = null,
-        string? name = null,
-        string? description = null,
-        IList<AITool>? tools = null,
-        ILoggerFactory? loggerFactory = null,
-        IServiceProvider? services = null)
+    [JsonPropertyName("timestamp")]
+    public long Timestamp { get; init; } = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+}
 
-    // Exposes the underlying IChatClient
-    public IChatClient ChatClient { get; }
+// Lifecycle events
+public record RunStartedEvent : AiStreamEvent
+{
+    [JsonPropertyName("run_id")]
+    public string RunId { get; init; } = Guid.NewGuid().ToString();
+}
 
-    // Streaming implementation converts IChatClient streams to AgentRunResponseUpdate
-    public override IAsyncEnumerable<AgentRunResponseUpdate> RunStreamingAsync(
-        IEnumerable<ChatMessage> messages,
-        AgentThread? thread = null,
-        AgentRunOptions? options = null,
-        CancellationToken cancellationToken = default)
+public record RunFinishedEvent : AiStreamEvent
+{
+    [JsonPropertyName("run_id")]
+    public string? RunId { get; init; }
+}
+
+public record RunErrorEvent : AiStreamEvent
+{
+    [JsonPropertyName("message")]
+    public string? Message { get; init; }
+}
+
+// Text message events
+public record TextMessageStartEvent : AiStreamEvent
+{
+    [JsonPropertyName("message_id")]
+    public string MessageId { get; init; } = Guid.NewGuid().ToString();
+
+    [JsonPropertyName("role")]
+    public string Role { get; init; } = "assistant";
+}
+
+public record TextMessageContentEvent : AiStreamEvent
+{
+    [JsonPropertyName("message_id")]
+    public required string MessageId { get; init; }
+
+    [JsonPropertyName("delta")]
+    public string? Delta { get; init; }
+}
+
+public record TextMessageEndEvent : AiStreamEvent
+{
+    [JsonPropertyName("message_id")]
+    public required string MessageId { get; init; }
 }
 ```
 
-### Microsoft AG-UI ASP.NET Integration
+### Updated StreamChatController
+
+**File:** `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/StreamChatController.cs`
 
 ```csharp
-// Microsoft.Agents.AI.Hosting.AGUI.AspNetCore
-public static class AGUIEndpointRouteBuilderExtensions
+[HttpPost("stream")]
+public async Task StreamChat(ChatRequestModel requestModel, CancellationToken ct)
 {
-    public static IEndpointConventionBuilder MapAGUI(
-        this IEndpointRouteBuilder endpoints,
-        string pattern,
-        AIAgent aiAgent)
-    {
-        return endpoints.MapPost(pattern, async (RunAgentInput? input, HttpContext context, ...) =>
-        {
-            // Converts agent streaming to AG-UI SSE events automatically
-            var events = aiAgent.RunStreamingAsync(messages, options: runOptions, ...)
-                .AsAGUIEventStreamAsync(...);
+    Response.ContentType = "text/event-stream";
+    Response.Headers.CacheControl = "no-cache";
+    Response.Headers.Connection = "keep-alive";
 
-            return new AGUIServerSentEventsResult(events);
-        });
+    var runId = Guid.NewGuid().ToString();
+    var messageId = Guid.NewGuid().ToString();
+
+    try
+    {
+        await WriteEventAsync(new RunStartedEvent { RunId = runId }, ct);
+
+        // ... resolve profile, get messages ...
+
+        await WriteEventAsync(new TextMessageStartEvent
+        {
+            MessageId = messageId
+        }, ct);
+
+        await foreach (var update in stream.WithCancellation(ct))
+        {
+            if (!string.IsNullOrEmpty(update.Text))
+            {
+                await WriteEventAsync(new TextMessageContentEvent
+                {
+                    MessageId = messageId,
+                    Delta = update.Text
+                }, ct);
+            }
+        }
+
+        await WriteEventAsync(new TextMessageEndEvent { MessageId = messageId }, ct);
+        await WriteEventAsync(new RunFinishedEvent { RunId = runId }, ct);
+    }
+    catch (Exception ex)
+    {
+        await WriteEventAsync(new RunErrorEvent { Message = ex.Message }, ct);
     }
 }
+
+private async Task WriteEventAsync(AiStreamEvent evt, CancellationToken ct)
+{
+    var json = JsonSerializer.Serialize(evt, evt.GetType(), _jsonOptions);
+    await Response.WriteAsync($"data: {json}\n\n", ct);
+    await Response.Body.FlushAsync(ct);
+}
 ```
 
-## Implementation with Microsoft Agent Framework
+## Tier 2: Agents Implementation (Umbraco.Ai.Agents)
 
-### 1. Create Umbraco Agent Factory
+### .NET SDK Options
 
-**File:** `src/Umbraco.Ai.Web/Api/Agents/UmbracoAgentFactory.cs`
+#### Option A: Microsoft Agent Framework (Recommended)
+
+**Source:** https://github.com/microsoft/agent-framework
+
+Microsoft is adding official AG-UI support via two packages:
+- **`Microsoft.Agents.AI`** - Core agent abstractions
+- **`Microsoft.Agents.AI.Hosting.AGUI.AspNetCore`** - Server-side ASP.NET Core integration
+
+**Key Components:**
+- **`ChatClientAgent`** - Wraps `IChatClient` directly (perfect fit for Umbraco.Ai)
+- **`MapAGUI()`** - ASP.NET Core endpoint extension
+- Built-in OpenTelemetry, memory providers, workflow support
+
+**Event naming:** `snake_case` (e.g., `text_message_content`) - matches AG-UI spec
+
+#### Option B: AG-UI Community SDK
+
+**Source:** https://github.com/ag-ui-protocol/ag-ui/pull/38
+
+Lighter-weight alternative with:
+- `ChatClientAgent` wrapping `IChatClient`
+- `MapAgentEndpoint()` route builder extension
+
+**Event naming:** `SCREAMING_CASE` (e.g., `TEXT_MESSAGE_CONTENT`) - differs from spec
+
+#### Recommendation
+
+Use **Microsoft Agent Framework** because:
+1. **`ChatClientAgent` wraps `IChatClient` directly** - perfect fit for Umbraco.Ai's architecture
+2. **Official Microsoft support** - long-term investment, consistent with .NET ecosystem
+3. **Built-in features** - OpenTelemetry, logging, memory providers included
+4. **Broader ecosystem** - Copilot Studio, Azure AI, A2A protocol integration
+5. **Standard AG-UI** - uses `snake_case` matching the AG-UI specification
+
+### Agent Factory
+
+**File:** `src/Umbraco.Ai.Agents/Services/UmbracoAgentFactory.cs`
 
 ```csharp
 using Microsoft.Agents.AI;
@@ -263,7 +298,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Profiles;
 
-namespace Umbraco.Ai.Web.Api.Agents;
+namespace Umbraco.Ai.Agents.Services;
 
 /// <summary>
 /// Factory for creating ChatClientAgent instances from Umbraco.Ai profiles.
@@ -272,111 +307,91 @@ public class UmbracoAgentFactory
 {
     private readonly IAiChatClientFactory _chatClientFactory;
     private readonly IAiProfileService _profileService;
+    private readonly IAiToolRegistry _toolRegistry;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILoggerFactory _loggerFactory;
 
-    public UmbracoAgentFactory(
-        IAiChatClientFactory chatClientFactory,
-        IAiProfileService profileService,
-        ILoggerFactory loggerFactory)
-    {
-        _chatClientFactory = chatClientFactory;
-        _profileService = profileService;
-        _loggerFactory = loggerFactory;
-    }
-
-    /// <summary>
-    /// Creates a ChatClientAgent from an Umbraco.Ai profile.
-    /// </summary>
     public async Task<ChatClientAgent> CreateAgentAsync(
-        Guid profileId,
-        IList<AITool>? tools = null,
+        AiAgent agent,
         CancellationToken ct = default)
     {
-        var profile = await _profileService.GetAsync(profileId, ct)
-            ?? throw new InvalidOperationException($"Profile {profileId} not found");
+        var chatClient = await _chatClientFactory.CreateClientAsync(agent.ProfileId, ct);
+        var profile = await _profileService.GetAsync(agent.ProfileId, ct);
 
-        var chatClient = await _chatClientFactory.CreateClientAsync(profileId, ct);
+        // Get tools for this agent
+        var tools = _toolRegistry.ToAITools(agent.EnabledToolIds, _serviceProvider);
 
-        // Wrap our IChatClient in Microsoft's ChatClientAgent
         return new ChatClientAgent(
             chatClient,
-            instructions: profile.SystemPrompt,
-            name: profile.Name,
-            description: $"Umbraco AI Agent: {profile.Alias}",
+            instructions: agent.SystemPrompt ?? profile?.SystemPrompt,
+            name: agent.Name,
+            description: agent.Description,
             tools: tools,
             loggerFactory: _loggerFactory);
     }
 }
 ```
 
-### 2. Register Agent Endpoints
+### Agent Endpoints
 
-**File:** `src/Umbraco.Ai.Web/Api/Agents/AgentEndpointExtensions.cs`
+**File:** `src/Umbraco.Ai.Agents/Api/Controllers/AgentChatController.cs`
 
 ```csharp
-using Microsoft.Agents.AI;
-using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Profiles;
-
-namespace Umbraco.Ai.Web.Api.Agents;
-
-public static class AgentEndpointExtensions
+[UmbracoAiVersionedManagementApiRoute("agents")]
+public class AgentChatController : AgentControllerBase
 {
-    public static IEndpointRouteBuilder MapUmbracoAiAgents(this IEndpointRouteBuilder builder)
+    [HttpPost("{agentIdOrAlias}/chat/stream")]
+    public async Task<IResult> StreamChat(
+        string agentIdOrAlias,
+        [FromBody] RunAgentInput input,
+        CancellationToken ct)
     {
-        var group = builder.MapGroup("/umbraco/ai/api/v1/agents");
+        var agent = await ResolveAgentAsync(agentIdOrAlias, ct);
+        var chatClientAgent = await _agentFactory.CreateAgentAsync(agent, ct);
 
-        // Default chat agent using default profile
-        group.MapPost("chat", async (
-            RunAgentInput input,
-            IAiChatService chatService,
-            ILoggerFactory loggerFactory,
-            HttpContext context,
-            CancellationToken ct) =>
-        {
-            var chatClient = chatService.CreateDefaultClient();
-            var agent = new ChatClientAgent(chatClient, loggerFactory: loggerFactory);
-
-            // Use Microsoft's AG-UI result handler
-            return Results.Extensions.AGUI(agent, input);
-        });
-
-        // Profile-specific agent endpoint
-        group.MapPost("{profileIdOrAlias}", async (
-            string profileIdOrAlias,
-            RunAgentInput input,
-            UmbracoAgentFactory agentFactory,
-            IAiProfileService profileService,
-            HttpContext context,
-            CancellationToken ct) =>
-        {
-            var profileId = await profileService.GetProfileIdAsync(
-                new IdOrAlias(profileIdOrAlias), ct);
-
-            var agent = await agentFactory.CreateAgentAsync(profileId, ct);
-
-            return Results.Extensions.AGUI(agent, input);
-        });
-
-        return builder;
+        // Microsoft's MapAGUI handles all event conversion
+        return Results.Extensions.AGUI(chatClientAgent, input);
     }
 }
 ```
 
-### 3. Frontend TypeScript Types
+### Custom Approval Events
 
-Use types matching Microsoft's `snake_case` convention (AG-UI spec standard):
+Extend AG-UI with Umbraco-specific approval events:
+
+```csharp
+public record ApprovalRequestedEvent : AiStreamEvent
+{
+    [JsonPropertyName("type")]
+    public string Type => "approval_requested";
+
+    [JsonPropertyName("approval_id")]
+    public required Guid ApprovalId { get; init; }
+
+    [JsonPropertyName("tool_id")]
+    public required string ToolId { get; init; }
+
+    [JsonPropertyName("tool_name")]
+    public required string ToolName { get; init; }
+
+    [JsonPropertyName("parameters")]
+    public required object Parameters { get; init; }
+
+    [JsonPropertyName("parameters_summary")]
+    public string? ParametersSummary { get; init; }
+}
+```
+
+## Frontend Integration
+
+### TypeScript Event Types
 
 **File:** `src/Umbraco.Ai.Web.StaticAssets/Client/src/api/events.ts`
 
 ```typescript
 /**
- * AG-UI event types matching Microsoft Agent Framework.
- * Uses snake_case as per AG-UI specification.
- * See: https://github.com/microsoft/agent-framework
+ * AG-UI event types matching the specification.
+ * Uses snake_case per AG-UI spec.
  */
 
 interface BaseEvent {
@@ -388,13 +403,11 @@ interface BaseEvent {
 export interface RunStartedEvent extends BaseEvent {
   type: 'run_started';
   run_id?: string;
-  thread_id?: string;
 }
 
 export interface RunFinishedEvent extends BaseEvent {
   type: 'run_finished';
   run_id?: string;
-  thread_id?: string;
 }
 
 export interface RunErrorEvent extends BaseEvent {
@@ -420,7 +433,7 @@ export interface TextMessageEndEvent extends BaseEvent {
   message_id: string;
 }
 
-// Tool events
+// Tool events (Agents only)
 export interface ToolCallStartEvent extends BaseEvent {
   type: 'tool_call_start';
   tool_call_id: string;
@@ -439,7 +452,17 @@ export interface ToolCallEndEvent extends BaseEvent {
   tool_call_id: string;
 }
 
-// State events
+// Approval events (Agents only, custom)
+export interface ApprovalRequestedEvent extends BaseEvent {
+  type: 'approval_requested';
+  approval_id: string;
+  tool_id: string;
+  tool_name: string;
+  parameters: unknown;
+  parameters_summary?: string;
+}
+
+// State events (Agents only)
 export interface StateSnapshotEvent extends BaseEvent {
   type: 'state_snapshot';
   snapshot: unknown;
@@ -461,118 +484,95 @@ export interface MessagesSnapshotEvent extends BaseEvent {
   }>;
 }
 
-// Union type
-export type AgUiEvent =
+// Union types - Core subset vs full Agents
+export type CoreStreamEvent =
   | RunStartedEvent
   | RunFinishedEvent
   | RunErrorEvent
   | TextMessageStartEvent
   | TextMessageContentEvent
-  | TextMessageEndEvent
+  | TextMessageEndEvent;
+
+export type AgentStreamEvent =
+  | CoreStreamEvent
   | ToolCallStartEvent
   | ToolCallArgsEvent
   | ToolCallEndEvent
   | StateSnapshotEvent
   | StateDeltaEvent
-  | MessagesSnapshotEvent;
+  | MessagesSnapshotEvent
+  | ApprovalRequestedEvent;
 
 // Type guards
-export const isRunStarted = (e: AgUiEvent): e is RunStartedEvent => e.type === 'run_started';
-export const isRunFinished = (e: AgUiEvent): e is RunFinishedEvent => e.type === 'run_finished';
-export const isRunError = (e: AgUiEvent): e is RunErrorEvent => e.type === 'run_error';
-export const isTextMessageContent = (e: AgUiEvent): e is TextMessageContentEvent =>
+export const isRunStarted = (e: BaseEvent): e is RunStartedEvent => e.type === 'run_started';
+export const isRunFinished = (e: BaseEvent): e is RunFinishedEvent => e.type === 'run_finished';
+export const isRunError = (e: BaseEvent): e is RunErrorEvent => e.type === 'run_error';
+export const isTextMessageContent = (e: BaseEvent): e is TextMessageContentEvent =>
   e.type === 'text_message_content';
-export const isToolCallStart = (e: AgUiEvent): e is ToolCallStartEvent =>
+export const isToolCallStart = (e: BaseEvent): e is ToolCallStartEvent =>
   e.type === 'tool_call_start';
+export const isApprovalRequested = (e: BaseEvent): e is ApprovalRequestedEvent =>
+  e.type === 'approval_requested';
 ```
 
-## Migration Steps
+## Implementation Phases
 
-### Phase 1: Add Microsoft Agent Framework
+### Phase 1: Core AG-UI Events
 
-1. **Add NuGet package references**
-   ```xml
-   <PackageReference Include="Microsoft.Agents.AI" Version="x.x.x" />
-   <PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="x.x.x" />
-   ```
+1. Create `AiStreamEvent` base and derived types in `Umbraco.Ai.Web`
+2. Update `StreamChatController` to emit AG-UI events
+3. Update frontend TypeScript types
+4. Update frontend SSE parsing
+5. Remove legacy `ChatStreamChunkModel` and `[DONE]` marker
 
-2. **Create UmbracoAgentFactory**
-   - Wrap `IChatClient` from `IAiChatClientFactory` in `ChatClientAgent`
-   - Integrate with profile system for instructions/settings
+### Phase 2: Agents Foundation (separate project)
 
-3. **Register AG-UI Endpoints**
-   - Use `MapAGUI()` extension method
-   - Configure authentication/authorization via Umbraco backoffice security
+1. Add Microsoft.Agents.AI packages to `Umbraco.Ai.Agents`
+2. Create `UmbracoAgentFactory`
+3. Implement AG-UI endpoint using `MapAGUI()`
+4. Add custom approval events
 
-4. **Update Frontend**
-   - Add TypeScript types for AG-UI events (`snake_case`)
-   - Update event handlers for new event structure
+### Phase 3: Frontend Agents Support
 
-### Phase 2: Agent Features
+1. Handle tool events in UI
+2. Implement approval widget
+3. Session management
 
-1. **Add Umbraco Tools**
-   - Content tools (search, create, update, publish)
-   - Media tools
-   - Navigation tools
-   - Register via `ChatClientAgent` tools parameter
+## Migration Path
 
-2. **Register Tools in Agent Factory**
-   ```csharp
-   var tools = new List<AITool>
-   {
-       AIFunctionFactory.Create(SearchContent),
-       AIFunctionFactory.Create(GetContent),
-       AIFunctionFactory.Create(UpdateContent),
-   };
+### For Developers Using Core
 
-   return new ChatClientAgent(chatClient, tools: tools, ...);
-   ```
+1. Update frontend to handle AG-UI events (same structure as Agents will use)
+2. No backend package changes needed - Core uses lightweight custom types
 
-3. **Frontend Tool UI**
-   - Handle `tool_call_*` events
-   - Implement approval UI for destructive tools
-   - Add state synchronization via `state_*` events
+### For Developers Adopting Agents
 
-### Phase 3: Advanced Features
+1. Add `Umbraco.Ai.Agents` package
+2. Frontend already understands event structure from Core
+3. Add handlers for tool/approval events
 
-1. **Memory/Context Providers**
-   - Leverage Microsoft's `AIContextProvider` for RAG
-   - Integrate with Umbraco content search
+## Files Summary
 
-2. **OpenTelemetry Integration**
-   - Use Microsoft's built-in `OpenTelemetryAgent` wrapper
-   - Configure tracing for agent interactions
+### Core (Modify)
 
-3. **Multi-Agent Scenarios**
-   - Explore A2A (Agent-to-Agent) protocol support
-   - Consider Copilot Studio integration
+- `src/Umbraco.Ai.Web/Api/Common/Events/` (new folder)
+  - `AiStreamEvent.cs` (includes all event types)
+- `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/StreamChatController.cs`
+- `src/Umbraco.Ai.Web.StaticAssets/Client/src/api/events.ts`
 
-## SDK Comparison Summary
+### Agents (New - Future)
 
-| Aspect | Microsoft Agent Framework | Custom Implementation |
-|--------|---------------------------|----------------------|
-| IChatClient wrapping | `ChatClientAgent` included | Must implement |
-| ASP.NET integration | `MapAGUI()` included | Must implement |
-| Event serialization | Handled automatically | Must configure |
-| Tool support | Built-in via M.E.AI | Must implement |
-| OpenTelemetry | Built-in | Must implement |
-| Memory providers | Built-in | Must implement |
-| Maintenance | Microsoft | Self-maintained |
+- `src/Umbraco.Ai.Agents/Services/UmbracoAgentFactory.cs`
+- `src/Umbraco.Ai.Agents/Api/Controllers/AgentChatController.cs`
+- `src/Umbraco.Ai.Agents/Api/Events/ApprovalRequestedEvent.cs`
 
-## Recommendation
+## Benefits of This Approach
 
-**Use Microsoft Agent Framework** because:
-
-1. **`ChatClientAgent` wraps `IChatClient` directly** - perfect fit for Umbraco.Ai's architecture
-2. **Official Microsoft support** - long-term investment, consistent with .NET ecosystem
-3. **Built-in features** - OpenTelemetry, logging, memory providers included
-4. **Broader ecosystem** - Copilot Studio, Azure AI, A2A protocol integration
-5. **Standard AG-UI** - uses `snake_case` matching the AG-UI specification
-
-**Community SDK alternative** if:
-- Microsoft packages are unavailable or unstable
-- Lighter weight solution needed (fewer dependencies)
-- Specific customization requirements not met by Microsoft
+1. **Consistency** - Same event envelope for Core and Agents
+2. **Lightweight Core** - No external AG-UI dependency in Core package
+3. **Full Power in Agents** - Microsoft Agent Framework for tools/sessions
+4. **Easy Transition** - Developers learn one pattern, add capabilities incrementally
+5. **AG-UI Spec Compliant** - Uses `snake_case` per specification
 
 ## Future Extensions
 
@@ -581,10 +581,10 @@ export const isToolCallStart = (e: AgUiEvent): e is ToolCallStartEvent =>
 Register Umbraco tools via `ChatClientAgent`:
 
 ```csharp
-public async Task<ChatClientAgent> CreateAgentAsync(Guid profileId, CancellationToken ct)
+public async Task<ChatClientAgent> CreateAgentAsync(AiAgent agent, CancellationToken ct)
 {
-    var chatClient = await _chatClientFactory.CreateClientAsync(profileId, ct);
-    var profile = await _profileService.GetAsync(profileId, ct);
+    var chatClient = await _chatClientFactory.CreateClientAsync(agent.ProfileId, ct);
+    var profile = await _profileService.GetAsync(agent.ProfileId, ct);
 
     // Define Umbraco tools
     var tools = new List<AITool>
@@ -598,7 +598,7 @@ public async Task<ChatClientAgent> CreateAgentAsync(Guid profileId, Cancellation
     return new ChatClientAgent(
         chatClient,
         instructions: profile?.SystemPrompt,
-        name: profile?.Name,
+        name: agent.Name,
         tools: tools,
         loggerFactory: _loggerFactory);
 }

@@ -26,38 +26,17 @@ public class AgentResponseModel
     public string? Description { get; set; }
 
     /// <summary>
-    /// The agent content.
+    /// The linked profile ID.
     /// </summary>
-    public string Content { get; set; } = string.Empty;
+    public Guid ProfileId { get; set; }
 
     /// <summary>
-    /// Optional linked profile ID.
+    /// Instructions that define how the agent behaves.
     /// </summary>
-    public Guid? ProfileId { get; set; }
-
-    /// <summary>
-    /// Tags for categorization.
-    /// </summary>
-    public IEnumerable<string> Tags { get; set; } = [];
+    public string? Instructions { get; set; }
 
     /// <summary>
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }
-
-    /// <summary>
-    /// Scope configuration defining where this agent can run.
-    /// Null means the agent is not allowed anywhere.
-    /// </summary>
-    public ScopeModel? Scope { get; set; }
-
-    /// <summary>
-    /// Creation timestamp.
-    /// </summary>
-    public DateTime DateCreated { get; set; }
-
-    /// <summary>
-    /// Last modification timestamp.
-    /// </summary>
-    public DateTime DateModified { get; set; }
 }

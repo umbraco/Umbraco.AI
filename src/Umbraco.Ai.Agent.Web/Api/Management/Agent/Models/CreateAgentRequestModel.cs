@@ -23,30 +23,19 @@ public class CreateAgentRequestModel
     public required string Name { get; init; }
 
     /// <summary>
-    /// The agent content.
-    /// </summary>
-    [Required]
-    public required string Content { get; init; }
-
-    /// <summary>
     /// Optional description.
     /// </summary>
     [StringLength(1000)]
     public string? Description { get; init; }
 
     /// <summary>
-    /// Optional linked profile ID.
+    /// The linked profile ID.
     /// </summary>
-    public Guid? ProfileId { get; init; }
+    [Required]
+    public required Guid ProfileId { get; init; }
 
     /// <summary>
-    /// Optional tags for categorization.
+    /// Instructions that define how the agent behaves.
     /// </summary>
-    public IEnumerable<string>? Tags { get; init; }
-
-    /// <summary>
-    /// Optional scope configuration defining where this agent can run.
-    /// Null means the agent is not allowed anywhere.
-    /// </summary>
-    public ScopeModel? Scope { get; init; }
+    public string? Instructions { get; init; }
 }

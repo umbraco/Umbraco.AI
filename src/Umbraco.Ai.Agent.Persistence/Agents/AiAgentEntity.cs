@@ -26,37 +26,17 @@ public class AiAgentEntity
     public string? Description { get; set; }
 
     /// <summary>
-    /// AiAgent template content.
-    /// </summary>
-    public string Content { get; set; } = string.Empty;
-
-    /// <summary>
     /// Optional linked profile ID (soft FK).
     /// </summary>
-    public Guid? ProfileId { get; set; }
+    public Guid ProfileId { get; set; }
 
     /// <summary>
-    /// Tags array serialized as a comma-separated string.
+    /// Instructions that define how the agent behaves.
     /// </summary>
-    public string? Tags { get; set; }
+    public string? Instructions { get; set; }
 
     /// <summary>
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; } = true;
-
-    /// <summary>
-    /// JSON-serialized scope configuration.
-    /// </summary>
-    public string? Scope { get; set; }
-
-    /// <summary>
-    /// Creation timestamp.
-    /// </summary>
-    public DateTime DateCreated { get; set; }
-
-    /// <summary>
-    /// Last modification timestamp.
-    /// </summary>
-    public DateTime DateModified { get; set; }
 }

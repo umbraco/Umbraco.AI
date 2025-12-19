@@ -11,10 +11,8 @@ export const UAiAgentTypeMapper = {
             alias: response.alias,
             name: response.name,
             description: response.description ?? null,
-            content: response.content,
-            profileId: response.profileId ?? null,
-            tags: response.tags ?? [],
-            scope: null,
+            profileId: response.profileId,
+            instructions: response.instructions ?? null,
             isActive: response.isActive,
         };
     },
@@ -26,6 +24,7 @@ export const UAiAgentTypeMapper = {
             alias: response.alias,
             name: response.name,
             description: response.description ?? null,
+            profileId: response.profileId,
             isActive: response.isActive,
         };
     },
@@ -34,11 +33,9 @@ export const UAiAgentTypeMapper = {
         return {
             alias: model.alias,
             name: model.name,
-            content: model.content,
             description: model.description,
             profileId: model.profileId,
-            tags: model.tags,
-            scope: null,
+            instructions: model.instructions,
         };
     },
 
@@ -46,11 +43,9 @@ export const UAiAgentTypeMapper = {
         return {
             alias: model.alias,
             name: model.name,
-            content: model.content,
             description: model.description,
             profileId: model.profileId,
-            tags: model.tags,
-            scope: null,
+            instructions: model.instructions,
             isActive: model.isActive,
         };
     },

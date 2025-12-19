@@ -1,5 +1,3 @@
-using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
@@ -10,17 +8,11 @@ namespace Umbraco.Ai.Agent.Core.Agents;
 internal sealed class AiAgentService : IAiAgentService
 {
     private readonly IAiAgentRepository _repository;
-    private readonly IAiChatService _chatService;
-    private readonly IAiAgentScopeValidator _scopeValidator;
 
     public AiAgentService(
-        IAiAgentRepository repository,
-        IAiChatService chatService,
-        IAiAgentScopeValidator scopeValidator)
+        IAiAgentRepository repository)
     {
         _repository = repository;
-        _chatService = chatService;
-        _scopeValidator = scopeValidator;
     }
 
     /// <inheritdoc />
@@ -50,7 +42,6 @@ internal sealed class AiAgentService : IAiAgentService
         ArgumentNullException.ThrowIfNull(agent);
         ArgumentException.ThrowIfNullOrWhiteSpace(agent.Alias);
         ArgumentException.ThrowIfNullOrWhiteSpace(agent.Name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(agent.Content);
 
         // Generate new ID if needed
         if (agent.Id == Guid.Empty)
@@ -64,9 +55,6 @@ internal sealed class AiAgentService : IAiAgentService
         {
             throw new InvalidOperationException($"A agent with alias '{agent.Alias}' already exists.");
         }
-
-        // Update timestamp
-        agent.DateModified = DateTime.UtcNow;
 
         return await _repository.SaveAsync(agent, cancellationToken);
     }

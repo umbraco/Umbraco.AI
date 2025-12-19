@@ -26,40 +26,17 @@ public sealed class AiAgent
     public string? Description { get; set; }
 
     /// <summary>
-    /// The agent definition content. May include placeholders like {{variable}}.
+    /// Profile to use for AI model configuration.
     /// </summary>
-    public required string Content { get; set; }
+    public required Guid ProfileId { get; set; }
 
     /// <summary>
-    /// Optional ID of the AI profile this agent is designed for.
-    /// References AiProfile.Id from Umbraco.Ai.Core.
+    /// Instructions that define how the agent behaves.
     /// </summary>
-    public Guid? ProfileId { get; set; }
-
-    /// <summary>
-    /// Tags for categorization and filtering.
-    /// </summary>
-    public IReadOnlyList<string> Tags { get; set; } = [];
+    public string? Instructions { get; set; }
 
     /// <summary>
     /// Whether this agent is active and available for use.
     /// </summary>
     public bool IsActive { get; set; } = true;
-
-    /// <summary>
-    /// Scope configuration defining where this agent can run.
-    /// Controls both UI display and server-side enforcement.
-    /// If null, the agent is not allowed anywhere (denied by default).
-    /// </summary>
-    public AiAgentScope? Scope { get; set; }
-
-    /// <summary>
-    /// When the agent was created.
-    /// </summary>
-    public DateTime DateCreated { get; init; }
-
-    /// <summary>
-    /// When the agent was last modified.
-    /// </summary>
-    public DateTime DateModified { get; set; }
 }

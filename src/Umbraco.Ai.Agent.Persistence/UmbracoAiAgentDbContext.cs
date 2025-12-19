@@ -42,26 +42,14 @@ public class UmbracoAiAgentDbContext : DbContext
             entity.Property(e => e.Description)
                 .HasMaxLength(1000);
 
-            entity.Property(e => e.Content)
-                .IsRequired();
+            entity.Property(e => e.ProfileId)
+                .IsRequired(true);
 
-            entity.Property(e => e.ProfileId);
-
-            entity.Property(e => e.Tags)
-                .HasMaxLength(2000);
+            entity.Property(e => e.Instructions);
 
             entity.Property(e => e.IsActive)
                 .IsRequired()
                 .HasDefaultValue(true);
-
-            entity.Property(e => e.Scope)
-                .HasMaxLength(4000);
-
-            entity.Property(e => e.DateCreated)
-                .IsRequired();
-
-            entity.Property(e => e.DateModified)
-                .IsRequired();
 
             // Indexes
             entity.HasIndex(e => e.Alias)

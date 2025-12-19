@@ -9,10 +9,8 @@ export interface UAiAgentDetailModel extends UmbEntityModel {
     alias: string;
     name: string;
     description: string | null;
-    content: string;
-    profileId: string | null;
-    tags: string[];
-    scope: any | null;
+    profileId: string;
+    instructions: string | null;
     isActive: boolean;
 }
 
@@ -25,5 +23,6 @@ export interface UAiAgentItemModel extends UmbEntityModel {
     alias: string;
     name: string;
     description: string | null;
+    profileId: string;
     isActive: boolean;
 }

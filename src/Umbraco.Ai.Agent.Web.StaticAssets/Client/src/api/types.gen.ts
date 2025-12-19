@@ -9,7 +9,7 @@ export type AgentItemResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
-    profileId?: string | null;
+    profileId: string;
     isActive: boolean;
 };
 
@@ -18,23 +18,17 @@ export type AgentResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
-    content: string;
-    profileId?: string | null;
-    tags: Array<string>;
+    profileId: string;
+    instructions?: string | null;
     isActive: boolean;
-    scope?: ScopeModel | null;
-    dateCreated: string;
-    dateModified: string;
 };
 
 export type CreateAgentRequestModel = {
     alias: string;
     name: string;
-    content: string;
     description?: string | null;
-    profileId?: string | null;
-    tags?: Array<string> | null;
-    scope?: ScopeModel | null;
+    profileId: string;
+    instructions?: string | null;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -59,26 +53,13 @@ export type ProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
 };
 
-export type ScopeModel = {
-    allowRules: Array<ScopeRuleModel>;
-    denyRules: Array<ScopeRuleModel>;
-};
-
-export type ScopeRuleModel = {
-    propertyEditorUiAliases?: Array<string> | null;
-    propertyAliases?: Array<string> | null;
-    contentTypeAliases?: Array<string> | null;
-};
-
 export type UpdateAgentRequestModel = {
     alias: string;
     name: string;
-    content: string;
     description?: string | null;
-    profileId?: string | null;
-    tags?: Array<string> | null;
+    profileId: string;
+    instructions?: string | null;
     isActive: boolean;
-    scope?: ScopeModel | null;
 };
 
 export type ValidationProblemDetails = {

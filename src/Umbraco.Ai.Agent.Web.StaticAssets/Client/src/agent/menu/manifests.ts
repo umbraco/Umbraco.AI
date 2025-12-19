@@ -6,7 +6,7 @@ export const agentMenuManifests: ManifestMenuItem[] = [
         type: "menuItem",
         alias: "UmbracoAiAgent.MenuItem.Agents",
         name: "Agents Menu Item",
-        weight: 90,
+        weight: 70,
         meta: {
             label: "Agents",
             icon: UAI_AGENT_ICON,

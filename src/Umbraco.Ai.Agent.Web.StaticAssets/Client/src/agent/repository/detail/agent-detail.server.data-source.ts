@@ -5,8 +5,7 @@ import { AgentsService } from "../../../api/index.js";
 import { UAiAgentTypeMapper } from "../../type-mapper.js";
 import type { UAiAgentDetailModel } from "../../types.js";
 import { UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
-
-const UAI_EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+import { UAI_EMPTY_GUID } from "@umbraco-ai/core";
 
 /**
  * Server data source for Agent detail operations.
@@ -28,10 +27,8 @@ export class UAiAgentDetailServerDataSource implements UmbDetailDataSource<UAiAg
             alias: "",
             name: "",
             description: null,
-            content: "",
-            profileId: null,
-            tags: [],
-            scope: null,
+            profileId: "",
+            instructions: null,
             isActive: true,
             ...preset,
         };

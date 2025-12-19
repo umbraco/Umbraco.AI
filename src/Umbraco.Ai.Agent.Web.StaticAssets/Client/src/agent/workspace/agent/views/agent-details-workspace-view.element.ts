@@ -1,4 +1,4 @@
-import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiSelectedEvent } from "@umbraco-ai/core";
@@ -8,22 +8,8 @@ import type { UAiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 /**
- * Creates a default scope with one allow rule for all text-based editors.
- */
-// function createDefaultScope(): UAiAgentScope {
-//     return {
-//         allowRules: [{
-//             propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
-//             propertyAliases: null,
-//             contentTypeAliases: null,
-//         }],
-//         denyRules: [],
-//     };
-// }
-
-/**
  * Workspace view for Agent details.
- * Displays content, description, scope configuration, tags, and status.
+ * Displays system prompt, description, profile, and status.
  */
 @customElement("uai-agent-details-workspace-view")
 export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
@@ -44,10 +30,6 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         });
     }
 
-    // #getScope(): UAiAgentScope {
-    //     return this._model?.scope ?? createDefaultScope();
-    // }
-
     #onDescriptionChange(event: Event) {
         event.stopPropagation();
         const value = (event.target as HTMLInputElement).value;
@@ -56,11 +38,11 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onContentChange(event: Event) {
+    #onInstructionsChange(event: Event) {
         event.stopPropagation();
         const value = (event.target as HTMLTextAreaElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ content: value }, "content")
+            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ instructions: value || null }, "instructions")
         );
     }
 
@@ -75,33 +57,9 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     #onProfileChange(event: UaiSelectedEvent) {
         event.stopPropagation();
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ profileId: event.unique }, "profileId")
+            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ profileId: event.unique ?? "" }, "profileId")
         );
     }
-
-    // #updateScope(scope: UAiAgentScope) {
-    //     this.#workspaceContext?.handleCommand(
-    //         new UaiPartialUpdateCommand<UAiAgentDetailModel>({ scope }, "scope")
-    //     );
-    // }
-
-    // #onAllowRulesChange(event: CustomEvent<UaiScopeRule[]>) {
-    //     event.stopPropagation();
-    //     const scope = this.#getScope();
-    //     this.#updateScope({
-    //         ...scope,
-    //         allowRules: event.detail,
-    //     });
-    // }
-    //
-    // #onDenyRulesChange(event: CustomEvent<UaiScopeRule[]>) {
-    //     event.stopPropagation();
-    //     const scope = this.#getScope();
-    //     this.#updateScope({
-    //         ...scope,
-    //         denyRules: event.detail,
-    //     });
-    // }
 
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
@@ -117,15 +75,13 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     #renderLeftColumn() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
-        //const scope = this.#getScope();
-
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="AI Profile" description="Optional AI profile this agent is designed for">
+                <umb-property-layout label="AI Profile" description="The AI profile this agent uses for model configuration">
                     <uai-profile-picker
                         slot="editor"
-                        .value=${this._model.profileId ?? undefined}
-                        placeholder="-- No Profile --"
+                        .value=${this._model.profileId || undefined}
+                        placeholder="-- Select Profile --"
                         @selected=${this.#onProfileChange}
                     ></uai-profile-picker>
                 </umb-property-layout>
@@ -139,40 +95,16 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-input>
                 </umb-property-layout>
 
-                <umb-property-layout label="Content" description="The agent definition text">
+                <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves">
                     <uui-textarea
                         slot="editor"
-                        .value=${this._model.content}
-                        @input=${this.#onContentChange}
-                        placeholder="Enter agent content..."
+                        .value=${this._model.instructions ?? ""}
+                        @input=${this.#onInstructionsChange}
+                        placeholder="Enter instructions..."
                         rows="12"
                     ></uui-textarea>
                 </umb-property-layout>
             </uui-box>
-
-            <uui-box headline="Scope">
-                <umb-property-layout
-                    label="Allow"
-                    description="Agent is allowed where ANY rule matches (OR logic between rules)"
-                >
-                    
-                </umb-property-layout>
-
-                <umb-property-layout
-                    label="Deny"
-                    description="Agent is denied where ANY rule matches (overrides allow rules)"
-                >
-                    
-                </umb-property-layout>
-            </uui-box>
-
-            ${this._model.tags.length > 0 ? html`
-                <uui-box headline="Tags">
-                    <div class="tags-container">
-                        ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
-                    </div>
-                </uui-box>
-            ` : nothing}
         `;
     }
 
@@ -232,20 +164,9 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 margin-top: var(--uui-size-layout-1);
             }
 
-            .deny-box {
-                --uui-box-header-color: var(--uui-color-danger);
-            }
-
             uui-input,
             uui-textarea {
                 width: 100%;
-            }
-
-            .tags-container {
-                display: flex;
-                flex-wrap: wrap;
-                gap: var(--uui-size-space-2);
-                padding: var(--uui-size-space-3) 0;
             }
 
             umb-property-layout[orientation="vertical"]:not(:last-child) {

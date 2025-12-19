@@ -21,8 +21,7 @@ public static class UmbracoBuilderExtensions
     {
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
-            .Add<AgentMapDefinition>()
-            .Add<AgentExecutionMapDefinition>(); 
+            .Add<AgentMapDefinition>(); 
 
         // Configure Management API
         builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>

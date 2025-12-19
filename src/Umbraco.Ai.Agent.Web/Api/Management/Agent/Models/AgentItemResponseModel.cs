@@ -26,9 +26,9 @@ public class AgentItemResponseModel
     public string? Description { get; set; }
 
     /// <summary>
-    /// Optional linked profile ID.
+    /// The linked profile ID.
     /// </summary>
-    public Guid? ProfileId { get; set; }
+    public Guid ProfileId { get; set; }
 
     /// <summary>
     /// Whether the agent is active.

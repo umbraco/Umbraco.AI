@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Prompt Persistence</Title>
-        <Description>EF Core persistence layer for Umbraco Ai Prompt</Description>
+        <Title>Umbraco Ai Agent Persistence</Title>
+        <Description>EF Core persistence layer for Umbraco Ai Agent</Description>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Prompt Persistence SQLite</Title>
-        <Description>SQLite migrations for Umbraco Ai Prompt</Description>
+        <Title>Umbraco Ai Agent Persistence SQLite</Title>
+        <Description>SQLite migrations for Umbraco Ai Agent</Description>
     </PropertyGroup>
 
     <ItemGroup>
@@ -11,5 +11,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Umbraco.Ai.Agent.Persistence\Umbraco.Ai.Agent.Persistence.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Migrations\" />
     </ItemGroup>
 </Project>

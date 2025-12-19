@@ -8,5 +8,5 @@ public class AiAgentOptions
     /// <summary>
     /// The configuration section name.
     /// </summary>
-    public const string SectionName = "Umbraco:Ai:AiAgent";
+    public const string SectionName = "Umbraco:Ai:Agent";
 }

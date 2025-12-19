@@ -1,2 +1,2 @@
-export const UAI_PROMPT_WORKSPACE_ALIAS = 'UmbracoAiAgent.Workspace.Prompt';
-export const UAI_PROMPT_ROOT_WORKSPACE_ALIAS = 'UmbracoAiAgent.Workspace.PromptRoot';
+export const UAI_AGENT_WORKSPACE_ALIAS = 'UmbracoAiAgent.Workspace.Agent';
+export const UAI_AGENT_ROOT_WORKSPACE_ALIAS = 'UmbracoAiAgent.Workspace.AgentRoot';

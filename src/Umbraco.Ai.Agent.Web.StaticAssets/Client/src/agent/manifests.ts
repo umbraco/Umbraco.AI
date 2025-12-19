@@ -1,15 +1,13 @@
-import { promptCollectionManifests } from "./collection/manifests.js";
-import { promptEntityActionManifests } from "./entity-actions/manifests.js";
-import { promptMenuManifests } from "./menu/manifests.js";
-import { promptRepositoryManifests } from "./repository/manifests.js";
-import { promptWorkspaceManifests } from "./workspace/manifests.js";
-import { promptPropertyActionManifests } from "./property-actions/manifests.js";
+import { agentCollectionManifests } from "./collection/manifests.js";
+import { agentEntityActionManifests } from "./entity-actions/manifests.js";
+import { agentMenuManifests } from "./menu/manifests.js";
+import { agentRepositoryManifests } from "./repository/manifests.js";
+import { agentWorkspaceManifests } from "./workspace/manifests.js";
 
-export const promptManifests = [
-    ...promptCollectionManifests,
-    ...promptEntityActionManifests,
-    ...promptMenuManifests,
-    ...promptRepositoryManifests,
-    ...promptWorkspaceManifests,
-    ...promptPropertyActionManifests,
+export const agentManifests = [
+    ...agentCollectionManifests,
+    ...agentEntityActionManifests,
+    ...agentMenuManifests,
+    ...agentRepositoryManifests,
+    ...agentWorkspaceManifests,
 ];

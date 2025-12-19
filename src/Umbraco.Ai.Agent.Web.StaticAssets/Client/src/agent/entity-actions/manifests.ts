@@ -1,14 +1,14 @@
-import { UAI_PROMPT_ENTITY_TYPE, UAI_PROMPT_ROOT_ENTITY_TYPE } from "../constants.js";
+import { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from "../constants.js";
 
-export const promptEntityActionManifests: Array<UmbExtensionManifest> = [
+export const agentEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAiAgent.EntityAction.Prompt.Create",
-        name: "Create Prompt Entity Action",
+        alias: "UmbracoAiAgent.EntityAction.Agent.Create",
+        name: "Create Agent Entity Action",
         weight: 1200,
-        api: () => import("./prompt-create.action.js"),
-        forEntityTypes: [UAI_PROMPT_ROOT_ENTITY_TYPE],
+        api: () => import("./agent-create.action.js"),
+        forEntityTypes: [UAI_AGENT_ROOT_ENTITY_TYPE],
         meta: {
             icon: "icon-add",
             label: "Create",
@@ -17,11 +17,11 @@ export const promptEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "delete",
-        alias: "UmbracoAiAgent.EntityAction.Prompt.Delete",
-        name: "Delete Prompt Entity Action",
+        alias: "UmbracoAiAgent.EntityAction.Agent.Delete",
+        name: "Delete Agent Entity Action",
         weight: 100,
-        api: () => import("./prompt-delete.action.js"),
-        forEntityTypes: [UAI_PROMPT_ENTITY_TYPE],
+        api: () => import("./agent-delete.action.js"),
+        forEntityTypes: [UAI_AGENT_ENTITY_TYPE],
         meta: {
             icon: "icon-trash",
             label: "#actions_delete",

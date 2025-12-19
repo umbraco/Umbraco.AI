@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// Request model for creating a prompt.
+/// Request model for creating a agent.
 /// </summary>
-public class CreatePromptRequestModel
+public class CreateAgentRequestModel
 {
     /// <summary>
     /// The unique alias (URL-safe identifier).
@@ -23,7 +23,7 @@ public class CreatePromptRequestModel
     public required string Name { get; init; }
 
     /// <summary>
-    /// The prompt content.
+    /// The agent content.
     /// </summary>
     [Required]
     public required string Content { get; init; }
@@ -45,8 +45,8 @@ public class CreatePromptRequestModel
     public IEnumerable<string>? Tags { get; init; }
 
     /// <summary>
-    /// Optional scope configuration defining where this prompt can run.
-    /// Null means the prompt is not allowed anywhere.
+    /// Optional scope configuration defining where this agent can run.
+    /// Null means the agent is not allowed anywhere.
     /// </summary>
     public ScopeModel? Scope { get; init; }
 }

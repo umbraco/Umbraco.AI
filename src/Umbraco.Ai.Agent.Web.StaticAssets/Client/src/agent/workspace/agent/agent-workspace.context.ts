@@ -11,21 +11,21 @@ import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
 import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
-import { UAiAgentDetailRepository } from "../../repository/detail/prompt-detail.repository.js";
-import { UAI_PROMPT_WORKSPACE_ALIAS, UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
+import { UAiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
+import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
 import type { UAiAgentDetailModel } from "../../types.js";
-import { UAiAgentWorkspaceEditorElement } from "./prompt-workspace-editor.element.js";
-import { UAI_PROMPT_ROOT_WORKSPACE_PATH } from "../prompt-root/paths.js";
+import { UAiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
+import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
 /**
- * Workspace context for editing Prompt entities.
+ * Workspace context for editing Agent entities.
  * Handles CRUD operations and state management.
  */
 export class UAiAgentWorkspaceContext
     extends UmbSubmittableWorkspaceContextBase<UAiAgentDetailModel>
     implements UmbRoutableWorkspaceContext
 {
-    public readonly IS_PROMPT_WORKSPACE_CONTEXT = true;
+    public readonly IS_AGENT_WORKSPACE_CONTEXT = true;
     readonly routes = new UmbWorkspaceRouteManager(this);
 
     #unique = new UmbBasicState<string | undefined>(undefined);
@@ -39,19 +39,19 @@ export class UAiAgentWorkspaceContext
     #entityContext = new UmbEntityContext(this);
 
     constructor(host: UmbControllerHost) {
-        super(host, UAI_PROMPT_WORKSPACE_ALIAS);
+        super(host, UAI_AGENT_WORKSPACE_ALIAS);
 
         this.#repository = new UAiAgentDetailRepository(this);
         this.addValidationContext(new UmbValidationContext(this));
 
-        this.#entityContext.setEntityType(UAI_PROMPT_ENTITY_TYPE);
+        this.#entityContext.setEntityType(UAI_AGENT_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
 
         // Redirect to collection when entity is deleted
         new UaiEntityDeletedRedirectController(this, {
             getUnique: () => this.getUnique(),
             getEntityType: () => this.getEntityType(),
-            collectionPath: UAI_PROMPT_ROOT_WORKSPACE_PATH,
+            collectionPath: UAI_AGENT_ROOT_WORKSPACE_PATH,
         });
 
         this.routes.setRoutes([
@@ -86,7 +86,7 @@ export class UAiAgentWorkspaceContext
     }
 
     /**
-     * Creates a scaffold for a new prompt.
+     * Creates a scaffold for a new agent.
      */
     async scaffold() {
         this.resetState();
@@ -99,7 +99,7 @@ export class UAiAgentWorkspaceContext
     }
 
     /**
-     * Loads an existing prompt by ID.
+     * Loads an existing agent by ID.
      */
     async load(id: string) {
         this.resetState();
@@ -148,11 +148,11 @@ export class UAiAgentWorkspaceContext
     }
 
     getEntityType(): string {
-        return UAI_PROMPT_ENTITY_TYPE;
+        return UAI_AGENT_ENTITY_TYPE;
     }
 
     /**
-     * Saves the prompt (create or update).
+     * Saves the agent (create or update).
      */
     async submit() {
         const model = this.#model.getValue();

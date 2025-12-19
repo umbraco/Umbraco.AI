@@ -894,7 +894,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
         const elementPath = await buildElementPath(this);
 
         try {
-            const result = await umbOpenModal(this, UAI_PROMPT_PREVIEW_MODAL, {
+            const result = await umbOpenModal(this, UAI_AGENT_PREVIEW_MODAL, {
                 data: {
                     promptUnique: meta.promptUnique,
                     promptName: meta.label,

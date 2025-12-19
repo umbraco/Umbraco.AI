@@ -1,8 +1,8 @@
-export { UAI_PROMPT_ENTITY_TYPE, UAI_PROMPT_ROOT_ENTITY_TYPE } from './entity.js';
+export { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from './entity.js';
 export type { UAiAgentEntityType, UAiAgentRootEntityType } from './entity.js';
 
 export * from './repository/constants.js';
 export * from './workspace/constants.js';
 export * from './collection/constants.js';
 
-export const UAI_PROMPT_ICON = 'icon-command';
+export const UAI_AGENT_ICON = 'icon-bot';

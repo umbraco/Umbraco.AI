@@ -2,7 +2,7 @@ import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localiza
 
 export default {
     uAiAgent: {
-        deleteConfirm: "Are you sure you want to delete this prompt?",
-        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} prompt(s)?`,
+        deleteConfirm: "Are you sure you want to delete this agent?",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} agent(s)?`,
     },
 } as UmbLocalizationDictionary;

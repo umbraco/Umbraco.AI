@@ -1,11 +1,11 @@
-# Umbraco.Ai.Prompt
+# Umbraco.Ai.Agent
 
-A prompt management plugin for Umbraco.Ai that provides storage, organization, and management of AI prompt templates.
+An agent management plugin for Umbraco.Ai that provides storage, organization, and management of AI Agent templates.
 
 ## Features
 
-- Store and manage AI prompt templates
-- Link prompts to AI profiles
+- Store and manage AI Agent definitions
+- Link Agents to AI profiles
 - Tag-based organization
 - Full backoffice UI integration
 - Management API endpoints
@@ -13,7 +13,7 @@ A prompt management plugin for Umbraco.Ai that provides storage, organization, a
 ## Installation
 
 ```bash
-dotnet add package Umbraco.Ai.Prompt
+dotnet add package Umbraco.Ai.Agent
 ```
 
 ## Requirements

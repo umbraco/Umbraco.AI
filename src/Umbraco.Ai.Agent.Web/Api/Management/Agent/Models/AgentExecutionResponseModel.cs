@@ -1,11 +1,11 @@
 using Umbraco.Ai.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// Response model for prompt execution.
+/// Response model for agent execution.
 /// </summary>
-public class PromptExecutionResponseModel
+public class AgentExecutionResponseModel
 {
     /// <summary>
     /// The generated response content.

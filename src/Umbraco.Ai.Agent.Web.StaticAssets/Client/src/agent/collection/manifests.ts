@@ -1,31 +1,31 @@
-import { UAI_PROMPT_COLLECTION_ALIAS } from "./constants.js";
-import { UAI_PROMPT_COLLECTION_REPOSITORY_ALIAS } from "../repository/constants.js";
-import { promptCollectionActionManifests } from "./action/manifests.js";
-import { promptBulkActionManifests } from "./bulk-action/manifests.js";
+import { UAI_AGENT_COLLECTION_ALIAS } from "./constants.js";
+import { UAI_AGENT_COLLECTION_REPOSITORY_ALIAS } from "../repository/constants.js";
+import { agentCollectionActionManifests } from "./action/manifests.js";
+import { agentBulkActionManifests } from "./bulk-action/manifests.js";
 
-export const promptCollectionManifests: Array<UmbExtensionManifest> = [
+export const agentCollectionManifests: Array<UmbExtensionManifest> = [
     {
         type: "collection",
         kind: "default",
-        alias: UAI_PROMPT_COLLECTION_ALIAS,
-        name: "Prompt Collection",
-        element: () => import("./prompt-collection.element.js"),
+        alias: UAI_AGENT_COLLECTION_ALIAS,
+        name: "Agent Collection",
+        element: () => import("./agent-collection.element.js"),
         meta: {
-            repositoryAlias: UAI_PROMPT_COLLECTION_REPOSITORY_ALIAS,
+            repositoryAlias: UAI_AGENT_COLLECTION_REPOSITORY_ALIAS,
         },
     },
     {
         type: "collectionView",
-        alias: "UmbracoAiAgent.CollectionView.Prompt.Table",
-        name: "Prompt Table View",
-        element: () => import("./views/table/prompt-table-collection-view.element.js"),
+        alias: "UmbracoAiAgent.CollectionView.Agent.Table",
+        name: "Agent Table View",
+        element: () => import("./views/table/agent-table-collection-view.element.js"),
         meta: {
             label: "Table",
             icon: "icon-list",
             pathName: "table",
         },
-        conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_PROMPT_COLLECTION_ALIAS }],
+        conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_AGENT_COLLECTION_ALIAS }],
     },
-    ...promptCollectionActionManifests,
-    ...promptBulkActionManifests,
+    ...agentCollectionActionManifests,
+    ...agentBulkActionManifests,
 ];

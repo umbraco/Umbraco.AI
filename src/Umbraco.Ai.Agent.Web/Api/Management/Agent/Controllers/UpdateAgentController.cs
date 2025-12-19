@@ -4,19 +4,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Agent.Extensions;
-using Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Controllers;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for updating Agents.
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
-public class UpdatePromptController : PromptControllerBase
+public class UpdateAgentController : AgentControllerBase
 {
     private readonly IAiAgentService _AiAgentService;
     private readonly IUmbracoMapper _umbracoMapper;
@@ -24,38 +24,38 @@ public class UpdatePromptController : PromptControllerBase
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public UpdatePromptController(IAiAgentService AiAgentService, IUmbracoMapper umbracoMapper)
+    public UpdateAgentController(IAiAgentService AiAgentService, IUmbracoMapper umbracoMapper)
     {
         _AiAgentService = AiAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
     /// <summary>
-    /// Updates an existing prompt.
+    /// Updates an existing agent.
     /// </summary>
-    /// <param name="promptIdOrAlias">The prompt ID (GUID) or alias (string).</param>
-    /// <param name="model">The prompt update request.</param>
+    /// <param name="agentIdOrAlias">The agent ID (GUID) or alias (string).</param>
+    /// <param name="model">The agent update request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated prompt.</returns>
-    [HttpPut($"{{{nameof(promptIdOrAlias)}}}")]
+    /// <returns>The updated agent.</returns>
+    [HttpPut($"{{{nameof(agentIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UpdatePrompt(
-        IdOrAlias promptIdOrAlias,
-        [FromBody] UpdatePromptRequestModel model,
+    public async Task<IActionResult> UpdateAgent(
+        IdOrAlias agentIdOrAlias,
+        [FromBody] UpdateAgentRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AiAgent? existing = await _AiAgentService.GetPromptAsync(promptIdOrAlias, cancellationToken);
+        AiAgent? existing = await _AiAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
         if (existing is null)
         {
-            return PromptNotFound();
+            return AgentNotFound();
         }
 
-        AiAgent prompt = _umbracoMapper.Map(model, existing);
+        AiAgent agent = _umbracoMapper.Map(model, existing);
 
-        await _AiAgentService.SavePromptAsync(prompt, cancellationToken);
+        await _AiAgentService.SaveAgentAsync(agent, cancellationToken);
         return Ok();
     }
 }

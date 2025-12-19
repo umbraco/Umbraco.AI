@@ -7,49 +7,49 @@ using Umbraco.Ai.Agent.Extensions;
 using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Controllers;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for deleting Agents.
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
-public class DeletePromptController : PromptControllerBase
+public class DeleteAgentController : AgentControllerBase
 {
     private readonly IAiAgentService _AiAgentService;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public DeletePromptController(IAiAgentService AiAgentService)
+    public DeleteAgentController(IAiAgentService AiAgentService)
     {
         _AiAgentService = AiAgentService;
     }
 
     /// <summary>
-    /// Deletes a prompt.
+    /// Deletes a agent.
     /// </summary>
-    /// <param name="promptIdOrAlias">The prompt ID (GUID) or alias (string).</param>
+    /// <param name="agentIdOrAlias">The agent ID (GUID) or alias (string).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content if successful.</returns>
-    [HttpDelete($"{{{nameof(promptIdOrAlias)}}}")]
+    [HttpDelete($"{{{nameof(agentIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeletePrompt(
-        IdOrAlias promptIdOrAlias,
+    public async Task<IActionResult> DeleteAgent(
+        IdOrAlias agentIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var promptId = await _AiAgentService.TryGetPromptIdAsync(promptIdOrAlias, cancellationToken);
-        if (promptId is null)
+        var agentId = await _AiAgentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
+        if (agentId is null)
         {
-            return PromptNotFound();
+            return AgentNotFound();
         }
 
-        var deleted = await _AiAgentService.DeleteAsync(promptId.Value, cancellationToken);
+        var deleted = await _AiAgentService.DeleteAsync(agentId.Value, cancellationToken);
         if (!deleted)
         {
-            return PromptNotFound();
+            return AgentNotFound();
         }
 
         return NoContent();

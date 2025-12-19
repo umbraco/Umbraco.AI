@@ -1,68 +1,28 @@
-import type { PromptResponseModel, PromptItemResponseModel, ScopeModel } from "../api/types.gen.js";
-import { UAI_PROMPT_ENTITY_TYPE } from "./constants.js";
-import type { UAiAgentScope, UaiScopeRule } from "./property-actions/types.js";
+import type { AgentResponseModel, AgentItemResponseModel } from "../api/types.gen.js";
+import { UAI_AGENT_ENTITY_TYPE } from "./constants.js";
 import type { UAiAgentDetailModel, UAiAgentItemModel } from "./types.js";
 
-/**
- * Maps API scope model to internal scope model.
- */
-function mapScopeFromApi(apiScope: ScopeModel | null | undefined): UAiAgentScope | null {
-    if (!apiScope) return null;
-
-    return {
-        allowRules: (apiScope.allowRules ?? []).map(mapScopeRuleFromApi),
-        denyRules: (apiScope.denyRules ?? []).map(mapScopeRuleFromApi),
-    };
-}
-
-function mapScopeRuleFromApi(rule: { propertyEditorUiAliases?: string[] | null; propertyAliases?: string[] | null; contentTypeAliases?: string[] | null }): UaiScopeRule {
-    return {
-        propertyEditorUiAliases: rule.propertyEditorUiAliases ?? null,
-        propertyAliases: rule.propertyAliases ?? null,
-        contentTypeAliases: rule.contentTypeAliases ?? null,
-    };
-}
-
-/**
- * Maps internal scope model to API scope model.
- */
-function mapScopeToApi(scope: UAiAgentScope | null): ScopeModel | null {
-    if (!scope) return null;
-
-    return {
-        allowRules: scope.allowRules.map(rule => ({
-            propertyEditorUiAliases: rule.propertyEditorUiAliases,
-            propertyAliases: rule.propertyAliases,
-            contentTypeAliases: rule.contentTypeAliases,
-        })),
-        denyRules: scope.denyRules.map(rule => ({
-            propertyEditorUiAliases: rule.propertyEditorUiAliases,
-            propertyAliases: rule.propertyAliases,
-            contentTypeAliases: rule.contentTypeAliases,
-        })),
-    };
-}
 
 export const UAiAgentTypeMapper = {
-    toDetailModel(response: PromptResponseModel): UAiAgentDetailModel {
+    toDetailModel(response: AgentResponseModel): UAiAgentDetailModel {
         return {
             unique: response.id,
-            entityType: UAI_PROMPT_ENTITY_TYPE,
+            entityType: UAI_AGENT_ENTITY_TYPE,
             alias: response.alias,
             name: response.name,
             description: response.description ?? null,
             content: response.content,
             profileId: response.profileId ?? null,
             tags: response.tags ?? [],
-            scope: mapScopeFromApi(response.scope),
+            scope: null,
             isActive: response.isActive,
         };
     },
 
-    toItemModel(response: PromptItemResponseModel): UAiAgentItemModel {
+    toItemModel(response: AgentItemResponseModel): UAiAgentItemModel {
         return {
             unique: response.id,
-            entityType: UAI_PROMPT_ENTITY_TYPE,
+            entityType: UAI_AGENT_ENTITY_TYPE,
             alias: response.alias,
             name: response.name,
             description: response.description ?? null,
@@ -78,7 +38,7 @@ export const UAiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             tags: model.tags,
-            scope: mapScopeToApi(model.scope),
+            scope: null,
         };
     },
 
@@ -90,7 +50,7 @@ export const UAiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             tags: model.tags,
-            scope: mapScopeToApi(model.scope),
+            scope: null,
             isActive: model.isActive,
         };
     },

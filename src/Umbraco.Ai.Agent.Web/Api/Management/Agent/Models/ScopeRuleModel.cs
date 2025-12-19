@@ -1,7 +1,7 @@
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// API model for a scope rule that determines where a prompt can run.
+/// API model for a scope rule that determines where a agent can run.
 /// </summary>
 public class ScopeRuleModel
 {

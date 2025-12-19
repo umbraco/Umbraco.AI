@@ -1,7 +1,7 @@
 namespace Umbraco.Ai.Agent.Persistence.Agents;
 
 /// <summary>
-/// EF Core entity for prompt storage.
+/// EF Core entity for agent storage.
 /// </summary>
 public class AiAgentEntity
 {
@@ -41,7 +41,7 @@ public class AiAgentEntity
     public string? Tags { get; set; }
 
     /// <summary>
-    /// Whether the prompt is active.
+    /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; } = true;
 

@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// Response model for a prompt list item.
+/// Response model for a agent list item.
 /// </summary>
-public class PromptItemResponseModel
+public class AgentItemResponseModel
 {
     /// <summary>
     /// The unique identifier.
@@ -31,7 +31,7 @@ public class PromptItemResponseModel
     public Guid? ProfileId { get; set; }
 
     /// <summary>
-    /// Whether the prompt is active.
+    /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }
 }

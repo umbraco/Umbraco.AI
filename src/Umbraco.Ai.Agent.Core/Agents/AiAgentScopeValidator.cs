@@ -6,7 +6,7 @@ using Umbraco.Cms.Core.Services;
 namespace Umbraco.Ai.Agent.Core.Agents;
 
 /// <summary>
-/// Validates whether a prompt execution is allowed based on its scope configuration.
+/// Validates whether a agent execution is allowed based on its scope configuration.
 /// </summary>
 internal sealed class AiAgentScopeValidator : IAiAgentScopeValidator
 {
@@ -35,36 +35,36 @@ internal sealed class AiAgentScopeValidator : IAiAgentScopeValidator
 
     /// <inheritdoc />
     public async Task<AiAgentScopeValidationResult> ValidateAsync(
-        AiAgent prompt,
+        AiAgent agent,
         AiAgentExecutionRequest request,
         CancellationToken cancellationToken = default)
     {
-        // If no scope is defined, prompt is not allowed anywhere
-        if (prompt.Scope is null)
+        // If no scope is defined, agent is not allowed anywhere
+        if (agent.Scope is null)
         {
-            return AiAgentScopeValidationResult.Denied("Prompt has no scope defined.");
+            return AiAgentScopeValidationResult.Denied("Agent has no scope defined.");
         }
 
-        // If no allow rules are defined, prompt is not allowed anywhere
-        if (prompt.Scope.AllowRules.Count == 0)
+        // If no allow rules are defined, agent is not allowed anywhere
+        if (agent.Scope.AllowRules.Count == 0)
         {
-            return AiAgentScopeValidationResult.Denied("Prompt has no allow rules defined.");
+            return AiAgentScopeValidationResult.Denied("Agent has no allow rules defined.");
         }
 
         // Build the resolved context from the request and actual content item
         var resolvedContext = await ResolveContextAsync(request, cancellationToken);
 
         // Check deny rules first (deny takes precedence)
-        foreach (var denyRule in prompt.Scope.DenyRules)
+        foreach (var denyRule in agent.Scope.DenyRules)
         {
             if (MatchesRule(denyRule, resolvedContext))
             {
-                return AiAgentScopeValidationResult.Denied("Prompt execution denied by deny rule.");
+                return AiAgentScopeValidationResult.Denied("Agent execution denied by deny rule.");
             }
         }
 
         // Check if any allow rule matches
-        foreach (var allowRule in prompt.Scope.AllowRules)
+        foreach (var allowRule in agent.Scope.AllowRules)
         {
             if (MatchesRule(allowRule, resolvedContext))
             {

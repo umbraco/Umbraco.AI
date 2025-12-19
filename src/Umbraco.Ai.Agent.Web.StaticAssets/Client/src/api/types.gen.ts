@@ -4,7 +4,30 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44363' | (string & {});
 };
 
-export type CreatePromptRequestModel = {
+export type AgentItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    isActive: boolean;
+};
+
+export type AgentResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    content: string;
+    profileId?: string | null;
+    tags: Array<string>;
+    isActive: boolean;
+    scope?: ScopeModel | null;
+    dateCreated: string;
+    dateModified: string;
+};
+
+export type CreateAgentRequestModel = {
     alias: string;
     name: string;
     content: string;
@@ -22,9 +45,9 @@ export type NotificationHeaderModel = {
     type: EventMessageTypeModel;
 };
 
-export type PagedPromptItemResponseModel = {
+export type PagedAgentItemResponseModel = {
     total: number;
-    items: Array<PromptItemResponseModel>;
+    items: Array<AgentItemResponseModel>;
 };
 
 export type ProblemDetails = {
@@ -36,49 +59,18 @@ export type ProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
 };
 
-export type PromptExecutionRequestModel = {
-    entityId: string;
-    entityType: string;
-    propertyAlias: string;
-    culture?: string | null;
-    segment?: string | null;
-    localContent?: {
-        [key: string]: unknown;
-    } | null;
-    context?: {
-        [key: string]: unknown;
-    } | null;
+export type ScopeModel = {
+    allowRules: Array<ScopeRuleModel>;
+    denyRules: Array<ScopeRuleModel>;
 };
 
-export type PromptExecutionResponseModel = {
-    content: string;
-    usage?: UsageModel | null;
+export type ScopeRuleModel = {
+    propertyEditorUiAliases?: Array<string> | null;
+    propertyAliases?: Array<string> | null;
+    contentTypeAliases?: Array<string> | null;
 };
 
-export type PromptItemResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
-    isActive: boolean;
-};
-
-export type PromptResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    description?: string | null;
-    content: string;
-    profileId?: string | null;
-    tags: Array<string>;
-    isActive: boolean;
-    scope?: ScopeModel | null;
-    dateCreated: string;
-    dateModified: string;
-};
-
-export type UpdatePromptRequestModel = {
+export type UpdateAgentRequestModel = {
     alias: string;
     name: string;
     content: string;
@@ -87,12 +79,6 @@ export type UpdatePromptRequestModel = {
     tags?: Array<string> | null;
     isActive: boolean;
     scope?: ScopeModel | null;
-};
-
-export type UsageModel = {
-    inputTokens?: number | null;
-    outputTokens?: number | null;
-    totalTokens?: number | null;
 };
 
 export type ValidationProblemDetails = {
@@ -109,17 +95,6 @@ export type ValidationProblemDetails = {
     } | undefined;
 };
 
-export type ScopeModel = {
-    allowRules: Array<ScopeRuleModel>;
-    denyRules: Array<ScopeRuleModel>;
-};
-
-export type ScopeRuleModel = {
-    propertyEditorUiAliases?: Array<string> | null;
-    propertyAliases?: Array<string> | null;
-    contentTypeAliases?: Array<string> | null;
-};
-
 export type GetAllAgentsData = {
     body?: never;
     path?: never;
@@ -129,7 +104,7 @@ export type GetAllAgentsData = {
         filter?: string;
         profileId?: string;
     };
-    url: '/umbraco/ai/management/api/v1/Agents';
+    url: '/umbraco/ai/management/api/v1/agents';
 };
 
 export type GetAllAgentsErrors = {
@@ -143,19 +118,19 @@ export type GetAllAgentsResponses = {
     /**
      * OK
      */
-    200: PagedPromptItemResponseModel;
+    200: PagedAgentItemResponseModel;
 };
 
 export type GetAllAgentsResponse = GetAllAgentsResponses[keyof GetAllAgentsResponses];
 
-export type CreatePromptData = {
-    body?: CreatePromptRequestModel;
+export type CreateAgentData = {
+    body?: CreateAgentRequestModel;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/Agents';
+    url: '/umbraco/ai/management/api/v1/agents';
 };
 
-export type CreatePromptErrors = {
+export type CreateAgentErrors = {
     /**
      * Bad Request
      */
@@ -170,27 +145,27 @@ export type CreatePromptErrors = {
     409: ProblemDetails;
 };
 
-export type CreatePromptError = CreatePromptErrors[keyof CreatePromptErrors];
+export type CreateAgentError = CreateAgentErrors[keyof CreateAgentErrors];
 
-export type CreatePromptResponses = {
+export type CreateAgentResponses = {
     /**
      * Created
      */
-    201: PromptResponseModel;
+    201: AgentResponseModel;
 };
 
-export type CreatePromptResponse = CreatePromptResponses[keyof CreatePromptResponses];
+export type CreateAgentResponse = CreateAgentResponses[keyof CreateAgentResponses];
 
-export type DeletePromptData = {
+export type DeleteAgentData = {
     body?: never;
     path: {
-        promptIdOrAlias: string;
+        agentIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}';
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}';
 };
 
-export type DeletePromptErrors = {
+export type DeleteAgentErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -201,27 +176,27 @@ export type DeletePromptErrors = {
     404: ProblemDetails;
 };
 
-export type DeletePromptError = DeletePromptErrors[keyof DeletePromptErrors];
+export type DeleteAgentError = DeleteAgentErrors[keyof DeleteAgentErrors];
 
-export type DeletePromptResponses = {
+export type DeleteAgentResponses = {
     /**
      * No Content
      */
     204: void;
 };
 
-export type DeletePromptResponse = DeletePromptResponses[keyof DeletePromptResponses];
+export type DeleteAgentResponse = DeleteAgentResponses[keyof DeleteAgentResponses];
 
-export type GetPromptByIdOrAliasData = {
+export type GetAgentByIdOrAliasData = {
     body?: never;
     path: {
-        promptIdOrAlias: string;
+        agentIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}';
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}';
 };
 
-export type GetPromptByIdOrAliasErrors = {
+export type GetAgentByIdOrAliasErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -232,27 +207,27 @@ export type GetPromptByIdOrAliasErrors = {
     404: ProblemDetails;
 };
 
-export type GetPromptByIdOrAliasError = GetPromptByIdOrAliasErrors[keyof GetPromptByIdOrAliasErrors];
+export type GetAgentByIdOrAliasError = GetAgentByIdOrAliasErrors[keyof GetAgentByIdOrAliasErrors];
 
-export type GetPromptByIdOrAliasResponses = {
+export type GetAgentByIdOrAliasResponses = {
     /**
      * OK
      */
-    200: PromptResponseModel;
+    200: AgentResponseModel;
 };
 
-export type GetPromptByIdOrAliasResponse = GetPromptByIdOrAliasResponses[keyof GetPromptByIdOrAliasResponses];
+export type GetAgentByIdOrAliasResponse = GetAgentByIdOrAliasResponses[keyof GetAgentByIdOrAliasResponses];
 
-export type UpdatePromptData = {
-    body?: UpdatePromptRequestModel;
+export type UpdateAgentData = {
+    body?: UpdateAgentRequestModel;
     path: {
-        promptIdOrAlias: string;
+        agentIdOrAlias: string;
     };
     query?: never;
-    url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}';
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}';
 };
 
-export type UpdatePromptErrors = {
+export type UpdateAgentErrors = {
     /**
      * Bad Request
      */
@@ -267,96 +242,11 @@ export type UpdatePromptErrors = {
     404: ProblemDetails;
 };
 
-export type UpdatePromptError = UpdatePromptErrors[keyof UpdatePromptErrors];
+export type UpdateAgentError = UpdateAgentErrors[keyof UpdateAgentErrors];
 
-export type UpdatePromptResponses = {
+export type UpdateAgentResponses = {
     /**
      * OK
      */
     200: unknown;
 };
-
-export type ExecutePromptData = {
-    body?: PromptExecutionRequestModel;
-    path: {
-        promptIdOrAlias: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}/execute';
-};
-
-export type ExecutePromptErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type ExecutePromptError = ExecutePromptErrors[keyof ExecutePromptErrors];
-
-export type ExecutePromptResponses = {
-    /**
-     * OK
-     */
-    200: PromptExecutionResponseModel;
-};
-
-export type ExecutePromptResponse = ExecutePromptResponses[keyof ExecutePromptResponses];
-
-export type GetDocumentTypeAliasesData = {
-    body?: never;
-    path?: never;
-    query?: {
-        query?: string;
-    };
-    url: '/umbraco/ai/management/api/v1/utils/document-type-aliases';
-};
-
-export type GetDocumentTypeAliasesErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type GetDocumentTypeAliasesResponses = {
-    /**
-     * OK
-     */
-    200: Array<string>;
-};
-
-export type GetDocumentTypeAliasesResponse = GetDocumentTypeAliasesResponses[keyof GetDocumentTypeAliasesResponses];
-
-export type GetPropertyAliasesData = {
-    body?: never;
-    path?: never;
-    query?: {
-        query?: string;
-    };
-    url: '/umbraco/ai/management/api/v1/utils/property-aliases';
-};
-
-export type GetPropertyAliasesErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type GetPropertyAliasesResponses = {
-    /**
-     * OK
-     */
-    200: Array<string>;
-};
-
-export type GetPropertyAliasesResponse = GetPropertyAliasesResponses[keyof GetPropertyAliasesResponses];

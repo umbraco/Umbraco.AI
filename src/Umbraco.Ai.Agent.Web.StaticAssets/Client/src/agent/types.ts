@@ -1,5 +1,4 @@
 import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
-import type { UAiAgentScope } from "./property-actions/types.js";
 
 /**
  * Detail model for workspace editing.
@@ -13,7 +12,7 @@ export interface UAiAgentDetailModel extends UmbEntityModel {
     content: string;
     profileId: string | null;
     tags: string[];
-    scope: UAiAgentScope | null;
+    scope: any | null;
     isActive: boolean;
 }
 

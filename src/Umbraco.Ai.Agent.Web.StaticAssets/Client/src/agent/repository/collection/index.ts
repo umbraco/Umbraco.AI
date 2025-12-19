@@ -1,2 +1,2 @@
-export { UAiAgentCollectionRepository } from './prompt-collection.repository.js';
-export { UAiAgentCollectionServerDataSource } from './prompt-collection.server.data-source.js';
+export { UAiAgentCollectionRepository } from './agent-collection.repository.js';
+export { UAiAgentCollectionServerDataSource } from './agent-collection.server.data-source.js';

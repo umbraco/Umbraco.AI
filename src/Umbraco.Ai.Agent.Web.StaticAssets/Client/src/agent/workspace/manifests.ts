@@ -1,7 +1,7 @@
-import { manifests as promptManifests } from './prompt/manifests.js';
-import { manifests as promptRootManifests } from './prompt-root/manifests.js';
+import { manifests as agentManifests } from './agent/manifests.js';
+import { manifests as agentRootManifests } from './agent-root/manifests.js';
 
-export const promptWorkspaceManifests: Array<UmbExtensionManifest> = [
-    ...promptManifests,
-    ...promptRootManifests
+export const agentWorkspaceManifests: Array<UmbExtensionManifest> = [
+    ...agentManifests,
+    ...agentRootManifests
 ];

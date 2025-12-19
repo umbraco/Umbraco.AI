@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Prompt</Title>
-        <Description>agent management plugin for Umbraco Ai</Description>
+        <Title>Umbraco Ai Agent</Title>
+        <Description>Agent management plugin for Umbraco Ai</Description>
         <PackageReadmeFile>docs\README.md</PackageReadmeFile>
-        <PackageTags>umbraco ai prompt umbraco-marketplace</PackageTags>
+        <PackageTags>umbraco ai agent umbraco-marketplace</PackageTags>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <IncludeSymbols>false</IncludeSymbols>
     </PropertyGroup>

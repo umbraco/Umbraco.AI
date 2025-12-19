@@ -1,15 +1,15 @@
 import { css, html, customElement } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { UAI_CREATE_PROMPT_WORKSPACE_PATH_PATTERN } from "../../workspace/prompt/paths.js";
+import { UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN } from "../../workspace/agent/paths.js";
 
 /**
- * Collection action button for creating a new prompt.
+ * Collection action button for creating a new agent.
  */
-@customElement("uai-prompt-create-collection-action")
+@customElement("uai-agent-create-collection-action")
 export class UAiAgentCreateCollectionActionElement extends UmbLitElement {
     #onClick() {
-        const path = UAI_CREATE_PROMPT_WORKSPACE_PATH_PATTERN.generateAbsolute({});
+        const path = UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({});
         history.pushState(null, "", path);
     }
 
@@ -42,6 +42,6 @@ export default UAiAgentCreateCollectionActionElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-prompt-create-collection-action": UAiAgentCreateCollectionActionElement;
+        "uai-agent-create-collection-action": UAiAgentCreateCollectionActionElement;
     }
 }

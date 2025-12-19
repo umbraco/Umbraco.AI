@@ -1,23 +1,23 @@
 import { UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
-import { UAI_PROMPT_WORKSPACE_ALIAS, UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
+import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
 
 export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspace",
         kind: "routable",
-        alias: UAI_PROMPT_WORKSPACE_ALIAS,
-        name: "Prompt Workspace",
-        api: () => import("./prompt-workspace.context.js"),
+        alias: UAI_AGENT_WORKSPACE_ALIAS,
+        name: "Agent Workspace",
+        api: () => import("./agent-workspace.context.js"),
         meta: {
-            entityType: UAI_PROMPT_ENTITY_TYPE,
+            entityType: UAI_AGENT_ENTITY_TYPE,
         },
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAiAgent.Workspace.Prompt.View.Details",
-        name: "Prompt Details Workspace View",
-        js: () => import("./views/prompt-details-workspace-view.element.js"),
+        alias: "UmbracoAiAgent.Workspace.Agent.View.Details",
+        name: "Agent Details Workspace View",
+        js: () => import("./views/agent-details-workspace-view.element.js"),
         weight: 100,
         meta: {
             label: "Details",
@@ -27,15 +27,15 @@ export const manifests: Array<UmbExtensionManifest> = [
         conditions: [
             {
                 alias: UMB_WORKSPACE_CONDITION_ALIAS,
-                match: UAI_PROMPT_WORKSPACE_ALIAS,
+                match: UAI_AGENT_WORKSPACE_ALIAS,
             },
         ],
     },
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAiAgent.WorkspaceAction.Prompt.Save",
-        name: "Save Prompt",
+        alias: "UmbracoAiAgent.WorkspaceAction.Agent.Save",
+        name: "Save Agent",
         api: UmbSubmitWorkspaceAction,
         meta: {
             label: "Save",
@@ -45,7 +45,7 @@ export const manifests: Array<UmbExtensionManifest> = [
         conditions: [
             {
                 alias: UMB_WORKSPACE_CONDITION_ALIAS,
-                match: UAI_PROMPT_WORKSPACE_ALIAS,
+                match: UAI_AGENT_WORKSPACE_ALIAS,
             },
         ],
     },

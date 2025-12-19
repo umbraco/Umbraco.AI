@@ -1,1 +1,1 @@
-export const UAI_PROMPT_COLLECTION_ALIAS = 'UmbracoAiAgent.Collection.Prompt';
+export const UAI_AGENT_COLLECTION_ALIAS = 'UmbracoAiAgent.Collection.Agent';

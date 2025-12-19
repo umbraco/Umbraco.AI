@@ -15,12 +15,12 @@ public class Constants
         /// <summary>
         /// The API name.
         /// </summary>
-        public const string ApiName = "ai-prompt-management";
+        public const string ApiName = "ai-agent-management";
         
         /// <summary>
         /// The API name.
         /// </summary>
-        public const string ApiTitle = "Umbraco AI agent management API";
+        public const string ApiTitle = "Umbraco AI Agent Management API";
         
         /// <summary>
         /// The backoffice API path - shared with Umbraco.Ai.
@@ -35,33 +35,17 @@ public class Constants
             /// <summary>
             /// AiAgent feature constants.
             /// </summary>
-            public static class Prompt
+            public static class Agent
             {
                 /// <summary>
-                /// Route segment for prompt endpoints.
+                /// Route segment for agent endpoints.
                 /// </summary>
-                public const string RouteSegment = "Agents";
+                public const string RouteSegment = "agents";
 
                 /// <summary>
-                /// Swagger group name for prompt endpoints.
+                /// Swagger group name for agent endpoints.
                 /// </summary>
                 public const string GroupName = "Agents";
-            }
-
-            /// <summary>
-            /// Utils feature constants.
-            /// </summary>
-            public static class Utils
-            {
-                /// <summary>
-                /// Route segment for utils endpoints.
-                /// </summary>
-                public const string RouteSegment = "utils";
-
-                /// <summary>
-                /// Swagger group name for utils endpoints.
-                /// </summary>
-                public const string GroupName = "Utils";
             }
         }
     }

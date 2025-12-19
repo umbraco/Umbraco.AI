@@ -1,34 +1,34 @@
 using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Mapping;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Mapping;
 
 /// <summary>
-/// UmbracoMapper definitions for prompt execution models.
+/// UmbracoMapper definitions for agent execution models.
 /// </summary>
-public class PromptExecutionMapDefinition : IMapDefinition
+public class AgentExecutionMapDefinition : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)
     {
         // Request mapping (request model -> domain)
         // Using factory-only pattern since init-only properties must be set at construction
-        mapper.Define<PromptExecutionRequestModel, AiAgentExecutionRequest>(
+        mapper.Define<AgentExecutionRequestModel, AiAgentExecutionRequest>(
             CreateExecutionRequestFactory,
             (_, _, _) => { });
 
         // Response mapping (domain -> response model)
         // Using factory-only pattern since init-only properties must be set at construction
-        mapper.Define<AiAgentExecutionResult, PromptExecutionResponseModel>(
+        mapper.Define<AiAgentExecutionResult, AgentExecutionResponseModel>(
             CreateExecutionResponseFactory,
             (_, _, _) => { });
     }
 
     // Umbraco.Code.MapAll
     private static AiAgentExecutionRequest CreateExecutionRequestFactory(
-        PromptExecutionRequestModel source,
+        AgentExecutionRequestModel source,
         MapperContext context)
     {
         return new AiAgentExecutionRequest
@@ -44,11 +44,11 @@ public class PromptExecutionMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static PromptExecutionResponseModel CreateExecutionResponseFactory(
+    private static AgentExecutionResponseModel CreateExecutionResponseFactory(
         AiAgentExecutionResult source,
         MapperContext context)
     {
-        return new PromptExecutionResponseModel
+        return new AgentExecutionResponseModel
         {
             Content = source.Content,
             Usage = source.Usage is not null

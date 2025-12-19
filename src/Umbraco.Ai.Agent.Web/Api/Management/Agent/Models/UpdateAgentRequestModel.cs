@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// Request model for updating a prompt.
+/// Request model for updating a agent.
 /// </summary>
-public class UpdatePromptRequestModel
+public class UpdateAgentRequestModel
 {
     /// <summary>
     /// The unique alias (URL-safe identifier).
@@ -23,7 +23,7 @@ public class UpdatePromptRequestModel
     public required string Name { get; init; }
 
     /// <summary>
-    /// The prompt content.
+    /// The agent content.
     /// </summary>
     [Required]
     public required string Content { get; init; }
@@ -45,13 +45,13 @@ public class UpdatePromptRequestModel
     public IEnumerable<string>? Tags { get; init; }
 
     /// <summary>
-    /// Whether the prompt is active.
+    /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; init; } = true;
 
     /// <summary>
-    /// Optional scope configuration defining where this prompt can run.
-    /// Null means the prompt is not allowed anywhere.
+    /// Optional scope configuration defining where this agent can run.
+    /// Null means the agent is not allowed anywhere.
     /// </summary>
     public ScopeModel? Scope { get; init; }
 }

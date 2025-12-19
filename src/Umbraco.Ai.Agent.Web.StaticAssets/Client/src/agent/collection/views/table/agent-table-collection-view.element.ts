@@ -12,13 +12,13 @@ import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collec
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UAiAgentItemModel } from "../../../types.js";
-import { UAI_PROMPT_ICON } from "../../../constants.js";
-import { UAI_EDIT_PROMPT_WORKSPACE_PATH_PATTERN } from "../../../workspace/prompt/paths.js";
+import { UAI_AGENT_ICON } from "../../../constants.js";
+import { UAI_EDIT_AGENT_WORKSPACE_PATH_PATTERN } from "../../../workspace/agent/paths.js";
 
 /**
- * Table view for the Prompt collection.
+ * Table view for the Agent collection.
  */
-@customElement("uai-prompt-table-collection-view")
+@customElement("uai-agent-table-collection-view")
 export class UAiAgentTableCollectionViewElement extends UmbLitElement {
     @state()
     private _tableConfig: UmbTableConfig = {
@@ -70,12 +70,12 @@ export class UAiAgentTableCollectionViewElement extends UmbLitElement {
     #createTableItems(items: UAiAgentItemModel[]) {
         this._items = items.map((item) => ({
             id: item.unique,
-            icon: UAI_PROMPT_ICON,
+            icon: UAI_AGENT_ICON,
             data: [
                 {
                     columnAlias: "name",
                     value: html`<a
-                        href=${UAI_EDIT_PROMPT_WORKSPACE_PATH_PATTERN.generateAbsolute({ unique: item.unique })}
+                        href=${UAI_EDIT_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({ unique: item.unique })}
                         >${item.name}</a
                     >`,
                 },
@@ -126,6 +126,6 @@ export default UAiAgentTableCollectionViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-prompt-table-collection-view": UAiAgentTableCollectionViewElement;
+        "uai-agent-table-collection-view": UAiAgentTableCollectionViewElement;
     }
 }

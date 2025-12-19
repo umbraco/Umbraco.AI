@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
     <PropertyGroup>
-        <Title>Umbraco Ai Prompt Static Assets</Title>
-        <Description>Backoffice UI for Umbraco Ai Prompt</Description>
+        <Title>Umbraco Ai Agent Static Assets</Title>
+        <Description>Backoffice UI for Umbraco Ai Agent</Description>
         <StaticWebAssetBasePath>App_Plugins/UmbracoAiAgent</StaticWebAssetBasePath>
         <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     </PropertyGroup>

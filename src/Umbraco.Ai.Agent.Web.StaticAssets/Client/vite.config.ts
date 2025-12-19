@@ -5,7 +5,7 @@ export default defineConfig({
     lib: {
       entry: "src/bundle.manifests.ts",
       formats: ["es"],
-      fileName: "umbraco-ai-prompt",
+      fileName: "umbraco-ai-agent",
     },
     outDir: "../wwwroot",
     emptyOutDir: true,

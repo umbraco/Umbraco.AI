@@ -6,7 +6,7 @@ import { UAiAgentTypeMapper } from "../../type-mapper.js";
 import type { UAiAgentItemModel } from "../../types.js";
 
 /**
- * Server data source for Prompt collection operations.
+ * Server data source for Agent collection operations.
  */
 export class UAiAgentCollectionServerDataSource implements UmbCollectionDataSource<UAiAgentItemModel> {
     #host: UmbControllerHost;

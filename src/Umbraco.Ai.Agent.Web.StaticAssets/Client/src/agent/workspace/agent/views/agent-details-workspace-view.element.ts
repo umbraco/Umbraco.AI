@@ -5,39 +5,36 @@ import type { UaiSelectedEvent } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
 import type { UAiAgentDetailModel } from "../../../types.js";
-import type { UAiAgentScope, UaiScopeRule } from "../../../property-actions/types.js";
-import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../../property-actions/constants.js";
-import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
-import "../../../components/scope-rules-editor/scope-rules-editor.element.js";
+import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 /**
  * Creates a default scope with one allow rule for all text-based editors.
  */
-function createDefaultScope(): UAiAgentScope {
-    return {
-        allowRules: [{
-            propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
-            propertyAliases: null,
-            contentTypeAliases: null,
-        }],
-        denyRules: [],
-    };
-}
+// function createDefaultScope(): UAiAgentScope {
+//     return {
+//         allowRules: [{
+//             propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
+//             propertyAliases: null,
+//             contentTypeAliases: null,
+//         }],
+//         denyRules: [],
+//     };
+// }
 
 /**
- * Workspace view for Prompt details.
+ * Workspace view for Agent details.
  * Displays content, description, scope configuration, tags, and status.
  */
-@customElement("uai-prompt-details-workspace-view")
+@customElement("uai-agent-details-workspace-view")
 export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
-    #workspaceContext?: typeof UAI_PROMPT_WORKSPACE_CONTEXT.TYPE;
+    #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
 
     @state()
     private _model?: UAiAgentDetailModel;
 
     constructor() {
         super();
-        this.consumeContext(UAI_PROMPT_WORKSPACE_CONTEXT, (context) => {
+        this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
             if (context) {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
@@ -47,9 +44,9 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         });
     }
 
-    #getScope(): UAiAgentScope {
-        return this._model?.scope ?? createDefaultScope();
-    }
+    // #getScope(): UAiAgentScope {
+    //     return this._model?.scope ?? createDefaultScope();
+    // }
 
     #onDescriptionChange(event: Event) {
         event.stopPropagation();
@@ -82,29 +79,29 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #updateScope(scope: UAiAgentScope) {
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ scope }, "scope")
-        );
-    }
+    // #updateScope(scope: UAiAgentScope) {
+    //     this.#workspaceContext?.handleCommand(
+    //         new UaiPartialUpdateCommand<UAiAgentDetailModel>({ scope }, "scope")
+    //     );
+    // }
 
-    #onAllowRulesChange(event: CustomEvent<UaiScopeRule[]>) {
-        event.stopPropagation();
-        const scope = this.#getScope();
-        this.#updateScope({
-            ...scope,
-            allowRules: event.detail,
-        });
-    }
-
-    #onDenyRulesChange(event: CustomEvent<UaiScopeRule[]>) {
-        event.stopPropagation();
-        const scope = this.#getScope();
-        this.#updateScope({
-            ...scope,
-            denyRules: event.detail,
-        });
-    }
+    // #onAllowRulesChange(event: CustomEvent<UaiScopeRule[]>) {
+    //     event.stopPropagation();
+    //     const scope = this.#getScope();
+    //     this.#updateScope({
+    //         ...scope,
+    //         allowRules: event.detail,
+    //     });
+    // }
+    //
+    // #onDenyRulesChange(event: CustomEvent<UaiScopeRule[]>) {
+    //     event.stopPropagation();
+    //     const scope = this.#getScope();
+    //     this.#updateScope({
+    //         ...scope,
+    //         denyRules: event.detail,
+    //     });
+    // }
 
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
@@ -120,11 +117,11 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     #renderLeftColumn() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
-        const scope = this.#getScope();
+        //const scope = this.#getScope();
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="AI Profile" description="Optional AI profile this prompt is designed for">
+                <umb-property-layout label="AI Profile" description="Optional AI profile this agent is designed for">
                     <uai-profile-picker
                         slot="editor"
                         .value=${this._model.profileId ?? undefined}
@@ -133,7 +130,7 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-profile-picker>
                 </umb-property-layout>
 
-                <umb-property-layout label="Description" description="Brief description of this prompt">
+                <umb-property-layout label="Description" description="Brief description of this agent">
                     <uui-input
                         slot="editor"
                         .value=${this._model.description ?? ""}
@@ -147,7 +144,7 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         slot="editor"
                         .value=${this._model.content}
                         @input=${this.#onContentChange}
-                        placeholder="Enter prompt content..."
+                        placeholder="Enter agent content..."
                         rows="12"
                     ></uui-textarea>
                 </umb-property-layout>
@@ -156,26 +153,16 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             <uui-box headline="Scope">
                 <umb-property-layout
                     label="Allow"
-                    description="Prompt is allowed where ANY rule matches (OR logic between rules)"
+                    description="Agent is allowed where ANY rule matches (OR logic between rules)"
                 >
-                    <uai-scope-rules-editor
-                        slot="editor"
-                        .rules=${scope.allowRules}
-                        addButtonLabel="Add Allow Rule"
-                        @rules-change=${this.#onAllowRulesChange}
-                    ></uai-scope-rules-editor>
+                    
                 </umb-property-layout>
 
                 <umb-property-layout
                     label="Deny"
-                    description="Prompt is denied where ANY rule matches (overrides allow rules)"
+                    description="Agent is denied where ANY rule matches (overrides allow rules)"
                 >
-                    <uai-scope-rules-editor
-                        slot="editor"
-                        .rules=${scope.denyRules}
-                        addButtonLabel="Add Deny Rule"
-                        @rules-change=${this.#onDenyRulesChange}
-                    ></uai-scope-rules-editor>
+                    
                 </umb-property-layout>
             </uui-box>
 
@@ -281,6 +268,6 @@ export default UAiAgentDetailsWorkspaceViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-prompt-details-workspace-view": UAiAgentDetailsWorkspaceViewElement;
+        "uai-agent-details-workspace-view": UAiAgentDetailsWorkspaceViewElement;
     }
 }

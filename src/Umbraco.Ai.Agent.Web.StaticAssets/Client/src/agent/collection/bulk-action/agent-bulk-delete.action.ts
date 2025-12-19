@@ -1,5 +1,5 @@
 import { UaiBulkDeleteActionBase, type UaiBulkDeleteActionArgs } from "@umbraco-ai/core";
-import { UAiAgentDetailRepository } from "../../repository/detail/prompt-detail.repository.js";
+import { UAiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
 
 export class UAiAgentBulkDeleteAction extends UaiBulkDeleteActionBase {
     protected getArgs(): UaiBulkDeleteActionArgs {

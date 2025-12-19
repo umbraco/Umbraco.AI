@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreatePromptData, CreatePromptErrors, CreatePromptResponses, DeletePromptData, DeletePromptErrors, DeletePromptResponses, ExecutePromptData, ExecutePromptErrors, ExecutePromptResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetDocumentTypeAliasesData, GetDocumentTypeAliasesErrors, GetDocumentTypeAliasesResponses, GetPromptByIdOrAliasData, GetPromptByIdOrAliasErrors, GetPromptByIdOrAliasResponses, GetPropertyAliasesData, GetPropertyAliasesErrors, GetPropertyAliasesResponses, UpdatePromptData, UpdatePromptErrors, UpdatePromptResponses } from './types.gen';
+import type { CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -27,20 +27,20 @@ export class AgentsService {
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/Agents',
+            url: '/umbraco/ai/management/api/v1/agents',
             ...options
         });
     }
     
-    public static createPrompt<ThrowOnError extends boolean = false>(options?: Options<CreatePromptData, ThrowOnError>) {
-        return (options?.client ?? client).post<CreatePromptResponses, CreatePromptErrors, ThrowOnError>({
+    public static createAgent<ThrowOnError extends boolean = false>(options?: Options<CreateAgentData, ThrowOnError>) {
+        return (options?.client ?? client).post<CreateAgentResponses, CreateAgentErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/Agents',
+            url: '/umbraco/ai/management/api/v1/agents',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -49,91 +49,46 @@ export class AgentsService {
         });
     }
     
-    public static deletePrompt<ThrowOnError extends boolean = false>(options: Options<DeletePromptData, ThrowOnError>) {
-        return (options.client ?? client).delete<DeletePromptResponses, DeletePromptErrors, ThrowOnError>({
+    public static deleteAgent<ThrowOnError extends boolean = false>(options: Options<DeleteAgentData, ThrowOnError>) {
+        return (options.client ?? client).delete<DeleteAgentResponses, DeleteAgentErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}',
+            url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}',
             ...options
         });
     }
     
-    public static getPromptByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetPromptByIdOrAliasData, ThrowOnError>) {
-        return (options.client ?? client).get<GetPromptByIdOrAliasResponses, GetPromptByIdOrAliasErrors, ThrowOnError>({
+    public static getAgentByIdOrAlias<ThrowOnError extends boolean = false>(options: Options<GetAgentByIdOrAliasData, ThrowOnError>) {
+        return (options.client ?? client).get<GetAgentByIdOrAliasResponses, GetAgentByIdOrAliasErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}',
+            url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}',
             ...options
         });
     }
     
-    public static updatePrompt<ThrowOnError extends boolean = false>(options: Options<UpdatePromptData, ThrowOnError>) {
-        return (options.client ?? client).put<UpdatePromptResponses, UpdatePromptErrors, ThrowOnError>({
+    public static updateAgent<ThrowOnError extends boolean = false>(options: Options<UpdateAgentData, ThrowOnError>) {
+        return (options.client ?? client).put<UpdateAgentResponses, UpdateAgentErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}',
+            url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
-        });
-    }
-    
-    public static executePrompt<ThrowOnError extends boolean = false>(options: Options<ExecutePromptData, ThrowOnError>) {
-        return (options.client ?? client).post<ExecutePromptResponses, ExecutePromptErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/Agents/{promptIdOrAlias}/execute',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-}
-
-export class UtilsService {
-    public static getDocumentTypeAliases<ThrowOnError extends boolean = false>(options?: Options<GetDocumentTypeAliasesData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetDocumentTypeAliasesResponses, GetDocumentTypeAliasesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/utils/document-type-aliases',
-            ...options
-        });
-    }
-    
-    public static getPropertyAliases<ThrowOnError extends boolean = false>(options?: Options<GetPropertyAliasesData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetPropertyAliasesResponses, GetPropertyAliasesErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/utils/property-aliases',
-            ...options
         });
     }
 }

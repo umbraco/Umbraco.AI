@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
-using Umbraco.Ai.Agent.Web.Api.Management.Prompt.Mapping;
+using Umbraco.Ai.Agent.Web.Api.Management.Agent.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Ai.Extensions;
@@ -21,8 +21,8 @@ public static class UmbracoBuilderExtensions
     {
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
-            .Add<PromptMapDefinition>()
-            .Add<PromptExecutionMapDefinition>(); 
+            .Add<AgentMapDefinition>()
+            .Add<AgentExecutionMapDefinition>(); 
 
         // Configure Management API
         builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>

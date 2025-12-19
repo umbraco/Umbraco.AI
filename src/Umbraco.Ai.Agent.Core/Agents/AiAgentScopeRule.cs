@@ -1,7 +1,7 @@
 namespace Umbraco.Ai.Agent.Core.Agents;
 
 /// <summary>
-/// Defines a single scope rule that determines where a prompt can run.
+/// Defines a single scope rule that determines where a agent can run.
 /// All non-null properties use AND logic between them.
 /// Values within each array use OR logic.
 /// </summary>

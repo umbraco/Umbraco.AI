@@ -1,7 +1,7 @@
 namespace Umbraco.Ai.Agent.Core.Agents;
 
 /// <summary>
-/// Request model for prompt execution.
+/// Request model for agent execution.
 /// </summary>
 public class AiAgentExecutionRequest
 {

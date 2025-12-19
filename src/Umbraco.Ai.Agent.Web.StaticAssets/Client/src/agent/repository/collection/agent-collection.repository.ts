@@ -1,10 +1,10 @@
 import type { UmbCollectionFilterModel, UmbCollectionRepository } from "@umbraco-cms/backoffice/collection";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
-import { UAiAgentCollectionServerDataSource } from "./prompt-collection.server.data-source.js";
+import { UAiAgentCollectionServerDataSource } from "./agent-collection.server.data-source.js";
 
 /**
- * Repository for Prompt collection operations.
+ * Repository for Agent collection operations.
  */
 export class UAiAgentCollectionRepository extends UmbRepositoryBase implements UmbCollectionRepository {
     #collectionSource: UAiAgentCollectionServerDataSource;

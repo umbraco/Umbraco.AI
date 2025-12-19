@@ -6,16 +6,16 @@ namespace Umbraco.Ai.Agent.Extensions;
 /// <summary>
 /// Extension methods for <see cref="IAiAgentService"/> to support IdOrAlias lookups.
 /// </summary>
-internal static class AgentserviceExtensions
+internal static class AgentServiceExtensions
 {
     /// <summary>
-    /// Gets a prompt by ID or alias.
+    /// Gets a agent by ID or alias.
     /// </summary>
-    /// <param name="service">The prompt service.</param>
+    /// <param name="service">The agent service.</param>
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt if found, otherwise null.</returns>
-    public static async Task<Core.Agents.AiAgent?> GetPromptAsync(
+    /// <returns>The agent if found, otherwise null.</returns>
+    public static async Task<Core.Agents.AiAgent?> GetAgentAsync(
         this IAiAgentService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
@@ -34,14 +34,14 @@ internal static class AgentserviceExtensions
     }
 
     /// <summary>
-    /// Tries to get a prompt ID by ID or alias.
+    /// Tries to get a agent ID by ID or alias.
     /// If already an ID, returns it directly without a database lookup.
     /// </summary>
-    /// <param name="service">The prompt service.</param>
+    /// <param name="service">The agent service.</param>
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt ID if found, otherwise null.</returns>
-    public static async Task<Guid?> TryGetPromptIdAsync(
+    /// <returns>The agent ID if found, otherwise null.</returns>
+    public static async Task<Guid?> TryGetAgentIdAsync(
         this IAiAgentService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
@@ -52,36 +52,36 @@ internal static class AgentserviceExtensions
             return idOrAlias.Id.Value;
         }
 
-        // For alias, we need to look up the prompt
+        // For alias, we need to look up the agent
         if (idOrAlias.Alias != null)
         {
-            var prompt = await service.GetByAliasAsync(idOrAlias.Alias, cancellationToken);
-            return prompt?.Id;
+            var agent = await service.GetByAliasAsync(idOrAlias.Alias, cancellationToken);
+            return agent?.Id;
         }
 
         return null;
     }
 
     /// <summary>
-    /// Gets a prompt ID by ID or alias, throwing if not found.
+    /// Gets a agent ID by ID or alias, throwing if not found.
     /// </summary>
-    /// <param name="service">The prompt service.</param>
+    /// <param name="service">The agent service.</param>
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt ID.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the prompt is not found.</exception>
-    public static async Task<Guid> GetPromptIdAsync(
+    /// <returns>The agent ID.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the agent is not found.</exception>
+    public static async Task<Guid> GetAgentIdAsync(
         this IAiAgentService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var promptId = await TryGetPromptIdAsync(service, idOrAlias, cancellationToken);
-        if (promptId is null)
+        var agentId = await TryGetAgentIdAsync(service, idOrAlias, cancellationToken);
+        if (agentId is null)
         {
             throw new InvalidOperationException(
-                $"Unable to find a prompt with the id or alias of '{idOrAlias}'");
+                $"Unable to find a agent with the id or alias of '{idOrAlias}'");
         }
 
-        return promptId.Value;
+        return agentId.Value;
     }
 }

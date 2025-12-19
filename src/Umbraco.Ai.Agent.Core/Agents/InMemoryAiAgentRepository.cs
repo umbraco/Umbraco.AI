@@ -13,16 +13,16 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
     /// <inheritdoc />
     public Task<AiAgent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _Agents.TryGetValue(id, out var prompt);
-        return Task.FromResult(prompt);
+        _Agents.TryGetValue(id, out var agent);
+        return Task.FromResult(agent);
     }
 
     /// <inheritdoc />
     public Task<AiAgent?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        var prompt = _Agents.Values.FirstOrDefault(p =>
+        var agent = _Agents.Values.FirstOrDefault(p =>
             p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(prompt);
+        return Task.FromResult(agent);
     }
 
     /// <inheritdoc />

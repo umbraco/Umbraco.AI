@@ -3,7 +3,7 @@ using Microsoft.Extensions.AI;
 namespace Umbraco.Ai.Agent.Core.Agents;
 
 /// <summary>
-/// Result of prompt execution.
+/// Result of agent execution.
 /// </summary>
 public class AiAgentExecutionResult
 {

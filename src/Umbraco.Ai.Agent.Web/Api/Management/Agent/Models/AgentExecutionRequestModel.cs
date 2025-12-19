@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
-/// Request model for prompt execution.
+/// Request model for agent execution.
 /// </summary>
-public class PromptExecutionRequestModel
+public class AgentExecutionRequestModel
 {
     /// <summary>
     /// The entity ID for context.

@@ -1,10 +1,10 @@
 import type { UmbEntityActionArgs } from "@umbraco-cms/backoffice/entity-action";
 import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { UAI_CREATE_PROMPT_WORKSPACE_PATH_PATTERN } from "../workspace/prompt/paths.js";
+import { UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN } from "../workspace/agent/paths.js";
 
 /**
- * Entity action for creating a new prompt.
+ * Entity action for creating a new agent.
  * Navigates directly to the create workspace.
  */
 export class UAiAgentCreateEntityAction extends UmbEntityActionBase<never> {
@@ -13,7 +13,7 @@ export class UAiAgentCreateEntityAction extends UmbEntityActionBase<never> {
     }
 
     override async execute() {
-        const path = UAI_CREATE_PROMPT_WORKSPACE_PATH_PATTERN.generateAbsolute({});
+        const path = UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({});
         history.pushState(null, "", path);
     }
 }

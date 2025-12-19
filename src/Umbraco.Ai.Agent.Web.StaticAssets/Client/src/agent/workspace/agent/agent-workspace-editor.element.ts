@@ -3,14 +3,14 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
-import { UAI_PROMPT_WORKSPACE_CONTEXT } from "./prompt-workspace.context-token.js";
-import { UAI_PROMPT_WORKSPACE_ALIAS } from "../../constants.js";
+import { UAI_AGENT_WORKSPACE_CONTEXT } from "./agent-workspace.context-token.js";
+import { UAI_AGENT_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UAiAgentDetailModel } from "../../types.js";
-import { UAI_PROMPT_ROOT_WORKSPACE_PATH } from "../prompt-root/paths.js";
+import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
-@customElement("uai-prompt-workspace-editor")
+@customElement("uai-agent-workspace-editor")
 export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
-    #workspaceContext?: typeof UAI_PROMPT_WORKSPACE_CONTEXT.TYPE;
+    #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
 
     @state()
     private _model?: UAiAgentDetailModel;
@@ -24,7 +24,7 @@ export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
     constructor() {
         super();
 
-        this.consumeContext(UAI_PROMPT_WORKSPACE_CONTEXT, (context) => {
+        this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
             if (!context) return;
             this.#workspaceContext = context;
             this.observe(context.model, (model) => {
@@ -82,10 +82,10 @@ export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <umb-workspace-editor alias="${UAI_PROMPT_WORKSPACE_ALIAS}">
+            <umb-workspace-editor alias="${UAI_AGENT_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
                     <uui-button
-                        href=${UAI_PROMPT_ROOT_WORKSPACE_PATH}
+                        href=${UAI_AGENT_ROOT_WORKSPACE_PATH}
                         label="Back to Agents"
                         compact
                     >
@@ -96,7 +96,7 @@ export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
                         .value=${this._model.name}
                         @input="${this.#onNameChange}"
                         label="Name"
-                        placeholder="Enter prompt name"
+                        placeholder="Enter agent name"
                     >
                         <uui-input-lock
                             slot="append"
@@ -119,7 +119,7 @@ export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
                 )}
 
                 <div slot="footer-info" id="footer">
-                    <a href=${UAI_PROMPT_ROOT_WORKSPACE_PATH}>Agents</a>
+                    <a href=${UAI_AGENT_ROOT_WORKSPACE_PATH}>Agents</a>
                     / ${this._model.name || "Untitled"}
                 </div>
             </umb-workspace-editor>
@@ -167,6 +167,6 @@ export default UAiAgentWorkspaceEditorElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-prompt-workspace-editor": UAiAgentWorkspaceEditorElement;
+        "uai-agent-workspace-editor": UAiAgentWorkspaceEditorElement;
     }
 }

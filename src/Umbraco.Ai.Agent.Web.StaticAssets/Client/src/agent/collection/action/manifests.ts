@@ -1,11 +1,11 @@
-import { UAI_PROMPT_COLLECTION_ALIAS } from "../constants.js";
+import { UAI_AGENT_COLLECTION_ALIAS } from "../constants.js";
 
-export const promptCollectionActionManifests: Array<UmbExtensionManifest> = [
+export const agentCollectionActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "collectionAction",
-        alias: "UmbracoAiAgent.CollectionAction.Prompt.Create",
-        name: "Create Prompt",
-        element: () => import("./prompt-create-collection-action.element.js"),
-        conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_PROMPT_COLLECTION_ALIAS }],
+        alias: "UmbracoAiAgent.CollectionAction.Agent.Create",
+        name: "Create Agent",
+        element: () => import("./agent-create-collection-action.element.js"),
+        conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_AGENT_COLLECTION_ALIAS }],
     },
 ];

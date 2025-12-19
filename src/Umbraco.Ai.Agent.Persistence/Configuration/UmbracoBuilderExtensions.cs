@@ -32,7 +32,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiAgentRepository, EfCoreAiAgentRepository>();
 
         // Register migration notification handler
-        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunPromptMigrationNotificationHandler>();
+        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAgentMigrationNotificationHandler>();
 
         return builder;
     }

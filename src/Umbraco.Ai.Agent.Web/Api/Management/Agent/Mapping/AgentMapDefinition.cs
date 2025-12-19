@@ -1,27 +1,27 @@
 using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Web.Api.Management.Prompt.Models;
+using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Strings;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Prompt.Mapping;
+namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Mapping;
 
 /// <summary>
-/// UmbracoMapper definitions for prompt models.
+/// UmbracoMapper definitions for agent models.
 /// </summary>
-public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
+public class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)
     {
         // Response mappings (domain -> response)
-        mapper.Define<AiAgent, PromptResponseModel>((_, _) => new PromptResponseModel(), MapToResponse);
-        mapper.Define<AiAgent, PromptItemResponseModel>((_, _) => new PromptItemResponseModel(), MapToItemResponse);
+        mapper.Define<AiAgent, AgentResponseModel>((_, _) => new AgentResponseModel(), MapToResponse);
+        mapper.Define<AiAgent, AgentItemResponseModel>((_, _) => new AgentItemResponseModel(), MapToItemResponse);
 
         // Request mappings (request -> domain)
         // Create: Factory sets init-only properties (Id, Alias, DateCreated), Map sets the rest
-        mapper.Define<CreatePromptRequestModel, AiAgent>(CreatePromptFactory, MapFromCreateRequest);
+        mapper.Define<CreateAgentRequestModel, AiAgent>(CreateAgentFactory, MapFromCreateRequest);
         // Update: Maps onto existing entity, so init-only properties are already set
-        mapper.Define<UpdatePromptRequestModel, AiAgent>((_, _) => new AiAgent
+        mapper.Define<UpdateAgentRequestModel, AiAgent>((_, _) => new AiAgent
         {
             Id = Guid.Empty,
             Alias = string.Empty,
@@ -30,7 +30,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         }, MapFromUpdateRequest);
     }
 
-    private AiAgent CreatePromptFactory(CreatePromptRequestModel source, MapperContext context)
+    private AiAgent CreateAgentFactory(CreateAgentRequestModel source, MapperContext context)
     {
         var now = DateTime.UtcNow;
         return new AiAgent
@@ -46,7 +46,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
     }
 
     // Umbraco.Code.MapAll -Id -DateCreated
-    private static void MapFromCreateRequest(CreatePromptRequestModel source, AiAgent target, MapperContext context)
+    private static void MapFromCreateRequest(CreateAgentRequestModel source, AiAgent target, MapperContext context)
     {
         target.Alias = source.Alias;
         target.Name = source.Name;
@@ -60,7 +60,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
     }
 
     // Umbraco.Code.MapAll -Id -DateCreated -DateModified
-    private static void MapFromUpdateRequest(UpdatePromptRequestModel source, AiAgent target, MapperContext context)
+    private static void MapFromUpdateRequest(UpdateAgentRequestModel source, AiAgent target, MapperContext context)
     {
         // Note: Id, DateCreated, and DateModified are preserved from the existing entity
         // DateModified will be set by the service
@@ -75,7 +75,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToResponse(AiAgent source, PromptResponseModel target, MapperContext context)
+    private static void MapToResponse(AiAgent source, AgentResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Alias = source.Alias;
@@ -91,7 +91,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToItemResponse(AiAgent source, PromptItemResponseModel target, MapperContext context)
+    private static void MapToItemResponse(AiAgent source, AgentItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Alias = source.Alias;

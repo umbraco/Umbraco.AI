@@ -4,7 +4,7 @@ import { UmbCollectionDefaultElement } from "@umbraco-cms/backoffice/collection"
 /**
  * Custom collection element for Agents with search header.
  */
-@customElement("uai-prompt-collection")
+@customElement("uai-agent-collection")
 export class UAiAgentCollectionElement extends UmbCollectionDefaultElement {
     protected override renderToolbar() {
         return html`
@@ -19,6 +19,6 @@ export { UAiAgentCollectionElement as element };
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-prompt-collection": UAiAgentCollectionElement;
+        "uai-agent-collection": UAiAgentCollectionElement;
     }
 }

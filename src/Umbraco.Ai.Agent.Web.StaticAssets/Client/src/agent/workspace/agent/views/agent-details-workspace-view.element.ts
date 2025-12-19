@@ -3,9 +3,10 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiSelectedEvent } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
-import "@umbraco-ai/core";
 import type { UAiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
+
+import "@umbraco-cms/backoffice/markdown-editor";
 
 /**
  * Workspace view for Agent details.
@@ -21,7 +22,7 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     constructor() {
         super();
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
-            if (context) {
+            if (context) { 
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
@@ -40,7 +41,7 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
     #onInstructionsChange(event: Event) {
         event.stopPropagation();
-        const value = (event.target as HTMLTextAreaElement).value;
+        const value = (event.target as HTMLInputElement).value;
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UAiAgentDetailModel>({ instructions: value || null }, "instructions")
         );
@@ -96,13 +97,11 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
 
                 <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves">
-                    <uui-textarea
+                    <umb-input-markdown
                         slot="editor"
                         .value=${this._model.instructions ?? ""}
-                        @input=${this.#onInstructionsChange}
-                        placeholder="Enter instructions..."
-                        rows="12"
-                    ></uui-textarea>
+                        @change=${this.#onInstructionsChange} 
+                    ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
         `;
@@ -164,9 +163,13 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 margin-top: var(--uui-size-layout-1);
             }
 
-            uui-input,
-            uui-textarea {
+            uui-input {
                 width: 100%;
+            }
+
+            umb-input-markdown {
+                width: 100%;
+                --umb-code-editor-height: 400px;
             }
 
             umb-property-layout[orientation="vertical"]:not(:last-child) {

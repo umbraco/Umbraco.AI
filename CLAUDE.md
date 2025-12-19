@@ -1,0 +1,146 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Build Commands
+
+```bash
+# Build the solution
+dotnet build Umbraco.Ai.Agent.sln
+
+# Build frontend assets (from Client directory)
+cd src/Umbraco.Ai.Agent.Web.StaticAssets/Client
+npm install
+npm run build
+
+# Watch frontend during development
+npm run watch
+```
+
+## Testing
+
+```bash
+# Run all tests
+dotnet test Umbraco.Ai.Agent.sln
+
+# Run specific test project
+dotnet test tests/Umbraco.Ai.Agent.Tests.Unit/Umbraco.Ai.Agent.Tests.Unit.csproj
+```
+
+## Architecture Overview
+
+Umbraco.Ai.Agent is an agent management plugin for Umbraco.Ai. It provides storage, organization, and management of AI agent definitions with full backoffice UI integration.
+
+### Project Structure
+
+| Project | Purpose |
+|---------|---------|
+| `Umbraco.Ai.Agent.Core` | Core domain models, services, and repository interfaces |
+| `Umbraco.Ai.Agent.Persistence` | EF Core DbContext, entities, and repository implementations |
+| `Umbraco.Ai.Agent.Persistence.SqlServer` | SQL Server migrations |
+| `Umbraco.Ai.Agent.Persistence.Sqlite` | SQLite migrations |
+| `Umbraco.Ai.Agent.Web` | Management API controllers, models, and mapping |
+| `Umbraco.Ai.Agent.Web.StaticAssets` | TypeScript/Lit frontend components |
+| `Umbraco.Ai.Agent.Startup` | Umbraco Composer for auto-discovery and DI registration |
+| `Umbraco.Ai.Agent` | Meta-package that bundles all components |
+
+### Key Services
+
+- `IAiAgentService` - Primary interface for agent CRUD operations
+- `IAiAgentRepository` - Repository interface for agent persistence
+
+### Domain Model
+
+The `AiAgent` entity represents a stored agent definition:
+- `Id` - Unique identifier
+- `Alias` - URL-safe unique identifier
+- `Name` - Display name
+- `Description` - Optional description
+- `Content` - The agent definition text
+- `ProfileId` - Optional link to Umbraco.Ai profile (soft FK)
+- `Tags` - Categorization tags
+- `IsActive` - Active status
+- `DateCreated` / `DateModified` - Timestamps
+
+### Management API
+
+Endpoints are under `/umbraco/ai/management/api/v1/agents/`:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/agents` | Get all agents (paged) |
+| GET | `/agents/{agentIdOrAlias}` | Get agent by ID or alias |
+| GET | `/agents/profile/{profileId}` | Get agents by profile |
+| POST | `/agents` | Create agent |
+| PUT | `/agents/{agentIdOrAlias}` | Update agent by ID or alias |
+| DELETE | `/agents/{agentIdOrAlias}` | Delete agent by ID or alias |
+
+The `{agentIdOrAlias}` parameter accepts either a GUID (e.g., `550e8400-e29b-41d4-a716-446655440000`) or a string alias (e.g., `my-agent-alias`). This pattern matches Umbraco.Ai's `IdOrAlias` convention.
+
+The API shares the same Swagger group (`ai-management`) as Umbraco.Ai.
+
+## Database Migrations
+
+Migrations use the `UmbracoAiAgent_` prefix.
+
+```bash
+# SQL Server
+dotnet ef migrations add UmbracoAiAgent_<MigrationName> \
+  -p src/Umbraco.Ai.Agent.Persistence.SqlServer \
+  -c UmbracoAiAgentDbContext \
+  --output-dir Migrations
+
+# SQLite
+dotnet ef migrations add UmbracoAiAgent_<MigrationName> \
+  -p src/Umbraco.Ai.Agent.Persistence.Sqlite \
+  -c UmbracoAiAgentDbContext \
+  --output-dir Migrations
+```
+
+## Project Organization
+
+### Core Principles (Feature-Sliced Architecture)
+
+1. **Feature folders are flat** - All files for a feature live at the folder root
+2. **Interfaces and implementations live side-by-side**
+3. **Shared code lives at the project root level** (Models/, Configuration/)
+
+### Web Layer (Layer-Based Organization)
+
+Web follows Umbraco CMS Management API conventions:
+- `Controllers/` - API endpoints
+- `Models/` - Request/response DTOs
+- `Mapping/` - UmbracoMapper definitions
+
+## Key Namespaces
+
+- `Umbraco.Ai.Agent.Core.Agents` - Agent domain model and services
+- `Umbraco.Ai.Agent.Persistence` - EF Core persistence
+- `Umbraco.Ai.Agent.Web.Api.Management.Agent` - API controllers and models
+- `Umbraco.Ai.Agent.Extensions` - DI extension methods
+
+## Configuration
+
+```json
+{
+  "Umbraco": {
+    "Ai": {
+      "Agent": {
+        // Future configuration options
+      }
+    }
+  }
+}
+```
+
+## Target Framework
+
+- .NET 10.0 (`net10.0`)
+- Uses Central Package Management (`Directory.Packages.props`)
+- Nullable reference types enabled
+
+## Dependencies
+
+- Umbraco CMS 17.x
+- Umbraco.Ai 17.x
+- Entity Framework Core 10.x

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco Ai Prompt Persistence SQL Server</Title>
+        <Description>SQL Server migrations for Umbraco Ai Prompt</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+        <PackageReference Include="Umbraco.Cms.Persistence.EFCore.SqlServer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.Ai.Agent.Persistence\Umbraco.Ai.Agent.Persistence.csproj" />
+    </ItemGroup>
+</Project>

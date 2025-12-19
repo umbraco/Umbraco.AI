@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco Ai Prompt Web</Title>
+        <Description>Management API for Umbraco Ai Prompt</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseLocalUmbracoAi Condition="'$(UseLocalUmbracoAi)' == ''">false</UseLocalUmbracoAi>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseLocalUmbracoAi)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Web\Umbraco.Ai.Web.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalUmbracoAi)' != 'true'">
+        <PackageReference Include="Umbraco.Ai.Web" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Umbraco.Cms.Api.Management" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.Ai.Agent.Core\Umbraco.Ai.Agent.Core.csproj" />
+    </ItemGroup>
+</Project>

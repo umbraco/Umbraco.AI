@@ -1,0 +1,129 @@
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UAiAgentExecutionRepository } from "../repository/execution/prompt-execution.repository.js";
+
+/**
+ * Options for prompt execution.
+ */
+export interface UAiAgentExecuteOptions {
+    /** Optional abort signal for cancellation. */
+    signal?: AbortSignal;
+    /** The entity ID for context. Required for scope validation. */
+    entityId: string;
+    /** The entity type (e.g., "document", "media"). Required for scope validation. */
+    entityType: string;
+    /** The property alias being edited. Required for scope validation. */
+    propertyAlias: string;
+    /** The culture variant. */
+    culture?: string;
+    /** The segment variant. */
+    segment?: string;
+    /** Local content model for snapshot (future use). */
+    localContent?: Record<string, unknown>;
+    /** Additional context variables. */
+    context?: Record<string, unknown>;
+}
+
+/**
+ * Result of prompt execution.
+ */
+export interface UAiAgentExecuteResult {
+    /** The generated response content. */
+    content: string;
+}
+
+/**
+ * Controller for executing AI Agents.
+ * This is the central API for prompt execution - all consumers should use this controller.
+ * Calls the server-side execute endpoint which handles:
+ * - Prompt resolution
+ * - Template variable replacement
+ * - (Future) Entity snapshot context
+ * - AI chat completion
+ *
+ * @example
+ * ```typescript
+ * const controller = new UAiAgentController(this);
+ *
+ * const { data, error } = await controller.execute(
+ *     "my-prompt-alias", // or prompt ID
+ *     {
+ *         entityId: "12345",
+ *         entityType: "document",
+ *         propertyAlias: "bodyText",
+ *         context: {
+ *             customValue: "some additional context"
+ *         }
+ *     }
+ * );
+ * ```
+ *
+ * @public
+ */
+export class UAiAgentController extends UmbControllerBase {
+    #repository: UAiAgentExecutionRepository;
+
+    constructor(host: UmbControllerHost) {
+        super(host);
+        this.#repository = new UAiAgentExecutionRepository(this);
+    }
+
+    /**
+     * Executes a prompt by ID or alias and returns the AI response.
+     * Calls the server-side execute endpoint which handles:
+     * - Prompt resolution
+     * - Scope validation
+     * - Template variable replacement
+     * - (Future) Entity snapshot context
+     * - AI chat completion
+     *
+     * @param promptIdOrAlias - The prompt ID (GUID) or alias to execute.
+     * @param options - Configuration including entity context (required for scope validation).
+     * @returns The AI response content or error.
+     */
+    async execute(
+        promptIdOrAlias: string,
+        options: UAiAgentExecuteOptions
+    ): Promise<{ data?: UAiAgentExecuteResult; error?: Error }> {
+        try {
+            const { data, error } = await this.#repository.execute(
+                promptIdOrAlias,
+                {
+                    entityId: options.entityId,
+                    entityType: options.entityType,
+                    propertyAlias: options.propertyAlias,
+                    culture: options.culture,
+                    segment: options.segment,
+                    localContent: options.localContent,
+                    context: options.context,
+                },
+                options.signal
+            );
+
+            if (error) {
+                return {
+                    error: error instanceof Error
+                        ? error
+                        : new Error('Failed to execute prompt')
+                };
+            }
+
+            if (data) {
+                return {
+                    data: { content: data.content }
+                };
+            }
+
+            return { error: new Error('No response received') };
+        } catch (err) {
+            if ((err as Error)?.name === 'AbortError') {
+                return { error: err as Error };
+            }
+            return {
+                error: err instanceof Error
+                    ? err
+                    : new Error('Failed to execute prompt')
+            };
+        }
+    }
+}

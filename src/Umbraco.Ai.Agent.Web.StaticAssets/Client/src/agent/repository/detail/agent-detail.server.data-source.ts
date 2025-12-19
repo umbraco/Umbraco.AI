@@ -1,0 +1,121 @@
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import type { UmbDetailDataSource } from "@umbraco-cms/backoffice/repository";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { AgentsService } from "../../../api/index.js";
+import { UAiAgentTypeMapper } from "../../type-mapper.js";
+import type { UAiAgentDetailModel } from "../../types.js";
+import { UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
+
+const UAI_EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+
+/**
+ * Server data source for Prompt detail operations.
+ */
+export class UAiAgentDetailServerDataSource implements UmbDetailDataSource<UAiAgentDetailModel> {
+    #host: UmbControllerHost;
+
+    constructor(host: UmbControllerHost) {
+        this.#host = host;
+    }
+
+    /**
+     * Creates a scaffold for a new prompt.
+     */
+    async createScaffold(preset?: Partial<UAiAgentDetailModel>) {
+        const scaffold: UAiAgentDetailModel = {
+            unique: UAI_EMPTY_GUID,
+            entityType: UAI_PROMPT_ENTITY_TYPE,
+            alias: "",
+            name: "",
+            description: null,
+            content: "",
+            profileId: null,
+            tags: [],
+            scope: null,
+            isActive: true,
+            ...preset,
+        };
+
+        return { data: scaffold };
+    }
+
+    /**
+     * Reads a prompt by its unique identifier.
+     */
+    async read(unique: string) {
+        const { data, error } = await tryExecute(
+            this.#host,
+            AgentsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } })
+        );
+
+        if (error || !data) {
+            return { error };
+        }
+
+        return { data: UAiAgentTypeMapper.toDetailModel(data) };
+    }
+
+    /**
+     * Creates a new prompt.
+     */
+    async create(model: UAiAgentDetailModel, _parentUnique: string | null) {
+        const requestBody = UAiAgentTypeMapper.toCreateRequest(model);
+
+        const { response, error } = await tryExecute(
+            this.#host,
+            AgentsService.createPrompt({ body: requestBody })
+        );
+
+        if (error) {
+            return { error };
+        }
+
+        // Extract the ID from the Location header
+        const locationHeader = response?.headers?.get("Location") ?? "";
+        const unique = locationHeader.split("/").pop() ?? "";
+
+        return {
+            data: {
+                ...model,
+                unique,
+            },
+        };
+    }
+
+    /**
+     * Updates an existing prompt.
+     */
+    async update(model: UAiAgentDetailModel) {
+        const requestBody = UAiAgentTypeMapper.toUpdateRequest(model);
+
+        const { error } = await tryExecute(
+            this.#host,
+            AgentsService.updatePrompt({
+                path: { promptIdOrAlias: model.unique },
+                body: requestBody,
+            })
+        );
+
+        if (error) {
+            return { error };
+        }
+
+        return { data: model };
+    }
+
+    /**
+     * Deletes a prompt by its unique identifier.
+     */
+    async delete(unique: string) {
+        const { error } = await tryExecute(
+            this.#host,
+            AgentsService.deletePrompt({ path: { promptIdOrAlias: unique } })
+        );
+
+        if (error) {
+            return { error };
+        }
+
+        return {};
+    }
+}

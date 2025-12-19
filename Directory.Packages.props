@@ -27,6 +27,12 @@
     <PackageVersion Include="Umbraco.Ai.Web" Version="[17.0.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Startup" Version="[17.0.0, 17.999.999)" />
   </ItemGroup>
+    
+  <!-- Microsoft AI packages -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Agents.AI" Version="1.0.0-preview.251219.1" />
+    <PackageVersion Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251219.1" />
+  </ItemGroup>
 
   <!-- EF Core tools -->
   <ItemGroup>

@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseLocalUmbracoAi)' == 'true'">
-        <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Startup\Umbraco.Ai.Startup.csproj" />
+        <ProjectReference Include="..\..\..\..\..\Umbraco.Ai\src\Umbraco.Ai.Startup\Umbraco.Ai.Startup.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseLocalUmbracoAi)' != 'true'">

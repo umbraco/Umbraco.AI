@@ -18,13 +18,11 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       // External: Umbraco backoffice + Node.js built-ins used by @segment/analytics-node
-      // The Node.js modules are from CopilotKit's telemetry dependency and are safely
-      // externalized since the analytics code has browser fallbacks
       external: [/^@umbraco/, "stream", "http", "https", "url", "zlib"],
       output: {
-        // Control chunk splitting - bundle CopilotKit dependencies together
+        // Group CopilotKit's heavy dependencies into fewer chunks
+        // These are lazy-loaded when sidebar opens (via dynamic import)
         manualChunks: (id) => {
-          // Bundle all CopilotKit and its heavy dependencies into one chunk
           if (
             id.includes("@copilotkit") ||
             id.includes("shiki") ||
@@ -32,11 +30,11 @@ export default defineConfig({
             id.includes("cytoscape") ||
             id.includes("react-markdown") ||
             id.includes("remark") ||
-            id.includes("rehype")
+            id.includes("rehype") ||
+            id.includes("streamdown")
           ) {
             return "copilot-vendor";
           }
-          // Bundle React separately
           if (id.includes("react") || id.includes("react-dom")) {
             return "react-vendor";
           }

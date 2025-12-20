@@ -1,17 +1,17 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UMB_COPILOT_SIDEBAR_CONTEXT, type UmbCopilotSidebarContext } from "../sidebar/copilot-sidebar.context.js";
+import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../copilot.context.js";
 
 @customElement("uai-copilot-header-app")
 export class UaiCopilotHeaderAppElement extends UmbLitElement {
-  #sidebarContext?: UmbCopilotSidebarContext;
+  #copilotContext?: UmbCopilotContext;
   @state() private _isOpen = false;
 
   constructor() {
     super();
-    this.consumeContext(UMB_COPILOT_SIDEBAR_CONTEXT, (context) => {
-      this.#sidebarContext = context;
+    this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
+      this.#copilotContext = context;
       if (context) {
         this.observe(context.isOpen, (isOpen) => (this._isOpen = isOpen));
       }
@@ -19,7 +19,8 @@ export class UaiCopilotHeaderAppElement extends UmbLitElement {
   }
 
   #handleClick() {
-    this.#sidebarContext?.toggle();
+    console.log("uai-copilot-header-app: Clicked");
+    this.#copilotContext?.toggle();
   }
 
   override render() {

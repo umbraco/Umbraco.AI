@@ -9,8 +9,8 @@ export interface AgentInfo {
   alias: string;
 }
 
-export class UmbCopilotSidebarContext extends UmbControllerBase {
-  public readonly IS_COPILOT_SIDEBAR_CONTEXT = true;
+export class UmbCopilotContext extends UmbControllerBase {
+  public readonly IS_COPILOT_CONTEXT = true;
 
   #isOpen = new UmbBooleanState(false);
   readonly isOpen = this.#isOpen.asObservable();
@@ -23,7 +23,7 @@ export class UmbCopilotSidebarContext extends UmbControllerBase {
 
   constructor(host: UmbControllerHost) {
     super(host);
-    this.provideContext(UMB_COPILOT_SIDEBAR_CONTEXT, this);
+    this.provideContext(UMB_COPILOT_CONTEXT, this);
   }
 
   hasAgent(): boolean {
@@ -49,13 +49,16 @@ export class UmbCopilotSidebarContext extends UmbControllerBase {
   }
 
   toggle() {
+    console.log("toggle")
     this.#isOpen.setValue(!this.#isOpen.getValue());
   }
 }
 
-export const UMB_COPILOT_SIDEBAR_CONTEXT = new UmbContextToken<UmbCopilotSidebarContext>(
-  "UmbCopilotSidebarContext",
+export const UMB_COPILOT_CONTEXT = new UmbContextToken<UmbCopilotContext>(
+  "UmbCopilotContext",
   undefined,
-  (context): context is UmbCopilotSidebarContext =>
-    (context as UmbCopilotSidebarContext).IS_COPILOT_SIDEBAR_CONTEXT === true
+  (context): context is UmbCopilotContext =>
+    (context as UmbCopilotContext).IS_COPILOT_CONTEXT
 );
+
+export default UmbCopilotContext;

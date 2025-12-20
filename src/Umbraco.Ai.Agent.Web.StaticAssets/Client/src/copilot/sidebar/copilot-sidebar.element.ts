@@ -1,18 +1,16 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import type { UmbExtensionRegistry, ManifestBase } from "@umbraco-cms/backoffice/extension-api";
-import { UmbCopilotSidebarContext } from "./copilot-sidebar.context.js";
 import { UaiCopilotRepository, type CopilotAgentItem } from "./copilot.repository.js";
+import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../copilot.context.js";
 
 // NOTE: Chat component is lazy-loaded when sidebar opens to avoid loading
 // CopilotKit's heavy dependencies (~15MB) until actually needed
 
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
-  // Provide global context
-  #sidebarContext = new UmbCopilotSidebarContext(this);
+  #copilotContext?: UmbCopilotContext;
+  
   #repository = new UaiCopilotRepository(this);
   #chatComponentLoaded = false;
 
@@ -25,15 +23,25 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
 
   constructor() {
     super();
-    this.observe(this.#sidebarContext.isOpen, (isOpen) => {
+    this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
+      if (context) {
+        this.#copilotContext = context;
+        this.#observerCopilotContext();
+      }
+    });
+  }
+  
+  async #observerCopilotContext() {
+    if (!this.#copilotContext) return;
+    this.observe(this.#copilotContext.isOpen, (isOpen) => {
       this._isOpen = isOpen;
       // Lazy-load the chat component when sidebar opens for the first time
       if (isOpen && !this.#chatComponentLoaded) {
         this.#loadChatComponent();
       }
     });
-    this.observe(this.#sidebarContext.agentId, (id) => (this._selectedAgentId = id));
-    this.observe(this.#sidebarContext.agentName, (name) => (this._selectedAgentName = name));
+    this.observe(this.#copilotContext.agentId, (id) => (this._selectedAgentId = id));
+    this.observe(this.#copilotContext.agentName, (name) => (this._selectedAgentName = name));
   }
 
   async #loadChatComponent() {
@@ -50,6 +58,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
   }
 
   async #loadAgents() {
+    console.log("Loading agents...");
     const { data, error } = await this.#repository.requestActiveAgents();
 
     if (error) {
@@ -62,7 +71,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       this._agents = data;
       // Auto-select first agent if none selected
       if (!this._selectedAgentId && this._agents.length > 0) {
-        this.#sidebarContext.setAgent(this._agents[0].id, this._agents[0].name);
+        this.#copilotContext?.setAgent(this._agents[0].id, this._agents[0].name);
       }
     }
 
@@ -73,12 +82,12 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     const select = e.target as HTMLSelectElement;
     const agent = this._agents.find((a) => a.id === select.value);
     if (agent) {
-      this.#sidebarContext.setAgent(agent.id, agent.name);
+      this.#copilotContext?.setAgent(agent.id, agent.name);
     }
   }
 
   #handleClose() {
-    this.#sidebarContext.close();
+    this.#copilotContext?.close();
   }
 
   #renderChatContent() {
@@ -201,15 +210,6 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     }
   `;
 }
-
-export const onInit = (_host: UmbControllerHost, _extensionRegistry: UmbExtensionRegistry<ManifestBase>): void => {
-  // Sidebar element self-registers via @customElement decorator
-  console.log("Copilot sidebar entry point initialized");
-};
-
-export const onUnload = (_host: UmbControllerHost, _extensionRegistry: UmbExtensionRegistry<ManifestBase>): void => {
-  // Cleanup if needed
-};
 
 declare global {
   interface HTMLElementTagNameMap {

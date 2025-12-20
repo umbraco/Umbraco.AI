@@ -17,7 +17,10 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
-      external: [/^@umbraco/],
+      // External: Umbraco backoffice + Node.js built-ins used by @segment/analytics-node
+      // The Node.js modules are from CopilotKit's telemetry dependency and are safely
+      // externalized since the analytics code has browser fallbacks
+      external: [/^@umbraco/, "stream", "http", "https", "url", "zlib"],
       output: {
         // Control chunk splitting - bundle CopilotKit dependencies together
         manualChunks: (id) => {

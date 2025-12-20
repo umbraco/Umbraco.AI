@@ -12,8 +12,18 @@
     "@umbraco-cms/backoffice": "^17.0.0",
     "@umbraco-ai/core": "^17.0.0"
   },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@copilotkit/react-core": "^1.50.0",
+    "@copilotkit/react-ui": "^1.50.0",
+    "@r2wc/react-to-web-component": "^2.0.3"
+  },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.85.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
     "@umbraco-cms/backoffice": "^17.0.0",
     "@umbraco-ai/core": "file:../../../../Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
     "chalk": "^5.6.0",

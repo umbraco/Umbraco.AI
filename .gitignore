@@ -62,6 +62,9 @@ Desktop.ini
 .AppleDouble
 .LSOverride
 
+# Claude
+nul
+
 # Demo site
 demo/*/umbraco/
 demo/*/App_Data/

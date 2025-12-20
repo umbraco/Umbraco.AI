@@ -18,6 +18,27 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       external: [/^@umbraco/],
+      output: {
+        // Control chunk splitting - bundle CopilotKit dependencies together
+        manualChunks: (id) => {
+          // Bundle all CopilotKit and its heavy dependencies into one chunk
+          if (
+            id.includes("@copilotkit") ||
+            id.includes("shiki") ||
+            id.includes("mermaid") ||
+            id.includes("cytoscape") ||
+            id.includes("react-markdown") ||
+            id.includes("remark") ||
+            id.includes("rehype")
+          ) {
+            return "copilot-vendor";
+          }
+          // Bundle React separately
+          if (id.includes("react") || id.includes("react-dom")) {
+            return "react-vendor";
+          }
+        },
+      },
     },
   },
 });

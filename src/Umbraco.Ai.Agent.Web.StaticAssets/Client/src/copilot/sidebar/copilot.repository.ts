@@ -21,7 +21,7 @@ export class UaiCopilotRepository extends UmbRepositoryBase {
     const { data, error } = await tryExecute(
       this,
       AgentsService.getAllAgents({
-        query: { isActive: true, skip: 0, take: 100 },
+        query: { skip: 0, take: 100 },
       })
     );
 
@@ -29,11 +29,14 @@ export class UaiCopilotRepository extends UmbRepositoryBase {
       return { error };
     }
 
-    const items: CopilotAgentItem[] = data.items.map((agent) => ({
-      id: agent.id!,
-      name: agent.name!,
-      alias: agent.alias!,
-    }));
+    // Filter to only active agents on the client side
+    const items: CopilotAgentItem[] = data.items
+      .filter((agent) => agent.isActive)
+      .map((agent) => ({
+        id: agent.id!,
+        name: agent.name!,
+        alias: agent.alias!,
+      }));
 
     return { data: items };
   }

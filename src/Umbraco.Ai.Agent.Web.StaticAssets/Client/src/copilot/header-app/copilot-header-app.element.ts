@@ -13,7 +13,7 @@ export class UaiCopilotHeaderAppElement extends UmbLitElement {
     this.consumeContext(UMB_COPILOT_SIDEBAR_CONTEXT, (context) => {
       this.#sidebarContext = context;
       if (context) {
-        this.observe(context.isOpen, (isOpen) => this._isOpen = isOpen);
+        this.observe(context.isOpen, (isOpen) => (this._isOpen = isOpen));
       }
     });
   }
@@ -22,7 +22,7 @@ export class UaiCopilotHeaderAppElement extends UmbLitElement {
     this.#sidebarContext?.toggle();
   }
 
-  render() {
+  override render() {
     return html`
       <uui-button
         look="primary"
@@ -35,11 +35,18 @@ export class UaiCopilotHeaderAppElement extends UmbLitElement {
     `;
   }
 
-  static styles = css`
-    :host { display: flex; align-items: center; }
-    .active { background-color: var(--uui-color-selected); }
+  static override styles = css`
+    :host {
+      display: flex;
+      align-items: center;
+    }
+    uui-button.active {
+      background-color: var(--uui-color-selected);
+    }
   `;
 }
+
+export default UaiCopilotHeaderAppElement;
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -1,11 +1,7 @@
-import { UmbContextBase } from "@umbraco-cms/backoffice/class-api";
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import { UmbBooleanState, UmbStringState } from "@umbraco-cms/backoffice/observable-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
-
-export const UMB_COPILOT_SIDEBAR_CONTEXT = new UmbContextToken<UmbCopilotSidebarContext>(
-  "UmbCopilotSidebarContext"
-);
 
 export interface AgentInfo {
   id: string;
@@ -13,7 +9,9 @@ export interface AgentInfo {
   alias: string;
 }
 
-export class UmbCopilotSidebarContext extends UmbContextBase<UmbCopilotSidebarContext> {
+export class UmbCopilotSidebarContext extends UmbControllerBase {
+  public readonly IS_COPILOT_SIDEBAR_CONTEXT = true;
+
   #isOpen = new UmbBooleanState(false);
   readonly isOpen = this.#isOpen.asObservable();
 
@@ -24,7 +22,8 @@ export class UmbCopilotSidebarContext extends UmbContextBase<UmbCopilotSidebarCo
   readonly agentName = this.#agentName.asObservable();
 
   constructor(host: UmbControllerHost) {
-    super(host, UMB_COPILOT_SIDEBAR_CONTEXT);
+    super(host);
+    this.provideContext(UMB_COPILOT_SIDEBAR_CONTEXT, this);
   }
 
   hasAgent(): boolean {
@@ -53,3 +52,10 @@ export class UmbCopilotSidebarContext extends UmbContextBase<UmbCopilotSidebarCo
     this.#isOpen.setValue(!this.#isOpen.getValue());
   }
 }
+
+export const UMB_COPILOT_SIDEBAR_CONTEXT = new UmbContextToken<UmbCopilotSidebarContext>(
+  "UmbCopilotSidebarContext",
+  undefined,
+  (context): context is UmbCopilotSidebarContext =>
+    (context as UmbCopilotSidebarContext).IS_COPILOT_SIDEBAR_CONTEXT === true
+);

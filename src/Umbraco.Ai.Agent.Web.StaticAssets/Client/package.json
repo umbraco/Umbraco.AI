@@ -25,7 +25,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
     "@umbraco-cms/backoffice": "^17.0.0",
-    "@umbraco-ai/core": "file:../../../../Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
+    "@umbraco-ai/core": "file:../../../../../../Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
     "chalk": "^5.6.0",
     "cross-env": "^10.0.0",
     "node-fetch": "^3.3.2",

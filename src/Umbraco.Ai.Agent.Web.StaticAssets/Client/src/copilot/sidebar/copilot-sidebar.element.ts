@@ -1,7 +1,9 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UmbCopilotSidebarContext, UMB_COPILOT_SIDEBAR_CONTEXT } from "./copilot-sidebar.context.js";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import type { UmbExtensionRegistry, ManifestBase } from "@umbraco-cms/backoffice/extension-api";
+import { UmbCopilotSidebarContext } from "./copilot-sidebar.context.js";
 import { UaiCopilotRepository, type CopilotAgentItem } from "./copilot.repository.js";
 
 // Import registers the React chat web component
@@ -21,12 +23,12 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
 
   constructor() {
     super();
-    this.observe(this.#sidebarContext.isOpen, (isOpen) => this._isOpen = isOpen);
-    this.observe(this.#sidebarContext.agentId, (id) => this._selectedAgentId = id);
-    this.observe(this.#sidebarContext.agentName, (name) => this._selectedAgentName = name);
+    this.observe(this.#sidebarContext.isOpen, (isOpen) => (this._isOpen = isOpen));
+    this.observe(this.#sidebarContext.agentId, (id) => (this._selectedAgentId = id));
+    this.observe(this.#sidebarContext.agentName, (name) => (this._selectedAgentName = name));
   }
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this.#loadAgents();
   }
@@ -63,44 +65,44 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     this.#sidebarContext.close();
   }
 
-  render() {
+  override render() {
     return html`
       <div class="sidebar-overlay ${this._isOpen ? "open" : ""}" @click=${this.#handleClose}></div>
       <aside class="sidebar ${this._isOpen ? "open" : ""}">
         <header class="sidebar-header">
           <div class="header-content">
             <uui-icon name="icon-chat"></uui-icon>
-            ${this._loading ? html`<span>Loading...</span>` : html`
-              <uui-select
-                .value=${this._selectedAgentId}
-                @change=${this.#handleAgentChange}>
-                ${this._agents.map((agent) => html`
-                  <uui-select-option value=${agent.id} ?selected=${agent.id === this._selectedAgentId}>
-                    ${agent.name}
-                  </uui-select-option>
-                `)}
-              </uui-select>
-            `}
+            ${this._loading
+              ? html`<span>Loading...</span>`
+              : html`
+                  <uui-select .value=${this._selectedAgentId} @change=${this.#handleAgentChange}>
+                    ${this._agents.map(
+                      (agent) => html`
+                        <uui-select-option value=${agent.id} ?selected=${agent.id === this._selectedAgentId}>
+                          ${agent.name}
+                        </uui-select-option>
+                      `
+                    )}
+                  </uui-select>
+                `}
           </div>
           <uui-button compact look="default" @click=${this.#handleClose}>
             <uui-icon name="icon-wrong"></uui-icon>
           </uui-button>
         </header>
         <div class="sidebar-content">
-          ${this._selectedAgentId ? html`
-            <uai-copilot-chat
-              agentId=${this._selectedAgentId}
-              agentName=${this._selectedAgentName}
-            ></uai-copilot-chat>
-          ` : html`
-            <div class="no-agent">Select an agent to start chatting</div>
-          `}
+          ${this._selectedAgentId
+            ? html`
+                <uai-copilot-chat agentId=${this._selectedAgentId} agentName=${this._selectedAgentName}>
+                </uai-copilot-chat>
+              `
+            : html` <div class="no-agent">Select an agent to start chatting</div> `}
         </div>
       </aside>
     `;
   }
 
-  static styles = css`
+  static override styles = css`
     :host {
       display: contents;
     }
@@ -174,6 +176,15 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     }
   `;
 }
+
+export const onInit = (_host: UmbControllerHost, _extensionRegistry: UmbExtensionRegistry<ManifestBase>): void => {
+  // Sidebar element self-registers via @customElement decorator
+  console.log("Copilot sidebar entry point initialized");
+};
+
+export const onUnload = (_host: UmbControllerHost, _extensionRegistry: UmbExtensionRegistry<ManifestBase>): void => {
+  // Cleanup if needed
+};
 
 declare global {
   interface HTMLElementTagNameMap {

@@ -1,4 +1,4 @@
-import { HttpAgent, type RunAgentInput } from "@ag-ui/client";
+import { HttpAgent, type Message } from "@ag-ui/client";
 import type {
   ChatMessage,
   AgentClientCallbacks,
@@ -23,17 +23,13 @@ export interface UaiAgentClientConfig {
  * Provides a simplified callback interface for the chat UI.
  */
 export class UaiAgentClient {
-  #config: UaiAgentClientConfig;
   #agent: HttpAgent;
   #callbacks: AgentClientCallbacks;
   #messages: ChatMessage[] = [];
   #pendingToolCalls: Map<string, ToolCallInfo> = new Map();
-  #currentMessageId?: string;
-  #currentToolCallId?: string;
   #toolCallArgs: Map<string, string> = new Map();
 
   constructor(config: UaiAgentClientConfig, callbacks: AgentClientCallbacks = {}) {
-    this.#config = config;
     this.#callbacks = callbacks;
 
     const baseUrl = config.baseUrl ?? "/umbraco/ai/management/api/v1";
@@ -57,6 +53,33 @@ export class UaiAgentClient {
   }
 
   /**
+   * Convert ChatMessage to AG-UI Message format.
+   */
+  #toAgUiMessage(m: ChatMessage): Message {
+    if (m.role === "user") {
+      return {
+        id: m.id,
+        role: "user" as const,
+        content: m.content,
+      };
+    } else if (m.role === "assistant") {
+      return {
+        id: m.id,
+        role: "assistant" as const,
+        content: m.content,
+      };
+    } else {
+      // tool message requires toolCallId
+      return {
+        id: m.id,
+        role: "tool" as const,
+        content: m.content,
+        toolCallId: m.toolCallId ?? m.id,
+      };
+    }
+  }
+
+  /**
    * Send a message and start a new run.
    */
   async sendMessage(messages: ChatMessage[]): Promise<void> {
@@ -64,22 +87,18 @@ export class UaiAgentClient {
     this.#pendingToolCalls.clear();
     this.#toolCallArgs.clear();
 
-    const input: RunAgentInput = {
-      threadId: crypto.randomUUID(),
-      runId: crypto.randomUUID(),
-      messages: messages.map((m) => ({
-        id: m.id,
-        role: m.role,
-        content: m.content,
-      })),
-    };
+    // Set messages on the agent before running
+    this.#agent.setMessages(messages.map((m) => this.#toAgUiMessage(m)));
 
     try {
-      const eventStream = await this.#agent.runAgent(input);
-
-      for await (const event of eventStream) {
-        this.#handleEvent(event);
-      }
+      await this.#agent.runAgent(
+        { runId: crypto.randomUUID() },
+        {
+          onEvent: (params) => {
+            this.#handleEvent(params.event as { type: string; [key: string]: unknown });
+          },
+        }
+      );
     } catch (error) {
       this.#callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
     }
@@ -105,7 +124,7 @@ export class UaiAgentClient {
   #handleEvent(event: { type: string; [key: string]: unknown }) {
     switch (event.type as EventType) {
       case "TEXT_MESSAGE_START":
-        this.#currentMessageId = event.messageId as string;
+        // Message started - nothing to do
         break;
 
       case "TEXT_MESSAGE_CONTENT":
@@ -114,7 +133,6 @@ export class UaiAgentClient {
 
       case "TEXT_MESSAGE_END":
         this.#callbacks.onTextEnd?.(event.content as string);
-        this.#currentMessageId = undefined;
         break;
 
       case "TOOL_CALL_START":
@@ -159,7 +177,6 @@ export class UaiAgentClient {
       status: "pending",
     };
 
-    this.#currentToolCallId = toolCall.id;
     this.#pendingToolCalls.set(toolCall.id, toolCall);
     this.#toolCallArgs.set(toolCall.id, "");
     this.#callbacks.onToolCallStart?.(toolCall);
@@ -183,8 +200,6 @@ export class UaiAgentClient {
       this.#callbacks.onToolCallArgsEnd?.(toolCallId, args);
       this.#callbacks.onToolCallEnd?.(toolCallId);
     }
-
-    this.#currentToolCallId = undefined;
   }
 
   #handleRunFinished(event: { [key: string]: unknown }) {

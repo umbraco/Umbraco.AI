@@ -6,6 +6,8 @@ export interface ChatMessage {
   role: "user" | "assistant" | "tool";
   content: string;
   toolCalls?: ToolCallInfo[];
+  /** Required for tool role messages - the ID of the tool call this is responding to */
+  toolCallId?: string;
   timestamp: Date;
 }
 

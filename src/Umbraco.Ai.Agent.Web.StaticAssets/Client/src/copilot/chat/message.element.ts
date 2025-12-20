@@ -2,10 +2,10 @@ import { customElement, property, css, html } from "@umbraco-cms/backoffice/exte
 import { unsafeHTML } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
-import type { ChatMessage, ToolCallInfo } from "./types.js";
+import type { ChatMessage } from "./types.js";
 
 // Import the tool status element
-import "../../../agent/tools/tool-status.element.js";
+import "../../agent/tools/tool-status.element.js";
 
 /**
  * Chat message component.

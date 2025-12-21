@@ -15,10 +15,10 @@ public sealed class AguiStreamOptions
     /// <summary>
     /// Gets or sets the JSON serializer options.
     /// Configured for AG-UI protocol compliance with polymorphic type handling.
+    /// Uses camelCase via explicit JsonPropertyName attributes on all event types.
     /// </summary>
     public JsonSerializerOptions JsonSerializerOptions { get; set; } = new(JsonSerializerDefaults.Web)
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
         AllowOutOfOrderMetadataProperties = true
     };

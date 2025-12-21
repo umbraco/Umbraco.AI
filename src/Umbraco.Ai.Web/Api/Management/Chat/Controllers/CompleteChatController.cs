@@ -7,6 +7,7 @@ using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Cms.Core.Mapping;
@@ -51,16 +52,41 @@ public class CompleteChatController : ChatControllerBase
     public async Task<IActionResult> CompleteChat(
         ChatRequestModel requestModel,
         CancellationToken cancellationToken = default)
+        => await CompleteChatAsync(
+            requestModel,
+            null,
+            cancellationToken);
+
+    /// <summary>
+    /// Complete a chat conversation (non-streaming).
+    /// </summary>
+    /// <param name="profileIdOrAlias"></param>
+    /// <param name="requestModel">The chat request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The chat completion response.</returns>
+    [HttpPost("{profileIdOrAlias}/complete")]
+    [MapToApiVersion("1.0")]
+    [ProducesResponseType(typeof(ChatResponseModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CompleteChatWithProfile(
+        IdOrAlias profileIdOrAlias,
+        ChatRequestModel requestModel,
+        CancellationToken cancellationToken = default)
+        => await CompleteChatAsync(
+            requestModel,
+            await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken),
+            cancellationToken);
+    
+    private async Task<IActionResult> CompleteChatAsync(
+        ChatRequestModel requestModel,
+        Guid? profileId,
+        CancellationToken cancellationToken)
     {
         try
         {
             // Convert request messages to ChatMessage list
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
-
-            // Resolve profile ID from IdOrAlias
-            var profileId = requestModel.ProfileIdOrAlias != null
-                ? await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
-                : null;
 
             // Get chat response
             var response = profileId.HasValue
@@ -73,10 +99,6 @@ public class CompleteChatController : ChatControllerBase
                     cancellationToken: cancellationToken);
 
             return Ok(_umbracoMapper.Map<ChatResponseModel>(response));
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
-        {
-            return ProfileNotFound();
         }
         catch (InvalidOperationException ex)
         {

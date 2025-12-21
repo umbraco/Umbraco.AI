@@ -4,8 +4,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
 import type { ChatMessage } from "./types.js";
 
-// Import the tool status element
-import "../../agent/tools/tool-status.element.js";
+// Import the tool renderer element (handles extension lookup and custom UI)
+import "./tool-renderer.element.js";
 
 /**
  * Chat message component.
@@ -40,9 +40,7 @@ export class UaiCopilotMessageElement extends UmbLitElement {
     return html`
       <div class="tool-calls">
         ${this.message.toolCalls.map(
-          (tc) => html`
-            <uai-agent-tool-status .toolCall=${tc}></uai-agent-tool-status>
-          `
+          (tc) => html`<uai-tool-renderer .toolCall=${tc}></uai-tool-renderer>`
         )}
       </div>
     `;

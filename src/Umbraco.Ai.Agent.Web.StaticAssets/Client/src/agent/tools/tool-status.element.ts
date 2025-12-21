@@ -1,17 +1,6 @@
 import { customElement, property, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaiAgentToolElementProps } from "./uai-agent-tool.extension.js";
-
-/**
- * Tool call information passed to the element.
- */
-export interface ToolCallInfo {
-  id: string;
-  name: string;
-  arguments: string;
-  result?: string;
-  status: "pending" | "running" | "completed" | "error";
-}
+import type { UaiAgentToolElementProps, UaiAgentToolStatus } from "./uai-agent-tool.extension.js";
 
 /**
  * Default element for displaying tool call status.
@@ -26,35 +15,35 @@ export class UaiAgentToolStatusElement extends UmbLitElement implements UaiAgent
   args: Record<string, unknown> = {};
 
   @property({ type: String })
-  status: "pending" | "running" | "completed" | "error" = "pending";
+  status: UaiAgentToolStatus = "pending";
 
   @property({ type: Object })
   result?: unknown;
 
-  /**
-   * Alternative property for when used with ToolCallInfo object directly.
-   */
-  @property({ type: Object })
-  toolCall?: ToolCallInfo;
+  /** Display name for the tool */
+  @property({ type: String })
+  name = "Tool";
+
+  /** Icon to display */
+  @property({ type: String })
+  icon = "icon-wand";
 
   override render() {
-    const status = this.toolCall?.status ?? this.status;
-    const name = this.toolCall?.name ?? (this.args.name as string) ?? "Tool";
-
-    const statusIcon = {
+    const statusIcon: Record<UaiAgentToolStatus, string> = {
       pending: "icon-hourglass",
-      running: "icon-sync",
-      completed: "icon-check",
+      streaming: "icon-sync",
+      executing: "icon-sync",
+      complete: "icon-check",
       error: "icon-alert",
-    }[status];
+    };
+
+    const isLoading = this.status === "streaming" || this.status === "executing";
 
     return html`
-      <div class="tool-status ${status}">
-        <uui-icon name=${statusIcon}></uui-icon>
-        <span class="tool-name">${name}</span>
-        ${status === "running"
-          ? html`<uui-loader-circle></uui-loader-circle>`
-          : ""}
+      <div class="tool-status ${this.status}">
+        <uui-icon name=${statusIcon[this.status]}></uui-icon>
+        <span class="tool-name">${this.name}</span>
+        ${isLoading ? html`<uui-loader-circle></uui-loader-circle>` : ""}
       </div>
     `;
   }
@@ -75,7 +64,7 @@ export class UaiAgentToolStatusElement extends UmbLitElement implements UaiAgent
       color: var(--uui-color-text);
     }
 
-    .tool-status.completed {
+    .tool-status.complete {
       color: var(--uui-color-positive);
     }
 
@@ -83,7 +72,8 @@ export class UaiAgentToolStatusElement extends UmbLitElement implements UaiAgent
       color: var(--uui-color-danger);
     }
 
-    .tool-status.running uui-icon {
+    .tool-status.streaming uui-icon,
+    .tool-status.executing uui-icon {
       animation: spin 1s linear infinite;
     }
 

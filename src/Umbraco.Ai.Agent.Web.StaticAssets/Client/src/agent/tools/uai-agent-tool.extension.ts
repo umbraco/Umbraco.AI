@@ -18,6 +18,16 @@ export interface UaiAgentToolApi extends UmbApi {
 }
 
 /**
+ * Tool status values matching AG-UI events.
+ */
+export type UaiAgentToolStatus =
+  | "pending"    // TOOL_CALL_START received
+  | "streaming"  // TOOL_CALL_ARGS being received
+  | "executing"  // Frontend tool executing (after TOOL_CALL_END)
+  | "complete"   // TOOL_CALL_RESULT received or frontend execution done
+  | "error";     // Error occurred
+
+/**
  * Props interface for tool render elements.
  * All tool elements receive these standardized props.
  */
@@ -25,7 +35,7 @@ export interface UaiAgentToolElementProps {
   /** Arguments passed to the tool by the AI agent */
   args: Record<string, unknown>;
   /** Current execution status of the tool */
-  status: "pending" | "running" | "completed" | "error";
+  status: UaiAgentToolStatus;
   /** Result from tool execution (when completed) */
   result?: unknown;
 }
@@ -74,6 +84,10 @@ export interface ManifestUaiAgentTool
     toolName: string;
     /** Display label for the tool */
     label?: string;
+    /** Description for LLM (required for frontend tools) */
+    description?: string;
+    /** JSON Schema for tool parameters (required for frontend tools) */
+    parameters?: Record<string, unknown>;
     /** Icon to display with the tool */
     icon?: string;
   };

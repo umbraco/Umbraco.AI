@@ -1,5 +1,14 @@
+// Re-export AG-UI types for convenience
+export {
+  EventType,
+  type Tool as AgUiTool,
+  type ToolMessage,
+  type Message as AgUiMessage,
+} from "@ag-ui/core";
+
 /**
  * Chat message in the conversation.
+ * Extends AG-UI Message with additional UI-specific fields.
  */
 export interface ChatMessage {
   id: string;
@@ -12,6 +21,16 @@ export interface ChatMessage {
 }
 
 /**
+ * Tool call status matching AG-UI events.
+ */
+export type ToolCallStatus =
+  | "pending"    // TOOL_CALL_START received
+  | "streaming"  // TOOL_CALL_ARGS being received
+  | "executing"  // Frontend tool executing (after TOOL_CALL_END)
+  | "completed"  // TOOL_CALL_RESULT received or frontend execution done
+  | "error";     // Error occurred
+
+/**
  * Information about a tool call.
  */
 export interface ToolCallInfo {
@@ -19,7 +38,7 @@ export interface ToolCallInfo {
   name: string;
   arguments: string;
   result?: string;
-  status: "pending" | "running" | "completed" | "error";
+  status: ToolCallStatus;
 }
 
 /**
@@ -73,8 +92,10 @@ export interface AgentClientCallbacks {
   onToolCallStart?: (info: ToolCallInfo) => void;
   /** Called when tool call arguments are complete */
   onToolCallArgsEnd?: (id: string, args: string) => void;
-  /** Called when a tool call completes */
+  /** Called when a tool call completes (arguments streamed) */
   onToolCallEnd?: (id: string) => void;
+  /** Called when a tool call result is received (backend tool execution) */
+  onToolCallResult?: (id: string, result: string) => void;
   /** Called when the run finishes */
   onRunFinished?: (event: RunFinishedEvent) => void;
   /** Called when a state snapshot is received */
@@ -96,20 +117,3 @@ export interface RunFinishedEvent {
   error?: string;
 }
 
-/**
- * AG-UI event types from the protocol.
- */
-export enum EventType {
-  TEXT_MESSAGE_START = "TEXT_MESSAGE_START",
-  TEXT_MESSAGE_CONTENT = "TEXT_MESSAGE_CONTENT",
-  TEXT_MESSAGE_END = "TEXT_MESSAGE_END",
-  TOOL_CALL_START = "TOOL_CALL_START",
-  TOOL_CALL_ARGS = "TOOL_CALL_ARGS",
-  TOOL_CALL_END = "TOOL_CALL_END",
-  RUN_STARTED = "RUN_STARTED",
-  RUN_FINISHED = "RUN_FINISHED",
-  RUN_ERROR = "RUN_ERROR",
-  STATE_SNAPSHOT = "STATE_SNAPSHOT",
-  STATE_DELTA = "STATE_DELTA",
-  MESSAGES_SNAPSHOT = "MESSAGES_SNAPSHOT",
-}

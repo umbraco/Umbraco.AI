@@ -6,6 +6,7 @@ import type {
   AgentState,
   InterruptInfo,
   EventType,
+  AgUiTool,
 } from "./types.js";
 
 /**
@@ -28,6 +29,7 @@ export class UaiAgentClient {
   #messages: ChatMessage[] = [];
   #pendingToolCalls: Map<string, ToolCallInfo> = new Map();
   #toolCallArgs: Map<string, string> = new Map();
+  #frontendTools: AgUiTool[] = [];
 
   constructor(config: UaiAgentClientConfig, callbacks: AgentClientCallbacks = {}) {
     this.#callbacks = callbacks;
@@ -50,6 +52,21 @@ export class UaiAgentClient {
    */
   get messages(): ChatMessage[] {
     return [...this.#messages];
+  }
+
+  /**
+   * Register frontend tools that can be called by the agent.
+   * These tools are sent to the backend when starting a run.
+   */
+  setFrontendTools(tools: AgUiTool[]) {
+    this.#frontendTools = tools;
+  }
+
+  /**
+   * Get the registered frontend tools.
+   */
+  get frontendTools(): AgUiTool[] {
+    return [...this.#frontendTools];
   }
 
   /**
@@ -81,8 +98,10 @@ export class UaiAgentClient {
 
   /**
    * Send a message and start a new run.
+   * @param messages The messages to send
+   * @param tools Optional additional tools to include (merged with registered frontend tools)
    */
-  async sendMessage(messages: ChatMessage[]): Promise<void> {
+  async sendMessage(messages: ChatMessage[], tools?: AgUiTool[]): Promise<void> {
     this.#messages = messages;
     this.#pendingToolCalls.clear();
     this.#toolCallArgs.clear();
@@ -90,9 +109,16 @@ export class UaiAgentClient {
     // Set messages on the agent before running
     this.#agent.setMessages(messages.map((m) => this.#toAgUiMessage(m)));
 
+    // Merge frontend tools with any additional tools passed in
+    const allTools = [...this.#frontendTools, ...(tools ?? [])];
+
     try {
       await this.#agent.runAgent(
-        { runId: crypto.randomUUID() },
+        {
+          runId: crypto.randomUUID(),
+          // Only include tools if there are any
+          ...(allTools.length > 0 && { tools: allTools }),
+        },
         {
           onEvent: (params) => {
             this.#handleEvent(params.event as { type: string; [key: string]: unknown });
@@ -147,6 +173,10 @@ export class UaiAgentClient {
         this.#handleToolCallEnd(event);
         break;
 
+      case "TOOL_CALL_RESULT":
+        this.#handleToolCallResult(event);
+        break;
+
       case "RUN_FINISHED":
         this.#handleRunFinished(event);
         break;
@@ -196,10 +226,24 @@ export class UaiAgentClient {
     if (toolCall) {
       const args = this.#toolCallArgs.get(toolCallId) ?? "";
       toolCall.arguments = args;
-      toolCall.status = "running";
+      // Status stays "pending" for backend tools (waiting for TOOL_CALL_RESULT)
+      // Frontend tools will set status to "executing" when they execute
       this.#callbacks.onToolCallArgsEnd?.(toolCallId, args);
       this.#callbacks.onToolCallEnd?.(toolCallId);
     }
+  }
+
+  #handleToolCallResult(event: { [key: string]: unknown }) {
+    const toolCallId = event.toolCallId as string;
+    const content = event.content as string;
+
+    const toolCall = this.#pendingToolCalls.get(toolCallId);
+    if (toolCall) {
+      toolCall.result = content;
+      toolCall.status = "completed";
+    }
+
+    this.#callbacks.onToolCallResult?.(toolCallId, content);
   }
 
   #handleRunFinished(event: { [key: string]: unknown }) {
@@ -282,5 +326,30 @@ export class UaiAgentClient {
    */
   getToolCall(toolCallId: string): ToolCallInfo | undefined {
     return this.#pendingToolCalls.get(toolCallId);
+  }
+
+  /**
+   * Send a tool result and continue the conversation.
+   * Used after frontend tool execution.
+   */
+  async sendToolResult(toolCallId: string, result: unknown, error?: string): Promise<void> {
+    // Create a tool message with the result
+    const toolMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "tool",
+      content: typeof result === "string" ? result : JSON.stringify(result),
+      toolCallId,
+      timestamp: new Date(),
+    };
+
+    // Update the tool call status
+    const toolCall = this.#pendingToolCalls.get(toolCallId);
+    if (toolCall) {
+      toolCall.result = toolMessage.content;
+      toolCall.status = error ? "error" : "completed";
+    }
+
+    // Send with the tool message included
+    await this.sendMessage([...this.#messages, toolMessage]);
   }
 }

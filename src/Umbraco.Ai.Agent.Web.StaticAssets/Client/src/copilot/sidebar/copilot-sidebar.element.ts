@@ -10,8 +10,16 @@ import "../chat/index.js";
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
   #copilotContext?: UmbCopilotContext;
-  
+
   #repository = new UaiCopilotRepository(this);
+
+  readonly #sidebarWidth = 400;
+
+  #updateContentOffset(isOpen: boolean) {
+    // Apply margin to body element to push entire page content
+    document.body.style.marginInlineEnd = isOpen ? `${this.#sidebarWidth}px` : "";
+    document.body.style.transition = "margin-inline-end 0.3s ease";
+  }
 
   @state() private _isOpen = false;
   @state() private _agents: CopilotAgentItem[] = [];
@@ -33,6 +41,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     if (!this.#copilotContext) return;
     this.observe(this.#copilotContext.isOpen, (isOpen) => {
       this._isOpen = isOpen;
+      this.#updateContentOffset(isOpen);
     });
     this.observe(this.#copilotContext.agentId, (id) => (this._selectedAgentId = id));
     this.observe(this.#copilotContext.agentName, (name) => (this._selectedAgentName = name));
@@ -41,6 +50,11 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
   override connectedCallback() {
     super.connectedCallback();
     this.#loadAgents();
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.#updateContentOffset(false); // Reset margin when component unmounts
   }
 
   async #loadAgents() {
@@ -88,7 +102,6 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
 
   override render() {
     return html`
-      <div class="sidebar-overlay ${this._isOpen ? "open" : ""}" @click=${this.#handleClose}></div>
       <aside class="sidebar ${this._isOpen ? "open" : ""}">
         <header class="sidebar-header">
           <div class="header-content">
@@ -121,20 +134,6 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
   static override styles = css`
     :host {
       display: contents;
-    }
-
-    .sidebar-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.3);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      z-index: 999;
-    }
-    .sidebar-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
     }
 
     .sidebar {

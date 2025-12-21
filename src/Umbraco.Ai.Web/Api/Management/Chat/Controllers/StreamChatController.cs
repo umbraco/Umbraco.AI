@@ -1,107 +1,210 @@
-using System.Text.Json;
+using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using Umbraco.Ai.Agui.Events;
+using Umbraco.Ai.Agui.Events.Lifecycle;
+using Umbraco.Ai.Agui.Events.Messages;
+using Umbraco.Ai.Agui.Models;
+using Umbraco.Ai.Agui.Streaming;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Web.Api.Common.Configuration;
+using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Chat.Models;
 using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
 
 /// <summary>
-/// Controller for streaming chat completion using Server-Sent Events (SSE).
+/// Controller for streaming chat completion using AG-UI protocol over Server-Sent Events (SSE).
 /// </summary>
 [ApiVersion("1.0")]
 public class StreamChatController : ChatControllerBase
 {
     private readonly IAiChatService _chatService;
     private readonly IAiProfileService _profileService;
-    private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamChatController"/> class.
     /// </summary>
     public StreamChatController(
         IAiChatService chatService,
-        IAiProfileService profileService,
-        IUmbracoMapper umbracoMapper)
+        IAiProfileService profileService)
     {
         _chatService = chatService;
         _profileService = profileService;
-        _umbracoMapper = umbracoMapper;
     }
-
+    
     /// <summary>
-    /// Complete a chat conversation with streaming response (SSE).
+    /// Complete a chat conversation with AG-UI streaming response (SSE).
     /// </summary>
-    /// <param name="requestModel">The chat request.</param>
+    /// <param name="request">The AG-UI run request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A stream of chat completion chunks.</returns>
+    /// <returns>A stream of AG-UI events.</returns>
     [HttpPost("stream")]
     [MapToApiVersion("1.0")]
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task StreamChat(
-        ChatRequestModel requestModel,
+    public async Task<IResult> StreamChat(
+        AguiRunRequest request,
         CancellationToken cancellationToken = default)
     {
-        Response.ContentType = "text/event-stream";
-        Response.Headers.CacheControl = "no-cache";
-        Response.Headers.Connection = "keep-alive";
+        var events = StreamAguiEventsAsync(request, null, cancellationToken);
+        
+        return new AguiEventStreamResult(events);
+    }
 
-        try
+    /// <summary>
+    /// Complete a chat conversation with AG-UI streaming response (SSE).
+    /// </summary>
+    /// <param name="profileIdOrAlias"></param>
+    /// <param name="request">The AG-UI run request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A stream of AG-UI events.</returns>
+    [HttpPost("{profileIdOrAlias}/stream")]
+    [MapToApiVersion("1.0")]
+    [Produces("text/event-stream")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IResult> StreamChatWithProfile(
+        IdOrAlias profileIdOrAlias,
+        AguiRunRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var profileId = await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken);
+        
+        var events = StreamAguiEventsAsync(request, profileId, cancellationToken);
+        
+        return new AguiEventStreamResult(events);
+    }
+
+    private async IAsyncEnumerable<IAguiEvent> StreamAguiEventsAsync(
+        AguiRunRequest request,
+        Guid? profileId,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var threadId = string.IsNullOrEmpty(request.ThreadId) ? Guid.NewGuid().ToString() : request.ThreadId;
+        var runId = string.IsNullOrEmpty(request.RunId) ? Guid.NewGuid().ToString() : request.RunId;
+        var messageId = Guid.NewGuid().ToString();
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        // Emit RunStarted
+        yield return new RunStartedEvent
         {
-            // Convert request messages to ChatMessage list
-            var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
+            ThreadId = threadId,
+            RunId = runId,
+            Timestamp = timestamp
+        };
 
-            // Resolve profile ID from IdOrAlias
-            var profileId = requestModel.ProfileIdOrAlias != null
-                ? await _profileService.TryGetProfileIdAsync(requestModel.ProfileIdOrAlias, cancellationToken)
-                : null;
+        // Emit TextMessageStart for the assistant response
+        yield return new TextMessageStartEvent
+        {
+            MessageId = messageId,
+            Role = AguiMessageRole.Assistant,
+            Timestamp = timestamp
+        };
 
-            // Get streaming chat response
-            var stream = profileId.HasValue
-                ? _chatService.GetStreamingResponseAsync(
-                    profileId.Value,
-                    messages,
-                    cancellationToken: cancellationToken)
-                : _chatService.GetStreamingResponseAsync(
-                    messages,
-                    cancellationToken: cancellationToken);
+        // Use Channel for streaming with proper error handling
+        var channel = Channel.CreateUnbounded<IAguiEvent>();
+        var hasError = false;
+        string? errorMessage = null;
 
-            await foreach (var update in stream.WithCancellation(cancellationToken))
+        // Start background task to produce events
+        _ = Task.Run(async () =>
+        {
+            try
             {
-                var chunk = _umbracoMapper.Map<ChatStreamChunkModel>(update);
+                // Convert AG-UI messages to M.E.AI ChatMessages
+                var chatMessages = ConvertToChatMessages(request.Messages);
 
-                var json = JsonSerializer.Serialize(chunk);
-                await Response.WriteAsync($"data: {json}\n\n", cancellationToken);
-                await Response.Body.FlushAsync(cancellationToken);
+                // Get streaming response from chat service
+                var stream = profileId.HasValue
+                    ? _chatService.GetStreamingResponseAsync(profileId.Value, chatMessages, cancellationToken: cancellationToken)
+                    : _chatService.GetStreamingResponseAsync(chatMessages, cancellationToken: cancellationToken);
+
+                // Stream text content updates
+                await foreach (var update in stream.WithCancellation(cancellationToken))
+                {
+                    var text = update.Text;
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        await channel.Writer.WriteAsync(new TextMessageContentEvent
+                        {
+                            MessageId = messageId,
+                            Delta = text,
+                            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                        }, cancellationToken);
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                hasError = true;
+                errorMessage = ex.Message;
+            }
+            finally
+            {
+                channel.Writer.Complete();
+            }
+        }, cancellationToken);
 
-            // Send final event
-            await Response.WriteAsync("data: [DONE]\n\n", cancellationToken);
-            await Response.Body.FlushAsync(cancellationToken);
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        // Read from channel and yield events
+        await foreach (var evt in channel.Reader.ReadAllAsync(cancellationToken))
         {
-            Response.StatusCode = StatusCodes.Status404NotFound;
-            var error = JsonSerializer.Serialize(new { error = "Profile not found", detail = ex.Message });
-            await Response.WriteAsync($"data: {error}\n\n", cancellationToken);
+            yield return evt;
         }
-        catch (Exception ex)
+
+        // Emit TextMessageEnd
+        yield return new TextMessageEndEvent
         {
-            Response.StatusCode = StatusCodes.Status400BadRequest;
-            var error = JsonSerializer.Serialize(new { error = "Chat streaming failed", detail = ex.Message });
-            await Response.WriteAsync($"data: {error}\n\n", cancellationToken);
+            MessageId = messageId,
+            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+
+        if (hasError)
+        {
+            // Emit error event
+            yield return new RunErrorEvent
+            {
+                Message = errorMessage ?? "Unknown error occurred",
+                Code = "CHAT_ERROR",
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            };
         }
+
+        // Emit RunFinished
+        yield return new RunFinishedEvent
+        {
+            ThreadId = threadId,
+            RunId = runId,
+            Outcome = hasError ? AguiRunOutcome.Interrupt : AguiRunOutcome.Success,
+            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+    }
+
+    private static List<ChatMessage> ConvertToChatMessages(IEnumerable<AguiMessage> messages)
+    {
+        var chatMessages = new List<ChatMessage>();
+
+        foreach (var msg in messages)
+        {
+            var role = msg.Role switch
+            {
+                AguiMessageRole.User => ChatRole.User,
+                AguiMessageRole.Assistant => ChatRole.Assistant,
+                AguiMessageRole.System => ChatRole.System,
+                AguiMessageRole.Tool => ChatRole.Tool,
+                AguiMessageRole.Developer => ChatRole.System, // Map developer to system
+                _ => ChatRole.User
+            };
+
+            chatMessages.Add(new ChatMessage(role, msg.Content ?? string.Empty));
+        }
+
+        return chatMessages;
     }
 }

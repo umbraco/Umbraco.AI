@@ -4,6 +4,7 @@ import {
   EventType as AguiEventType,
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
+import { RunStateManager, type StateChangeListener } from "./run-state-manager.js";
 import type {
   ChatMessage,
   AgentClientCallbacks,
@@ -12,6 +13,7 @@ import type {
   InterruptInfo,
   AgUiTool,
   AgentTransport,
+  RunLifecycleState,
 } from "../types.js";
 
 /**
@@ -29,9 +31,7 @@ export interface UaiAgentClientConfig {
 export class UaiAgentClient {
   #transport: AgentTransport;
   #callbacks: AgentClientCallbacks;
-  #messages: ChatMessage[] = [];
-  #pendingToolCalls: Map<string, ToolCallInfo> = new Map();
-  #toolCallArgs: Map<string, string> = new Map();
+  #stateManager: RunStateManager;
   #frontendTools: AgUiTool[] = [];
 
   /**
@@ -43,6 +43,7 @@ export class UaiAgentClient {
   constructor(transport: AgentTransport, callbacks: AgentClientCallbacks = {}) {
     this.#transport = transport;
     this.#callbacks = callbacks;
+    this.#stateManager = new RunStateManager();
   }
 
   /**
@@ -67,8 +68,30 @@ export class UaiAgentClient {
   /**
    * Get the current messages.
    */
-  get messages(): ChatMessage[] { 
-    return [...this.#messages];
+  get messages(): ChatMessage[] {
+    return this.#stateManager.messages;
+  }
+
+  /**
+   * Get the current run lifecycle state.
+   */
+  get runState(): RunLifecycleState {
+    return this.#stateManager.state;
+  }
+
+  /**
+   * Check if a run is currently active.
+   */
+  get isRunning(): boolean {
+    return this.#stateManager.isRunning;
+  }
+
+  /**
+   * Subscribe to run state changes.
+   * @returns Unsubscribe function
+   */
+  subscribeToState(listener: StateChangeListener): () => void {
+    return this.#stateManager.subscribe(listener);
   }
 
   /**
@@ -130,9 +153,11 @@ export class UaiAgentClient {
    * @param tools Optional additional tools to include (merged with registered frontend tools)
    */
   async sendMessage(messages: ChatMessage[], tools?: AgUiTool[]): Promise<void> {
-    this.#messages = messages;
-    this.#pendingToolCalls.clear();
-    this.#toolCallArgs.clear();
+    const threadId = crypto.randomUUID();
+    const runId = crypto.randomUUID();
+
+    // Initialize state manager for this run
+    this.#stateManager.startRun(runId, threadId, messages);
 
     // Set messages on the agent before running
     const convertedMessages = messages.map((m) => this.#toAgUiMessage(m));
@@ -144,8 +169,8 @@ export class UaiAgentClient {
     try {
       // Subscribe to the transport's event stream
       this.#transport.run({
-        threadId: crypto.randomUUID(),
-        runId: crypto.randomUUID(),
+        threadId,
+        runId,
         messages: convertedMessages,
         tools: allTools,
         context: [],
@@ -154,14 +179,18 @@ export class UaiAgentClient {
           this.#handleEvent(event);
         },
         error: (error) => {
-          this.#callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+          const err = error instanceof Error ? error : new Error(String(error));
+          this.#stateManager.setError(err);
+          this.#callbacks.onError?.(err);
         },
         complete: () => {
           // Stream completed
         },
       });
     } catch (error) {
-      this.#callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+      const err = error instanceof Error ? error : new Error(String(error));
+      this.#stateManager.setError(err);
+      this.#callbacks.onError?.(err);
     }
   }
 
@@ -176,7 +205,7 @@ export class UaiAgentClient {
       timestamp: new Date(),
     };
 
-    await this.sendMessage([...this.#messages, userMessage]);
+    await this.sendMessage([...this.#stateManager.messages, userMessage]);
   }
 
   /**
@@ -242,25 +271,19 @@ export class UaiAgentClient {
       status: "pending",
     };
 
-    this.#pendingToolCalls.set(toolCall.id, toolCall);
-    this.#toolCallArgs.set(toolCall.id, "");
+    this.#stateManager.addToolCall(toolCall);
     this.#callbacks.onToolCallStart?.(toolCall);
   }
 
   #handleToolCallArgs(event: BaseEvent & { toolCallId: string; delta: string }) {
-    const toolCallId = event.toolCallId;
-    const delta = event.delta;
-    const currentArgs = this.#toolCallArgs.get(toolCallId) ?? "";
-    this.#toolCallArgs.set(toolCallId, currentArgs + delta);
+    this.#stateManager.appendToolCallArgs(event.toolCallId, event.delta);
   }
 
   #handleToolCallEnd(event: BaseEvent & { toolCallId: string }) {
-    const toolCallId = event.toolCallId as string;
-    const toolCall = this.#pendingToolCalls.get(toolCallId);
+    const toolCallId = event.toolCallId;
+    const args = this.#stateManager.finalizeToolCallArgs(toolCallId);
 
-    if (toolCall) {
-      const args = this.#toolCallArgs.get(toolCallId) ?? "";
-      toolCall.arguments = args;
+    if (args !== undefined) {
       // Status stays "pending" for backend tools (waiting for TOOL_CALL_RESULT)
       // Frontend tools will set status to "executing" when they execute
       this.#callbacks.onToolCallArgsEnd?.(toolCallId, args);
@@ -269,15 +292,10 @@ export class UaiAgentClient {
   }
 
   #handleToolCallResult(event: BaseEvent & { toolCallId: string; content: string }) {
-    const toolCallId = event.toolCallId as string;
+    const toolCallId = event.toolCallId;
     const content = event.content;
 
-    const toolCall = this.#pendingToolCalls.get(toolCallId);
-    if (toolCall) {
-      toolCall.result = content;
-      toolCall.status = "completed";
-    }
-
+    this.#stateManager.setToolCallResult(toolCallId, content, "completed");
     this.#callbacks.onToolCallResult?.(toolCallId, content);
   }
 
@@ -286,16 +304,19 @@ export class UaiAgentClient {
 
     if (outcome === "interrupt") {
       const interrupt = this.#parseInterrupt(event.interrupt);
+      this.#stateManager.interrupt(interrupt);
       this.#callbacks.onRunFinished?.({
         outcome: "interrupt",
         interrupt,
       });
     } else if (outcome === "error") {
+      this.#stateManager.setError(new Error(event.error ?? "Unknown error"));
       this.#callbacks.onRunFinished?.({
         outcome: "error",
         error: event.error as string,
       });
     } else {
+      this.#stateManager.complete();
       this.#callbacks.onRunFinished?.({
         outcome: "success",
       });
@@ -316,7 +337,7 @@ export class UaiAgentClient {
       timestamp: new Date(),
     }));
 
-    this.#messages = messages;
+    this.#stateManager.setMessages(messages);
     this.#callbacks.onMessagesSnapshot?.(messages);
   }
 
@@ -338,29 +359,22 @@ export class UaiAgentClient {
    * Mark a tool call as completed with result.
    */
   setToolCallResult(toolCallId: string, result: unknown) {
-    const toolCall = this.#pendingToolCalls.get(toolCallId);
-    if (toolCall) {
-      toolCall.result = JSON.stringify(result);
-      toolCall.status = "completed";
-    }
+    const resultStr = typeof result === "string" ? result : JSON.stringify(result);
+    this.#stateManager.setToolCallResult(toolCallId, resultStr, "completed");
   }
 
   /**
    * Mark a tool call as failed.
    */
   setToolCallError(toolCallId: string, error: string) {
-    const toolCall = this.#pendingToolCalls.get(toolCallId);
-    if (toolCall) {
-      toolCall.result = error;
-      toolCall.status = "error";
-    }
+    this.#stateManager.setToolCallResult(toolCallId, error, "error");
   }
 
   /**
    * Get a pending tool call by ID.
    */
   getToolCall(toolCallId: string): ToolCallInfo | undefined {
-    return this.#pendingToolCalls.get(toolCallId);
+    return this.#stateManager.getToolCall(toolCallId);
   }
 
   /**
@@ -381,15 +395,20 @@ export class UaiAgentClient {
       timestamp: new Date(),
     };
 
-    // Update the tool call status
-    const toolCall = this.#pendingToolCalls.get(toolCallId);
-    if (toolCall) {
-      toolCall.result = toolMessage.content;
-      toolCall.status = error ? "error" : "completed";
-    }
+    // Update the tool call status via state manager
+    const status = error ? "error" : "completed";
+    this.#stateManager.setToolCallResult(toolCallId, toolMessage.content, status);
 
     // Send with the current messages plus the tool result
     // currentMessages must include the assistant message with toolCalls for the LLM to understand
     await this.sendMessage([...currentMessages, toolMessage]);
+  }
+
+  /**
+   * Reset the client state.
+   * Useful when starting a new conversation.
+   */
+  reset(): void {
+    this.#stateManager.reset();
   }
 }

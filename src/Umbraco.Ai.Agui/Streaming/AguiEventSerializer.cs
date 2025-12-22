@@ -21,26 +21,28 @@ public sealed class AguiEventSerializer
 
     /// <summary>
     /// Serializes an event to SSE format.
-    /// The event type discriminator is included in the JSON via JsonPolymorphic.
+    /// The event type discriminator is included in the JSON via JsonPolymorphic on BaseAguiEvent.
     /// </summary>
     /// <param name="event">The event to serialize.</param>
     /// <returns>The SSE formatted string.</returns>
     public string Serialize(IAguiEvent @event)
     {
-        var data = JsonSerializer.Serialize(@event, @event.GetType(), _options.JsonSerializerOptions);
+        // Serialize as BaseAguiEvent to include the type discriminator from [JsonPolymorphic]
+        var data = JsonSerializer.Serialize(@event, typeof(BaseAguiEvent), _options.JsonSerializerOptions);
         return $"data: {data}\n\n";
     }
 
     /// <summary>
     /// Serializes an event to SSE format asynchronously.
-    /// The event type discriminator is included in the JSON via JsonPolymorphic.
+    /// The event type discriminator is included in the JSON via JsonPolymorphic on BaseAguiEvent.
     /// </summary>
     /// <param name="event">The event to serialize.</param>
     /// <param name="writer">The text writer to write to.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public async Task SerializeAsync(IAguiEvent @event, TextWriter writer, CancellationToken cancellationToken = default)
     {
-        var data = JsonSerializer.Serialize(@event, @event.GetType(), _options.JsonSerializerOptions);
+        // Serialize as BaseAguiEvent to include the type discriminator from [JsonPolymorphic]
+        var data = JsonSerializer.Serialize(@event, typeof(BaseAguiEvent), _options.JsonSerializerOptions);
         await writer.WriteAsync($"data: {data}\n\n");
         await writer.FlushAsync(cancellationToken);
     }

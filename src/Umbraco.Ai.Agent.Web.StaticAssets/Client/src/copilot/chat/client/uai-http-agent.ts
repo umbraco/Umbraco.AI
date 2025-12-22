@@ -1,6 +1,6 @@
 import { AbstractAgent, type RunAgentInput, type BaseEvent, type Message, type Tool } from "@ag-ui/client";
 import { Observable } from "rxjs";
-import { AgentsService } from "../../api/sdk.gen.js";
+import { AgentsService } from "../../../api/sdk.gen.js";
 import type {
   AguiRunRequestModel,
   AguiMessageModel,
@@ -8,8 +8,8 @@ import type {
   AguiToolCallModel,
   AguiMessageRoleModel,
   AguiContextItemModel,
-} from "../../api/types.gen.js";
-import type { AgentTransport } from "./types.js";
+} from "../../../api/types.gen.js";
+import type { AgentTransport } from "../types.js";
 
 /**
  * Configuration for the UaiHttpAgent.

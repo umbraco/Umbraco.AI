@@ -12,7 +12,7 @@ import type {
   InterruptInfo,
   AgUiTool,
   AgentTransport,
-} from "./types.js";
+} from "../types.js";
 
 /**
  * Configuration for the Uai Agent Client.

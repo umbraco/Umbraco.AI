@@ -1,13 +1,13 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaiAgentClient } from "./ag-ui-client.js";
-import { FrontendToolManager } from "./frontend-tool-manager.js";
+import { UaiAgentClient } from "../client/ag-ui-client.js";
+import { FrontendToolManager } from "../client/frontend-tool-manager.js";
 import type {
   ChatMessage,
   AgentState,
   InterruptInfo,
   ToolCallInfo,
-} from "./types.js";
+} from "../types.js";
 
 // Import sub-components
 import "./message.element.js";

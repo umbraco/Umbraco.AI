@@ -1,8 +1,8 @@
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { createExtensionApi } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { ManifestUaiAgentTool, UaiAgentToolApi } from "../../agent/tools/uai-agent-tool.extension.js";
-import type { AgUiTool, ToolCallInfo } from "./types.js";
+import type { ManifestUaiAgentTool, UaiAgentToolApi } from "../../../agent/tools/uai-agent-tool.extension.js";
+import type { AgUiTool, ToolCallInfo } from "../types.js";
 
 /**
  * Result of a tool execution.

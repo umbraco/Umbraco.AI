@@ -1,6 +1,6 @@
 import { customElement, property, state, css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { InterruptInfo, InterruptOption } from "./types.js";
+import type { InterruptInfo, InterruptOption } from "../types.js";
 
 /**
  * Interrupt UI component.

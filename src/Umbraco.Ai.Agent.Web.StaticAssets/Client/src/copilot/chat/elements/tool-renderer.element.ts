@@ -2,11 +2,11 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { loadManifestElement, loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
-import type { ManifestUaiAgentTool, UaiAgentToolElement, UaiAgentToolStatus, UaiAgentToolApi } from "../../agent/tools/uai-agent-tool.extension.js";
-import type { ToolCallInfo, ToolCallStatus } from "./types.js";
+import type { ManifestUaiAgentTool, UaiAgentToolElement, UaiAgentToolStatus, UaiAgentToolApi } from "../../../agent/tools/uai-agent-tool.extension.js";
+import type { ToolCallInfo, ToolCallStatus } from "../types.js";
 
 // Import default tool status component
-import "../../agent/tools/tool-status.element.js";
+import "../../../agent/tools/tool-status.element.js";
 
 /**
  * Event detail for tool execution results.

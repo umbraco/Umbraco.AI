@@ -81,6 +81,16 @@ export class RunStateManager {
   }
 
   /**
+   * End streaming and transition back to running state.
+   */
+  endStreaming(): void {
+    if (this.#state.status === 'streaming_text') {
+      const { runId, threadId } = this.#state;
+      this.transition({ status: 'running', runId, threadId });
+    }
+  }
+
+  /**
    * Add a pending tool call.
    */
   addToolCall(toolCall: ToolCallInfo): void {

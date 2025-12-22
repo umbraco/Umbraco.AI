@@ -206,6 +206,7 @@ export class UaiAgentClient {
         break;
 
       case AguiEventType.TEXT_MESSAGE_END:
+        this.#stateManager.endStreaming();
         this.#callbacks.onTextEnd?.();
         break;
 

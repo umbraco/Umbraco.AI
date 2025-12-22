@@ -2,7 +2,7 @@ import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registr
 import { createExtensionApi } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { ManifestUaiAgentTool, UaiAgentToolApi } from "../../../agent/tools/uai-agent-tool.extension.js";
-import type { AgUiTool, ToolCallInfo } from "../types.js";
+import type { AguiTool, ToolCallInfo } from "../types.js";
 
 /**
  * Result of a tool execution.
@@ -34,7 +34,7 @@ export interface PendingToolExecution {
  */
 export class FrontendToolManager {
   #toolManifests: Map<string, ManifestUaiAgentTool> = new Map();
-  #tools: AgUiTool[] = [];
+  #tools: AguiTool[] = [];
   #pendingExecutions: Map<string, PendingToolExecution> = new Map();
   #host: UmbLitElement;
 
@@ -49,7 +49,7 @@ export class FrontendToolManager {
   /**
    * Get the loaded frontend tools in AG-UI format.
    */
-  get tools(): AgUiTool[] {
+  get tools(): AguiTool[] {
     return [...this.#tools];
   }
 
@@ -72,7 +72,7 @@ export class FrontendToolManager {
    * Tools with an `api` property are frontend-executable tools.
    * @returns The loaded tools in AG-UI format
    */
-  loadFromRegistry(): AgUiTool[] {
+  loadFromRegistry(): AguiTool[] {
     // Get all uaiAgentTool manifests that have an API (frontend tools)
     const manifests = umbExtensionsRegistry.getByTypeAndFilter<
       "uaiAgentTool",

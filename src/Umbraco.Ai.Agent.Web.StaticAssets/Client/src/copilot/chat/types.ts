@@ -1,9 +1,9 @@
 // Re-export AG-UI types for convenience
 export {
   EventType,
-  type Tool as AgUiTool,
+  type Tool as AguiTool,
   type ToolMessage,
-  type Message as AgUiMessage,
+  type Message as AguiMessage,
 } from "@ag-ui/core";
 
 import type { RunAgentInput, BaseEvent, Message } from "@ag-ui/client";

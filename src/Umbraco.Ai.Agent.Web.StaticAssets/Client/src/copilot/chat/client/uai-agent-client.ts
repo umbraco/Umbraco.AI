@@ -11,7 +11,7 @@ import type {
   ToolCallInfo,
   AgentState,
   InterruptInfo,
-  AgUiTool,
+  AguiTool,
   AgentTransport,
   RunLifecycleState,
 } from "../types.js";
@@ -96,7 +96,7 @@ export class UaiAgentClient {
   /**
    * Convert ChatMessage to AG-UI Message format.
    */
-  static #toAgUiMessage(m: ChatMessage): Message {
+  static #toAguiMessage(m: ChatMessage): Message {
     if (m.role === "user") {
       return {
         id: m.id,
@@ -136,7 +136,7 @@ export class UaiAgentClient {
    * @param messages The messages to send
    * @param tools Optional additional tools to include (merged with registered frontend tools)
    */
-  async sendMessage(messages: ChatMessage[], tools?: AgUiTool[]): Promise<void> {
+  async sendMessage(messages: ChatMessage[], tools?: AguiTool[]): Promise<void> {
     const threadId = crypto.randomUUID();
     const runId = crypto.randomUUID();
 
@@ -144,7 +144,7 @@ export class UaiAgentClient {
     this.#stateManager.startRun(runId, threadId, messages);
 
     // Set messages on the agent before running
-    const convertedMessages = messages.map((m) => UaiAgentClient.#toAgUiMessage(m));
+    const convertedMessages = messages.map((m) => UaiAgentClient.#toAguiMessage(m));
     this.#transport.setMessages(convertedMessages);
 
     // Use tools passed in directly

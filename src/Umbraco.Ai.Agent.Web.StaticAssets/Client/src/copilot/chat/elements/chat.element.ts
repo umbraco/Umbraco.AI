@@ -47,7 +47,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
   #client?: UaiAgentClient;
   #toolManager?: FrontendToolManager;
-  #frontendTools: import("../types.js").AgUiTool[] = [];
+  #frontendTools: import("../types.js").AguiTool[] = [];
   #messagesContainer?: HTMLElement;
 
   override connectedCallback() {

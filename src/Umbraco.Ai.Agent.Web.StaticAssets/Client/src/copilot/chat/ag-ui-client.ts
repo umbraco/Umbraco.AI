@@ -1,4 +1,8 @@
-import { type Message } from "@ag-ui/client";
+import {
+  type Message,
+  type BaseEvent,
+  EventType as AguiEventType,
+} from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import type {
   ChatMessage,
@@ -6,7 +10,6 @@ import type {
   ToolCallInfo,
   AgentState,
   InterruptInfo,
-  EventType,
   AgUiTool,
   AgentTransport,
 } from "./types.js";
@@ -148,7 +151,7 @@ export class UaiAgentClient {
         context: [],
       }).subscribe({
         next: (event) => {
-          this.#handleEvent(event as { type: string; [key: string]: unknown });
+          this.#handleEvent(event);
         },
         error: (error) => {
           this.#callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
@@ -179,62 +182,62 @@ export class UaiAgentClient {
   /**
    * Handle incoming AG-UI events.
    */
-  #handleEvent(event: { type: string; [key: string]: unknown }) {
-    switch (event.type as EventType) {
-      case "TEXT_MESSAGE_START":
+  #handleEvent(event: BaseEvent) {
+    switch (event.type) {
+      case AguiEventType.TEXT_MESSAGE_START:
         // Message started - nothing to do
         break;
 
-      case "TEXT_MESSAGE_CONTENT":
-        this.#callbacks.onTextDelta?.(event.delta as string);
+      case AguiEventType.TEXT_MESSAGE_CONTENT:
+        this.#callbacks.onTextDelta?.((event as BaseEvent & { delta: string }).delta);
         break;
 
-      case "TEXT_MESSAGE_END":
+      case AguiEventType.TEXT_MESSAGE_END:
         this.#callbacks.onTextEnd?.();
         break;
 
-      case "TOOL_CALL_START":
-        this.#handleToolCallStart(event);
+      case AguiEventType.TOOL_CALL_START:
+        this.#handleToolCallStart(event as BaseEvent & { toolCallId: string; toolCallName: string });
         break;
 
-      case "TOOL_CALL_ARGS":
-        this.#handleToolCallArgs(event);
+      case AguiEventType.TOOL_CALL_ARGS:
+        this.#handleToolCallArgs(event as BaseEvent & { toolCallId: string; delta: string });
         break;
 
-      case "TOOL_CALL_END":
-        this.#handleToolCallEnd(event);
+      case AguiEventType.TOOL_CALL_END:
+        this.#handleToolCallEnd(event as BaseEvent & { toolCallId: string });
         break;
 
-      case "TOOL_CALL_RESULT":
-        this.#handleToolCallResult(event);
+      case AguiEventType.TOOL_CALL_RESULT:
+        this.#handleToolCallResult(event as BaseEvent & { toolCallId: string; content: string });
         break;
 
-      case "RUN_FINISHED":
-        this.#handleRunFinished(event);
+      case AguiEventType.RUN_FINISHED:
+        this.#handleRunFinished(event as BaseEvent & { outcome: string; interrupt?: unknown; error?: string });
         break;
 
-      case "RUN_ERROR":
-        this.#callbacks.onError?.(new Error(event.message as string));
+      case AguiEventType.RUN_ERROR:
+        this.#callbacks.onError?.(new Error((event as BaseEvent & { message: string }).message));
         break;
 
-      case "STATE_SNAPSHOT":
-        this.#callbacks.onStateSnapshot?.(event.state as AgentState);
+      case AguiEventType.STATE_SNAPSHOT:
+        this.#callbacks.onStateSnapshot?.((event as BaseEvent & { state: AgentState }).state);
         break;
 
-      case "STATE_DELTA":
-        this.#callbacks.onStateDelta?.(event.delta as Partial<AgentState>);
+      case AguiEventType.STATE_DELTA:
+        this.#callbacks.onStateDelta?.((event as BaseEvent & { delta: Partial<AgentState> }).delta);
         break;
 
-      case "MESSAGES_SNAPSHOT":
-        this.#handleMessagesSnapshot(event);
+      case AguiEventType.MESSAGES_SNAPSHOT:
+        this.#handleMessagesSnapshot(event as BaseEvent & { messages: unknown[] });
         break;
     }
   }
 
-  #handleToolCallStart(event: { [key: string]: unknown }) {
+  #handleToolCallStart(event: BaseEvent & { toolCallId: string; toolCallName: string }) {
     const toolCall: ToolCallInfo = {
-      id: event.toolCallId as string,
-      name: event.toolCallName as string,
+      id: event.toolCallId,
+      name: event.toolCallName,
       arguments: "",
       status: "pending",
     };
@@ -244,14 +247,14 @@ export class UaiAgentClient {
     this.#callbacks.onToolCallStart?.(toolCall);
   }
 
-  #handleToolCallArgs(event: { [key: string]: unknown }) {
-    const toolCallId = event.toolCallId as string;
-    const delta = event.delta as string;
+  #handleToolCallArgs(event: BaseEvent & { toolCallId: string; delta: string }) {
+    const toolCallId = event.toolCallId;
+    const delta = event.delta;
     const currentArgs = this.#toolCallArgs.get(toolCallId) ?? "";
     this.#toolCallArgs.set(toolCallId, currentArgs + delta);
   }
 
-  #handleToolCallEnd(event: { [key: string]: unknown }) {
+  #handleToolCallEnd(event: BaseEvent & { toolCallId: string }) {
     const toolCallId = event.toolCallId as string;
     const toolCall = this.#pendingToolCalls.get(toolCallId);
 
@@ -265,9 +268,9 @@ export class UaiAgentClient {
     }
   }
 
-  #handleToolCallResult(event: { [key: string]: unknown }) {
+  #handleToolCallResult(event: BaseEvent & { toolCallId: string; content: string }) {
     const toolCallId = event.toolCallId as string;
-    const content = event.content as string;
+    const content = event.content;
 
     const toolCall = this.#pendingToolCalls.get(toolCallId);
     if (toolCall) {
@@ -278,8 +281,8 @@ export class UaiAgentClient {
     this.#callbacks.onToolCallResult?.(toolCallId, content);
   }
 
-  #handleRunFinished(event: { [key: string]: unknown }) {
-    const outcome = event.outcome as string;
+  #handleRunFinished(event: BaseEvent & { outcome: string; interrupt?: unknown; error?: string }) {
+    const outcome = event.outcome;
 
     if (outcome === "interrupt") {
       const interrupt = this.#parseInterrupt(event.interrupt);
@@ -299,7 +302,7 @@ export class UaiAgentClient {
     }
   }
 
-  #handleMessagesSnapshot(event: { [key: string]: unknown }) {
+  #handleMessagesSnapshot(event: BaseEvent & { messages: unknown[] }) {
     const rawMessages = event.messages as Array<{
       id: string;
       role: string;

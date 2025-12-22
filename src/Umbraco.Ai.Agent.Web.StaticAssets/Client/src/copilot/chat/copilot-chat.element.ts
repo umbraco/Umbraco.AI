@@ -1,11 +1,15 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import { createExtensionApi } from "@umbraco-cms/backoffice/extension-api";
 import { UaiAgentClient } from "./ag-ui-client.js";
+import type { ManifestUaiAgentTool, UaiAgentToolApi } from "../../agent/tools/uai-agent-tool.extension.js";
 import type {
   ChatMessage,
   AgentState,
   InterruptInfo,
   ToolCallInfo,
+  AgUiTool,
 } from "./types.js";
 
 // Import sub-components
@@ -44,6 +48,9 @@ export class UaiCopilotChatElement extends UmbLitElement {
   @state()
   private _currentToolCalls: ToolCallInfo[] = [];
 
+  /** Tool calls that need to be executed after RUN_FINISHED */
+  #pendingToolExecutions: Map<string, { name: string; args: Record<string, unknown> }> = new Map();
+
   #client?: UaiAgentClient;
   #messagesContainer?: HTMLElement;
 
@@ -75,15 +82,25 @@ export class UaiCopilotChatElement extends UmbLitElement {
           this._streamingContent += delta;
         },
         onTextEnd: () => {
-          // Use the accumulated streaming content (TEXT_MESSAGE_END doesn't include content)
-          this.#finalizeAssistantMessage(this._streamingContent);
+          // Don't finalize here - wait for RUN_FINISHED to include any tool calls
+          // The streaming content is preserved until then
         },
         onToolCallStart: (info) => {
           this._currentToolCalls = [...this._currentToolCalls, info];
           this._agentState = { status: "executing", currentStep: `Calling ${info.name}...` };
         },
+        onToolCallArgsEnd: (id, args) => {
+          this.#handleToolCallArgsEnd(id, args);
+        },
         onToolCallEnd: (id) => {
-          this.#handleToolCallEnd(id);
+          // Queue for execution after RUN_FINISHED (so assistant message includes tool calls)
+          const toolCall = this._currentToolCalls.find((tc) => tc.id === id) as ToolCallInfo & { parsedArgs?: Record<string, unknown> } | undefined;
+          if (toolCall) {
+            this.#pendingToolExecutions.set(id, {
+              name: toolCall.name,
+              args: toolCall.parsedArgs ?? {}
+            });
+          }
         },
         onRunFinished: (event) => {
           this.#handleRunFinished(event);
@@ -104,6 +121,34 @@ export class UaiCopilotChatElement extends UmbLitElement {
         },
       }
     );
+
+    // Load frontend tools from extension registry and register with client
+    this.#loadFrontendTools();
+  }
+
+  /**
+   * Load frontend tool definitions from the extension registry.
+   * Tools with an `api` property are frontend-executable tools.
+   */
+  #loadFrontendTools() {
+    if (!this.#client) return;
+
+    // Get all uaiAgentTool manifests that have an API (frontend tools)
+    const toolManifests = umbExtensionsRegistry.getByTypeAndFilter<
+      "uaiAgentTool",
+      ManifestUaiAgentTool
+    >("uaiAgentTool", (manifest) => manifest.api !== undefined);
+
+    // Convert manifests to AG-UI tool format
+    const tools: AgUiTool[] = toolManifests.map((manifest) => ({
+      name: manifest.meta.toolName,
+      description: manifest.meta.description ?? "",
+      parameters: manifest.meta.parameters ?? { type: "object", properties: {} },
+    }));
+
+    if (tools.length > 0) {
+      this.#client.setFrontendTools(tools);
+    }
   }
 
   #finalizeAssistantMessage(content: string) {
@@ -120,20 +165,114 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this._currentToolCalls = [];
   }
 
-  #handleToolCallEnd(toolCallId: string) {
-    // Update tool call status
+  #handleToolCallArgsEnd(toolCallId: string, argsJson: string) {
+    // Update tool call with parsed arguments
+    let args: Record<string, unknown> = {};
+    try {
+      args = JSON.parse(argsJson);
+    } catch {
+      // Failed to parse tool args - use empty object
+    }
+
     this._currentToolCalls = this._currentToolCalls.map((tc) =>
-      tc.id === toolCallId ? { ...tc, status: "completed" as const } : tc
+      tc.id === toolCallId ? { ...tc, arguments: argsJson, parsedArgs: args } : tc
     );
   }
 
-  #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }) {
-    this._isLoading = false;
-    this._agentState = undefined;
+  /**
+   * Get the manifest for a frontend tool by name.
+   */
+  #getFrontendToolManifest(toolName: string): ManifestUaiAgentTool | undefined {
+    const manifests = umbExtensionsRegistry.getByTypeAndFilter<
+      "uaiAgentTool",
+      ManifestUaiAgentTool
+    >("uaiAgentTool", (manifest) => manifest.api !== undefined && manifest.meta.toolName === toolName);
+
+    return manifests[0];
+  }
+
+  /**
+   * Execute a frontend tool by ID with pre-parsed arguments.
+   */
+  async #executeFrontendToolById(toolCallId: string, toolName: string, args: Record<string, unknown>) {
+    if (!this.#client) return;
+
+    // Check if this is a frontend tool we can execute
+    const manifest = this.#getFrontendToolManifest(toolName);
+    if (!manifest) {
+      return;
+    }
+
+    this._agentState = { status: "executing", currentStep: `Executing ${toolName}...` };
+
+    let resultContent: string;
+    let hasError = false;
+
+    try {
+      // Create the tool API instance
+      const api = await createExtensionApi<UaiAgentToolApi>(this, manifest);
+      if (!api) {
+        throw new Error(`Failed to create API for tool: ${toolName}`);
+      }
+
+      // Execute the tool
+      const result = await api.execute(args);
+      resultContent = typeof result === "string" ? result : JSON.stringify(result);
+    } catch (error) {
+      // Tool execution failed - send error as the result
+      hasError = true;
+      resultContent = `Error: ${error instanceof Error ? error.message : String(error)}`;
+    }
+
+    // Update the assistant message's tool call with result and status
+    // This allows custom renderers to display the result
+    this._messages = this._messages.map((msg) => {
+      if (msg.role === "assistant" && msg.toolCalls) {
+        return {
+          ...msg,
+          toolCalls: msg.toolCalls.map((tc) =>
+            tc.id === toolCallId
+              ? { ...tc, status: hasError ? "error" : "completed", result: resultContent }
+              : tc
+          ),
+        } as ChatMessage;
+      }
+      return msg;
+    });
+
+    // Create tool result message and add to local messages
+    // This ensures _messages stays in sync when the continuation run completes
+    const toolMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "tool",
+      content: resultContent,
+      toolCallId,
+      timestamp: new Date(),
+    };
+
+    this._messages = [...this._messages, toolMessage];
+
+    // Continue the conversation with updated messages
+    await this.#client.sendMessage(this._messages);
+  }
+
+  async #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }) {
+    // First, finalize the assistant message with any tool calls
+    if (this._streamingContent || this._currentToolCalls.length > 0) {
+      this.#finalizeAssistantMessage(this._streamingContent);
+    }
+
+    // Get pending tool executions before clearing
+    const toolsToExecute = new Map(this.#pendingToolExecutions);
+    this.#pendingToolExecutions.clear();
 
     if (event.outcome === "interrupt" && event.interrupt) {
+      this._isLoading = false;
+      this._agentState = undefined;
       this._activeInterrupt = event.interrupt;
     } else if (event.outcome === "error") {
+      this._isLoading = false;
+      this._agentState = undefined;
       // Add error message
       this._messages = [
         ...this._messages,
@@ -144,6 +283,18 @@ export class UaiCopilotChatElement extends UmbLitElement {
           timestamp: new Date(),
         },
       ];
+    } else {
+      // Success - check if we have frontend tools to execute
+      if (toolsToExecute.size > 0) {
+        // Execute frontend tools
+        for (const [toolCallId, toolInfo] of toolsToExecute) {
+          await this.#executeFrontendToolById(toolCallId, toolInfo.name, toolInfo.args);
+        }
+        // Loading state is managed by tool execution
+      } else {
+        this._isLoading = false;
+        this._agentState = undefined;
+      }
     }
   }
 

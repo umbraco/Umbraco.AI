@@ -5,6 +5,7 @@ import type {
   AguiRunRequestModel,
   AguiMessageModel,
   AguiToolModel,
+  AguiToolCallModel,
   AguiMessageRoleModel,
   AguiContextItemModel,
 } from "../../api/types.gen.js";
@@ -96,11 +97,25 @@ export class UaiHttpAgent extends AbstractAgent {
         .join("");
     }
 
+    // Convert toolCalls for assistant messages
+    let toolCalls: AguiToolCallModel[] | undefined;
+    if ("toolCalls" in msg && Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
+      toolCalls = msg.toolCalls.map((tc: { id: string; type: string; function: { name: string; arguments: string } }) => ({
+        id: tc.id,
+        type: tc.type,
+        function: {
+          name: tc.function.name,
+          arguments: tc.function.arguments,
+        },
+      }));
+    }
+
     return {
       id: msg.id,
       role: this.#mapRole(msg.role),
       content,
       toolCallId: "toolCallId" in msg ? (msg.toolCallId as string) : undefined,
+      toolCalls,
     };
   }
 

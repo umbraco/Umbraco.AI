@@ -75,10 +75,21 @@ export class UaiAgentClient {
         content: m.content,
       };
     } else if (m.role === "assistant") {
+      // Include tool calls if present - critical for LLM to know what was already called
+      const toolCalls = m.toolCalls?.map(tc => ({
+        id: tc.id,
+        type: "function" as const,
+        function: {
+          name: tc.name,
+          arguments: tc.arguments ?? "{}",
+        },
+      }));
+
       return {
         id: m.id,
         role: "assistant" as const,
         content: m.content,
+        ...(toolCalls && toolCalls.length > 0 && { toolCalls }),
       };
     } else {
       // tool message requires toolCallId
@@ -102,7 +113,8 @@ export class UaiAgentClient {
     this.#toolCallArgs.clear();
 
     // Set messages on the agent before running
-    this.#agent.setMessages(messages.map((m) => this.#toAgUiMessage(m)));
+    const convertedMessages = messages.map((m) => this.#toAgUiMessage(m));
+    this.#agent.setMessages(convertedMessages);
 
     // Merge frontend tools with any additional tools passed in
     const allTools = [...this.#frontendTools, ...(tools ?? [])];
@@ -326,8 +338,12 @@ export class UaiAgentClient {
   /**
    * Send a tool result and continue the conversation.
    * Used after frontend tool execution.
+   * @param toolCallId The ID of the tool call this result is for
+   * @param result The result from tool execution
+   * @param currentMessages The current messages (must include the assistant message with tool calls)
+   * @param error Optional error message
    */
-  async sendToolResult(toolCallId: string, result: unknown, error?: string): Promise<void> {
+  async sendToolResult(toolCallId: string, result: unknown, currentMessages: ChatMessage[], error?: string): Promise<void> {
     // Create a tool message with the result
     const toolMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -344,7 +360,8 @@ export class UaiAgentClient {
       toolCall.status = error ? "error" : "completed";
     }
 
-    // Send with the tool message included
-    await this.sendMessage([...this.#messages, toolMessage]);
+    // Send with the current messages plus the tool result
+    // currentMessages must include the assistant message with toolCalls for the LLM to understand
+    await this.sendMessage([...currentMessages, toolMessage]);
   }
 }

@@ -47,6 +47,12 @@ export class UaiCopilotMessageElement extends UmbLitElement {
   }
 
   override render() {
+    // Hide tool result messages - they're internal to the conversation
+    // Users only see the assistant's response that uses the tool result
+    if (this.message.role === "tool") {
+      return html``;
+    }
+
     const isUser = this.message.role === "user";
     const iconName = isUser ? "icon-user" : "icon-wand";
 

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading.Channels;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +10,7 @@ using Umbraco.Ai.Agent.Extensions;
 using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Events.Lifecycle;
 using Umbraco.Ai.Agui.Events.Messages;
+using Umbraco.Ai.Agui.Events.Tools;
 using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
 using Umbraco.Ai.Core.Chat;
@@ -125,34 +127,62 @@ public class RunAgentController : AgentControllerBase
             Timestamp = timestamp
         };
 
-        // Use Channel for streaming with proper error handling
+        // Use a channel to bridge between try-catch and yield
         var channel = Channel.CreateUnbounded<IAguiEvent>();
-        var hasError = false;
-        string? errorMessage = null;
 
-        // Start background task to produce events
-        _ = Task.Run(async () =>
+        // Start the streaming task
+        var streamingTask = Task.Run(async () =>
         {
+            var hasError = false;
+            string? errorMessage = null;
+            var toolCalls = new List<FunctionCallContent>();
+            var emittedToolCallIds = new HashSet<string>();
+
             try
             {
-                // Create chat client from profile
+                // Create chat client
                 var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 
                 // Convert AG-UI messages to M.E.AI ChatMessages
                 var chatMessages = ConvertToChatMessages(agent, request.Messages);
 
-                // Get streaming response
-                await foreach (var update in chatClient.GetStreamingResponseAsync(chatMessages, cancellationToken: cancellationToken))
+                // Convert AG-UI tools to M.E.AI AITools
+                var chatOptions = new ChatOptions();
+                if (request.Tools?.Any() == true)
                 {
-                    var text = update.Text;
-                    if (!string.IsNullOrEmpty(text))
+                    chatOptions.Tools = ConvertToAITools(request.Tools);
+                    // Don't auto-invoke tools - we want to stream them to frontend
+                    chatOptions.ToolMode = ChatToolMode.Auto;
+                }
+
+                // Stream the response
+                await foreach (var update in chatClient.GetStreamingResponseAsync(chatMessages, chatOptions, cancellationToken))
+                {
+                    // Handle text content
+                    if (!string.IsNullOrEmpty(update.Text))
                     {
                         await channel.Writer.WriteAsync(new TextMessageContentEvent
                         {
                             MessageId = messageId,
-                            Delta = text,
+                            Delta = update.Text,
                             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                         }, cancellationToken);
+                    }
+
+                    // Check for tool calls in the update contents
+                    if (update.Contents != null)
+                    {
+                        foreach (var content in update.Contents)
+                        {
+                            if (content is FunctionCallContent functionCall && !string.IsNullOrEmpty(functionCall.CallId))
+                            {
+                                // Track tool calls for later processing
+                                if (!emittedToolCallIds.Contains(functionCall.CallId))
+                                {
+                                    toolCalls.Add(functionCall);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -161,44 +191,102 @@ public class RunAgentController : AgentControllerBase
                 hasError = true;
                 errorMessage = ex.Message;
             }
-            finally
+
+            // Emit TextMessageEnd (before tool calls)
+            await channel.Writer.WriteAsync(new TextMessageEndEvent
             {
-                channel.Writer.Complete();
+                MessageId = messageId,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            }, CancellationToken.None);
+
+            // Emit tool call events for any tool calls detected
+            foreach (var toolCall in toolCalls)
+            {
+                if (emittedToolCallIds.Contains(toolCall.CallId!))
+                    continue;
+
+                emittedToolCallIds.Add(toolCall.CallId!);
+
+                // TOOL_CALL_START
+                await channel.Writer.WriteAsync(new ToolCallStartEvent
+                {
+                    ToolCallId = toolCall.CallId!,
+                    ToolCallName = toolCall.Name,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, CancellationToken.None);
+
+                // TOOL_CALL_ARGS - send arguments as JSON
+                var argsJson = toolCall.Arguments != null
+                    ? JsonSerializer.Serialize(toolCall.Arguments)
+                    : "{}";
+
+                await channel.Writer.WriteAsync(new ToolCallArgsEvent
+                {
+                    ToolCallId = toolCall.CallId!,
+                    Delta = argsJson,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, CancellationToken.None);
+
+                // TOOL_CALL_END
+                await channel.Writer.WriteAsync(new ToolCallEndEvent
+                {
+                    ToolCallId = toolCall.CallId!,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, CancellationToken.None);
             }
+
+            if (hasError)
+            {
+                await channel.Writer.WriteAsync(new RunErrorEvent
+                {
+                    Message = errorMessage ?? "Unknown error occurred",
+                    Code = "AGENT_RUN_ERROR",
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                }, CancellationToken.None);
+            }
+
+            // Emit RunFinished
+            await channel.Writer.WriteAsync(new RunFinishedEvent
+            {
+                ThreadId = threadId,
+                RunId = runId,
+                Outcome = hasError ? AguiRunOutcome.Interrupt : AguiRunOutcome.Success,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            }, CancellationToken.None);
+
+            channel.Writer.Complete();
         }, cancellationToken);
 
-        // Read from channel and yield events
+        // Yield events from the channel
         await foreach (var evt in channel.Reader.ReadAllAsync(cancellationToken))
         {
             yield return evt;
         }
 
-        // Emit TextMessageEnd
-        yield return new TextMessageEndEvent
-        {
-            MessageId = messageId,
-            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-        };
+        await streamingTask;
+    }
 
-        if (hasError)
+    /// <summary>
+    /// Convert AG-UI tools to M.E.AI AITool format.
+    /// These are "frontend tools" - the LLM can call them, but execution happens on the client.
+    /// </summary>
+    private static IList<AITool> ConvertToAITools(IEnumerable<AguiTool> tools)
+    {
+        var aiTools = new List<AITool>();
+
+        foreach (var tool in tools)
         {
-            // Emit error event
-            yield return new RunErrorEvent
-            {
-                Message = errorMessage ?? "Unknown error occurred",
-                Code = "AGENT_RUN_ERROR",
-                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-            };
+            // Create AIFunction with name and description
+            // The stub implementation just returns a marker - actual execution happens on frontend
+            var aiFunction = AIFunctionFactory.Create(
+                method: () => $"[FRONTEND_TOOL:{tool.Name}]",
+                name: tool.Name,
+                description: tool.Description);
+
+            aiTools.Add(aiFunction);
         }
 
-        // Emit RunFinished
-        yield return new RunFinishedEvent
-        {
-            ThreadId = threadId,
-            RunId = runId,
-            Outcome = hasError ? AguiRunOutcome.Interrupt : AguiRunOutcome.Success,
-            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-        };
+        return aiTools;
     }
 
     private static List<ChatMessage> ConvertToChatMessages(AiAgent agent, IEnumerable<AguiMessage> messages)
@@ -214,17 +302,61 @@ public class RunAgentController : AgentControllerBase
         // Convert AG-UI messages
         foreach (var msg in messages)
         {
-            var role = msg.Role switch
+            if (msg.Role == AguiMessageRole.Assistant && msg.ToolCalls?.Any() == true)
             {
-                AguiMessageRole.User => ChatRole.User,
-                AguiMessageRole.Assistant => ChatRole.Assistant,
-                AguiMessageRole.System => ChatRole.System,
-                AguiMessageRole.Tool => ChatRole.Tool,
-                AguiMessageRole.Developer => ChatRole.System, // Map developer to system
-                _ => ChatRole.User
-            };
+                // Assistant message with tool calls - include FunctionCallContent
+                var contents = new List<AIContent>();
 
-            chatMessages.Add(new ChatMessage(role, msg.Content ?? string.Empty));
+                // Add text content if present
+                if (!string.IsNullOrEmpty(msg.Content))
+                {
+                    contents.Add(new TextContent(msg.Content));
+                }
+
+                // Add function call content for each tool call
+                foreach (var toolCall in msg.ToolCalls)
+                {
+                    // Parse arguments from JSON string to dictionary
+                    IDictionary<string, object?>? args = null;
+                    if (!string.IsNullOrEmpty(toolCall.Function.Arguments))
+                    {
+                        try
+                        {
+                            args = JsonSerializer.Deserialize<Dictionary<string, object?>>(toolCall.Function.Arguments);
+                        }
+                        catch
+                        {
+                            // If parsing fails, use empty dict
+                            args = new Dictionary<string, object?>();
+                        }
+                    }
+
+                    contents.Add(new FunctionCallContent(toolCall.Id, toolCall.Function.Name, args));
+                }
+
+                chatMessages.Add(new ChatMessage(ChatRole.Assistant, contents));
+            }
+            else if (msg.Role == AguiMessageRole.Tool && !string.IsNullOrEmpty(msg.ToolCallId))
+            {
+                // Tool result message - include FunctionResultContent
+                var result = new FunctionResultContent(msg.ToolCallId, msg.Content ?? string.Empty);
+                chatMessages.Add(new ChatMessage(ChatRole.Tool, [result]));
+            }
+            else
+            {
+                // Regular message
+                var role = msg.Role switch
+                {
+                    AguiMessageRole.User => ChatRole.User,
+                    AguiMessageRole.Assistant => ChatRole.Assistant,
+                    AguiMessageRole.System => ChatRole.System,
+                    AguiMessageRole.Tool => ChatRole.Tool,
+                    AguiMessageRole.Developer => ChatRole.System,
+                    _ => ChatRole.User
+                };
+
+                chatMessages.Add(new ChatMessage(role, msg.Content ?? string.Empty));
+            }
         }
 
         return chatMessages;

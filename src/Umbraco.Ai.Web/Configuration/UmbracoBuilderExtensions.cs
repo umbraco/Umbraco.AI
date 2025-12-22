@@ -91,6 +91,7 @@ public static class UmbracoBuilderExtensions
                 options.DocumentFilter<MimeTypeDocumentFilter>(apiName);
                 options.OperationFilter<UmbracoAiManagementApiBackOfficeSecurityRequirementsOperationFilter>(apiName);
                 options.OperationFilter<SwaggerOperationFilter>(apiName);
+                options.OperationFilter<SseResponseOperationFilter>(apiName);
                 
                 // Map IdOrAlias to string in OpenAPI schema for cleaner client generation
                 if (!options.SchemaGeneratorOptions.CustomTypeMappings.ContainsKey(typeof(IdOrAlias)))

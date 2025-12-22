@@ -1,6 +1,6 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaiAgentClient } from "../client/ag-ui-client.js";
+import { UaiAgentClient } from "../client/uai-agent-client.ts";
 import { FrontendToolManager } from "../client/frontend-tool-manager.js";
 import type {
   ChatMessage,

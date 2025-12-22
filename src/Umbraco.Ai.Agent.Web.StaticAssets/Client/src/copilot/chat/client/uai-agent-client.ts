@@ -214,7 +214,7 @@ export class UaiAgentClient {
   #handleEvent(event: BaseEvent) {
     switch (event.type) {
       case AguiEventType.TEXT_MESSAGE_START:
-        // Message started - nothing to do
+        this.#stateManager.startStreaming((event as BaseEvent & { messageId?: string }).messageId);
         break;
 
       case AguiEventType.TEXT_MESSAGE_CONTENT:

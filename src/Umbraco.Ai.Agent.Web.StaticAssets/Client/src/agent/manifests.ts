@@ -3,6 +3,7 @@ import { agentEntityActionManifests } from "./entity-actions/manifests.js";
 import { agentMenuManifests } from "./menu/manifests.js";
 import { agentRepositoryManifests } from "./repository/manifests.js";
 import { agentWorkspaceManifests } from "./workspace/manifests.js";
+import { manifests as agentToolsManifests } from "./tools/manifests.js";
 
 export const agentManifests = [
     ...agentCollectionManifests,
@@ -10,4 +11,5 @@ export const agentManifests = [
     ...agentMenuManifests,
     ...agentRepositoryManifests,
     ...agentWorkspaceManifests,
+    ...agentToolsManifests,
 ];

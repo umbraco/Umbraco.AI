@@ -9,13 +9,20 @@
     "generate-client": "node scripts/generate-openapi.js https://localhost:44363/umbraco/swagger/ai-agent-management/swagger.json"
   },
   "peerDependencies": {
-    "@umbraco-cms/backoffice": "^17.0.0",
-    "@umbraco-ai/core": "^17.0.0"
+    "@umbraco-ai/core": "^17.0.0",
+    "@umbraco-cms/backoffice": "^17.0.0"
+  },
+  "dependencies": {
+    "@ag-ui/client": "^0.0.42",
+    "rxjs": "^7.8.2"
+  },
+  "overrides": {
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.85.0",
-    "@umbraco-cms/backoffice": "^17.0.0",
-    "@umbraco-ai/core": "file:../../../../Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
+    "@umbraco-ai/core": "file:../../../../../../Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
+    "@umbraco-cms/backoffice": "^17.0.2",
     "chalk": "^5.6.0",
     "cross-env": "^10.0.0",
     "node-fetch": "^3.3.2",

@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Web.Api;
 using Umbraco.Ai.Agent.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
 using Umbraco.Ai.Web.Api.Management.Common.Routing;
 
 namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;

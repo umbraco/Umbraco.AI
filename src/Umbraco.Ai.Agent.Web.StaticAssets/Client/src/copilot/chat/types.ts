@@ -53,6 +53,8 @@ export interface ToolCallInfo {
   id: string;
   name: string;
   arguments: string;
+  /** Parsed arguments for frontend tool execution */
+  parsedArgs?: Record<string, unknown>;
   result?: string;
   status: ToolCallStatus;
 }

@@ -1,15 +1,12 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import { createExtensionApi } from "@umbraco-cms/backoffice/extension-api";
 import { UaiAgentClient } from "./ag-ui-client.js";
-import type { ManifestUaiAgentTool, UaiAgentToolApi } from "../../agent/tools/uai-agent-tool.extension.js";
+import { FrontendToolManager } from "./frontend-tool-manager.js";
 import type {
   ChatMessage,
   AgentState,
   InterruptInfo,
   ToolCallInfo,
-  AgUiTool,
 } from "./types.js";
 
 // Import sub-components
@@ -48,10 +45,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
   @state()
   private _currentToolCalls: ToolCallInfo[] = [];
 
-  /** Tool calls that need to be executed after RUN_FINISHED */
-  #pendingToolExecutions: Map<string, { name: string; args: Record<string, unknown> }> = new Map();
-
   #client?: UaiAgentClient;
+  #toolManager?: FrontendToolManager;
   #messagesContainer?: HTMLElement;
 
   override connectedCallback() {
@@ -75,6 +70,10 @@ export class UaiCopilotChatElement extends UmbLitElement {
   #initClient() {
     if (!this.agentId) return;
 
+    // Initialize tool manager
+    this.#toolManager = new FrontendToolManager(this);
+    const frontendTools = this.#toolManager.loadFromRegistry();
+
     this.#client = UaiAgentClient.create(
       { agentId: this.agentId },
       {
@@ -93,13 +92,10 @@ export class UaiCopilotChatElement extends UmbLitElement {
           this.#handleToolCallArgsEnd(id, args);
         },
         onToolCallEnd: (id) => {
-          // Queue for execution after RUN_FINISHED (so assistant message includes tool calls)
+          // Queue frontend tools for execution after RUN_FINISHED
           const toolCall = this._currentToolCalls.find((tc) => tc.id === id) as ToolCallInfo & { parsedArgs?: Record<string, unknown> } | undefined;
-          if (toolCall) {
-            this.#pendingToolExecutions.set(id, {
-              name: toolCall.name,
-              args: toolCall.parsedArgs ?? {}
-            });
+          if (toolCall && this.#toolManager) {
+            this.#toolManager.queueForExecution(id, toolCall.name, toolCall.parsedArgs ?? {});
           }
         },
         onRunFinished: (event) => {
@@ -122,32 +118,9 @@ export class UaiCopilotChatElement extends UmbLitElement {
       }
     );
 
-    // Load frontend tools from extension registry and register with client
-    this.#loadFrontendTools();
-  }
-
-  /**
-   * Load frontend tool definitions from the extension registry.
-   * Tools with an `api` property are frontend-executable tools.
-   */
-  #loadFrontendTools() {
-    if (!this.#client) return;
-
-    // Get all uaiAgentTool manifests that have an API (frontend tools)
-    const toolManifests = umbExtensionsRegistry.getByTypeAndFilter<
-      "uaiAgentTool",
-      ManifestUaiAgentTool
-    >("uaiAgentTool", (manifest) => manifest.api !== undefined);
-
-    // Convert manifests to AG-UI tool format
-    const tools: AgUiTool[] = toolManifests.map((manifest) => ({
-      name: manifest.meta.toolName,
-      description: manifest.meta.description ?? "",
-      parameters: manifest.meta.parameters ?? { type: "object", properties: {} },
-    }));
-
-    if (tools.length > 0) {
-      this.#client.setFrontendTools(tools);
+    // Register frontend tools with the client
+    if (frontendTools.length > 0) {
+      this.#client.setFrontendTools(frontendTools);
     }
   }
 
@@ -166,66 +139,32 @@ export class UaiCopilotChatElement extends UmbLitElement {
   }
 
   #handleToolCallArgsEnd(toolCallId: string, argsJson: string) {
-    // Update tool call with parsed arguments
-    let args: Record<string, unknown> = {};
-    try {
-      args = JSON.parse(argsJson);
-    } catch {
-      // Failed to parse tool args - use empty object
-    }
-
-    this._currentToolCalls = this._currentToolCalls.map((tc) =>
-      tc.id === toolCallId ? { ...tc, arguments: argsJson, parsedArgs: args } : tc
+    // Parse and update tool call with parsed arguments
+    const args = FrontendToolManager.parseArgs(argsJson);
+    this._currentToolCalls = FrontendToolManager.updateToolCall(
+      this._currentToolCalls,
+      toolCallId,
+      { arguments: argsJson, parsedArgs: args }
     );
-  }
-
-  /**
-   * Get the manifest for a frontend tool by name.
-   */
-  #getFrontendToolManifest(toolName: string): ManifestUaiAgentTool | undefined {
-    const manifests = umbExtensionsRegistry.getByTypeAndFilter<
-      "uaiAgentTool",
-      ManifestUaiAgentTool
-    >("uaiAgentTool", (manifest) => manifest.api !== undefined && manifest.meta.toolName === toolName);
-
-    return manifests[0];
   }
 
   /**
    * Execute a frontend tool by ID with pre-parsed arguments.
    */
   async #executeFrontendToolById(toolCallId: string, toolName: string, args: Record<string, unknown>) {
-    if (!this.#client) return;
+    if (!this.#client || !this.#toolManager) return;
 
     // Check if this is a frontend tool we can execute
-    const manifest = this.#getFrontendToolManifest(toolName);
-    if (!manifest) {
+    if (!this.#toolManager.isFrontendTool(toolName)) {
       return;
     }
 
     this._agentState = { status: "executing", currentStep: `Executing ${toolName}...` };
 
-    let resultContent: string;
-    let hasError = false;
-
-    try {
-      // Create the tool API instance
-      const api = await createExtensionApi<UaiAgentToolApi>(this, manifest);
-      if (!api) {
-        throw new Error(`Failed to create API for tool: ${toolName}`);
-      }
-
-      // Execute the tool
-      const result = await api.execute(args);
-      resultContent = typeof result === "string" ? result : JSON.stringify(result);
-    } catch (error) {
-      // Tool execution failed - send error as the result
-      hasError = true;
-      resultContent = `Error: ${error instanceof Error ? error.message : String(error)}`;
-    }
+    // Execute the tool using the manager
+    const { result: resultContent, hasError } = await this.#toolManager.execute(toolName, args);
 
     // Update the assistant message's tool call with result and status
-    // This allows custom renderers to display the result
     this._messages = this._messages.map((msg) => {
       if (msg.role === "assistant" && msg.toolCalls) {
         return {
@@ -241,7 +180,6 @@ export class UaiCopilotChatElement extends UmbLitElement {
     });
 
     // Create tool result message and add to local messages
-    // This ensures _messages stays in sync when the continuation run completes
     const toolMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "tool",
@@ -262,9 +200,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
       this.#finalizeAssistantMessage(this._streamingContent);
     }
 
-    // Get pending tool executions before clearing
-    const toolsToExecute = new Map(this.#pendingToolExecutions);
-    this.#pendingToolExecutions.clear();
+    // Get pending tool executions from the manager
+    const toolsToExecute = this.#toolManager?.consumePendingExecutions() ?? [];
 
     if (event.outcome === "interrupt" && event.interrupt) {
       this._isLoading = false;
@@ -285,10 +222,10 @@ export class UaiCopilotChatElement extends UmbLitElement {
       ];
     } else {
       // Success - check if we have frontend tools to execute
-      if (toolsToExecute.size > 0) {
+      if (toolsToExecute.length > 0) {
         // Execute frontend tools
-        for (const [toolCallId, toolInfo] of toolsToExecute) {
-          await this.#executeFrontendToolById(toolCallId, toolInfo.name, toolInfo.args);
+        for (const toolExec of toolsToExecute) {
+          await this.#executeFrontendToolById(toolExec.id, toolExec.name, toolExec.args);
         }
         // Loading state is managed by tool execution
       } else {

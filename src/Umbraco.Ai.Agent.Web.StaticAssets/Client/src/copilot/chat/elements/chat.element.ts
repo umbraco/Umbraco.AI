@@ -47,6 +47,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
   #client?: UaiAgentClient;
   #toolManager?: FrontendToolManager;
+  #frontendTools: import("../types.js").AgUiTool[] = [];
   #messagesContainer?: HTMLElement;
 
   override connectedCallback() {
@@ -72,7 +73,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
     // Initialize tool manager
     this.#toolManager = new FrontendToolManager(this);
-    const frontendTools = this.#toolManager.loadFromRegistry();
+    this.#frontendTools = this.#toolManager.loadFromRegistry();
 
     this.#client = UaiAgentClient.create(
       { agentId: this.agentId },
@@ -118,10 +119,6 @@ export class UaiCopilotChatElement extends UmbLitElement {
       }
     );
 
-    // Register frontend tools with the client
-    if (frontendTools.length > 0) {
-      this.#client.setFrontendTools(frontendTools);
-    }
   }
 
   #finalizeAssistantMessage(content: string) {
@@ -191,7 +188,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this._messages = [...this._messages, toolMessage];
 
     // Continue the conversation with updated messages
-    await this.#client.sendMessage(this._messages);
+    await this.#client.sendMessage(this._messages, this.#frontendTools);
   }
 
   async #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }) {

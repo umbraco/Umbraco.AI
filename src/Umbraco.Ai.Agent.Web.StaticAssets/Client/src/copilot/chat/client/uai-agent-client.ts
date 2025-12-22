@@ -32,7 +32,6 @@ export class UaiAgentClient {
   #transport: AgentTransport;
   #callbacks: AgentClientCallbacks;
   #stateManager: RunStateManager;
-  #frontendTools: AgUiTool[] = [];
 
   /**
    * Create a new UaiAgentClient with an injected transport.
@@ -95,24 +94,9 @@ export class UaiAgentClient {
   }
 
   /**
-   * Register frontend tools that can be called by the agent.
-   * These tools are sent to the backend when starting a run.
-   */
-  setFrontendTools(tools: AgUiTool[]) {
-    this.#frontendTools = tools;
-  }
-
-  /**
-   * Get the registered frontend tools.
-   */
-  get frontendTools(): AgUiTool[] {
-    return [...this.#frontendTools];
-  }
-
-  /**
    * Convert ChatMessage to AG-UI Message format.
    */
-  #toAgUiMessage(m: ChatMessage): Message {
+  static #toAgUiMessage(m: ChatMessage): Message {
     if (m.role === "user") {
       return {
         id: m.id,
@@ -160,11 +144,11 @@ export class UaiAgentClient {
     this.#stateManager.startRun(runId, threadId, messages);
 
     // Set messages on the agent before running
-    const convertedMessages = messages.map((m) => this.#toAgUiMessage(m));
+    const convertedMessages = messages.map((m) => UaiAgentClient.#toAgUiMessage(m));
     this.#transport.setMessages(convertedMessages);
 
-    // Merge frontend tools with any additional tools passed in
-    const allTools = [...this.#frontendTools, ...(tools ?? [])];
+    // Use tools passed in directly
+    const allTools = tools ?? [];
 
     try {
       // Subscribe to the transport's event stream
@@ -303,7 +287,7 @@ export class UaiAgentClient {
     const outcome = event.outcome;
 
     if (outcome === "interrupt") {
-      const interrupt = this.#parseInterrupt(event.interrupt);
+      const interrupt = UaiAgentClient.#parseInterrupt(event.interrupt);
       this.#stateManager.interrupt(interrupt);
       this.#callbacks.onRunFinished?.({
         outcome: "interrupt",
@@ -341,7 +325,7 @@ export class UaiAgentClient {
     this.#callbacks.onMessagesSnapshot?.(messages);
   }
 
-  #parseInterrupt(raw: unknown): InterruptInfo {
+  static #parseInterrupt(raw: unknown): InterruptInfo {
     const data = raw as Record<string, unknown>;
 
     return {
@@ -356,52 +340,10 @@ export class UaiAgentClient {
   }
 
   /**
-   * Mark a tool call as completed with result.
-   */
-  setToolCallResult(toolCallId: string, result: unknown) {
-    const resultStr = typeof result === "string" ? result : JSON.stringify(result);
-    this.#stateManager.setToolCallResult(toolCallId, resultStr, "completed");
-  }
-
-  /**
-   * Mark a tool call as failed.
-   */
-  setToolCallError(toolCallId: string, error: string) {
-    this.#stateManager.setToolCallResult(toolCallId, error, "error");
-  }
-
-  /**
    * Get a pending tool call by ID.
    */
   getToolCall(toolCallId: string): ToolCallInfo | undefined {
     return this.#stateManager.getToolCall(toolCallId);
-  }
-
-  /**
-   * Send a tool result and continue the conversation.
-   * Used after frontend tool execution.
-   * @param toolCallId The ID of the tool call this result is for
-   * @param result The result from tool execution
-   * @param currentMessages The current messages (must include the assistant message with tool calls)
-   * @param error Optional error message
-   */
-  async sendToolResult(toolCallId: string, result: unknown, currentMessages: ChatMessage[], error?: string): Promise<void> {
-    // Create a tool message with the result
-    const toolMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "tool",
-      content: typeof result === "string" ? result : JSON.stringify(result),
-      toolCallId,
-      timestamp: new Date(),
-    };
-
-    // Update the tool call status via state manager
-    const status = error ? "error" : "completed";
-    this.#stateManager.setToolCallResult(toolCallId, toolMessage.content, status);
-
-    // Send with the current messages plus the tool result
-    // currentMessages must include the assistant message with toolCalls for the LLM to understand
-    await this.sendMessage([...currentMessages, toolMessage]);
   }
 
   /**

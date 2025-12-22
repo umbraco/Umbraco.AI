@@ -276,17 +276,58 @@ public class RunAgentController : AgentControllerBase
 
         foreach (var tool in tools)
         {
-            // Create AIFunction with name and description
-            // The stub implementation just returns a marker - actual execution happens on frontend
-            var aiFunction = AIFunctionFactory.Create(
-                method: () => $"[FRONTEND_TOOL:{tool.Name}]",
-                name: tool.Name,
-                description: tool.Description);
-
-            aiTools.Add(aiFunction);
+            aiTools.Add(new FrontendToolFunction(tool));
         }
 
         return aiTools;
+    }
+
+    /// <summary>
+    /// A frontend tool function that exposes the tool's parameter schema to the LLM
+    /// but doesn't actually execute - execution happens on the client.
+    /// </summary>
+    private sealed class FrontendToolFunction : AIFunction
+    {
+        private readonly string _name;
+        private readonly string _description;
+        private readonly JsonElement _jsonSchema;
+
+        public FrontendToolFunction(AguiTool tool)
+        {
+            _name = tool.Name;
+            _description = tool.Description;
+            _jsonSchema = BuildJsonSchema(tool.Parameters);
+        }
+
+        private static JsonElement BuildJsonSchema(AguiToolParameters parameters)
+        {
+            var schemaObj = new Dictionary<string, object?>
+            {
+                ["type"] = parameters.Type,
+                ["properties"] = parameters.Properties,
+            };
+
+            if (parameters.Required?.Any() == true)
+            {
+                schemaObj["required"] = parameters.Required;
+            }
+
+            return JsonSerializer.SerializeToElement(schemaObj);
+        }
+
+        public override string Name => _name;
+
+        public override string Description => _description;
+
+        public override JsonElement JsonSchema => _jsonSchema;
+
+        protected override ValueTask<object?> InvokeCoreAsync(
+            AIFunctionArguments arguments,
+            CancellationToken cancellationToken)
+        {
+            // Frontend tool - just return a marker (not actually invoked on backend)
+            return new ValueTask<object?>($"[FRONTEND_TOOL:{_name}]");
+        }
     }
 
     private static List<ChatMessage> ConvertToChatMessages(AiAgent agent, IEnumerable<AguiMessage> messages)

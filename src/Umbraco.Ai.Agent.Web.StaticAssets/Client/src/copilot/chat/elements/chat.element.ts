@@ -94,9 +94,11 @@ export class UaiCopilotChatElement extends UmbLitElement {
         },
         onToolCallEnd: (id) => {
           // Queue frontend tools for execution after RUN_FINISHED
-          const toolCall = this._currentToolCalls.find((tc) => tc.id === id) as ToolCallInfo & { parsedArgs?: Record<string, unknown> } | undefined;
+          // Use the client's state manager which has the args - reactive state may not have updated yet
+          const toolCall = this.#client?.getToolCall(id);
           if (toolCall && this.#toolManager) {
-            this.#toolManager.queueForExecution(id, toolCall.name, toolCall.parsedArgs ?? {});
+            const parsedArgs = FrontendToolManager.parseArgs(toolCall.arguments);
+            this.#toolManager.queueForExecution(id, toolCall.name, parsedArgs);
           }
         },
         onRunFinished: (event) => {
@@ -251,7 +253,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this._isLoading = true;
     this._agentState = { status: "thinking" };
 
-    this.#client.sendMessage(this._messages);
+    this.#client.sendMessage(this._messages, this.#frontendTools);
   }
 
   #handleInterruptResponse(e: CustomEvent<string>) {
@@ -262,7 +264,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this._isLoading = true;
     this._agentState = { status: "thinking" };
 
-    this.#client.resumeRun(response);
+    this.#client.resumeRun(response, this.#frontendTools);
   }
 
   #scrollToBottom() {

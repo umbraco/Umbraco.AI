@@ -180,8 +180,10 @@ export class UaiAgentClient {
 
   /**
    * Resume a run after an interrupt with user response.
+   * @param interruptResponse The user's response to the interrupt
+   * @param tools Optional tools to include (should be the same as the original run)
    */
-  async resumeRun(interruptResponse: string): Promise<void> {
+  async resumeRun(interruptResponse: string, tools?: AguiTool[]): Promise<void> {
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
@@ -189,7 +191,7 @@ export class UaiAgentClient {
       timestamp: new Date(),
     };
 
-    await this.sendMessage([...this.#stateManager.messages, userMessage]);
+    await this.sendMessage([...this.#stateManager.messages, userMessage], tools);
   }
 
   /**

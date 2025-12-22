@@ -223,6 +223,10 @@ export class UaiCopilotChatElement extends UmbLitElement {
     } else {
       // Success - check if we have frontend tools to execute
       if (toolsToExecute.length > 0) {
+        // Signal state transition to awaiting tool execution
+        const pendingIds = toolsToExecute.map((t) => t.id);
+        this.#client?.awaitToolExecution(pendingIds);
+
         // Execute frontend tools
         for (const toolExec of toolsToExecute) {
           await this.#executeFrontendToolById(toolExec.id, toolExec.name, toolExec.args);

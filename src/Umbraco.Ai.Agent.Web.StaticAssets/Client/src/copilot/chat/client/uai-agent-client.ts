@@ -405,6 +405,15 @@ export class UaiAgentClient {
   }
 
   /**
+   * Signal that we're awaiting frontend tool execution.
+   * Called by the consumer when frontend tools need to be executed.
+   * @param pendingToolIds IDs of tools awaiting execution
+   */
+  awaitToolExecution(pendingToolIds: string[]): void {
+    this.#stateManager.awaitToolExecution(pendingToolIds);
+  }
+
+  /**
    * Reset the client state.
    * Useful when starting a new conversation.
    */

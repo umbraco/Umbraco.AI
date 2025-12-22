@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseLocalUmbracoAi)' == 'true'">
+        <ProjectReference Include="..\..\..\..\..\Umbraco.Ai\src\Umbraco.Ai.Agui\Umbraco.Ai.Agui.csproj" />
         <ProjectReference Include="..\..\..\..\..\Umbraco.Ai\src\Umbraco.Ai.Web\Umbraco.Ai.Web.csproj" />
     </ItemGroup>
 
@@ -22,5 +23,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Umbraco.Ai.Agent.Core\Umbraco.Ai.Agent.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Api\Management\Agent\Run\" />
     </ItemGroup>
 </Project>

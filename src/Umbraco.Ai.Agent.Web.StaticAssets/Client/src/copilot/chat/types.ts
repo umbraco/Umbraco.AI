@@ -86,8 +86,8 @@ export interface AgentState {
 export interface AgentClientCallbacks {
   /** Called when a text delta is received */
   onTextDelta?: (delta: string) => void;
-  /** Called when text message is complete */
-  onTextEnd?: (content: string) => void;
+  /** Called when text message is complete (content should be accumulated from deltas) */
+  onTextEnd?: () => void;
   /** Called when a tool call starts */
   onToolCallStart?: (info: ToolCallInfo) => void;
   /** Called when tool call arguments are complete */

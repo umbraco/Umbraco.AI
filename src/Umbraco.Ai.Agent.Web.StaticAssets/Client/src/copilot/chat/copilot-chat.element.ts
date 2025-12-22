@@ -74,8 +74,9 @@ export class UaiCopilotChatElement extends UmbLitElement {
         onTextDelta: (delta) => {
           this._streamingContent += delta;
         },
-        onTextEnd: (content) => {
-          this.#finalizeAssistantMessage(content);
+        onTextEnd: () => {
+          // Use the accumulated streaming content (TEXT_MESSAGE_END doesn't include content)
+          this.#finalizeAssistantMessage(this._streamingContent);
         },
         onToolCallStart: (info) => {
           this._currentToolCalls = [...this._currentToolCalls, info];

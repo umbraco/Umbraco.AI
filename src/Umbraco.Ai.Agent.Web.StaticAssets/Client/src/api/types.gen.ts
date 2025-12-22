@@ -23,6 +23,61 @@ export type AgentResponseModel = {
     isActive: boolean;
 };
 
+export type AguiContextItemModel = {
+    description: string;
+    value?: unknown;
+};
+
+export type AguiFunctionCallModel = {
+    name: string;
+    arguments: string;
+};
+
+export type AguiMessageModel = {
+    id?: string | null;
+    role: AguiMessageRoleModel;
+    content?: string | null;
+    name?: string | null;
+    toolCalls?: Array<AguiToolCallModel> | null;
+    toolCallId?: string | null;
+};
+
+export type AguiMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
+
+export type AguiResumeInfoModel = {
+    interruptId: string;
+    payload?: unknown;
+};
+
+export type AguiRunRequestModel = {
+    threadId: string;
+    runId: string;
+    messages: Array<AguiMessageModel>;
+    tools?: Array<AguiToolModel> | null;
+    state?: unknown;
+    context?: Array<AguiContextItemModel> | null;
+    resume?: AguiResumeInfoModel | null;
+    forwardedProps?: unknown;
+};
+
+export type AguiToolCallModel = {
+    id: string;
+    type: string;
+    function: AguiFunctionCallModel;
+};
+
+export type AguiToolModel = {
+    name: string;
+    description: string;
+    parameters: AguiToolParametersModel;
+};
+
+export type AguiToolParametersModel = {
+    type: string;
+    properties: unknown;
+    required?: Array<string> | null;
+};
+
 export type CreateAgentRequestModel = {
     alias: string;
     name: string;
@@ -231,3 +286,38 @@ export type UpdateAgentResponses = {
      */
     200: unknown;
 };
+
+export type RunAgentData = {
+    body?: AguiRunRequestModel;
+    path: {
+        agentIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/run';
+};
+
+export type RunAgentErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RunAgentError = RunAgentErrors[keyof RunAgentErrors];
+
+export type RunAgentResponses = {
+    /**
+     * Server-Sent Events stream
+     */
+    200: string;
+};
+
+export type RunAgentResponse = RunAgentResponses[keyof RunAgentResponses];

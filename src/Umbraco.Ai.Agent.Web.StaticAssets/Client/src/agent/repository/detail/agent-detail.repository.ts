@@ -13,6 +13,7 @@ import { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from "../../constan
  * Dispatches entity action events after successful CRUD operations.
  */
 export class UAiAgentDetailRepository extends UmbDetailRepositoryBase<UAiAgentDetailModel> {
+    
     constructor(host: UmbControllerHost) {
         super(host, UAiAgentDetailServerDataSource, UAI_AGENT_DETAIL_STORE_CONTEXT);
     }

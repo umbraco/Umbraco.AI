@@ -1,4 +1,5 @@
-import { HttpAgent, type Message } from "@ag-ui/client";
+import { type Message } from "@ag-ui/client";
+import { UaiHttpAgent } from "./uai-http-agent.js";
 import type {
   ChatMessage,
   AgentClientCallbacks,
@@ -13,8 +14,6 @@ import type {
  * Configuration for the Uai Agent Client.
  */
 export interface UaiAgentClientConfig {
-  /** Base URL for the agent API */
-  baseUrl?: string;
   /** Agent ID to connect to */
   agentId: string;
 }
@@ -24,7 +23,7 @@ export interface UaiAgentClientConfig {
  * Provides a simplified callback interface for the chat UI.
  */
 export class UaiAgentClient {
-  #agent: HttpAgent;
+  #agent: UaiHttpAgent;
   #callbacks: AgentClientCallbacks;
   #messages: ChatMessage[] = [];
   #pendingToolCalls: Map<string, ToolCallInfo> = new Map();
@@ -33,11 +32,7 @@ export class UaiAgentClient {
 
   constructor(config: UaiAgentClientConfig, callbacks: AgentClientCallbacks = {}) {
     this.#callbacks = callbacks;
-
-    const baseUrl = config.baseUrl ?? "/umbraco/ai/management/api/v1";
-    this.#agent = new HttpAgent({
-      url: `${baseUrl}/agents/${config.agentId}/stream`,
-    });
+    this.#agent = new UaiHttpAgent({ agentId: config.agentId });
   }
 
   /**
@@ -50,7 +45,7 @@ export class UaiAgentClient {
   /**
    * Get the current messages.
    */
-  get messages(): ChatMessage[] {
+  get messages(): ChatMessage[] { 
     return [...this.#messages];
   }
 
@@ -158,7 +153,7 @@ export class UaiAgentClient {
         break;
 
       case "TEXT_MESSAGE_END":
-        this.#callbacks.onTextEnd?.(event.content as string);
+        this.#callbacks.onTextEnd?.();
         break;
 
       case "TOOL_CALL_START":

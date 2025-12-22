@@ -132,3 +132,39 @@ export interface RunFinishedEvent {
   interrupt?: InterruptInfo;
   error?: string;
 }
+
+// =============================================================================
+// Run Lifecycle State Types (Phase 3)
+// =============================================================================
+
+/**
+ * Discriminated union for run lifecycle state.
+ * Enables type-safe state transitions and prepares for session resumption.
+ */
+export type RunLifecycleState =
+  | { status: 'idle' }
+  | { status: 'running'; runId: string; threadId: string }
+  | { status: 'streaming_text'; runId: string; threadId: string; messageId?: string }
+  | { status: 'awaiting_tool_execution'; runId: string; threadId: string; pendingTools: string[] }
+  | { status: 'interrupted'; runId: string; threadId: string; interrupt: InterruptInfo }
+  | { status: 'error'; runId: string; error: Error };
+
+/**
+ * Context for a run, including messages and pending tool calls.
+ * This structure supports future session resumption.
+ */
+export interface RunContext {
+  threadId: string;
+  runId: string;
+  messages: ChatMessage[];
+  pendingToolCalls: Map<string, ToolCallInfo>;
+  toolCallArgs: Map<string, string>;
+}
+
+/**
+ * Snapshot of state for session resumption.
+ */
+export interface RunSnapshot {
+  state: RunLifecycleState;
+  context?: RunContext;
+}

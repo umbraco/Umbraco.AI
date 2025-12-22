@@ -6,6 +6,22 @@ export {
   type Message as AgUiMessage,
 } from "@ag-ui/core";
 
+import type { RunAgentInput, BaseEvent, Message } from "@ag-ui/client";
+import type { Observable } from "rxjs";
+
+/**
+ * Transport interface for agent communication.
+ * Enables dependency injection for testability.
+ */
+export interface AgentTransport {
+  /** Run the agent with the given input, returning a stream of events */
+  run(input: RunAgentInput): Observable<BaseEvent>;
+  /** Set messages for the current run */
+  setMessages(messages: Message[]): void;
+  /** Abort the current run */
+  abortRun(): void;
+}
+
 /**
  * Chat message in the conversation.
  * Extends AG-UI Message with additional UI-specific fields.
@@ -116,4 +132,3 @@ export interface RunFinishedEvent {
   interrupt?: InterruptInfo;
   error?: string;
 }
-

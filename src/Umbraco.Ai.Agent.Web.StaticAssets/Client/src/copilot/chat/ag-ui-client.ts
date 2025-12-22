@@ -8,6 +8,7 @@ import type {
   InterruptInfo,
   EventType,
   AgUiTool,
+  AgentTransport,
 } from "./types.js";
 
 /**
@@ -23,16 +24,34 @@ export interface UaiAgentClientConfig {
  * Provides a simplified callback interface for the chat UI.
  */
 export class UaiAgentClient {
-  #agent: UaiHttpAgent;
+  #transport: AgentTransport;
   #callbacks: AgentClientCallbacks;
   #messages: ChatMessage[] = [];
   #pendingToolCalls: Map<string, ToolCallInfo> = new Map();
   #toolCallArgs: Map<string, string> = new Map();
   #frontendTools: AgUiTool[] = [];
 
-  constructor(config: UaiAgentClientConfig, callbacks: AgentClientCallbacks = {}) {
+  /**
+   * Create a new UaiAgentClient with an injected transport.
+   * For production use, prefer the static create() factory method.
+   * @param transport The transport layer for agent communication
+   * @param callbacks Optional callbacks for handling events
+   */
+  constructor(transport: AgentTransport, callbacks: AgentClientCallbacks = {}) {
+    this.#transport = transport;
     this.#callbacks = callbacks;
-    this.#agent = new UaiHttpAgent({ agentId: config.agentId });
+  }
+
+  /**
+   * Factory method for creating a UaiAgentClient in production.
+   * Creates the appropriate transport layer internally.
+   * @param config Configuration for the agent client
+   * @param callbacks Optional callbacks for handling events
+   * @returns A new UaiAgentClient instance
+   */
+  static create(config: UaiAgentClientConfig, callbacks?: AgentClientCallbacks): UaiAgentClient {
+    const transport = new UaiHttpAgent({ agentId: config.agentId });
+    return new UaiAgentClient(transport, callbacks);
   }
 
   /**
@@ -114,24 +133,30 @@ export class UaiAgentClient {
 
     // Set messages on the agent before running
     const convertedMessages = messages.map((m) => this.#toAgUiMessage(m));
-    this.#agent.setMessages(convertedMessages);
+    this.#transport.setMessages(convertedMessages);
 
     // Merge frontend tools with any additional tools passed in
     const allTools = [...this.#frontendTools, ...(tools ?? [])];
 
     try {
-      await this.#agent.runAgent(
-        {
-          runId: crypto.randomUUID(),
-          // Only include tools if there are any
-          ...(allTools.length > 0 && { tools: allTools }),
+      // Subscribe to the transport's event stream
+      this.#transport.run({
+        threadId: crypto.randomUUID(),
+        runId: crypto.randomUUID(),
+        messages: convertedMessages,
+        tools: allTools,
+        context: [],
+      }).subscribe({
+        next: (event) => {
+          this.#handleEvent(event as { type: string; [key: string]: unknown });
         },
-        {
-          onEvent: (params) => {
-            this.#handleEvent(params.event as { type: string; [key: string]: unknown });
-          },
-        }
-      );
+        error: (error) => {
+          this.#callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+        },
+        complete: () => {
+          // Stream completed
+        },
+      });
     } catch (error) {
       this.#callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
     }

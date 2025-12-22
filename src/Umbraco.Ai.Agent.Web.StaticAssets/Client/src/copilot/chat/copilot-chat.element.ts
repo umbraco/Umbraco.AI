@@ -75,7 +75,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
   #initClient() {
     if (!this.agentId) return;
 
-    this.#client = new UaiAgentClient(
+    this.#client = UaiAgentClient.create(
       { agentId: this.agentId },
       {
         onTextDelta: (delta) => {

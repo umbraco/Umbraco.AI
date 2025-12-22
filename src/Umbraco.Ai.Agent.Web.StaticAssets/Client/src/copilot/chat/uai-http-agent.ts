@@ -9,6 +9,7 @@ import type {
   AguiMessageRoleModel,
   AguiContextItemModel,
 } from "../../api/types.gen.js";
+import type { AgentTransport } from "./types.js";
 
 /**
  * Configuration for the UaiHttpAgent.
@@ -21,8 +22,9 @@ export interface UaiHttpAgentConfig {
 /**
  * HTTP Agent implementation that uses the hey-api generated client.
  * This provides automatic authentication via the hey-api client configuration.
+ * Implements AgentTransport for dependency injection support.
  */
-export class UaiHttpAgent extends AbstractAgent {
+export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
   #agentId: string;
   #abortController?: AbortController;
 

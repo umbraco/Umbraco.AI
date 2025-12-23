@@ -2,7 +2,16 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { loadManifestElement, loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
-import type { ManifestUaiAgentTool, UaiAgentToolElement, UaiAgentToolStatus, UaiAgentToolApi } from "../../../agent/tools/uai-agent-tool.extension.js";
+import type {
+  ManifestUaiAgentTool,
+  UaiAgentToolElement,
+  UaiAgentToolStatus,
+  UaiAgentToolApi,
+} from "../../../agent/tools/uai-agent-tool.extension.js";
+import type {
+  ManifestUaiAgentApprovalElement,
+  UaiAgentApprovalElement,
+} from "../../../agent/approval/uai-agent-approval-element.extension.js";
 import type { ToolCallInfo, ToolCallStatus } from "../types.js";
 
 // Import default tool status component
@@ -25,7 +34,10 @@ export interface ToolResultEventDetail {
  * 2. If found with `element`, instantiates the custom element
  * 3. Otherwise, renders the default tool status indicator
  *
- * Supports both backend tools (render-only) and frontend tools (with execution).
+ * Supports:
+ * - Backend tools (render-only)
+ * - Frontend tools (with execution)
+ * - HITL tools (with approval before execution)
  */
 @customElement("uai-tool-renderer")
 export class UaiToolRendererElement extends UmbLitElement {
@@ -34,6 +46,11 @@ export class UaiToolRendererElement extends UmbLitElement {
   #toolApi: UaiAgentToolApi | null = null;
   #hasExecuted = false;
   #previousToolCallStatus: ToolCallStatus | null = null;
+
+  // HITL approval state
+  #approvalElement: UaiAgentApprovalElement | null = null;
+  #respondResolver: ((value: unknown) => void) | null = null;
+  #parsedArgs: Record<string, unknown> = {};
 
   @property({ type: Object })
   toolCall!: ToolCallInfo;
@@ -46,6 +63,9 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   @state()
   private _hasCustomElement = false;
+
+  @state()
+  private _isAwaitingApproval = false;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -136,12 +156,12 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   /**
    * Execute a frontend tool and dispatch the result.
+   * For HITL tools, waits for user approval before execution.
    */
   async #executeFrontendTool() {
     if (!this.#toolApi || this.#hasExecuted) return;
 
     this.#hasExecuted = true;
-    this._status = "executing";
 
     // Parse arguments
     let args: Record<string, unknown> = {};
@@ -152,6 +172,37 @@ export class UaiToolRendererElement extends UmbLitElement {
         args = { raw: this.toolCall.arguments };
       }
     }
+    this.#parsedArgs = args;
+
+    // Check for HITL approval requirement
+    const approval = this.#manifest?.meta.approval;
+    if (approval) {
+      this._status = "awaiting_approval";
+      this._isAwaitingApproval = true;
+
+      // Handle both boolean and object forms
+      const isSimple = approval === true;
+      const approvalObj = typeof approval === "object" ? approval : null;
+      const alias = isSimple
+        ? "Uai.AgentApprovalElement.Default"
+        : (approvalObj?.elementAlias ?? "Uai.AgentApprovalElement.Default");
+      const config = isSimple
+        ? {}
+        : (approvalObj?.config ?? {});
+
+      await this.#loadApprovalElement(alias, config);
+
+      // Wait for user response
+      const userResponse = await new Promise((resolve) => {
+        this.#respondResolver = resolve;
+      });
+
+      // Include user response in args for the tool API
+      args.__approval = userResponse;
+      this._isAwaitingApproval = false;
+    }
+
+    this._status = "executing";
 
     try {
       const result = await this.#toolApi.execute(args);
@@ -197,6 +248,56 @@ export class UaiToolRendererElement extends UmbLitElement {
           composed: true,
         })
       );
+    }
+  }
+
+  /**
+   * Load an approval element by alias and set up its props.
+   */
+  async #loadApprovalElement(alias: string, config: Record<string, unknown>) {
+    // Look up approval element manifest by alias
+    const approvalManifests = umbExtensionsRegistry.getByTypeAndFilter<
+      "uaiAgentApprovalElement",
+      ManifestUaiAgentApprovalElement
+    >("uaiAgentApprovalElement", (manifest) => manifest.alias === alias);
+
+    if (approvalManifests.length === 0) {
+      console.error("Approval element not found: " + alias);
+      this.#respond({ approved: true });
+      return;
+    }
+
+    const approvalManifest = approvalManifests[0];
+
+    if (!approvalManifest.element) {
+      console.error("Approval element has no element: " + alias);
+      this.#respond({ approved: true });
+      return;
+    }
+
+    try {
+      const ElementConstructor = await loadManifestElement<UaiAgentApprovalElement>(approvalManifest.element);
+
+      if (ElementConstructor) {
+        this.#approvalElement = new ElementConstructor();
+        this.#approvalElement.args = this.#parsedArgs;
+        this.#approvalElement.config = config;
+        this.#approvalElement.respond = (result: unknown) => this.#respond(result);
+        this.requestUpdate();
+      }
+    } catch (error) {
+      console.error("Failed to load approval element " + alias + ":", error);
+      this.#respond({ approved: true });
+    }
+  }
+
+  /**
+   * Handle user response from approval element.
+   */
+  #respond(result: unknown) {
+    if (this.#respondResolver) {
+      this.#respondResolver(result);
+      this.#respondResolver = null;
     }
   }
 
@@ -260,7 +361,19 @@ export class UaiToolRendererElement extends UmbLitElement {
     return this.#manifest?.api !== undefined || this.#toolApi !== null;
   }
 
+  /**
+   * Check if this tool requires HITL approval.
+   */
+  get hasApproval(): boolean {
+    return this.#manifest?.meta.approval !== undefined;
+  }
+
   override render() {
+    // If awaiting approval and we have an approval element, render it
+    if (this._isAwaitingApproval && this.#approvalElement) {
+      return html`${this.#approvalElement}`;
+    }
+
     if (this._hasCustomElement && this.#toolElement) {
       return html`${this.#toolElement}`;
     }

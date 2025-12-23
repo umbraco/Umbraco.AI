@@ -32,6 +32,7 @@ export class UaiAgentToolStatusElement extends UmbLitElement implements UaiAgent
     const statusIcon: Record<UaiAgentToolStatus, string> = {
       pending: "icon-hourglass",
       streaming: "icon-sync",
+      awaiting_approval: "icon-hand",
       executing: "icon-sync",
       complete: "icon-check",
       error: "icon-alert",

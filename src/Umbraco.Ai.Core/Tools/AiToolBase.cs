@@ -86,6 +86,9 @@ public abstract class AiToolBase : AiToolBasic, IAiTool
 public abstract class AiToolBase<TArgs> : AiToolBasic, IAiTool
     where TArgs : class
 {
+    /// <inheritdoc />
+    public override Type ArgsType => typeof(TArgs);
+
     /// <summary>
     /// Executes the tool with strongly-typed arguments.
     /// Override this method to implement the tool's logic.

@@ -336,11 +336,13 @@ export class UaiAgentClient {
 
     return {
       id: (data.id as string) ?? crypto.randomUUID(),
+      reason: data.reason as string | undefined,
       type: (data.type as InterruptInfo["type"]) ?? "custom",
       title: (data.title as string) ?? "Action Required",
       message: (data.message as string) ?? "",
       options: data.options as InterruptInfo["options"],
       inputConfig: data.inputConfig as InterruptInfo["inputConfig"],
+      payload: data.payload as Record<string, unknown>,
       metadata: data.metadata as Record<string, unknown>,
     };
   }

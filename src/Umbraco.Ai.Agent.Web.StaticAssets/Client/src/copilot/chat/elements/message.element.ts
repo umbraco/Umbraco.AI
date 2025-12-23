@@ -1,5 +1,5 @@
 import { customElement, property, css, html } from "@umbraco-cms/backoffice/external/lit";
-import { unsafeHTML } from "@umbraco-cms/backoffice/external/lit";
+import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
 import type { ChatMessage } from "../types.js";
@@ -37,9 +37,13 @@ export class UaiCopilotMessageElement extends UmbLitElement {
       return html``;
     }
 
+    // Use repeat with key to ensure element identity across re-renders
+    // This prevents losing approval state when the message re-renders
     return html`
       <div class="tool-calls">
-        ${this.message.toolCalls.map(
+        ${repeat(
+          this.message.toolCalls,
+          (tc) => tc.id,
           (tc) => html`<uai-tool-renderer .toolCall=${tc}></uai-tool-renderer>`
         )}
       </div>

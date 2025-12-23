@@ -64,6 +64,8 @@ export interface ToolCallInfo {
  */
 export interface InterruptInfo {
   id: string;
+  /** Reason for the interrupt (e.g., "tool_execution" for frontend tools) */
+  reason?: string;
   type: "approval" | "input" | "choice" | "custom";
   title: string;
   message: string;

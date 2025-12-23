@@ -1,7 +1,8 @@
-import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state, css, html, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaiAgentClient } from "../client/uai-agent-client.ts";
 import { FrontendToolManager } from "../client/frontend-tool-manager.js";
+import type { ToolResultEventDetail } from "./tool-renderer.element.js";
 import type {
   ChatMessage,
   AgentState,
@@ -49,10 +50,16 @@ export class UaiCopilotChatElement extends UmbLitElement {
   #toolManager?: FrontendToolManager;
   #frontendTools: import("../types.js").AguiTool[] = [];
   #messagesContainer?: HTMLElement;
+  #pendingToolResults: Set<string> = new Set();
 
   override connectedCallback() {
     super.connectedCallback();
     this.#initClient();
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener("tool-result", this.#handleToolResult as EventListener);
   }
 
   override updated(changedProperties: Map<string, unknown>) {
@@ -71,8 +78,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
   #initClient() {
     if (!this.agentId) return;
 
-    // Initialize tool manager
-    this.#toolManager = new FrontendToolManager(this);
+    // Initialize tool registry manager
+    this.#toolManager = new FrontendToolManager();
     this.#frontendTools = this.#toolManager.loadFromRegistry();
 
     this.#client = UaiAgentClient.create(
@@ -92,14 +99,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
         onToolCallArgsEnd: (id, args) => {
           this.#handleToolCallArgsEnd(id, args);
         },
-        onToolCallEnd: (id) => {
-          // Queue frontend tools for execution after RUN_FINISHED
-          // Use the client's state manager which has the args - reactive state may not have updated yet
-          const toolCall = this.#client?.getToolCall(id);
-          if (toolCall && this.#toolManager) {
-            const parsedArgs = FrontendToolManager.parseArgs(toolCall.arguments);
-            this.#toolManager.queueForExecution(id, toolCall.name, parsedArgs);
-          }
+        onToolCallEnd: () => {
+          // Tool-renderer handles execution - no action needed here
         },
         onRunFinished: (event) => {
           this.#handleRunFinished(event);
@@ -121,6 +122,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
       }
     );
 
+    // Listen for tool-result events from tool-renderer
+    this.addEventListener("tool-result", this.#handleToolResult as EventListener);
   }
 
   #finalizeAssistantMessage(content: string) {
@@ -148,20 +151,14 @@ export class UaiCopilotChatElement extends UmbLitElement {
   }
 
   /**
-   * Execute a frontend tool by ID with pre-parsed arguments.
+   * Handle tool-result events from tool-renderer.
+   * Tool-renderer is the single owner of tool execution (including HITL approval).
    */
-  async #executeFrontendToolById(toolCallId: string, toolName: string, args: Record<string, unknown>) {
-    if (!this.#client || !this.#toolManager) return;
+  #handleToolResult = (event: CustomEvent<ToolResultEventDetail>) => {
+    const { toolCallId, result, error } = event.detail;
 
-    // Check if this is a frontend tool we can execute
-    if (!this.#toolManager.isFrontendTool(toolName)) {
-      return;
-    }
-
-    this._agentState = { status: "executing", currentStep: `Executing ${toolName}...` };
-
-    // Execute the tool using the manager
-    const { result: resultContent, hasError } = await this.#toolManager.execute(toolName, args);
+    // Remove from pending set
+    this.#pendingToolResults.delete(toolCallId);
 
     // Update the assistant message's tool call with result and status
     this._messages = this._messages.map((msg) => {
@@ -170,7 +167,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
           ...msg,
           toolCalls: msg.toolCalls.map((tc) =>
             tc.id === toolCallId
-              ? { ...tc, status: hasError ? "error" : "completed", result: resultContent }
+              ? { ...tc, status: error ? "error" : "completed", result: typeof result === "string" ? result : JSON.stringify(result) }
               : tc
           ),
         } as ChatMessage;
@@ -178,7 +175,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
       return msg;
     });
 
-    // Create tool result message and add to local messages
+    // Create tool result message
+    const resultContent = typeof result === "string" ? result : JSON.stringify(result);
     const toolMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "tool",
@@ -189,18 +187,19 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
     this._messages = [...this._messages, toolMessage];
 
-    // Continue the conversation with updated messages
-    await this.#client.sendMessage(this._messages, this.#frontendTools);
-  }
+    // Check if all pending tool results are in
+    if (this.#pendingToolResults.size === 0) {
+      // All tools executed - continue the conversation
+      this._agentState = { status: "thinking" };
+      this.#client?.sendMessage(this._messages, this.#frontendTools);
+    }
+  };
 
-  async #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }) {
+  #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }) {
     // First, finalize the assistant message with any tool calls
     if (this._streamingContent || this._currentToolCalls.length > 0) {
       this.#finalizeAssistantMessage(this._streamingContent);
     }
-
-    // Get pending tool executions from the manager
-    const toolsToExecute = this.#toolManager?.consumePendingExecutions() ?? [];
 
     if (event.outcome === "interrupt" && event.interrupt) {
       this._isLoading = false;
@@ -220,17 +219,18 @@ export class UaiCopilotChatElement extends UmbLitElement {
         },
       ];
     } else {
-      // Success - check if we have frontend tools to execute
-      if (toolsToExecute.length > 0) {
-        // Signal state transition to awaiting tool execution
-        const pendingIds = toolsToExecute.map((t) => t.id);
-        this.#client?.awaitToolExecution(pendingIds);
+      // Success - check if we have frontend tools that need execution
+      // Find frontend tool calls from the finalized message
+      const lastMessage = this._messages[this._messages.length - 1];
+      const frontendToolCalls = lastMessage?.toolCalls?.filter(
+        (tc) => this.#toolManager?.isFrontendTool(tc.name)
+      ) ?? [];
 
-        // Execute frontend tools
-        for (const toolExec of toolsToExecute) {
-          await this.#executeFrontendToolById(toolExec.id, toolExec.name, toolExec.args);
-        }
-        // Loading state is managed by tool execution
+      if (frontendToolCalls.length > 0) {
+        // Track pending tool results - tool-renderer will execute and dispatch events
+        this.#pendingToolResults = new Set(frontendToolCalls.map((tc) => tc.id));
+        this._agentState = { status: "executing", currentStep: "Executing tools..." };
+        // tool-renderer instances will execute and dispatch tool-result events
       } else {
         this._isLoading = false;
         this._agentState = undefined;
@@ -277,7 +277,9 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
   #renderMessages() {
     return html`
-      ${this._messages.map(
+      ${repeat(
+        this._messages,
+        (msg) => msg.id,
         (msg) => html`<uai-copilot-message .message=${msg}></uai-copilot-message>`
       )}
       ${this._streamingContent
@@ -287,7 +289,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
                 id: "streaming",
                 role: "assistant",
                 content: this._streamingContent,
-                toolCalls: this._currentToolCalls.length > 0 ? this._currentToolCalls : undefined,
+                // Don't render tool calls during streaming - wait for message finalization
+                // This prevents tool-renderer being recreated when message is finalized
                 timestamp: new Date(),
               }}
             ></uai-copilot-message>

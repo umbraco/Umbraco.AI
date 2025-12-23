@@ -39,12 +39,16 @@ export interface ToolResultEventDetail {
  * - Frontend tools (with execution)
  * - HITL tools (with approval before execution)
  */
+// Track which tool calls are being executed to prevent duplicates across instances
+const executingToolCalls = new Set<string>();
+
 @customElement("uai-tool-renderer")
 export class UaiToolRendererElement extends UmbLitElement {
   #toolElement: UaiAgentToolElement | null = null;
   #manifest: ManifestUaiAgentTool | null = null;
   #toolApi: UaiAgentToolApi | null = null;
   #hasExecuted = false;
+  #isLoadingApi = false;
   #previousToolCallStatus: ToolCallStatus | null = null;
 
   // HITL approval state
@@ -90,14 +94,8 @@ export class UaiToolRendererElement extends UmbLitElement {
 
       // Execute frontend tool when args are complete (status changes from streaming/pending)
       // and we have an API to execute
-      if (
-        statusChanged &&
-        !this.#hasExecuted &&
-        this.hasFrontendApi &&
-        this.toolCall.arguments &&
-        this.toolCall.status !== "streaming"
-      ) {
-        this.#executeFrontendTool();
+      if (statusChanged) {
+        this.#tryExecute();
       }
     }
   }
@@ -106,7 +104,7 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Look up the tool extension by toolName.
    */
   #lookupExtension() {
-    if (!this.toolCall?.name) return;
+    if (!this.toolCall?.name || this.#manifest) return;
 
     const manifests = umbExtensionsRegistry.getByTypeAndFilter<
       "uaiAgentTool",
@@ -116,6 +114,35 @@ export class UaiToolRendererElement extends UmbLitElement {
     if (manifests.length > 0) {
       this.#manifest = manifests[0];
       this.#loadElement();
+
+      // Try to execute now that manifest is available
+      // (handles case where updated() ran before manifest was found)
+      this.#tryExecute();
+    }
+  }
+
+  /**
+   * Try to execute the frontend tool if all conditions are met.
+   *
+   * Called from multiple places to handle async loading race conditions:
+   * - updated(): when toolCall property changes
+   * - #lookupExtension(): after manifest is found
+   * - #loadElement(): after API is loaded
+   *
+   * Conditions for execution:
+   * - Not already executed (within this instance)
+   * - Has a frontend API (manifest.api defined or API loaded)
+   * - Arguments are available
+   * - Not currently streaming
+   */
+  #tryExecute() {
+    if (
+      !this.#hasExecuted &&
+      this.hasFrontendApi &&
+      this.toolCall?.arguments !== undefined &&
+      this.toolCall.status !== "streaming"
+    ) {
+      this.#executeFrontendTool();
     }
   }
 
@@ -141,12 +168,17 @@ export class UaiToolRendererElement extends UmbLitElement {
     }
 
     // Load API if available (for frontend tools)
-    if (this.#manifest.api) {
+    if (this.#manifest.api && !this.#isLoadingApi) {
+      this.#isLoadingApi = true;
       try {
         const ApiConstructor = await loadManifestApi<UaiAgentToolApi>(this.#manifest.api);
 
-        if (ApiConstructor) {
+        if (ApiConstructor && !this.#toolApi) {
           this.#toolApi = new ApiConstructor(this);
+
+          // API loaded - try to execute now
+          // (handles race condition where updated() ran before API was ready)
+          this.#tryExecute();
         }
       } catch (error) {
         console.error(`Failed to load tool API for ${this.toolCall.name}:`, error);
@@ -156,10 +188,28 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   /**
    * Execute a frontend tool and dispatch the result.
-   * For HITL tools, waits for user approval before execution.
+   *
+   * For HITL tools with approval config, waits for user approval before execution.
+   * Uses a module-level Set to prevent duplicate execution across element instances.
    */
   async #executeFrontendTool() {
-    if (!this.#toolApi || this.#hasExecuted) return;
+    const toolCallId = this.toolCall?.id;
+
+    // Prevent duplicate execution across instances using module-level Set
+    if (toolCallId) {
+      if (executingToolCalls.has(toolCallId)) {
+        return;
+      }
+      executingToolCalls.add(toolCallId);
+    }
+
+    // Verify API is ready and we haven't already executed
+    if (!this.#toolApi || this.#hasExecuted) {
+      if (toolCallId) {
+        executingToolCalls.delete(toolCallId);
+      }
+      return;
+    }
 
     this.#hasExecuted = true;
 
@@ -176,11 +226,9 @@ export class UaiToolRendererElement extends UmbLitElement {
 
     // Check for HITL approval requirement
     const approval = this.#manifest?.meta.approval;
-    if (approval) {
-      this._status = "awaiting_approval";
-      this._isAwaitingApproval = true;
 
-      // Handle both boolean and object forms
+    if (approval) {
+      // Handle both boolean (simple) and object (customized) approval config
       const isSimple = approval === true;
       const approvalObj = typeof approval === "object" ? approval : null;
       const alias = isSimple
@@ -190,16 +238,26 @@ export class UaiToolRendererElement extends UmbLitElement {
         ? {}
         : (approvalObj?.config ?? {});
 
-      await this.#loadApprovalElement(alias, config);
+      // Load approval element BEFORE setting state to avoid render race condition
+      const loaded = await this.#loadApprovalElement(alias, config);
 
-      // Wait for user response
-      const userResponse = await new Promise((resolve) => {
-        this.#respondResolver = resolve;
-      });
+      if (loaded) {
+        // Set status after element is ready - triggers render with element available
+        this._status = "awaiting_approval";
+        this._isAwaitingApproval = true;
 
-      // Include user response in args for the tool API
-      args.__approval = userResponse;
-      this._isAwaitingApproval = false;
+        // Wait for user response (promise resolves when user clicks approve/deny)
+        const userResponse = await new Promise((resolve) => {
+          this.#respondResolver = resolve;
+        });
+
+        // Include user response in args for the tool API
+        args.__approval = userResponse;
+        this._isAwaitingApproval = false;
+      } else {
+        // Approval element failed to load - proceed without approval
+        console.warn(`Proceeding without approval for ${this.toolCall.name} - approval element failed to load`);
+      }
     }
 
     this._status = "executing";
@@ -248,13 +306,19 @@ export class UaiToolRendererElement extends UmbLitElement {
           composed: true,
         })
       );
+    } finally {
+      // Clean up the executing set
+      if (toolCallId) {
+        executingToolCalls.delete(toolCallId);
+      }
     }
   }
 
   /**
    * Load an approval element by alias and set up its props.
+   * @returns true if element was loaded successfully, false otherwise
    */
-  async #loadApprovalElement(alias: string, config: Record<string, unknown>) {
+  async #loadApprovalElement(alias: string, config: Record<string, unknown>): Promise<boolean> {
     // Look up approval element manifest by alias
     const approvalManifests = umbExtensionsRegistry.getByTypeAndFilter<
       "uaiAgentApprovalElement",
@@ -262,17 +326,15 @@ export class UaiToolRendererElement extends UmbLitElement {
     >("uaiAgentApprovalElement", (manifest) => manifest.alias === alias);
 
     if (approvalManifests.length === 0) {
-      console.error("Approval element not found: " + alias);
-      this.#respond({ approved: true });
-      return;
+      console.error(`Approval element not found: ${alias}`);
+      return false;
     }
 
     const approvalManifest = approvalManifests[0];
 
     if (!approvalManifest.element) {
-      console.error("Approval element has no element: " + alias);
-      this.#respond({ approved: true });
-      return;
+      console.error(`Approval element has no element: ${alias}`);
+      return false;
     }
 
     try {
@@ -282,13 +344,16 @@ export class UaiToolRendererElement extends UmbLitElement {
         this.#approvalElement = new ElementConstructor();
         this.#approvalElement.args = this.#parsedArgs;
         this.#approvalElement.config = config;
-        this.#approvalElement.respond = (result: unknown) => this.#respond(result);
-        this.requestUpdate();
+        this.#approvalElement.respond = (result: unknown) => {
+          this.#respond(result);
+        };
+        return true;
       }
     } catch (error) {
-      console.error("Failed to load approval element " + alias + ":", error);
-      this.#respond({ approved: true });
+      console.error(`Failed to load approval element ${alias}:`, error);
     }
+
+    return false;
   }
 
   /**

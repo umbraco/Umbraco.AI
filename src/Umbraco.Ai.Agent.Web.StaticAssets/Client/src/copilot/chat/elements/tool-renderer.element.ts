@@ -305,6 +305,9 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Update the internal status based on toolCall info.
    */
   #updateStatus() {
+    // Don't override status while awaiting user approval
+    if (this._isAwaitingApproval) return;
+
     // Map the toolCall status to our internal status
     const statusMap: Record<string, UaiAgentToolStatus> = {
       pending: "pending",

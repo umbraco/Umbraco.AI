@@ -100,7 +100,8 @@ public class AiChatClientFactoryTests
 
         // Assert
         client.ShouldNotBeNull();
-        client.ShouldBe(fakeChatClient);
+        // Factory wraps with FunctionInvokingChatClient; verify inner client is accessible
+        client.GetService<FakeChatClient>().ShouldBe(fakeChatClient);
     }
 
     #endregion
@@ -310,11 +311,20 @@ public class AiChatClientFactoryTests
         var wrappedClient1 = new FakeChatClient("Wrapped 1");
         var wrappedClient2 = new FakeChatClient("Wrapped 2");
 
+        // Track middleware application order
+        var applicationOrder = new List<string>();
+
         var middleware1Mock = new Mock<IAiChatMiddleware>();
-        middleware1Mock.Setup(m => m.Apply(baseChatClient)).Returns(wrappedClient1);
+        middleware1Mock
+            .Setup(m => m.Apply(It.IsAny<IChatClient>()))
+            .Callback(() => applicationOrder.Add("middleware1"))
+            .Returns(wrappedClient1);
 
         var middleware2Mock = new Mock<IAiChatMiddleware>();
-        middleware2Mock.Setup(m => m.Apply(wrappedClient1)).Returns(wrappedClient2);
+        middleware2Mock
+            .Setup(m => m.Apply(It.IsAny<IChatClient>()))
+            .Callback(() => applicationOrder.Add("middleware2"))
+            .Returns(wrappedClient2);
 
         var middlewareWithItems = new AiChatMiddlewareCollection(() => new[]
         {
@@ -344,10 +354,11 @@ public class AiChatClientFactoryTests
         // Act
         var client = await factoryWithMiddleware.CreateClientAsync(profile);
 
-        // Assert
+        // Assert - verify middleware applied in correct order and final client returned
         client.ShouldBe(wrappedClient2);
-        middleware1Mock.Verify(m => m.Apply(baseChatClient), Times.Once);
-        middleware2Mock.Verify(m => m.Apply(wrappedClient1), Times.Once);
+        applicationOrder.ShouldBe(new[] { "middleware1", "middleware2" });
+        middleware1Mock.Verify(m => m.Apply(It.IsAny<IChatClient>()), Times.Once);
+        middleware2Mock.Verify(m => m.Apply(It.IsAny<IChatClient>()), Times.Once);
     }
 
     [Fact]
@@ -390,8 +401,9 @@ public class AiChatClientFactoryTests
         // Act
         var client = await factory.CreateClientAsync(profile);
 
-        // Assert
-        client.ShouldBe(baseChatClient);
+        // Assert - factory wraps with FunctionInvokingChatClient; verify inner client is accessible
+        client.ShouldNotBeNull();
+        client.GetService<FakeChatClient>().ShouldBe(baseChatClient);
     }
 
     #endregion
@@ -437,8 +449,9 @@ public class AiChatClientFactoryTests
         // Act
         var client = await factory.CreateClientAsync(profile);
 
-        // Assert
-        client.ShouldBe(fakeChatClient);
+        // Assert - factory wraps with FunctionInvokingChatClient; verify inner client is accessible
+        client.ShouldNotBeNull();
+        client.GetService<FakeChatClient>().ShouldBe(fakeChatClient);
         // Verify that CreateClient was called on the configured capability (no settings parameter)
         configuredCapabilityMock.Verify(c => c.CreateClient(), Times.Once);
         // Verify that GetConfiguredProviderAsync was called (which handles settings resolution)

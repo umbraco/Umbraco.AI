@@ -69,7 +69,7 @@ public class FakeChatClient : IChatClient
 
     public object? GetService(Type serviceType, object? key = null)
     {
-        if (serviceType == typeof(IChatClient))
+        if (serviceType == typeof(IChatClient) || serviceType == typeof(FakeChatClient))
         {
             return this;
         }

@@ -21,11 +21,47 @@ export interface UaiAgentToolApi extends UmbApi {
  * Tool status values matching AG-UI events.
  */
 export type UaiAgentToolStatus =
-  | "pending"    // TOOL_CALL_START received
-  | "streaming"  // TOOL_CALL_ARGS being received
-  | "executing"  // Frontend tool executing (after TOOL_CALL_END)
-  | "complete"   // TOOL_CALL_RESULT received or frontend execution done
-  | "error";     // Error occurred
+  | "pending"           // TOOL_CALL_START received
+  | "streaming"         // TOOL_CALL_ARGS being received
+  | "awaiting_approval" // HITL: Waiting for user approval
+  | "executing"         // Frontend tool executing (after TOOL_CALL_END)
+  | "complete"          // TOOL_CALL_RESULT received or frontend execution done
+  | "error";            // Error occurred
+
+/**
+ * HITL approval configuration for tools.
+ *
+ * When `approval` is specified, the tool will pause before execution
+ * to show an approval UI and wait for user response.
+ *
+ * @example
+ * ```typescript
+ * // Simplest - use default approval with localized defaults
+ * approval: true
+ *
+ * // With custom config
+ * approval: {
+ *   config: {
+ *     title: "Confirm Deletion",
+ *     message: "Are you sure you want to delete this content?"
+ *   }
+ * }
+ *
+ * // With custom approval element
+ * approval: {
+ *   elementAlias: "MyProject.AgentApprovalElement.CustomPreview",
+ *   config: { showPreview: true }
+ * }
+ * ```
+ */
+export type UaiAgentToolApprovalConfig =
+  | true
+  | {
+      /** Alias of approval element (defaults to 'Uai.AgentApprovalElement.Default') */
+      elementAlias?: string;
+      /** Static config passed to the approval element */
+      config?: Record<string, unknown>;
+    };
 
 /**
  * Props interface for tool render elements.
@@ -50,12 +86,18 @@ export type UaiAgentToolElement = UmbControllerHostElement &
  * Manifest for AI Agent Tools.
  *
  * Tools can be called by AI agents and optionally render custom UI (Generative UI).
- * - `api` - Required: The tool execution logic
+ * - `api` - Optional: The tool execution logic (required for frontend tools)
  * - `element` - Optional: Custom UI element (defaults to tool-status indicator via kind)
+ * - `approval` - Optional: HITL approval configuration
+ *
+ * Tool types:
+ * - Frontend tool (has `api`): Executes locally in the browser
+ * - Backend tool (no `api`): Render-only, execution happens on server
+ * - HITL tool (has `approval`): Pauses for user approval before execution
  *
  * @example
  * ```typescript
- * // Tool with default status indicator
+ * // Auto-execute frontend tool
  * {
  *   type: 'uaiAgentTool',
  *   kind: 'default',
@@ -64,14 +106,30 @@ export type UaiAgentToolElement = UmbControllerHostElement &
  *   api: () => import('./search-documents.api.js')
  * }
  *
- * // Tool with custom Generative UI
+ * // HITL frontend tool with approval
  * {
  *   type: 'uaiAgentTool',
  *   kind: 'default',
- *   alias: 'Uai.AgentTool.ShowWeather',
- *   meta: { toolName: 'show_weather' },
- *   api: () => import('./weather.api.js'),
- *   element: () => import('./weather.element.js')  // Overrides default
+ *   alias: 'Uai.AgentTool.DeleteContent',
+ *   meta: {
+ *     toolName: 'delete_content',
+ *     approval: true  // Uses default approval element
+ *   },
+ *   api: () => import('./delete-content.api.js')
+ * }
+ *
+ * // Backend tool with custom UI (no api)
+ * {
+ *   type: 'uaiAgentTool',
+ *   kind: 'default',
+ *   alias: 'Uai.AgentTool.PublishContent',
+ *   meta: {
+ *     toolName: 'publish_content',
+ *     approval: {
+ *       config: { title: 'Confirm Publication' }
+ *     }
+ *   }
+ *   // No api = backend tool, frontend just provides UI
  * }
  * ```
  */
@@ -90,6 +148,13 @@ export interface ManifestUaiAgentTool
     parameters?: Record<string, unknown>;
     /** Icon to display with the tool */
     icon?: string;
+    /**
+     * HITL approval configuration.
+     * When specified, tool pauses for user approval before execution.
+     * - `true` - Use default approval element with localized defaults
+     * - `{ elementAlias?, config? }` - Custom approval element and/or config
+     */
+    approval?: UaiAgentToolApprovalConfig;
   };
 }
 

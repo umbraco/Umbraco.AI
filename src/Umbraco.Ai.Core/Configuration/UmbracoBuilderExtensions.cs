@@ -6,6 +6,7 @@ using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.Tools;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;
@@ -40,6 +41,13 @@ public static partial class UmbracoBuilderExtensions
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add middleware
         _ = builder.AiChatMiddleware();
         _ = builder.AiEmbeddingMiddleware();
+
+        // Tool infrastructure - auto-discover tools via [AiTool] attribute
+        builder.AiTools()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiTool, AiToolAttribute>(cache: true));
+
+        // Function factory for creating MEAI AIFunction instances
+        services.AddSingleton<IAiFunctionFactory, AiFunctionFactory>();
 
         // Settings resolution
         services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();

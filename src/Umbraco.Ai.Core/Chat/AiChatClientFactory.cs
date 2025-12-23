@@ -34,7 +34,12 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
 
     private IChatClient ApplyMiddleware(IChatClient client)
     {
-        // Apply middleware in collection order (controlled by AiChatMiddlewareCollectionBuilder)
+        // Add function invocation support (no-op when ChatOptions.Tools is empty)
+        client = client.AsBuilder()
+            .UseFunctionInvocation()
+            .Build();
+
+        // Apply custom middleware in collection order (controlled by AiChatMiddlewareCollectionBuilder)
         foreach (var middleware in _middleware)
         {
             client = middleware.Apply(client);

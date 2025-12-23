@@ -1,5 +1,6 @@
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Embeddings;
+using Umbraco.Ai.Core.Tools;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;
@@ -42,4 +43,20 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AiEmbeddingMiddlewareCollectionBuilder AiEmbeddingMiddleware(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AiEmbeddingMiddlewareCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI tools collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI tools collection builder.</returns>
+    /// <remarks>
+    /// Use this to add or exclude AI tools. Tools are auto-discovered via the [AiTool] attribute.
+    /// <code>
+    /// builder.AiTools()
+    ///     .Add&lt;CustomTool&gt;()
+    ///     .Exclude&lt;SomeUnwantedTool&gt;();
+    /// </code>
+    /// </remarks>
+    public static AiToolCollectionBuilder AiTools(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AiToolCollectionBuilder>();
 }

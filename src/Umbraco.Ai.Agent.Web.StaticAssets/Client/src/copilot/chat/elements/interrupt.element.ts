@@ -1,134 +1,201 @@
 import { customElement, property, state, css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { InterruptInfo, InterruptOption } from "../types.js";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import { loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
+import type { ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
+import type {
+  ManifestUaiAgentApprovalElement,
+  UaiAgentApprovalElement,
+} from "../../../agent/approval/uai-agent-approval-element.extension.js";
+import type { InterruptInfo } from "../types.js";
 
 /**
  * Interrupt UI component.
  * Renders approval/input/choice UI for human-in-the-loop interactions.
  *
+ * Uses the uaiAgentApprovalElement extension system when available.
+ * Falls back to built-in approval elements based on interrupt type.
+ *
  * @fires respond - Dispatched when user responds to the interrupt
  */
 @customElement("uai-copilot-interrupt")
 export class UaiCopilotInterruptElement extends UmbLitElement {
+  #approvalElement: UaiAgentApprovalElement | null = null;
+
   @property({ type: Object })
   interrupt?: InterruptInfo;
 
   @state()
-  private _inputValue = "";
+  private _isLoading = true;
 
-  #handleResponse(value: string) {
+  override updated(changedProperties: Map<string, unknown>) {
+    super.updated(changedProperties);
+
+    if (changedProperties.has("interrupt") && this.interrupt) {
+      this.#loadApprovalElement();
+    }
+  }
+
+  /**
+   * Load the appropriate approval element based on the interrupt.
+   * Priority:
+   * 1. Tool manifest with approval config (if toolName in payload)
+   * 2. Default approval element based on interrupt type
+   */
+  async #loadApprovalElement() {
+    if (!this.interrupt) return;
+
+    this._isLoading = true;
+    this.#approvalElement = null;
+
+    // Determine which approval element to use
+    let alias = "Uai.AgentApprovalElement.Default";
+    let config: Record<string, unknown> = {};
+
+    // Check if interrupt payload has a toolName - if so, look up tool manifest
+    const toolName = this.interrupt.payload?.toolName as string | undefined;
+
+    if (toolName) {
+      // Try to find a UaiAgentTool manifest for this tool
+      const toolManifests = umbExtensionsRegistry.getByTypeAndFilter<
+        "uaiAgentTool",
+        ManifestUaiAgentTool
+      >("uaiAgentTool", (m) => m.meta.toolName === toolName);
+
+      if (toolManifests.length > 0 && toolManifests[0].meta.approval) {
+        const approval = toolManifests[0].meta.approval;
+        const isSimple = approval === true;
+        const approvalObj = typeof approval === "object" ? approval : null;
+        alias = isSimple
+          ? "Uai.AgentApprovalElement.Default"
+          : (approvalObj?.elementAlias ?? "Uai.AgentApprovalElement.Default");
+        config = isSimple
+          ? {}
+          : (approvalObj?.config ?? {});
+      }
+    } else {
+      // Map interrupt type to default approval element
+      switch (this.interrupt.type) {
+        case "input":
+          alias = "Uai.AgentApprovalElement.Input";
+          config = {
+            prompt: this.interrupt.title,
+            placeholder: this.interrupt.inputConfig?.placeholder,
+            multiline: this.interrupt.inputConfig?.multiline,
+          };
+          break;
+        case "choice":
+          alias = "Uai.AgentApprovalElement.Choice";
+          config = {
+            title: this.interrupt.title,
+            message: this.interrupt.message,
+            options: this.interrupt.options?.map((opt) => ({
+              value: opt.value,
+              label: opt.label,
+              variant: opt.variant,
+            })),
+          };
+          break;
+        case "approval":
+        default:
+          alias = "Uai.AgentApprovalElement.Default";
+          config = {
+            title: this.interrupt.title,
+            message: this.interrupt.message,
+          };
+          // Map options to approve/deny labels if provided
+          if (this.interrupt.options?.length) {
+            const approveOpt = this.interrupt.options.find(
+              (o) => o.variant === "positive" || o.value === "yes"
+            );
+            const denyOpt = this.interrupt.options.find(
+              (o) => o.variant === "danger" || o.value === "no"
+            );
+            if (approveOpt) config.approveLabel = approveOpt.label;
+            if (denyOpt) config.denyLabel = denyOpt.label;
+          }
+          break;
+      }
+    }
+
+    // Look up approval element manifest by alias
+    const approvalManifests = umbExtensionsRegistry.getByTypeAndFilter<
+      "uaiAgentApprovalElement",
+      ManifestUaiAgentApprovalElement
+    >("uaiAgentApprovalElement", (manifest) => manifest.alias === alias);
+
+    if (approvalManifests.length === 0) {
+      console.error("Approval element not found: " + alias);
+      this._isLoading = false;
+      return;
+    }
+
+    const approvalManifest = approvalManifests[0];
+
+    if (!approvalManifest.element) {
+      console.error("Approval element has no element: " + alias);
+      this._isLoading = false;
+      return;
+    }
+
+    try {
+      const ElementConstructor = await loadManifestElement<UaiAgentApprovalElement>(approvalManifest.element);
+
+      if (ElementConstructor) {
+        this.#approvalElement = new ElementConstructor();
+
+        // Build args from interrupt payload or legacy fields
+        const args: Record<string, unknown> = this.interrupt.payload ?? {
+          title: this.interrupt.title,
+          message: this.interrupt.message,
+          options: this.interrupt.options,
+        };
+
+        this.#approvalElement.args = args;
+        this.#approvalElement.config = config;
+        this.#approvalElement.respond = (result: unknown) => this.#handleResponse(result);
+      }
+    } catch (error) {
+      console.error("Failed to load approval element " + alias + ":", error);
+    }
+
+    this._isLoading = false;
+    this.requestUpdate();
+  }
+
+  #handleResponse(value: unknown) {
+    // Convert response to string for backward compatibility with existing event handlers
+    let responseString: string;
+
+    if (typeof value === "string") {
+      responseString = value;
+    } else if (typeof value === "object" && value !== null) {
+      // Handle standard approval response formats
+      const obj = value as Record<string, unknown>;
+      if (obj.approved === true) {
+        responseString = "yes";
+      } else if (obj.approved === false) {
+        responseString = "no";
+      } else if (obj.input !== undefined) {
+        responseString = String(obj.input);
+      } else if (obj.choice !== undefined) {
+        responseString = String(obj.choice);
+      } else if (obj.cancelled === true) {
+        responseString = "__cancelled__";
+      } else {
+        responseString = JSON.stringify(value);
+      }
+    } else {
+      responseString = String(value);
+    }
+
     this.dispatchEvent(
       new CustomEvent("respond", {
-        detail: value,
+        detail: responseString,
         bubbles: true,
         composed: true,
       })
     );
-  }
-
-  #handleInputKeydown(e: KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      this.#submitInput();
-    }
-  }
-
-  #submitInput() {
-    if (!this._inputValue.trim()) return;
-    this.#handleResponse(this._inputValue);
-    this._inputValue = "";
-  }
-
-  #renderApproval() {
-    const options = this.interrupt?.options ?? [
-      { value: "yes", label: "Yes", variant: "positive" as const },
-      { value: "no", label: "No", variant: "default" as const },
-    ];
-
-    return html`
-      <div class="interrupt-actions">
-        ${options.map((opt) => this.#renderButton(opt))}
-      </div>
-    `;
-  }
-
-  #renderButton(opt: InterruptOption) {
-    const look = opt.variant === "danger" ? "primary" : "secondary";
-    const color = opt.variant === "danger" ? "danger" : opt.variant === "positive" ? "positive" : "default";
-
-    return html`
-      <uui-button
-        look=${look}
-        color=${color}
-        @click=${() => this.#handleResponse(opt.value)}
-      >
-        ${opt.label}
-      </uui-button>
-    `;
-  }
-
-  #renderInput() {
-    const config = this.interrupt?.inputConfig;
-
-    if (config?.multiline) {
-      return html`
-        <div class="interrupt-input">
-          <uui-textarea
-            .value=${this._inputValue}
-            placeholder=${config.placeholder ?? "Enter your response..."}
-            @input=${(e: Event) => (this._inputValue = (e.target as HTMLTextAreaElement).value)}
-          ></uui-textarea>
-          <uui-button look="primary" @click=${this.#submitInput}>
-            Submit
-          </uui-button>
-        </div>
-      `;
-    }
-
-    return html`
-      <div class="interrupt-input">
-        <uui-input
-          .value=${this._inputValue}
-          placeholder=${config?.placeholder ?? "Enter your response..."}
-          @input=${(e: Event) => (this._inputValue = (e.target as HTMLInputElement).value)}
-          @keydown=${this.#handleInputKeydown}
-        ></uui-input>
-        <uui-button look="primary" @click=${this.#submitInput}>
-          Submit
-        </uui-button>
-      </div>
-    `;
-  }
-
-  #renderChoice() {
-    return html`
-      <div class="interrupt-choices">
-        ${this.interrupt?.options?.map(
-          (opt) => html`
-            <uui-button look="outline" @click=${() => this.#handleResponse(opt.value)}>
-              ${opt.label}
-            </uui-button>
-          `
-        )}
-      </div>
-    `;
-  }
-
-  #renderContent() {
-    switch (this.interrupt?.type) {
-      case "approval":
-        return this.#renderApproval();
-      case "input":
-        return this.#renderInput();
-      case "choice":
-        return this.#renderChoice();
-      case "custom":
-      default:
-        // For custom types, render options if available, otherwise input
-        return this.interrupt?.options?.length
-          ? this.#renderChoice()
-          : this.#renderInput();
-    }
   }
 
   override render() {
@@ -136,6 +203,25 @@ export class UaiCopilotInterruptElement extends UmbLitElement {
       return nothing;
     }
 
+    if (this._isLoading) {
+      return html`
+        <div class="interrupt-card">
+          <div class="loading">
+            <uui-loader></uui-loader>
+          </div>
+        </div>
+      `;
+    }
+
+    if (this.#approvalElement) {
+      return html`
+        <div class="interrupt-card">
+          ${this.#approvalElement}
+        </div>
+      `;
+    }
+
+    // Fallback if no approval element was loaded
     return html`
       <div class="interrupt-card">
         <div class="interrupt-header">
@@ -143,7 +229,14 @@ export class UaiCopilotInterruptElement extends UmbLitElement {
           <span>${this.interrupt.title}</span>
         </div>
         <div class="interrupt-message">${this.interrupt.message}</div>
-        ${this.#renderContent()}
+        <div class="interrupt-actions">
+          <uui-button look="primary" color="positive" @click=${() => this.#handleResponse({ approved: true })}>
+            Approve
+          </uui-button>
+          <uui-button look="secondary" @click=${() => this.#handleResponse({ approved: false })}>
+            Deny
+          </uui-button>
+        </div>
       </div>
     `;
   }
@@ -181,24 +274,10 @@ export class UaiCopilotInterruptElement extends UmbLitElement {
       flex-wrap: wrap;
     }
 
-    .interrupt-input {
+    .loading {
       display: flex;
-      gap: var(--uui-size-space-2);
-    }
-
-    .interrupt-input uui-input,
-    .interrupt-input uui-textarea {
-      flex: 1;
-    }
-
-    .interrupt-choices {
-      display: flex;
-      flex-direction: column;
-      gap: var(--uui-size-space-2);
-    }
-
-    .interrupt-choices uui-button {
-      width: 100%;
+      justify-content: center;
+      padding: var(--uui-size-space-4);
     }
   `;
 }

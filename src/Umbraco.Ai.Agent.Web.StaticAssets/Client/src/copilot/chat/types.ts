@@ -72,6 +72,8 @@ export interface InterruptInfo {
     placeholder?: string;
     multiline?: boolean;
   };
+  /** AG-UI interrupt payload - contains tool-specific data from server */
+  payload?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 }
 

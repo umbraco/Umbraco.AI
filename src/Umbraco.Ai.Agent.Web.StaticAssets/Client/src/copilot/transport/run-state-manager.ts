@@ -1,11 +1,5 @@
-import type {
-  RunLifecycleState,
-  RunContext,
-  RunSnapshot,
-  ChatMessage,
-  ToolCallInfo,
-  InterruptInfo,
-} from "../core/models/chat.types.js";
+import type { ChatMessage, ToolCallInfo, InterruptInfo } from "../core/types.js";
+import type { RunLifecycleState, RunContext, RunSnapshot } from "./types.js";
 
 /**
  * Callback type for state change listeners.

@@ -9,7 +9,7 @@ import type {
   AguiMessageRoleModel,
   AguiContextItemModel,
 } from "../../api/types.gen.js";
-import type { AgentTransport } from "../core/models/chat.types.js";
+import type { AgentTransport } from "./types.js";
 
 /**
  * Configuration for the UaiHttpAgent.

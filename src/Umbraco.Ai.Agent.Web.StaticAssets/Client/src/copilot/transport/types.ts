@@ -1,3 +1,7 @@
+/**
+ * Transport layer types for AG-UI protocol communication.
+ */
+
 // Re-export AG-UI types for convenience
 export {
   EventType,
@@ -8,6 +12,7 @@ export {
 
 import type { RunAgentInput, BaseEvent, Message } from "@ag-ui/client";
 import type { Observable } from "rxjs";
+import type { ChatMessage, ToolCallInfo, InterruptInfo, AgentState } from "../core/types.js";
 
 /**
  * Transport interface for agent communication.
@@ -20,86 +25,6 @@ export interface AgentTransport {
   setMessages(messages: Message[]): void;
   /** Abort the current run */
   abortRun(): void;
-}
-
-/**
- * Chat message in the conversation.
- * Extends AG-UI Message with additional UI-specific fields.
- */
-export interface ChatMessage {
-  id: string;
-  role: "user" | "assistant" | "tool";
-  content: string;
-  toolCalls?: ToolCallInfo[];
-  /** Required for tool role messages - the ID of the tool call this is responding to */
-  toolCallId?: string;
-  timestamp: Date;
-}
-
-/**
- * Tool call status matching AG-UI events.
- */
-export type ToolCallStatus =
-  | "pending"    // TOOL_CALL_START received
-  | "streaming"  // TOOL_CALL_ARGS being received
-  | "executing"  // Frontend tool executing (after TOOL_CALL_END)
-  | "completed"  // TOOL_CALL_RESULT received or frontend execution done
-  | "error";     // Error occurred
-
-/**
- * Information about a tool call.
- */
-export interface ToolCallInfo {
-  id: string;
-  name: string;
-  arguments: string;
-  /** Parsed arguments for frontend tool execution */
-  parsedArgs?: Record<string, unknown>;
-  result?: string;
-  status: ToolCallStatus;
-}
-
-/**
- * Interrupt information for human-in-the-loop interactions.
- */
-export interface InterruptInfo {
-  id: string;
-  /** Reason for the interrupt (e.g., "tool_execution" for frontend tools) */
-  reason?: string;
-  type: "approval" | "input" | "choice" | "custom";
-  title: string;
-  message: string;
-  options?: InterruptOption[];
-  inputConfig?: {
-    placeholder?: string;
-    multiline?: boolean;
-  };
-  /** AG-UI interrupt payload - contains tool-specific data from server */
-  payload?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-}
-
-/**
- * Option for interrupt choices.
- */
-export interface InterruptOption {
-  value: string;
-  label: string;
-  variant?: "positive" | "danger" | "default";
-}
-
-/**
- * Agent state for displaying progress and status.
- */
-export interface AgentState {
-  status: "idle" | "thinking" | "executing" | "awaiting_input";
-  currentStep?: string;
-  progress?: {
-    current: number;
-    total: number;
-    label?: string;
-  };
-  custom?: Record<string, unknown>;
 }
 
 /**
@@ -140,7 +65,7 @@ export interface RunFinishedEvent {
 }
 
 // =============================================================================
-// Run Lifecycle State Types (Phase 3)
+// Run Lifecycle State Types
 // =============================================================================
 
 /**
@@ -174,3 +99,106 @@ export interface RunSnapshot {
   state: RunLifecycleState;
   context?: RunContext;
 }
+
+// =============================================================================
+// AG-UI Event Types (for type-safe event handling)
+// =============================================================================
+
+import { EventType as AguiEventType } from "@ag-ui/client";
+
+/** Base event type with common fields */
+interface TypedBaseEvent {
+  type: AguiEventType;
+  rawEvent?: unknown;
+}
+
+/** TEXT_MESSAGE_START event */
+export interface TextMessageStartEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.TEXT_MESSAGE_START;
+  messageId?: string;
+}
+
+/** TEXT_MESSAGE_CONTENT event - text delta */
+export interface TextMessageContentEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.TEXT_MESSAGE_CONTENT;
+  delta: string;
+}
+
+/** TEXT_MESSAGE_END event */
+export interface TextMessageEndEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.TEXT_MESSAGE_END;
+}
+
+/** TOOL_CALL_START event */
+export interface ToolCallStartEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.TOOL_CALL_START;
+  toolCallId: string;
+  toolCallName: string;
+}
+
+/** TOOL_CALL_ARGS event - argument delta */
+export interface ToolCallArgsEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.TOOL_CALL_ARGS;
+  toolCallId: string;
+  delta: string;
+}
+
+/** TOOL_CALL_END event */
+export interface ToolCallEndEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.TOOL_CALL_END;
+  toolCallId: string;
+}
+
+/** TOOL_CALL_RESULT event - backend tool execution result */
+export interface ToolCallResultEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.TOOL_CALL_RESULT;
+  toolCallId: string;
+  content: string;
+}
+
+/** RUN_FINISHED event */
+export interface RunFinishedAguiEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.RUN_FINISHED;
+  outcome: string;
+  interrupt?: unknown;
+  error?: string;
+}
+
+/** RUN_ERROR event */
+export interface RunErrorEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.RUN_ERROR;
+  message: string;
+}
+
+/** STATE_SNAPSHOT event */
+export interface StateSnapshotEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.STATE_SNAPSHOT;
+  state: AgentState;
+}
+
+/** STATE_DELTA event */
+export interface StateDeltaEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.STATE_DELTA;
+  delta: Partial<AgentState>;
+}
+
+/** MESSAGES_SNAPSHOT event */
+export interface MessagesSnapshotEvent extends TypedBaseEvent {
+  type: typeof AguiEventType.MESSAGES_SNAPSHOT;
+  messages: unknown[];
+}
+
+/** Union of all typed AG-UI events */
+export type AguiTypedEvent =
+  | TextMessageStartEvent
+  | TextMessageContentEvent
+  | TextMessageEndEvent
+  | ToolCallStartEvent
+  | ToolCallArgsEvent
+  | ToolCallEndEvent
+  | ToolCallResultEvent
+  | RunFinishedAguiEvent
+  | RunErrorEvent
+  | StateSnapshotEvent
+  | StateDeltaEvent
+  | MessagesSnapshotEvent;

@@ -5,16 +5,24 @@ import {
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import { RunStateManager, type StateChangeListener } from "./run-state-manager.js";
+import type { ChatMessage, ToolCallInfo, InterruptInfo } from "../core/types.js";
 import type {
-  ChatMessage,
   AgentClientCallbacks,
-  ToolCallInfo,
-  AgentState,
-  InterruptInfo,
   AguiTool,
   AgentTransport,
   RunLifecycleState,
-} from "../core/models/chat.types.js";
+  TextMessageStartEvent,
+  TextMessageContentEvent,
+  ToolCallStartEvent,
+  ToolCallArgsEvent,
+  ToolCallEndEvent,
+  ToolCallResultEvent,
+  RunFinishedAguiEvent,
+  RunErrorEvent,
+  StateSnapshotEvent,
+  StateDeltaEvent,
+  MessagesSnapshotEvent,
+} from "./types.js";
 
 /**
  * Configuration for the Uai Agent Client.
@@ -58,7 +66,9 @@ export class UaiAgentClient {
   }
 
   /**
-   * Update the callbacks.
+   * Update the callbacks dynamically.
+   * Available for external use to change event handlers after construction.
+   * @param callbacks The new set of callbacks to use
    */
   setCallbacks(callbacks: AgentClientCallbacks) {
     this.#callbacks = callbacks;
@@ -196,15 +206,16 @@ export class UaiAgentClient {
 
   /**
    * Handle incoming AG-UI events.
+   * Uses typed event interfaces for type safety.
    */
   #handleEvent(event: BaseEvent) {
     switch (event.type) {
       case AguiEventType.TEXT_MESSAGE_START:
-        this.#stateManager.startStreaming((event as BaseEvent & { messageId?: string }).messageId);
+        this.#stateManager.startStreaming((event as TextMessageStartEvent).messageId);
         break;
 
       case AguiEventType.TEXT_MESSAGE_CONTENT:
-        this.#callbacks.onTextDelta?.((event as BaseEvent & { delta: string }).delta);
+        this.#callbacks.onTextDelta?.((event as TextMessageContentEvent).delta);
         break;
 
       case AguiEventType.TEXT_MESSAGE_END:
@@ -213,47 +224,47 @@ export class UaiAgentClient {
         break;
 
       case AguiEventType.TOOL_CALL_START:
-        this.#handleToolCallStart(event as BaseEvent & { toolCallId: string; toolCallName: string });
+        this.#handleToolCallStart(event as ToolCallStartEvent);
         break;
 
       case AguiEventType.TOOL_CALL_ARGS:
-        this.#handleToolCallArgs(event as BaseEvent & { toolCallId: string; delta: string });
+        this.#handleToolCallArgs(event as ToolCallArgsEvent);
         break;
 
       case AguiEventType.TOOL_CALL_END:
-        this.#handleToolCallEnd(event as BaseEvent & { toolCallId: string });
+        this.#handleToolCallEnd(event as ToolCallEndEvent);
         break;
 
       case AguiEventType.TOOL_CALL_RESULT:
-        this.#handleToolCallResult(event as BaseEvent & { toolCallId: string; content: string });
+        this.#handleToolCallResult(event as ToolCallResultEvent);
         break;
 
       case AguiEventType.RUN_FINISHED:
-        this.#handleRunFinished(event as BaseEvent & { outcome: string; interrupt?: unknown; error?: string });
+        this.#handleRunFinished(event as RunFinishedAguiEvent);
         break;
 
       case AguiEventType.RUN_ERROR: {
-        const err = new Error((event as BaseEvent & { message: string }).message);
+        const err = new Error((event as RunErrorEvent).message);
         this.#stateManager.setError(err);
         this.#callbacks.onError?.(err);
         break;
       }
 
       case AguiEventType.STATE_SNAPSHOT:
-        this.#callbacks.onStateSnapshot?.((event as BaseEvent & { state: AgentState }).state);
+        this.#callbacks.onStateSnapshot?.((event as StateSnapshotEvent).state);
         break;
 
       case AguiEventType.STATE_DELTA:
-        this.#callbacks.onStateDelta?.((event as BaseEvent & { delta: Partial<AgentState> }).delta);
+        this.#callbacks.onStateDelta?.((event as StateDeltaEvent).delta);
         break;
 
       case AguiEventType.MESSAGES_SNAPSHOT:
-        this.#handleMessagesSnapshot(event as BaseEvent & { messages: unknown[] });
+        this.#handleMessagesSnapshot(event as MessagesSnapshotEvent);
         break;
     }
   }
 
-  #handleToolCallStart(event: BaseEvent & { toolCallId: string; toolCallName: string }) {
+  #handleToolCallStart(event: ToolCallStartEvent) {
     const toolCall: ToolCallInfo = {
       id: event.toolCallId,
       name: event.toolCallName,
@@ -265,11 +276,11 @@ export class UaiAgentClient {
     this.#callbacks.onToolCallStart?.(toolCall);
   }
 
-  #handleToolCallArgs(event: BaseEvent & { toolCallId: string; delta: string }) {
+  #handleToolCallArgs(event: ToolCallArgsEvent) {
     this.#stateManager.appendToolCallArgs(event.toolCallId, event.delta);
   }
 
-  #handleToolCallEnd(event: BaseEvent & { toolCallId: string }) {
+  #handleToolCallEnd(event: ToolCallEndEvent) {
     const toolCallId = event.toolCallId;
     const args = this.#stateManager.finalizeToolCallArgs(toolCallId);
 
@@ -281,7 +292,7 @@ export class UaiAgentClient {
     }
   }
 
-  #handleToolCallResult(event: BaseEvent & { toolCallId: string; content: string }) {
+  #handleToolCallResult(event: ToolCallResultEvent) {
     const toolCallId = event.toolCallId;
     const content = event.content;
 
@@ -289,7 +300,7 @@ export class UaiAgentClient {
     this.#callbacks.onToolCallResult?.(toolCallId, content);
   }
 
-  #handleRunFinished(event: BaseEvent & { outcome: string; interrupt?: unknown; error?: string }) {
+  #handleRunFinished(event: RunFinishedAguiEvent) {
     const outcome = event.outcome;
 
     if (outcome === "interrupt") {
@@ -313,7 +324,7 @@ export class UaiAgentClient {
     }
   }
 
-  #handleMessagesSnapshot(event: BaseEvent & { messages: unknown[] }) {
+  #handleMessagesSnapshot(event: MessagesSnapshotEvent) {
     const rawMessages = event.messages as Array<{
       id: string;
       role: string;

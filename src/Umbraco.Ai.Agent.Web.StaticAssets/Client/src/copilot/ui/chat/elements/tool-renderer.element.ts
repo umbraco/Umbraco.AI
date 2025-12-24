@@ -12,7 +12,8 @@ import type {
   ManifestUaiAgentApprovalElement,
   UaiAgentApprovalElement,
 } from "../../../../agent/approval/uai-agent-approval-element.extension.js";
-import type { ToolCallInfo, ToolCallStatus } from "../../../core/models/chat.types.js";
+import type { ToolCallInfo, ToolCallStatus } from "../../../core/types.js";
+import { safeParseJson } from "../../../core/utils/json.js";
 import { UMB_COPILOT_TOOL_BUS_CONTEXT } from "../../../core/copilot.context.js";
 import type { CopilotToolBus } from "../../../core/services/copilot-tool-bus.js";
 
@@ -32,9 +33,6 @@ import "../../../../agent/tools/tool-status.element.js";
  * - Frontend tools (with execution)
  * - HITL tools (with approval before execution)
  */
-// Track which tool calls are being executed to prevent duplicates across instances
-const executingToolCalls = new Set<string>();
-
 @customElement("uai-tool-renderer")
 export class UaiToolRendererElement extends UmbLitElement {
   #toolElement: UaiAgentToolElement | null = null;
@@ -69,6 +67,22 @@ export class UaiToolRendererElement extends UmbLitElement {
     super.connectedCallback();
     this.consumeContext(UMB_COPILOT_TOOL_BUS_CONTEXT, (bus) => (this.#toolBus = bus));
     this.#lookupExtension();
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+
+    // Resolve with cancellation if awaiting approval
+    if (this.#respondResolver) {
+      this.#respondResolver({ cancelled: true });
+      this.#respondResolver = null;
+    }
+
+    // Clean up executing state
+    const toolCallId = this.toolCall?.id;
+    if (toolCallId) {
+      this.#toolBus?.clearExecuting(toolCallId);
+    }
   }
 
   override updated(changedProperties: Map<string, unknown>) {
@@ -185,23 +199,22 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Execute a frontend tool and dispatch the result.
    *
    * For HITL tools with approval config, waits for user approval before execution.
-   * Uses a module-level Set to prevent duplicate execution across element instances.
+   * Uses CopilotToolBus to prevent duplicate execution across element instances.
    */
   async #executeFrontendTool() {
     const toolCallId = this.toolCall?.id;
 
-    // Prevent duplicate execution across instances using module-level Set
-    if (toolCallId) {
-      if (executingToolCalls.has(toolCallId)) {
-        return;
+    // Prevent duplicate execution across instances using tool bus
+    if (toolCallId && this.#toolBus) {
+      if (!this.#toolBus.markExecuting(toolCallId)) {
+        return; // Already executing
       }
-      executingToolCalls.add(toolCallId);
     }
 
     // Verify API is ready and we haven't already executed
     if (!this.#toolApi || this.#hasExecuted) {
       if (toolCallId) {
-        executingToolCalls.delete(toolCallId);
+        this.#toolBus?.clearExecuting(toolCallId);
       }
       return;
     }
@@ -209,14 +222,7 @@ export class UaiToolRendererElement extends UmbLitElement {
     this.#hasExecuted = true;
 
     // Parse arguments
-    let args: Record<string, unknown> = {};
-    if (this.toolCall.arguments) {
-      try {
-        args = JSON.parse(this.toolCall.arguments);
-      } catch {
-        args = { raw: this.toolCall.arguments };
-      }
-    }
+    const args: Record<string, unknown> = safeParseJson(this.toolCall.arguments, { raw: this.toolCall.arguments });
     this.#parsedArgs = args;
 
     // Check for HITL approval requirement
@@ -242,13 +248,22 @@ export class UaiToolRendererElement extends UmbLitElement {
         this._isAwaitingApproval = true;
 
         // Wait for user response (promise resolves when user clicks approve/deny)
-        const userResponse = await new Promise((resolve) => {
+        const userResponse = (await new Promise<unknown>((resolve) => {
           this.#respondResolver = resolve;
-        });
+        })) as Record<string, unknown> | undefined;
+
+        this._isAwaitingApproval = false;
+
+        // Check if component was unmounted during approval (cancelled)
+        if (userResponse?.cancelled) {
+          if (toolCallId) {
+            this.#toolBus?.clearExecuting(toolCallId);
+          }
+          return;
+        }
 
         // Include user response in args for the tool API
         args.__approval = userResponse;
-        this._isAwaitingApproval = false;
       } else {
         // Approval element failed to load - proceed without approval
         console.warn(`Proceeding without approval for ${this.toolCall.name} - approval element failed to load`);
@@ -290,7 +305,7 @@ export class UaiToolRendererElement extends UmbLitElement {
     } finally {
       // Clean up the executing set
       if (toolCallId) {
-        executingToolCalls.delete(toolCallId);
+        this.#toolBus?.clearExecuting(toolCallId);
       }
     }
   }
@@ -366,11 +381,7 @@ export class UaiToolRendererElement extends UmbLitElement {
     this._status = statusMap[this.toolCall.status] ?? "pending";
 
     if (this.toolCall.result) {
-      try {
-        this._result = JSON.parse(this.toolCall.result);
-      } catch {
-        this._result = this.toolCall.result;
-      }
+      this._result = safeParseJson(this.toolCall.result, this.toolCall.result as unknown as Record<string, unknown>);
     }
   }
 
@@ -381,14 +392,7 @@ export class UaiToolRendererElement extends UmbLitElement {
     if (!this.#toolElement) return;
 
     // Parse arguments
-    let args: Record<string, unknown> = {};
-    if (this.toolCall.arguments) {
-      try {
-        args = JSON.parse(this.toolCall.arguments);
-      } catch {
-        args = { raw: this.toolCall.arguments };
-      }
-    }
+    const args = safeParseJson(this.toolCall.arguments, { raw: this.toolCall.arguments });
 
     // Set props on the element
     this.#toolElement.args = args;
@@ -433,14 +437,7 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   #renderDefault() {
     // Parse arguments for display
-    let args: Record<string, unknown> = {};
-    if (this.toolCall?.arguments) {
-      try {
-        args = JSON.parse(this.toolCall.arguments);
-      } catch {
-        args = { raw: this.toolCall.arguments };
-      }
-    }
+    const args = safeParseJson(this.toolCall?.arguments, { raw: this.toolCall?.arguments ?? "" });
 
     return html`
       <uai-agent-tool-status

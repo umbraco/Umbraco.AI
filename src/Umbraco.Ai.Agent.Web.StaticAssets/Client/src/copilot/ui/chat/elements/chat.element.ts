@@ -1,6 +1,6 @@
-import { customElement, property, state, css, html, repeat } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { ChatMessage, AgentState, InterruptInfo } from "../../../core/models/chat.types.js";
+import type { ChatMessage, AgentState, InterruptInfo } from "../../../core/types.js";
 import { UMB_COPILOT_CONTEXT, UMB_COPILOT_RUN_CONTEXT } from "../../../core/copilot.context.js";
 import type { CopilotRunController } from "../../../core/controllers/copilot-run.controller.js";
 
@@ -37,7 +37,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
   private _streamingContent = "";
 
   #runController?: CopilotRunController;
-  #messagesContainer?: HTMLElement;
+  #messagesRef = createRef<HTMLElement>();
 
   constructor() {
     super();
@@ -88,10 +88,15 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this.#runController?.respondToInterrupt(response);
   }
 
+  #handleCancel() {
+    this.#runController?.abortRun();
+  }
+
   #scrollToBottom() {
     requestAnimationFrame(() => {
-      if (this.#messagesContainer) {
-        this.#messagesContainer.scrollTop = this.#messagesContainer.scrollHeight;
+      const container = this.#messagesRef.value;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
       }
     });
   }
@@ -125,8 +130,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
       <div class="chat-container">
         <div
           class="messages-area"
-          @scroll=${() => {}}
-          ${(el: HTMLElement) => (this.#messagesContainer = el)}
+          ${ref(this.#messagesRef)}
         >
           ${this._messages.length === 0 && !this._streamingContent
             ? html`
@@ -139,7 +143,10 @@ export class UaiCopilotChatElement extends UmbLitElement {
         </div>
 
         ${this._agentState?.status && this._agentState.status !== "idle"
-          ? html`<uai-copilot-agent-status .state=${this._agentState}></uai-copilot-agent-status>`
+          ? html`<uai-copilot-agent-status
+              .state=${this._agentState}
+              @cancel=${this.#handleCancel}
+            ></uai-copilot-agent-status>`
           : ""}
 
         ${this._activeInterrupt

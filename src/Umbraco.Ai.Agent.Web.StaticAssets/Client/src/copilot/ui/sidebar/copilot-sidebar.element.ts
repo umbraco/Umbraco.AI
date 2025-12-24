@@ -32,6 +32,8 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       if (context) {
         this.#copilotContext = context;
         this.#observeCopilotContext();
+        // Load agents once context is available (ensures proper timing)
+        context.loadAgents();
       }
     });
   }
@@ -46,11 +48,6 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     this.observe(this.#copilotContext.agentName, (name) => (this._selectedAgentName = name));
     this.observe(this.#copilotContext.agents, (agents) => (this._agents = agents));
     this.observe(this.#copilotContext.agentsLoading, (loading) => (this._loading = loading));
-  }
-
-  override connectedCallback() {
-    super.connectedCallback();
-    this.#copilotContext?.loadAgents();
   }
 
   override disconnectedCallback() {

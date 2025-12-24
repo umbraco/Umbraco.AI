@@ -8,6 +8,9 @@ import { CopilotRunController } from "./controllers/copilot-run.controller.js";
 import { CopilotToolBus } from "./services/copilot-tool-bus.js";
 import type { CopilotAgentItem } from "../ui/sidebar/copilot.repository.js";
 
+/**
+ * Basic agent information used for display purposes.
+ */
 export interface AgentInfo {
   id: string;
   name: string;
@@ -85,36 +88,54 @@ export class UmbCopilotContext extends UmbControllerBase {
     this.provideContext(UMB_COPILOT_TOOL_BUS_CONTEXT, this.#toolBus);
   }
 
+  /**
+   * Load available agents from the server.
+   */
   loadAgents(): Promise<void> {
     return this.#agentStore.loadAgents();
   }
 
+  /**
+   * Check if an agent is currently selected.
+   */
   hasAgent(): boolean {
     return !!this.#agentId.getValue();
   }
 
+  /**
+   * Select an agent by its ID.
+   * @param agentId The unique identifier of the agent to select
+   */
   setAgent(agentId: string): void {
     this.#agentStore.selectAgentById(agentId);
   }
 
+  /**
+   * Clear the currently selected agent.
+   * Available for external use when deselecting agents programmatically.
+   */
   clearAgent(): void {
     this.#agentId.setValue("");
     this.#agentName.setValue("");
   }
 
+  /** Open the copilot panel. */
   open() {
     this.#isOpen.setValue(true);
   }
 
+  /** Close the copilot panel. */
   close() {
     this.#isOpen.setValue(false);
   }
 
+  /** Toggle the copilot panel visibility. */
   toggle() {
     this.#isOpen.setValue(!this.#isOpen.getValue());
   }
 }
 
+/** Context token for the root Copilot context (agent selection, panel state). */
 export const UMB_COPILOT_CONTEXT = new UmbContextToken<UmbCopilotContext>(
   "UmbCopilotContext",
   undefined,
@@ -122,10 +143,12 @@ export const UMB_COPILOT_CONTEXT = new UmbContextToken<UmbCopilotContext>(
     (context as UmbCopilotContext).IS_COPILOT_CONTEXT
 );
 
+/** Context token for the run controller (messages, streaming, lifecycle). */
 export const UMB_COPILOT_RUN_CONTEXT = new UmbContextToken<CopilotRunController>(
   "UmbCopilotRunContext"
 );
 
+/** Context token for the tool bus (frontend tool execution coordination). */
 export const UMB_COPILOT_TOOL_BUS_CONTEXT = new UmbContextToken<CopilotToolBus>(
   "UmbCopilotToolBusContext"
 );

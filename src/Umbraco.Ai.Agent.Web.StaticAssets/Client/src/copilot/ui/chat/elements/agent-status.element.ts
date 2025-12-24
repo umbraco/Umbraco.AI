@@ -1,6 +1,6 @@
 import { customElement, property, css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { AgentState } from "../../../core/models/chat.types.js";
+import type { AgentState } from "../../../core/types.js";
 
 /**
  * Agent status component.
@@ -39,6 +39,10 @@ export class UaiCopilotAgentStatusElement extends UmbLitElement {
     `;
   }
 
+  #handleCancel() {
+    this.dispatchEvent(new CustomEvent("cancel", { bubbles: true, composed: true }));
+  }
+
   override render() {
     if (!this.state || this.state.status === "idle") {
       return nothing;
@@ -52,6 +56,14 @@ export class UaiCopilotAgentStatusElement extends UmbLitElement {
         ${showLoader ? html`<uui-loader-circle></uui-loader-circle>` : nothing}
         <span class="status-text">${this.state.currentStep ?? this.#getDefaultLabel()}</span>
         ${this.#renderProgress()}
+        ${showLoader
+          ? html`<uui-button
+              compact
+              look="secondary"
+              label="Cancel"
+              @click=${this.#handleCancel}
+            ></uui-button>`
+          : nothing}
       </div>
     `;
   }
@@ -104,6 +116,11 @@ export class UaiCopilotAgentStatusElement extends UmbLitElement {
     .progress-label {
       font-size: var(--uui-type-small-size);
       opacity: 0.8;
+    }
+
+    uui-button {
+      margin-left: auto;
+      flex-shrink: 0;
     }
   `;
 }

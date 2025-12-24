@@ -8,7 +8,8 @@ import type {
   ChatMessage,
   InterruptInfo,
   ToolCallInfo,
-} from "../models/chat.types.js";
+} from "../types.js";
+import { safeParseJson } from "../utils/json.js";
 import { CopilotToolBus, type CopilotToolResult } from "../services/copilot-tool-bus.js";
 import type { CopilotAgentItem } from "../../ui/sidebar/copilot.repository.js";
 
@@ -25,7 +26,7 @@ export class CopilotRunController extends UmbControllerBase {
   #toolBus: CopilotToolBus;
   #client?: UaiAgentClient;
   #agent?: CopilotAgentItem;
-  #frontendTools: import("../models/chat.types.js").AguiTool[] = [];
+  #frontendTools: import("../../transport/types.js").AguiTool[] = [];
   #toolManager = new FrontendToolManager();
   #currentToolCalls: ToolCallInfo[] = [];
   #subscriptions: Subscription[] = [];
@@ -100,6 +101,21 @@ export class CopilotRunController extends UmbControllerBase {
     this.#currentToolCalls = [];
   }
 
+  /**
+   * Abort the current run.
+   * Cancels any ongoing agent execution and resets status.
+   */
+  abortRun(): void {
+    if (!this.#client) return;
+
+    this.#client.reset();
+    this.#streamingContent.next("");
+    this.#agentState.next(undefined);
+    this.#runStatus.next({ isRunning: false });
+    this.#currentToolCalls = [];
+    this.#toolBus.clearPending();
+  }
+
   #createClient(): void {
     if (!this.#agent?.id) return;
 
@@ -136,10 +152,14 @@ export class CopilotRunController extends UmbControllerBase {
   #finalizeAssistantMessage(content: string): void {
     if (!content && this.#currentToolCalls.length === 0) return;
 
+    // If there are tool calls, discard any pre-tool text to avoid teaching
+    // the LLM to output text before tool calls in future turns
+    const finalContent = this.#currentToolCalls.length > 0 ? "" : content;
+
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
-      content,
+      content: finalContent,
       toolCalls: this.#currentToolCalls.length > 0 ? [...this.#currentToolCalls] : undefined,
       timestamp: new Date(),
     };
@@ -151,16 +171,10 @@ export class CopilotRunController extends UmbControllerBase {
   }
 
   #handleToolCallArgsEnd(toolCallId: string, argsJson: string): void {
-    try {
-      const args = JSON.parse(argsJson);
-      this.#currentToolCalls = this.#currentToolCalls.map((tc) =>
-        tc.id === toolCallId ? { ...tc, arguments: argsJson, parsedArgs: args } : tc
-      );
-    } catch {
-      this.#currentToolCalls = this.#currentToolCalls.map((tc) =>
-        tc.id === toolCallId ? { ...tc, arguments: argsJson } : tc
-      );
-    }
+    const parsedArgs = safeParseJson(argsJson);
+    this.#currentToolCalls = this.#currentToolCalls.map((tc) =>
+      tc.id === toolCallId ? { ...tc, arguments: argsJson, parsedArgs } : tc
+    );
   }
 
   #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }): void {

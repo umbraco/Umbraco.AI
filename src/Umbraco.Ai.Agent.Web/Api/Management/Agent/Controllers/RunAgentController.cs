@@ -146,14 +146,8 @@ public class RunAgentController : AgentControllerBase
                 // Convert AG-UI messages to M.E.AI ChatMessages
                 var chatMessages = ConvertToChatMessages(agent, request.Messages);
 
-                // Convert AG-UI tools to M.E.AI AITools
-                var chatOptions = new ChatOptions();
-                if (request.Tools?.Any() == true)
-                {
-                    chatOptions.Tools = ConvertToAITools(request.Tools);
-                    // Don't auto-invoke tools - we want to stream them to frontend
-                    chatOptions.ToolMode = ChatToolMode.Auto;
-                }
+                // Build ChatOptions with profile settings
+                var chatOptions = BuildChatOptions(profile, request.Tools);
 
                 // Stream the response
                 await foreach (var update in chatClient.GetStreamingResponseAsync(chatMessages, chatOptions, cancellationToken))
@@ -328,6 +322,39 @@ public class RunAgentController : AgentControllerBase
             // Frontend tool - just return a marker (not actually invoked on backend)
             return new ValueTask<object?>($"[FRONTEND_TOOL:{_name}]");
         }
+    }
+
+    /// <summary>
+    /// Build ChatOptions with profile settings applied.
+    /// </summary>
+    private static ChatOptions BuildChatOptions(AiProfile profile, IEnumerable<AguiTool>? tools)
+    {
+        var chatOptions = new ChatOptions();
+
+        // Apply profile settings (Temperature, MaxTokens) if available
+        if (profile.Settings is AiChatProfileSettings chatSettings)
+        {
+            if (chatSettings.Temperature.HasValue)
+            {
+                chatOptions.Temperature = chatSettings.Temperature.Value;
+            }
+
+            if (chatSettings.MaxTokens.HasValue)
+            {
+                chatOptions.MaxOutputTokens = chatSettings.MaxTokens.Value;
+            }
+        }
+
+        // Configure tools if provided
+        if (tools?.Any() == true)
+        {
+            chatOptions.Tools = ConvertToAITools(tools);
+            chatOptions.ToolMode = ChatToolMode.Auto;
+            // Process one tool call at a time for more predictable behavior
+            chatOptions.AllowMultipleToolCalls = false;
+        }
+
+        return chatOptions;
     }
 
     private static List<ChatMessage> ConvertToChatMessages(AiAgent agent, IEnumerable<AguiMessage> messages)

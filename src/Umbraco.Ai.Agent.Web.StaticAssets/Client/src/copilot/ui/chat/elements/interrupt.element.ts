@@ -7,7 +7,7 @@ import type {
   ManifestUaiAgentApprovalElement,
   UaiAgentApprovalElement,
 } from "../../../../agent/approval/uai-agent-approval-element.extension.js";
-import type { InterruptInfo } from "../../../core/models/chat.types.js";
+import type { InterruptInfo } from "../../../core/types.js";
 
 /**
  * Interrupt UI component.

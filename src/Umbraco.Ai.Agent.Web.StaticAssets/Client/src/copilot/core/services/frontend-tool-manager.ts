@@ -1,6 +1,6 @@
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import type { ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
-import type { AguiTool, ToolCallInfo } from "../types.js";
+import type { AguiTool, ToolCallInfo } from "../models/chat.types.js";
 
 /**
  * Frontend tool registry manager.

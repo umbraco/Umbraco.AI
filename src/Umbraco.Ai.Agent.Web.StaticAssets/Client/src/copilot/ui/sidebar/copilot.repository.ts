@@ -1,6 +1,6 @@
 import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { AgentsService } from "../../api/sdk.gen.js";
+import { AgentsService } from "../../../api/sdk.gen.js";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 
 export interface CopilotAgentItem {
@@ -18,19 +18,18 @@ export class UaiCopilotRepository extends UmbRepositoryBase {
   }
 
   async requestActiveAgents(): Promise<{ data?: CopilotAgentItem[]; error?: unknown }> {
-    const { data, error } = await tryExecute(
+    const response = await tryExecute(
       this,
       AgentsService.getAllAgents({
         query: { skip: 0, take: 100 },
       })
     );
 
-    if (error || !data) {
-      return { error };
+    if (response.error || !response.data) {
+      return { error: response.error };
     }
 
-    // Filter to only active agents on the client side
-    const items: CopilotAgentItem[] = data.items
+    const items: CopilotAgentItem[] = response.data.items
       .filter((agent) => agent.isActive)
       .map((agent) => ({
         id: agent.id!,

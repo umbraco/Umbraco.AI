@@ -1,5 +1,5 @@
 import type { UmbEntryPointOnInit, UmbEntryPointOnUnload } from "@umbraco-cms/backoffice/extension-api";
-import { UmbCopilotContext } from "../copilot.context.js";
+import { UmbCopilotContext } from "../../core/copilot.context.js";
 
 // The sidebar element - imported so it registers the custom element
 import "./copilot-sidebar.element.js";

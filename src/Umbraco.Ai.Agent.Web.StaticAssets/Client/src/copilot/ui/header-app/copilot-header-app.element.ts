@@ -1,7 +1,7 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../copilot.context.js";
+import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../core/copilot.context.js";
 
 @customElement("uai-copilot-header-app")
 export class UaiCopilotHeaderAppElement extends UmbLitElement {

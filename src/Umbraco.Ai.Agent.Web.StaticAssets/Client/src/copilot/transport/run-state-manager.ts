@@ -5,7 +5,7 @@ import type {
   ChatMessage,
   ToolCallInfo,
   InterruptInfo,
-} from "../types.js";
+} from "../core/models/chat.types.js";
 
 /**
  * Callback type for state change listeners.

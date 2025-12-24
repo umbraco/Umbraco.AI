@@ -7,24 +7,17 @@ import type {
   UaiAgentToolElement,
   UaiAgentToolStatus,
   UaiAgentToolApi,
-} from "../../../agent/tools/uai-agent-tool.extension.js";
+} from "../../../../agent/tools/uai-agent-tool.extension.js";
 import type {
   ManifestUaiAgentApprovalElement,
   UaiAgentApprovalElement,
-} from "../../../agent/approval/uai-agent-approval-element.extension.js";
-import type { ToolCallInfo, ToolCallStatus } from "../types.js";
+} from "../../../../agent/approval/uai-agent-approval-element.extension.js";
+import type { ToolCallInfo, ToolCallStatus } from "../../../core/models/chat.types.js";
+import { UMB_COPILOT_TOOL_BUS_CONTEXT } from "../../../core/copilot.context.js";
+import type { CopilotToolBus } from "../../../core/services/copilot-tool-bus.js";
 
 // Import default tool status component
-import "../../../agent/tools/tool-status.element.js";
-
-/**
- * Event detail for tool execution results.
- */
-export interface ToolResultEventDetail {
-  toolCallId: string;
-  result: unknown;
-  error?: string;
-}
+import "../../../../agent/tools/tool-status.element.js";
 
 /**
  * Tool renderer component that dynamically renders tool UI based on registered extensions.
@@ -55,6 +48,7 @@ export class UaiToolRendererElement extends UmbLitElement {
   #approvalElement: UaiAgentApprovalElement | null = null;
   #respondResolver: ((value: unknown) => void) | null = null;
   #parsedArgs: Record<string, unknown> = {};
+  #toolBus?: CopilotToolBus;
 
   @property({ type: Object })
   toolCall!: ToolCallInfo;
@@ -73,6 +67,7 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   override connectedCallback() {
     super.connectedCallback();
+    this.consumeContext(UMB_COPILOT_TOOL_BUS_CONTEXT, (bus) => (this.#toolBus = bus));
     this.#lookupExtension();
   }
 
@@ -273,17 +268,10 @@ export class UaiToolRendererElement extends UmbLitElement {
         this.#updateElementProps();
       }
 
-      // Dispatch event with result
-      this.dispatchEvent(
-        new CustomEvent<ToolResultEventDetail>("tool-result", {
-          detail: {
-            toolCallId: this.toolCall.id,
-            result,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.#toolBus?.publishResult({
+        toolCallId: this.toolCall.id,
+        result,
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this._status = "error";
@@ -294,18 +282,11 @@ export class UaiToolRendererElement extends UmbLitElement {
         this.#updateElementProps();
       }
 
-      // Dispatch event with error
-      this.dispatchEvent(
-        new CustomEvent<ToolResultEventDetail>("tool-result", {
-          detail: {
-            toolCallId: this.toolCall.id,
-            result: { error: errorMessage },
-            error: errorMessage,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      this.#toolBus?.publishResult({
+        toolCallId: this.toolCall.id,
+        result: { error: errorMessage },
+        error: errorMessage,
+      });
     } finally {
       // Clean up the executing set
       if (toolCallId) {

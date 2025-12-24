@@ -1,17 +1,16 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UaiCopilotRepository, type CopilotAgentItem } from "./copilot.repository.js";
-import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../copilot.context.js";
+import type { CopilotAgentItem } from "./copilot.repository.js";
+import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../core/copilot.context.js";
 
 // Import native chat component (lightweight, no lazy loading needed)
 import "../chat/index.js";
 
+/** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
   #copilotContext?: UmbCopilotContext;
-
-  #repository = new UaiCopilotRepository(this);
 
   readonly #sidebarWidth = 400;
 
@@ -32,12 +31,12 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
       if (context) {
         this.#copilotContext = context;
-        this.#observerCopilotContext();
+        this.#observeCopilotContext();
       }
     });
   }
-  
-  async #observerCopilotContext() {
+
+  #observeCopilotContext() {
     if (!this.#copilotContext) return;
     this.observe(this.#copilotContext.isOpen, (isOpen) => {
       this._isOpen = isOpen;
@@ -45,11 +44,13 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     });
     this.observe(this.#copilotContext.agentId, (id) => (this._selectedAgentId = id));
     this.observe(this.#copilotContext.agentName, (name) => (this._selectedAgentName = name));
+    this.observe(this.#copilotContext.agents, (agents) => (this._agents = agents));
+    this.observe(this.#copilotContext.agentsLoading, (loading) => (this._loading = loading));
   }
 
   override connectedCallback() {
     super.connectedCallback();
-    this.#loadAgents();
+    this.#copilotContext?.loadAgents();
   }
 
   override disconnectedCallback() {
@@ -57,32 +58,11 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     this.#updateContentOffset(false); // Reset margin when component unmounts
   }
 
-  async #loadAgents() {
-    console.log("Loading agents...");
-    const { data, error } = await this.#repository.requestActiveAgents();
-
-    if (error) {
-      console.error("Failed to load agents:", error);
-      this._loading = false;
-      return;
-    }
-
-    if (data) {
-      this._agents = data;
-      // Auto-select first agent if none selected
-      if (!this._selectedAgentId && this._agents.length > 0) {
-        this.#copilotContext?.setAgent(this._agents[0].id, this._agents[0].name);
-      }
-    }
-
-    this._loading = false;
-  }
-
   #handleAgentChange(e: Event) {
     const select = e.target as HTMLSelectElement;
     const agent = this._agents.find((a) => a.id === select.value);
     if (agent) {
-      this.#copilotContext?.setAgent(agent.id, agent.name);
+      this.#copilotContext?.setAgent(agent.id);
     }
   }
 

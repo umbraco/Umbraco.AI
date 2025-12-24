@@ -14,7 +14,7 @@ import type {
   AguiTool,
   AgentTransport,
   RunLifecycleState,
-} from "../types.js";
+} from "../core/models/chat.types.js";
 
 /**
  * Configuration for the Uai Agent Client.

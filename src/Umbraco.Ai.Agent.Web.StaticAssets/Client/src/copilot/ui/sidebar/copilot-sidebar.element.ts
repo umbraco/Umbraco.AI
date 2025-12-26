@@ -50,11 +50,10 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       <aside class="sidebar ${this._isOpen ? "open" : ""}">
         <header class="sidebar-header">
           <div class="header-content">
-            <uui-icon name="icon-chat"></uui-icon>
-            <span class="header-title">Copilot</span>
+            <h3 class="header-title">Copilot</h3>
           </div>
           <uui-button compact look="default" @click=${this.#handleClose}>
-            <uui-icon name="icon-wrong"></uui-icon>
+            <uui-icon name="icon-delete"></uui-icon>
           </uui-button>
         </header>
         <div class="sidebar-content">
@@ -92,7 +91,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--uui-size-space-4);
+      padding: var(--uui-size-space-4) var(--uui-size-space-4) var(--uui-size-space-4) var(--uui-size-space-5);
       border-bottom: 1px solid var(--uui-color-border);
       background: var(--uui-color-surface-alt);
       height: 60px;
@@ -112,6 +111,10 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       overflow: hidden;
       display: flex;
       flex-direction: column;
+    }
+
+    uui-icon {
+      font-size: 16px;
     }
 
     uai-copilot-chat {

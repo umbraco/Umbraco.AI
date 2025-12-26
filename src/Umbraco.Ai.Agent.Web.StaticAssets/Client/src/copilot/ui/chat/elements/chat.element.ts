@@ -195,6 +195,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
       color: var(--uui-color-text-alt);
       text-align: center;
       padding: var(--uui-size-space-5);
+      box-sizing: border-box;
     }
 
     .empty-state uui-icon {
@@ -206,6 +207,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     .empty-state p {
       margin: 0;
       font-size: var(--uui-type-default-size);
+      color: var(--uui-color-text-alt);
     }
   `;
 }

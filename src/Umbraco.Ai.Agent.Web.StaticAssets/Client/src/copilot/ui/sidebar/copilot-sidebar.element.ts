@@ -121,7 +121,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       width: 400px;
       max-width: 90vw;
       background: var(--uui-color-surface);
-      box-shadow: var(--uui-shadow-depth-3);
+      border-left: 1px solid var(--uui-color-border);
       transform: translateX(100%);
       transition: transform 0.3s ease;
       z-index: 1000;

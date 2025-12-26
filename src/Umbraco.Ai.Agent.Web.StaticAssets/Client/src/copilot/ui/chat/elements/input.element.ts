@@ -81,8 +81,6 @@ export class UaiCopilotInputElement extends UmbLitElement {
 
     .input-wrapper {
       padding: var(--uui-size-space-3);
-      border-top: 1px solid var(--uui-color-border);
-      background: var(--uui-color-surface-alt);
     }
 
     .input-box {

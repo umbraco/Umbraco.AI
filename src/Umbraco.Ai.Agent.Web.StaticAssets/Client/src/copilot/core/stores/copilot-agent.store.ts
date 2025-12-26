@@ -1,7 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject } from "rxjs";
-import { UaiCopilotRepository, type CopilotAgentItem } from "../../ui/sidebar/copilot.repository.js";
+import { UaiCopilotRepository, type CopilotAgentItem } from "../repositories/copilot.repository.js";
 
 /** Loads Copilot agents from the repository and tracks the current selection. */
 export class CopilotAgentStore extends UmbControllerBase {

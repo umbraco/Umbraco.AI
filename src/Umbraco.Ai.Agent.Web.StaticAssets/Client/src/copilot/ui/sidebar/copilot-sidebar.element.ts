@@ -95,6 +95,8 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       padding: var(--uui-size-space-4);
       border-bottom: 1px solid var(--uui-color-border);
       background: var(--uui-color-surface-alt);
+      height: 60px;
+      box-sizing: border-box;
     }
     .header-content {
       display: flex;

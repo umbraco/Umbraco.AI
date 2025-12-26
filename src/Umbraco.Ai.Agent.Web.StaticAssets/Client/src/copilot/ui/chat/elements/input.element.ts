@@ -1,4 +1,5 @@
-import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state, css, html, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
+import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../../core/copilot.context.js";
 import type { CopilotAgentItem } from "../../../core/repositories/copilot.repository.js";
@@ -30,6 +31,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
   private _agentsLoading = true;
 
   #copilotContext?: UmbCopilotContext;
+  #textareaRef = createRef<HTMLElement>();
 
   constructor() {
     super();
@@ -41,6 +43,17 @@ export class UaiCopilotInputElement extends UmbLitElement {
         this.observe(context.agentsLoading, (loading) => (this._agentsLoading = loading));
       }
     });
+  }
+
+  override updated(changedProperties: PropertyValues) {
+    super.updated(changedProperties);
+
+    // Re-focus textarea when it becomes enabled again
+    if (changedProperties.has("disabled") && !this.disabled) {
+      requestAnimationFrame(() => {
+        this.#textareaRef.value?.focus();
+      });
+    }
   }
 
   #handleAgentChange(e: Event) {
@@ -86,6 +99,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
       <div class="input-wrapper">
         <div class="input-box">
           <uui-textarea
+            ${ref(this.#textareaRef)}
             .value=${this._value}
             placeholder=${this.placeholder}
             ?disabled=${this.disabled}
@@ -127,7 +141,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
     }
 
     .input-wrapper {
-      padding: var(--uui-size-space-3);
+      padding: var(--uui-size-space-4);
     }
 
     .input-box {

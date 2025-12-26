@@ -84,7 +84,7 @@ export class UaiCopilotMessageElement extends UmbLitElement {
 
     .message-content {
       flex: 1;
-      max-width: 80%;
+      max-width: 90%;
       overflow-wrap: break-word;
     }
 

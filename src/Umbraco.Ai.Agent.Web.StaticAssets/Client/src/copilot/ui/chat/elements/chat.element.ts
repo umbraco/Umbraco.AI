@@ -180,7 +180,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     .messages-area {
       flex: 1;
       overflow-y: auto;
-      padding: var(--uui-size-space-2) 0;
+      padding: var(--uui-size-space-2);
     }
 
     .empty-state {

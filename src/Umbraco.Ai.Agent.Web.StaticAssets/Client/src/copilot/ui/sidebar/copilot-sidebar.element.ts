@@ -11,7 +11,7 @@ import "../chat/index.js";
 export class UaiCopilotSidebarElement extends UmbLitElement {
   #copilotContext?: UmbCopilotContext;
 
-  readonly #sidebarWidth = 400;
+  readonly #sidebarWidth = 450;
 
   #updateContentOffset(isOpen: boolean) {
     // Apply margin to body element to push entire page content
@@ -74,7 +74,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       top: 0;
       right: 0;
       bottom: 0;
-      width: 400px;
+      width: 450px;
       max-width: 90vw;
       background: var(--uui-color-surface);
       border-left: 1px solid var(--uui-color-border);

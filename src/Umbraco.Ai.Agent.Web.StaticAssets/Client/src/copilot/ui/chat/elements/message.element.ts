@@ -76,6 +76,7 @@ export class UaiCopilotMessageElement extends UmbLitElement {
       display: flex;
       gap: var(--uui-size-space-3);
       padding: var(--uui-size-space-3);
+      padding-bottom: 0;
     }
 
     .message.user {

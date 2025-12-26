@@ -50,7 +50,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       <aside class="sidebar ${this._isOpen ? "open" : ""}">
         <header class="sidebar-header">
           <div class="header-content">
-            <h3 class="header-title">Copilot</h3>
+            <h3 class="header-title">Umbraco Copilot</h3>
           </div>
           <uui-button compact look="default" @click=${this.#handleClose}>
             <uui-icon name="icon-delete"></uui-icon>

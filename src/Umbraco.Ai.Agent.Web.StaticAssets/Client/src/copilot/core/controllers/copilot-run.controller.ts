@@ -11,7 +11,7 @@ import type {
 } from "../types.js";
 import { safeParseJson } from "../utils/json.js";
 import { CopilotToolBus, type CopilotToolResult } from "../services/copilot-tool-bus.js";
-import type { CopilotAgentItem } from "../../ui/sidebar/copilot.repository.js";
+import type { CopilotAgentItem } from "../repositories/copilot.repository.js";
 
 export interface RunStatusSnapshot {
   isRunning: boolean;

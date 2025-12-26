@@ -1,7 +1,6 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { CopilotAgentItem } from "./copilot.repository.js";
 import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../core/copilot.context.js";
 
 // Import native chat component (lightweight, no lazy loading needed)
@@ -21,33 +20,20 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
   }
 
   @state() private _isOpen = false;
-  @state() private _agents: CopilotAgentItem[] = [];
-  @state() private _selectedAgentId = "";
-  @state() private _selectedAgentName = "";
-  @state() private _loading = true;
 
   constructor() {
     super();
     this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
       if (context) {
         this.#copilotContext = context;
-        this.#observeCopilotContext();
+        this.observe(context.isOpen, (isOpen) => {
+          this._isOpen = isOpen;
+          this.#updateContentOffset(isOpen);
+        });
         // Load agents once context is available (ensures proper timing)
         context.loadAgents();
       }
     });
-  }
-
-  #observeCopilotContext() {
-    if (!this.#copilotContext) return;
-    this.observe(this.#copilotContext.isOpen, (isOpen) => {
-      this._isOpen = isOpen;
-      this.#updateContentOffset(isOpen);
-    });
-    this.observe(this.#copilotContext.agentId, (id) => (this._selectedAgentId = id));
-    this.observe(this.#copilotContext.agentName, (name) => (this._selectedAgentName = name));
-    this.observe(this.#copilotContext.agents, (agents) => (this._agents = agents));
-    this.observe(this.#copilotContext.agentsLoading, (loading) => (this._loading = loading));
   }
 
   override disconnectedCallback() {
@@ -55,26 +41,8 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     this.#updateContentOffset(false); // Reset margin when component unmounts
   }
 
-  #handleAgentChange(e: Event) {
-    const select = e.target as HTMLSelectElement;
-    const agent = this._agents.find((a) => a.id === select.value);
-    if (agent) {
-      this.#copilotContext?.setAgent(agent.id);
-    }
-  }
-
   #handleClose() {
     this.#copilotContext?.close();
-  }
-
-  #renderChatContent() {
-    if (this._selectedAgentId) {
-      return html`
-        <uai-copilot-chat agentId=${this._selectedAgentId} agentName=${this._selectedAgentName}>
-        </uai-copilot-chat>
-      `;
-    }
-    return html`<div class="no-agent">Select an agent to start chatting</div>`;
   }
 
   override render() {
@@ -83,26 +51,14 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
         <header class="sidebar-header">
           <div class="header-content">
             <uui-icon name="icon-chat"></uui-icon>
-            ${this._loading
-              ? html`<span>Loading...</span>`
-              : html`
-                  <uui-select .value=${this._selectedAgentId} @change=${this.#handleAgentChange}>
-                    ${this._agents.map(
-                      (agent) => html`
-                        <uui-select-option value=${agent.id} ?selected=${agent.id === this._selectedAgentId}>
-                          ${agent.name}
-                        </uui-select-option>
-                      `
-                    )}
-                  </uui-select>
-                `}
+            <span class="header-title">Copilot</span>
           </div>
           <uui-button compact look="default" @click=${this.#handleClose}>
             <uui-icon name="icon-wrong"></uui-icon>
           </uui-button>
         </header>
         <div class="sidebar-content">
-          ${this.#renderChatContent()}
+          <uai-copilot-chat></uai-copilot-chat>
         </div>
       </aside>
     `;
@@ -145,8 +101,8 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       align-items: center;
       gap: var(--uui-size-space-3);
     }
-    .header-content uui-select {
-      min-width: 200px;
+    .header-title {
+      font-weight: 600;
     }
 
     .sidebar-content {
@@ -159,12 +115,6 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
     uai-copilot-chat {
       flex: 1;
       display: block;
-    }
-
-    .no-agent {
-      padding: var(--uui-size-space-5);
-      text-align: center;
-      color: var(--uui-color-text-alt);
     }
   `;
 }

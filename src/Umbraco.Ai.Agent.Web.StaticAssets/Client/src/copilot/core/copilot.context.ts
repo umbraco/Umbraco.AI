@@ -6,7 +6,7 @@ import type { Observable } from "rxjs";
 import { CopilotAgentStore } from "./stores/copilot-agent.store.js";
 import { CopilotRunController } from "./controllers/copilot-run.controller.js";
 import { CopilotToolBus } from "./services/copilot-tool-bus.js";
-import type { CopilotAgentItem } from "../ui/sidebar/copilot.repository.js";
+import type { CopilotAgentItem } from "./repositories/copilot.repository.js";
 
 /**
  * Basic agent information used for display purposes.

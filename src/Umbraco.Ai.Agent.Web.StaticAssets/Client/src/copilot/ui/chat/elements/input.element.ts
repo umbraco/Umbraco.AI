@@ -1,5 +1,7 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../../core/copilot.context.js";
+import type { CopilotAgentItem } from "../../../core/repositories/copilot.repository.js";
 
 /**
  * Chat input component.
@@ -17,6 +19,42 @@ export class UaiCopilotInputElement extends UmbLitElement {
 
   @state()
   private _value = "";
+
+  @state()
+  private _agents: CopilotAgentItem[] = [];
+
+  @state()
+  private _selectedAgentId = "";
+
+  @state()
+  private _agentsLoading = true;
+
+  #copilotContext?: UmbCopilotContext;
+
+  constructor() {
+    super();
+    this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
+      if (context) {
+        this.#copilotContext = context;
+        this.observe(context.agents, (agents) => (this._agents = agents));
+        this.observe(context.agentId, (id) => (this._selectedAgentId = id));
+        this.observe(context.agentsLoading, (loading) => (this._agentsLoading = loading));
+      }
+    });
+  }
+
+  #handleAgentChange(e: Event) {
+    const select = e.target as HTMLSelectElement;
+    this.#copilotContext?.setAgent(select.value);
+  }
+
+  #getAgentOptions(): Array<{ name: string; value: string; selected?: boolean }> {
+    return this._agents.map((agent) => ({
+      name: agent.name,
+      value: agent.id,
+      selected: agent.id === this._selectedAgentId,
+    }));
+  }
 
   #handleKeydown(e: KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -58,7 +96,16 @@ export class UaiCopilotInputElement extends UmbLitElement {
           <hr class="divider" />
           <div class="actions-row">
             <div class="left-actions">
-              <!-- Future: add attachment, voice, etc. -->
+              ${this._agentsLoading
+                ? html`<span class="agent-loading">Loading...</span>`
+                : html`
+                    <uui-select
+                      class="agent-select"
+                      .value=${this._selectedAgentId}
+                      .options=${this.#getAgentOptions()}
+                      @change=${this.#handleAgentChange}
+                    ></uui-select>
+                  `}
             </div>
             <uui-button
               look="primary"
@@ -119,6 +166,16 @@ export class UaiCopilotInputElement extends UmbLitElement {
     .left-actions {
       display: flex;
       gap: var(--uui-size-space-2);
+    }
+
+    .agent-select {
+      min-width: 120px;
+      max-width: 180px;
+    }
+
+    .agent-loading {
+      font-size: var(--uui-type-small-size);
+      color: var(--uui-color-text-alt);
     }
   `;
 }

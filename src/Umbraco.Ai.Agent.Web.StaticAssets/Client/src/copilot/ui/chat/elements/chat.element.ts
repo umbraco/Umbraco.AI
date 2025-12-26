@@ -1,4 +1,4 @@
-import { customElement, property, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { ChatMessage, AgentState, InterruptInfo } from "../../../core/types.js";
 import { UMB_COPILOT_CONTEXT, UMB_COPILOT_RUN_CONTEXT } from "../../../core/copilot.context.js";
@@ -15,11 +15,8 @@ import "./interrupt.element.js";
  */
 @customElement("uai-copilot-chat")
 export class UaiCopilotChatElement extends UmbLitElement {
-  @property({ type: String })
-  agentId = "";
-
-  @property({ type: String })
-  agentName = "";
+  @state()
+  private _agentName = "";
 
   @state()
   private _messages: ChatMessage[] = [];
@@ -43,7 +40,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     super();
     this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
       if (context) {
-        this.observe(context.agentName, (name) => (this.agentName = name));
+        this.observe(context.agentName, (name) => (this._agentName = name));
       }
     });
 
@@ -136,7 +133,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
             ? html`
                 <div class="empty-state">
                   <uui-icon name="icon-chat"></uui-icon>
-                  <p>Start a conversation with ${this.agentName || "the agent"}</p>
+                  <p>Start a conversation with ${this._agentName || "the agent"}</p>
                 </div>
               `
             : this.#renderMessages()}

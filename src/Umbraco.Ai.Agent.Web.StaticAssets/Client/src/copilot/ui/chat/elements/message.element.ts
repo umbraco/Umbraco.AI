@@ -57,14 +57,8 @@ export class UaiCopilotMessageElement extends UmbLitElement {
       return html``;
     }
 
-    const isUser = this.message.role === "user";
-    const iconName = isUser ? "icon-user" : "icon-wand";
-
     return html`
       <div class="message ${this.message.role}">
-        <div class="message-avatar">
-          <uui-icon name=${iconName}></uui-icon>
-        </div>
         <div class="message-content">
           ${this.#renderContent()}
           ${this.#renderToolCalls()}
@@ -86,27 +80,6 @@ export class UaiCopilotMessageElement extends UmbLitElement {
 
     .message.user {
       flex-direction: row-reverse;
-    }
-
-    .message-avatar {
-      flex-shrink: 0;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: var(--uui-color-surface-alt);
-    }
-
-    .message.user .message-avatar {
-      background: var(--uui-color-selected);
-      color: var(--uui-color-selected-contrast);
-    }
-
-    .message.assistant .message-avatar {
-      background: var(--uui-color-positive);
-      color: var(--uui-color-positive-contrast);
     }
 
     .message-content {

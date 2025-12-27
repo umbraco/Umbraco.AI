@@ -6,6 +6,8 @@ import type { ChatMessage } from "../../../core/types.js";
 
 // Import the tool renderer element (handles extension lookup and custom UI)
 import "./tool-renderer.element.js";
+import "./message-copy-button.element.js";
+import "./message-regenerate-button.element.js";
 
 /**
  * Chat message component.
@@ -15,6 +17,12 @@ import "./tool-renderer.element.js";
 export class UaiCopilotMessageElement extends UmbLitElement {
   @property({ type: Object })
   message!: ChatMessage;
+
+  @property({ type: Boolean, attribute: "is-last-assistant-message" })
+  isLastAssistantMessage = false;
+
+  @property({ type: Boolean, attribute: "is-running" })
+  isRunning = false;
 
   #renderContent() {
     if (!this.message.content) {
@@ -50,6 +58,26 @@ export class UaiCopilotMessageElement extends UmbLitElement {
     `;
   }
 
+  #renderActions() {
+    // Only show for assistant messages with content
+    if (this.message.role !== "assistant" || !this.message.content?.trim()) {
+      return html``;
+    }
+
+    // Determine visibility class - hide during streaming on latest message
+    const isHidden = this.isRunning && this.isLastAssistantMessage;
+    const visibilityClass = isHidden ? "hidden" : this.isLastAssistantMessage ? "always-visible" : "";
+
+    return html`
+      <div class="message-actions ${visibilityClass}">
+        ${this.isLastAssistantMessage
+          ? html`<uai-message-regenerate-button></uai-message-regenerate-button>`
+          : ""}
+        <uai-message-copy-button .content=${this.message.content}></uai-message-copy-button>
+      </div>
+    `;
+  }
+
   override render() {
     // Hide tool result messages - they're internal to the conversation
     // Users only see the assistant's response that uses the tool result
@@ -62,6 +90,7 @@ export class UaiCopilotMessageElement extends UmbLitElement {
         <div class="message-content">
           ${this.#renderContent()}
           ${this.#renderToolCalls()}
+          ${this.#renderActions()}
         </div>
       </div>
     `;
@@ -139,6 +168,24 @@ export class UaiCopilotMessageElement extends UmbLitElement {
       display: flex;
       flex-wrap: wrap;
       gap: var(--uui-size-space-2);
+    }
+
+    .message-actions {
+      display: flex;
+      gap: var(--uui-size-space-1);
+      margin-top: var(--uui-size-space-1);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .message:hover .message-actions,
+    .message-actions.always-visible {
+      opacity: 1;
+    }
+
+    /* Use visibility to preserve space during streaming */
+    .message-actions.hidden {
+      visibility: hidden;
     }
   `;
 }

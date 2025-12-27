@@ -116,6 +116,42 @@ export class CopilotRunController extends UmbControllerBase {
     this.#toolBus.clearPending();
   }
 
+  /**
+   * Regenerate the last assistant message.
+   * Removes the last assistant message and any subsequent messages,
+   * then re-sends the conversation to get a new response.
+   */
+  regenerateLastMessage(): void {
+    if (!this.#client) return;
+
+    const messages = this.#messages.value;
+
+    // Find index of last assistant message
+    let lastAssistantIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") {
+        lastAssistantIndex = i;
+        break;
+      }
+    }
+
+    if (lastAssistantIndex === -1) return;
+
+    // Remove from that message onwards (assistant message and any tool results after it)
+    const truncatedMessages = messages.slice(0, lastAssistantIndex);
+    this.#messages.next(truncatedMessages);
+
+    // Reset any streaming/tool state
+    this.#streamingContent.next("");
+    this.#currentToolCalls = [];
+    this.#toolBus.clearPending();
+
+    // Trigger new generation
+    this.#agentState.next({ status: "thinking" });
+    this.#runStatus.next({ isRunning: true, status: "thinking" });
+    this.#client.sendMessage(truncatedMessages, this.#frontendTools);
+  }
+
   #createClient(): void {
     if (!this.#agent?.id) return;
 

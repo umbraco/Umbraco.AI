@@ -89,6 +89,26 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this.#runController?.abortRun();
   }
 
+  #handleRegenerate() {
+    this.#runController?.regenerateLastMessage();
+  }
+
+  #getLastAssistantMessageId(): string | undefined {
+    // If streaming, the streaming message is the last assistant message
+    if (this._streamingContent) {
+      return "streaming";
+    }
+
+    // Find the last assistant message in the messages array
+    for (let i = this._messages.length - 1; i >= 0; i--) {
+      if (this._messages[i].role === "assistant") {
+        return this._messages[i].id;
+      }
+    }
+
+    return undefined;
+  }
+
   #scrollToBottom() {
     requestAnimationFrame(() => {
       const container = this.#messagesRef.value;
@@ -99,11 +119,20 @@ export class UaiCopilotChatElement extends UmbLitElement {
   }
 
   #renderMessages() {
+    const lastAssistantId = this.#getLastAssistantMessageId();
+
     return html`
       ${repeat(
         this._messages,
         (msg) => msg.id,
-        (msg) => html`<uai-copilot-message .message=${msg}></uai-copilot-message>`
+        (msg) => html`
+          <uai-copilot-message
+            .message=${msg}
+            ?is-last-assistant-message=${msg.id === lastAssistantId}
+            ?is-running=${this._isLoading}
+            @regenerate=${this.#handleRegenerate}
+          ></uai-copilot-message>
+        `
       )}
       ${this._streamingContent
         ? html`
@@ -116,6 +145,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
                 // This prevents tool-renderer being recreated when message is finalized
                 timestamp: new Date(),
               }}
+              is-last-assistant-message
+              is-running
             ></uai-copilot-message>
           `
         : ""}

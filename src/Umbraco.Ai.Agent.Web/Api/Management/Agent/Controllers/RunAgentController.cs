@@ -5,6 +5,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Agent.Extensions;
 using Umbraco.Ai.Agui.Events;
@@ -28,6 +29,7 @@ public class RunAgentController : AgentControllerBase
     private readonly IAiAgentService _agentService;
     private readonly IAiProfileService _profileService;
     private readonly IAiChatClientFactory _chatClientFactory;
+    private readonly ILogger<RunAgentController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RunAgentController"/> class.
@@ -35,11 +37,13 @@ public class RunAgentController : AgentControllerBase
     public RunAgentController(
         IAiAgentService agentService,
         IAiProfileService profileService,
-        IAiChatClientFactory chatClientFactory)
+        IAiChatClientFactory chatClientFactory,
+        ILogger<RunAgentController> logger)
     {
         _agentService = agentService;
         _profileService = profileService;
         _chatClientFactory = chatClientFactory;
+        _logger = logger;
     }
 
     /// <summary>
@@ -148,6 +152,18 @@ public class RunAgentController : AgentControllerBase
 
                 // Build ChatOptions with profile settings
                 var chatOptions = BuildChatOptions(profile, request.Tools);
+
+                // DEBUG: Log tool schemas being sent to the LLM
+                if (chatOptions.Tools != null)
+                {
+                    foreach (var tool in chatOptions.Tools.OfType<AIFunction>())
+                    {
+                        _logger.LogDebug(
+                            "Tool '{ToolName}' JsonSchema: {Schema}",
+                            tool.Name,
+                            tool.JsonSchema.GetRawText());
+                    }
+                }
 
                 // Stream the response
                 await foreach (var update in chatClient.GetStreamingResponseAsync(chatMessages, chatOptions, cancellationToken))
@@ -319,8 +335,15 @@ public class RunAgentController : AgentControllerBase
             AIFunctionArguments arguments,
             CancellationToken cancellationToken)
         {
-            // Frontend tool - just return a marker (not actually invoked on backend)
-            return new ValueTask<object?>($"[FRONTEND_TOOL:{_name}]");
+            // Tell FunctionInvokingChatClient to stop its invocation loop.
+            // This allows us to return out and emit the tool call to the frontend
+            // instead of auto-executing and feeding a fake result back to the model.
+            if (FunctionInvokingChatClient.CurrentContext is not null)
+            {
+                FunctionInvokingChatClient.CurrentContext.Terminate = true;
+            }
+
+            return ValueTask.FromResult<object?>(null);
         }
     }
 

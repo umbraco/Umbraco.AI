@@ -151,15 +151,11 @@ export class CopilotRunController extends UmbControllerBase {
 
   #finalizeAssistantMessage(content: string): void {
     if (!content && this.#currentToolCalls.length === 0) return;
-
-    // If there are tool calls, discard any pre-tool text to avoid teaching
-    // the LLM to output text before tool calls in future turns
-    const finalContent = this.#currentToolCalls.length > 0 ? "" : content;
-
+    
     const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
-      content: finalContent,
+      content,
       toolCalls: this.#currentToolCalls.length > 0 ? [...this.#currentToolCalls] : undefined,
       timestamp: new Date(),
     };

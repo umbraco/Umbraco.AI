@@ -1,0 +1,17 @@
+{
+    "name": "Umbraco Ai Anthropic Provider",
+    "$schema": "../umbraco-package-schema.json",
+    "extensions": [
+        {
+            "type": "localization",
+            "alias": "Uai.Anthropic.Localization.En",
+            "weight": -100,
+            "name": "English",
+            "meta": {
+                "culture": "en"
+            },
+            "js": "/App_Plugins/UmbracoAiAnthropic/lang/en.js"
+        }
+    ],
+    "version": ""
+}

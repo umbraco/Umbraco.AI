@@ -54,7 +54,7 @@ public class AnthropicProvider : AiProviderBase<AnthropicProviderSettings>
         var result = await client.Models.List(cancellationToken: cancellationToken).ConfigureAwait(false);
 
         var modelIds = result.Data
-            .Select(m => m.Id)
+            .Select(m => m.ID)
             .OrderBy(id => id)
             .ToList();
 
@@ -73,17 +73,13 @@ public class AnthropicProvider : AiProviderBase<AnthropicProviderSettings>
             throw new InvalidOperationException("Anthropic API key is required.");
         }
 
-        var client = new AnthropicClient
-        {
-            APIKey = settings.ApiKey
-        };
-
-        if (!string.IsNullOrWhiteSpace(settings.Endpoint))
-        {
-            client.BaseUrl = new Uri(settings.Endpoint);
-        }
-
-        return client;
+        return string.IsNullOrWhiteSpace(settings.Endpoint)
+            ? new AnthropicClient { APIKey = settings.ApiKey }
+            : new AnthropicClient
+            {
+                APIKey = settings.ApiKey,
+                BaseUrl = new Uri(settings.Endpoint)
+            };
     }
 
     private static string GetCacheKey(AnthropicProviderSettings settings)

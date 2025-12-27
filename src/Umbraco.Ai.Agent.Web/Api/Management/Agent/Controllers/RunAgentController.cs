@@ -16,6 +16,7 @@ using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
@@ -29,6 +30,8 @@ public class RunAgentController : AgentControllerBase
     private readonly IAiAgentService _agentService;
     private readonly IAiProfileService _profileService;
     private readonly IAiChatClientFactory _chatClientFactory;
+    private readonly AiToolCollection _toolCollection;
+    private readonly IAiFunctionFactory _functionFactory;
     private readonly ILogger<RunAgentController> _logger;
 
     /// <summary>
@@ -38,11 +41,15 @@ public class RunAgentController : AgentControllerBase
         IAiAgentService agentService,
         IAiProfileService profileService,
         IAiChatClientFactory chatClientFactory,
+        AiToolCollection toolCollection,
+        IAiFunctionFactory functionFactory,
         ILogger<RunAgentController> logger)
     {
         _agentService = agentService;
         _profileService = profileService;
         _chatClientFactory = chatClientFactory;
+        _toolCollection = toolCollection;
+        _functionFactory = functionFactory;
         _logger = logger;
     }
 
@@ -141,9 +148,13 @@ public class RunAgentController : AgentControllerBase
             string? errorMessage = null;
             var toolCalls = new List<FunctionCallContent>();
             var emittedToolCallIds = new HashSet<string>();
+            var toolResults = new Dictionary<string, string>();
 
             try
             {
+                // Reset frontend tool invocation flag for this run
+                FrontendToolFunction.ResetInvocationFlag();
+
                 // Create chat client
                 var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 
@@ -179,7 +190,7 @@ public class RunAgentController : AgentControllerBase
                         }, cancellationToken);
                     }
 
-                    // Check for tool calls in the update contents
+                    // Check for tool calls and results in the update contents
                     if (update.Contents != null)
                     {
                         foreach (var content in update.Contents)
@@ -191,6 +202,14 @@ public class RunAgentController : AgentControllerBase
                                 {
                                     toolCalls.Add(functionCall);
                                 }
+                            }
+                            else if (content is FunctionResultContent functionResult && !string.IsNullOrEmpty(functionResult.CallId))
+                            {
+                                // Track tool results for backend tools
+                                var resultJson = functionResult.Result != null
+                                    ? JsonSerializer.Serialize(functionResult.Result)
+                                    : "null";
+                                toolResults[functionResult.CallId] = resultJson;
                             }
                         }
                     }
@@ -243,6 +262,19 @@ public class RunAgentController : AgentControllerBase
                     ToolCallId = toolCall.CallId!,
                     Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                 }, CancellationToken.None);
+
+                // TOOL_CALL_RESULT - emit for backend tools that have results
+                if (toolResults.TryGetValue(toolCall.CallId!, out var resultContent))
+                {
+                    await channel.Writer.WriteAsync(new ToolCallResultEvent
+                    {
+                        MessageId = Guid.NewGuid().ToString(),
+                        ToolCallId = toolCall.CallId!,
+                        Content = resultContent,
+                        Role = AguiMessageRole.Tool,
+                        Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                    }, CancellationToken.None);
+                }
             }
 
             if (hasError)
@@ -255,12 +287,30 @@ public class RunAgentController : AgentControllerBase
                 }, CancellationToken.None);
             }
 
+            // Determine run outcome and interrupt info
+            var frontendToolInvoked = FrontendToolFunction.WasInvoked;
+            var outcome = hasError
+                ? AguiRunOutcome.Error
+                : frontendToolInvoked
+                    ? AguiRunOutcome.Interrupt
+                    : AguiRunOutcome.Success;
+
+            // Build interrupt info if frontend tools need execution
+            AguiInterruptInfo? interrupt = frontendToolInvoked
+                ? new AguiInterruptInfo
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Reason = "tool_execution",
+                }
+                : null;
+
             // Emit RunFinished
             await channel.Writer.WriteAsync(new RunFinishedEvent
             {
                 ThreadId = threadId,
                 RunId = runId,
-                Outcome = hasError ? AguiRunOutcome.Interrupt : AguiRunOutcome.Success,
+                Outcome = outcome,
+                Interrupt = interrupt,
                 Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             }, CancellationToken.None);
 
@@ -302,6 +352,23 @@ public class RunAgentController : AgentControllerBase
         private readonly string _description;
         private readonly JsonElement _jsonSchema;
 
+        /// <summary>
+        /// Thread-static flag to track if any frontend tool was invoked during the current run.
+        /// Used to determine if the run should finish with an interrupt.
+        /// </summary>
+        [ThreadStatic]
+        private static bool _wasInvoked;
+
+        /// <summary>
+        /// Gets whether any frontend tool was invoked during the current run.
+        /// </summary>
+        public static bool WasInvoked => _wasInvoked;
+
+        /// <summary>
+        /// Resets the invocation flag. Call this at the start of each run.
+        /// </summary>
+        public static void ResetInvocationFlag() => _wasInvoked = false;
+
         public FrontendToolFunction(AguiTool tool)
         {
             _name = tool.Name;
@@ -335,6 +402,9 @@ public class RunAgentController : AgentControllerBase
             AIFunctionArguments arguments,
             CancellationToken cancellationToken)
         {
+            // Mark that a frontend tool was invoked
+            _wasInvoked = true;
+
             // Tell FunctionInvokingChatClient to stop its invocation loop.
             // This allows us to return out and emit the tool call to the frontend
             // instead of auto-executing and feeding a fake result back to the model.
@@ -350,7 +420,7 @@ public class RunAgentController : AgentControllerBase
     /// <summary>
     /// Build ChatOptions with profile settings applied.
     /// </summary>
-    private static ChatOptions BuildChatOptions(AiProfile profile, IEnumerable<AguiTool>? tools)
+    private ChatOptions BuildChatOptions(AiProfile profile, IEnumerable<AguiTool>? frontendTools)
     {
         var chatOptions = new ChatOptions();
 
@@ -368,10 +438,26 @@ public class RunAgentController : AgentControllerBase
             }
         }
 
-        // Configure tools if provided
-        if (tools?.Any() == true)
+        // Build combined tool list (backend + frontend)
+        var allTools = new List<AITool>();
+
+        // Add backend tools - these execute server-side automatically
+        if (_toolCollection.Any())
         {
-            chatOptions.Tools = ConvertToAITools(tools);
+            var backendFunctions = _functionFactory.Create(_toolCollection);
+            allTools.AddRange(backendFunctions);
+        }
+
+        // Add frontend tools - these return to client for execution
+        if (frontendTools?.Any() == true)
+        {
+            allTools.AddRange(ConvertToAITools(frontendTools));
+        }
+
+        // Configure tools if any exist
+        if (allTools.Count > 0)
+        {
+            chatOptions.Tools = allTools;
             chatOptions.ToolMode = ChatToolMode.Auto;
             // Process one tool call at a time for more predictable behavior
             chatOptions.AllowMultipleToolCalls = false;

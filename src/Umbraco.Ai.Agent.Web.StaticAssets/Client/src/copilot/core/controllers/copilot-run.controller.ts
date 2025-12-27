@@ -169,6 +169,7 @@ export class CopilotRunController extends UmbControllerBase {
           this.#agentState.next({ status: "executing", currentStep: `Calling ${info.name}...` });
         },
         onToolCallArgsEnd: (id, args) => this.#handleToolCallArgsEnd(id, args),
+        onToolCallResult: (id, result) => this.#handleServerToolResult(id, result),
         onRunFinished: (event) => this.#handleRunFinished(event),
         onStateSnapshot: (state) => this.#agentState.next(state),
         onStateDelta: (delta) => {
@@ -209,8 +210,26 @@ export class CopilotRunController extends UmbControllerBase {
     );
   }
 
+  /**
+   * Handle server-side tool result (TOOL_CALL_RESULT event).
+   * Updates the tool call status to completed.
+   * Tool messages are added later in #handleRunFinished after the assistant message is finalized.
+   */
+  #handleServerToolResult(toolCallId: string, result: string): void {
+    // Update pending tool calls with the result (message not yet finalized)
+    this.#currentToolCalls = this.#currentToolCalls.map((tc) =>
+      tc.id === toolCallId ? { ...tc, status: "completed", result } : tc
+    );
+  }
+
   #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }): void {
     this.#finalizeAssistantMessage(this.#streamingContent.value);
+
+    // Get the last assistant message by role (more robust than index-based lookup)
+    const assistantMessage = this.#getLastAssistantMessage();
+
+    // Add tool messages for server-side tool calls (must come after assistant message)
+    this.#addServerToolMessages();
 
     if (event.outcome === "interrupt" && event.interrupt) {
       this.#interrupt.next(event.interrupt);
@@ -236,9 +255,8 @@ export class CopilotRunController extends UmbControllerBase {
       return;
     }
 
-    const lastMessage = this.#messages.value[this.#messages.value.length - 1];
     const frontendToolCalls =
-      lastMessage?.toolCalls?.filter((tc) => this.#toolManager.isFrontendTool(tc.name)) ?? [];
+      assistantMessage?.toolCalls?.filter((tc) => this.#toolManager.isFrontendTool(tc.name)) ?? [];
 
     if (frontendToolCalls.length > 0) {
       const ids = frontendToolCalls.map((tc) => tc.id);
@@ -249,6 +267,46 @@ export class CopilotRunController extends UmbControllerBase {
       this.#agentState.next(undefined);
       this.#runStatus.next({ isRunning: false });
     }
+  }
+
+  /**
+   * Get the last assistant message from the conversation.
+   */
+  #getLastAssistantMessage(): ChatMessage | undefined {
+    const messages = this.#messages.value;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") {
+        return messages[i];
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Add tool messages for server-side tool calls that have results.
+   * Called after the assistant message is finalized to ensure correct message order.
+   */
+  #addServerToolMessages(): void {
+    const assistantMessage = this.#getLastAssistantMessage();
+    if (!assistantMessage?.toolCalls) return;
+
+    // Find server-side tool calls with results (not frontend tools)
+    const serverToolCalls = assistantMessage.toolCalls.filter(
+      (tc) => tc.result !== undefined && !this.#toolManager.isFrontendTool(tc.name)
+    );
+
+    if (serverToolCalls.length === 0) return;
+
+    // Add tool messages for each server-side tool call
+    const toolMessages: ChatMessage[] = serverToolCalls.map((tc) => ({
+      id: crypto.randomUUID(),
+      role: "tool" as const,
+      content: tc.result ?? "",
+      toolCallId: tc.id,
+      timestamp: new Date(),
+    }));
+
+    this.#messages.next([...this.#messages.value, ...toolMessages]);
   }
 
   #handleToolResult(result: CopilotToolResult): void {

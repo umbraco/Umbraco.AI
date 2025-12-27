@@ -1,4 +1,5 @@
 import { customElement, property, css, html } from "@umbraco-cms/backoffice/external/lit";
+import { keyed } from "lit/directives/keyed.js";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaiAgentToolElementProps, UaiAgentToolStatus } from "./uai-agent-tool.extension.js";
 
@@ -40,9 +41,11 @@ export class UaiAgentToolStatusElement extends UmbLitElement implements UaiAgent
 
     const isLoading = this.status === "streaming" || this.status === "executing";
 
+    const iconName = statusIcon[this.status];
+
     return html`
       <div class="tool-status ${this.status}">
-        <uui-icon name=${statusIcon[this.status]}></uui-icon>
+        ${keyed(iconName, html`<uui-icon name=${iconName}></uui-icon>`)}
         <span class="tool-name">${this.name}</span>
         ${isLoading ? html`<uui-loader-circle></uui-loader-circle>` : ""}
       </div>

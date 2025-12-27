@@ -41,6 +41,14 @@ export class UaiCopilotInputElement extends UmbLitElement {
         this.observe(context.agents, (agents) => (this._agents = agents));
         this.observe(context.agentId, (id) => (this._selectedAgentId = id));
         this.observe(context.agentsLoading, (loading) => (this._agentsLoading = loading));
+        this.observe(context.isOpen, (isOpen) => {
+          if (isOpen) {
+            // Focus input when sidebar opens (after transition completes)
+            setTimeout(() => {
+              this.#textareaRef.value?.focus();
+            }, 350); // Slightly longer than the 0.3s CSS transition
+          }
+        });
       }
     });
   }

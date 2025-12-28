@@ -2,6 +2,7 @@ import {
   type Message,
   type BaseEvent,
   EventType as AguiEventType,
+  transformChunks,
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import { RunStateManager, type StateChangeListener } from "./run-state-manager.js";
@@ -162,13 +163,16 @@ export class UaiAgentClient {
 
     try {
       // Subscribe to the transport's event stream
+      // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
       this.#transport.run({
         threadId,
         runId,
         messages: convertedMessages,
         tools: allTools,
         context: [],
-      }).subscribe({
+      }).pipe(
+        transformChunks(false) // false = no debug logging
+      ).subscribe({
         next: (event) => {
           this.#handleEvent(event);
         },
@@ -210,9 +214,15 @@ export class UaiAgentClient {
    */
   #handleEvent(event: BaseEvent) {
     switch (event.type) {
-      case AguiEventType.TEXT_MESSAGE_START:
-        this.#stateManager.startStreaming((event as TextMessageStartEvent).messageId);
+      case AguiEventType.TEXT_MESSAGE_START: {
+        const messageId = (event as TextMessageStartEvent).messageId;
+        this.#stateManager.startStreaming(messageId);
+        // Call onTextStart for multi-block UI support
+        if (messageId) {
+          this.#callbacks.onTextStart?.(messageId);
+        }
         break;
+      }
 
       case AguiEventType.TEXT_MESSAGE_CONTENT:
         this.#callbacks.onTextDelta?.((event as TextMessageContentEvent).delta);

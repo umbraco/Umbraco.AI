@@ -8,6 +8,7 @@ import "./message.element.js";
 import "./input.element.js";
 import "./agent-status.element.js";
 import "./interrupt.element.js";
+import "./tool-renderer.element.js";
 
 /**
  * Main chat component.
@@ -29,9 +30,6 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
   @state()
   private _isLoading = false;
-
-  @state()
-  private _streamingContent = "";
 
   #runController?: CopilotRunController;
   #messagesRef = createRef<HTMLElement>();
@@ -55,10 +53,6 @@ export class UaiCopilotChatElement extends UmbLitElement {
   #observeRunController(runController: CopilotRunController) {
     this.observe(runController.messages$, (messages) => {
       this._messages = messages;
-      this.#scrollToBottom();
-    });
-    this.observe(runController.streamingContent$, (content) => {
-      this._streamingContent = content;
       this.#scrollToBottom();
     });
     this.observe(runController.agentState$, (state) => {
@@ -94,18 +88,11 @@ export class UaiCopilotChatElement extends UmbLitElement {
   }
 
   #getLastAssistantMessageId(): string | undefined {
-    // If streaming, the streaming message is the last assistant message
-    if (this._streamingContent) {
-      return "streaming";
-    }
-
-    // Find the last assistant message in the messages array
     for (let i = this._messages.length - 1; i >= 0; i--) {
       if (this._messages[i].role === "assistant") {
         return this._messages[i].id;
       }
     }
-
     return undefined;
   }
 
@@ -134,22 +121,6 @@ export class UaiCopilotChatElement extends UmbLitElement {
           ></uai-copilot-message>
         `
       )}
-      ${this._streamingContent
-        ? html`
-            <uai-copilot-message
-              .message=${{
-                id: "streaming",
-                role: "assistant",
-                content: this._streamingContent,
-                // Don't render tool calls during streaming - wait for message finalization
-                // This prevents tool-renderer being recreated when message is finalized
-                timestamp: new Date(),
-              }}
-              is-last-assistant-message
-              is-running
-            ></uai-copilot-message>
-          `
-        : ""}
     `;
   }
 
@@ -160,7 +131,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
           class="messages-area"
           ${ref(this.#messagesRef)}
         >
-          ${this._messages.length === 0 && !this._streamingContent
+          ${this._messages.length === 0
             ? html`
                 <div class="empty-state">
                   <uui-icon name="icon-chat"></uui-icon>

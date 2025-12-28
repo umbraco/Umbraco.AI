@@ -130,30 +130,30 @@ public class RunAgentController : AgentControllerBase
             Timestamp = timestamp
         };
 
-        // Emit TextMessageStart for the assistant response
-        yield return new TextMessageStartEvent
-        {
-            MessageId = messageId,
-            Role = AguiMessageRole.Assistant,
-            Timestamp = timestamp
-        };
+        // NOTE: No TextMessageStartEvent here - we use CHUNK events instead.
+        // The frontend transformChunks operator will convert CHUNK → START/CONTENT/END.
 
         // Use a channel to bridge between try-catch and yield
         var channel = Channel.CreateUnbounded<IAguiEvent>();
 
         // Start the streaming task
+        // Build frontend tool names set for quick lookup
+        var frontendToolNames = new HashSet<string>(
+            request.Tools?.Select(t => t.Name) ?? [],
+            StringComparer.OrdinalIgnoreCase);
+
         var streamingTask = Task.Run(async () =>
         {
             var hasError = false;
             string? errorMessage = null;
-            var toolCalls = new List<FunctionCallContent>();
             var emittedToolCallIds = new HashSet<string>();
-            var toolResults = new Dictionary<string, string>();
+            // Track frontend tool call IDs (for skipping their fake results)
+            var frontendToolCallIds = new HashSet<string>();
+            // Track current messageId - will be regenerated after each tool result for multi-block UI
+            var currentMessageId = messageId;
 
             try
             {
-                // Reset frontend tool invocation flag for this run
-                FrontendToolFunction.ResetInvocationFlag();
 
                 // Create chat client
                 var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
@@ -176,42 +176,81 @@ public class RunAgentController : AgentControllerBase
                     }
                 }
 
-                // Stream the response
+                // Stream the response - emit events immediately as they arrive
                 await foreach (var update in chatClient.GetStreamingResponseAsync(chatMessages, chatOptions, cancellationToken))
                 {
-                    // Handle text content
-                    if (!string.IsNullOrEmpty(update.Text))
-                    {
-                        await channel.Writer.WriteAsync(new TextMessageContentEvent
-                        {
-                            MessageId = messageId,
-                            Delta = update.Text,
-                            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                        }, cancellationToken);
-                    }
-
-                    // Check for tool calls and results in the update contents
+                    // Check for tool calls and results FIRST (before text)
+                    // This ensures tool call UI appears before any follow-up text
                     if (update.Contents != null)
                     {
                         foreach (var content in update.Contents)
                         {
-                            if (content is FunctionCallContent functionCall && !string.IsNullOrEmpty(functionCall.CallId))
+                            if (content is FunctionCallContent functionCall &&
+                                !string.IsNullOrEmpty(functionCall.CallId) &&
+                                !emittedToolCallIds.Contains(functionCall.CallId))
                             {
-                                // Track tool calls for later processing
-                                if (!emittedToolCallIds.Contains(functionCall.CallId))
+                                emittedToolCallIds.Add(functionCall.CallId);
+
+                                // Track if this is a frontend tool
+                                var isFrontendTool = frontendToolNames.Contains(functionCall.Name);
+                                if (isFrontendTool)
                                 {
-                                    toolCalls.Add(functionCall);
+                                    frontendToolCallIds.Add(functionCall.CallId);
                                 }
+
+                                // Emit TOOL_CALL_CHUNK immediately with name and args
+                                var argsJson = functionCall.Arguments != null
+                                    ? JsonSerializer.Serialize(functionCall.Arguments)
+                                    : "{}";
+
+                                await channel.Writer.WriteAsync(new ToolCallChunkEvent
+                                {
+                                    ToolCallId = functionCall.CallId,
+                                    ToolCallName = functionCall.Name,
+                                    ParentMessageId = currentMessageId,
+                                    Delta = argsJson,
+                                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                                }, cancellationToken);
                             }
-                            else if (content is FunctionResultContent functionResult && !string.IsNullOrEmpty(functionResult.CallId))
+                            else if (content is FunctionResultContent functionResult &&
+                                     !string.IsNullOrEmpty(functionResult.CallId))
                             {
-                                // Track tool results for backend tools
+                                // Skip emitting results for frontend tools - they execute on client
+                                if (frontendToolCallIds.Contains(functionResult.CallId))
+                                {
+                                    continue;
+                                }
+
+                                // Emit TOOL_CALL_RESULT for backend tools only
                                 var resultJson = functionResult.Result != null
                                     ? JsonSerializer.Serialize(functionResult.Result)
                                     : "null";
-                                toolResults[functionResult.CallId] = resultJson;
+
+                                await channel.Writer.WriteAsync(new ToolCallResultEvent
+                                {
+                                    MessageId = Guid.NewGuid().ToString(),
+                                    ToolCallId = functionResult.CallId,
+                                    Content = resultJson,
+                                    Role = AguiMessageRole.Tool,
+                                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                                }, cancellationToken);
+
+                                // Generate new messageId for any following text (multi-block UI)
+                                currentMessageId = Guid.NewGuid().ToString();
                             }
                         }
+                    }
+
+                    // Handle text content - emit as TEXT_MESSAGE_CHUNK
+                    if (!string.IsNullOrEmpty(update.Text))
+                    {
+                        await channel.Writer.WriteAsync(new TextMessageChunkEvent
+                        {
+                            MessageId = currentMessageId,
+                            Role = AguiMessageRole.Assistant,
+                            Delta = update.Text,
+                            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                        }, cancellationToken);
                     }
                 }
             }
@@ -221,61 +260,8 @@ public class RunAgentController : AgentControllerBase
                 errorMessage = ex.Message;
             }
 
-            // Emit TextMessageEnd (before tool calls)
-            await channel.Writer.WriteAsync(new TextMessageEndEvent
-            {
-                MessageId = messageId,
-                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-            }, CancellationToken.None);
-
-            // Emit tool call events for any tool calls detected
-            foreach (var toolCall in toolCalls)
-            {
-                if (emittedToolCallIds.Contains(toolCall.CallId!))
-                    continue;
-
-                emittedToolCallIds.Add(toolCall.CallId!);
-
-                // TOOL_CALL_START
-                await channel.Writer.WriteAsync(new ToolCallStartEvent
-                {
-                    ToolCallId = toolCall.CallId!,
-                    ToolCallName = toolCall.Name,
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                }, CancellationToken.None);
-
-                // TOOL_CALL_ARGS - send arguments as JSON
-                var argsJson = toolCall.Arguments != null
-                    ? JsonSerializer.Serialize(toolCall.Arguments)
-                    : "{}";
-
-                await channel.Writer.WriteAsync(new ToolCallArgsEvent
-                {
-                    ToolCallId = toolCall.CallId!,
-                    Delta = argsJson,
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                }, CancellationToken.None);
-
-                // TOOL_CALL_END
-                await channel.Writer.WriteAsync(new ToolCallEndEvent
-                {
-                    ToolCallId = toolCall.CallId!,
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                }, CancellationToken.None);
-
-                // TOOL_CALL_RESULT - emit for backend tools that have results
-                if (toolResults.TryGetValue(toolCall.CallId!, out var resultContent))
-                {
-                    await channel.Writer.WriteAsync(new ToolCallResultEvent
-                    {
-                        MessageId = Guid.NewGuid().ToString(),
-                        ToolCallId = toolCall.CallId!,
-                        Content = resultContent,
-                        Role = AguiMessageRole.Tool,
-                        Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                    }, CancellationToken.None);
-                }
-            }
+            // NOTE: No TextMessageEndEvent or batched tool events here.
+            // The frontend transformChunks operator handles closing messages on mode switch.
 
             if (hasError)
             {
@@ -288,15 +274,16 @@ public class RunAgentController : AgentControllerBase
             }
 
             // Determine run outcome and interrupt info
-            var frontendToolInvoked = FrontendToolFunction.WasInvoked;
+            // Use tracked frontend tool call IDs instead of AsyncLocal (more reliable across Task.Run boundaries)
+            var hasFrontendTools = frontendToolCallIds.Count > 0;
             var outcome = hasError
                 ? AguiRunOutcome.Error
-                : frontendToolInvoked
+                : hasFrontendTools
                     ? AguiRunOutcome.Interrupt
                     : AguiRunOutcome.Success;
 
             // Build interrupt info if frontend tools need execution
-            AguiInterruptInfo? interrupt = frontendToolInvoked
+            AguiInterruptInfo? interrupt = hasFrontendTools
                 ? new AguiInterruptInfo
                 {
                     Id = Guid.NewGuid().ToString(),
@@ -352,23 +339,6 @@ public class RunAgentController : AgentControllerBase
         private readonly string _description;
         private readonly JsonElement _jsonSchema;
 
-        /// <summary>
-        /// Thread-static flag to track if any frontend tool was invoked during the current run.
-        /// Used to determine if the run should finish with an interrupt.
-        /// </summary>
-        [ThreadStatic]
-        private static bool _wasInvoked;
-
-        /// <summary>
-        /// Gets whether any frontend tool was invoked during the current run.
-        /// </summary>
-        public static bool WasInvoked => _wasInvoked;
-
-        /// <summary>
-        /// Resets the invocation flag. Call this at the start of each run.
-        /// </summary>
-        public static void ResetInvocationFlag() => _wasInvoked = false;
-
         public FrontendToolFunction(AguiTool tool)
         {
             _name = tool.Name;
@@ -402,9 +372,6 @@ public class RunAgentController : AgentControllerBase
             AIFunctionArguments arguments,
             CancellationToken cancellationToken)
         {
-            // Mark that a frontend tool was invoked
-            _wasInvoked = true;
-
             // Tell FunctionInvokingChatClient to stop its invocation loop.
             // This allows us to return out and emit the tool call to the frontend
             // instead of auto-executing and feeding a fake result back to the model.

@@ -31,6 +31,9 @@ export class CopilotRunController extends UmbControllerBase {
   #currentToolCalls: ToolCallInfo[] = [];
   #subscriptions: Subscription[] = [];
 
+  /** ID of the assistant message currently being streamed */
+  #currentAssistantMessageId: string | null = null;
+
   #messages = new BehaviorSubject<ChatMessage[]>([]);
   readonly messages$ = this.#messages.asObservable();
 
@@ -99,6 +102,7 @@ export class CopilotRunController extends UmbControllerBase {
     this.#agentState.next(undefined);
     this.#interrupt.next(undefined);
     this.#currentToolCalls = [];
+    this.#currentAssistantMessageId = null;
   }
 
   /**
@@ -113,6 +117,7 @@ export class CopilotRunController extends UmbControllerBase {
     this.#agentState.next(undefined);
     this.#runStatus.next({ isRunning: false });
     this.#currentToolCalls = [];
+    this.#currentAssistantMessageId = null;
     this.#toolBus.clearPending();
   }
 
@@ -141,9 +146,10 @@ export class CopilotRunController extends UmbControllerBase {
     const truncatedMessages = messages.slice(0, lastAssistantIndex);
     this.#messages.next(truncatedMessages);
 
-    // Reset any streaming/tool state
+    // Reset streaming/tool state
     this.#streamingContent.next("");
     this.#currentToolCalls = [];
+    this.#currentAssistantMessageId = null;
     this.#toolBus.clearPending();
 
     // Trigger new generation
@@ -158,14 +164,83 @@ export class CopilotRunController extends UmbControllerBase {
     this.#client = UaiAgentClient.create(
       { agentId: this.#agent.id },
       {
+        onTextStart: (messageId) => {
+          const messages = this.#messages.value;
+          const lastMessage = messages[messages.length - 1];
+
+          // Check if we need a new message for text-after-tool:
+          // - Last message is a tool result, OR
+          // - Last message is an assistant with tool calls
+          const isAfterTool =
+            lastMessage?.role === "tool" ||
+            (lastMessage?.role === "assistant" && lastMessage.toolCalls?.length);
+
+          if (isAfterTool) {
+            // Create NEW assistant message for text after tool execution
+            const newMessage: ChatMessage = {
+              id: messageId || crypto.randomUUID(),
+              role: "assistant",
+              content: "",
+              timestamp: new Date(),
+            };
+            this.#messages.next([...messages, newMessage]);
+            this.#currentAssistantMessageId = newMessage.id;
+          } else if (!this.#currentAssistantMessageId) {
+            // Create first assistant message for this run
+            const newMessage: ChatMessage = {
+              id: messageId || crypto.randomUUID(),
+              role: "assistant",
+              content: "",
+              timestamp: new Date(),
+            };
+            this.#messages.next([...messages, newMessage]);
+            this.#currentAssistantMessageId = newMessage.id;
+          }
+        },
         onTextDelta: (delta) => {
+          // Update streamingContent for typing indicator
           this.#streamingContent.next(this.#streamingContent.value + delta);
+
+          // Update current assistant message content directly
+          if (this.#currentAssistantMessageId) {
+            const messages = this.#messages.value.map((msg) =>
+              msg.id === this.#currentAssistantMessageId
+                ? { ...msg, content: msg.content + delta }
+                : msg
+            );
+            this.#messages.next(messages);
+          }
         },
         onTextEnd: () => {
-          // handled when run finishes
+          // Text complete - nothing special needed
         },
         onToolCallStart: (info) => {
-          this.#currentToolCalls = [...this.#currentToolCalls, info];
+          const toolCall: ToolCallInfo = { ...info, status: "pending" };
+          this.#currentToolCalls = [...this.#currentToolCalls, toolCall];
+
+          let messages = [...this.#messages.value];
+
+          if (!this.#currentAssistantMessageId) {
+            // Tool call without preceding text - create empty assistant message
+            const newMessage: ChatMessage = {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: "",
+              toolCalls: [toolCall],
+              timestamp: new Date(),
+            };
+            messages.push(newMessage);
+            this.#currentAssistantMessageId = newMessage.id;
+          } else {
+            // Add tool call to current assistant message
+            messages = messages.map((msg) =>
+              msg.id === this.#currentAssistantMessageId
+                ? { ...msg, toolCalls: [...(msg.toolCalls || []), toolCall] }
+                : msg
+            );
+          }
+
+          this.#messages.next(messages);
           this.#agentState.next({ status: "executing", currentStep: `Calling ${info.name}...` });
         },
         onToolCallArgsEnd: (id, args) => this.#handleToolCallArgsEnd(id, args),
@@ -186,50 +261,74 @@ export class CopilotRunController extends UmbControllerBase {
     );
   }
 
-  #finalizeAssistantMessage(content: string): void {
-    if (!content && this.#currentToolCalls.length === 0) return;
-    
-    const assistantMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content,
-      toolCalls: this.#currentToolCalls.length > 0 ? [...this.#currentToolCalls] : undefined,
-      timestamp: new Date(),
-    };
-
-    const nextMessages = [...this.#messages.value, assistantMessage];
-    this.#messages.next(nextMessages);
-    this.#streamingContent.next("");
-    this.#currentToolCalls = [];
-  }
-
   #handleToolCallArgsEnd(toolCallId: string, argsJson: string): void {
     const parsedArgs = safeParseJson(argsJson);
+
+    // Update currentToolCalls
     this.#currentToolCalls = this.#currentToolCalls.map((tc) =>
       tc.id === toolCallId ? { ...tc, arguments: argsJson, parsedArgs } : tc
     );
+
+    // Update message directly
+    const messages = this.#messages.value.map((msg) => {
+      if (msg.id === this.#currentAssistantMessageId && msg.toolCalls) {
+        return {
+          ...msg,
+          toolCalls: msg.toolCalls.map((tc) =>
+            tc.id === toolCallId ? { ...tc, arguments: argsJson, parsedArgs } : tc
+          ),
+        };
+      }
+      return msg;
+    });
+    this.#messages.next(messages);
   }
 
   /**
    * Handle server-side tool result (TOOL_CALL_RESULT event).
-   * Updates the tool call status to completed.
-   * Tool messages are added later in #handleRunFinished after the assistant message is finalized.
+   * Updates the tool call status and immediately adds the tool message.
    */
   #handleServerToolResult(toolCallId: string, result: string): void {
-    // Update pending tool calls with the result (message not yet finalized)
+    // Update pending tool calls
     this.#currentToolCalls = this.#currentToolCalls.map((tc) =>
       tc.id === toolCallId ? { ...tc, status: "completed", result } : tc
     );
+
+    // Update the tool call in the message
+    const updated = this.#messages.value.map((msg) => {
+      if (msg.id === this.#currentAssistantMessageId && msg.toolCalls) {
+        return {
+          ...msg,
+          toolCalls: msg.toolCalls.map((tc) =>
+            tc.id === toolCallId ? { ...tc, status: "completed" as const, result } : tc
+          ),
+        };
+      }
+      return msg;
+    });
+
+    // Immediately add tool message (must happen before any text-after-tool)
+    const toolMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "tool",
+      content: result,
+      toolCallId: toolCallId,
+      timestamp: new Date(),
+    };
+
+    this.#messages.next([...updated, toolMessage]);
   }
 
   #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }): void {
-    this.#finalizeAssistantMessage(this.#streamingContent.value);
+    // Clear streaming content
+    this.#streamingContent.next("");
 
-    // Get the last assistant message by role (more robust than index-based lookup)
-    const assistantMessage = this.#getLastAssistantMessage();
+    // Store current assistant message ID before resetting
+    const assistantMessageId = this.#currentAssistantMessageId;
 
-    // Add tool messages for server-side tool calls (must come after assistant message)
-    this.#addServerToolMessages();
+    // Reset for next run
+    this.#currentAssistantMessageId = null;
+    this.#currentToolCalls = [];
 
     if (event.outcome === "interrupt" && event.interrupt) {
       this.#interrupt.next(event.interrupt);
@@ -239,22 +338,21 @@ export class CopilotRunController extends UmbControllerBase {
     }
 
     if (event.outcome === "error") {
-      const nextMessages = [
-        ...this.#messages.value,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: `Error: ${event.error ?? "An error occurred"}`,
-          timestamp: new Date(),
-        } as ChatMessage,
-      ];
-
-      this.#messages.next(nextMessages);
+      // Add error message
+      const errorMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: `Error: ${event.error ?? "An error occurred"}`,
+        timestamp: new Date(),
+      };
+      this.#messages.next([...this.#messages.value, errorMessage]);
       this.#agentState.next(undefined);
       this.#runStatus.next({ isRunning: false });
       return;
     }
 
+    // Check for frontend tools using the stored assistant message ID
+    const assistantMessage = this.#messages.value.find((m) => m.id === assistantMessageId);
     const frontendToolCalls =
       assistantMessage?.toolCalls?.filter((tc) => this.#toolManager.isFrontendTool(tc.name)) ?? [];
 
@@ -269,65 +367,23 @@ export class CopilotRunController extends UmbControllerBase {
     }
   }
 
-  /**
-   * Get the last assistant message from the conversation.
-   */
-  #getLastAssistantMessage(): ChatMessage | undefined {
-    const messages = this.#messages.value;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === "assistant") {
-        return messages[i];
-      }
-    }
-    return undefined;
-  }
-
-  /**
-   * Add tool messages for server-side tool calls that have results.
-   * Called after the assistant message is finalized to ensure correct message order.
-   */
-  #addServerToolMessages(): void {
-    const assistantMessage = this.#getLastAssistantMessage();
-    if (!assistantMessage?.toolCalls) return;
-
-    // Find server-side tool calls with results (not frontend tools)
-    const serverToolCalls = assistantMessage.toolCalls.filter(
-      (tc) => tc.result !== undefined && !this.#toolManager.isFrontendTool(tc.name)
-    );
-
-    if (serverToolCalls.length === 0) return;
-
-    // Add tool messages for each server-side tool call
-    const toolMessages: ChatMessage[] = serverToolCalls.map((tc) => ({
-      id: crypto.randomUUID(),
-      role: "tool" as const,
-      content: tc.result ?? "",
-      toolCallId: tc.id,
-      timestamp: new Date(),
-    }));
-
-    this.#messages.next([...this.#messages.value, ...toolMessages]);
-  }
-
   #handleToolResult(result: CopilotToolResult): void {
-    // Update existing assistant tool call metadata
+    const resultContent = typeof result.result === "string"
+      ? result.result
+      : JSON.stringify(result.result);
+    const newStatus = result.error ? "error" : "completed";
+
+    // Update assistant tool call status
     const updated = this.#messages.value.map((msg) => {
       if (msg.role === "assistant" && msg.toolCalls) {
         return {
           ...msg,
           toolCalls: msg.toolCalls.map((tc) =>
             tc.id === result.toolCallId
-              ? {
-                  ...tc,
-                  status: result.error ? "error" : "completed",
-                  result:
-                    typeof result.result === "string"
-                      ? result.result
-                      : JSON.stringify(result.result),
-                }
+              ? { ...tc, status: newStatus as ToolCallInfo["status"], result: resultContent }
               : tc
           ),
-        } as ChatMessage;
+        };
       }
       return msg;
     });
@@ -336,7 +392,7 @@ export class CopilotRunController extends UmbControllerBase {
     const toolMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "tool",
-      content: typeof result.result === "string" ? result.result : JSON.stringify(result.result),
+      content: resultContent,
       toolCallId: result.toolCallId,
       timestamp: new Date(),
     };

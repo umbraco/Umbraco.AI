@@ -31,6 +31,8 @@ export interface AgentTransport {
  * Callbacks for AG-UI client events.
  */
 export interface AgentClientCallbacks {
+  /** Called when a new text message starts (with messageId for multi-block UI) */
+  onTextStart?: (messageId: string) => void;
   /** Called when a text delta is received */
   onTextDelta?: (delta: string) => void;
   /** Called when text message is complete (content should be accumulated from deltas) */

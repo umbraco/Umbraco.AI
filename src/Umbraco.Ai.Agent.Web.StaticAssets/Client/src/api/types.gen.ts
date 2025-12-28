@@ -42,7 +42,7 @@ export type AguiMessageModel = {
     toolCallId?: string | null;
 };
 
-export type AguiMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
+export type AguiMessageRoleModel = 'user' | 'assistant' | 'system' | 'tool' | 'developer' | 'activity';
 
 export type AguiResumeInfoModel = {
     interruptId: string;

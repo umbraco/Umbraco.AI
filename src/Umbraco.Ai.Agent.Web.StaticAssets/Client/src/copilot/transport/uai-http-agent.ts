@@ -122,14 +122,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
   }
 
   #mapRole(role: string): AguiMessageRoleModel {
-    const roleMap: Record<string, AguiMessageRoleModel> = {
-      user: "User",
-      assistant: "Assistant",
-      system: "System",
-      tool: "Tool",
-      developer: "Developer",
-    };
-    return roleMap[role.toLowerCase()] ?? "User";
+    return role.toLowerCase() as AguiMessageRoleModel;
   }
 
   #toAguiTool(tool: Tool): AguiToolModel {

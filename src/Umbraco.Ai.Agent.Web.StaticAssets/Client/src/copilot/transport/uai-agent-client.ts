@@ -171,7 +171,7 @@ export class UaiAgentClient {
         tools: allTools,
         context: [],
       }).pipe(
-        transformChunks(false) // false = no debug logging
+        transformChunks(false)
       ).subscribe({
         next: (event) => {
           this.#handleEvent(event);
@@ -311,7 +311,9 @@ export class UaiAgentClient {
   }
 
   #handleRunFinished(event: RunFinishedAguiEvent) {
-    const outcome = event.outcome;
+    // Normalize outcome to lowercase for case-insensitive comparison
+    // Backend sends PascalCase (e.g., "Interrupt") but we use lowercase
+    const outcome = (event.outcome ?? "").toLowerCase();
 
     if (outcome === "interrupt") {
       const interrupt = UaiAgentClient.#parseInterrupt(event.interrupt);

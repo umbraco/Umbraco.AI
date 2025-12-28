@@ -175,8 +175,13 @@ export class CopilotRunController extends UmbControllerBase {
             lastMessage?.role === "tool" ||
             (lastMessage?.role === "assistant" && lastMessage.toolCalls?.length);
 
-          if (isAfterTool) {
+          // Also check if messageId differs from current (indicates new message block from backend)
+          const isDifferentMessageId =
+            messageId && this.#currentAssistantMessageId && messageId !== this.#currentAssistantMessageId;
+
+          if (isAfterTool || isDifferentMessageId) {
             // Create NEW assistant message for text after tool execution
+            // or when backend signals a new message block
             const newMessage: ChatMessage = {
               id: messageId || crypto.randomUUID(),
               role: "assistant",
@@ -331,10 +336,14 @@ export class CopilotRunController extends UmbControllerBase {
     this.#currentToolCalls = [];
 
     if (event.outcome === "interrupt" && event.interrupt) {
-      this.#interrupt.next(event.interrupt);
-      this.#agentState.next(undefined);
-      this.#runStatus.next({ isRunning: false });
-      return;
+      // Only show HITL controls for human_approval interrupts
+      if (event.interrupt.reason === "human_approval") {
+        this.#interrupt.next(event.interrupt);
+        this.#agentState.next(undefined);
+        this.#runStatus.next({ isRunning: false });
+        return;
+      }
+      // For other interrupt reasons (e.g., tool_execution), fall through to frontend tool check
     }
 
     if (event.outcome === "error") {

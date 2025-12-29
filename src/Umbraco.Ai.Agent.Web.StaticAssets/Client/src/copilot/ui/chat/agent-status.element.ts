@@ -1,6 +1,6 @@
 import { customElement, property, css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaiAgentState } from "../../../core/types.js";
+import type { UaiAgentState } from "../../core/types.js";
 
 /**
  * Agent status component.

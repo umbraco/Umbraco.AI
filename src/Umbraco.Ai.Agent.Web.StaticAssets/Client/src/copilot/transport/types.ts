@@ -67,42 +67,6 @@ export interface RunFinishedEvent {
 }
 
 // =============================================================================
-// Run Lifecycle State Types
-// =============================================================================
-
-/**
- * Discriminated union for run lifecycle state.
- * Enables type-safe state transitions and prepares for session resumption.
- */
-export type RunLifecycleState =
-  | { status: 'idle' }
-  | { status: 'running'; runId: string; threadId: string }
-  | { status: 'streaming_text'; runId: string; threadId: string; messageId?: string }
-  | { status: 'awaiting_tool_execution'; runId: string; threadId: string; pendingTools: string[] }
-  | { status: 'interrupted'; runId: string; threadId: string; interrupt: UaiInterruptInfo }
-  | { status: 'error'; runId: string; error: Error };
-
-/**
- * Context for a run, including messages and pending tool calls.
- * This structure supports future session resumption.
- */
-export interface RunContext {
-  threadId: string;
-  runId: string;
-  messages: UaiChatMessage[];
-  pendingToolCalls: Map<string, UaiToolCallInfo>;
-  toolCallArgs: Map<string, string>;
-}
-
-/**
- * Snapshot of state for session resumption.
- */
-export interface RunSnapshot {
-  state: RunLifecycleState;
-  context?: RunContext;
-}
-
-// =============================================================================
 // AG-UI Event Types (for type-safe event handling)
 // =============================================================================
 

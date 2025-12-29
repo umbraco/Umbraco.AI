@@ -2,12 +2,12 @@ import { customElement, property, state, css, html, nothing } from "@umbraco-cms
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
-import type { ManifestUaiAgentTool } from "../../../../agent/tools/uai-agent-tool.extension.js";
+import type { ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
 import type {
   ManifestUaiAgentApprovalElement,
   UaiAgentApprovalElement,
-} from "../../../../agent/approval/uai-agent-approval-element.extension.js";
-import type { UaiInterruptInfo } from "../../../core/types.js";
+} from "../../../agent/approval/uai-agent-approval-element.extension.js";
+import type { UaiInterruptInfo } from "../../core/types.js";
 
 /**
  * Interrupt UI component.

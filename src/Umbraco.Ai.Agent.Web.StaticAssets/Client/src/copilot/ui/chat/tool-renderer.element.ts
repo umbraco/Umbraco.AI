@@ -6,12 +6,12 @@ import type {
   ManifestUaiAgentTool,
   UaiAgentToolElement,
   UaiAgentToolStatus,
-} from "../../../../agent/tools/uai-agent-tool.extension.js";
-import type { UaiToolCallInfo } from "../../../core/types.js";
-import { safeParseJson } from "../../../core/utils/json.js";
+} from "../../../agent/tools/uai-agent-tool.extension.js";
+import type { UaiToolCallInfo } from "../../core/types.js";
+import { safeParseJson } from "../../core/utils/json.js";
 
 // Import default tool status component
-import "../../../../agent/tools/tool-status.element.js";
+import "../../../agent/tools/tool-status.element.js";
 
 /**
  * Tool renderer component that dynamically renders tool UI based on registered extensions.

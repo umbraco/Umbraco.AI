@@ -1,8 +1,8 @@
 import { customElement, property, state, css, html, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../../core/copilot.context.js";
-import type { UaiCopilotAgentItem } from "../../../core/repositories/copilot.repository.js";
+import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../core/copilot.context.js";
+import type { UaiCopilotAgentItem } from "../../core/repositories/copilot.repository.js";
 
 /**
  * Chat input component.

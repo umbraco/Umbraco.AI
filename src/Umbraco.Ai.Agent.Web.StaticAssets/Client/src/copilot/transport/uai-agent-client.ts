@@ -5,13 +5,11 @@ import {
   transformChunks,
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
-import { UaiRunStateManager, type StateChangeListener } from "../core/run-state-manager.js";
 import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "../core/types.js";
 import type {
   AgentClientCallbacks,
   AguiTool,
   AgentTransport,
-  RunLifecycleState,
   TextMessageStartEvent,
   TextMessageContentEvent,
   ToolCallStartEvent,
@@ -35,12 +33,15 @@ export interface UaiAgentClientConfig {
 
 /**
  * Client wrapper for AG-UI protocol.
- * Provides a simplified callback interface for the chat UI.
+ * Pure event bridge - receives AG-UI events and forwards via callbacks.
+ * State management is handled by UaiCopilotRunController.
  */
 export class UaiAgentClient {
   #transport: AgentTransport;
   #callbacks: AgentClientCallbacks;
-  #stateManager: UaiRunStateManager;
+
+  /** Accumulates tool call arguments during streaming */
+  #pendingToolArgs = new Map<string, string>();
 
   /**
    * Create a new UaiAgentClient with an injected transport.
@@ -51,7 +52,6 @@ export class UaiAgentClient {
   constructor(transport: AgentTransport, callbacks: AgentClientCallbacks = {}) {
     this.#transport = transport;
     this.#callbacks = callbacks;
-    this.#stateManager = new UaiRunStateManager();
   }
 
   /**
@@ -68,40 +68,10 @@ export class UaiAgentClient {
 
   /**
    * Update the callbacks dynamically.
-   * Available for external use to change event handlers after construction.
    * @param callbacks The new set of callbacks to use
    */
   setCallbacks(callbacks: AgentClientCallbacks) {
     this.#callbacks = callbacks;
-  }
-
-  /**
-   * Get the current messages.
-   */
-  get messages(): UaiChatMessage[] {
-    return this.#stateManager.messages;
-  }
-
-  /**
-   * Get the current run lifecycle state.
-   */
-  get runState(): RunLifecycleState {
-    return this.#stateManager.state;
-  }
-
-  /**
-   * Check if a run is currently active.
-   */
-  get isRunning(): boolean {
-    return this.#stateManager.isRunning;
-  }
-
-  /**
-   * Subscribe to run state changes.
-   * @returns Unsubscribe function
-   */
-  subscribeToState(listener: StateChangeListener): () => void {
-    return this.#stateManager.subscribe(listener);
   }
 
   /**
@@ -143,81 +113,47 @@ export class UaiAgentClient {
   }
 
   /**
-   * Send a message and start a new run.
+   * Send messages and start a new run.
    * @param messages The messages to send
-   * @param tools Optional additional tools to include (merged with registered frontend tools)
+   * @param tools Optional tools to include
    */
-  async sendMessage(messages: UaiChatMessage[], tools?: AguiTool[]): Promise<void> {
+  sendMessage(messages: UaiChatMessage[], tools?: AguiTool[]): void {
     const threadId = crypto.randomUUID();
     const runId = crypto.randomUUID();
 
-    // Initialize state manager for this run
-    this.#stateManager.startRun(runId, threadId, messages);
+    // Clear any pending tool args from previous run
+    this.#pendingToolArgs.clear();
 
-    // Set messages on the agent before running
+    // Convert and set messages on transport
     const convertedMessages = messages.map((m) => UaiAgentClient.#toAguiMessage(m));
     this.#transport.setMessages(convertedMessages);
 
-    // Use tools passed in directly
-    const allTools = tools ?? [];
-
-    try {
-      // Subscribe to the transport's event stream
-      // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
-      this.#transport.run({
-        threadId,
-        runId,
-        messages: convertedMessages,
-        tools: allTools,
-        context: [],
-      }).pipe(
-        transformChunks(false)
-      ).subscribe({
-        next: (event) => {
-          this.#handleEvent(event);
-        },
-        error: (error) => {
-          const err = error instanceof Error ? error : new Error(String(error));
-          this.#stateManager.setError(err);
-          this.#callbacks.onError?.(err);
-        },
-        complete: () => {
-          // Stream completed
-        },
-      });
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      this.#stateManager.setError(err);
-      this.#callbacks.onError?.(err);
-    }
-  }
-
-  /**
-   * Resume a run after an interrupt with user response.
-   * @param interruptResponse The user's response to the interrupt
-   * @param tools Optional tools to include (should be the same as the original run)
-   */
-  async resumeRun(interruptResponse: string, tools?: AguiTool[]): Promise<void> {
-    const userMessage: UaiChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: interruptResponse,
-      timestamp: new Date(),
-    };
-
-    await this.sendMessage([...this.#stateManager.messages, userMessage], tools);
+    // Subscribe to the transport's event stream
+    // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
+    this.#transport.run({
+      threadId,
+      runId,
+      messages: convertedMessages,
+      tools: tools ?? [],
+      context: [],
+    }).pipe(
+      transformChunks(false)
+    ).subscribe({
+      next: (event) => this.#handleEvent(event),
+      error: (error) => {
+        const err = error instanceof Error ? error : new Error(String(error));
+        this.#callbacks.onError?.(err);
+      },
+    });
   }
 
   /**
    * Handle incoming AG-UI events.
-   * Uses typed event interfaces for type safety.
    */
   #handleEvent(event: BaseEvent) {
     switch (event.type) {
       case AguiEventType.TEXT_MESSAGE_START: {
         const messageId = (event as TextMessageStartEvent).messageId;
-        this.#stateManager.startStreaming(messageId);
-        // Call onTextStart for multi-block UI support
         if (messageId) {
           this.#callbacks.onTextStart?.(messageId);
         }
@@ -229,7 +165,6 @@ export class UaiAgentClient {
         break;
 
       case AguiEventType.TEXT_MESSAGE_END:
-        this.#stateManager.endStreaming();
         this.#callbacks.onTextEnd?.();
         break;
 
@@ -246,19 +181,19 @@ export class UaiAgentClient {
         break;
 
       case AguiEventType.TOOL_CALL_RESULT:
-        this.#handleToolCallResult(event as ToolCallResultEvent);
+        this.#callbacks.onToolCallResult?.(
+          (event as ToolCallResultEvent).toolCallId,
+          (event as ToolCallResultEvent).content
+        );
         break;
 
       case AguiEventType.RUN_FINISHED:
         this.#handleRunFinished(event as RunFinishedAguiEvent);
         break;
 
-      case AguiEventType.RUN_ERROR: {
-        const err = new Error((event as RunErrorEvent).message);
-        this.#stateManager.setError(err);
-        this.#callbacks.onError?.(err);
+      case AguiEventType.RUN_ERROR:
+        this.#callbacks.onError?.(new Error((event as RunErrorEvent).message));
         break;
-      }
 
       case AguiEventType.STATE_SNAPSHOT:
         this.#callbacks.onStateSnapshot?.((event as StateSnapshotEvent).state);
@@ -281,33 +216,21 @@ export class UaiAgentClient {
       arguments: "",
       status: "pending",
     };
-
-    this.#stateManager.addToolCall(toolCall);
+    this.#pendingToolArgs.set(event.toolCallId, "");
     this.#callbacks.onToolCallStart?.(toolCall);
   }
 
   #handleToolCallArgs(event: ToolCallArgsEvent) {
-    this.#stateManager.appendToolCallArgs(event.toolCallId, event.delta);
+    const current = this.#pendingToolArgs.get(event.toolCallId) ?? "";
+    this.#pendingToolArgs.set(event.toolCallId, current + event.delta);
   }
 
   #handleToolCallEnd(event: ToolCallEndEvent) {
-    const toolCallId = event.toolCallId;
-    const args = this.#stateManager.finalizeToolCallArgs(toolCallId);
-
+    const args = this.#pendingToolArgs.get(event.toolCallId);
     if (args !== undefined) {
-      // Status stays "pending" for backend tools (waiting for TOOL_CALL_RESULT)
-      // Frontend tools will set status to "executing" when they execute
-      this.#callbacks.onToolCallArgsEnd?.(toolCallId, args);
-      this.#callbacks.onToolCallEnd?.(toolCallId);
+      this.#callbacks.onToolCallArgsEnd?.(event.toolCallId, args);
+      this.#callbacks.onToolCallEnd?.(event.toolCallId);
     }
-  }
-
-  #handleToolCallResult(event: ToolCallResultEvent) {
-    const toolCallId = event.toolCallId;
-    const content = event.content;
-
-    this.#stateManager.setToolCallResult(toolCallId, content, "completed");
-    this.#callbacks.onToolCallResult?.(toolCallId, content);
   }
 
   #handleRunFinished(event: RunFinishedAguiEvent) {
@@ -317,19 +240,16 @@ export class UaiAgentClient {
 
     if (outcome === "interrupt") {
       const interrupt = UaiAgentClient.#parseInterrupt(event.interrupt);
-      this.#stateManager.interrupt(interrupt);
       this.#callbacks.onRunFinished?.({
         outcome: "interrupt",
         interrupt,
       });
     } else if (outcome === "error") {
-      this.#stateManager.setError(new Error(event.error ?? "Unknown error"));
       this.#callbacks.onRunFinished?.({
         outcome: "error",
         error: event.error as string,
       });
     } else {
-      this.#stateManager.complete();
       this.#callbacks.onRunFinished?.({
         outcome: "success",
       });
@@ -350,7 +270,6 @@ export class UaiAgentClient {
       timestamp: new Date(),
     }));
 
-    this.#stateManager.setMessages(messages);
     this.#callbacks.onMessagesSnapshot?.(messages);
   }
 
@@ -371,26 +290,10 @@ export class UaiAgentClient {
   }
 
   /**
-   * Get a pending tool call by ID.
-   */
-  getToolCall(toolCallId: string): UaiToolCallInfo | undefined {
-    return this.#stateManager.getToolCall(toolCallId);
-  }
-
-  /**
-   * Signal that we're awaiting frontend tool execution.
-   * Called by the consumer when frontend tools need to be executed.
-   * @param pendingToolIds IDs of tools awaiting execution
-   */
-  awaitToolExecution(pendingToolIds: string[]): void {
-    this.#stateManager.awaitToolExecution(pendingToolIds);
-  }
-
-  /**
    * Reset the client state.
-   * Useful when starting a new conversation.
+   * Clears pending tool arguments.
    */
   reset(): void {
-    this.#stateManager.reset();
+    this.#pendingToolArgs.clear();
   }
 }

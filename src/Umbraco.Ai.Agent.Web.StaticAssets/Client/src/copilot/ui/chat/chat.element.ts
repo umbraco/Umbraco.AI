@@ -1,8 +1,8 @@
 import { customElement, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo } from "../../../core/types.js";
-import { UAI_COPILOT_CONTEXT, UAI_COPILOT_RUN_CONTEXT, type UaiCopilotContext } from "../../../core/copilot.context.js";
-import type { UaiCopilotRunController } from "../../../core/controllers/copilot-run.controller.js";
+import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo } from "../../core/types.js";
+import { UAI_COPILOT_CONTEXT, UAI_COPILOT_RUN_CONTEXT, type UaiCopilotContext } from "../../core/copilot.context.js";
+import type { UaiCopilotRunController } from "../../core/controllers/copilot-run.controller.js";
 
 import "./message.element.js";
 import "./input.element.js";

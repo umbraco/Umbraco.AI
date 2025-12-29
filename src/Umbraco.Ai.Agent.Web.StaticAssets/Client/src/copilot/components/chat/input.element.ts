@@ -39,7 +39,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
       if (context) {
         this.#copilotContext = context;
         this.observe(context.agents, (agents) => (this._agents = agents));
-        this.observe(context.agentId, (id) => (this._selectedAgentId = id));
+        this.observe(context.selectedAgent, (agent) => (this._selectedAgentId = agent?.id ?? ""));
         this.observe(context.agentsLoading, (loading) => (this._agentsLoading = loading));
         this.observe(context.isOpen, (isOpen) => {
           if (isOpen) {
@@ -66,7 +66,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
 
   #handleAgentChange(e: Event) {
     const select = e.target as HTMLSelectElement;
-    this.#copilotContext?.setAgent(select.value);
+    this.#copilotContext?.selectAgent(select.value);
   }
 
   #getAgentOptions(): Array<{ name: string; value: string; selected?: boolean }> {

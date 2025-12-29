@@ -1,7 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject, Subscription, map } from "rxjs";
-import { UaiFrontendToolManager } from "../services/frontend-tool.manager.ts";
+import { UaiFrontendToolManager } from "./frontend-tool.manager.ts";
 import {
   UaiFrontendToolExecutor,
   type UaiFrontendToolResult,
@@ -14,7 +14,7 @@ import type {
   UaiToolCallInfo,
   UaiToolCallStatus,
 } from "../types.js";
-import { safeParseJson } from "../utils/json.js";
+import { safeParseJson } from "../utils";
 import { UaiInterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.js";
 import { UaiToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.js";
 import { UaiHitlInterruptHandler } from "../interrupts/handlers/hitl-interrupt.handler.js";

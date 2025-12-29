@@ -1,21 +1,11 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { UmbArrayState, UmbBasicState, UmbBooleanState, UmbStringState } from "@umbraco-cms/backoffice/observable-api";
+import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
-import type { Observable } from "rxjs";
 import { UaiCopilotRunController } from "./services/copilot-run.controller.js";
 import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiCopilotAgentItem } from "./types.ts";
-
-/**
- * Basic agent information used for display purposes.
- */
-export interface UaiAgentInfo {
-  id: string;
-  name: string;
-  alias: string;
-}
 
 /**
  * Root Copilot context that wires together agent data, run lifecycle, and tool coordination.
@@ -27,23 +17,17 @@ export class UaiCopilotContext extends UmbControllerBase {
   #isOpen = new UmbBooleanState(false);
   readonly isOpen = this.#isOpen.asObservable();
 
-  #agentId = new UmbStringState("");
-  readonly agentId = this.#agentId.asObservable();
-
-  #agentName = new UmbStringState("");
-  readonly agentName = this.#agentName.asObservable();
-
   #agentRepository: UaiCopilotAgentRepository;
   #runController: UaiCopilotRunController;
   #hitlContext: UaiHitlContext;
 
-  #agents: UmbArrayState<UaiCopilotAgentItem> = new UmbArrayState<UaiCopilotAgentItem>([], (x) => x.id);
-  #selectedAgent: UmbBasicState<UaiCopilotAgentItem | undefined> = new UmbBasicState<UaiCopilotAgentItem | undefined>(undefined);
-  #agentsLoading: UmbBasicState<boolean> = new UmbBasicState<boolean>(false);
-  
-  readonly agents: Observable<UaiCopilotAgentItem[]> = this.#agents.asObservable();
-  readonly selectedAgent: Observable<UaiCopilotAgentItem | undefined> = this.#selectedAgent.asObservable();
-  readonly agentsLoading: Observable<boolean> = this.#agentsLoading.asObservable();
+  #agents = new UmbArrayState<UaiCopilotAgentItem>([], (x) => x.id);
+  #selectedAgent = new UmbBasicState<UaiCopilotAgentItem | undefined>(undefined);
+  #agentsLoading = new UmbBooleanState(false);
+
+  readonly agents = this.#agents.asObservable();
+  readonly selectedAgent = this.#selectedAgent.asObservable();
+  readonly agentsLoading = this.#agentsLoading.asObservable();
 
   get messages$() {
     return this.#runController.messages$;
@@ -76,14 +60,10 @@ export class UaiCopilotContext extends UmbControllerBase {
     this.#hitlContext = new UaiHitlContext(host);
     this.#runController = new UaiCopilotRunController(host, this.#hitlContext);
 
+    // Sync selected agent to run controller
     this.observe(this.selectedAgent, (agent) => {
       if (agent) {
-        this.#agentId.setValue(agent.id);
-        this.#agentName.setValue(agent.name);
         this.#runController.setAgent(agent);
-      } else {
-        this.#agentId.setValue("");
-        this.#agentName.setValue("");
       }
     });
 
@@ -96,50 +76,56 @@ export class UaiCopilotContext extends UmbControllerBase {
    * Load available agents from the server.
    */
   async loadAgents(): Promise<void> {
-    
-    // Set loading state
     this.#agentsLoading.setValue(true);
-    
-    // Load and observe selected agent
-    const { asObservable: agentsObservable } = await this.#agentRepository.getOrFetchAll();
-    if (!agentsObservable) return;
-    this.observe(agentsObservable(), (agents) => {
-      this.#agents.setValue(agents);
-    });
-    
-    // Load and observe selected agent
-    const { asObservable: selectedAsObservable } = await this.#agentRepository.selected();
-    if (!selectedAsObservable) return;
-    this.observe(selectedAsObservable(), (agent) => {
-      this.#selectedAgent.setValue(agent);
-    });
-    
-    // Clear loading state
+
+    const { data } = await this.#agentRepository.fetchActiveAgents();
+
+    if (data) {
+      this.#agents.setValue(data);
+
+      // Auto-select first agent if none selected
+      if (!this.#selectedAgent.getValue() && data.length > 0) {
+        this.#selectedAgent.setValue(data[0]);
+      }
+    }
+
     this.#agentsLoading.setValue(false);
-    
   }
 
   /**
    * Check if an agent is currently selected.
    */
   hasAgent(): boolean {
-    return !!this.#agentId.getValue();
+    return !!this.#selectedAgent.getValue();
+  }
+
+  /**
+   * Get the currently selected agent ID.
+   */
+  getAgentId(): string | undefined {
+    return this.#selectedAgent.getValue()?.id;
+  }
+
+  /**
+   * Get the currently selected agent name.
+   */
+  getAgentName(): string | undefined {
+    return this.#selectedAgent.getValue()?.name;
   }
 
   /**
    * Select an agent by its ID.
    * @param agentId The unique identifier of the agent to select
    */
-  async setAgent(agentId: string): Promise<void> {
-    await this.#agentRepository.select(agentId);
-  }
-
-  /**
-   * Clear the currently selected agent.
-   * Available for external use when deselecting agents programmatically.
-   */
-  async clearAgent(): Promise<void> {
-    await this.#agentRepository.select(undefined);
+  selectAgent(agentId: string | undefined): void {
+    if (!agentId) {
+      this.#selectedAgent.setValue(undefined);
+      return;
+    }
+    const agent = this.#agents.getValue().find((a) => a.id === agentId);
+    if (agent) {
+      this.#selectedAgent.setValue(agent);
+    }
   }
 
   /** Open the copilot panel. */

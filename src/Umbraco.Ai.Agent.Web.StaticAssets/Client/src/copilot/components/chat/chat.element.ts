@@ -40,7 +40,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
       if (!context) return;
       this.#copilotContext = context;
-      this.observe(context.agentName, (name) => (this._agentName = name));
+      this.observe(context.selectedAgent, (agent) => (this._agentName = agent?.name ?? ""));
       this.observe(context.hitlInterrupt$, (interrupt) => {
         this._hitlInterrupt = interrupt;
         if (interrupt) {

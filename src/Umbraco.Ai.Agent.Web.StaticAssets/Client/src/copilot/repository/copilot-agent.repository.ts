@@ -1,21 +1,19 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { AgentsService } from "../../../api";
+import { AgentsService } from "../../api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { UaiCopilotAgentItem } from "../../types.js";
+import { UaiCopilotAgentItem } from "../types.js";
 
 /**
- * Data-source for loading active agents for the copilot.
+ * Repository for loading active agents for the copilot.
  */
-export class UaiCopilotAgentServerDataSource {
-  
+export class UaiCopilotAgentRepository {
   #host: UmbControllerHost;
 
   constructor(host: UmbControllerHost) {
     this.#host = host;
   }
 
-  async requestActiveAgents(): Promise<{ data?: UaiCopilotAgentItem[]; error?: unknown }> {
-    
+  async fetchActiveAgents(): Promise<{ data?: UaiCopilotAgentItem[]; error?: unknown }> {
     const response = await tryExecute(
       this.#host,
       AgentsService.getAllAgents({

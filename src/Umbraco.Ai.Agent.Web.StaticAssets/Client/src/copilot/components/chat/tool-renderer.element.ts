@@ -7,7 +7,7 @@ import type {
 } from "../../../agent/tools";
 import type { UaiToolCallInfo } from "../../types.js";
 import { safeParseJson } from "../../utils";
-import { UAI_COPILOT_RUN_CONTEXT } from "../../copilot.context.js";
+import { UAI_COPILOT_CONTEXT } from "../../copilot.context.js";
 import type { UaiFrontendToolManager } from "../../services/frontend-tool.manager.ts";
 
 // Import default tool status component
@@ -46,9 +46,9 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this.consumeContext(UAI_COPILOT_RUN_CONTEXT, (runController) => {
-      if (runController) {
-        this.#toolManager = runController.toolManager;
+    this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
+      if (context) {
+        this.#toolManager = context.toolManager;
         this.#lookupExtension();
       }
     });

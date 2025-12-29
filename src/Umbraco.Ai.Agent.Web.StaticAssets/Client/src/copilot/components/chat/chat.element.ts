@@ -1,8 +1,7 @@
 import { customElement, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo } from "../../types.js";
-import { UAI_COPILOT_CONTEXT, UAI_COPILOT_RUN_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
-import type { UaiCopilotRunController } from "../../services/copilot-run.controller.js";
+import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
 
 import "./message.element.js";
 import "./input.element.js";
@@ -32,7 +31,6 @@ export class UaiCopilotChatElement extends UmbLitElement {
   private _isRunning = false;
 
   #copilotContext?: UaiCopilotContext;
-  #runController?: UaiCopilotRunController;
   #messagesRef = createRef<HTMLElement>();
 
   constructor() {
@@ -40,7 +38,23 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
       if (!context) return;
       this.#copilotContext = context;
+
+      // Agent info
       this.observe(context.selectedAgent, (agent) => (this._agentName = agent?.name ?? ""));
+
+      // Run state (via passthrough getters)
+      this.observe(context.messages$, (messages) => {
+        this._messages = messages;
+        this.#scrollToBottom();
+      });
+      this.observe(context.agentState$, (state) => {
+        this._agentState = state;
+      });
+      this.observe(context.isRunning$, (isRunning) => {
+        this._isRunning = isRunning;
+      });
+
+      // HITL interrupts
       this.observe(context.hitlInterrupt$, (interrupt) => {
         this._hitlInterrupt = interrupt;
         if (interrupt) {
@@ -48,31 +62,11 @@ export class UaiCopilotChatElement extends UmbLitElement {
         }
       });
     });
-
-    this.consumeContext(UAI_COPILOT_RUN_CONTEXT, (runController) => {
-      this.#runController = runController;
-      if (runController) {
-        this.#observeRunController(runController);
-      }
-    });
-  }
-
-  #observeRunController(runController: UaiCopilotRunController) {
-    this.observe(runController.messages$, (messages) => {
-      this._messages = messages;
-      this.#scrollToBottom();
-    });
-    this.observe(runController.agentState$, (state) => {
-      this._agentState = state;
-    });
-    this.observe(runController.isRunning$, (isRunning) => {
-      this._isRunning = isRunning;
-    });
   }
 
   #handleSendMessage(e: CustomEvent<string>) {
     const content = e.detail;
-    this.#runController?.sendUserMessage(content);
+    this.#copilotContext?.sendUserMessage(content);
   }
 
   #handleInterruptResponse(e: CustomEvent<string>) {
@@ -81,11 +75,11 @@ export class UaiCopilotChatElement extends UmbLitElement {
   }
 
   #handleCancel() {
-    this.#runController?.abortRun();
+    this.#copilotContext?.abortRun();
   }
 
   #handleRegenerate() {
-    this.#runController?.regenerateLastMessage();
+    this.#copilotContext?.regenerateLastMessage();
   }
 
   #getLastAssistantMessageId(): string | undefined {

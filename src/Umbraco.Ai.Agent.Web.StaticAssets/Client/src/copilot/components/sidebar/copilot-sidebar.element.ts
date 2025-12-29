@@ -1,7 +1,7 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../core/copilot.context.js";
+import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
 
 // Import native chat component (lightweight, no lazy loading needed)
 import "../chat/index.js";

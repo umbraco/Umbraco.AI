@@ -6,13 +6,12 @@
 export {
   EventType,
   type Tool as AguiTool,
-  type ToolMessage,
-  type Message as AguiMessage,
+  type ToolMessage
 } from "@ag-ui/core";
 
 import type { RunAgentInput, BaseEvent, Message } from "@ag-ui/client";
 import type { Observable } from "rxjs";
-import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo, UaiAgentState } from "../core/types.js";
+import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo, UaiAgentState } from "../types.js";
 
 /**
  * Transport interface for agent communication.

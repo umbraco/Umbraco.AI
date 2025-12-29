@@ -5,7 +5,7 @@ import {
   transformChunks,
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
-import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "../core/types.js";
+import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "../types.js";
 import type {
   AgentClientCallbacks,
   AguiTool,

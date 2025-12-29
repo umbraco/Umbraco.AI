@@ -2,7 +2,7 @@ import { customElement, property, css, html } from "@umbraco-cms/backoffice/exte
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
-import type { UaiChatMessage } from "../../core/types.js";
+import type { UaiChatMessage } from "../../types.js";
 
 // Import the tool renderer element (handles extension lookup and custom UI)
 import "./tool-renderer.element.js";

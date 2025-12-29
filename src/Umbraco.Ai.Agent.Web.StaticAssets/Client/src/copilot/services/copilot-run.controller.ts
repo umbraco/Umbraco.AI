@@ -1,39 +1,43 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject, Subscription, map } from "rxjs";
-import { UaiAgentClient } from "../../transport/uai-agent-client.js";
-import { UaiFrontendToolManager } from "../services/frontend-tool-manager.js";
+import { UaiFrontendToolManager } from "../services/frontend-tool.manager.ts";
 import {
   UaiFrontendToolExecutor,
   type UaiFrontendToolResult,
   type UaiFrontendToolStatusUpdate,
-} from "../services/frontend-tool-executor.js";
+} from "./frontend-tool.executor.js";
 import type {
   UaiAgentState,
-  UaiChatMessage,
+  UaiChatMessage, UaiCopilotAgentItem,
   UaiInterruptInfo,
   UaiToolCallInfo,
   UaiToolCallStatus,
 } from "../types.js";
 import { safeParseJson } from "../utils/json.js";
-import type { UaiCopilotAgentItem } from "../repositories/copilot.repository.js";
 import { UaiInterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.js";
 import { UaiToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.js";
 import { UaiHitlInterruptHandler } from "../interrupts/handlers/hitl-interrupt.handler.js";
 import { UaiDefaultInterruptHandler } from "../interrupts/handlers/default-interrupt.handler.js";
 import type { UaiInterruptContext } from "../interrupts/types.js";
 import type UaiHitlContext from "../hitl.context.js";
+import { UaiAgentClient } from "../transport";
 
 /**
  * Encapsulates the AG-UI client lifecycle, manages chat state + streaming,
  * and exposes RxJS streams that UI components observe.
  */
 export class UaiCopilotRunController extends UmbControllerBase {
+  #toolManager: UaiFrontendToolManager;
   #toolExecutor: UaiFrontendToolExecutor;
+
+  /** Expose tool manager for context provision */
+  get toolManager(): UaiFrontendToolManager {
+    return this.#toolManager;
+  }
   #client?: UaiAgentClient;
   #agent?: UaiCopilotAgentItem;
-  #frontendTools: import("../../transport/types.js").AguiTool[] = [];
-  #toolManager = new UaiFrontendToolManager();
+  #frontendTools: import("../transport/types.js").AguiTool[] = [];
   #currentToolCalls: UaiToolCallInfo[] = [];
   #subscriptions: Subscription[] = [];
   #handlerRegistry = new UaiInterruptHandlerRegistry();
@@ -53,8 +57,9 @@ export class UaiCopilotRunController extends UmbControllerBase {
 
   constructor(host: UmbControllerHost, hitlContext: UaiHitlContext) {
     super(host);
+    this.#toolManager = new UaiFrontendToolManager(host);
     this.#frontendTools = this.#toolManager.loadFromRegistry();
-    this.#toolExecutor = new UaiFrontendToolExecutor(host, this.#toolManager, hitlContext);
+    this.#toolExecutor = new UaiFrontendToolExecutor(this.#toolManager, hitlContext);
     this.#subscriptions.push(
       this.#toolExecutor.results$.subscribe((result) => this.#handleToolResult(result)),
       this.#toolExecutor.statusUpdates$.subscribe((update) => this.#handleToolStatusUpdate(update))

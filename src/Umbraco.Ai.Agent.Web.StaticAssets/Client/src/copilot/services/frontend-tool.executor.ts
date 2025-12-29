@@ -1,11 +1,9 @@
-import { loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
-import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { Subject } from "rxjs";
-import type { UaiFrontendToolManager } from "./frontend-tool-manager.js";
+import type { UaiFrontendToolManager } from "./frontend-tool.manager.ts";
 import type { UaiInterruptInfo, UaiToolCallInfo, UaiToolCallStatus } from "../types.js";
 import type { UaiInterruptContext } from "../interrupts/types.js";
-import type { UaiAgentToolApi, ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
 import type UaiHitlContext from "../hitl.context.js";
+import { ManifestUaiAgentTool } from "../../agent/tools";
 
 /**
  * Result of a frontend tool execution.
@@ -33,18 +31,13 @@ export interface UaiFrontendToolStatusUpdate {
  * Executes frontend tools and publishes results.
  *
  * Responsibilities:
- * - Loading tool APIs from manifests
  * - Executing tools sequentially
  * - Handling HITL approval via UaiHitlContext
  * - Publishing status updates and results via observables
  */
 export class UaiFrontendToolExecutor {
-  #host: UmbControllerHost;
   #toolManager: UaiFrontendToolManager;
   #hitlContext?: UaiHitlContext;
-
-  /** Cache of loaded tool APIs */
-  #apiCache = new Map<string, UaiAgentToolApi>();
 
   /** Observable streams for tool execution events */
   #results = new Subject<UaiFrontendToolResult>();
@@ -53,12 +46,7 @@ export class UaiFrontendToolExecutor {
   #statusUpdates = new Subject<UaiFrontendToolStatusUpdate>();
   readonly statusUpdates$ = this.#statusUpdates.asObservable();
 
-  constructor(
-    host: UmbControllerHost,
-    toolManager: UaiFrontendToolManager,
-    hitlContext?: UaiHitlContext
-  ) {
-    this.#host = host;
+  constructor(toolManager: UaiFrontendToolManager, hitlContext?: UaiHitlContext) {
     this.#toolManager = toolManager;
     this.#hitlContext = hitlContext;
   }
@@ -91,22 +79,14 @@ export class UaiFrontendToolExecutor {
    */
   async #executeSingle(toolCall: UaiToolCallInfo): Promise<void> {
     try {
-      // Get the manifest for this tool
+      // Get manifest for approval config
       const manifest = this.#toolManager.getManifest(toolCall.name);
-      if (!manifest?.api) {
-        throw new Error(`No API found for tool: ${toolCall.name}`);
+      if (!manifest) {
+        throw new Error(`Tool not found: ${toolCall.name}`);
       }
 
-      // Load or get cached API
-      let api = this.#apiCache.get(toolCall.name);
-      if (!api) {
-        const ApiConstructor = await loadManifestApi<UaiAgentToolApi>(manifest.api);
-        if (!ApiConstructor) {
-          throw new Error(`Failed to load API for tool: ${toolCall.name}`);
-        }
-        api = new ApiConstructor(this.#host);
-        this.#apiCache.set(toolCall.name, api);
-      }
+      // Get API from manager (handles loading and caching)
+      const api = await this.#toolManager.getApi(toolCall.name);
 
       // Parse arguments
       const args = this.#parseArgs(toolCall.arguments);

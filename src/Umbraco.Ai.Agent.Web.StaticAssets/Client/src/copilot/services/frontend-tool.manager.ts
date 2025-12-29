@@ -1,7 +1,12 @@
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import type { ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
+import { loadManifestApi, loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UaiToolCallInfo } from "../types.js";
-import type { AguiTool } from "../../transport/types.js";
+import { ManifestUaiAgentTool, UaiAgentToolApi, UaiAgentToolElement } from "../../agent/tools";
+import { AguiTool } from "../transport";
+
+/** Element constructor type for tool UI components */
+type UaiToolElementConstructor = new () => UaiAgentToolElement;
 
 /**
  * Frontend tool registry manager.
@@ -9,13 +14,19 @@ import type { AguiTool } from "../../transport/types.js";
  * Responsibilities:
  * - Loading tool manifests from the extension registry
  * - Converting tools to AG-UI format for the LLM
+ * - Resolving and caching tool API instances
  * - Providing manifest lookup for tool-renderer
- *
- * Note: Execution is handled by tool-renderer (single owner of tool lifecycle).
  */
 export class UaiFrontendToolManager {
+  #host: UmbControllerHost;
   #toolManifests: Map<string, ManifestUaiAgentTool> = new Map();
+  #apiCache: Map<string, UaiAgentToolApi> = new Map();
+  #elementCache: Map<string, UaiToolElementConstructor> = new Map();
   #tools: AguiTool[] = [];
+
+  constructor(host: UmbControllerHost) {
+    this.#host = host;
+  }
 
   /**
    * Get the loaded frontend tools in AG-UI format.
@@ -68,6 +79,64 @@ export class UaiFrontendToolManager {
    */
   getManifest(toolName: string): ManifestUaiAgentTool | undefined {
     return this.#toolManifests.get(toolName);
+  }
+
+  /**
+   * Get or load the API instance for a tool.
+   * @param toolName The name of the tool
+   * @returns The tool API instance
+   * @throws Error if tool not found or API fails to load
+   */
+  async getApi(toolName: string): Promise<UaiAgentToolApi> {
+    // Return cached instance if available
+    const cached = this.#apiCache.get(toolName);
+    if (cached) {
+      return cached;
+    }
+
+    // Get manifest
+    const manifest = this.#toolManifests.get(toolName);
+    if (!manifest?.api) {
+      throw new Error(`No API found for tool: ${toolName}`);
+    }
+
+    // Load and cache API
+    const ApiConstructor = await loadManifestApi<UaiAgentToolApi>(manifest.api);
+    if (!ApiConstructor) {
+      throw new Error(`Failed to load API for tool: ${toolName}`);
+    }
+
+    const api = new ApiConstructor(this.#host);
+    this.#apiCache.set(toolName, api);
+    return api;
+  }
+
+  /**
+   * Get or load the element constructor for a tool's UI.
+   * @param toolName The name of the tool
+   * @returns The element constructor, or undefined if tool has no custom UI
+   */
+  async getElement(toolName: string): Promise<UaiToolElementConstructor | undefined> {
+    // Return cached constructor if available
+    const cached = this.#elementCache.get(toolName);
+    if (cached) {
+      return cached;
+    }
+
+    // Get manifest
+    const manifest = this.#toolManifests.get(toolName);
+    if (!manifest?.element) {
+      return undefined;
+    }
+
+    // Load and cache element constructor
+    const ElementConstructor = await loadManifestElement<UaiAgentToolElement>(manifest.element);
+    if (!ElementConstructor) {
+      return undefined;
+    }
+
+    this.#elementCache.set(toolName, ElementConstructor as UaiToolElementConstructor);
+    return ElementConstructor as UaiToolElementConstructor;
   }
 
   /**

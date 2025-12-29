@@ -1,14 +1,14 @@
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
-import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import { loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
 import type {
   ManifestUaiAgentTool,
   UaiAgentToolElement,
   UaiAgentToolStatus,
-} from "../../../agent/tools/uai-agent-tool.extension.js";
-import type { UaiToolCallInfo } from "../../core/types.js";
-import { safeParseJson } from "../../core/utils/json.js";
+} from "../../../agent/tools";
+import type { UaiToolCallInfo } from "../../types.js";
+import { safeParseJson } from "../../utils";
+import { UAI_COPILOT_RUN_CONTEXT } from "../../copilot.context.js";
+import type { UaiFrontendToolManager } from "../../services/frontend-tool.manager.ts";
 
 // Import default tool status component
 import "../../../agent/tools/tool-status.element.js";
@@ -28,6 +28,7 @@ import "../../../agent/tools/tool-status.element.js";
  */
 @customElement("uai-tool-renderer")
 export class UaiToolRendererElement extends UmbLitElement {
+  #toolManager?: UaiFrontendToolManager;
   #toolElement: UaiAgentToolElement | null = null;
   #manifest: ManifestUaiAgentTool | null = null;
 
@@ -45,7 +46,12 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this.#lookupExtension();
+    this.consumeContext(UAI_COPILOT_RUN_CONTEXT, (runController) => {
+      if (runController) {
+        this.#toolManager = runController.toolManager;
+        this.#lookupExtension();
+      }
+    });
   }
 
   override updated(changedProperties: Map<string, unknown>) {
@@ -66,17 +72,12 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Look up the tool extension by toolName.
    */
   #lookupExtension() {
-    if (!this.toolCall?.name || this.#manifest) {
+    if (!this.#toolManager || !this.toolCall?.name || this.#manifest) {
       return;
     }
 
-    const manifests = umbExtensionsRegistry.getByTypeAndFilter<
-      "uaiAgentTool",
-      ManifestUaiAgentTool
-    >("uaiAgentTool", (manifest) => manifest.meta.toolName === this.toolCall.name);
-
-    if (manifests.length > 0) {
-      this.#manifest = manifests[0];
+    this.#manifest = this.#toolManager.getManifest(this.toolCall.name) ?? null;
+    if (this.#manifest) {
       this.#loadElement();
     }
   }
@@ -85,12 +86,10 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Load the custom element if the manifest has one.
    */
   async #loadElement() {
-    if (!this.#manifest?.element) return;
+    if (!this.#toolManager || !this.toolCall?.name) return;
 
     try {
-      const ElementConstructor = await loadManifestElement<UaiAgentToolElement>(
-        this.#manifest.element
-      );
+      const ElementConstructor = await this.#toolManager.getElement(this.toolCall.name);
 
       if (ElementConstructor) {
         this.#toolElement = new ElementConstructor();

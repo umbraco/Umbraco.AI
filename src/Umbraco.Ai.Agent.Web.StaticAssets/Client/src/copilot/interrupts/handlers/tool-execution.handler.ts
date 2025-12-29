@@ -1,6 +1,6 @@
 import type { UaiInterruptContext, UaiInterruptHandler } from "../types.js";
-import type { UaiFrontendToolManager } from "../../services/frontend-tool-manager.js";
-import type { UaiFrontendToolExecutor } from "../../services/frontend-tool-executor.js";
+import type { UaiFrontendToolManager } from "../../services/frontend-tool.manager.ts";
+import type { UaiFrontendToolExecutor } from "../../services/frontend-tool.executor.ts";
 import type { UaiInterruptInfo, UaiToolCallInfo } from "../../types.js";
 
 /**

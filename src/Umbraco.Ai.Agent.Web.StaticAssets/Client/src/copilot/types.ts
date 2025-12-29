@@ -3,6 +3,12 @@
  * These types are used across core, transport, and UI layers.
  */
 
+export interface UaiCopilotAgentItem {
+  id: string;
+  name: string;
+  alias: string;
+}
+
 /**
  * Chat message in the conversation.
  * Extends AG-UI Message with additional UI-specific fields.

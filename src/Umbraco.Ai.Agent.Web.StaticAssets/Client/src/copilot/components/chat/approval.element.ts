@@ -2,12 +2,12 @@ import { customElement, property, state, css, html, nothing } from "@umbraco-cms
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
-import type { ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
+import type { ManifestUaiAgentTool } from "../../../agent/tools";
 import type {
   ManifestUaiAgentApprovalElement,
   UaiAgentApprovalElement,
-} from "../../../agent/approval/uai-agent-approval-element.extension.js";
-import type { UaiInterruptInfo } from "../../core/types.js";
+} from "../../../agent/approval";
+import type { UaiInterruptInfo } from "../../types.js";
 
 /**
  * Interrupt UI component.
@@ -18,8 +18,8 @@ import type { UaiInterruptInfo } from "../../core/types.js";
  *
  * @fires respond - Dispatched when user responds to the interrupt
  */
-@customElement("uai-copilot-interrupt")
-export class UaiCopilotInterruptElement extends UmbLitElement {
+@customElement("uai-copilot-approval")
+export class UaiCopilotApprovalElement extends UmbLitElement {
   #approvalElement: UaiAgentApprovalElement | null = null;
 
   @property({ type: Object })
@@ -282,10 +282,10 @@ export class UaiCopilotInterruptElement extends UmbLitElement {
   `;
 }
 
-export default UaiCopilotInterruptElement;
+export default UaiCopilotApprovalElement;
 
 declare global {
   interface HTMLElementTagNameMap {
-    "uai-copilot-interrupt": UaiCopilotInterruptElement;
+    "uai-copilot-approval": UaiCopilotApprovalElement;
   }
 }

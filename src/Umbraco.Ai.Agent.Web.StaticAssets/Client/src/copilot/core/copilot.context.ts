@@ -3,9 +3,9 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBooleanState, UmbStringState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { Observable } from "rxjs";
-import { CopilotAgentStore } from "./stores/copilot-agent.store.js";
-import { CopilotRunController } from "./controllers/copilot-run.controller.js";
-import { CopilotToolBus } from "./services/copilot-tool-bus.js";
+import { UaiCopilotAgentStore } from "./stores/copilot-agent.store.js";
+import { UaiCopilotRunController } from "./controllers/copilot-run.controller.js";
+import { UaiCopilotToolBus } from "./services/copilot-tool-bus.js";
 import type { CopilotAgentItem } from "./repositories/copilot.repository.js";
 import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 
@@ -34,9 +34,9 @@ export class UaiCopilotContext extends UmbControllerBase {
   #agentName = new UmbStringState("");
   readonly agentName = this.#agentName.asObservable();
 
-  #agentStore: CopilotAgentStore;
-  #toolBus: CopilotToolBus;
-  #runController: CopilotRunController;
+  #agentStore: UaiCopilotAgentStore;
+  #toolBus: UaiCopilotToolBus;
+  #runController: UaiCopilotRunController;
   #hitlContext: UaiHitlContext;
 
   readonly agents: Observable<CopilotAgentItem[]>;
@@ -70,10 +70,10 @@ export class UaiCopilotContext extends UmbControllerBase {
   constructor(host: UmbControllerHost) {
     super(host);
 
-    this.#toolBus = new CopilotToolBus(host);
-    this.#agentStore = new CopilotAgentStore(host);
+    this.#toolBus = new UaiCopilotToolBus(host);
+    this.#agentStore = new UaiCopilotAgentStore(host);
     this.#hitlContext = new UaiHitlContext(host);
-    this.#runController = new CopilotRunController(host, this.#toolBus, this.#hitlContext);
+    this.#runController = new UaiCopilotRunController(host, this.#toolBus, this.#hitlContext);
 
     this.agents = this.#agentStore.agents$;
     this.selectedAgent = this.#agentStore.selectedAgent$;
@@ -160,13 +160,13 @@ export const UAI_COPILOT_CONTEXT = new UmbContextToken<UaiCopilotContext>(
 );
 
 /** Context token for the run controller (messages, streaming, lifecycle). */
-export const UAI_COPILOT_RUN_CONTEXT = new UmbContextToken<CopilotRunController>(
+export const UAI_COPILOT_RUN_CONTEXT = new UmbContextToken<UaiCopilotRunController>(
   "UaiCopilotRunContext"
 );
 
 /** Context token for the tool bus (frontend tool execution coordination). */
-export const UAI_COPILOT_TOOL_BUS_CONTEXT = new UmbContextToken<CopilotToolBus>(
-  "UaiCopilotToolBusContext"
+export const UAI_COPILOT_TOOL_BUS_CONTEXT = new UmbContextToken<UaiCopilotToolBus>(
+  "UaiUaiCopilotToolBusContext"
 );
 
 export default UaiCopilotContext;

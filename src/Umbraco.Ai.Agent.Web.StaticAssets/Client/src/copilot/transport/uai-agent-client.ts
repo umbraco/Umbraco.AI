@@ -5,7 +5,7 @@ import {
   transformChunks,
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
-import { RunStateManager, type StateChangeListener } from "./run-state-manager.js";
+import { UaiRunStateManager, type StateChangeListener } from "./run-state-manager.js";
 import type { ChatMessage, ToolCallInfo, InterruptInfo } from "../core/types.js";
 import type {
   AgentClientCallbacks,
@@ -40,7 +40,7 @@ export interface UaiAgentClientConfig {
 export class UaiAgentClient {
   #transport: AgentTransport;
   #callbacks: AgentClientCallbacks;
-  #stateManager: RunStateManager;
+  #stateManager: UaiRunStateManager;
 
   /**
    * Create a new UaiAgentClient with an injected transport.
@@ -51,7 +51,7 @@ export class UaiAgentClient {
   constructor(transport: AgentTransport, callbacks: AgentClientCallbacks = {}) {
     this.#transport = transport;
     this.#callbacks = callbacks;
-    this.#stateManager = new RunStateManager();
+    this.#stateManager = new UaiRunStateManager();
   }
 
   /**

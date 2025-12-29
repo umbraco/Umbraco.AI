@@ -1,6 +1,6 @@
 import type { InterruptContext, InterruptHandler } from "../types.js";
-import type { FrontendToolManager } from "../../services/frontend-tool-manager.js";
-import type { FrontendToolExecutor } from "../../services/frontend-tool-executor.js";
+import type { UaiFrontendToolManager } from "../../services/frontend-tool-manager.js";
+import type { UaiFrontendToolExecutor } from "../../services/frontend-tool-executor.js";
 import type { InterruptInfo, ToolCallInfo } from "../../types.js";
 
 /**
@@ -8,15 +8,15 @@ import type { InterruptInfo, ToolCallInfo } from "../../types.js";
  *
  * When the server interrupts with reason "tool_execution":
  * 1. Finds frontend tool calls in the last assistant message
- * 2. Executes them via FrontendToolExecutor
+ * 2. Executes them via UaiFrontendToolExecutor
  * 3. Resumes the run when all tools complete
  */
-export class ToolExecutionHandler implements InterruptHandler {
+export class UaiToolExecutionHandler implements InterruptHandler {
   readonly reason = "tool_execution";
 
   constructor(
-    private toolManager: FrontendToolManager,
-    private executor: FrontendToolExecutor
+    private toolManager: UaiFrontendToolManager,
+    private executor: UaiFrontendToolExecutor
   ) {}
 
   handle(_interrupt: InterruptInfo, context: InterruptContext): void {

@@ -24,7 +24,7 @@ import "../../../../agent/tools/tool-status.element.js";
  * Status updates and results are received via the `toolCall` property,
  * which is updated by the controller when the tool bus emits events.
  *
- * Execution is handled by FrontendToolExecutor, NOT by this component.
+ * Execution is handled by UaiFrontendToolExecutor, NOT by this component.
  */
 @customElement("uai-tool-renderer")
 export class UaiToolRendererElement extends UmbLitElement {

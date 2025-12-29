@@ -2,7 +2,7 @@ import { customElement, state, css, html, repeat, ref, createRef } from "@umbrac
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { ChatMessage, AgentState, InterruptInfo } from "../../../core/types.js";
 import { UAI_COPILOT_CONTEXT, UAI_COPILOT_RUN_CONTEXT, type UaiCopilotContext } from "../../../core/copilot.context.js";
-import type { CopilotRunController } from "../../../core/controllers/copilot-run.controller.js";
+import type { UaiCopilotRunController } from "../../../core/controllers/copilot-run.controller.js";
 
 import "./message.element.js";
 import "./input.element.js";
@@ -32,7 +32,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
   private _isRunning = false;
 
   #copilotContext?: UaiCopilotContext;
-  #runController?: CopilotRunController;
+  #runController?: UaiCopilotRunController;
   #messagesRef = createRef<HTMLElement>();
 
   constructor() {
@@ -57,7 +57,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
     });
   }
 
-  #observeRunController(runController: CopilotRunController) {
+  #observeRunController(runController: UaiCopilotRunController) {
     this.observe(runController.messages$, (messages) => {
       this._messages = messages;
       this.#scrollToBottom();

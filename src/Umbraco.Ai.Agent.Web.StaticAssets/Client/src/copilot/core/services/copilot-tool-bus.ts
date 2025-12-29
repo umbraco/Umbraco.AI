@@ -31,10 +31,10 @@ export interface CopilotToolStatusUpdate {
  * - Status updates (e.g., "executing", "awaiting_approval")
  * - Result publishing
  *
- * Execution coordination is handled by FrontendToolExecutor,
+ * Execution coordination is handled by UaiFrontendToolExecutor,
  * not by this bus.
  */
-export class CopilotToolBus extends UmbControllerBase {
+export class UaiCopilotToolBus extends UmbControllerBase {
   #results = new Subject<CopilotToolResult>();
   readonly results$ = this.#results.asObservable();
 

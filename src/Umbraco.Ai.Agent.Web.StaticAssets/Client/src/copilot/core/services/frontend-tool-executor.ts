@@ -1,7 +1,7 @@
 import { loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import type { FrontendToolManager } from "./frontend-tool-manager.js";
-import type { CopilotToolBus } from "./copilot-tool-bus.js";
+import type { UaiFrontendToolManager } from "./frontend-tool-manager.js";
+import type { UaiCopilotToolBus } from "./copilot-tool-bus.js";
 import type { InterruptInfo, ToolCallInfo } from "../types.js";
 import type { InterruptContext } from "../interrupts/types.js";
 import type { UaiAgentToolApi, ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
@@ -14,12 +14,12 @@ import type UaiHitlContext from "../hitl.context.js";
  * - Loading tool APIs from manifests
  * - Executing tools sequentially
  * - Handling HITL approval via UaiHitlContext
- * - Publishing status updates and results via CopilotToolBus
+ * - Publishing status updates and results via UaiCopilotToolBus
  */
-export class FrontendToolExecutor {
+export class UaiFrontendToolExecutor {
   #host: UmbControllerHost;
-  #toolManager: FrontendToolManager;
-  #toolBus: CopilotToolBus;
+  #toolManager: UaiFrontendToolManager;
+  #toolBus: UaiCopilotToolBus;
   #hitlContext?: UaiHitlContext;
 
   /** Cache of loaded tool APIs */
@@ -27,8 +27,8 @@ export class FrontendToolExecutor {
 
   constructor(
     host: UmbControllerHost,
-    toolManager: FrontendToolManager,
-    toolBus: CopilotToolBus,
+    toolManager: UaiFrontendToolManager,
+    toolBus: UaiCopilotToolBus,
     hitlContext?: UaiHitlContext
   ) {
     this.#host = host;

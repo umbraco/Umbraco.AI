@@ -13,7 +13,7 @@ import type { AguiTool } from "../../transport/types.js";
  *
  * Note: Execution is handled by tool-renderer (single owner of tool lifecycle).
  */
-export class FrontendToolManager {
+export class UaiFrontendToolManager {
   #toolManifests: Map<string, ManifestUaiAgentTool> = new Map();
   #tools: AguiTool[] = [];
 

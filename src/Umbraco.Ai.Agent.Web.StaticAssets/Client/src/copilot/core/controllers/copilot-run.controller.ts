@@ -2,8 +2,8 @@ import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject, Subscription, map } from "rxjs";
 import { UaiAgentClient } from "../../transport/uai-agent-client.js";
-import { FrontendToolManager } from "../services/frontend-tool-manager.js";
-import { FrontendToolExecutor } from "../services/frontend-tool-executor.js";
+import { UaiFrontendToolManager } from "../services/frontend-tool-manager.js";
+import { UaiFrontendToolExecutor } from "../services/frontend-tool-executor.js";
 import type {
   AgentState,
   ChatMessage,
@@ -12,12 +12,12 @@ import type {
   ToolCallStatus,
 } from "../types.js";
 import { safeParseJson } from "../utils/json.js";
-import { CopilotToolBus, type CopilotToolResult, type CopilotToolStatusUpdate } from "../services/copilot-tool-bus.js";
+import { UaiCopilotToolBus, type CopilotToolResult, type CopilotToolStatusUpdate } from "../services/copilot-tool-bus.js";
 import type { CopilotAgentItem } from "../repositories/copilot.repository.js";
-import { InterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.js";
-import { ToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.js";
-import { HitlInterruptHandler } from "../interrupts/handlers/hitl-interrupt.handler.js";
-import { DefaultInterruptHandler } from "../interrupts/handlers/default-interrupt.handler.js";
+import { UaiInterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.js";
+import { UaiToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.js";
+import { UaiHitlInterruptHandler } from "../interrupts/handlers/hitl-interrupt.handler.js";
+import { UaiDefaultInterruptHandler } from "../interrupts/handlers/default-interrupt.handler.js";
 import type { InterruptContext } from "../interrupts/types.js";
 import type UaiHitlContext from "../hitl.context.js";
 
@@ -25,16 +25,16 @@ import type UaiHitlContext from "../hitl.context.js";
  * Encapsulates the AG-UI client lifecycle, manages chat state + streaming,
  * and exposes RxJS streams that UI components observe.
  */
-export class CopilotRunController extends UmbControllerBase {
-  #toolBus: CopilotToolBus;
-  #toolExecutor: FrontendToolExecutor;
+export class UaiCopilotRunController extends UmbControllerBase {
+  #toolBus: UaiCopilotToolBus;
+  #toolExecutor: UaiFrontendToolExecutor;
   #client?: UaiAgentClient;
   #agent?: CopilotAgentItem;
   #frontendTools: import("../../transport/types.js").AguiTool[] = [];
-  #toolManager = new FrontendToolManager();
+  #toolManager = new UaiFrontendToolManager();
   #currentToolCalls: ToolCallInfo[] = [];
   #subscriptions: Subscription[] = [];
-  #handlerRegistry = new InterruptHandlerRegistry();
+  #handlerRegistry = new UaiInterruptHandlerRegistry();
 
   /** ID of the assistant message currently being streamed */
   #currentAssistantMessageId: string | null = null;
@@ -49,11 +49,11 @@ export class CopilotRunController extends UmbControllerBase {
   readonly agentState$ = this.#agentState.asObservable();
   readonly isRunning$ = this.agentState$.pipe(map((state) => state !== undefined));
 
-  constructor(host: UmbControllerHost, toolBus: CopilotToolBus, hitlContext: UaiHitlContext) {
+  constructor(host: UmbControllerHost, toolBus: UaiCopilotToolBus, hitlContext: UaiHitlContext) {
     super(host);
     this.#toolBus = toolBus;
     this.#frontendTools = this.#toolManager.loadFromRegistry();
-    this.#toolExecutor = new FrontendToolExecutor(host, this.#toolManager, toolBus, hitlContext);
+    this.#toolExecutor = new UaiFrontendToolExecutor(host, this.#toolManager, toolBus, hitlContext);
     this.#subscriptions.push(
       this.#toolBus.results$.subscribe((result) => this.#handleToolResult(result)),
       this.#toolBus.statusUpdates$.subscribe((update) => this.#handleStatusUpdate(update))
@@ -377,7 +377,7 @@ export class CopilotRunController extends UmbControllerBase {
   /**
    * Handle frontend tool result from the tool bus.
    * Updates the tool call status in messages and adds a tool message.
-   * Note: Resume is handled by ToolExecutionHandler when all tools complete.
+   * Note: Resume is handled by UaiToolExecutionHandler when all tools complete.
    */
   #handleToolResult(result: CopilotToolResult): void {
     const resultContent = typeof result.result === "string"
@@ -433,9 +433,9 @@ export class CopilotRunController extends UmbControllerBase {
   #setupHandlerRegistry(): void {
     this.#handlerRegistry.clear();
     this.#handlerRegistry.registerAll([
-      new ToolExecutionHandler(this.#toolManager, this.#toolExecutor),
-      new HitlInterruptHandler(this),
-      new DefaultInterruptHandler(),
+      new UaiToolExecutionHandler(this.#toolManager, this.#toolExecutor),
+      new UaiHitlInterruptHandler(this),
+      new UaiDefaultInterruptHandler(),
     ]);
   }
 }

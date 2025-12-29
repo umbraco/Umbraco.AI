@@ -4,7 +4,7 @@ import { BehaviorSubject } from "rxjs";
 import { UaiCopilotRepository, type CopilotAgentItem } from "../repositories/copilot.repository.js";
 
 /** Loads Copilot agents from the repository and tracks the current selection. */
-export class CopilotAgentStore extends UmbControllerBase {
+export class UaiCopilotAgentStore extends UmbControllerBase {
   #repository: UaiCopilotRepository;
 
   #agents = new BehaviorSubject<CopilotAgentItem[]>([]);

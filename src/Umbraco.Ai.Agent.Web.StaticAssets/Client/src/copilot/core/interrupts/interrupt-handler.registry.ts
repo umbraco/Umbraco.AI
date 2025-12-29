@@ -5,7 +5,7 @@ import type { InterruptInfo } from "../types.js";
  * Registry for interrupt handlers.
  * Matches interrupts to handlers by reason, with fallback support.
  */
-export class InterruptHandlerRegistry {
+export class UaiInterruptHandlerRegistry {
   #handlers = new Map<string, InterruptHandler>();
   #fallbackHandler?: InterruptHandler;
 

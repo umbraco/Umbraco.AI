@@ -9,7 +9,7 @@ import type UaiHitlContext from "../../hitl.context.js";
  * Handles server-side HITL (human_approval) interrupts.
  * Delegates to UaiHitlContext to show the interrupt UI.
  */
-export class HitlInterruptHandler extends UmbControllerBase implements InterruptHandler {
+export class UaiHitlInterruptHandler extends UmbControllerBase implements InterruptHandler {
   readonly reason = "human_approval";
 
   #hitlContext?: UaiHitlContext;

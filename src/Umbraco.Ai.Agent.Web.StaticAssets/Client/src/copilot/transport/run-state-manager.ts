@@ -15,7 +15,7 @@ export type StateChangeListener = (state: RunLifecycleState) => void;
  * - State change subscriptions
  * - Snapshot/restore for future session resumption
  */
-export class RunStateManager {
+export class UaiRunStateManager {
   #state: RunLifecycleState = { status: 'idle' };
   #context?: RunContext;
   #listeners: Set<StateChangeListener> = new Set();

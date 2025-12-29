@@ -5,7 +5,7 @@ import {
   transformChunks,
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
-import { UaiRunStateManager, type StateChangeListener } from "./run-state-manager.js";
+import { UaiRunStateManager, type StateChangeListener } from "../core/run-state-manager.js";
 import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "../core/types.js";
 import type {
   AgentClientCallbacks,

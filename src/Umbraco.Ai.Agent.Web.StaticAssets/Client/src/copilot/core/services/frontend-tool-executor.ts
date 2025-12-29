@@ -1,11 +1,33 @@
 import { loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { Subject } from "rxjs";
 import type { UaiFrontendToolManager } from "./frontend-tool-manager.js";
-import type { UaiCopilotToolBus } from "./copilot-tool-bus.js";
-import type { UaiInterruptInfo, UaiToolCallInfo } from "../types.js";
+import type { UaiInterruptInfo, UaiToolCallInfo, UaiToolCallStatus } from "../types.js";
 import type { UaiInterruptContext } from "../interrupts/types.js";
 import type { UaiAgentToolApi, ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
 import type UaiHitlContext from "../hitl.context.js";
+
+/**
+ * Result of a frontend tool execution.
+ */
+export interface UaiFrontendToolResult {
+  /** The ID of the tool call this result belongs to */
+  toolCallId: string;
+  /** The result returned by the tool */
+  result: unknown;
+  /** Error message if the tool execution failed */
+  error?: string;
+}
+
+/**
+ * Status update for a tool call.
+ */
+export interface UaiFrontendToolStatusUpdate {
+  /** The ID of the tool call */
+  toolCallId: string;
+  /** The new status */
+  status: UaiToolCallStatus;
+}
 
 /**
  * Executes frontend tools and publishes results.
@@ -14,26 +36,30 @@ import type UaiHitlContext from "../hitl.context.js";
  * - Loading tool APIs from manifests
  * - Executing tools sequentially
  * - Handling HITL approval via UaiHitlContext
- * - Publishing status updates and results via UaiCopilotToolBus
+ * - Publishing status updates and results via observables
  */
 export class UaiFrontendToolExecutor {
   #host: UmbControllerHost;
   #toolManager: UaiFrontendToolManager;
-  #toolBus: UaiCopilotToolBus;
   #hitlContext?: UaiHitlContext;
 
   /** Cache of loaded tool APIs */
   #apiCache = new Map<string, UaiAgentToolApi>();
 
+  /** Observable streams for tool execution events */
+  #results = new Subject<UaiFrontendToolResult>();
+  readonly results$ = this.#results.asObservable();
+
+  #statusUpdates = new Subject<UaiFrontendToolStatusUpdate>();
+  readonly statusUpdates$ = this.#statusUpdates.asObservable();
+
   constructor(
     host: UmbControllerHost,
     toolManager: UaiFrontendToolManager,
-    toolBus: UaiCopilotToolBus,
     hitlContext?: UaiHitlContext
   ) {
     this.#host = host;
     this.#toolManager = toolManager;
-    this.#toolBus = toolBus;
     this.#hitlContext = hitlContext;
   }
 
@@ -47,7 +73,7 @@ export class UaiFrontendToolExecutor {
 
   /**
    * Execute a list of tool calls sequentially.
-   * Each tool is executed one at a time, with results published via the tool bus.
+   * Each tool is executed one at a time, with results published via observables.
    * Errors are caught per-tool and published as error results.
    *
    * @param toolCalls The tool calls to execute
@@ -88,14 +114,14 @@ export class UaiFrontendToolExecutor {
       // Check for HITL approval requirement
       if (manifest.meta.approval && this.#hitlContext) {
         // Publish awaiting_approval status
-        this.#toolBus.publishStatusUpdate(toolCall.id, "awaiting_approval");
+        this.#statusUpdates.next({ toolCallId: toolCall.id, status: "awaiting_approval" });
 
         // Wait for user approval
         const approvalResponse = await this.#requestApproval(toolCall, manifest, args);
 
         // If cancelled, publish error and return
         if (approvalResponse === null) {
-          this.#toolBus.publishResult({
+          this.#results.next({
             toolCallId: toolCall.id,
             result: { error: "User cancelled the operation" },
             error: "User cancelled the operation",
@@ -110,20 +136,20 @@ export class UaiFrontendToolExecutor {
       }
 
       // Publish executing status
-      this.#toolBus.publishStatusUpdate(toolCall.id, "executing");
+      this.#statusUpdates.next({ toolCallId: toolCall.id, status: "executing" });
 
       // Execute the tool
       const result = await api.execute(args);
 
       // Publish success result
-      this.#toolBus.publishResult({
+      this.#results.next({
         toolCallId: toolCall.id,
         result,
       });
     } catch (error) {
       // Publish error result - never throw
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.#toolBus.publishResult({
+      this.#results.next({
         toolCallId: toolCall.id,
         result: { error: errorMessage },
         error: errorMessage,

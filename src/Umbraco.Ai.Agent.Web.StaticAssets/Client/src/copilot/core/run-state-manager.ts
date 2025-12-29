@@ -1,5 +1,5 @@
-import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "../core/types.js";
-import type { RunLifecycleState, RunContext, RunSnapshot } from "./types.js";
+import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "./types.js";
+import type { RunLifecycleState, RunContext, RunSnapshot } from "../transport/types.js";
 
 /**
  * Callback type for state change listeners.
@@ -8,7 +8,7 @@ export type StateChangeListener = (state: RunLifecycleState) => void;
 
 /**
  * Manages the lifecycle state of an agent run.
- * 
+ *
  * Centralizes state management that was previously scattered across
  * UaiAgentClient and the consumer component. Provides:
  * - Type-safe state transitions
@@ -146,11 +146,11 @@ export class UaiRunStateManager {
     if (this.#state.status !== 'idle') {
       const runId = 'runId' in this.#state ? this.#state.runId : '';
       const threadId = 'threadId' in this.#state ? this.#state.threadId : '';
-      this.transition({ 
-        status: 'awaiting_tool_execution', 
-        runId, 
-        threadId, 
-        pendingTools: pendingToolIds 
+      this.transition({
+        status: 'awaiting_tool_execution',
+        runId,
+        threadId,
+        pendingTools: pendingToolIds
       });
     }
   }

@@ -3,7 +3,11 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject, Subscription, map } from "rxjs";
 import { UaiAgentClient } from "../../transport/uai-agent-client.js";
 import { UaiFrontendToolManager } from "../services/frontend-tool-manager.js";
-import { UaiFrontendToolExecutor } from "../services/frontend-tool-executor.js";
+import {
+  UaiFrontendToolExecutor,
+  type UaiFrontendToolResult,
+  type UaiFrontendToolStatusUpdate,
+} from "../services/frontend-tool-executor.js";
 import type {
   UaiAgentState,
   UaiChatMessage,
@@ -12,7 +16,6 @@ import type {
   UaiToolCallStatus,
 } from "../types.js";
 import { safeParseJson } from "../utils/json.js";
-import { UaiCopilotToolBus, type UaiCopilotToolResult, type UaiCopilotToolStatusUpdate } from "../services/copilot-tool-bus.js";
 import type { UaiCopilotAgentItem } from "../repositories/copilot.repository.js";
 import { UaiInterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.js";
 import { UaiToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.js";
@@ -26,7 +29,6 @@ import type UaiHitlContext from "../hitl.context.js";
  * and exposes RxJS streams that UI components observe.
  */
 export class UaiCopilotRunController extends UmbControllerBase {
-  #toolBus: UaiCopilotToolBus;
   #toolExecutor: UaiFrontendToolExecutor;
   #client?: UaiAgentClient;
   #agent?: UaiCopilotAgentItem;
@@ -49,14 +51,13 @@ export class UaiCopilotRunController extends UmbControllerBase {
   readonly agentState$ = this.#agentState.asObservable();
   readonly isRunning$ = this.agentState$.pipe(map((state) => state !== undefined));
 
-  constructor(host: UmbControllerHost, toolBus: UaiCopilotToolBus, hitlContext: UaiHitlContext) {
+  constructor(host: UmbControllerHost, hitlContext: UaiHitlContext) {
     super(host);
-    this.#toolBus = toolBus;
     this.#frontendTools = this.#toolManager.loadFromRegistry();
-    this.#toolExecutor = new UaiFrontendToolExecutor(host, this.#toolManager, toolBus, hitlContext);
+    this.#toolExecutor = new UaiFrontendToolExecutor(host, this.#toolManager, hitlContext);
     this.#subscriptions.push(
-      this.#toolBus.results$.subscribe((result) => this.#handleToolResult(result)),
-      this.#toolBus.statusUpdates$.subscribe((update) => this.#handleToolStatusUpdate(update))
+      this.#toolExecutor.results$.subscribe((result) => this.#handleToolResult(result)),
+      this.#toolExecutor.statusUpdates$.subscribe((update) => this.#handleToolStatusUpdate(update))
     );
     this.#setupHandlerRegistry();
   }
@@ -375,11 +376,11 @@ export class UaiCopilotRunController extends UmbControllerBase {
   }
 
   /**
-   * Handle frontend tool result from the tool bus.
+   * Handle frontend tool result from the executor.
    * Updates the tool call status in messages and adds a tool message.
    * Note: Resume is handled by UaiToolExecutionHandler when all tools complete.
    */
-  #handleToolResult(result: UaiCopilotToolResult): void {
+  #handleToolResult(result: UaiFrontendToolResult): void {
     const resultContent = typeof result.result === "string"
       ? result.result
       : JSON.stringify(result.result);
@@ -412,10 +413,10 @@ export class UaiCopilotRunController extends UmbControllerBase {
   }
 
   /**
-   * Handle status update from the tool bus.
+   * Handle status update from the executor.
    * Updates the tool call status in messages (e.g., "executing", "awaiting_approval").
    */
-  #handleToolStatusUpdate(update: UaiCopilotToolStatusUpdate): void {
+  #handleToolStatusUpdate(update: UaiFrontendToolStatusUpdate): void {
     const updated = this.#messages.value.map((msg) => {
       if (msg.role === "assistant" && msg.toolCalls) {
         return {

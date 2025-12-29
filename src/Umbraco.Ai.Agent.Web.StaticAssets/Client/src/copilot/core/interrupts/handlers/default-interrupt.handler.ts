@@ -1,10 +1,14 @@
-import { InterruptContext, InterruptHandler } from "../types.ts";
-import { InterruptInfo } from "../../types.ts";
+import type { InterruptContext, InterruptHandler } from "../types.js";
+import type { InterruptInfo } from "../../types.js";
 
+/**
+ * Default fallback handler that clears agent state.
+ * Used when no specific handler matches the interrupt reason.
+ */
 export class DefaultInterruptHandler implements InterruptHandler {
-    
-    readonly reason = "*";
-    handle(_interrupt: InterruptInfo, context: InterruptContext): void {
-        context.setAgentState(undefined);
-    }
+  readonly reason = "*";
+
+  handle(_interrupt: InterruptInfo, context: InterruptContext): void {
+    context.setAgentState(undefined);
+  }
 }

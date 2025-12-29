@@ -1,22 +1,14 @@
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import { loadManifestElement, loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
-import type { Subscription } from "rxjs";
+import { loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
 import type {
   ManifestUaiAgentTool,
   UaiAgentToolElement,
   UaiAgentToolStatus,
-  UaiAgentToolApi,
 } from "../../../../agent/tools/uai-agent-tool.extension.js";
-import type {
-  ManifestUaiAgentApprovalElement,
-  UaiAgentApprovalElement,
-} from "../../../../agent/approval/uai-agent-approval-element.extension.js";
-import type { ToolCallInfo, ToolCallStatus } from "../../../core/types.js";
+import type { ToolCallInfo } from "../../../core/types.js";
 import { safeParseJson } from "../../../core/utils/json.js";
-import { UAI_COPILOT_TOOL_BUS_CONTEXT } from "../../../core/copilot.context.js";
-import type { CopilotToolBus } from "../../../core/services/copilot-tool-bus.js";
 
 // Import default tool status component
 import "../../../../agent/tools/tool-status.element.js";
@@ -24,32 +16,20 @@ import "../../../../agent/tools/tool-status.element.js";
 /**
  * Tool renderer component that dynamically renders tool UI based on registered extensions.
  *
- * For each tool call:
+ * This is a purely presentational component that:
  * 1. Looks up `uaiAgentTool` extension by `meta.toolName`
  * 2. If found with `element`, instantiates the custom element
  * 3. Otherwise, renders the default tool status indicator
  *
- * Supports:
- * - Backend tools (render-only)
- * - Frontend tools (with execution)
- * - HITL tools (with approval before execution)
+ * Status updates and results are received via the `toolCall` property,
+ * which is updated by the controller when the tool bus emits events.
+ *
+ * Execution is handled by FrontendToolExecutor, NOT by this component.
  */
 @customElement("uai-tool-renderer")
 export class UaiToolRendererElement extends UmbLitElement {
   #toolElement: UaiAgentToolElement | null = null;
   #manifest: ManifestUaiAgentTool | null = null;
-  #toolApi: UaiAgentToolApi | null = null;
-  #hasExecuted = false;
-  #isLoadingApi = false;
-  #previousToolCallStatus: ToolCallStatus | null = null;
-  #pendingSubscription?: Subscription;
-  #isPending = false;
-
-  // HITL approval state
-  #approvalElement: UaiAgentApprovalElement | null = null;
-  #respondResolver: ((value: unknown) => void) | null = null;
-  #parsedArgs: Record<string, unknown> = {};
-  #toolBus?: CopilotToolBus;
 
   @property({ type: Object })
   toolCall!: ToolCallInfo;
@@ -63,68 +43,21 @@ export class UaiToolRendererElement extends UmbLitElement {
   @state()
   private _hasCustomElement = false;
 
-  @state()
-  private _isAwaitingApproval = false;
-
   override connectedCallback() {
     super.connectedCallback();
-    console.log("tool-renderer connectedCallback:", this.toolCall?.name, this.toolCall?.id);
-    this.consumeContext(UAI_COPILOT_TOOL_BUS_CONTEXT, (bus) => {
-      this.#toolBus = bus;
-      // Subscribe to pending set changes to know when this tool should execute
-      this.#pendingSubscription = bus.pending$.subscribe((pendingSet) => {
-        const wasPending = this.#isPending;
-        this.#isPending = this.toolCall?.id ? pendingSet.has(this.toolCall.id) : false;
-        console.log("tool-renderer pending$ update:", this.toolCall?.name, this.#isPending);
-        // If we just became pending, try to execute
-        if (!wasPending && this.#isPending) {
-          this.#tryExecute();
-        }
-      });
-    });
     this.#lookupExtension();
-  }
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-
-    // Clean up pending subscription
-    this.#pendingSubscription?.unsubscribe();
-    this.#pendingSubscription = undefined;
-
-    // Resolve with cancellation if awaiting approval
-    if (this.#respondResolver) {
-      this.#respondResolver({ cancelled: true });
-      this.#respondResolver = null;
-    }
-
-    // Clean up executing state
-    const toolCallId = this.toolCall?.id;
-    if (toolCallId) {
-      this.#toolBus?.clearExecuting(toolCallId);
-    }
   }
 
   override updated(changedProperties: Map<string, unknown>) {
     super.updated(changedProperties);
 
     if (changedProperties.has("toolCall") && this.toolCall) {
-      // Check if status just changed to a state where we should execute
-      const statusChanged = this.#previousToolCallStatus !== this.toolCall.status;
-      this.#previousToolCallStatus = this.toolCall.status;
-
       // Update status based on tool call info
       this.#updateStatus();
 
       // Update element props if we have a custom element
       if (this.#toolElement) {
         this.#updateElementProps();
-      }
-
-      // Execute frontend tool when args are complete (status changes from streaming/pending)
-      // and we have an API to execute
-      if (statusChanged) {
-        this.#tryExecute();
       }
     }
   }
@@ -133,9 +66,7 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Look up the tool extension by toolName.
    */
   #lookupExtension() {
-    console.log("tool-renderer #lookupExtension:", this.toolCall?.name);
     if (!this.toolCall?.name || this.#manifest) {
-      console.log("  -> Early return:", !this.toolCall?.name ? "no name" : "already has manifest");
       return;
     }
 
@@ -144,264 +75,30 @@ export class UaiToolRendererElement extends UmbLitElement {
       ManifestUaiAgentTool
     >("uaiAgentTool", (manifest) => manifest.meta.toolName === this.toolCall.name);
 
-    console.log("  -> Found manifests:", manifests.length);
     if (manifests.length > 0) {
       this.#manifest = manifests[0];
-      console.log("  -> Manifest has api:", !!this.#manifest.api);
       this.#loadElement();
-
-      // Try to execute now that manifest is available
-      // (handles case where updated() ran before manifest was found)
-      this.#tryExecute();
     }
   }
 
   /**
-   * Try to execute the frontend tool if all conditions are met.
-   *
-   * Called from multiple places to handle async loading race conditions:
-   * - updated(): when toolCall property changes
-   * - #lookupExtension(): after manifest is found
-   * - #loadElement(): after API is loaded
-   * - pending$ subscription: when this tool becomes pending
-   *
-   * Conditions for execution:
-   * - Not already executed (within this instance)
-   * - Is marked as pending by ToolExecutionHandler (prevents race with RUN_FINISHED)
-   * - Has a frontend API (manifest.api defined or API loaded)
-   * - Arguments are available
-   * - Not currently streaming
-   */
-  #tryExecute() {
-    console.log("tool-renderer #tryExecute:", this.toolCall?.name, this.toolCall?.id);
-    console.log("  #hasExecuted:", this.#hasExecuted);
-    console.log("  #isPending:", this.#isPending);
-    console.log("  hasFrontendApi:", this.hasFrontendApi);
-    console.log("  arguments:", this.toolCall?.arguments !== undefined);
-    console.log("  status:", this.toolCall?.status);
-
-    if (
-      !this.#hasExecuted &&
-      this.#isPending &&  // Only execute when marked as pending by ToolExecutionHandler
-      this.hasFrontendApi &&
-      this.toolCall?.arguments !== undefined &&
-      this.toolCall.status !== "streaming"
-    ) {
-      console.log("  -> Executing frontend tool");
-      this.#executeFrontendTool();
-    } else {
-      console.log("  -> Skipping execution (conditions not met)");
-    }
-  }
-
-  /**
-   * Load the custom element and API if the manifest has them.
+   * Load the custom element if the manifest has one.
    */
   async #loadElement() {
-    if (!this.#manifest) return;
-
-    // Load custom element if available
-    if (this.#manifest.element) {
-      try {
-        const ElementConstructor = await loadManifestElement<UaiAgentToolElement>(this.#manifest.element);
-
-        if (ElementConstructor) {
-          this.#toolElement = new ElementConstructor();
-          this.#updateElementProps();
-          this._hasCustomElement = true;
-        }
-      } catch (error) {
-        console.error(`Failed to load tool element for ${this.toolCall.name}:`, error);
-      }
-    }
-
-    // Load API if available (for frontend tools)
-    if (this.#manifest.api && !this.#isLoadingApi) {
-      this.#isLoadingApi = true;
-      try {
-        const ApiConstructor = await loadManifestApi<UaiAgentToolApi>(this.#manifest.api);
-
-        if (ApiConstructor && !this.#toolApi) {
-          this.#toolApi = new ApiConstructor(this);
-
-          // API loaded - try to execute now
-          // (handles race condition where updated() ran before API was ready)
-          this.#tryExecute();
-        }
-      } catch (error) {
-        console.error(`Failed to load tool API for ${this.toolCall.name}:`, error);
-      }
-    }
-  }
-
-  /**
-   * Execute a frontend tool and dispatch the result.
-   *
-   * For HITL tools with approval config, waits for user approval before execution.
-   * Uses CopilotToolBus to prevent duplicate execution across element instances.
-   */
-  async #executeFrontendTool() {
-    const toolCallId = this.toolCall?.id;
-    console.log("tool-renderer #executeFrontendTool:", this.toolCall?.name, toolCallId);
-
-    // Prevent duplicate execution across instances using tool bus
-    if (toolCallId && this.#toolBus) {
-      if (!this.#toolBus.markExecuting(toolCallId)) {
-        console.log("  -> Already executing, returning");
-        return; // Already executing
-      }
-    }
-
-    // Verify API is ready and we haven't already executed
-    if (!this.#toolApi || this.#hasExecuted) {
-      console.log("  -> API not ready or already executed:", !this.#toolApi, this.#hasExecuted);
-      if (toolCallId) {
-        this.#toolBus?.clearExecuting(toolCallId);
-      }
-      return;
-    }
-
-    console.log("  -> Proceeding with execution");
-    this.#hasExecuted = true;
-
-    // Parse arguments
-    const args: Record<string, unknown> = safeParseJson(this.toolCall.arguments, { raw: this.toolCall.arguments });
-    this.#parsedArgs = args;
-
-    // Check for HITL approval requirement
-    const approval = this.#manifest?.meta.approval;
-
-    if (approval) {
-      // Handle both boolean (simple) and object (customized) approval config
-      const isSimple = approval === true;
-      const approvalObj = typeof approval === "object" ? approval : null;
-      const alias = isSimple
-        ? "Uai.AgentApprovalElement.Default"
-        : (approvalObj?.elementAlias ?? "Uai.AgentApprovalElement.Default");
-      const config = isSimple
-        ? {}
-        : (approvalObj?.config ?? {});
-
-      // Load approval element BEFORE setting state to avoid render race condition
-      const loaded = await this.#loadApprovalElement(alias, config);
-
-      if (loaded) {
-        // Set status after element is ready - triggers render with element available
-        this._status = "awaiting_approval";
-        this._isAwaitingApproval = true;
-
-        // Wait for user response (promise resolves when user clicks approve/deny)
-        const userResponse = (await new Promise<unknown>((resolve) => {
-          this.#respondResolver = resolve;
-        })) as Record<string, unknown> | undefined;
-
-        this._isAwaitingApproval = false;
-
-        // Check if component was unmounted during approval (cancelled)
-        if (userResponse?.cancelled) {
-          if (toolCallId) {
-            this.#toolBus?.clearExecuting(toolCallId);
-          }
-          return;
-        }
-
-        // Include user response in args for the tool API
-        args.__approval = userResponse;
-      } else {
-        // Approval element failed to load - proceed without approval
-        console.warn(`Proceeding without approval for ${this.toolCall.name} - approval element failed to load`);
-      }
-    }
-
-    this._status = "executing";
+    if (!this.#manifest?.element) return;
 
     try {
-      const result = await this.#toolApi.execute(args);
-
-      this._result = result;
-      this._status = "complete";
-
-      // Update element props
-      if (this.#toolElement) {
-        this.#updateElementProps();
-      }
-
-      this.#toolBus?.publishResult({
-        toolCallId: this.toolCall.id,
-        result,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this._status = "error";
-      this._result = { error: errorMessage };
-
-      // Update element props
-      if (this.#toolElement) {
-        this.#updateElementProps();
-      }
-
-      this.#toolBus?.publishResult({
-        toolCallId: this.toolCall.id,
-        result: { error: errorMessage },
-        error: errorMessage,
-      });
-    } finally {
-      // Clean up the executing set
-      if (toolCallId) {
-        this.#toolBus?.clearExecuting(toolCallId);
-      }
-    }
-  }
-
-  /**
-   * Load an approval element by alias and set up its props.
-   * @returns true if element was loaded successfully, false otherwise
-   */
-  async #loadApprovalElement(alias: string, config: Record<string, unknown>): Promise<boolean> {
-    // Look up approval element manifest by alias
-    const approvalManifests = umbExtensionsRegistry.getByTypeAndFilter<
-      "uaiAgentApprovalElement",
-      ManifestUaiAgentApprovalElement
-    >("uaiAgentApprovalElement", (manifest) => manifest.alias === alias);
-
-    if (approvalManifests.length === 0) {
-      console.error(`Approval element not found: ${alias}`);
-      return false;
-    }
-
-    const approvalManifest = approvalManifests[0];
-
-    if (!approvalManifest.element) {
-      console.error(`Approval element has no element: ${alias}`);
-      return false;
-    }
-
-    try {
-      const ElementConstructor = await loadManifestElement<UaiAgentApprovalElement>(approvalManifest.element);
+      const ElementConstructor = await loadManifestElement<UaiAgentToolElement>(
+        this.#manifest.element
+      );
 
       if (ElementConstructor) {
-        this.#approvalElement = new ElementConstructor();
-        this.#approvalElement.args = this.#parsedArgs;
-        this.#approvalElement.config = config;
-        this.#approvalElement.respond = (result: unknown) => {
-          this.#respond(result);
-        };
-        return true;
+        this.#toolElement = new ElementConstructor();
+        this.#updateElementProps();
+        this._hasCustomElement = true;
       }
     } catch (error) {
-      console.error(`Failed to load approval element ${alias}:`, error);
-    }
-
-    return false;
-  }
-
-  /**
-   * Handle user response from approval element.
-   */
-  #respond(result: unknown) {
-    if (this.#respondResolver) {
-      this.#respondResolver(result);
-      this.#respondResolver = null;
+      console.error(`Failed to load tool element for ${this.toolCall.name}:`, error);
     }
   }
 
@@ -409,13 +106,11 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Update the internal status based on toolCall info.
    */
   #updateStatus() {
-    // Don't override status while awaiting user approval
-    if (this._isAwaitingApproval) return;
-
     // Map the toolCall status to our internal status
     const statusMap: Record<string, UaiAgentToolStatus> = {
       pending: "pending",
       streaming: "streaming",
+      awaiting_approval: "awaiting_approval",
       executing: "executing",
       completed: "complete",
       error: "error",
@@ -424,7 +119,10 @@ export class UaiToolRendererElement extends UmbLitElement {
     this._status = statusMap[this.toolCall.status] ?? "pending";
 
     if (this.toolCall.result) {
-      this._result = safeParseJson(this.toolCall.result, this.toolCall.result as unknown as Record<string, unknown>);
+      this._result = safeParseJson(
+        this.toolCall.result,
+        this.toolCall.result as unknown as Record<string, unknown>
+      );
     }
   }
 
@@ -444,32 +142,13 @@ export class UaiToolRendererElement extends UmbLitElement {
   }
 
   /**
-   * Get the manifest for external use (e.g., for frontend tool execution).
+   * Get the manifest for external use.
    */
   get manifest(): ManifestUaiAgentTool | null {
     return this.#manifest;
   }
 
-  /**
-   * Check if this tool has an API (is a frontend tool).
-   */
-  get hasFrontendApi(): boolean {
-    return this.#manifest?.api !== undefined || this.#toolApi !== null;
-  }
-
-  /**
-   * Check if this tool requires HITL approval.
-   */
-  get hasApproval(): boolean {
-    return this.#manifest?.meta.approval !== undefined;
-  }
-
   override render() {
-    // If awaiting approval and we have an approval element, render it
-    if (this._isAwaitingApproval && this.#approvalElement) {
-      return html`${this.#approvalElement}`;
-    }
-
     if (this._hasCustomElement && this.#toolElement) {
       return html`${this.#toolElement}`;
     }
@@ -480,7 +159,9 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   #renderDefault() {
     // Parse arguments for display
-    const args = safeParseJson(this.toolCall?.arguments, { raw: this.toolCall?.arguments ?? "" });
+    const args = safeParseJson(this.toolCall?.arguments, {
+      raw: this.toolCall?.arguments ?? "",
+    });
 
     return html`
       <uai-agent-tool-status

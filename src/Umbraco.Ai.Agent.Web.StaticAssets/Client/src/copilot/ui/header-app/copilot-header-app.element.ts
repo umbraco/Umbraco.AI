@@ -19,7 +19,6 @@ export class UaiCopilotHeaderAppElement extends UmbLitElement {
   }
 
   #handleClick() {
-    console.log("uai-copilot-header-app: Clicked");
     this.#copilotContext?.toggle();
   }
 

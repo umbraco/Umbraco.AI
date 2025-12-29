@@ -21,11 +21,12 @@ export interface ChatMessage {
  * Tool call status matching AG-UI events.
  */
 export type ToolCallStatus =
-  | "pending"    // TOOL_CALL_START received
-  | "streaming"  // TOOL_CALL_ARGS being received
-  | "executing"  // Frontend tool executing (after TOOL_CALL_END)
-  | "completed"  // TOOL_CALL_RESULT received or frontend execution done
-  | "error";     // Error occurred
+  | "pending"           // TOOL_CALL_START received
+  | "streaming"         // TOOL_CALL_ARGS being received
+  | "awaiting_approval" // Frontend tool waiting for user approval
+  | "executing"         // Frontend tool executing (after TOOL_CALL_END)
+  | "completed"         // TOOL_CALL_RESULT received or frontend execution done
+  | "error";            // Error occurred
 
 /**
  * Information about a tool call.

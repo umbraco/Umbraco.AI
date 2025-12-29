@@ -71,9 +71,9 @@ export class UaiCopilotContext extends UmbControllerBase {
     super(host);
 
     this.#toolBus = new CopilotToolBus(host);
-    this.#runController = new CopilotRunController(host, this.#toolBus);
     this.#agentStore = new CopilotAgentStore(host);
     this.#hitlContext = new UaiHitlContext(host);
+    this.#runController = new CopilotRunController(host, this.#toolBus, this.#hitlContext);
 
     this.agents = this.#agentStore.agents$;
     this.selectedAgent = this.#agentStore.selectedAgent$;

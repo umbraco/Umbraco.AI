@@ -1,23 +1,27 @@
-import { InterruptContext, InterruptHandler } from "../types.ts";
-import { InterruptInfo } from "../../types.ts";
+import type { InterruptContext, InterruptHandler } from "../types.js";
+import type { InterruptInfo } from "../../types.js";
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { UAI_HITL_CONTEXT, UaiHitlContext } from "../../hitl.context.ts";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UAI_HITL_CONTEXT } from "../../hitl.context.js";
+import type UaiHitlContext from "../../hitl.context.js";
 
+/**
+ * Handles server-side HITL (human_approval) interrupts.
+ * Delegates to UaiHitlContext to show the interrupt UI.
+ */
 export class HitlInterruptHandler extends UmbControllerBase implements InterruptHandler {
-    readonly reason = "human_approval"; 
+  readonly reason = "human_approval";
 
-   #hitlContext?: UaiHitlContext;
+  #hitlContext?: UaiHitlContext;
 
-    constructor(host: UmbControllerHost) {
-        super(host);
-        this.consumeContext(UAI_HITL_CONTEXT, (hitlContext) => {
-            this.#hitlContext = hitlContext;
-        });
-    }
+  constructor(host: UmbControllerHost) {
+    super(host);
+    this.consumeContext(UAI_HITL_CONTEXT, (hitlContext) => {
+      this.#hitlContext = hitlContext;
+    });
+  }
 
-    handle(interrupt: InterruptInfo, context: InterruptContext): void {
-        console.log("HitlInterruptHandler handling interrupt:", interrupt);
-        this.#hitlContext?.setInterrupt(interrupt, context);
-    }
+  handle(interrupt: InterruptInfo, context: InterruptContext): void {
+    this.#hitlContext?.setInterrupt(interrupt, context);
+  }
 }

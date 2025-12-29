@@ -3,20 +3,23 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject, Subscription, map } from "rxjs";
 import { UaiAgentClient } from "../../transport/uai-agent-client.js";
 import { FrontendToolManager } from "../services/frontend-tool-manager.js";
+import { FrontendToolExecutor } from "../services/frontend-tool-executor.js";
 import type {
   AgentState,
   ChatMessage,
   InterruptInfo,
   ToolCallInfo,
+  ToolCallStatus,
 } from "../types.js";
 import { safeParseJson } from "../utils/json.js";
-import { CopilotToolBus, type CopilotToolResult } from "../services/copilot-tool-bus.js";
+import { CopilotToolBus, type CopilotToolResult, type CopilotToolStatusUpdate } from "../services/copilot-tool-bus.js";
 import type { CopilotAgentItem } from "../repositories/copilot.repository.js";
-import { InterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.ts";
-import { ToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.ts";
-import { HitlInterruptHandler } from "../interrupts/handlers/hitl-interrupt.handler.ts";
-import { DefaultInterruptHandler } from "../interrupts/handlers/default-interrupt.handler.ts";
-import { InterruptContext } from "../interrupts/types.ts";
+import { InterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.js";
+import { ToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.js";
+import { HitlInterruptHandler } from "../interrupts/handlers/hitl-interrupt.handler.js";
+import { DefaultInterruptHandler } from "../interrupts/handlers/default-interrupt.handler.js";
+import type { InterruptContext } from "../interrupts/types.js";
+import type UaiHitlContext from "../hitl.context.js";
 
 /**
  * Encapsulates the AG-UI client lifecycle, manages chat state + streaming,
@@ -24,6 +27,7 @@ import { InterruptContext } from "../interrupts/types.ts";
  */
 export class CopilotRunController extends UmbControllerBase {
   #toolBus: CopilotToolBus;
+  #toolExecutor: FrontendToolExecutor;
   #client?: UaiAgentClient;
   #agent?: CopilotAgentItem;
   #frontendTools: import("../../transport/types.js").AguiTool[] = [];
@@ -45,12 +49,14 @@ export class CopilotRunController extends UmbControllerBase {
   readonly agentState$ = this.#agentState.asObservable();
   readonly isRunning$ = this.agentState$.pipe(map((state) => state !== undefined));
 
-  constructor(host: UmbControllerHost, toolBus: CopilotToolBus) {
+  constructor(host: UmbControllerHost, toolBus: CopilotToolBus, hitlContext: UaiHitlContext) {
     super(host);
     this.#toolBus = toolBus;
     this.#frontendTools = this.#toolManager.loadFromRegistry();
+    this.#toolExecutor = new FrontendToolExecutor(host, this.#toolManager, toolBus, hitlContext);
     this.#subscriptions.push(
-      this.#toolBus.results$.subscribe((result) => this.#handleToolResult(result))
+      this.#toolBus.results$.subscribe((result) => this.#handleToolResult(result)),
+      this.#toolBus.statusUpdates$.subscribe((update) => this.#handleStatusUpdate(update))
     );
     this.#setupHandlerRegistry();
   }
@@ -103,7 +109,6 @@ export class CopilotRunController extends UmbControllerBase {
     this.#agentState.next(undefined);
     this.#currentToolCalls = [];
     this.#currentAssistantMessageId = null;
-    this.#toolBus.clearPending();
   }
 
   /**
@@ -135,7 +140,6 @@ export class CopilotRunController extends UmbControllerBase {
     this.#streamingContent.next("");
     this.#currentToolCalls = [];
     this.#currentAssistantMessageId = null;
-    this.#toolBus.clearPending();
 
     // Trigger new generation
     this.#agentState.next({ status: "thinking" });
@@ -204,7 +208,6 @@ export class CopilotRunController extends UmbControllerBase {
           // Text complete - nothing special needed
         },
         onToolCallStart: (info) => {
-          console.log("onToolCallStart:", info.name, info.id);
           const toolCall: ToolCallInfo = { ...info, status: "pending" };
           this.#currentToolCalls = [...this.#currentToolCalls, toolCall];
 
@@ -221,10 +224,8 @@ export class CopilotRunController extends UmbControllerBase {
             };
             messages.push(newMessage);
             this.#currentAssistantMessageId = newMessage.id;
-            console.log("  Created new assistant message:", newMessage.id);
           } else {
             // Add tool call to current assistant message
-            console.log("  Adding to existing assistant message:", this.#currentAssistantMessageId);
             messages = messages.map((msg) =>
               msg.id === this.#currentAssistantMessageId
                 ? { ...msg, toolCalls: [...(msg.toolCalls || []), toolCall] }
@@ -311,13 +312,11 @@ export class CopilotRunController extends UmbControllerBase {
   }
 
   #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }): void {
-    console.log("#handleRunFinished called:", event.outcome, event.interrupt?.reason);
     // Clear streaming content
     this.#streamingContent.next("");
 
     // Store current assistant message ID before resetting
     const assistantMessageId = this.#currentAssistantMessageId;
-    console.log("  #currentAssistantMessageId before reset:", assistantMessageId);
 
     // Reset for next run
     this.#currentAssistantMessageId = null;
@@ -329,7 +328,6 @@ export class CopilotRunController extends UmbControllerBase {
     }
 
     if (event.outcome === "interrupt" && event.interrupt) {
-      console.log("  Creating interrupt context with assistantMessageId:", assistantMessageId);
       const context = this.#createInterruptContext(assistantMessageId);
       if (this.#handlerRegistry.handle(event.interrupt, context)) {
         return;
@@ -376,12 +374,16 @@ export class CopilotRunController extends UmbControllerBase {
     this.#client?.sendMessage(this.#messages.value, this.#frontendTools);
   }
 
+  /**
+   * Handle frontend tool result from the tool bus.
+   * Updates the tool call status in messages and adds a tool message.
+   * Note: Resume is handled by ToolExecutionHandler when all tools complete.
+   */
   #handleToolResult(result: CopilotToolResult): void {
-    console.log("#handleToolResult:", result.toolCallId, result.error ? "error" : "success");
     const resultContent = typeof result.result === "string"
       ? result.result
       : JSON.stringify(result.result);
-    const newStatus = result.error ? "error" : "completed";
+    const newStatus: ToolCallStatus = result.error ? "error" : "completed";
 
     // Update assistant tool call status
     const updated = this.#messages.value.map((msg) => {
@@ -390,7 +392,7 @@ export class CopilotRunController extends UmbControllerBase {
           ...msg,
           toolCalls: msg.toolCalls.map((tc) =>
             tc.id === result.toolCallId
-              ? { ...tc, status: newStatus as ToolCallInfo["status"], result: resultContent }
+              ? { ...tc, status: newStatus, result: resultContent }
               : tc
           ),
         };
@@ -407,22 +409,33 @@ export class CopilotRunController extends UmbControllerBase {
       timestamp: new Date(),
     };
     this.#messages.next([...updated, toolMessage]);
+  }
 
-    const hasPending = this.#toolBus.hasPending();
-    console.log("  hasPending:", hasPending);
-    if (!hasPending) {
-      console.log("  Resuming run with sendMessage");
-      this.#agentState.next({ status: "thinking" });
-      this.#client?.sendMessage(this.#messages.value, this.#frontendTools);
-    }
+  /**
+   * Handle status update from the tool bus.
+   * Updates the tool call status in messages (e.g., "executing", "awaiting_approval").
+   */
+  #handleStatusUpdate(update: CopilotToolStatusUpdate): void {
+    const updated = this.#messages.value.map((msg) => {
+      if (msg.role === "assistant" && msg.toolCalls) {
+        return {
+          ...msg,
+          toolCalls: msg.toolCalls.map((tc) =>
+            tc.id === update.toolCallId ? { ...tc, status: update.status } : tc
+          ),
+        };
+      }
+      return msg;
+    });
+    this.#messages.next(updated);
   }
 
   #setupHandlerRegistry(): void {
     this.#handlerRegistry.clear();
     this.#handlerRegistry.registerAll([
-        new ToolExecutionHandler(this.#toolManager, this.#toolBus),
-        new HitlInterruptHandler(this),
-        new DefaultInterruptHandler()
+      new ToolExecutionHandler(this.#toolManager, this.#toolExecutor),
+      new HitlInterruptHandler(this),
+      new DefaultInterruptHandler(),
     ]);
   }
 }

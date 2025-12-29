@@ -1,41 +1,52 @@
-import { InterruptContext, InterruptHandler } from "../types.ts";
-import { FrontendToolManager } from "../../services/frontend-tool-manager.ts";
-import { CopilotToolBus } from "../../services/copilot-tool-bus.ts";
-import { InterruptInfo } from "../../types.ts";
+import type { InterruptContext, InterruptHandler } from "../types.js";
+import type { FrontendToolManager } from "../../services/frontend-tool-manager.js";
+import type { FrontendToolExecutor } from "../../services/frontend-tool-executor.js";
+import type { InterruptInfo, ToolCallInfo } from "../../types.js";
 
+/**
+ * Handles tool_execution interrupts by executing frontend tools.
+ *
+ * When the server interrupts with reason "tool_execution":
+ * 1. Finds frontend tool calls in the last assistant message
+ * 2. Executes them via FrontendToolExecutor
+ * 3. Resumes the run when all tools complete
+ */
 export class ToolExecutionHandler implements InterruptHandler {
-    
-    readonly reason = "tool_execution";
+  readonly reason = "tool_execution";
 
-    constructor(
-        private toolManager: FrontendToolManager,
-        private toolBus: CopilotToolBus
-    ) {}
+  constructor(
+    private toolManager: FrontendToolManager,
+    private executor: FrontendToolExecutor
+  ) {}
 
-    handle(_interrupt: InterruptInfo, context: InterruptContext): void {
-        console.log("ToolExecutionHandler handling tool execution interrupt");
-        const assistantId = context.lastAssistantMessageId;
-        console.log("  assistantId:", assistantId);
-        console.log("  messages count:", context.messages.length);
-        console.log("  message ids:", context.messages.map(m => `${m.role}:${m.id}`));
+  handle(_interrupt: InterruptInfo, context: InterruptContext): void {
+    const assistantId = context.lastAssistantMessageId;
+    const assistantMessage = context.messages.find((msg) => msg.id === assistantId);
 
-        const assistantMessage = context.messages.find(msg => msg.id === assistantId);
-        console.log("  assistantMessage found:", !!assistantMessage);
-        console.log("  toolCalls on message:", assistantMessage?.toolCalls?.length ?? 0);
+    const toolCalls =
+      assistantMessage?.toolCalls?.filter((tc) =>
+        this.toolManager.isFrontendTool(tc.name)
+      ) ?? [];
 
-        const toolCalls = assistantMessage?.toolCalls?.filter(
-            tc => this.toolManager.isFrontendTool(tc.name)
-        ) ?? [];
-        console.log("  frontend toolCalls:", toolCalls.length, toolCalls.map(tc => tc.name));
-
-        if (toolCalls.length > 0) {
-            const ids = toolCalls.map(tc => tc.id);
-            console.log("  Setting pending:", ids);
-            this.toolBus.setPending(ids);
-            context.setAgentState({ status: "executing", currentStep: "Executing tools..." });
-        } else {
-            console.log("  No frontend tools found - clearing agent state");
-            context.setAgentState(undefined);
-        }
+    if (toolCalls.length > 0) {
+      context.setAgentState({ status: "executing", currentStep: "Executing tools..." });
+      // Fire-and-forget async execution
+      this.#executeAndResume(context, toolCalls);
+    } else {
+      // No frontend tools to execute
+      context.setAgentState(undefined);
     }
+  }
+
+  /**
+   * Execute tools and resume the run when complete.
+   * This is fire-and-forget from handle() - errors are caught per-tool.
+   */
+  async #executeAndResume(
+    context: InterruptContext,
+    toolCalls: ToolCallInfo[]
+  ): Promise<void> {
+    await this.executor.execute(toolCalls);
+    context.resume();
+  }
 }

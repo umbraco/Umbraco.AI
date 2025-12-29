@@ -1,4 +1,4 @@
-import { AgentState, ChatMessage, InterruptInfo } from "../types.ts";
+import type { AgentState, ChatMessage, InterruptInfo } from "../types.js";
 
 export interface InterruptHandler {
     readonly reason: string;  // e.g., "tool_execution", "human_approval", "*" for fallback

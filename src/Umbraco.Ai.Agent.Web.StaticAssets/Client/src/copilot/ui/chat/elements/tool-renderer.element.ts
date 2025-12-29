@@ -2,6 +2,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { loadManifestElement, loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
+import type { Subscription } from "rxjs";
 import type {
   ManifestUaiAgentTool,
   UaiAgentToolElement,
@@ -14,7 +15,7 @@ import type {
 } from "../../../../agent/approval/uai-agent-approval-element.extension.js";
 import type { ToolCallInfo, ToolCallStatus } from "../../../core/types.js";
 import { safeParseJson } from "../../../core/utils/json.js";
-import { UMB_COPILOT_TOOL_BUS_CONTEXT } from "../../../core/copilot.context.js";
+import { UAI_COPILOT_TOOL_BUS_CONTEXT } from "../../../core/copilot.context.js";
 import type { CopilotToolBus } from "../../../core/services/copilot-tool-bus.js";
 
 // Import default tool status component
@@ -41,6 +42,8 @@ export class UaiToolRendererElement extends UmbLitElement {
   #hasExecuted = false;
   #isLoadingApi = false;
   #previousToolCallStatus: ToolCallStatus | null = null;
+  #pendingSubscription?: Subscription;
+  #isPending = false;
 
   // HITL approval state
   #approvalElement: UaiAgentApprovalElement | null = null;
@@ -65,12 +68,29 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this.consumeContext(UMB_COPILOT_TOOL_BUS_CONTEXT, (bus) => (this.#toolBus = bus));
+    console.log("tool-renderer connectedCallback:", this.toolCall?.name, this.toolCall?.id);
+    this.consumeContext(UAI_COPILOT_TOOL_BUS_CONTEXT, (bus) => {
+      this.#toolBus = bus;
+      // Subscribe to pending set changes to know when this tool should execute
+      this.#pendingSubscription = bus.pending$.subscribe((pendingSet) => {
+        const wasPending = this.#isPending;
+        this.#isPending = this.toolCall?.id ? pendingSet.has(this.toolCall.id) : false;
+        console.log("tool-renderer pending$ update:", this.toolCall?.name, this.#isPending);
+        // If we just became pending, try to execute
+        if (!wasPending && this.#isPending) {
+          this.#tryExecute();
+        }
+      });
+    });
     this.#lookupExtension();
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
+
+    // Clean up pending subscription
+    this.#pendingSubscription?.unsubscribe();
+    this.#pendingSubscription = undefined;
 
     // Resolve with cancellation if awaiting approval
     if (this.#respondResolver) {
@@ -113,15 +133,21 @@ export class UaiToolRendererElement extends UmbLitElement {
    * Look up the tool extension by toolName.
    */
   #lookupExtension() {
-    if (!this.toolCall?.name || this.#manifest) return;
+    console.log("tool-renderer #lookupExtension:", this.toolCall?.name);
+    if (!this.toolCall?.name || this.#manifest) {
+      console.log("  -> Early return:", !this.toolCall?.name ? "no name" : "already has manifest");
+      return;
+    }
 
     const manifests = umbExtensionsRegistry.getByTypeAndFilter<
       "uaiAgentTool",
       ManifestUaiAgentTool
     >("uaiAgentTool", (manifest) => manifest.meta.toolName === this.toolCall.name);
 
+    console.log("  -> Found manifests:", manifests.length);
     if (manifests.length > 0) {
       this.#manifest = manifests[0];
+      console.log("  -> Manifest has api:", !!this.#manifest.api);
       this.#loadElement();
 
       // Try to execute now that manifest is available
@@ -137,21 +163,34 @@ export class UaiToolRendererElement extends UmbLitElement {
    * - updated(): when toolCall property changes
    * - #lookupExtension(): after manifest is found
    * - #loadElement(): after API is loaded
+   * - pending$ subscription: when this tool becomes pending
    *
    * Conditions for execution:
    * - Not already executed (within this instance)
+   * - Is marked as pending by ToolExecutionHandler (prevents race with RUN_FINISHED)
    * - Has a frontend API (manifest.api defined or API loaded)
    * - Arguments are available
    * - Not currently streaming
    */
   #tryExecute() {
+    console.log("tool-renderer #tryExecute:", this.toolCall?.name, this.toolCall?.id);
+    console.log("  #hasExecuted:", this.#hasExecuted);
+    console.log("  #isPending:", this.#isPending);
+    console.log("  hasFrontendApi:", this.hasFrontendApi);
+    console.log("  arguments:", this.toolCall?.arguments !== undefined);
+    console.log("  status:", this.toolCall?.status);
+
     if (
       !this.#hasExecuted &&
+      this.#isPending &&  // Only execute when marked as pending by ToolExecutionHandler
       this.hasFrontendApi &&
       this.toolCall?.arguments !== undefined &&
       this.toolCall.status !== "streaming"
     ) {
+      console.log("  -> Executing frontend tool");
       this.#executeFrontendTool();
+    } else {
+      console.log("  -> Skipping execution (conditions not met)");
     }
   }
 
@@ -203,22 +242,26 @@ export class UaiToolRendererElement extends UmbLitElement {
    */
   async #executeFrontendTool() {
     const toolCallId = this.toolCall?.id;
+    console.log("tool-renderer #executeFrontendTool:", this.toolCall?.name, toolCallId);
 
     // Prevent duplicate execution across instances using tool bus
     if (toolCallId && this.#toolBus) {
       if (!this.#toolBus.markExecuting(toolCallId)) {
+        console.log("  -> Already executing, returning");
         return; // Already executing
       }
     }
 
     // Verify API is ready and we haven't already executed
     if (!this.#toolApi || this.#hasExecuted) {
+      console.log("  -> API not ready or already executed:", !this.#toolApi, this.#hasExecuted);
       if (toolCallId) {
         this.#toolBus?.clearExecuting(toolCallId);
       }
       return;
     }
 
+    console.log("  -> Proceeding with execution");
     this.#hasExecuted = true;
 
     // Parse arguments

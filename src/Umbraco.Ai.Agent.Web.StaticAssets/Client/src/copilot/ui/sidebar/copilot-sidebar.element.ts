@@ -1,7 +1,7 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../core/copilot.context.js";
+import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../core/copilot.context.js";
 
 // Import native chat component (lightweight, no lazy loading needed)
 import "../chat/index.js";
@@ -9,7 +9,7 @@ import "../chat/index.js";
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
-  #copilotContext?: UmbCopilotContext;
+  #copilotContext?: UaiCopilotContext;
 
   readonly #sidebarWidth = 450;
 
@@ -23,7 +23,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
 
   constructor() {
     super();
-    this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
+    this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
       if (context) {
         this.#copilotContext = context;
         this.observe(context.isOpen, (isOpen) => {

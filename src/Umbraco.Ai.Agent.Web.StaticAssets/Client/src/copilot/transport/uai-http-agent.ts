@@ -39,15 +39,20 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
    */
   run(input: RunAgentInput): Observable<BaseEvent> {
     return new Observable((subscriber) => {
-      this.#abortController = new AbortController();
+      // Create a local AbortController for this specific run.
+      // IMPORTANT: Capture in local variable to avoid race condition where
+      // cleanup from a previous Observable aborts a newer run's controller.
+      const abortController = new AbortController();
+      this.#abortController = abortController;
 
-      this.#runAsync(input, subscriber).catch((error) => {
+      this.#runAsync(input, subscriber, abortController.signal).catch((error) => {
         subscriber.error(error);
       });
 
       // Cleanup function - called when unsubscribed
+      // Uses local variable, not instance field, to abort only this run's controller
       return () => {
-        this.#abortController?.abort();
+        abortController.abort();
       };
     });
   }
@@ -58,7 +63,8 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
       next: (event: BaseEvent) => void;
       complete: () => void;
       error: (err: unknown) => void;
-    }
+    },
+    signal: AbortSignal
   ): Promise<void> {
     // Convert AG-UI RunAgentInput to hey-api AguiRunRequestModel
     const body: AguiRunRequestModel = {
@@ -74,7 +80,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     const result = await AgentsService.runAgent({
       path: { agentIdOrAlias: this.#agentId },
       body,
-      signal: this.#abortController?.signal,
+      signal,
     });
 
     // Iterate over the SSE stream and emit events

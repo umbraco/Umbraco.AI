@@ -7,6 +7,7 @@ import { CopilotAgentStore } from "./stores/copilot-agent.store.js";
 import { CopilotRunController } from "./controllers/copilot-run.controller.js";
 import { CopilotToolBus } from "./services/copilot-tool-bus.js";
 import type { CopilotAgentItem } from "./repositories/copilot.repository.js";
+import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 
 /**
  * Basic agent information used for display purposes.
@@ -21,7 +22,7 @@ export interface AgentInfo {
  * Root Copilot context that wires together agent data, run lifecycle, and tool coordination.
  * Provides Umb contexts so sidebar/header/chat elements can stay declarative.
  */
-export class UmbCopilotContext extends UmbControllerBase {
+export class UaiCopilotContext extends UmbControllerBase {
   public readonly IS_COPILOT_CONTEXT = true;
 
   #isOpen = new UmbBooleanState(false);
@@ -36,6 +37,7 @@ export class UmbCopilotContext extends UmbControllerBase {
   #agentStore: CopilotAgentStore;
   #toolBus: CopilotToolBus;
   #runController: CopilotRunController;
+  #hitlContext: UaiHitlContext;
 
   readonly agents: Observable<CopilotAgentItem[]>;
   readonly selectedAgent: Observable<CopilotAgentItem | undefined>;
@@ -53,12 +55,16 @@ export class UmbCopilotContext extends UmbControllerBase {
     return this.#runController.agentState$;
   }
 
-  get interrupt$() {
-    return this.#runController.interrupt$;
+  get isRunning$() {
+    return this.#runController.isRunning$;
   }
 
-  get runStatus$() {
-    return this.#runController.runStatus$;
+  /**
+   * Observable for HITL (human-in-the-loop) interrupt state.
+   * Emits when an interrupt requires user response.
+   */
+  get hitlInterrupt$() {
+    return this.#hitlContext.interrupt$;
   }
 
   constructor(host: UmbControllerHost) {
@@ -67,6 +73,7 @@ export class UmbCopilotContext extends UmbControllerBase {
     this.#toolBus = new CopilotToolBus(host);
     this.#runController = new CopilotRunController(host, this.#toolBus);
     this.#agentStore = new CopilotAgentStore(host);
+    this.#hitlContext = new UaiHitlContext(host);
 
     this.agents = this.#agentStore.agents$;
     this.selectedAgent = this.#agentStore.selectedAgent$;
@@ -83,9 +90,10 @@ export class UmbCopilotContext extends UmbControllerBase {
       }
     });
 
-    this.provideContext(UMB_COPILOT_CONTEXT, this);
-    this.provideContext(UMB_COPILOT_RUN_CONTEXT, this.#runController);
-    this.provideContext(UMB_COPILOT_TOOL_BUS_CONTEXT, this.#toolBus);
+    this.provideContext(UAI_COPILOT_CONTEXT, this);
+    this.provideContext(UAI_COPILOT_RUN_CONTEXT, this.#runController);
+    this.provideContext(UAI_COPILOT_TOOL_BUS_CONTEXT, this.#toolBus);
+    this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
   }
 
   /**
@@ -133,24 +141,32 @@ export class UmbCopilotContext extends UmbControllerBase {
   toggle() {
     this.#isOpen.setValue(!this.#isOpen.getValue());
   }
+
+  /**
+   * Respond to a HITL interrupt.
+   * @param response The user's response to the interrupt
+   */
+  respondToHitl(response: string): void {
+    this.#hitlContext.respond(response);
+  }
 }
 
 /** Context token for the root Copilot context (agent selection, panel state). */
-export const UMB_COPILOT_CONTEXT = new UmbContextToken<UmbCopilotContext>(
-  "UmbCopilotContext",
+export const UAI_COPILOT_CONTEXT = new UmbContextToken<UaiCopilotContext>(
+  "UaiCopilotContext",
   undefined,
-  (context): context is UmbCopilotContext =>
-    (context as UmbCopilotContext).IS_COPILOT_CONTEXT
+  (context): context is UaiCopilotContext =>
+    (context as UaiCopilotContext).IS_COPILOT_CONTEXT
 );
 
 /** Context token for the run controller (messages, streaming, lifecycle). */
-export const UMB_COPILOT_RUN_CONTEXT = new UmbContextToken<CopilotRunController>(
-  "UmbCopilotRunContext"
+export const UAI_COPILOT_RUN_CONTEXT = new UmbContextToken<CopilotRunController>(
+  "UaiCopilotRunContext"
 );
 
 /** Context token for the tool bus (frontend tool execution coordination). */
-export const UMB_COPILOT_TOOL_BUS_CONTEXT = new UmbContextToken<CopilotToolBus>(
-  "UmbCopilotToolBusContext"
+export const UAI_COPILOT_TOOL_BUS_CONTEXT = new UmbContextToken<CopilotToolBus>(
+  "UaiCopilotToolBusContext"
 );
 
-export default UmbCopilotContext;
+export default UaiCopilotContext;

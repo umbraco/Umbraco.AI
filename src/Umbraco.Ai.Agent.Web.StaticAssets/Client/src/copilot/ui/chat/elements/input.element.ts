@@ -1,7 +1,7 @@
 import { customElement, property, state, css, html, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../../core/copilot.context.js";
+import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../../core/copilot.context.js";
 import type { CopilotAgentItem } from "../../../core/repositories/copilot.repository.js";
 
 /**
@@ -30,12 +30,12 @@ export class UaiCopilotInputElement extends UmbLitElement {
   @state()
   private _agentsLoading = true;
 
-  #copilotContext?: UmbCopilotContext;
+  #copilotContext?: UaiCopilotContext;
   #textareaRef = createRef<HTMLElement>();
 
   constructor() {
     super();
-    this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
+    this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
       if (context) {
         this.#copilotContext = context;
         this.observe(context.agents, (agents) => (this._agents = agents));

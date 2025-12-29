@@ -1,16 +1,16 @@
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UMB_COPILOT_CONTEXT, type UmbCopilotContext } from "../../core/copilot.context.js";
+import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../core/copilot.context.js";
 
 @customElement("uai-copilot-header-app")
 export class UaiCopilotHeaderAppElement extends UmbLitElement {
-  #copilotContext?: UmbCopilotContext;
+  #copilotContext?: UaiCopilotContext;
   @state() private _isOpen = false;
 
   constructor() {
     super();
-    this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
+    this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
       this.#copilotContext = context;
       if (context) {
         this.observe(context.isOpen, (isOpen) => (this._isOpen = isOpen));

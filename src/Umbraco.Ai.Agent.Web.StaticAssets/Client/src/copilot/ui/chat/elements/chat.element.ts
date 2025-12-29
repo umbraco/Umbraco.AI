@@ -1,7 +1,7 @@
 import { customElement, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { ChatMessage, AgentState, InterruptInfo } from "../../../core/types.js";
-import { UMB_COPILOT_CONTEXT, UMB_COPILOT_RUN_CONTEXT } from "../../../core/copilot.context.js";
+import { UAI_COPILOT_CONTEXT, UAI_COPILOT_RUN_CONTEXT, type UaiCopilotContext } from "../../../core/copilot.context.js";
 import type { CopilotRunController } from "../../../core/controllers/copilot-run.controller.js";
 
 import "./message.element.js";
@@ -26,23 +26,30 @@ export class UaiCopilotChatElement extends UmbLitElement {
   private _agentState?: AgentState;
 
   @state()
-  private _activeInterrupt?: InterruptInfo;
+  private _hitlInterrupt?: InterruptInfo;
 
   @state()
-  private _isLoading = false;
+  private _isRunning = false;
 
+  #copilotContext?: UaiCopilotContext;
   #runController?: CopilotRunController;
   #messagesRef = createRef<HTMLElement>();
 
   constructor() {
     super();
-    this.consumeContext(UMB_COPILOT_CONTEXT, (context) => {
-      if (context) {
-        this.observe(context.agentName, (name) => (this._agentName = name));
-      }
+    this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
+      if (!context) return;
+      this.#copilotContext = context;
+      this.observe(context.agentName, (name) => (this._agentName = name));
+      this.observe(context.hitlInterrupt$, (interrupt) => {
+        this._hitlInterrupt = interrupt;
+        if (interrupt) {
+          this._isRunning = false;
+        }
+      });
     });
 
-    this.consumeContext(UMB_COPILOT_RUN_CONTEXT, (runController) => {
+    this.consumeContext(UAI_COPILOT_RUN_CONTEXT, (runController) => {
       this.#runController = runController;
       if (runController) {
         this.#observeRunController(runController);
@@ -58,14 +65,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
     this.observe(runController.agentState$, (state) => {
       this._agentState = state;
     });
-    this.observe(runController.interrupt$, (interrupt) => {
-      this._activeInterrupt = interrupt;
-      if (interrupt) {
-        this._isLoading = false;
-      }
-    });
-    this.observe(runController.runStatus$, (status) => {
-      this._isLoading = status.isRunning;
+    this.observe(runController.isRunning$, (isRunning) => {
+      this._isRunning = isRunning;
     });
   }
 
@@ -76,7 +77,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
   #handleInterruptResponse(e: CustomEvent<string>) {
     const response = e.detail;
-    this.#runController?.respondToInterrupt(response);
+    this.#copilotContext?.respondToHitl(response);
   }
 
   #handleCancel() {
@@ -116,7 +117,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
           <uai-copilot-message
             .message=${msg}
             ?is-last-assistant-message=${msg.id === lastAssistantId}
-            ?is-running=${this._isLoading}
+            ?is-running=${this._isRunning}
             @regenerate=${this.#handleRegenerate}
           ></uai-copilot-message>
         `
@@ -148,17 +149,17 @@ export class UaiCopilotChatElement extends UmbLitElement {
             ></uai-copilot-agent-status>`
           : ""}
 
-        ${this._activeInterrupt
+        ${this._hitlInterrupt
           ? html`
               <uai-copilot-interrupt
-                .interrupt=${this._activeInterrupt}
+                .interrupt=${this._hitlInterrupt}
                 @respond=${this.#handleInterruptResponse}
               ></uai-copilot-interrupt>
             `
           : ""}
 
         <uai-copilot-input
-          ?disabled=${this._isLoading || !!this._activeInterrupt}
+          ?disabled=${this._isRunning || !!this._hitlInterrupt}
           @send=${this.#handleSendMessage}
         ></uai-copilot-input>
       </div>

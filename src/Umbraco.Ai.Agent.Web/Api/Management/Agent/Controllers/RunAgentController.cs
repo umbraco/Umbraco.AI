@@ -117,6 +117,7 @@ public class RunAgentController : AgentControllerBase
         AguiRunRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        
         var threadId = string.IsNullOrEmpty(request.ThreadId) ? Guid.NewGuid().ToString() : request.ThreadId;
         var runId = string.IsNullOrEmpty(request.RunId) ? Guid.NewGuid().ToString() : request.RunId;
         var messageId = Guid.NewGuid().ToString();

@@ -1,4 +1,4 @@
-import type { ChatMessage, ToolCallInfo, InterruptInfo } from "../core/types.js";
+import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "../core/types.js";
 import type { RunLifecycleState, RunContext, RunSnapshot } from "./types.js";
 
 /**
@@ -53,7 +53,7 @@ export class UaiRunStateManager {
   /**
    * Start a new run.
    */
-  startRun(runId: string, threadId: string, messages: ChatMessage[]): void {
+  startRun(runId: string, threadId: string, messages: UaiChatMessage[]): void {
     this.#context = {
       threadId,
       runId,
@@ -87,7 +87,7 @@ export class UaiRunStateManager {
   /**
    * Add a pending tool call.
    */
-  addToolCall(toolCall: ToolCallInfo): void {
+  addToolCall(toolCall: UaiToolCallInfo): void {
     if (this.#context) {
       this.#context.pendingToolCalls.set(toolCall.id, toolCall);
       this.#context.toolCallArgs.set(toolCall.id, '');
@@ -135,7 +135,7 @@ export class UaiRunStateManager {
   /**
    * Get a pending tool call by ID.
    */
-  getToolCall(toolCallId: string): ToolCallInfo | undefined {
+  getToolCall(toolCallId: string): UaiToolCallInfo | undefined {
     return this.#context?.pendingToolCalls.get(toolCallId);
   }
 
@@ -158,7 +158,7 @@ export class UaiRunStateManager {
   /**
    * Transition to interrupted state.
    */
-  interrupt(interrupt: InterruptInfo): void {
+  interrupt(interrupt: UaiInterruptInfo): void {
     if (this.#state.status !== 'idle') {
       const runId = 'runId' in this.#state ? this.#state.runId : '';
       const threadId = 'threadId' in this.#state ? this.#state.threadId : '';
@@ -192,7 +192,7 @@ export class UaiRunStateManager {
   /**
    * Update messages in the context.
    */
-  setMessages(messages: ChatMessage[]): void {
+  setMessages(messages: UaiChatMessage[]): void {
     if (this.#context) {
       this.#context.messages = [...messages];
     }
@@ -201,7 +201,7 @@ export class UaiRunStateManager {
   /**
    * Get current messages.
    */
-  get messages(): ChatMessage[] {
+  get messages(): UaiChatMessage[] {
     return this.#context?.messages ? [...this.#context.messages] : [];
   }
 

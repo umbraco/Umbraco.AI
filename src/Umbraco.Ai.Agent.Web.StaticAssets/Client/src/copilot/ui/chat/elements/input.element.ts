@@ -2,7 +2,7 @@ import { customElement, property, state, css, html, ref, createRef } from "@umbr
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../../core/copilot.context.js";
-import type { CopilotAgentItem } from "../../../core/repositories/copilot.repository.js";
+import type { UaiCopilotAgentItem } from "../../../core/repositories/copilot.repository.js";
 
 /**
  * Chat input component.
@@ -22,7 +22,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
   private _value = "";
 
   @state()
-  private _agents: CopilotAgentItem[] = [];
+  private _agents: UaiCopilotAgentItem[] = [];
 
   @state()
   private _selectedAgentId = "";

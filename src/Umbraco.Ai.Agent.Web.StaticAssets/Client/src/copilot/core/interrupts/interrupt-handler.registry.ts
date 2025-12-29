@@ -1,21 +1,21 @@
-import type { InterruptContext, InterruptHandler } from "./types.js";
-import type { InterruptInfo } from "../types.js";
+import type { UaiInterruptContext, UaiInterruptHandler } from "./types.js";
+import type { UaiInterruptInfo } from "../types.js";
 
 /**
  * Registry for interrupt handlers.
  * Matches interrupts to handlers by reason, with fallback support.
  */
 export class UaiInterruptHandlerRegistry {
-  #handlers = new Map<string, InterruptHandler>();
-  #fallbackHandler?: InterruptHandler;
+  #handlers = new Map<string, UaiInterruptHandler>();
+  #fallbackHandler?: UaiInterruptHandler;
 
-  registerAll(handlers: InterruptHandler[]): void {
+  registerAll(handlers: UaiInterruptHandler[]): void {
     for (const handler of handlers) {
       this.register(handler);
     }
   }
 
-  register(handler: InterruptHandler): void {
+  register(handler: UaiInterruptHandler): void {
     if (handler.reason === "*") {
       this.#fallbackHandler = handler;
     } else {
@@ -23,7 +23,7 @@ export class UaiInterruptHandlerRegistry {
     }
   }
 
-  handle(interrupt: InterruptInfo, context: InterruptContext): boolean {
+  handle(interrupt: UaiInterruptInfo, context: UaiInterruptContext): boolean {
     const handler = this.#handlers.get(interrupt.reason ?? "") ?? this.#fallbackHandler;
     if (handler) {
       handler.handle(interrupt, context);

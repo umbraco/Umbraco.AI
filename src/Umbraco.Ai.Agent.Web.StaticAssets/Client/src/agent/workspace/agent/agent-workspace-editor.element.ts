@@ -5,15 +5,15 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "./agent-workspace.context-token.js";
 import { UAI_AGENT_WORKSPACE_ALIAS } from "../../constants.js";
-import type { UAiAgentDetailModel } from "../../types.js";
+import type { UaiAgentDetailModel } from "../../types.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
 @customElement("uai-agent-workspace-editor")
-export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
+export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
 
     @state()
-    private _model?: UAiAgentDetailModel;
+    private _model?: UaiAgentDetailModel;
 
     @state()
     private _isNew?: boolean;
@@ -50,11 +50,11 @@ export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UAiAgentDetailModel>({ name, alias }, "name-alias")
+                new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name, alias }, "name-alias")
             );
         } else {
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UAiAgentDetailModel>({ name }, "name")
+                new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name }, "name")
             );
         }
     }
@@ -63,7 +63,7 @@ export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ alias: target.value.toString() }, "alias")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ alias: target.value.toString() }, "alias")
         );
     }
 
@@ -163,10 +163,10 @@ export class UAiAgentWorkspaceEditorElement extends UmbLitElement {
     ];
 }
 
-export default UAiAgentWorkspaceEditorElement;
+export default UaiAgentWorkspaceEditorElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-agent-workspace-editor": UAiAgentWorkspaceEditorElement;
+        "uai-agent-workspace-editor": UaiAgentWorkspaceEditorElement;
     }
 }

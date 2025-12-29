@@ -2,15 +2,15 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbDetailDataSource } from "@umbraco-cms/backoffice/repository";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { AgentsService } from "../../../api/index.js";
-import { UAiAgentTypeMapper } from "../../type-mapper.js";
-import type { UAiAgentDetailModel } from "../../types.js";
+import { UaiAgentTypeMapper } from "../../type-mapper.js";
+import type { UaiAgentDetailModel } from "../../types.js";
 import { UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
 import { UAI_EMPTY_GUID } from "@umbraco-ai/core";
 
 /**
  * Server data source for Agent detail operations.
  */
-export class UAiAgentDetailServerDataSource implements UmbDetailDataSource<UAiAgentDetailModel> {
+export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAgentDetailModel> {
     #host: UmbControllerHost;
 
     constructor(host: UmbControllerHost) {
@@ -20,8 +20,8 @@ export class UAiAgentDetailServerDataSource implements UmbDetailDataSource<UAiAg
     /**
      * Creates a scaffold for a new agent.
      */
-    async createScaffold(preset?: Partial<UAiAgentDetailModel>) {
-        const scaffold: UAiAgentDetailModel = {
+    async createScaffold(preset?: Partial<UaiAgentDetailModel>) {
+        const scaffold: UaiAgentDetailModel = {
             unique: UAI_EMPTY_GUID,
             entityType: UAI_AGENT_ENTITY_TYPE,
             alias: "",
@@ -49,14 +49,14 @@ export class UAiAgentDetailServerDataSource implements UmbDetailDataSource<UAiAg
             return { error };
         }
 
-        return { data: UAiAgentTypeMapper.toDetailModel(data) };
+        return { data: UaiAgentTypeMapper.toDetailModel(data) };
     }
 
     /**
      * Creates a new agent.
      */
-    async create(model: UAiAgentDetailModel, _parentUnique: string | null) {
-        const requestBody = UAiAgentTypeMapper.toCreateRequest(model);
+    async create(model: UaiAgentDetailModel, _parentUnique: string | null) {
+        const requestBody = UaiAgentTypeMapper.toCreateRequest(model);
 
         const { response, error } = await tryExecute(
             this.#host,
@@ -82,8 +82,8 @@ export class UAiAgentDetailServerDataSource implements UmbDetailDataSource<UAiAg
     /**
      * Updates an existing agent.
      */
-    async update(model: UAiAgentDetailModel) {
-        const requestBody = UAiAgentTypeMapper.toUpdateRequest(model);
+    async update(model: UaiAgentDetailModel) {
+        const requestBody = UaiAgentTypeMapper.toUpdateRequest(model);
 
         const { error } = await tryExecute(
             this.#host,

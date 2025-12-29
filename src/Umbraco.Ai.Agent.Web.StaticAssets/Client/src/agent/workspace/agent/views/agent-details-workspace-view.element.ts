@@ -3,7 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiSelectedEvent } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
-import type { UAiAgentDetailModel } from "../../../types.js";
+import type { UaiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
@@ -13,11 +13,11 @@ import "@umbraco-cms/backoffice/markdown-editor";
  * Displays system prompt, description, profile, and status.
  */
 @customElement("uai-agent-details-workspace-view")
-export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
+export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
 
     @state()
-    private _model?: UAiAgentDetailModel;
+    private _model?: UaiAgentDetailModel;
 
     constructor() {
         super();
@@ -35,7 +35,7 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const value = (event.target as HTMLInputElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ description: value || null }, "description")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ description: value || null }, "description")
         );
     }
 
@@ -43,7 +43,7 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const value = (event.target as HTMLInputElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ instructions: value || null }, "instructions")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ instructions: value || null }, "instructions")
         );
     }
 
@@ -51,14 +51,14 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const checked = (event.target as HTMLInputElement).checked;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ isActive: checked }, "isActive")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ isActive: checked }, "isActive")
         );
     }
 
     #onProfileChange(event: UaiSelectedEvent) {
         event.stopPropagation();
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UAiAgentDetailModel>({ profileId: event.unique ?? "" }, "profileId")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId: event.unique ?? "" }, "profileId")
         );
     }
 
@@ -188,10 +188,10 @@ export class UAiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     ];
 }
 
-export default UAiAgentDetailsWorkspaceViewElement;
+export default UaiAgentDetailsWorkspaceViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-agent-details-workspace-view": UAiAgentDetailsWorkspaceViewElement;
+        "uai-agent-details-workspace-view": UaiAgentDetailsWorkspaceViewElement;
     }
 }

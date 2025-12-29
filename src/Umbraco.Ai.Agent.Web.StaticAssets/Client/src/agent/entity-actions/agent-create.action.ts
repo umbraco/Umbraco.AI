@@ -7,7 +7,7 @@ import { UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN } from "../workspace/agent/path
  * Entity action for creating a new agent.
  * Navigates directly to the create workspace.
  */
-export class UAiAgentCreateEntityAction extends UmbEntityActionBase<never> {
+export class UaiAgentCreateEntityAction extends UmbEntityActionBase<never> {
     constructor(host: UmbControllerHost, args: UmbEntityActionArgs<never>) {
         super(host, args);
     }
@@ -18,4 +18,4 @@ export class UAiAgentCreateEntityAction extends UmbEntityActionBase<never> {
     }
 }
 
-export { UAiAgentCreateEntityAction as api };
+export { UaiAgentCreateEntityAction as api };

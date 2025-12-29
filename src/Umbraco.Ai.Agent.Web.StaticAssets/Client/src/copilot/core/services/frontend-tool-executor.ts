@@ -2,8 +2,8 @@ import { loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UaiFrontendToolManager } from "./frontend-tool-manager.js";
 import type { UaiCopilotToolBus } from "./copilot-tool-bus.js";
-import type { InterruptInfo, ToolCallInfo } from "../types.js";
-import type { InterruptContext } from "../interrupts/types.js";
+import type { UaiInterruptInfo, UaiToolCallInfo } from "../types.js";
+import type { UaiInterruptContext } from "../interrupts/types.js";
 import type { UaiAgentToolApi, ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
 import type UaiHitlContext from "../hitl.context.js";
 
@@ -53,7 +53,7 @@ export class UaiFrontendToolExecutor {
    * @param toolCalls The tool calls to execute
    * @returns Promise that resolves when all tools complete
    */
-  async execute(toolCalls: ToolCallInfo[]): Promise<void> {
+  async execute(toolCalls: UaiToolCallInfo[]): Promise<void> {
     for (const toolCall of toolCalls) {
       await this.#executeSingle(toolCall);
     }
@@ -63,7 +63,7 @@ export class UaiFrontendToolExecutor {
    * Execute a single tool call.
    * Catches errors and publishes them as results - never throws.
    */
-  async #executeSingle(toolCall: ToolCallInfo): Promise<void> {
+  async #executeSingle(toolCall: UaiToolCallInfo): Promise<void> {
     try {
       // Get the manifest for this tool
       const manifest = this.#toolManager.getManifest(toolCall.name);
@@ -136,7 +136,7 @@ export class UaiFrontendToolExecutor {
    * Returns the user's response, or null if cancelled.
    */
   async #requestApproval(
-    toolCall: ToolCallInfo,
+    toolCall: UaiToolCallInfo,
     manifest: ManifestUaiAgentTool,
     args: Record<string, unknown>
   ): Promise<unknown> {
@@ -150,7 +150,7 @@ export class UaiFrontendToolExecutor {
     const approvalObj = typeof approval === "object" ? approval : null;
 
     // Build interrupt info for the approval UI
-    const interrupt: InterruptInfo = {
+    const interrupt: UaiInterruptInfo = {
       id: `approval-${toolCall.id}`,
       reason: "tool_approval",
       type: "approval",
@@ -170,9 +170,9 @@ export class UaiFrontendToolExecutor {
 
     // Create a Promise that resolves when user responds
     return new Promise<unknown>((resolve) => {
-      // Create InterruptContext where resume() resolves our Promise
-      const context: InterruptContext = {
-        resume: (response) => {
+      // Create UaiInterruptContext where resume() resolves our Promise
+      const context: UaiInterruptContext = {
+        resume: (response?: unknown) => {
           // "deny" or empty response = cancelled
           if (response === "deny" || response === undefined) {
             resolve(null);

@@ -1,17 +1,17 @@
 import type { UmbCollectionFilterModel, UmbCollectionRepository } from "@umbraco-cms/backoffice/collection";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
-import { UAiAgentCollectionServerDataSource } from "./agent-collection.server.data-source.js";
+import { UaiAgentCollectionServerDataSource } from "./agent-collection.server.data-source.js";
 
 /**
  * Repository for Agent collection operations.
  */
-export class UAiAgentCollectionRepository extends UmbRepositoryBase implements UmbCollectionRepository {
-    #collectionSource: UAiAgentCollectionServerDataSource;
+export class UaiAgentCollectionRepository extends UmbRepositoryBase implements UmbCollectionRepository {
+    #collectionSource: UaiAgentCollectionServerDataSource;
 
     constructor(host: UmbControllerHost) {
         super(host);
-        this.#collectionSource = new UAiAgentCollectionServerDataSource(host);
+        this.#collectionSource = new UaiAgentCollectionServerDataSource(host);
     }
 
     async requestCollection(filter: UmbCollectionFilterModel) {
@@ -19,4 +19,4 @@ export class UAiAgentCollectionRepository extends UmbRepositoryBase implements U
     }
 }
 
-export { UAiAgentCollectionRepository as api };
+export { UaiAgentCollectionRepository as api };

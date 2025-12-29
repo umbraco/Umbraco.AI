@@ -5,20 +5,20 @@ import { UaiAgentClient } from "../../transport/uai-agent-client.js";
 import { UaiFrontendToolManager } from "../services/frontend-tool-manager.js";
 import { UaiFrontendToolExecutor } from "../services/frontend-tool-executor.js";
 import type {
-  AgentState,
-  ChatMessage,
-  InterruptInfo,
-  ToolCallInfo,
-  ToolCallStatus,
+  UaiAgentState,
+  UaiChatMessage,
+  UaiInterruptInfo,
+  UaiToolCallInfo,
+  UaiToolCallStatus,
 } from "../types.js";
 import { safeParseJson } from "../utils/json.js";
-import { UaiCopilotToolBus, type CopilotToolResult, type CopilotToolStatusUpdate } from "../services/copilot-tool-bus.js";
-import type { CopilotAgentItem } from "../repositories/copilot.repository.js";
+import { UaiCopilotToolBus, type UaiCopilotToolResult, type UaiCopilotToolStatusUpdate } from "../services/copilot-tool-bus.js";
+import type { UaiCopilotAgentItem } from "../repositories/copilot.repository.js";
 import { UaiInterruptHandlerRegistry } from "../interrupts/interrupt-handler.registry.js";
 import { UaiToolExecutionHandler } from "../interrupts/handlers/tool-execution.handler.js";
 import { UaiHitlInterruptHandler } from "../interrupts/handlers/hitl-interrupt.handler.js";
 import { UaiDefaultInterruptHandler } from "../interrupts/handlers/default-interrupt.handler.js";
-import type { InterruptContext } from "../interrupts/types.js";
+import type { UaiInterruptContext } from "../interrupts/types.js";
 import type UaiHitlContext from "../hitl.context.js";
 
 /**
@@ -29,23 +29,23 @@ export class UaiCopilotRunController extends UmbControllerBase {
   #toolBus: UaiCopilotToolBus;
   #toolExecutor: UaiFrontendToolExecutor;
   #client?: UaiAgentClient;
-  #agent?: CopilotAgentItem;
+  #agent?: UaiCopilotAgentItem;
   #frontendTools: import("../../transport/types.js").AguiTool[] = [];
   #toolManager = new UaiFrontendToolManager();
-  #currentToolCalls: ToolCallInfo[] = [];
+  #currentToolCalls: UaiToolCallInfo[] = [];
   #subscriptions: Subscription[] = [];
   #handlerRegistry = new UaiInterruptHandlerRegistry();
 
   /** ID of the assistant message currently being streamed */
   #currentAssistantMessageId: string | null = null;
 
-  #messages = new BehaviorSubject<ChatMessage[]>([]);
+  #messages = new BehaviorSubject<UaiChatMessage[]>([]);
   readonly messages$ = this.#messages.asObservable();
 
   #streamingContent = new BehaviorSubject<string>("");
   readonly streamingContent$ = this.#streamingContent.asObservable();
 
-  #agentState = new BehaviorSubject<AgentState | undefined>(undefined);
+  #agentState = new BehaviorSubject<UaiAgentState | undefined>(undefined);
   readonly agentState$ = this.#agentState.asObservable();
   readonly isRunning$ = this.agentState$.pipe(map((state) => state !== undefined));
 
@@ -56,7 +56,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
     this.#toolExecutor = new UaiFrontendToolExecutor(host, this.#toolManager, toolBus, hitlContext);
     this.#subscriptions.push(
       this.#toolBus.results$.subscribe((result) => this.#handleToolResult(result)),
-      this.#toolBus.statusUpdates$.subscribe((update) => this.#handleStatusUpdate(update))
+      this.#toolBus.statusUpdates$.subscribe((update) => this.#handleToolStatusUpdate(update))
     );
     this.#setupHandlerRegistry();
   }
@@ -66,7 +66,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
     this.#subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
-  setAgent(agent: CopilotAgentItem): void {
+  setAgent(agent: UaiCopilotAgentItem): void {
     if (this.#agent?.id === agent.id) return;
     this.#agent = agent;
     this.#createClient();
@@ -76,7 +76,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
   sendUserMessage(content: string): void {
     if (!this.#client || !content.trim()) return;
 
-    const userMessage: ChatMessage = {
+    const userMessage: UaiChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content,
@@ -170,7 +170,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
           if (isAfterTool || isDifferentMessageId) {
             // Create NEW assistant message for text after tool execution
             // or when backend signals a new message block
-            const newMessage: ChatMessage = {
+            const newMessage: UaiChatMessage = {
               id: messageId || crypto.randomUUID(),
               role: "assistant",
               content: "",
@@ -180,7 +180,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
             this.#currentAssistantMessageId = newMessage.id;
           } else if (!this.#currentAssistantMessageId) {
             // Create first assistant message for this run
-            const newMessage: ChatMessage = {
+            const newMessage: UaiChatMessage = {
               id: messageId || crypto.randomUUID(),
               role: "assistant",
               content: "",
@@ -208,14 +208,14 @@ export class UaiCopilotRunController extends UmbControllerBase {
           // Text complete - nothing special needed
         },
         onToolCallStart: (info) => {
-          const toolCall: ToolCallInfo = { ...info, status: "pending" };
+          const toolCall: UaiToolCallInfo = { ...info, status: "pending" };
           this.#currentToolCalls = [...this.#currentToolCalls, toolCall];
 
           let messages = [...this.#messages.value];
 
           if (!this.#currentAssistantMessageId) {
             // Tool call without preceding text - create empty assistant message
-            const newMessage: ChatMessage = {
+            const newMessage: UaiChatMessage = {
               id: crypto.randomUUID(),
               role: "assistant",
               content: "",
@@ -241,7 +241,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
         onRunFinished: (event) => this.#handleRunFinished(event),
         onStateSnapshot: (state) => this.#agentState.next(state),
         onStateDelta: (delta) => {
-          const merged = { ...this.#agentState.value, ...delta } as AgentState;
+          const merged = { ...this.#agentState.value, ...delta } as UaiAgentState;
           this.#agentState.next(merged);
         },
         onMessagesSnapshot: (messages) => this.#messages.next(messages),
@@ -300,7 +300,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
     });
 
     // Immediately add tool message (must happen before any text-after-tool)
-    const toolMessage: ChatMessage = {
+    const toolMessage: UaiChatMessage = {
       id: crypto.randomUUID(),
       role: "tool",
       content: result,
@@ -311,7 +311,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
     this.#messages.next([...updated, toolMessage]);
   }
 
-  #handleRunFinished(event: { outcome: string; interrupt?: InterruptInfo; error?: string }): void {
+  #handleRunFinished(event: { outcome: string; interrupt?: UaiInterruptInfo; error?: string }): void {
     // Clear streaming content
     this.#streamingContent.next("");
 
@@ -338,10 +338,10 @@ export class UaiCopilotRunController extends UmbControllerBase {
     this.#agentState.next(undefined);
   }
 
-  #createInterruptContext(assistantMessageId: string | null): InterruptContext {
+  #createInterruptContext(assistantMessageId: string | null): UaiInterruptContext {
     return {
-      resume: (response) => this.#resumeRun(response),
-      setAgentState: (state) => this.#agentState.next(state),
+      resume: (response?: unknown) => this.#resumeRun(response),
+      setAgentState: (state?: UaiAgentState) => this.#agentState.next(state),
       lastAssistantMessageId: assistantMessageId ?? this.#currentAssistantMessageId ?? undefined,
       messages: this.#messages.value,
     };
@@ -349,7 +349,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
 
   #handleError(error?:string): void {
     // Add error message
-    const errorMessage: ChatMessage = {
+    const errorMessage: UaiChatMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
       content: `Error: ${error ?? "An error occurred"}`,
@@ -362,7 +362,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
   #resumeRun(response?: unknown): void {
     // Add response as user message and continue
     if (response !== undefined) {
-      const userMessage: ChatMessage = {
+      const userMessage: UaiChatMessage = {
         id: crypto.randomUUID(),
         role: "user",
         content: typeof response === "string" ? response : JSON.stringify(response),
@@ -379,11 +379,11 @@ export class UaiCopilotRunController extends UmbControllerBase {
    * Updates the tool call status in messages and adds a tool message.
    * Note: Resume is handled by UaiToolExecutionHandler when all tools complete.
    */
-  #handleToolResult(result: CopilotToolResult): void {
+  #handleToolResult(result: UaiCopilotToolResult): void {
     const resultContent = typeof result.result === "string"
       ? result.result
       : JSON.stringify(result.result);
-    const newStatus: ToolCallStatus = result.error ? "error" : "completed";
+    const newStatus: UaiToolCallStatus = result.error ? "error" : "completed";
 
     // Update assistant tool call status
     const updated = this.#messages.value.map((msg) => {
@@ -401,7 +401,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
     });
 
     // Append tool message for conversation history
-    const toolMessage: ChatMessage = {
+    const toolMessage: UaiChatMessage = {
       id: crypto.randomUUID(),
       role: "tool",
       content: resultContent,
@@ -415,7 +415,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
    * Handle status update from the tool bus.
    * Updates the tool call status in messages (e.g., "executing", "awaiting_approval").
    */
-  #handleStatusUpdate(update: CopilotToolStatusUpdate): void {
+  #handleToolStatusUpdate(update: UaiCopilotToolStatusUpdate): void {
     const updated = this.#messages.value.map((msg) => {
       if (msg.role === "assistant" && msg.toolCalls) {
         return {

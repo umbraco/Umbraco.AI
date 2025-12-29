@@ -1,6 +1,6 @@
 import { customElement, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { ChatMessage, AgentState, InterruptInfo } from "../../../core/types.js";
+import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo } from "../../../core/types.js";
 import { UAI_COPILOT_CONTEXT, UAI_COPILOT_RUN_CONTEXT, type UaiCopilotContext } from "../../../core/copilot.context.js";
 import type { UaiCopilotRunController } from "../../../core/controllers/copilot-run.controller.js";
 
@@ -20,13 +20,13 @@ export class UaiCopilotChatElement extends UmbLitElement {
   private _agentName = "";
 
   @state()
-  private _messages: ChatMessage[] = [];
+  private _messages: UaiChatMessage[] = [];
 
   @state()
-  private _agentState?: AgentState;
+  private _agentState?: UaiAgentState;
 
   @state()
-  private _hitlInterrupt?: InterruptInfo;
+  private _hitlInterrupt?: UaiInterruptInfo;
 
   @state()
   private _isRunning = false;

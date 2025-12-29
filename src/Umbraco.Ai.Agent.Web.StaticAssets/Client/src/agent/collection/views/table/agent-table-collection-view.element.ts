@@ -11,7 +11,7 @@ import type {
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import type { UAiAgentItemModel } from "../../../types.js";
+import type { UaiAgentItemModel } from "../../../types.js";
 import { UAI_AGENT_ICON } from "../../../constants.js";
 import { UAI_EDIT_AGENT_WORKSPACE_PATH_PATTERN } from "../../../workspace/agent/paths.js";
 
@@ -19,7 +19,7 @@ import { UAI_EDIT_AGENT_WORKSPACE_PATH_PATTERN } from "../../../workspace/agent/
  * Table view for the Agent collection.
  */
 @customElement("uai-agent-table-collection-view")
-export class UAiAgentTableCollectionViewElement extends UmbLitElement {
+export class UaiAgentTableCollectionViewElement extends UmbLitElement {
     @state()
     private _tableConfig: UmbTableConfig = {
         allowSelection: true,
@@ -31,7 +31,7 @@ export class UAiAgentTableCollectionViewElement extends UmbLitElement {
     @state()
     private _selection: Array<string> = [];
 
-    #collectionContext?: UmbDefaultCollectionContext<UAiAgentItemModel>;
+    #collectionContext?: UmbDefaultCollectionContext<UaiAgentItemModel>;
 
     private _columns: UmbTableColumn[] = [
         { name: "Name", alias: "name" },
@@ -54,7 +54,7 @@ export class UAiAgentTableCollectionViewElement extends UmbLitElement {
 
         this.observe(
             this.#collectionContext.items,
-            (items) => this.#createTableItems(items as UAiAgentItemModel[]),
+            (items) => this.#createTableItems(items as UaiAgentItemModel[]),
             "umbCollectionItemsObserver"
         );
 
@@ -67,7 +67,7 @@ export class UAiAgentTableCollectionViewElement extends UmbLitElement {
         );
     }
 
-    #createTableItems(items: UAiAgentItemModel[]) {
+    #createTableItems(items: UaiAgentItemModel[]) {
         this._items = items.map((item) => ({
             id: item.unique,
             icon: UAI_AGENT_ICON,
@@ -122,10 +122,10 @@ export class UAiAgentTableCollectionViewElement extends UmbLitElement {
     static styles = [UmbTextStyles];
 }
 
-export default UAiAgentTableCollectionViewElement;
+export default UaiAgentTableCollectionViewElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-agent-table-collection-view": UAiAgentTableCollectionViewElement;
+        "uai-agent-table-collection-view": UaiAgentTableCollectionViewElement;
     }
 }

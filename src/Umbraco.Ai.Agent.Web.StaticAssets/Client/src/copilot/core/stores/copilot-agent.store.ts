@@ -1,16 +1,16 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject } from "rxjs";
-import { UaiCopilotRepository, type CopilotAgentItem } from "../repositories/copilot.repository.js";
+import { UaiCopilotRepository, type UaiCopilotAgentItem } from "../repositories/copilot.repository.js";
 
 /** Loads Copilot agents from the repository and tracks the current selection. */
 export class UaiCopilotAgentStore extends UmbControllerBase {
   #repository: UaiCopilotRepository;
 
-  #agents = new BehaviorSubject<CopilotAgentItem[]>([]);
+  #agents = new BehaviorSubject<UaiCopilotAgentItem[]>([]);
   readonly agents$ = this.#agents.asObservable();
 
-  #selectedAgent = new BehaviorSubject<CopilotAgentItem | undefined>(undefined);
+  #selectedAgent = new BehaviorSubject<UaiCopilotAgentItem | undefined>(undefined);
   readonly selectedAgent$ = this.#selectedAgent.asObservable();
 
   #loading = new BehaviorSubject<boolean>(false);
@@ -48,7 +48,7 @@ export class UaiCopilotAgentStore extends UmbControllerBase {
     }
   }
 
-  get selectedAgent(): CopilotAgentItem | undefined {
+  get selectedAgent(): UaiCopilotAgentItem | undefined {
     return this.#selectedAgent.value;
   }
 }

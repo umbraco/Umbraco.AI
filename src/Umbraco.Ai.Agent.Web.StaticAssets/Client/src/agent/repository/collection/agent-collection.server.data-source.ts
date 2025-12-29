@@ -2,13 +2,13 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbCollectionDataSource, UmbCollectionFilterModel } from "@umbraco-cms/backoffice/collection";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { AgentsService } from "../../../api/index.js";
-import { UAiAgentTypeMapper } from "../../type-mapper.js";
-import type { UAiAgentItemModel } from "../../types.js";
+import { UaiAgentTypeMapper } from "../../type-mapper.js";
+import type { UaiAgentItemModel } from "../../types.js";
 
 /**
  * Server data source for Agent collection operations.
  */
-export class UAiAgentCollectionServerDataSource implements UmbCollectionDataSource<UAiAgentItemModel> {
+export class UaiAgentCollectionServerDataSource implements UmbCollectionDataSource<UaiAgentItemModel> {
     #host: UmbControllerHost;
 
     constructor(host: UmbControllerHost) {
@@ -34,7 +34,7 @@ export class UAiAgentCollectionServerDataSource implements UmbCollectionDataSour
             return { error };
         }
 
-        const items = data.items.map(UAiAgentTypeMapper.toItemModel);
+        const items = data.items.map(UaiAgentTypeMapper.toItemModel);
 
         return {
             data: {

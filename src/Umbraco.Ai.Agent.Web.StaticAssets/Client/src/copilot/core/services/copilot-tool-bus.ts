@@ -1,12 +1,12 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { Subject } from "rxjs";
-import type { ToolCallStatus } from "../types.js";
+import type { UaiToolCallStatus } from "../types.js";
 
 /**
  * Result of a frontend tool execution.
  */
-export interface CopilotToolResult {
+export interface UaiCopilotToolResult {
   /** The ID of the tool call this result belongs to */
   toolCallId: string;
   /** The result returned by the tool */
@@ -18,11 +18,11 @@ export interface CopilotToolResult {
 /**
  * Status update for a tool call.
  */
-export interface CopilotToolStatusUpdate {
+export interface UaiCopilotToolStatusUpdate {
   /** The ID of the tool call */
   toolCallId: string;
   /** The new status */
-  status: ToolCallStatus;
+  status: UaiToolCallStatus;
 }
 
 /**
@@ -35,10 +35,10 @@ export interface CopilotToolStatusUpdate {
  * not by this bus.
  */
 export class UaiCopilotToolBus extends UmbControllerBase {
-  #results = new Subject<CopilotToolResult>();
+  #results = new Subject<UaiCopilotToolResult>();
   readonly results$ = this.#results.asObservable();
 
-  #statusUpdates = new Subject<CopilotToolStatusUpdate>();
+  #statusUpdates = new Subject<UaiCopilotToolStatusUpdate>();
   readonly statusUpdates$ = this.#statusUpdates.asObservable();
 
   constructor(host: UmbControllerHost) {
@@ -49,7 +49,7 @@ export class UaiCopilotToolBus extends UmbControllerBase {
    * Publish a tool execution result.
    * @param result The tool execution result
    */
-  publishResult(result: CopilotToolResult): void {
+  publishResult(result: UaiCopilotToolResult): void {
     this.#results.next(result);
   }
 
@@ -58,7 +58,7 @@ export class UaiCopilotToolBus extends UmbControllerBase {
    * @param toolCallId The ID of the tool call
    * @param status The new status
    */
-  publishStatusUpdate(toolCallId: string, status: ToolCallStatus): void {
+  publishStatusUpdate(toolCallId: string, status: UaiToolCallStatus): void {
     this.#statusUpdates.next({ toolCallId, status });
   }
 }

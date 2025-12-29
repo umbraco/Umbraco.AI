@@ -6,7 +6,7 @@ import {
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import { UaiRunStateManager, type StateChangeListener } from "./run-state-manager.js";
-import type { ChatMessage, ToolCallInfo, InterruptInfo } from "../core/types.js";
+import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo } from "../core/types.js";
 import type {
   AgentClientCallbacks,
   AguiTool,
@@ -78,7 +78,7 @@ export class UaiAgentClient {
   /**
    * Get the current messages.
    */
-  get messages(): ChatMessage[] {
+  get messages(): UaiChatMessage[] {
     return this.#stateManager.messages;
   }
 
@@ -105,9 +105,9 @@ export class UaiAgentClient {
   }
 
   /**
-   * Convert ChatMessage to AG-UI Message format.
+   * Convert UaiChatMessage to AG-UI Message format.
    */
-  static #toAguiMessage(m: ChatMessage): Message {
+  static #toAguiMessage(m: UaiChatMessage): Message {
     if (m.role === "user") {
       return {
         id: m.id,
@@ -147,7 +147,7 @@ export class UaiAgentClient {
    * @param messages The messages to send
    * @param tools Optional additional tools to include (merged with registered frontend tools)
    */
-  async sendMessage(messages: ChatMessage[], tools?: AguiTool[]): Promise<void> {
+  async sendMessage(messages: UaiChatMessage[], tools?: AguiTool[]): Promise<void> {
     const threadId = crypto.randomUUID();
     const runId = crypto.randomUUID();
 
@@ -198,7 +198,7 @@ export class UaiAgentClient {
    * @param tools Optional tools to include (should be the same as the original run)
    */
   async resumeRun(interruptResponse: string, tools?: AguiTool[]): Promise<void> {
-    const userMessage: ChatMessage = {
+    const userMessage: UaiChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content: interruptResponse,
@@ -275,7 +275,7 @@ export class UaiAgentClient {
   }
 
   #handleToolCallStart(event: ToolCallStartEvent) {
-    const toolCall: ToolCallInfo = {
+    const toolCall: UaiToolCallInfo = {
       id: event.toolCallId,
       name: event.toolCallName,
       arguments: "",
@@ -343,7 +343,7 @@ export class UaiAgentClient {
       content: string;
     }>;
 
-    const messages: ChatMessage[] = rawMessages.map((m) => ({
+    const messages: UaiChatMessage[] = rawMessages.map((m) => ({
       id: m.id,
       role: m.role as "user" | "assistant" | "tool",
       content: m.content,
@@ -354,17 +354,17 @@ export class UaiAgentClient {
     this.#callbacks.onMessagesSnapshot?.(messages);
   }
 
-  static #parseInterrupt(raw: unknown): InterruptInfo {
+  static #parseInterrupt(raw: unknown): UaiInterruptInfo {
     const data = raw as Record<string, unknown>;
 
     return {
       id: (data.id as string) ?? crypto.randomUUID(),
       reason: data.reason as string | undefined,
-      type: (data.type as InterruptInfo["type"]) ?? "custom",
+      type: (data.type as UaiInterruptInfo["type"]) ?? "custom",
       title: (data.title as string) ?? "Action Required",
       message: (data.message as string) ?? "",
-      options: data.options as InterruptInfo["options"],
-      inputConfig: data.inputConfig as InterruptInfo["inputConfig"],
+      options: data.options as UaiInterruptInfo["options"],
+      inputConfig: data.inputConfig as UaiInterruptInfo["inputConfig"],
       payload: data.payload as Record<string, unknown>,
       metadata: data.metadata as Record<string, unknown>,
     };
@@ -373,7 +373,7 @@ export class UaiAgentClient {
   /**
    * Get a pending tool call by ID.
    */
-  getToolCall(toolCallId: string): ToolCallInfo | undefined {
+  getToolCall(toolCallId: string): UaiToolCallInfo | undefined {
     return this.#stateManager.getToolCall(toolCallId);
   }
 

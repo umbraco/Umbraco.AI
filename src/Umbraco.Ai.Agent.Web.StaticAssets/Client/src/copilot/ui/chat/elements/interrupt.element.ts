@@ -7,7 +7,7 @@ import type {
   ManifestUaiAgentApprovalElement,
   UaiAgentApprovalElement,
 } from "../../../../agent/approval/uai-agent-approval-element.extension.js";
-import type { InterruptInfo } from "../../../core/types.js";
+import type { UaiInterruptInfo } from "../../../core/types.js";
 
 /**
  * Interrupt UI component.
@@ -23,7 +23,7 @@ export class UaiCopilotInterruptElement extends UmbLitElement {
   #approvalElement: UaiAgentApprovalElement | null = null;
 
   @property({ type: Object })
-  interrupt?: InterruptInfo;
+  interrupt?: UaiInterruptInfo;
 
   @state()
   private _isLoading = true;

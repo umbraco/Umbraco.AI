@@ -1,6 +1,6 @@
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import type { ManifestUaiAgentTool } from "../../../agent/tools/uai-agent-tool.extension.js";
-import type { ToolCallInfo } from "../types.js";
+import type { UaiToolCallInfo } from "../types.js";
 import type { AguiTool } from "../../transport/types.js";
 
 /**
@@ -92,10 +92,10 @@ export class UaiFrontendToolManager {
    * @returns New array with the updated tool call
    */
   static updateToolCall(
-    toolCalls: ToolCallInfo[],
+    toolCalls: UaiToolCallInfo[],
     toolCallId: string,
-    updates: Partial<ToolCallInfo>
-  ): ToolCallInfo[] {
+    updates: Partial<UaiToolCallInfo>
+  ): UaiToolCallInfo[] {
     return toolCalls.map((tc) =>
       tc.id === toolCallId ? { ...tc, ...updates } : tc
     );

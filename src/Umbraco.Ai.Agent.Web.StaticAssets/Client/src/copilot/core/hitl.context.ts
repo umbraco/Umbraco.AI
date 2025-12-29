@@ -1,14 +1,14 @@
 ﻿import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
-import type { InterruptInfo } from "./types.js";
-import type { InterruptContext } from "./interrupts/types.js";
+import type { UaiInterruptInfo } from "./types.js";
+import type { UaiInterruptContext } from "./interrupts/types.js";
 import { BehaviorSubject } from "rxjs";
 
 export class UaiHitlContext extends UmbControllerBase {
 
-    #pendingContext?: InterruptContext;
-    #interrupt$ = new BehaviorSubject<InterruptInfo | undefined>(undefined);
+    #pendingContext?: UaiInterruptContext;
+    #interrupt$ = new BehaviorSubject<UaiInterruptInfo | undefined>(undefined);
 
     readonly interrupt$ = this.#interrupt$.asObservable();
     
@@ -16,7 +16,7 @@ export class UaiHitlContext extends UmbControllerBase {
         super(host);
     }
 
-    setInterrupt(interrupt: InterruptInfo, context: InterruptContext): void {
+    setInterrupt(interrupt: UaiInterruptInfo, context: UaiInterruptContext): void {
         this.#pendingContext = context;
         context.setAgentState(undefined);
         this.#interrupt$.next(interrupt);

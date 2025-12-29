@@ -7,7 +7,7 @@ import { UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN } from "../../workspace/agent/p
  * Collection action button for creating a new agent.
  */
 @customElement("uai-agent-create-collection-action")
-export class UAiAgentCreateCollectionActionElement extends UmbLitElement {
+export class UaiAgentCreateCollectionActionElement extends UmbLitElement {
     #onClick() {
         const path = UAI_CREATE_AGENT_WORKSPACE_PATH_PATTERN.generateAbsolute({});
         history.pushState(null, "", path);
@@ -38,10 +38,10 @@ export class UAiAgentCreateCollectionActionElement extends UmbLitElement {
     ];
 }
 
-export default UAiAgentCreateCollectionActionElement;
+export default UaiAgentCreateCollectionActionElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-agent-create-collection-action": UAiAgentCreateCollectionActionElement;
+        "uai-agent-create-collection-action": UaiAgentCreateCollectionActionElement;
     }
 }

@@ -1,7 +1,7 @@
-import type { InterruptContext, InterruptHandler } from "../types.js";
+import type { UaiInterruptContext, UaiInterruptHandler } from "../types.js";
 import type { UaiFrontendToolManager } from "../../services/frontend-tool-manager.js";
 import type { UaiFrontendToolExecutor } from "../../services/frontend-tool-executor.js";
-import type { InterruptInfo, ToolCallInfo } from "../../types.js";
+import type { UaiInterruptInfo, UaiToolCallInfo } from "../../types.js";
 
 /**
  * Handles tool_execution interrupts by executing frontend tools.
@@ -11,7 +11,7 @@ import type { InterruptInfo, ToolCallInfo } from "../../types.js";
  * 2. Executes them via UaiFrontendToolExecutor
  * 3. Resumes the run when all tools complete
  */
-export class UaiToolExecutionHandler implements InterruptHandler {
+export class UaiToolExecutionHandler implements UaiInterruptHandler {
   readonly reason = "tool_execution";
 
   constructor(
@@ -19,12 +19,12 @@ export class UaiToolExecutionHandler implements InterruptHandler {
     private executor: UaiFrontendToolExecutor
   ) {}
 
-  handle(_interrupt: InterruptInfo, context: InterruptContext): void {
+  handle(_interrupt: UaiInterruptInfo, context: UaiInterruptContext): void {
     const assistantId = context.lastAssistantMessageId;
     const assistantMessage = context.messages.find((msg) => msg.id === assistantId);
 
     const toolCalls =
-      assistantMessage?.toolCalls?.filter((tc) =>
+      assistantMessage?.toolCalls?.filter((tc: UaiToolCallInfo) =>
         this.toolManager.isFrontendTool(tc.name)
       ) ?? [];
 
@@ -43,8 +43,8 @@ export class UaiToolExecutionHandler implements InterruptHandler {
    * This is fire-and-forget from handle() - errors are caught per-tool.
    */
   async #executeAndResume(
-    context: InterruptContext,
-    toolCalls: ToolCallInfo[]
+    context: UaiInterruptContext,
+    toolCalls: UaiToolCallInfo[]
   ): Promise<void> {
     await this.executor.execute(toolCalls);
     context.resume();

@@ -1,13 +1,13 @@
-import type { AgentState, ChatMessage, InterruptInfo } from "../types.js";
+import type { UaiAgentState, UaiChatMessage, UaiInterruptInfo } from "../types.js";
 
-export interface InterruptHandler {
+export interface UaiInterruptHandler {
     readonly reason: string;  // e.g., "tool_execution", "human_approval", "*" for fallback
-    handle(interrupt: InterruptInfo, context: InterruptContext): void;
+    handle(interrupt: UaiInterruptInfo, context: UaiInterruptContext): void;
 }
 
-export interface InterruptContext {
+export interface UaiInterruptContext {
     resume(response?: unknown): void;
-    setAgentState(state?: AgentState): void;
+    setAgentState(state?: UaiAgentState): void;
     readonly lastAssistantMessageId?: string;
-    readonly messages: readonly ChatMessage[];
+    readonly messages: readonly UaiChatMessage[];
 }

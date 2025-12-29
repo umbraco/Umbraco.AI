@@ -2,9 +2,9 @@ import { UmbDetailRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbRequestReloadChildrenOfEntityEvent } from "@umbraco-cms/backoffice/entity-action";
 import { UaiEntityActionEvent, dispatchActionEvent } from "@umbraco-ai/core";
-import { UAiAgentDetailServerDataSource } from "./agent-detail.server.data-source.js";
+import { UaiAgentDetailServerDataSource } from "./agent-detail.server.data-source.js";
 import { UAI_AGENT_DETAIL_STORE_CONTEXT } from "./agent-detail.store.js";
-import type { UAiAgentDetailModel } from "../../types.js";
+import type { UaiAgentDetailModel } from "../../types.js";
 import { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from "../../constants.js";
 
 /**
@@ -12,13 +12,13 @@ import { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from "../../constan
  * Uses UmbDetailRepositoryBase for consistent CMS patterns.
  * Dispatches entity action events after successful CRUD operations.
  */
-export class UAiAgentDetailRepository extends UmbDetailRepositoryBase<UAiAgentDetailModel> {
-    
+export class UaiAgentDetailRepository extends UmbDetailRepositoryBase<UaiAgentDetailModel> {
+
     constructor(host: UmbControllerHost) {
-        super(host, UAiAgentDetailServerDataSource, UAI_AGENT_DETAIL_STORE_CONTEXT);
+        super(host, UaiAgentDetailServerDataSource, UAI_AGENT_DETAIL_STORE_CONTEXT);
     }
 
-    override async create(model: UAiAgentDetailModel) {
+    override async create(model: UaiAgentDetailModel) {
         const result = await super.create(model, null);
         if (!result.error && result.data) {
             dispatchActionEvent(this, UaiEntityActionEvent.created(result.data.unique, UAI_AGENT_ENTITY_TYPE));
@@ -30,7 +30,7 @@ export class UAiAgentDetailRepository extends UmbDetailRepositoryBase<UAiAgentDe
         return result;
     }
 
-    override async save(model: UAiAgentDetailModel) {
+    override async save(model: UaiAgentDetailModel) {
         const result = await super.save(model);
         if (!result.error) {
             dispatchActionEvent(this, UaiEntityActionEvent.updated(model.unique, UAI_AGENT_ENTITY_TYPE));
@@ -51,4 +51,4 @@ export class UAiAgentDetailRepository extends UmbDetailRepositoryBase<UAiAgentDe
     }
 }
 
-export { UAiAgentDetailRepository as api };
+export { UaiAgentDetailRepository as api };

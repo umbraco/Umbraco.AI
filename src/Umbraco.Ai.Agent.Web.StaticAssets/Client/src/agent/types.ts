@@ -3,7 +3,7 @@ import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
 /**
  * Detail model for workspace editing.
  */
-export interface UAiAgentDetailModel extends UmbEntityModel {
+export interface UaiAgentDetailModel extends UmbEntityModel {
     unique: string;
     entityType: string;
     alias: string;
@@ -17,7 +17,7 @@ export interface UAiAgentDetailModel extends UmbEntityModel {
 /**
  * Collection item model (lighter weight for lists).
  */
-export interface UAiAgentItemModel extends UmbEntityModel {
+export interface UaiAgentItemModel extends UmbEntityModel {
     unique: string;
     entityType: string;
     alias: string;

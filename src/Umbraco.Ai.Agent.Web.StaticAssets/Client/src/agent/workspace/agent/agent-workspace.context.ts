@@ -11,18 +11,18 @@ import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
 import type { UaiCommand } from "@umbraco-ai/core";
 import { UaiCommandStore, UAI_EMPTY_GUID, UaiEntityDeletedRedirectController } from "@umbraco-ai/core";
-import { UAiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
+import { UaiAgentDetailRepository } from "../../repository/detail/agent-detail.repository.js";
 import { UAI_AGENT_WORKSPACE_ALIAS, UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
-import type { UAiAgentDetailModel } from "../../types.js";
-import { UAiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
+import type { UaiAgentDetailModel } from "../../types.js";
+import { UaiAgentWorkspaceEditorElement } from "./agent-workspace-editor.element.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
 /**
  * Workspace context for editing Agent entities.
  * Handles CRUD operations and state management.
  */
-export class UAiAgentWorkspaceContext
-    extends UmbSubmittableWorkspaceContextBase<UAiAgentDetailModel>
+export class UaiAgentWorkspaceContext
+    extends UmbSubmittableWorkspaceContextBase<UaiAgentDetailModel>
     implements UmbRoutableWorkspaceContext
 {
     public readonly IS_AGENT_WORKSPACE_CONTEXT = true;
@@ -31,17 +31,17 @@ export class UAiAgentWorkspaceContext
     #unique = new UmbBasicState<string | undefined>(undefined);
     readonly unique = this.#unique.asObservable();
 
-    #model = new UmbObjectState<UAiAgentDetailModel | undefined>(undefined);
+    #model = new UmbObjectState<UaiAgentDetailModel | undefined>(undefined);
     readonly model = this.#model.asObservable();
 
-    #repository: UAiAgentDetailRepository;
+    #repository: UaiAgentDetailRepository;
     #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
 
     constructor(host: UmbControllerHost) {
         super(host, UAI_AGENT_WORKSPACE_ALIAS);
 
-        this.#repository = new UAiAgentDetailRepository(this);
+        this.#repository = new UaiAgentDetailRepository(this);
         this.addValidationContext(new UmbValidationContext(this));
 
         this.#entityContext.setEntityType(UAI_AGENT_ENTITY_TYPE);
@@ -57,7 +57,7 @@ export class UAiAgentWorkspaceContext
         this.routes.setRoutes([
             {
                 path: "create",
-                component: UAiAgentWorkspaceEditorElement,
+                component: UaiAgentWorkspaceEditorElement,
                 setup: async () => {
                     await this.scaffold();
                     new UmbWorkspaceIsNewRedirectController(
@@ -69,7 +69,7 @@ export class UAiAgentWorkspaceContext
             },
             {
                 path: "edit/:unique",
-                component: UAiAgentWorkspaceEditorElement,
+                component: UaiAgentWorkspaceEditorElement,
                 setup: (_component, info) => {
                     this.removeUmbControllerByAlias(UmbWorkspaceIsNewRedirectControllerAlias);
                     this.load(info.match.params.unique);
@@ -139,7 +139,7 @@ export class UAiAgentWorkspaceContext
         }
     }
 
-    getData(): UAiAgentDetailModel | undefined {
+    getData(): UaiAgentDetailModel | undefined {
         return this.#model.getValue();
     }
 
@@ -189,4 +189,4 @@ export class UAiAgentWorkspaceContext
     }
 }
 
-export { UAiAgentWorkspaceContext as api };
+export { UaiAgentWorkspaceContext as api };

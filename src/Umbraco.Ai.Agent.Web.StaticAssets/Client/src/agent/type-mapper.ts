@@ -1,10 +1,10 @@
 import type { AgentResponseModel, AgentItemResponseModel } from "../api/types.gen.js";
 import { UAI_AGENT_ENTITY_TYPE } from "./constants.js";
-import type { UAiAgentDetailModel, UAiAgentItemModel } from "./types.js";
+import type { UaiAgentDetailModel, UaiAgentItemModel } from "./types.js";
 
 
-export const UAiAgentTypeMapper = {
-    toDetailModel(response: AgentResponseModel): UAiAgentDetailModel {
+export const UaiAgentTypeMapper = {
+    toDetailModel(response: AgentResponseModel): UaiAgentDetailModel {
         return {
             unique: response.id,
             entityType: UAI_AGENT_ENTITY_TYPE,
@@ -17,7 +17,7 @@ export const UAiAgentTypeMapper = {
         };
     },
 
-    toItemModel(response: AgentItemResponseModel): UAiAgentItemModel {
+    toItemModel(response: AgentItemResponseModel): UaiAgentItemModel {
         return {
             unique: response.id,
             entityType: UAI_AGENT_ENTITY_TYPE,
@@ -29,7 +29,7 @@ export const UAiAgentTypeMapper = {
         };
     },
 
-    toCreateRequest(model: UAiAgentDetailModel) {
+    toCreateRequest(model: UaiAgentDetailModel) {
         return {
             alias: model.alias,
             name: model.name,
@@ -39,7 +39,7 @@ export const UAiAgentTypeMapper = {
         };
     },
 
-    toUpdateRequest(model: UAiAgentDetailModel) {
+    toUpdateRequest(model: UaiAgentDetailModel) {
         return {
             alias: model.alias,
             name: model.name,

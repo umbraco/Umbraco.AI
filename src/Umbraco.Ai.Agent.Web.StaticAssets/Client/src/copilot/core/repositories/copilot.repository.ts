@@ -3,7 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { AgentsService } from "../../../api/sdk.gen.js";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 
-export interface CopilotAgentItem {
+export interface UaiCopilotAgentItem {
   id: string;
   name: string;
   alias: string;
@@ -17,7 +17,7 @@ export class UaiCopilotRepository extends UmbRepositoryBase {
     super(host);
   }
 
-  async requestActiveAgents(): Promise<{ data?: CopilotAgentItem[]; error?: unknown }> {
+  async requestActiveAgents(): Promise<{ data?: UaiCopilotAgentItem[]; error?: unknown }> {
     const response = await tryExecute(
       this,
       AgentsService.getAllAgents({
@@ -29,7 +29,7 @@ export class UaiCopilotRepository extends UmbRepositoryBase {
       return { error: response.error };
     }
 
-    const items: CopilotAgentItem[] = response.data.items
+    const items: UaiCopilotAgentItem[] = response.data.items
       .filter((agent) => agent.isActive)
       .map((agent) => ({
         id: agent.id!,

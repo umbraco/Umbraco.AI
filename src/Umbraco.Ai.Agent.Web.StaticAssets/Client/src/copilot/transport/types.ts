@@ -12,7 +12,7 @@ export {
 
 import type { RunAgentInput, BaseEvent, Message } from "@ag-ui/client";
 import type { Observable } from "rxjs";
-import type { ChatMessage, ToolCallInfo, InterruptInfo, AgentState } from "../core/types.js";
+import type { UaiChatMessage, UaiToolCallInfo, UaiInterruptInfo, UaiAgentState } from "../core/types.js";
 
 /**
  * Transport interface for agent communication.
@@ -38,7 +38,7 @@ export interface AgentClientCallbacks {
   /** Called when text message is complete (content should be accumulated from deltas) */
   onTextEnd?: () => void;
   /** Called when a tool call starts */
-  onToolCallStart?: (info: ToolCallInfo) => void;
+  onToolCallStart?: (info: UaiToolCallInfo) => void;
   /** Called when tool call arguments are complete */
   onToolCallArgsEnd?: (id: string, args: string) => void;
   /** Called when a tool call completes (arguments streamed) */
@@ -48,11 +48,11 @@ export interface AgentClientCallbacks {
   /** Called when the run finishes */
   onRunFinished?: (event: RunFinishedEvent) => void;
   /** Called when a state snapshot is received */
-  onStateSnapshot?: (state: AgentState) => void;
+  onStateSnapshot?: (state: UaiAgentState) => void;
   /** Called when a state delta is received */
-  onStateDelta?: (delta: Partial<AgentState>) => void;
+  onStateDelta?: (delta: Partial<UaiAgentState>) => void;
   /** Called when a messages snapshot is received */
-  onMessagesSnapshot?: (messages: ChatMessage[]) => void;
+  onMessagesSnapshot?: (messages: UaiChatMessage[]) => void;
   /** Called on error */
   onError?: (error: Error) => void;
 }
@@ -62,7 +62,7 @@ export interface AgentClientCallbacks {
  */
 export interface RunFinishedEvent {
   outcome: "success" | "interrupt" | "error";
-  interrupt?: InterruptInfo;
+  interrupt?: UaiInterruptInfo;
   error?: string;
 }
 
@@ -79,7 +79,7 @@ export type RunLifecycleState =
   | { status: 'running'; runId: string; threadId: string }
   | { status: 'streaming_text'; runId: string; threadId: string; messageId?: string }
   | { status: 'awaiting_tool_execution'; runId: string; threadId: string; pendingTools: string[] }
-  | { status: 'interrupted'; runId: string; threadId: string; interrupt: InterruptInfo }
+  | { status: 'interrupted'; runId: string; threadId: string; interrupt: UaiInterruptInfo }
   | { status: 'error'; runId: string; error: Error };
 
 /**
@@ -89,8 +89,8 @@ export type RunLifecycleState =
 export interface RunContext {
   threadId: string;
   runId: string;
-  messages: ChatMessage[];
-  pendingToolCalls: Map<string, ToolCallInfo>;
+  messages: UaiChatMessage[];
+  pendingToolCalls: Map<string, UaiToolCallInfo>;
   toolCallArgs: Map<string, string>;
 }
 
@@ -175,13 +175,13 @@ export interface RunErrorEvent extends TypedBaseEvent {
 /** STATE_SNAPSHOT event */
 export interface StateSnapshotEvent extends TypedBaseEvent {
   type: typeof AguiEventType.STATE_SNAPSHOT;
-  state: AgentState;
+  state: UaiAgentState;
 }
 
 /** STATE_DELTA event */
 export interface StateDeltaEvent extends TypedBaseEvent {
   type: typeof AguiEventType.STATE_DELTA;
-  delta: Partial<AgentState>;
+  delta: Partial<UaiAgentState>;
 }
 
 /** MESSAGES_SNAPSHOT event */

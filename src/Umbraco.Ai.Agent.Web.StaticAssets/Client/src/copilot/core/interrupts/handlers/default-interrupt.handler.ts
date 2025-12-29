@@ -1,14 +1,14 @@
-import type { InterruptContext, InterruptHandler } from "../types.js";
-import type { InterruptInfo } from "../../types.js";
+import type { UaiInterruptContext, UaiInterruptHandler } from "../types.js";
+import type { UaiInterruptInfo } from "../../types.js";
 
 /**
  * Default fallback handler that clears agent state.
  * Used when no specific handler matches the interrupt reason.
  */
-export class UaiDefaultInterruptHandler implements InterruptHandler {
+export class UaiDefaultInterruptHandler implements UaiInterruptHandler {
   readonly reason = "*";
 
-  handle(_interrupt: InterruptInfo, context: InterruptContext): void {
+  handle(_interrupt: UaiInterruptInfo, context: UaiInterruptContext): void {
     context.setAgentState(undefined);
   }
 }

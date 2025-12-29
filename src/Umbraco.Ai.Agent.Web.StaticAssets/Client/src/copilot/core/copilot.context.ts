@@ -6,13 +6,13 @@ import type { Observable } from "rxjs";
 import { UaiCopilotAgentStore } from "./stores/copilot-agent.store.js";
 import { UaiCopilotRunController } from "./controllers/copilot-run.controller.js";
 import { UaiCopilotToolBus } from "./services/copilot-tool-bus.js";
-import type { CopilotAgentItem } from "./repositories/copilot.repository.js";
+import type { UaiCopilotAgentItem } from "./repositories/copilot.repository.js";
 import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 
 /**
  * Basic agent information used for display purposes.
  */
-export interface AgentInfo {
+export interface UaiAgentInfo {
   id: string;
   name: string;
   alias: string;
@@ -39,8 +39,8 @@ export class UaiCopilotContext extends UmbControllerBase {
   #runController: UaiCopilotRunController;
   #hitlContext: UaiHitlContext;
 
-  readonly agents: Observable<CopilotAgentItem[]>;
-  readonly selectedAgent: Observable<CopilotAgentItem | undefined>;
+  readonly agents: Observable<UaiCopilotAgentItem[]>;
+  readonly selectedAgent: Observable<UaiCopilotAgentItem | undefined>;
   readonly agentsLoading: Observable<boolean>;
 
   get messages$() {

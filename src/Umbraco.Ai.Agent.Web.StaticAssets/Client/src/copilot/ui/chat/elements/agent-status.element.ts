@@ -1,6 +1,6 @@
 import { customElement, property, css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { AgentState } from "../../../core/types.js";
+import type { UaiAgentState } from "../../../core/types.js";
 
 /**
  * Agent status component.
@@ -9,10 +9,10 @@ import type { AgentState } from "../../../core/types.js";
 @customElement("uai-copilot-agent-status")
 export class UaiCopilotAgentStatusElement extends UmbLitElement {
   @property({ type: Object })
-  state?: AgentState;
+  state?: UaiAgentState;
 
   #getDefaultLabel(): string {
-    const labels: Record<AgentState["status"], string> = {
+    const labels: Record<UaiAgentState["status"], string> = {
       thinking: "Thinking...",
       executing: "Executing...",
       awaiting_input: "Waiting for input...",

@@ -7,11 +7,11 @@
  * Chat message in the conversation.
  * Extends AG-UI Message with additional UI-specific fields.
  */
-export interface ChatMessage {
+export interface UaiChatMessage {
   id: string;
   role: "user" | "assistant" | "tool";
   content: string;
-  toolCalls?: ToolCallInfo[];
+  toolCalls?: UaiToolCallInfo[];
   /** Required for tool role messages - the ID of the tool call this is responding to */
   toolCallId?: string;
   timestamp: Date;
@@ -20,7 +20,7 @@ export interface ChatMessage {
 /**
  * Tool call status matching AG-UI events.
  */
-export type ToolCallStatus =
+export type UaiToolCallStatus =
   | "pending"           // TOOL_CALL_START received
   | "streaming"         // TOOL_CALL_ARGS being received
   | "awaiting_approval" // Frontend tool waiting for user approval
@@ -31,27 +31,27 @@ export type ToolCallStatus =
 /**
  * Information about a tool call.
  */
-export interface ToolCallInfo {
+export interface UaiToolCallInfo {
   id: string;
   name: string;
   arguments: string;
   /** Parsed arguments for frontend tool execution */
   parsedArgs?: Record<string, unknown>;
   result?: string;
-  status: ToolCallStatus;
+  status: UaiToolCallStatus;
 }
 
 /**
  * Interrupt information for human-in-the-loop interactions.
  */
-export interface InterruptInfo {
+export interface UaiInterruptInfo {
   id: string;
   /** Reason for the interrupt (e.g., "tool_execution" for frontend tools) */
   reason?: string;
   type: "approval" | "input" | "choice" | "custom";
   title: string;
   message: string;
-  options?: InterruptOption[];
+  options?: UaiInterruptOption[];
   inputConfig?: {
     placeholder?: string;
     multiline?: boolean;
@@ -64,7 +64,7 @@ export interface InterruptInfo {
 /**
  * Option for interrupt choices.
  */
-export interface InterruptOption {
+export interface UaiInterruptOption {
   value: string;
   label: string;
   variant?: "positive" | "danger" | "default";
@@ -73,7 +73,7 @@ export interface InterruptOption {
 /**
  * Agent state for displaying progress and status.
  */
-export interface AgentState {
+export interface UaiAgentState {
   status: "idle" | "thinking" | "executing" | "awaiting_input";
   currentStep?: string;
   progress?: {

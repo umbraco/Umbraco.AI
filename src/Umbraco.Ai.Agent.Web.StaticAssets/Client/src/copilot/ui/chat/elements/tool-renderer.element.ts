@@ -7,7 +7,7 @@ import type {
   UaiAgentToolElement,
   UaiAgentToolStatus,
 } from "../../../../agent/tools/uai-agent-tool.extension.js";
-import type { ToolCallInfo } from "../../../core/types.js";
+import type { UaiToolCallInfo } from "../../../core/types.js";
 import { safeParseJson } from "../../../core/utils/json.js";
 
 // Import default tool status component
@@ -32,7 +32,7 @@ export class UaiToolRendererElement extends UmbLitElement {
   #manifest: ManifestUaiAgentTool | null = null;
 
   @property({ type: Object })
-  toolCall!: ToolCallInfo;
+  toolCall!: UaiToolCallInfo;
 
   @state()
   private _status: UaiAgentToolStatus = "pending";

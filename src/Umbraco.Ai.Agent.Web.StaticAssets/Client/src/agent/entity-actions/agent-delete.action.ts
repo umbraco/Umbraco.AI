@@ -1,14 +1,14 @@
 import { UaiDeleteActionBase, type UaiDeleteActionArgs } from "@umbraco-ai/core";
-import { UAiAgentDetailRepository } from "../repository/detail/agent-detail.repository.js";
+import { UaiAgentDetailRepository } from "../repository/detail/agent-detail.repository.js";
 
-export class UAiAgentDeleteAction extends UaiDeleteActionBase {
+export class UaiAgentDeleteAction extends UaiDeleteActionBase {
     protected getArgs(): UaiDeleteActionArgs {
         return {
             headline: "#actions_delete",
             confirmMessage: "#uAiAgent_deleteConfirm",
-            getRepository: (host) => new UAiAgentDetailRepository(host),
+            getRepository: (host) => new UaiAgentDetailRepository(host),
         };
     }
 }
 
-export { UAiAgentDeleteAction as api };
+export { UaiAgentDeleteAction as api };

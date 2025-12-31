@@ -16,8 +16,9 @@ interface InputResponse {
  * It prompts the user for text input before continuing.
  * The LLM provides the question context, and the user types their response.
  *
- * The `__approval` field is automatically injected by the tool-renderer
- * after the user submits their input.
+ * The `__approval` field is automatically injected by the frontend-tool.executor
+ * after the user submits their input. The response is typed as
+ * { input: string } or { cancelled: true } from the input approval element.
  */
 export default class GetUserFeedbackApi extends UmbControllerBase implements UaiAgentToolApi {
   async execute(args: Record<string, unknown>): Promise<string> {

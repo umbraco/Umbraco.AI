@@ -6,7 +6,7 @@ import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.conte
 import "./message.element.js";
 import "./input.element.js";
 import "./agent-status.element.js";
-import "./approval.element.ts";
+import "./hitl-approval.element.js";
 import "./tool-renderer.element.js";
 
 /**
@@ -145,10 +145,10 @@ export class UaiCopilotChatElement extends UmbLitElement {
 
         ${this._hitlInterrupt
           ? html`
-              <uai-copilot-approval
+              <uai-copilot-hitl-approval
                 .interrupt=${this._hitlInterrupt}
                 @respond=${this.#handleInterruptResponse}
-              ></uai-copilot-approval>
+              ></uai-copilot-hitl-approval>
             `
           : ""}
 

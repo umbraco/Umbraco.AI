@@ -8,6 +8,7 @@ import { UaiCopilotAgentRepository } from "./repository";
 import { UaiCopilotAgentItem } from "./types.ts";
 import type { UaiFrontendToolManager } from "./services/frontend-tool.manager.ts";
 import { UaiEntityAdapterContext } from "../entity-adapter/index.js";
+import type { UaiPropertyChange, UaiPropertyChangeResult } from "../entity-adapter/index.js";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -110,6 +111,16 @@ export class UaiCopilotContext extends UmbControllerBase {
    */
   setSelectedEntityKey(key: string | undefined): void {
     this.#entityAdapterContext.setSelectedEntityKey(key);
+  }
+
+  /**
+   * Apply a property change to the currently selected entity.
+   * Changes are staged in the workspace - user must click Save to persist.
+   * @param change The property change to apply (alias, value, optional culture/segment)
+   * @returns Result indicating success or failure with error message
+   */
+  async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
+    return this.#entityAdapterContext.applyPropertyChange(change);
   }
 
   constructor(host: UmbControllerHost) {

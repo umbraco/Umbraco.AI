@@ -6,15 +6,28 @@
  */
 
 import { map, type Observable } from "@umbraco-cms/backoffice/external/rxjs";
+import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import type {
 	UaiEntityAdapterApi,
 	UaiEntityContext,
+	UaiPropertyChange,
+	UaiPropertyChangeResult,
 	UaiSerializedEntity,
 	UaiSerializedProperty,
 } from "../types.js";
 
 // Supported text-based property editors for initial implementation
 const SUPPORTED_EDITOR_ALIASES = ["Umbraco.TextBox", "Umbraco.TextArea"];
+
+/**
+ * Property structure from content type.
+ */
+interface PropertyStructure {
+	alias: string;
+	name: string;
+	description?: string | null;
+	dataType: { unique: string };
+}
 
 /**
  * Interface matching the essential methods of UmbDocumentWorkspaceContext.
@@ -36,10 +49,14 @@ interface DocumentWorkspaceContextLike {
 	name?(variantId?: unknown): Observable<string>;
 	// variants observable - contains name for each variant
 	variants?: Observable<Array<{ name?: string; culture?: string | null }>>;
-	// Structure manager for content type info including icon
+	// Structure manager for content type info including icon and property structure
 	structure?: {
 		ownerContentType?: Observable<{ icon?: string } | undefined>;
+		getPropertyStructureByAlias?(alias: string): Promise<PropertyStructure | undefined>;
+		getContentTypeProperties?(): Promise<PropertyStructure[]>;
 	};
+	// Property mutation - sets value in workspace (staged, not persisted)
+	setPropertyValue?<T>(alias: string, value: T, variantId?: UmbVariantId): Promise<void>;
 }
 
 /**
@@ -148,6 +165,7 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 
 	/**
 	 * Serialize document for LLM context.
+	 * Uses structure to get all properties, then merges with values.
 	 * Only includes TextBox and TextArea properties for now.
 	 */
 	async serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity> {
@@ -158,15 +176,54 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 		const contentType = ctx.getContentTypeUnique();
 		const values = ctx.getValues() ?? [];
 
-		// Filter to supported text editors and serialize
-		const properties: UaiSerializedProperty[] = values
-			.filter((v) => SUPPORTED_EDITOR_ALIASES.includes(v.editorAlias))
-			.map((v) => ({
-				alias: v.alias,
-				label: v.alias, // TODO: Get proper label from content type structure
-				editorAlias: v.editorAlias,
-				value: v.value,
-			}));
+		// Build maps for quick lookup
+		// Map: alias -> value entry (for getting current value and editorAlias)
+		const valuesByAlias = new Map(values.map((v) => [v.alias, v]));
+		// Map: dataType.unique -> editorAlias (for properties without values)
+		const editorAliasByDataType = new Map<string, string>();
+		for (const v of values) {
+			// Get the property structure to find its dataType.unique
+			const structure = await ctx.structure?.getPropertyStructureByAlias?.(v.alias);
+			if (structure?.dataType.unique) {
+				editorAliasByDataType.set(structure.dataType.unique, v.editorAlias);
+			}
+		}
+
+		// Get all properties from structure
+		const propertyStructures = await ctx.structure?.getContentTypeProperties?.() ?? [];
+
+		const properties: UaiSerializedProperty[] = [];
+
+		for (const prop of propertyStructures) {
+			const valueEntry = valuesByAlias.get(prop.alias);
+
+			// Determine editor alias: from value entry, or from dataType mapping
+			const editorAlias = valueEntry?.editorAlias ?? editorAliasByDataType.get(prop.dataType.unique);
+
+			// Only include if we know it's a supported editor
+			if (editorAlias && SUPPORTED_EDITOR_ALIASES.includes(editorAlias)) {
+				properties.push({
+					alias: prop.alias,
+					label: prop.name,
+					editorAlias,
+					value: valueEntry?.value ?? null,
+				});
+			}
+		}
+
+		// Fallback: if we couldn't get properties from structure, use values directly
+		if (propertyStructures.length === 0 && values.length > 0) {
+			for (const v of values) {
+				if (SUPPORTED_EDITOR_ALIASES.includes(v.editorAlias)) {
+					properties.push({
+						alias: v.alias,
+						label: v.alias,
+						editorAlias: v.editorAlias,
+						value: v.value,
+					});
+				}
+			}
+		}
 
 		return {
 			entityType: "document",
@@ -175,5 +232,57 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 			contentType: contentType ?? undefined,
 			properties,
 		};
+	}
+
+	/**
+	 * Apply a property change to the document workspace.
+	 * Changes are staged in the workspace - user must save to persist.
+	 * Only supports text-based properties (TextBox, TextArea) for now.
+	 */
+	async applyPropertyChange(
+		workspaceContext: unknown,
+		change: UaiPropertyChange,
+	): Promise<UaiPropertyChangeResult> {
+		const ctx = workspaceContext as DocumentWorkspaceContextLike;
+
+		// Check if workspace supports property mutation
+		if (typeof ctx.setPropertyValue !== "function") {
+			return {
+				success: false,
+				error: "Workspace does not support property mutation",
+			};
+		}
+
+		// Validate property exists and is a supported type
+		const property = await ctx.structure?.getPropertyStructureByAlias?.(change.alias);
+		if (!property) {
+			return {
+				success: false,
+				error: `Property "${change.alias}" not found on this document type`,
+			};
+		}
+
+		// Get the current values to check the editor type
+		const values = ctx.getValues() ?? [];
+		const existingValue = values.find((v) => v.alias === change.alias);
+		if (existingValue && !SUPPORTED_EDITOR_ALIASES.includes(existingValue.editorAlias)) {
+			return {
+				success: false,
+				error: `Property "${change.alias}" uses editor "${existingValue.editorAlias}" which is not yet supported. Only TextBox and TextArea are supported.`,
+			};
+		}
+
+		// Build variant ID from culture/segment (undefined = invariant)
+		const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
+
+		try {
+			await ctx.setPropertyValue(change.alias, change.value, variantId);
+			return { success: true };
+		} catch (error) {
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : "Unknown error applying property change",
+			};
+		}
 	}
 }

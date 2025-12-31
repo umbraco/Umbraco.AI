@@ -17,6 +17,7 @@
 - [x] Backend context processing (appends to system prompt)
 - [x] Reactive name updates (via `variants` observable)
 - [x] Reactive icon updates (via `structure.ownerContentType` observable)
+- [x] Property mutation API (`applyPropertyChange`) for TextBox/TextArea
 
 **Files created/modified:**
 | File | Status |
@@ -43,11 +44,116 @@
 
 - [ ] Extension manifest registration (currently hardcoded adapter)
 - [ ] Media adapter
-- [ ] Property mutation tools (`setPropertyValue`)
-- [ ] Complex property editors (block grid, media picker)
+- [x] Property mutation API (`applyPropertyChange` on adapters/context)
+- [x] Frontend tool for property mutation (`setPropertyValue` tool)
+- [x] Enhanced serialization using content type structure (shows all properties, not just those with values)
+- [ ] Complex property editors (block grid, media picker, RichText)
 - [ ] Nested modal handling tests
 - [ ] Entity URL generation (`getEditorUrl`)
 - [ ] Third-party adapter pattern (Commerce, etc.)
+
+---
+
+### ✅ Property Mutation API (Complete)
+
+**Goal**: Enable AI tools to update entity property values in the workspace (staged changes).
+
+**Implementation Flow:**
+```
+Tool Call (LLM)
+  → CopilotContext.applyPropertyChange(change)
+    → EntityAdapterContext.applyPropertyChange(change)
+      → Adapter.applyPropertyChange(workspaceContext, change)
+        → workspaceContext.setPropertyValue(alias, value, variantId)
+```
+
+**Key Design Decisions:**
+1. **Staged changes only** - Changes are applied to the workspace context, not persisted. User must click Save.
+2. **Adapter validation** - Document adapter validates property exists and is a supported editor type.
+3. **Supported editors** - TextBox and TextArea only (consistent with serialization).
+4. **Variant support** - Culture and segment can be specified for variant content.
+5. **Graceful error handling** - Returns `UaiPropertyChangeResult` with success/error instead of throwing.
+
+**Types Added:**
+```typescript
+interface UaiPropertyChange {
+  alias: string;      // Property alias
+  value: unknown;     // New value
+  culture?: string;   // For variant content (undefined = invariant)
+  segment?: string;   // For segmented content
+}
+
+interface UaiPropertyChangeResult {
+  success: boolean;
+  error?: string;     // Human-readable error message
+}
+```
+
+**Files Modified:**
+| File | Changes |
+|------|---------|
+| `entity-adapter/types.ts` | Added `UaiPropertyChange`, `UaiPropertyChangeResult`, updated `UaiEntityAdapterApi` |
+| `entity-adapter/adapters/document.adapter.ts` | Added `applyPropertyChange` method |
+| `entity-adapter/entity-adapter.context.ts` | Added `applyPropertyChange` method |
+| `entity-adapter/index.ts` | Exported new types |
+| `copilot/copilot.context.ts` | Added `applyPropertyChange` method |
+
+---
+
+### ✅ Frontend Tool: setPropertyValue (Complete)
+
+**Goal**: Expose property mutation to AI agents via the AG-UI tool call protocol.
+
+**Tool Definition:**
+```typescript
+{
+  type: "uaiAgentTool",
+  alias: "Uai.AgentTool.SetPropertyValue",
+  meta: {
+    toolName: "setPropertyValue",
+    description: "Update a property value on the currently selected entity...",
+    parameters: {
+      type: "object",
+      properties: {
+        alias: { type: "string", description: "Property alias" },
+        value: { type: "string", description: "New value" },
+        culture: { type: "string", description: "Optional culture code" },
+        segment: { type: "string", description: "Optional segment" },
+      },
+      required: ["alias", "value"],
+    },
+  },
+}
+```
+
+**Files Created:**
+| File | Purpose |
+|------|---------|
+| `agent/tools/entity/set-property-value.api.ts` | Tool execution logic |
+| `agent/tools/entity/manifests.ts` | Tool manifest definition |
+
+**Files Modified:**
+| File | Changes |
+|------|---------|
+| `agent/tools/manifests.ts` | Added entity tools to exports |
+
+**Usage Example (LLM perspective):**
+```json
+{
+  "tool": "setPropertyValue",
+  "args": {
+    "alias": "title",
+    "value": "My Updated Title"
+  }
+}
+```
+
+**Response:**
+```json
+{ "success": true }
+// or
+{ "success": false, "error": "Property 'xyz' not found..." }
+```
 
 ---
 

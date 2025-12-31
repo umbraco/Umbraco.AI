@@ -18,6 +18,8 @@ import { UaiDocumentAdapter } from "./adapters/document.adapter.js";
 import type {
 	UaiDetectedEntity,
 	UaiEntityAdapterApi,
+	UaiPropertyChange,
+	UaiPropertyChangeResult,
 	UaiSerializedEntity,
 } from "./types.js";
 
@@ -103,6 +105,32 @@ export class UaiEntityAdapterContext {
 		const selected = this.getSelectedEntity();
 		if (!selected) return undefined;
 		return selected.adapter.serializeForLlm(selected.workspaceContext);
+	}
+
+	/**
+	 * Apply a property change to the currently selected entity.
+	 * Changes are staged in the workspace - user must save to persist.
+	 * @param change The property change to apply
+	 * @returns Result indicating success or failure with error message
+	 */
+	async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
+		const selected = this.getSelectedEntity();
+
+		if (!selected) {
+			return {
+				success: false,
+				error: "No entity is currently selected",
+			};
+		}
+
+		if (!selected.adapter.applyPropertyChange) {
+			return {
+				success: false,
+				error: `Entity type "${selected.entityContext.entityType}" does not support property changes`,
+			};
+		}
+
+		return selected.adapter.applyPropertyChange(selected.workspaceContext, change);
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────────

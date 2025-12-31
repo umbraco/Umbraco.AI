@@ -37,11 +37,37 @@ export interface UaiSerializedProperty {
 }
 
 /**
+ * Request to change a property value.
+ * Changes are staged in the workspace - user must save to persist.
+ */
+export interface UaiPropertyChange {
+	/** Property alias */
+	alias: string;
+	/** New value to set */
+	value: unknown;
+	/** Culture for variant content (undefined = invariant) */
+	culture?: string;
+	/** Segment for segmented content (undefined = no segment) */
+	segment?: string;
+}
+
+/**
+ * Result of a property change operation.
+ */
+export interface UaiPropertyChangeResult {
+	/** Whether the change was applied successfully */
+	success: boolean;
+	/** Human-readable error message if failed */
+	error?: string;
+}
+
+/**
  * Entity adapter API interface.
  * Adapters are responsible for:
  * - Detecting if they can handle a workspace context
  * - Extracting entity identity from workspace context
  * - Serializing entity data for LLM consumption
+ * - Applying property changes (optional)
  */
 export interface UaiEntityAdapterApi {
 	readonly entityType: string;
@@ -84,6 +110,18 @@ export interface UaiEntityAdapterApi {
 	 * Serialize the entity for LLM context.
 	 */
 	serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity>;
+
+	/**
+	 * Apply a property change to the workspace (staged, not persisted).
+	 * Optional - some entity types may be read-only.
+	 * @param workspaceContext The workspace context to modify
+	 * @param change The property change to apply
+	 * @returns Result indicating success or failure with error message
+	 */
+	applyPropertyChange?(
+		workspaceContext: unknown,
+		change: UaiPropertyChange,
+	): Promise<UaiPropertyChangeResult>;
 }
 
 /**

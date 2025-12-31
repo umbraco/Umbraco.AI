@@ -1,5 +1,56 @@
 # Entity Adapter Architecture for Umbraco.Ai.Agent
 
+## Implementation Status
+
+### ✅ Phase 1: Minimal Implementation (Complete)
+
+**Goal**: Test entity adapter architecture with documents and simple text properties.
+
+**Completed:**
+- [x] Workspace Registry (cross-DOM context access)
+- [x] Entity Adapter types and interfaces
+- [x] Document Adapter (documents only, TextBox/TextArea properties)
+- [x] Entity Adapter Context (detection, selection, serialization)
+- [x] Entity Selector UI component (shows current entity with icon)
+- [x] CopilotContext integration (exposes entity context to UI)
+- [x] Context injection into agent requests (AG-UI protocol)
+- [x] Backend context processing (appends to system prompt)
+- [x] Reactive name updates (via `variants` observable)
+- [x] Reactive icon updates (via `structure.ownerContentType` observable)
+
+**Files created/modified:**
+| File | Status |
+|------|--------|
+| `entity-adapter/types.ts` | ✅ Created |
+| `entity-adapter/adapters/document.adapter.ts` | ✅ Created |
+| `entity-adapter/entity-adapter.context.ts` | ✅ Created |
+| `entity-adapter/index.ts` | ✅ Created |
+| `copilot/components/entity-selector/entity-selector.element.ts` | ✅ Created |
+| `copilot/components/entity-selector/index.ts` | ✅ Created |
+| `copilot/copilot.context.ts` | ✅ Modified |
+| `copilot/services/copilot-run.controller.ts` | ✅ Modified |
+| `copilot/transport/uai-agent-client.ts` | ✅ Modified |
+| `copilot/components/sidebar/copilot-sidebar.element.ts` | ✅ Modified |
+| `Umbraco.Ai.Agent.Web/.../RunAgentController.cs` | ✅ Modified |
+
+**Key technical findings:**
+- `UmbDocumentWorkspaceContext.name()` method returns observable that only emits initial value
+- Use `variants` observable instead for reactive name updates
+- `structure.ownerContentType` observable provides document type icon
+- Adapters own the logic for name/icon observables (not the context)
+
+### 🔲 Phase 2: Future Work
+
+- [ ] Extension manifest registration (currently hardcoded adapter)
+- [ ] Media adapter
+- [ ] Property mutation tools (`setPropertyValue`)
+- [ ] Complex property editors (block grid, media picker)
+- [ ] Nested modal handling tests
+- [ ] Entity URL generation (`getEditorUrl`)
+- [ ] Third-party adapter pattern (Commerce, etc.)
+
+---
+
 ## Overview
 
 Design a standardized mechanism for AI tools to interact with any Umbraco entity being edited. The system must:
@@ -400,6 +451,30 @@ This means when editing a block:
 - Tools operate on the document, not the block directly
 
 **Future enhancement**: Block-aware tools could optionally query the Workspace Registry directly for block workspaces to provide block-specific operations (e.g., "modify this block's content"). This would require a block-specific adapter that understands the block's relationship to its parent property.
+
+#### Inline Block Editors (Multiple Simultaneous Blocks)
+
+Block List with inline editing mode creates multiple simultaneous block workspace contexts:
+
+```
+[WorkspaceRegistry]
+- document:abc   [size: 1]
+- block:xyz-1    [size: 2]  ← inline block 1
+- block:xyz-2    [size: 3]  ← inline block 2
+- block:xyz-3    [size: 4]  ← inline block 3
+```
+
+Unlike modal blocks (one at a time), inline blocks are all active simultaneously. Registration order doesn't indicate "current" context since they're all visible.
+
+**Possible resolution strategies:**
+
+1. **Focus tracking** - Track which block element has focus or was last interacted with
+2. **Explicit selection** - User tells Copilot which block (e.g., "edit the hero block")
+3. **Ignore inline blocks** - Only track modal-opened blocks (clearer "current" semantics)
+4. **LLM disambiguation** - When multiple blocks active, LLM asks user to clarify
+5. **List exposure** - Copilot shows active blocks, user picks one
+
+This is a UX decision that affects how block-aware tools behave. For initial implementation, ignoring inline blocks (option 3) is simplest - modal blocks have clear "user opened this" intent.
 
 ### 5. Serialization Models
 

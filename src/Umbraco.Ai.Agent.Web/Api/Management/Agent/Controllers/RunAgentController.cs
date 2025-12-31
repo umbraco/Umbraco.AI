@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using Asp.Versioning;
@@ -159,8 +160,8 @@ public class RunAgentController : AgentControllerBase
                 // Create chat client
                 var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 
-                // Convert AG-UI messages to M.E.AI ChatMessages
-                var chatMessages = ConvertToChatMessages(agent, request.Messages);
+                // Convert AG-UI messages to M.E.AI ChatMessages (including context)
+                var chatMessages = ConvertToChatMessages(agent, request.Messages, request.Context);
 
                 // Build ChatOptions with profile settings
                 var chatOptions = BuildChatOptions(profile, request.Tools);
@@ -434,14 +435,43 @@ public class RunAgentController : AgentControllerBase
         return chatOptions;
     }
 
-    private static List<ChatMessage> ConvertToChatMessages(AiAgent agent, IEnumerable<AguiMessage> messages)
+    private static List<ChatMessage> ConvertToChatMessages(
+        AiAgent agent,
+        IEnumerable<AguiMessage> messages,
+        IEnumerable<AguiContextItem>? context)
     {
         var chatMessages = new List<ChatMessage>();
 
-        // Add agent instructions as system message if present
+        // Build system message with agent instructions + context
+        var systemContent = new StringBuilder();
+
+        // Add agent instructions
         if (!string.IsNullOrWhiteSpace(agent.Instructions))
         {
-            chatMessages.Add(new ChatMessage(ChatRole.System, agent.Instructions));
+            systemContent.AppendLine(agent.Instructions);
+        }
+
+        // Append context items (entity context, etc.)
+        if (context?.Any() == true)
+        {
+            systemContent.AppendLine();
+            systemContent.AppendLine("## Current Context");
+            foreach (var item in context)
+            {
+                systemContent.AppendLine($"### {item.Description}");
+                if (item.Value.HasValue)
+                {
+                    systemContent.AppendLine("```json");
+                    systemContent.AppendLine(item.Value.Value.GetRawText());
+                    systemContent.AppendLine("```");
+                }
+            }
+        }
+
+        // Add combined system message if there's content
+        if (systemContent.Length > 0)
+        {
+            chatMessages.Add(new ChatMessage(ChatRole.System, systemContent.ToString()));
         }
 
         // Convert AG-UI messages

@@ -1791,6 +1791,15 @@ Resources marked `Semantic` are included only when semantically relevant to the 
 3. **Match**: Find resources with similarity above threshold
 4. **Include**: Add matching resources to context
 
+**Fallback to OnDemand**: Semantic resources that don't match (or can't be matched) are automatically listed as OnDemand resources. This ensures resources are never completely inaccessible:
+
+- No embedding profile configured → falls back to OnDemand
+- Embedding generation fails → falls back to OnDemand
+- Resource has no embedding yet → falls back to OnDemand
+- Similarity threshold not met → falls back to OnDemand
+
+This makes the system forgiving during setup - users can mark resources as Semantic before configuring embeddings, and they'll still work via tool retrieval.
+
 ```csharp
 public interface IAiContextEmbeddingService
 {
@@ -2037,18 +2046,31 @@ public class AiContextResolver : IAiContextResolver
             .Where(r => r.InjectionMode == ResourceInjectionMode.OnDemand)
             .ToList();
 
-        // 3. Find semantically relevant resources (if query provided)
+        // 3. Find semantically relevant resources (if query provided and embeddings available)
         var matchingSemantic = new List<AiContextResource>();
-        if (!string.IsNullOrEmpty(request.Query) && semanticResources.Any())
-        {
-            var semanticMatches = await _embeddingService.FindRelevantResourcesAsync(
-                request.Query,
-                semanticResources,
-                request.SemanticSimilarityThreshold,
-                request.MaxSemanticResults,
-                ct);
+        var unmatchedSemantic = new List<AiContextResource>();
 
-            matchingSemantic = semanticMatches.Select(m => m.Resource).ToList();
+        if (semanticResources.Any())
+        {
+            if (!string.IsNullOrEmpty(request.Query) && await _embeddingService.IsAvailableAsync(ct))
+            {
+                var semanticMatches = await _embeddingService.FindRelevantResourcesAsync(
+                    request.Query,
+                    semanticResources,
+                    request.SemanticSimilarityThreshold,
+                    request.MaxSemanticResults,
+                    ct);
+
+                matchingSemantic = semanticMatches.Select(m => m.Resource).ToList();
+
+                // Semantic resources that didn't match fall back to OnDemand
+                unmatchedSemantic = semanticResources.Except(matchingSemantic).ToList();
+            }
+            else
+            {
+                // No embeddings available - all Semantic resources fall back to OnDemand
+                unmatchedSemantic = semanticResources;
+            }
         }
 
         // 4. Build resolved context
@@ -2059,13 +2081,15 @@ public class AiContextResolver : IAiContextResolver
                 .Concat(matchingSemantic)
                 .ToList(),
 
-            // Resources available via tool
-            OnDemandResources = onDemandResources,
+            // Resources available via tool (explicit OnDemand + Semantic fallback)
+            OnDemandResources = onDemandResources
+                .Concat(unmatchedSemantic)
+                .ToList(),
 
             // All resources for reference
             AllResources = allResources,
 
-            Sources = BuildSourceList(alwaysResources, matchingSemantic, onDemandResources)
+            Sources = BuildSourceList(alwaysResources, matchingSemantic, onDemandResources, unmatchedSemantic)
         };
     }
 }
@@ -2424,7 +2448,9 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 | Injection modes | `Always`, `Semantic`, `OnDemand` |
 | Default injection mode | `Always` (backwards compatible with V1) |
 | Semantic matching | Embedding-based similarity with configurable threshold (default 0.7) |
+| Semantic fallback | Unmatched Semantic resources automatically available as OnDemand |
 | OnDemand implementation | Tools (`get_context_resource`, `list_context_resources`) |
 | Embedding storage | Stored on resource entity, generated on save |
+| Embedding unavailable | Semantic gracefully degrades to OnDemand |
 | Token budget | Calculated per injection mode, warnings for overbudget |
 | Implementation order | V1: Always only → V2: +OnDemand → V3: +Semantic |

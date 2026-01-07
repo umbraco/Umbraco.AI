@@ -9,5 +9,5 @@ namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Controllers;
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.ContextResourceTypes.GroupName)]
 [UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.ContextResourceTypes.RouteSegment)]
-public abstract class ResourceTypeControllerBase : UmbracoAiCoreManagementControllerBase
+public abstract class ContextResourceTypeControllerBase : UmbracoAiCoreManagementControllerBase
 { }

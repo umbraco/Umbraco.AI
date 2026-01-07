@@ -1,24 +1,24 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import { UaiProviderDetailServerDataSource } from "./provider-detail.server.data-source.js";
-import type { UaiProviderDetailModel } from "../../types.js";
+import { UaiContextResourceTypeDetailServerDataSource } from "./context-resource-type-detail.server.data-source.js";
+import type { UaiContextResourceTypeDetailModel } from "../../types.js";
 
 /**
- * Repository for fetching provider details.
- * Provides full provider information including setting definitions.
+ * Repository for fetching contextResourceType details.
+ * Provides full contextResourceType information including setting definitions.
  */
-export class UaiProviderDetailRepository extends UmbControllerBase {
-    #dataSource: UaiProviderDetailServerDataSource;
+export class UaiContextResourceTypeDetailRepository extends UmbControllerBase {
+    #dataSource: UaiContextResourceTypeDetailServerDataSource;
 
     constructor(host: UmbControllerHost) {
         super(host);
-        this.#dataSource = new UaiProviderDetailServerDataSource(host);
+        this.#dataSource = new UaiContextResourceTypeDetailServerDataSource(host);
     }
 
     /**
-     * Requests full provider details by ID.
+     * Requests full contextResourceType details by ID.
      */
-    async requestById(id: string): Promise<{ data?: UaiProviderDetailModel; error?: unknown }> {
+    async requestById(id: string): Promise<{ data?: UaiContextResourceTypeDetailModel; error?: unknown }> {
         return this.#dataSource.get(id);
     }
 }

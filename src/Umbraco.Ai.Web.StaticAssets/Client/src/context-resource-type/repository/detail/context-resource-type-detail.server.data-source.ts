@@ -1,13 +1,13 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { ProvidersService } from "../../../api/sdk.gen.js";
-import { UaiProviderTypeMapper } from "../../type-mapper.js";
-import type { UaiProviderDetailModel } from "../../types.js";
+import { ContextResourceTypesService } from "../../../api/sdk.gen.js";
+import { UaiContextResourceTypeTypeMapper } from "../../type-mapper.js";
+import type { UaiContextResourceTypeDetailModel } from "../../types.js";
 
 /**
- * Server data source for fetching provider details.
+ * Server data source for fetching contextResourceType details.
  */
-export class UaiProviderDetailServerDataSource {
+export class UaiContextResourceTypeDetailServerDataSource {
     #host: UmbControllerHost;
 
     constructor(host: UmbControllerHost) {
@@ -15,18 +15,18 @@ export class UaiProviderDetailServerDataSource {
     }
 
     /**
-     * Fetches a provider by ID with full details including setting definitions.
+     * Fetches a contextResourceType by ID with full details including setting definitions.
      */
-    async get(id: string): Promise<{ data?: UaiProviderDetailModel; error?: unknown }> {
+    async get(id: string): Promise<{ data?: UaiContextResourceTypeDetailModel; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            ProvidersService.getProviderById({ path: { id } })
+            ContextResourceTypesService.getContextResourceTypeById({ path: { id } })
         );
 
         if (error || !data) {
             return { error };
         }
 
-        return { data: UaiProviderTypeMapper.toDetailModel(data) };
+        return { data: UaiContextResourceTypeTypeMapper.toDetailModel(data) };
     }
 }

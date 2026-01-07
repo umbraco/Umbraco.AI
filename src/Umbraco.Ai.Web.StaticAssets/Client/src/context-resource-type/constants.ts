@@ -1,1 +1,1 @@
-export const UAI_PROVIDER_ENTITY_TYPE = "umbraco-ai-provider";
+export const UAI_CONTEXT_RESOURCE_TYPE_ENTITY_TYPE = "umbraco-ai-context-resource-type";

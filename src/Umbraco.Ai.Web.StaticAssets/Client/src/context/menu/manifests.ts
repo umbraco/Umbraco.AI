@@ -6,7 +6,7 @@ export const contextMenuManifests: ManifestMenuItem[] = [
         type: "menuItem",
         alias: "UmbracoAi.MenuItem.Contexts",
         name: "Contexts Menu Item",
-        weight: 80,
+        weight: 190,
         meta: {
             label: "Contexts",
             icon: UAI_CONTEXT_ICON,

@@ -1,4 +1,4 @@
-import type { ContextResponseModel, ContextItemResponseModel, ContextResourceResponseModel } from "../api/types.gen.js";
+import type { ContextResponseModel, ContextItemResponseModel, ContextResourceModel } from "../api";
 import { UAI_CONTEXT_ENTITY_TYPE } from "./constants.js";
 import type { UaiContextDetailModel, UaiContextItemModel, UaiContextResourceModel, UaiContextResourceInjectionMode } from "./types.js";
 
@@ -23,7 +23,7 @@ export const UaiContextTypeMapper = {
         };
     },
 
-    toResourceModel(resource: ContextResourceResponseModel): UaiContextResourceModel {
+    toResourceModel(resource: ContextResourceModel): UaiContextResourceModel {
         return {
             id: resource.id,
             resourceTypeId: resource.resourceTypeId,

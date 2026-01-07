@@ -6,7 +6,7 @@ export const profileMenuManifests: ManifestMenuItem[] = [
         type: "menuItem",
         alias: "UmbracoAi.MenuItem.Profiles",
         name: "Profiles Menu Item",
-        weight: 90,
+        weight: 195,
         meta: {
             label: "Profiles",
             icon: UAI_PROFILE_ICON,

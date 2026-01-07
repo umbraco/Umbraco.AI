@@ -24,7 +24,7 @@ public class FakeChatCapability : IAiChatCapability
 
     public AiCapability Kind => AiCapability.Chat;
 
-    public IChatClient CreateClient(object? settings = null)
+    public IChatClient CreateClient(object? settings = null, string? modelId = null)
     {
         return _chatClient;
     }

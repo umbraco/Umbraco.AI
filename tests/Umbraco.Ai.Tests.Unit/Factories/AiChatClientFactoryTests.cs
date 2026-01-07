@@ -77,7 +77,7 @@ public class AiChatClientFactoryTests
 
         var fakeChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
-        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(fakeChatClient);
+        configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
@@ -333,7 +333,7 @@ public class AiChatClientFactoryTests
         });
 
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
-        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(baseChatClient);
+        configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
@@ -380,7 +380,7 @@ public class AiChatClientFactoryTests
 
         var baseChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
-        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(baseChatClient);
+        configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
@@ -428,7 +428,7 @@ public class AiChatClientFactoryTests
 
         var fakeChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
-        configuredCapabilityMock.Setup(x => x.CreateClient()).Returns(fakeChatClient);
+        configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
@@ -452,8 +452,8 @@ public class AiChatClientFactoryTests
         // Assert - factory wraps with FunctionInvokingChatClient; verify inner client is accessible
         client.ShouldNotBeNull();
         client.GetService<FakeChatClient>().ShouldBe(fakeChatClient);
-        // Verify that CreateClient was called on the configured capability (no settings parameter)
-        configuredCapabilityMock.Verify(c => c.CreateClient(), Times.Once);
+        // Verify that CreateClient was called on the configured capability with the model ID from the profile
+        configuredCapabilityMock.Verify(c => c.CreateClient("gpt-4"), Times.Once);
         // Verify that GetConfiguredProviderAsync was called (which handles settings resolution)
         _connectionServiceMock.Verify(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()), Times.Once);
     }

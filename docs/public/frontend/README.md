@@ -1,0 +1,122 @@
+---
+description: >-
+  Integrate AI capabilities into custom backoffice elements.
+---
+
+# Frontend Integration
+
+Umbraco.Ai provides TypeScript APIs for integrating AI chat capabilities into custom backoffice elements. The frontend APIs work within the Umbraco backoffice context.
+
+## Package
+
+The chat API is exported from the Umbraco.Ai client package:
+
+{% code title="Import" %}
+```typescript
+import { UaiChatController, UaiChatMessage, UaiChatResult } from '@umbraco-ai/backoffice';
+```
+{% endcode %}
+
+## Quick Start
+
+{% code title="Using Chat in a Custom Element" %}
+```typescript
+import { LitElement, html } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { UaiChatController, UaiChatMessage, UaiChatResult } from '@umbraco-ai/backoffice';
+
+@customElement('my-ai-element')
+export class MyAiElement extends LitElement {
+    #chatController = new UaiChatController(this);
+
+    @state()
+    private _response?: string;
+
+    @state()
+    private _loading = false;
+
+    async #handleSubmit() {
+        this._loading = true;
+
+        const messages: UaiChatMessage[] = [
+            { role: 'user', content: 'Hello, can you help me?' }
+        ];
+
+        const { data, error } = await this.#chatController.complete(messages);
+
+        if (data) {
+            this._response = data.message.content;
+        } else {
+            console.error('Chat error:', error);
+        }
+
+        this._loading = false;
+    }
+
+    render() {
+        return html`
+            <button @click=${this.#handleSubmit} ?disabled=${this._loading}>
+                ${this._loading ? 'Loading...' : 'Ask AI'}
+            </button>
+            ${this._response ? html`<p>${this._response}</p>` : ''}
+        `;
+    }
+}
+```
+{% endcode %}
+
+## Key Concepts
+
+### Controller Pattern
+
+`UaiChatController` follows the Umbraco backoffice controller pattern. It requires a controller host (typically the element itself) for lifecycle management:
+
+```typescript
+class MyElement extends LitElement {
+    // Controller is created with 'this' as the host
+    #chatController = new UaiChatController(this);
+}
+```
+
+### Profile Selection
+
+Specify which AI profile to use via `profileIdOrAlias`:
+
+```typescript
+// Use default chat profile
+await controller.complete(messages);
+
+// Use specific profile by alias
+await controller.complete(messages, { profileIdOrAlias: 'content-assistant' });
+
+// Use specific profile by ID
+await controller.complete(messages, { profileIdOrAlias: '3fa85f64-5717-4562-b3fc-2c963f66afa6' });
+```
+
+### Cancellation
+
+Pass an `AbortSignal` to cancel requests:
+
+```typescript
+const abortController = new AbortController();
+
+// Later, to cancel:
+abortController.abort();
+
+// Pass signal to chat
+await controller.complete(messages, { signal: abortController.signal });
+```
+
+## In This Section
+
+{% content-ref url="chat-controller.md" %}
+[Chat Controller](chat-controller.md)
+{% endcontent-ref %}
+
+{% content-ref url="chat-repository.md" %}
+[Chat Repository](chat-repository.md)
+{% endcontent-ref %}
+
+{% content-ref url="types.md" %}
+[Types](types.md)
+{% endcontent-ref %}

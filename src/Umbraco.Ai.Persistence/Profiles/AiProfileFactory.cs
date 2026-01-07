@@ -22,6 +22,15 @@ internal static class AiProfileFactory
             tags = entity.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
 
+        IReadOnlyList<Guid> contextIds = Array.Empty<Guid>();
+        if (!string.IsNullOrEmpty(entity.ContextIds))
+        {
+            contextIds = entity.ContextIds
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(Guid.Parse)
+                .ToArray();
+        }
+
         var capability = (AiCapability)entity.Capability;
 
         return new AiProfile
@@ -33,7 +42,8 @@ internal static class AiProfileFactory
             Model = new AiModelRef(entity.ProviderId, entity.ModelId),
             ConnectionId = entity.ConnectionId,
             Settings = AiProfileSettingsSerializer.Deserialize(capability, entity.Settings),
-            Tags = tags
+            Tags = tags,
+            ContextIds = contextIds
         };
     }
 
@@ -54,7 +64,8 @@ internal static class AiProfileFactory
             ModelId = profile.Model.ModelId,
             ConnectionId = profile.ConnectionId,
             Settings = AiProfileSettingsSerializer.Serialize(profile.Settings),
-            Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null
+            Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null,
+            ContextIds = profile.ContextIds.Count > 0 ? string.Join(',', profile.ContextIds) : null
         };
     }
 
@@ -72,6 +83,7 @@ internal static class AiProfileFactory
         entity.ModelId = profile.Model.ModelId;
         entity.ConnectionId = profile.ConnectionId;
         entity.Settings = AiProfileSettingsSerializer.Serialize(profile.Settings);
-        entity.Tags = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null;
+        entity.Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null;
+        entity.ContextIds = profile.ContextIds.Count > 0 ? string.Join(',', profile.ContextIds) : null;
     }
 }

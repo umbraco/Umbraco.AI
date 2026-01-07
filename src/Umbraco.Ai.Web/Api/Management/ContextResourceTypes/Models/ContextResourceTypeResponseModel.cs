@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Web.Api.Management.Context.Models;
+namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Models;
 
 /// <summary>
 /// Response model for a context resource type.
 /// </summary>
-public class ResourceTypeItemResponseModel
+public class ContextResourceTypeResponseModel
 {
     /// <summary>
     /// The unique identifier of the resource type (e.g., "text", "brand-voice").

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Core.Context;
 using Umbraco.Ai.Core.Context.ResourceTypes;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
@@ -74,6 +75,12 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAiContextResourceTypeInfrastructure, AiContextResourceTypeInfrastructure>();
         builder.AiContextResourceTypes()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiContextResourceType, AiContextResourceTypeAttribute>(cache: true));
+
+        // Context system
+        services.AddSingleton<IAiContextRepository, InMemoryAiContextRepository>();
+        services.AddSingleton<IAiContextService, AiContextService>();
+        services.AddSingleton<IAiContextResolver, AiContextResolver>();
+        services.AddSingleton<IAiContextFormatter, AiContextFormatter>();
 
         return builder;
     }

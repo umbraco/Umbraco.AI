@@ -52,4 +52,9 @@ public class ProfileResponseModel
     /// Tags associated with the profile.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = [];
+
+    /// <summary>
+    /// The IDs of contexts attached to this profile.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; set; } = [];
 }

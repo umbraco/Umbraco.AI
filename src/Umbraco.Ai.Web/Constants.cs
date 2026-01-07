@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Ai.Web;
+namespace Umbraco.Ai.Web;
 
 /// <summary>
 /// Defines constants for the Umbraco AI Management API.
@@ -119,6 +119,22 @@ public class Constants
                 /// The Swagger group name for Chat features.
                 /// </summary>
                 public const string GroupName = "Chat";
+            }
+
+            /// <summary>
+            /// Defines constants for Context features.
+            /// </summary>
+            public static class Context
+            {
+                /// <summary>
+                /// The route segment for Context features.
+                /// </summary>
+                public const string RouteSegment = "contexts";
+
+                /// <summary>
+                /// The Swagger group name for Context features.
+                /// </summary>
+                public const string GroupName = "Contexts";
             }
         }
     }

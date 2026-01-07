@@ -55,6 +55,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
         target.Tags = source.Tags;
+        target.ContextIds = source.ContextIds.ToList();
     }
 
     // Umbraco.Code.MapAll -Id -Capability
@@ -67,6 +68,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
         target.Tags = source.Tags;
+        target.ContextIds = source.ContextIds.ToList();
     }
 
     // Umbraco.Code.MapAll
@@ -80,6 +82,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Model = context.Map<ModelRefModel>(source.Model);
         target.Settings = MapSettingsToResponse(source);
         target.Tags = source.Tags;
+        target.ContextIds = source.ContextIds;
     }
 
     // Umbraco.Code.MapAll

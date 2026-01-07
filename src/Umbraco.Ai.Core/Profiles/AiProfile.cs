@@ -1,4 +1,4 @@
-﻿using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Profiles;
 
@@ -48,4 +48,10 @@ public sealed class AiProfile
     /// A list of tags associated with the AI profile for categorization and filtering.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Context IDs assigned to this profile for AI context injection.
+    /// These contexts provide brand voice, guidelines, and reference materials for AI operations.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; set; } = Array.Empty<Guid>();
 }

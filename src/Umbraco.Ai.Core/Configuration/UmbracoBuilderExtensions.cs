@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Core.Context.ResourceTypes;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
@@ -68,6 +69,11 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAiChatService, AiChatService>();
         services.AddSingleton<IAiEmbeddingService, AiEmbeddingService>();
         // TODO: services.AddSingleton<IAiToolService, AiToolService>();
+
+        // Context resource type infrastructure - auto-discover via [AiContextResourceType] attribute
+        services.AddSingleton<IAiContextResourceTypeInfrastructure, AiContextResourceTypeInfrastructure>();
+        builder.AiContextResourceTypes()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiContextResourceType, AiContextResourceTypeAttribute>(cache: true));
 
         return builder;
     }

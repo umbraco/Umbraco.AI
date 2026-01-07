@@ -81,6 +81,7 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAiContextService, AiContextService>();
         services.AddSingleton<IAiContextResolver, AiContextResolver>();
         services.AddSingleton<IAiContextFormatter, AiContextFormatter>();
+        services.AddSingleton<IAiContextAccessor, AiContextAccessor>();
 
         return builder;
     }

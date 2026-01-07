@@ -51,4 +51,14 @@ public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagemen
                 .WithTitle("Invalid settings")
                 .WithDetail(detail)
                 .Build()));
+
+    /// <summary>
+    /// Returns a 404 Not Found response for a context.
+    /// </summary>
+    protected IActionResult ContextNotFound()
+        => OperationStatusResult(ContextOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Context not found")
+                .WithDetail("The specified context could not be found.")
+                .Build()));
 }

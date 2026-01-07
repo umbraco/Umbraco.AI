@@ -16,10 +16,10 @@ public sealed class AiContext
     public Guid Id { get; internal set; }
 
     /// <summary>
-    /// The immutable alias of the AI context (e.g., "corporate-brand-voice").
+    /// The alias of the AI context (e.g., "corporate-brand-voice").
     /// Used for programmatic reference.
     /// </summary>
-    public required string Alias { get; init; }
+    public required string Alias { get; set; }
 
     /// <summary>
     /// The display name of the AI context (e.g., "Corporate Brand Voice").

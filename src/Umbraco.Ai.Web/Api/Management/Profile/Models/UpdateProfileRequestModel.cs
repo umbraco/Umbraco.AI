@@ -41,4 +41,9 @@ public class UpdateProfileRequestModel
     /// Tags associated with the profile.
     /// </summary>
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// The IDs of contexts to attach to this profile.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; init; } = [];
 }

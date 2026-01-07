@@ -15,6 +15,7 @@ export const UaiProfileTypeMapper = {
             connectionId: response.connectionId,
             settings: this.mapResponseSettings(response),
             tags: response.tags ?? [],
+            contextIds: response.contextIds ?? [],
         };
     },
 
@@ -38,6 +39,7 @@ export const UaiProfileTypeMapper = {
             connectionId: model.connectionId,
             settings: this.mapRequestSettings(model.settings),
             tags: model.tags,
+            contextIds: model.contextIds,
         };
     },
 
@@ -49,6 +51,7 @@ export const UaiProfileTypeMapper = {
             connectionId: model.connectionId,
             settings: this.mapRequestSettings(model.settings),
             tags: model.tags,
+            contextIds: model.contextIds,
         };
     },
 

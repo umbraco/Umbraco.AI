@@ -198,6 +198,7 @@ public sealed class AiContextResource
     public Guid Id { get; internal set; }
     public required string ResourceType { get; init; }  // "brand-voice", "document", "text" (immutable)
     public required string Name { get; set; }           // "Brand Guidelines", "Style Guide"
+    public string? Description { get; set; }            // What this resource contains/provides
     public int SortOrder { get; set; }                  // Controls injection order
     public required string Data { get; set; }           // JSON blob for type-specific data
 }
@@ -1700,6 +1701,578 @@ Always mention our commitment to sustainability..."
 
 ---
 
+## Dynamic Context Injection (Enhanced Design)
+
+The simplistic "attach all context to system message" approach works for an initial implementation but has significant limitations:
+
+- **Token waste** - Resources irrelevant to the current request still consume tokens
+- **Context window pollution** - Large contexts dilute the signal-to-noise ratio
+- **No intelligence** - The system can't decide what's actually needed
+- **Scalability issues** - As resources grow, the approach becomes untenable
+
+This section describes an enhanced architecture where context can be dynamically added or made available to the LLM based on the request.
+
+### Resource Injection Modes
+
+Each resource has an **injection mode** that determines how and when it's included:
+
+```csharp
+public enum ResourceInjectionMode
+{
+    /// <summary>
+    /// Always included in system prompt. Use for essential brand guidelines,
+    /// tone of voice, and core instructions that apply to every request.
+    /// </summary>
+    Always,
+
+    /// <summary>
+    /// Included if semantically relevant to the user's query.
+    /// Uses embedding similarity to determine relevance.
+    /// </summary>
+    Semantic,
+
+    /// <summary>
+    /// Made available as a tool the LLM can invoke to retrieve content.
+    /// The LLM decides when to look up the resource.
+    /// </summary>
+    OnDemand
+}
+```
+
+**Updated Resource Model:**
+
+```csharp
+public sealed class AiContextResource
+{
+    public Guid Id { get; internal set; }
+    public required string ResourceType { get; init; }
+    public required string Name { get; set; }
+    public string? Description { get; set; }              // What this resource contains/provides
+    public int SortOrder { get; set; }
+    public required string Data { get; set; }
+
+    // Dynamic injection configuration
+    public ResourceInjectionMode InjectionMode { get; set; } = ResourceInjectionMode.Always;
+
+    // For Semantic mode - cached embedding of resource content
+    public float[]? Embedding { get; set; }
+}
+```
+
+### Mode 1: Always (Static Injection)
+
+Resources marked `Always` are injected into the system prompt for every request. This is appropriate for:
+
+- Brand voice definitions
+- Core editorial guidelines
+- Target audience descriptions
+- Universal "avoid" patterns
+
+```
+✅ Use Always for:
+- "Be professional but approachable"
+- "Target audience: B2B tech decision makers"
+- "Never use exclamation marks"
+
+❌ Don't use Always for:
+- Detailed style guides (too large)
+- Product-specific information (not always relevant)
+- Reference documentation (query-dependent)
+```
+
+### Mode 2: Semantic (RAG-Style Retrieval)
+
+Resources marked `Semantic` are included only when semantically relevant to the user's query. This uses embedding similarity to determine relevance.
+
+**How it works:**
+
+1. **At resource save time**: Generate embedding for resource content
+2. **At request time**: Embed the user's query/prompt
+3. **Match**: Find resources with similarity above threshold
+4. **Include**: Add matching resources to context
+
+```csharp
+public interface IAiContextEmbeddingService
+{
+    /// <summary>
+    /// Generates and stores embedding for a resource.
+    /// Called when resource is created or updated.
+    /// </summary>
+    Task EmbedResourceAsync(AiContextResource resource, CancellationToken ct = default);
+
+    /// <summary>
+    /// Finds semantically relevant resources for a query.
+    /// </summary>
+    Task<IEnumerable<SemanticMatch>> FindRelevantResourcesAsync(
+        string query,
+        IEnumerable<AiContextResource> candidates,
+        float similarityThreshold = 0.7f,
+        int maxResults = 5,
+        CancellationToken ct = default);
+}
+
+public record SemanticMatch(AiContextResource Resource, float Similarity);
+```
+
+**Implementation Options:**
+
+```csharp
+// Option A: Use existing embedding profile
+public class AiContextEmbeddingService : IAiContextEmbeddingService
+{
+    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAiContextRepository _contextRepository;
+
+    public async Task EmbedResourceAsync(AiContextResource resource, CancellationToken ct)
+    {
+        // Get text content from resource
+        var resourceType = _resourceTypes.GetByAlias(resource.ResourceType);
+        var textContent = resourceType?.Format(resource.Data) ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(textContent))
+            return;
+
+        // Generate embedding using configured profile
+        var embedding = await _embeddingService.GenerateEmbeddingAsync(textContent, ct);
+        resource.Embedding = embedding.Vector.ToArray();
+
+        await _contextRepository.UpdateResourceEmbeddingAsync(resource.Id, resource.Embedding, ct);
+    }
+
+    public async Task<IEnumerable<SemanticMatch>> FindRelevantResourcesAsync(
+        string query,
+        IEnumerable<AiContextResource> candidates,
+        float similarityThreshold = 0.7f,
+        int maxResults = 5,
+        CancellationToken ct = default)
+    {
+        var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, ct);
+
+        return candidates
+            .Where(r => r.Embedding != null)
+            .Select(r => new SemanticMatch(r, CosineSimilarity(queryEmbedding.Vector, r.Embedding!)))
+            .Where(m => m.Similarity >= similarityThreshold)
+            .OrderByDescending(m => m.Similarity)
+            .Take(maxResults);
+    }
+
+    private static float CosineSimilarity(ReadOnlyMemory<float> a, float[] b)
+    {
+        var spanA = a.Span;
+        float dot = 0, magA = 0, magB = 0;
+        for (int i = 0; i < spanA.Length; i++)
+        {
+            dot += spanA[i] * b[i];
+            magA += spanA[i] * spanA[i];
+            magB += b[i] * b[i];
+        }
+        return dot / (MathF.Sqrt(magA) * MathF.Sqrt(magB));
+    }
+}
+```
+
+**When to use Semantic mode:**
+
+- Large reference documents
+- Product catalogs or feature descriptions
+- FAQ content
+- Historical brand guidelines
+- Any content where relevance depends on the query
+
+### Mode 3: OnDemand (Tool-Based Retrieval)
+
+Resources marked `OnDemand` are exposed as tools the LLM can invoke when it determines it needs the information. This is the most token-efficient approach for large resources.
+
+**How it works:**
+
+1. **System prompt includes**: List of available resources with descriptions
+2. **LLM decides**: Whether to retrieve any resources based on the task
+3. **Tool call**: LLM invokes `get_context_resource` tool with resource ID
+4. **Response**: Resource content returned to LLM in tool response
+
+```csharp
+// Tool definition for OnDemand resources
+[AiTool("get_context_resource", "Retrieve detailed content from a context resource")]
+public class GetContextResourceTool : AiToolBase
+{
+    private readonly IAiContextService _contextService;
+    private readonly AiContextResourceTypeCollection _resourceTypes;
+
+    public GetContextResourceTool(
+        IAiToolInfrastructure infrastructure,
+        IAiContextService contextService,
+        AiContextResourceTypeCollection resourceTypes)
+        : base(infrastructure)
+    {
+        _contextService = contextService;
+        _resourceTypes = resourceTypes;
+    }
+
+    [AiToolParameter("resourceId", "The ID of the resource to retrieve", required: true)]
+    public Guid ResourceId { get; set; }
+
+    public override async Task<AiToolResult> ExecuteAsync(CancellationToken ct)
+    {
+        var resource = await _contextService.GetResourceAsync(ResourceId, ct);
+        if (resource is null)
+            return AiToolResult.Failure($"Resource {ResourceId} not found");
+
+        var resourceType = _resourceTypes.GetByAlias(resource.ResourceType);
+        var content = resourceType?.Format(resource.Data) ?? resource.Data;
+
+        return AiToolResult.Success(content);
+    }
+}
+
+// Tool to list available OnDemand resources
+[AiTool("list_context_resources", "List available context resources that can be retrieved")]
+public class ListContextResourcesTool : AiToolBase
+{
+    private readonly IAgentSessionAccessor _sessionAccessor;
+
+    public override async Task<AiToolResult> ExecuteAsync(CancellationToken ct)
+    {
+        var session = _sessionAccessor.CurrentSession;
+        if (session?.ResolvedContext is null)
+            return AiToolResult.Success("No context resources available");
+
+        var onDemandResources = session.ResolvedContext.Resources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.OnDemand)
+            .Select(r => new
+            {
+                r.Id,
+                r.Name,
+                Description = r.Description ?? $"{r.ResourceType} resource"
+            });
+
+        return AiToolResult.Success(JsonSerializer.Serialize(onDemandResources));
+    }
+}
+```
+
+**System prompt injection for OnDemand resources:**
+
+```csharp
+public class AiContextFormatter : IAiContextFormatter
+{
+    public string Format(ResolvedAiContext context)
+    {
+        var sb = new StringBuilder();
+
+        // Format Always resources (full content)
+        var alwaysResources = context.Resources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.Always);
+
+        if (alwaysResources.Any())
+        {
+            sb.AppendLine("--- Context ---");
+            foreach (var resource in alwaysResources)
+            {
+                var formatted = FormatResource(resource);
+                if (!string.IsNullOrEmpty(formatted))
+                {
+                    sb.AppendLine($"[{resource.Name}]");
+                    sb.AppendLine(formatted);
+                    sb.AppendLine();
+                }
+            }
+        }
+
+        // List OnDemand resources (descriptions only)
+        var onDemandResources = context.Resources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.OnDemand);
+
+        if (onDemandResources.Any())
+        {
+            sb.AppendLine("--- Available Reference Materials ---");
+            sb.AppendLine("The following resources are available. Use the get_context_resource tool to retrieve them if needed:");
+            sb.AppendLine();
+            foreach (var resource in onDemandResources)
+            {
+                sb.AppendLine($"- **{resource.Name}** (ID: {resource.Id})");
+                sb.AppendLine($"  {resource.Description ?? "Additional reference material"}");
+            }
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
+}
+```
+
+**When to use OnDemand mode:**
+
+- Large style guides or brand books
+- Technical documentation
+- Legal/compliance documents
+- Any resource where the LLM can intelligently decide if it's needed
+
+### Unified Context Resolution
+
+The enhanced resolver handles all injection modes:
+
+```csharp
+public class AiContextResolver : IAiContextResolver
+{
+    private readonly IAiContextEmbeddingService _embeddingService;
+    private readonly IAiContextFormatter _formatter;
+
+    public async Task<ResolvedAiContext> ResolveAsync(
+        AiContextResolutionRequest request,
+        CancellationToken ct = default)
+    {
+        // 1. Collect all candidate resources (existing logic)
+        var allResources = await CollectCandidateResourcesAsync(request, ct);
+
+        // 2. Categorize by injection mode
+        var alwaysResources = allResources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.Always)
+            .ToList();
+
+        var semanticResources = allResources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.Semantic)
+            .ToList();
+
+        var onDemandResources = allResources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.OnDemand)
+            .ToList();
+
+        // 3. Find semantically relevant resources (if query provided)
+        var matchingSemantic = new List<AiContextResource>();
+        if (!string.IsNullOrEmpty(request.Query) && semanticResources.Any())
+        {
+            var semanticMatches = await _embeddingService.FindRelevantResourcesAsync(
+                request.Query,
+                semanticResources,
+                request.SemanticSimilarityThreshold,
+                request.MaxSemanticResults,
+                ct);
+
+            matchingSemantic = semanticMatches.Select(m => m.Resource).ToList();
+        }
+
+        // 4. Build resolved context
+        return new ResolvedAiContext
+        {
+            // Resources to inject into system prompt
+            InjectedResources = alwaysResources
+                .Concat(matchingSemantic)
+                .ToList(),
+
+            // Resources available via tool
+            OnDemandResources = onDemandResources,
+
+            // All resources for reference
+            AllResources = allResources,
+
+            Sources = BuildSourceList(alwaysResources, matchingSemantic, onDemandResources)
+        };
+    }
+}
+```
+
+**Updated Resolution Request:**
+
+```csharp
+public class AiContextResolutionRequest
+{
+    // Existing fields
+    public Guid? ContentId { get; set; }
+    public string? ContentPath { get; set; }
+    public Guid? ProfileId { get; set; }
+    public IEnumerable<Guid>? PromptContextIds { get; set; }
+    public string? PromptName { get; set; }
+    public IEnumerable<Guid>? AgentContextIds { get; set; }
+    public string? AgentName { get; set; }
+
+    // Fields for dynamic resolution
+    public string? Query { get; set; }                           // User query for semantic matching
+    public float SemanticSimilarityThreshold { get; set; } = 0.7f;
+    public int MaxSemanticResults { get; set; } = 5;
+}
+```
+
+**Updated Resolved Context:**
+
+```csharp
+public class ResolvedAiContext
+{
+    /// <summary>
+    /// Resources to inject directly into the system prompt.
+    /// Includes Always + matching Semantic resources.
+    /// </summary>
+    public IReadOnlyList<ResolvedResource> InjectedResources { get; set; } = [];
+
+    /// <summary>
+    /// Resources available via tool invocation.
+    /// LLM can retrieve these on demand.
+    /// </summary>
+    public IReadOnlyList<ResolvedResource> OnDemandResources { get; set; } = [];
+
+    /// <summary>
+    /// All resources for reference and debugging.
+    /// </summary>
+    public IReadOnlyList<ResolvedResource> AllResources { get; set; } = [];
+
+    /// <summary>
+    /// Tracking information for debugging.
+    /// </summary>
+    public IReadOnlyList<ContextSource> Sources { get; set; } = [];
+
+    public static ResolvedAiContext Empty => new();
+}
+```
+
+### Middleware Integration
+
+The context injection middleware is updated to handle dynamic resolution:
+
+```csharp
+internal class ContextInjectingChatClient : DelegatingChatClient
+{
+    public override async Task<ChatResponse> GetResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var session = _sessionAccessor.CurrentSession;
+        if (session?.CurrentContentId != null && session.EnableContextInjection)
+        {
+            // Extract query from the last user message
+            var lastUserMessage = messages.LastOrDefault(m => m.Role == ChatRole.User);
+            var query = lastUserMessage?.Text;
+
+            var resolutionRequest = new AiContextResolutionRequest
+            {
+                ContentId = session.CurrentContentId,
+                ProfileId = session.ProfileId,
+                AgentContextIds = session.Agent?.ContextIds,
+                AgentName = session.Agent?.Name,
+                Query = query  // For semantic matching
+            };
+
+            var context = await _contextResolver.ResolveAsync(resolutionRequest, cancellationToken);
+
+            // Format only injected resources (not OnDemand)
+            var contextBlock = _contextFormatter.FormatInjected(context);
+
+            // Inject into system message
+            messages = InjectContextIntoSystemMessage(messages, contextBlock);
+
+            // Store resolved context in session for tool access
+            session.ResolvedContext = context;
+        }
+
+        return await base.GetResponseAsync(messages, options, cancellationToken);
+    }
+}
+```
+
+### UI Enhancements
+
+The resource editor needs to support injection mode configuration:
+
+```
+┌─ Edit Resource: Style Guide ──────────────────────────────────────┐
+│                                                            [×]    │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  Name *                                                           │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ Corporate Style Guide                                       │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                                   │
+│  Description                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ Comprehensive style guide covering formatting,              │ │
+│  │ capitalization, punctuation, and writing best practices     │ │
+│  │ for corporate communications.                               │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│  ℹ️ Used in UI and shown to LLM for On-Demand resources          │
+│                                                                   │
+│  Injection Mode                                                   │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ (•) Always - Include in every request                       │ │
+│  │ ( ) Semantic - Include when relevant to query               │ │
+│  │ ( ) On-Demand - Available via tool for LLM to retrieve      │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                                   │
+│  Document Content                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ 📄 style-guide-2024.pdf                          [Change]   │ │
+│  │    Uploaded: Jan 15, 2024 (234 KB)                          │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│                                                                   │
+│                                         [Cancel]  [Save]          │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+### Recommendations by Resource Type
+
+| Resource Type | Typical Injection Mode | Rationale |
+|---------------|------------------------|-----------|
+| Brand Voice | Always | Core identity, applies to everything |
+| Target Audience | Always | Fundamental context for all content |
+| Tone Guidelines | Always | Essential for voice consistency |
+| Style Guide | OnDemand | Large document, let LLM decide when to retrieve |
+| Legal Disclaimers | Semantic | Include when query relates to compliance |
+| Product Specs | Semantic | Include when query relates to products |
+| SEO Guidelines | Semantic | Include when query relates to SEO |
+| Reference Docs | OnDemand | Let LLM decide when to retrieve |
+| FAQs | Semantic | Include when query is similar |
+
+### Token Budget Management
+
+With dynamic injection, token budgets become more predictable:
+
+```csharp
+public class TokenBudgetManager
+{
+    public TokenBudgetResult CalculateBudget(ResolvedAiContext context, int maxTokens)
+    {
+        var alwaysTokens = EstimateTokens(context.InjectedResources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.Always));
+
+        var semanticTokens = EstimateTokens(context.InjectedResources
+            .Where(r => r.InjectionMode == ResourceInjectionMode.Semantic));
+
+        var onDemandListTokens = EstimateOnDemandListTokens(context.OnDemandResources);
+
+        return new TokenBudgetResult
+        {
+            AlwaysTokens = alwaysTokens,
+            SemanticTokens = semanticTokens,
+            OnDemandListTokens = onDemandListTokens,
+            TotalInjectedTokens = alwaysTokens + semanticTokens + onDemandListTokens,
+            RemainingBudget = maxTokens - (alwaysTokens + semanticTokens + onDemandListTokens),
+            Warnings = GenerateWarnings(...)
+        };
+    }
+}
+```
+
+### Implementation Phases
+
+**Phase 1: Always Mode (V1)**
+- Implement basic static injection
+- All resources treated as `Always` by default
+
+**Phase 2: OnDemand Mode**
+- Add `InjectionMode` to resource model
+- Implement context resource tools (`get_context_resource`, `list_context_resources`)
+- Session storage for resolved context
+- UI for injection mode selection
+
+**Phase 3: Semantic Mode**
+- Add `Embedding` field to resource model
+- Integrate embedding generation on resource save
+- Implement similarity search via `IAiContextEmbeddingService`
+- Background job to embed existing resources
+- Configure embedding profile for context resources
+
+---
+
 ## Questions & Considerations
 
 ### 1. Context Inheritance
@@ -1847,3 +2420,11 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 | Agent context refresh | Session start + workspace change |
 | External link caching | Manual refresh + optional background job |
 | Debugging support | `ContextSource` tracking shows where each resource came from |
+| **Dynamic injection (V2+)** | |
+| Injection modes | `Always`, `Semantic`, `OnDemand` |
+| Default injection mode | `Always` (backwards compatible with V1) |
+| Semantic matching | Embedding-based similarity with configurable threshold (default 0.7) |
+| OnDemand implementation | Tools (`get_context_resource`, `list_context_resources`) |
+| Embedding storage | Stored on resource entity, generated on save |
+| Token budget | Calculated per injection mode, warnings for overbudget |
+| Implementation order | V1: Always only → V2: +OnDemand → V3: +Semantic |

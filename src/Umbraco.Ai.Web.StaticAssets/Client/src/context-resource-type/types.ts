@@ -1,36 +1,22 @@
 /**
- * Provider item model for UI consumption.
- * Maps from API's ProviderItemResponseModel.
+ * ContextResourceType item model for UI consumption.
+ * Maps from API's ContextResourceTypeItemResponseModel.
  */
-export interface UaiProviderItemModel {
+export interface UaiContextResourceTypeItemModel {
     id: string;
     name: string;
-    capabilities: string[];
+    description?: string | null;
+    icon?: string | null;
 }
 
 /**
- * Setting definition model for UI consumption.
- * Maps from API's SettingDefinitionModel.
+ * ContextResourceType detail model for UI consumption.
+ * Maps from API's ContextResourceTypeResponseModel.
+ * Includes full contextResourceType information with setting definitions.
  */
-export interface UaiSettingDefinitionModel {
-    key: string;
-    label: string;
-    description?: string;
-    editorUiAlias?: string;
-    editorConfig?: unknown;
-    defaultValue?: unknown;
-    sortOrder: number;
-    isRequired: boolean;
-}
-
-/**
- * Provider detail model for UI consumption.
- * Maps from API's ProviderResponseModel.
- * Includes full provider information with setting definitions.
- */
-export interface UaiProviderDetailModel {
+export interface UaiContextResourceTypeDetailModel {
     id: string;
     name: string;
-    capabilities: string[];
-    settingDefinitions: UaiSettingDefinitionModel[];
+    description?: string | null;
+    icon?: string | null;
 }

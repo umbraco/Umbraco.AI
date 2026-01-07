@@ -1,24 +1,24 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import { UaiProviderItemServerDataSource } from "./provider-item.server.data-source.js";
-import type { UaiProviderItemModel } from "../../types.js";
+import { UaiContextResourceTypeItemServerDataSource } from "./context-resource-type-item.server.data-source.js";
+import type { UaiContextResourceTypeItemModel } from "../../types.js";
 
 /**
- * Repository for fetching provider items.
- * Simple repository without store - providers are read-only and rarely change.
+ * Repository for fetching contextResourceType items.
+ * Simple repository without store - contextResourceTypes are read-only and rarely change.
  */
-export class UaiProviderItemRepository extends UmbControllerBase {
-    #dataSource: UaiProviderItemServerDataSource;
+export class UaiContextResourceTypeItemRepository extends UmbControllerBase {
+    #dataSource: UaiContextResourceTypeItemServerDataSource;
 
     constructor(host: UmbControllerHost) {
         super(host);
-        this.#dataSource = new UaiProviderItemServerDataSource(host);
+        this.#dataSource = new UaiContextResourceTypeItemServerDataSource(host);
     }
 
     /**
-     * Requests all available providers.
+     * Requests all available contextResourceTypes.
      */
-    async requestItems(): Promise<{ data?: UaiProviderItemModel[]; error?: unknown }> {
+    async requestItems(): Promise<{ data?: UaiContextResourceTypeItemModel[]; error?: unknown }> {
         return this.#dataSource.getItems();
     }
 }

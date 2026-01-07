@@ -5,4 +5,4 @@ export * from './repository/constants.js';
 export * from './workspace/constants.js';
 export * from './collection/constants.js';
 
-export const UAI_CONTEXT_ICON = 'icon-library';
+export const UAI_CONTEXT_ICON = 'icon-categories';

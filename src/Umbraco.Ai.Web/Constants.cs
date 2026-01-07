@@ -136,6 +136,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Contexts";
             }
+
+            /// <summary>
+            /// Defines constants for Resource Type features.
+            /// </summary>
+            public static class ContextResourceTypes
+            {
+                /// <summary>
+                /// The route segment for Context features.
+                /// </summary>
+                public const string RouteSegment = "context-resource-types";
+
+                /// <summary>
+                /// The Swagger group name for Context features.
+                /// </summary>
+                public const string GroupName = "Context Resource Types";
+            }
         }
     }
 }

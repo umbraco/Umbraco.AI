@@ -1,13 +1,13 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { ProvidersService } from "../../../api/sdk.gen.js";
-import { UaiProviderTypeMapper } from "../../type-mapper.js";
-import type { UaiProviderItemModel } from "../../types.js";
+import { ContextResourceTypesService } from "../../../api/sdk.gen.js";
+import { UaiContextResourceTypeTypeMapper } from "../../type-mapper.js";
+import type { UaiContextResourceTypeItemModel } from "../../types.js";
 
 /**
- * Server data source for fetching provider items.
+ * Server data source for fetching contextResourceType items.
  */
-export class UaiProviderItemServerDataSource {
+export class UaiContextResourceTypeItemServerDataSource {
     #host: UmbControllerHost;
 
     constructor(host: UmbControllerHost) {
@@ -15,19 +15,19 @@ export class UaiProviderItemServerDataSource {
     }
 
     /**
-     * Fetches all available providers.
+     * Fetches all available contextResourceTypes.
      */
-    async getItems(): Promise<{ data?: UaiProviderItemModel[]; error?: unknown }> {
+    async getItems(): Promise<{ data?: UaiContextResourceTypeItemModel[]; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            ProvidersService.getAllProviders()
+            ContextResourceTypesService.getAllContextResourceTypes()
         );
 
         if (error || !data) {
             return { error };
         }
 
-        const items = data.map(UaiProviderTypeMapper.toItemModel);
+        const items = data.map(UaiContextResourceTypeTypeMapper.toItemModel);
 
         return { data: items };
     }

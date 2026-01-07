@@ -18,13 +18,6 @@ public class ContextMapDefinition : IMapDefinition
         mapper.Define<AiContext, ContextItemResponseModel>((_, _) => new ContextItemResponseModel(), MapToItemResponse);
         mapper.Define<AiContextResource, ContextResourceModel>((_, _) => new ContextResourceModel(), MapResourceToModel);
 
-        // Resource type mappings
-        mapper.Define<IAiContextResourceType, ResourceTypeItemResponseModel>((_, _) => new ResourceTypeItemResponseModel
-        {
-            Id = string.Empty,
-            Name = string.Empty
-        }, MapResourceTypeToResponse);
-
         // Request mappings (request -> domain)
         mapper.Define<CreateContextRequestModel, AiContext>(CreateContextFactory, MapFromCreateRequest);
         mapper.Define<UpdateContextRequestModel, AiContext>((_, _) => new AiContext
@@ -114,14 +107,5 @@ public class ContextMapDefinition : IMapDefinition
         target.SortOrder = source.SortOrder;
         target.Data = source.Data;
         target.InjectionMode = source.InjectionMode.ToString();
-    }
-
-    // Umbraco.Code.MapAll
-    private static void MapResourceTypeToResponse(IAiContextResourceType source, ResourceTypeItemResponseModel target, MapperContext context)
-    {
-        target.Id = source.Id;
-        target.Name = source.Name;
-        target.Description = source.Description;
-        target.Icon = source.Icon;
     }
 }

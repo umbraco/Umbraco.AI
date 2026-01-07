@@ -1,2 +1,2 @@
-export { UaiProviderDetailRepository } from "./provider-detail.repository.js";
-export { UaiProviderDetailServerDataSource } from "./provider-detail.server.data-source.js";
+export { UaiContextResourceTypeDetailRepository } from "./context-resource-type-detail.repository.js";
+export { UaiContextResourceTypeDetailServerDataSource } from "./context-resource-type-detail.server.data-source.js";

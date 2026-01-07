@@ -1,3 +1,3 @@
-// Provider module manifests
+// ContextResourceType module manifests
 // Currently no manifests needed - repository is instantiated directly
-export const providerManifests: Array<UmbExtensionManifest> = [];
+export const contextResourceTypeManifests: Array<UmbExtensionManifest> = [];

@@ -4,21 +4,64 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44363' | (string & {});
 };
 
-export type UpdateProfileRequestModel = {
-    alias: string;
+export type AguiContextItemModel = {
+    description: string;
+    value?: unknown;
+};
+
+export type AguiFunctionCallModel = {
     name: string;
-    model: ModelRefModel;
-    connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
-    tags: Array<string>;
+    arguments: string;
 };
 
-export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
-    $type: string;
+export type AguiMessageModel = {
+    id?: string | null;
+    role: AguiMessageRoleModel;
+    content?: string | null;
+    name?: string | null;
+    toolCalls?: Array<AguiToolCallModel> | null;
+    toolCallId?: string | null;
 };
 
-export type ProfileSettingsModel = {
-    [key: string]: never;
+export type AguiMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
+
+export type AguiResumeInfoModel = {
+    interruptId: string;
+    payload?: unknown;
+};
+
+export type AguiRunRequestModel = {
+    threadId: string;
+    runId: string;
+    messages: Array<AguiMessageModel>;
+    tools?: Array<AguiToolModel> | null;
+    state?: unknown;
+    context?: Array<AguiContextItemModel> | null;
+    resume?: AguiResumeInfoModel | null;
+    forwardedProps?: unknown;
+};
+
+export type AguiToolCallModel = {
+    id: string;
+    type: string;
+    function: AguiFunctionCallModel;
+};
+
+export type AguiToolModel = {
+    name: string;
+    description: string;
+    parameters: AguiToolParametersModel;
+};
+
+export type AguiToolParametersModel = {
+    type: string;
+    properties: unknown;
+    required?: Array<string> | null;
+};
+
+export type ChatMessageModel = {
+    role: string;
+    content: string;
 };
 
 export type ChatProfileSettingsModel = ProfileSettingsModel & {
@@ -28,78 +71,14 @@ export type ChatProfileSettingsModel = ProfileSettingsModel & {
     systemPromptTemplate?: string | null;
 };
 
-export type ModelRefModel = {
-    providerId: string;
-    modelId: string;
+export type ChatRequestModel = {
+    messages: Array<ChatMessageModel>;
 };
 
-export type UpdateConnectionRequestModel = {
-    alias: string;
-    name: string;
-    settings?: unknown;
-    isActive: boolean;
-};
-
-export type SettingDefinitionModel = {
-    key: string;
-    label: string;
-    description?: string | null;
-    editorUiAlias?: string | null;
-    editorConfig?: unknown;
-    defaultValue?: unknown;
-    sortOrder: number;
-    isRequired: boolean;
-};
-
-export type ProviderResponseModel = {
-    id: string;
-    name: string;
-    capabilities: Array<string>;
-    settingDefinitions: Array<SettingDefinitionModel>;
-};
-
-export type ProviderItemResponseModel = {
-    id: string;
-    name: string;
-    capabilities: Array<string>;
-};
-
-export type ProfileResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    capability: string;
-    model?: ModelRefModel | null;
-    connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
-    tags: Array<string>;
-};
-
-export type ProfileItemResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    capability: string;
-    model?: ModelRefModel | null;
-};
-
-export type ProblemDetails = {
-    type?: string | null;
-    title?: string | null;
-    status?: number | null;
-    detail?: string | null;
-    instance?: string | null;
-    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
-};
-
-export type PagedProfileItemResponseModel = {
-    total: number;
-    items: Array<ProfileItemResponseModel>;
-};
-
-export type PagedConnectionItemResponseModel = {
-    total: number;
-    items: Array<ConnectionItemResponseModel>;
+export type ChatResponseModel = {
+    message: ChatMessageModel;
+    finishReason?: string | null;
+    usage?: UsageModel | null;
 };
 
 export type ConnectionItemResponseModel = {
@@ -108,59 +87,6 @@ export type ConnectionItemResponseModel = {
     name: string;
     providerId: string;
     isActive: boolean;
-};
-
-export type NotificationHeaderModel = {
-    message: string;
-    category: string;
-    type: EventMessageTypeModel;
-};
-
-export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
-
-export type ModelDescriptorResponseModel = {
-    model: ModelRefModel;
-    name: string;
-    metadata?: {
-        [key: string]: string;
-    } | null;
-};
-
-export type GenerateEmbeddingRequestModel = {
-    profileIdOrAlias?: string | null;
-    values: Array<string>;
-};
-
-export type EmbeddingResponseModel = {
-    embeddings: Array<EmbeddingItemModel>;
-};
-
-export type EmbeddingItemModel = {
-    index: number;
-    vector: Array<number>;
-};
-
-export type CreateProfileRequestModel = {
-    alias: string;
-    name: string;
-    capability: string;
-    model: ModelRefModel;
-    connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
-    tags: Array<string>;
-};
-
-export type CreateConnectionRequestModel = {
-    alias: string;
-    name: string;
-    providerId: string;
-    settings?: unknown;
-    isActive: boolean;
-};
-
-export type ConnectionTestResultModel = {
-    success: boolean;
-    errorMessage?: string | null;
 };
 
 export type ConnectionResponseModel = {
@@ -174,27 +100,275 @@ export type ConnectionResponseModel = {
     dateModified: string;
 };
 
-export type ChatUsageModel = {
+export type ConnectionTestResultModel = {
+    success: boolean;
+    errorMessage?: string | null;
+};
+
+export type ContextItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    resourceCount: number;
+    dateModified: string;
+};
+
+export type ContextResourceModel = {
+    id: string;
+    resourceTypeId: string;
+    name: string;
+    description?: string | null;
+    sortOrder: number;
+    data: string;
+    injectionMode: string;
+};
+
+export type ContextResourceTypeResponseModel = {
+    id: string;
+    name: string;
+    description?: string | null;
+    icon?: string | null;
+};
+
+export type ContextResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    dateCreated: string;
+    dateModified: string;
+    resources: Array<ContextResourceModel>;
+};
+
+export type CreateConnectionRequestModel = {
+    alias: string;
+    name: string;
+    providerId: string;
+    settings?: unknown;
+    isActive: boolean;
+};
+
+export type CreateContextRequestModel = {
+    alias: string;
+    name: string;
+    resources: Array<ContextResourceModel>;
+};
+
+export type CreateProfileRequestModel = {
+    alias: string;
+    name: string;
+    capability: string;
+    model: ModelRefModel;
+    connectionId: string;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    tags: Array<string>;
+    contextIds: Array<string>;
+};
+
+export type EmbeddingItemModel = {
+    index: number;
+    vector: Array<number>;
+};
+
+export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
+    $type: string;
+};
+
+export type EmbeddingResponseModel = {
+    embeddings: Array<EmbeddingItemModel>;
+};
+
+export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
+
+export type GenerateEmbeddingRequestModel = {
+    profileIdOrAlias?: string | null;
+    values: Array<string>;
+};
+
+export type ModelDescriptorResponseModel = {
+    model: ModelRefModel;
+    name: string;
+    metadata?: {
+        [key: string]: string;
+    } | null;
+};
+
+export type ModelRefModel = {
+    providerId: string;
+    modelId: string;
+};
+
+export type NotificationHeaderModel = {
+    message: string;
+    category: string;
+    type: EventMessageTypeModel;
+};
+
+export type PagedConnectionItemResponseModel = {
+    total: number;
+    items: Array<ConnectionItemResponseModel>;
+};
+
+export type PagedContextItemResponseModel = {
+    total: number;
+    items: Array<ContextItemResponseModel>;
+};
+
+export type PagedProfileItemResponseModel = {
+    total: number;
+    items: Array<ProfileItemResponseModel>;
+};
+
+export type ProblemDetails = {
+    type?: string | null;
+    title?: string | null;
+    status?: number | null;
+    detail?: string | null;
+    instance?: string | null;
+    [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | undefined;
+};
+
+export type ProfileItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    capability: string;
+    model?: ModelRefModel | null;
+};
+
+export type ProfileResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    capability: string;
+    model?: ModelRefModel | null;
+    connectionId: string;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    tags: Array<string>;
+    contextIds: Array<string>;
+};
+
+export type ProfileSettingsModel = {
+    [key: string]: never;
+};
+
+export type ProviderItemResponseModel = {
+    id: string;
+    name: string;
+    capabilities: Array<string>;
+};
+
+export type ProviderResponseModel = {
+    id: string;
+    name: string;
+    capabilities: Array<string>;
+    settingDefinitions: Array<SettingDefinitionModel>;
+};
+
+export type SettingDefinitionModel = {
+    key: string;
+    label: string;
+    description?: string | null;
+    editorUiAlias?: string | null;
+    editorConfig?: unknown;
+    defaultValue?: unknown;
+    sortOrder: number;
+    isRequired: boolean;
+};
+
+export type UpdateConnectionRequestModel = {
+    alias: string;
+    name: string;
+    settings?: unknown;
+    isActive: boolean;
+};
+
+export type UpdateContextRequestModel = {
+    alias: string;
+    name: string;
+    resources: Array<ContextResourceModel>;
+};
+
+export type UpdateProfileRequestModel = {
+    alias: string;
+    name: string;
+    model: ModelRefModel;
+    connectionId: string;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
+    tags: Array<string>;
+    contextIds: Array<string>;
+};
+
+export type UsageModel = {
     inputTokens?: number | null;
     outputTokens?: number | null;
     totalTokens?: number | null;
 };
 
-export type ChatResponseModel = {
-    message: ChatMessageModel;
-    finishReason?: string | null;
-    usage?: ChatUsageModel | null;
+export type CompleteChatWithProfileData = {
+    body?: ChatRequestModel;
+    path: {
+        profileIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/chat/{profileIdOrAlias}/complete';
 };
 
-export type ChatMessageModel = {
-    role: string;
-    content: string;
+export type CompleteChatWithProfileErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
 };
 
-export type ChatRequestModel = {
-    profileIdOrAlias?: string | null;
-    messages: Array<ChatMessageModel>;
+export type CompleteChatWithProfileError = CompleteChatWithProfileErrors[keyof CompleteChatWithProfileErrors];
+
+export type CompleteChatWithProfileResponses = {
+    /**
+     * OK
+     */
+    200: ChatResponseModel;
 };
+
+export type CompleteChatWithProfileResponse = CompleteChatWithProfileResponses[keyof CompleteChatWithProfileResponses];
+
+export type StreamChatWithProfileData = {
+    body?: AguiRunRequestModel;
+    path: {
+        profileIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/chat/{profileIdOrAlias}/stream';
+};
+
+export type StreamChatWithProfileErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type StreamChatWithProfileError = StreamChatWithProfileErrors[keyof StreamChatWithProfileErrors];
+
+export type StreamChatWithProfileResponses = {
+    /**
+     * Server-Sent Events stream
+     */
+    200: string;
+};
+
+export type StreamChatWithProfileResponse = StreamChatWithProfileResponses[keyof StreamChatWithProfileResponses];
 
 export type CompleteChatData = {
     body?: ChatRequestModel;
@@ -230,7 +404,7 @@ export type CompleteChatResponses = {
 export type CompleteChatResponse = CompleteChatResponses[keyof CompleteChatResponses];
 
 export type StreamChatData = {
-    body?: ChatRequestModel;
+    body?: AguiRunRequestModel;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/chat/stream';
@@ -245,20 +419,18 @@ export type StreamChatErrors = {
      * The resource is protected and requires an authentication token
      */
     401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
 };
 
 export type StreamChatError = StreamChatErrors[keyof StreamChatErrors];
 
 export type StreamChatResponses = {
     /**
-     * OK
+     * Server-Sent Events stream
      */
-    200: unknown;
+    200: string;
 };
+
+export type StreamChatResponse = StreamChatResponses[keyof StreamChatResponses];
 
 export type GetAllConnectionsData = {
     body?: never;
@@ -534,6 +706,207 @@ export type GetAllCapabilitiesResponses = {
 };
 
 export type GetAllCapabilitiesResponse = GetAllCapabilitiesResponses[keyof GetAllCapabilitiesResponses];
+
+export type GetAllContextResourceTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/context-resource-types';
+};
+
+export type GetAllContextResourceTypesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllContextResourceTypesResponses = {
+    /**
+     * OK
+     */
+    200: Array<ContextResourceTypeResponseModel>;
+};
+
+export type GetAllContextResourceTypesResponse = GetAllContextResourceTypesResponses[keyof GetAllContextResourceTypesResponses];
+
+export type GetContextResourceTypeByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/context-resource-types/{id}';
+};
+
+export type GetContextResourceTypeByIdErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetContextResourceTypeByIdError = GetContextResourceTypeByIdErrors[keyof GetContextResourceTypeByIdErrors];
+
+export type GetContextResourceTypeByIdResponses = {
+    /**
+     * OK
+     */
+    200: ContextResourceTypeResponseModel;
+};
+
+export type GetContextResourceTypeByIdResponse = GetContextResourceTypeByIdResponses[keyof GetContextResourceTypeByIdResponses];
+
+export type GetAllContextsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        filter?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/contexts';
+};
+
+export type GetAllContextsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllContextsResponses = {
+    /**
+     * OK
+     */
+    200: PagedContextItemResponseModel;
+};
+
+export type GetAllContextsResponse = GetAllContextsResponses[keyof GetAllContextsResponses];
+
+export type CreateContextData = {
+    body?: CreateContextRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/contexts';
+};
+
+export type CreateContextErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type CreateContextError = CreateContextErrors[keyof CreateContextErrors];
+
+export type CreateContextResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
+};
+
+export type DeleteContextData = {
+    body?: never;
+    path: {
+        contextIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}';
+};
+
+export type DeleteContextErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type DeleteContextError = DeleteContextErrors[keyof DeleteContextErrors];
+
+export type DeleteContextResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetContextByIdOrAliasData = {
+    body?: never;
+    path: {
+        contextIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}';
+};
+
+export type GetContextByIdOrAliasErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetContextByIdOrAliasError = GetContextByIdOrAliasErrors[keyof GetContextByIdOrAliasErrors];
+
+export type GetContextByIdOrAliasResponses = {
+    /**
+     * OK
+     */
+    200: ContextResponseModel;
+};
+
+export type GetContextByIdOrAliasResponse = GetContextByIdOrAliasResponses[keyof GetContextByIdOrAliasResponses];
+
+export type UpdateContextData = {
+    body?: UpdateContextRequestModel;
+    path: {
+        contextIdOrAlias: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}';
+};
+
+export type UpdateContextErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type UpdateContextError = UpdateContextErrors[keyof UpdateContextErrors];
+
+export type UpdateContextResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;

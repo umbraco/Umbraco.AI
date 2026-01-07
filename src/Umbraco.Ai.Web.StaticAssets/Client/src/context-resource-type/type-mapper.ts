@@ -1,34 +1,22 @@
-import type { ProviderItemResponseModel, ProviderResponseModel, SettingDefinitionModel } from "../api/types.gen.js";
-import type { UaiProviderDetailModel, UaiProviderItemModel, UaiSettingDefinitionModel } from "./types.js";
+import type { UaiContextResourceTypeDetailModel, UaiContextResourceTypeItemModel } from "./types.js";
+import { ContextResourceTypeResponseModel } from "../api";
 
-export const UaiProviderTypeMapper = {
-    toItemModel(response: ProviderItemResponseModel): UaiProviderItemModel {
+export const UaiContextResourceTypeTypeMapper = {
+    toItemModel(response: ContextResourceTypeResponseModel): UaiContextResourceTypeItemModel {
         return {
             id: response.id,
             name: response.name,
-            capabilities: response.capabilities,
+            description: response.description,
+            icon: response.icon,
         };
     },
 
-    toDetailModel(response: ProviderResponseModel): UaiProviderDetailModel {
+    toDetailModel(response: ContextResourceTypeResponseModel): UaiContextResourceTypeDetailModel {
         return {
             id: response.id,
             name: response.name,
-            capabilities: response.capabilities,
-            settingDefinitions: response.settingDefinitions.map(UaiProviderTypeMapper.toSettingDefinitionModel),
-        };
-    },
-
-    toSettingDefinitionModel(response: SettingDefinitionModel): UaiSettingDefinitionModel {
-        return {
-            key: response.key,
-            label: response.label,
-            description: response.description ?? undefined,
-            editorUiAlias: response.editorUiAlias ?? undefined,
-            editorConfig: response.editorConfig ?? undefined,
-            defaultValue: response.defaultValue ?? undefined,
-            sortOrder: response.sortOrder,
-            isRequired: response.isRequired,
+            description: response.description,
+            icon: response.icon,
         };
     },
 };

@@ -25,7 +25,7 @@ public class FakeEmbeddingCapability : IAiEmbeddingCapability
 
     public AiCapability Kind => AiCapability.Embedding;
 
-    public IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings)
+    public IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings, string? modelId = null)
     {
         return _generator;
     }

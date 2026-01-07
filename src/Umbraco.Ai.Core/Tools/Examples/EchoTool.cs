@@ -18,7 +18,7 @@ public record EchoArgs(
 /// <remarks>
 /// This tool is NOT registered by default - use it as a reference for implementing your own tools.
 /// </remarks>
-[AiTool("example.echo", "Echo", Category = "Example")]
+[AiTool("example_echo", "Echo", Category = "Example")]
 public class EchoTool : AiToolBase<EchoArgs>
 {
     /// <inheritdoc />

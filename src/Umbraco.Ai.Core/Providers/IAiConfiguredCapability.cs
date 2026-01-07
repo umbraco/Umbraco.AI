@@ -28,7 +28,9 @@ public interface IAiConfiguredChatCapability : IAiConfiguredCapability
     /// <summary>
     /// Creates a chat client with the baked-in settings.
     /// </summary>
-    IChatClient CreateClient();
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <returns>A configured chat client.</returns>
+    IChatClient CreateClient(string? modelId = null);
 }
 
 /// <summary>
@@ -39,5 +41,7 @@ public interface IAiConfiguredEmbeddingCapability : IAiConfiguredCapability
     /// <summary>
     /// Creates an embedding generator with the baked-in settings.
     /// </summary>
-    IEmbeddingGenerator<string, Embedding<float>> CreateGenerator();
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <returns>A configured embedding generator.</returns>
+    IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(string? modelId = null);
 }

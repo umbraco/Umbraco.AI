@@ -23,8 +23,8 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         // Get configured provider with resolved settings
         var chatCapability = await GetConfiguredChatCapabilityAsync(profile, cancellationToken);
 
-        // Create base client from provider (settings already resolved)
-        var chatClient = chatCapability.CreateClient();
+        // Create base client from provider with the profile's model
+        var chatClient = chatCapability.CreateClient(profile.Model.ModelId);
 
         // Apply middleware in order
         chatClient = ApplyMiddleware(chatClient);

@@ -31,7 +31,7 @@ public static class UmbracoBuilderExtensions
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });
 
-        // Replace in-memory repositories with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
+        // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
         builder.Services.AddSingleton<IAiConnectionRepository, EfCoreAiConnectionRepository>();
         builder.Services.AddSingleton<IAiProfileRepository, EfCoreAiProfileRepository>();
 

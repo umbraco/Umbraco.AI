@@ -25,8 +25,8 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         // Get configured provider with resolved settings
         var embeddingCapability = await GetConfiguredEmbeddingCapabilityAsync(profile, cancellationToken);
 
-        // Create base generator from provider (settings already resolved)
-        var generator = embeddingCapability.CreateGenerator();
+        // Create base generator from provider with the profile's model
+        var generator = embeddingCapability.CreateGenerator(profile.Model.ModelId);
 
         // Apply middleware in order
         generator = ApplyMiddleware(generator);

@@ -12,7 +12,7 @@ internal sealed class AiConfiguredChatCapability(IAiChatCapability inner, object
     public AiCapability Kind => inner.Kind;
 
     /// <inheritdoc />
-    public IChatClient CreateClient() => inner.CreateClient(settings);
+    public IChatClient CreateClient(string? modelId = null) => inner.CreateClient(settings, modelId);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
@@ -29,8 +29,8 @@ internal sealed class AiConfiguredEmbeddingCapability(IAiEmbeddingCapability inn
     public AiCapability Kind => inner.Kind;
 
     /// <inheritdoc />
-    public IEmbeddingGenerator<string, Embedding<float>> CreateGenerator()
-        => inner.CreateGenerator(settings);
+    public IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(string? modelId = null)
+        => inner.CreateGenerator(settings, modelId);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)

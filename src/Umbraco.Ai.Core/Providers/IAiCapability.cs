@@ -59,22 +59,24 @@ public interface IAiChatCapability : IAiCapability
     /// <summary>
     /// Creates a chat client with the provided settings.
     /// </summary>
-    /// <param name="settings"></param>
-    /// <returns></returns>
-    IChatClient CreateClient(object? settings = null);
+    /// <param name="settings">Provider-specific settings (e.g., API key).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <returns>A configured chat client.</returns>
+    IChatClient CreateClient(object? settings = null, string? modelId = null);
 }
 
 /// <summary>
 /// Defines an AI capability for generating embeddings.
 /// </summary>
 public interface IAiEmbeddingCapability : IAiCapability
-{   
+{
     /// <summary>
     /// Creates an embedding generator with the provided settings.
     /// </summary>
-    /// <param name="settings"></param>
-    /// <returns></returns>
-    IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings);
+    /// <param name="settings">Provider-specific settings (e.g., API key).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <returns>A configured embedding generator.</returns>
+    IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings, string? modelId = null);
 }
 
 /// <summary>
@@ -144,38 +146,40 @@ public abstract class AiChatCapabilityBase(IAiProvider provider) : AiCapabilityB
     public override AiCapability Kind => AiCapability.Chat;
 
     /// <summary>
-    /// Creates a chat client.
+    /// Creates a chat client with the specified model.
     /// </summary>
-    /// <returns></returns>
-    protected abstract IChatClient CreateClient();
-    
-    IChatClient IAiChatCapability.CreateClient(object? settings)
-        => CreateClient();
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured chat client.</returns>
+    protected abstract IChatClient CreateClient(string? modelId);
+
+    IChatClient IAiChatCapability.CreateClient(object? settings, string? modelId)
+        => CreateClient(modelId);
 }
 
 /// <summary>
 /// Base implementation of an AI chat capability with specific settings.
 /// </summary>
-/// <typeparam name="TSettings"></typeparam>
+/// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
 public abstract class AiChatCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiChatCapability
     where TSettings : class
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Chat;
-    
+
     /// <summary>
-    /// Creates a chat client with the provided settings.
+    /// Creates a chat client with the provided settings and model.
     /// </summary>
-    /// <param name="settings"></param>
-    /// <returns></returns>
-    protected abstract IChatClient CreateClient(TSettings settings);
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured chat client.</returns>
+    protected abstract IChatClient CreateClient(TSettings settings, string? modelId);
 
     /// <inheritdoc />
-    IChatClient IAiChatCapability.CreateClient(object? settings)
+    IChatClient IAiChatCapability.CreateClient(object? settings, string? modelId)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
-        return CreateClient((TSettings)settings);
+        return CreateClient((TSettings)settings, modelId);
     }
 }
 
@@ -186,40 +190,42 @@ public abstract class AiEmbeddingCapabilityBase(IAiProvider provider) : AiCapabi
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Embedding;
-    
+
     /// <summary>
-    /// Creates an embedding generator.
+    /// Creates an embedding generator with the specified model.
     /// </summary>
-    /// <returns></returns>
-    protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator();
-    
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured embedding generator.</returns>
+    protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(string? modelId);
+
     /// <inheritdoc />
-    IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings)
-        => CreateGenerator();
+    IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
+        => CreateGenerator(modelId);
 }
 
 /// <summary>
 /// Base implementation of an AI embedding capability with specific settings.
 /// </summary>
-/// <typeparam name="TSettings"></typeparam>
-public abstract class AiEmbeddingCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiEmbeddingCapability 
+/// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
+public abstract class AiEmbeddingCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiEmbeddingCapability
     where TSettings : class
 {
     /// <inheritdoc />
     public override AiCapability Kind => AiCapability.Embedding;
-    
+
     /// <summary>
-    /// Creates an embedding generator with the provided settings.
+    /// Creates an embedding generator with the provided settings and model.
     /// </summary>
-    /// <param name="settings"></param>
-    /// <returns></returns>
-    protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(TSettings settings);
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured embedding generator.</returns>
+    protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(TSettings settings, string? modelId);
 
     /// <inheritdoc />
-    IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings)
+    IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));
-        return CreateGenerator((TSettings)settings);
+        return CreateGenerator((TSettings)settings, modelId);
     }
 }

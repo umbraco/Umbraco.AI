@@ -1,59 +1,256 @@
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { customElement, html, ifDefined, nothing, repeat } from "@umbraco-cms/backoffice/external/lit";
+import {
+    css,
+    customElement,
+    html,
+    nothing,
+    property,
+    repeat,
+    state,
+} from '@umbraco-cms/backoffice/external/lit';
+import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
+import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
+import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
+import type { UaiContextResourceModel, UaiContextResourceInjectionMode } from '../../types.js';
+import type { UaiContextResourceTypeItemModel } from '../../../context-resource-type/types.js';
+import { UaiContextResourceTypeItemRepository } from '../../../context-resource-type/repository/item/context-resource-type-item.repository.js';
+import { UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL } from './context-resource-type-picker-modal.token.js';
+import { UAI_RESOURCE_OPTIONS_MODAL } from './resource-options-modal.token.js';
 
+const elementName = 'uai-resource-list';
 
-@customElement("uai-resource-list")
+export interface UaiResourceCardModel extends UaiContextResourceModel {
+    resourceType?: UaiContextResourceTypeItemModel;
+}
+
+@customElement(elementName)
 export class UaiResourceListElement extends UmbLitElement {
+    #contextResourceTypeRepository = new UaiContextResourceTypeItemRepository(this);
+    #contextResourceTypes: UaiContextResourceTypeItemModel[] = [];
+
+    @property({ type: Array })
+    public get items(): UaiContextResourceModel[] {
+        return this._items;
+    }
+    public set items(value: UaiContextResourceModel[]) {
+        this._items = value ?? [];
+        this.#updateCards();
+    }
+
+    @state()
+    private _items: UaiContextResourceModel[] = [];
+
+    @state()
+    private _cards: UaiResourceCardModel[] = [];
+
+    @property({ type: Boolean, reflect: true })
+    public readonly = false;
+
+    constructor() {
+        super();
+        this.#loadContextResourceTypes();
+    }
+
+    async #loadContextResourceTypes() {
+        const { data } = await this.#contextResourceTypeRepository.requestItems();
+        if (data) {
+            this.#contextResourceTypes = data;
+            this.#updateCards();
+        }
+    }
+
+    #updateCards() {
+        this._cards = this._items.map(item => ({
+            ...item,
+            resourceType: this.#contextResourceTypes.find(rt => rt.id === item.resourceTypeId),
+        }));
+    }
+
+    async #openPicker() {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
+
+        // Step 1: Pick a context resource type
+        const typePickerModal = modalManager.open(this, UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL, {
+            data: {
+                contextResourceTypes: this.#contextResourceTypes,
+            },
+        });
+
+        const typePickerResult = await typePickerModal.onSubmit();
+        if (!typePickerResult?.contextResourceType) return;
+
+        const selectedType = typePickerResult.contextResourceType;
+
+        // Step 2: Open the resource options modal
+        const optionsModal = modalManager.open(this, UAI_RESOURCE_OPTIONS_MODAL, {
+            data: {
+                resourceType: selectedType,
+                resource: undefined, // New resource
+            },
+        });
+
+        const optionsResult = await optionsModal.onSubmit();
+        if (!optionsResult?.resource) return;
+
+        // Create the new resource
+        const newResource: UaiContextResourceModel = {
+            id: crypto.randomUUID(),
+            resourceTypeId: selectedType.id,
+            name: optionsResult.resource.name,
+            description: optionsResult.resource.description ?? null,
+            sortOrder: this._items.length,
+            data: optionsResult.resource.data,
+            injectionMode: optionsResult.resource.injectionMode,
+        };
+
+        this._items = [...this._items, newResource];
+        this.#updateCards();
+        this.dispatchEvent(new UmbChangeEvent());
+    }
+
+    async #onEdit(card: UaiResourceCardModel) {
+        if (this.readonly) return;
+
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
+
+        const optionsModal = modalManager.open(this, UAI_RESOURCE_OPTIONS_MODAL, {
+            data: {
+                resourceType: card.resourceType,
+                resource: card,
+            },
+        });
+
+        const optionsResult = await optionsModal.onSubmit();
+        if (!optionsResult?.resource) return;
+
+        // Update the existing resource
+        this._items = this._items.map(item =>
+            item.id === card.id
+                ? {
+                    ...item,
+                    name: optionsResult.resource.name,
+                    description: optionsResult.resource.description ?? null,
+                    data: optionsResult.resource.data,
+                    injectionMode: optionsResult.resource.injectionMode,
+                }
+                : item
+        );
+        this.#updateCards();
+        this.dispatchEvent(new UmbChangeEvent());
+    }
+
+    #onRemove(card: UaiResourceCardModel) {
+        this._items = this._items.filter(x => x.id !== card.id);
+        this.#updateCards();
+        this.dispatchEvent(new UmbChangeEvent());
+    }
 
     override render() {
         return html`<div class="container">${this.#renderItems()} ${this.#renderAddButton()}</div>`;
     }
 
     #renderItems() {
-        if (!this._items?.length) return nothing;
+        if (!this._cards?.length) return nothing;
         return html`
-			${repeat(
-                this._items,
-                (item) => item.unique,
+            ${repeat(
+                this._cards,
+                (item) => item.id,
                 (item) => this.#renderItem(item),
             )}
-		`;
-    }
-
-    #renderItem(item: any) {
-        return html`
-			<uui-card-media
-				name=${ifDefined(item.name === null ? undefined : item.name)}
-				data-mark="${item.entityType}:${item.unique}">
-				<umb-imaging-thumbnail
-					unique=${item.unique}
-					alt=${item.name}
-					icon=${item.mediaType.icon}></umb-imaging-thumbnail>
-				<uui-action-bar slot="actions"> ${this.#renderRemoveAction(item)}</uui-action-bar>
-			</uui-card-media>
-		`;
+        `;
     }
 
     #renderAddButton() {
-        if (!this._items?.length) return nothing;
+        if (this.readonly) return nothing;
         return html`
             <uui-button
                 id="btn-add"
                 look="placeholder"
                 @click=${this.#openPicker}
-                label=${this.localize.term('general_choose')}
+                label="Add resource">
                 <uui-icon name="icon-add"></uui-icon>
-                ${this.localize.term('general_choose')}
+                Add
             </uui-button>
         `;
     }
-    
+
+    #renderItem(card: UaiResourceCardModel) {
+        return html`
+            <uui-card-content-node
+                name=${card.name}
+                @click=${() => this.#onEdit(card)}
+                ?readonly=${this.readonly}>
+                <umb-icon
+                    slot="icon"
+                    name=${card.resourceType?.icon ?? 'icon-document'}></umb-icon>
+                <span slot="tag">
+                    ${this.#renderInjectionModeBadge(card.injectionMode)}
+                </span>
+                <uui-action-bar slot="actions">
+                    ${this.#renderRemoveAction(card)}
+                </uui-action-bar>
+            </uui-card-content-node>
+        `;
+    }
+
+    #renderInjectionModeBadge(mode: UaiContextResourceInjectionMode) {
+        const color = mode === 'Always' ? 'positive' : 'default';
+        const label = mode === 'Always' ? 'Always' : 'On-Demand';
+        return html`<uui-tag size="s" color=${color}>${label}</uui-tag>`;
+    }
+
+    #renderRemoveAction(card: UaiResourceCardModel) {
+        if (this.readonly) return nothing;
+        return html`
+            <uui-button
+                label="Remove"
+                look="secondary"
+                @click=${(e: Event) => {
+                    e.stopPropagation();
+                    this.#onRemove(card);
+                }}>
+                <uui-icon name="icon-trash"></uui-icon>
+            </uui-button>
+        `;
+    }
+
+    static override styles = [
+        css`
+            :host {
+                position: relative;
+            }
+            .container {
+                display: grid;
+                gap: var(--uui-size-space-3);
+                grid-template-columns: repeat(auto-fill, minmax(var(--umb-card-medium-min-width), 1fr));
+                grid-auto-rows: var(--umb-card-medium-min-width);
+            }
+
+            #btn-add {
+                text-align: center;
+                height: 100%;
+            }
+
+            uui-card-content-node {
+                cursor: pointer;
+            }
+
+            uui-card-content-node[readonly] {
+                cursor: default;
+            }
+
+            uui-card-content-node:hover:not([readonly]) {
+                background-color: var(--uui-color-surface-emphasis);
+            }
+        `,
+    ];
 }
 
-export default UaiResourceListElement;
+export { UaiResourceListElement as element };
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-resource-list": UaiResourceListElement;
+        [elementName]: UaiResourceListElement;
     }
 }

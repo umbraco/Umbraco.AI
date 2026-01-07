@@ -1,0 +1,85 @@
+---
+description: >-
+  Understand the core concepts that make up Umbraco.Ai's architecture.
+---
+
+# Core Concepts
+
+Umbraco.Ai is built around a hierarchical configuration model that separates concerns and enables flexibility. Understanding these concepts helps you make the most of the platform.
+
+## The Configuration Hierarchy
+
+```
+Provider (plugin with capabilities)
+    └── Connection (authentication/credentials)
+            └── Profile (use-case configuration)
+                    └── AI Request (the actual call)
+```
+
+Each level adds configuration that flows down to the actual AI request.
+
+## Key Concepts
+
+<table data-view="cards">
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Providers</strong></td>
+<td>Installable plugins that connect to AI services like OpenAI or Azure</td>
+</tr>
+<tr>
+<td><strong>Connections</strong></td>
+<td>Store credentials and endpoint settings for a provider</td>
+</tr>
+<tr>
+<td><strong>Profiles</strong></td>
+<td>Combine a connection with model settings for specific use cases</td>
+</tr>
+<tr>
+<td><strong>Capabilities</strong></td>
+<td>The types of AI operations available: Chat, Embedding, and more</td>
+</tr>
+<tr>
+<td><strong>Middleware</strong></td>
+<td>Extensible pipeline for logging, caching, and custom behavior</td>
+</tr>
+</tbody>
+</table>
+
+## Built on Microsoft.Extensions.AI
+
+Umbraco.Ai is built on [Microsoft.Extensions.AI](https://learn.microsoft.com/en-us/dotnet/ai/ai-extensions), Microsoft's official abstraction for AI services. This means:
+
+* Standard types like `IChatClient`, `ChatMessage`, and `ChatResponse`
+* Familiar patterns for .NET developers
+* Compatibility with the broader M.E.AI ecosystem
+* Future-proof as M.E.AI evolves
+
+The service layer in Umbraco.Ai is intentionally thin - it adds Umbraco-specific features (profiles, connections, backoffice UI) while exposing standard M.E.AI types.
+
+## In This Section
+
+{% content-ref url="providers.md" %}
+[Providers](providers.md)
+{% endcontent-ref %}
+
+{% content-ref url="connections.md" %}
+[Connections](connections.md)
+{% endcontent-ref %}
+
+{% content-ref url="profiles.md" %}
+[Profiles](profiles.md)
+{% endcontent-ref %}
+
+{% content-ref url="capabilities.md" %}
+[Capabilities](capabilities.md)
+{% endcontent-ref %}
+
+{% content-ref url="middleware.md" %}
+[Middleware](middleware.md)
+{% endcontent-ref %}

@@ -1,12 +1,16 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import type { UmbPropertyValueData, UmbPropertyDatasetElement } from "@umbraco-cms/backoffice/property";
 import type { UaiConnectionDetailModel } from "../../../types.js";
 import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
 import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
+import { ConnectionsService } from "../../../../api/sdk.gen.js";
 
 /**
  * Workspace view for Connection details.
@@ -16,6 +20,7 @@ import type { UaiProviderDetailModel } from "../../../../provider/types.js";
 export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
     #providerDetailRepository = new UaiProviderDetailRepository(this);
+    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
     @state()
     private _model?: UaiConnectionDetailModel;
@@ -25,6 +30,12 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
 
     @state()
     private _providerSettings: UmbPropertyValueData[] = [];
+
+    @state()
+    private _testButtonState?: UUIButtonState;
+
+    @state()
+    private _testButtonColor?: "default" | "positive" | "warning" | "danger" = "default"
 
     constructor() {
         super();
@@ -39,6 +50,9 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                     this.#populateProviderSettings();
                 });
             }
+        });
+        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
+            this.#notificationContext = context;
         });
     }
 
@@ -72,6 +86,43 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    async #onTestConnection() {
+        const unique = this._model?.unique;
+        if (!unique || unique === UAI_EMPTY_GUID) return;
+
+        this._testButtonState = "waiting";
+        this._testButtonColor = "default";
+
+        const { data, error } = await tryExecute(
+            this,
+            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } })
+        );
+
+        if (error || !data?.success) {
+            this._testButtonState = "failed";
+            this._testButtonColor = "danger";
+            this.#notificationContext?.peek("danger", {
+                data: { message: data?.errorMessage ?? this.localize.string("#uaiConnection_testConnectionFailed") },
+            });
+            this.#resetButtonState();
+            return;
+        }
+
+        this._testButtonState = "success";
+        this._testButtonColor = "positive";
+        this.#notificationContext?.peek("positive", {
+            data: { message: this.localize.string("#uaiConnection_testConnectionSuccess") },
+        });
+        this.#resetButtonState();
+    }
+
+    #resetButtonState() {
+        setTimeout(() => {
+            this._testButtonState = undefined;
+            this._testButtonColor = "default";
+        }, 2000);
+    }
+
     #toPropertyConfig(config: unknown): Array<{ alias: string; value: unknown }> {
         if (!config || typeof config !== "object") return [];
         return Object.entries(config).map(([alias, value]) => ({ alias, value }));
@@ -99,27 +150,43 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #renderRightColumn() {
         if (!this._model) return null;
 
-        return html`<uui-box headline="Info">
-            <umb-property-layout label="Id"  orientation="vertical">
-               <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-            ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-            : this._model.unique}</div>
-            </umb-property-layout>
-            
-            <umb-property-layout label="Provider"  orientation="vertical">
-                <div slot="editor">${this._provider?.name ?? this._model.providerId}</div>
-            </umb-property-layout>
-
-            <umb-property-layout label="Capabilities"  orientation="vertical">
-                <div slot="editor">
-                    ${this._provider?.capabilities.map(cap => html`<uui-tag color="default" look="outline">${cap}</uui-tag> `)}
+        return html`
+            <uui-box headline=${this.localize.string("#uaiConnection_actions")}>
+                <div class="action-buttons">
+                    <uui-button
+                        label=${this.localize.string("#uaiConnection_testConnection")}
+                        look="primary"
+                        .color=${this._testButtonColor}
+                        .state=${this._testButtonState}
+                        .disabled=${this._model.unique === UAI_EMPTY_GUID}
+                        @click=${this.#onTestConnection}>
+                        ${this.localize.string("#uaiConnection_testConnection")}
+                    </uui-button>
                 </div>
-            </umb-property-layout>
+            </uui-box>
 
-            <umb-property-layout label="Active" orientation="vertical">
-                <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
-            </umb-property-layout>
-        </uui-box>`;
+            <uui-box headline="Info">
+                <umb-property-layout label="Id" orientation="vertical">
+                    <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
+                        ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
+                        : this._model.unique}</div>
+                </umb-property-layout>
+
+                <umb-property-layout label="Provider" orientation="vertical">
+                    <div slot="editor">${this._provider?.name ?? this._model.providerId}</div>
+                </umb-property-layout>
+
+                <umb-property-layout label="Capabilities" orientation="vertical">
+                    <div slot="editor">
+                        ${this._provider?.capabilities.map(cap => html`<uui-tag color="default" look="outline">${cap}</uui-tag> `)}
+                    </div>
+                </umb-property-layout>
+
+                <umb-property-layout label="Active" orientation="vertical">
+                    <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
+                </umb-property-layout>
+            </uui-box>
+        `;
     }
 
     #renderProviderSettings() {
@@ -210,6 +277,17 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
+            }
+            
+            .action-buttons {
+                display: flex;
+                gap: var(--uui-size-space-5);
+                flex-wrap: wrap;
+                padding: var(--uui-size-space-5) 0;
+            }
+            
+            .action-buttons uui-button {
+                flex-grow: 1;
             }
         `,
     ];

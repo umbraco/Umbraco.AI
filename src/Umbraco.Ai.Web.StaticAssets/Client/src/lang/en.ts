@@ -10,6 +10,10 @@ export default {
     uaiConnection: {
         deleteConfirm: "Are you sure you want to delete this connection?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} connection(s)?`,
+        actions: "Actions",
+        testConnection: "Test Connection",
+        testConnectionSuccess: "Connection test successful",
+        testConnectionFailed: "Connection test failed",
     },
     uaiProfile: {
         deleteConfirm: "Are you sure you want to delete this profile?",

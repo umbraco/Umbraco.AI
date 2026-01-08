@@ -97,7 +97,7 @@ The core library containing all abstractions, services, and models:
 Reference implementation of an AI provider for OpenAI:
 
 - `OpenAiProvider` - Provider class with `[AiProvider]` attribute
-- `OpenAiProviderSettings` - Typed settings with `[AiSetting]` attributes
+- `OpenAiProviderSettings` - Typed settings with `[AiField]` attributes
 - `OpenAiChatCapability` - Chat completion capability
 - `OpenAiEmbeddingCapability` - Text embedding capability
 
@@ -179,8 +179,8 @@ public interface IAiProvider : IDiscoverable
     // The type representing provider-specific settings
     Type? SettingsType { get; }
 
-    // Get setting definitions for UI rendering
-    IReadOnlyList<AiSettingDefinition> GetSettingDefinitions();
+    // Get settings schema for UI rendering
+    AiEditableModelSchema? GetSettingsSchema();
 
     // Get all capabilities this provider supports
     IReadOnlyCollection<IAiCapability> GetCapabilities();
@@ -742,13 +742,13 @@ Configuration section: `Umbraco:Ai`
 }
 ```
 
-### AiSettingAttribute
+### AiFieldAttribute
 
-Decorates provider settings properties for UI generation:
+Decorates properties for UI generation (used for both provider settings and data models):
 
 ```csharp
 [AttributeUsage(AttributeTargets.Property)]
-public class AiSettingAttribute : Attribute
+public class AiFieldAttribute : Attribute
 {
     public string? Label { get; set; }           // Display label
     public string? Description { get; set; }     // Help text
@@ -763,7 +763,7 @@ public class AiSettingAttribute : Attribute
 ```csharp
 public class OpenAiProviderSettings
 {
-    [AiSetting(
+    [AiField(
         Label = "API Key",
         Description = "Your OpenAI API key from platform.openai.com",
         EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
@@ -772,7 +772,7 @@ public class OpenAiProviderSettings
     [Required]
     public string? ApiKey { get; set; }
 
-    [AiSetting(
+    [AiField(
         Label = "Organization ID",
         Description = "Optional: Your OpenAI organization ID",
         EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
@@ -780,7 +780,7 @@ public class OpenAiProviderSettings
     )]
     public string? OrganizationId { get; set; }
 
-    [AiSetting(
+    [AiField(
         Label = "API Endpoint",
         Description = "Custom API endpoint (leave empty for default)",
         EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
@@ -793,7 +793,7 @@ public class OpenAiProviderSettings
 
 ### Environment Variable Resolution
 
-The `IAiSettingsResolver` supports resolving values from configuration:
+The `IAiEditableModelResolver` supports resolving values from configuration:
 
 ```json
 // Connection settings in database
@@ -836,9 +836,9 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 |---------|---------------|----------|
 | `IAiRegistry` | `AiRegistry` | Singleton |
 | `IAiCapabilityFactory` | `AiCapabilityFactory` | Singleton |
-| `IAiSettingDefinitionBuilder` | `AiSettingDefinitionBuilder` | Singleton |
+| `IAiEditableModelSchemaBuilder` | `AiEditableModelSchemaBuilder` | Singleton |
 | `IAiProviderInfrastructure` | `AiProviderInfrastructure` | Singleton |
-| `IAiSettingsResolver` | `AiSettingsResolver` | Singleton |
+| `IAiEditableModelResolver` | `AiEditableModelResolver` | Singleton |
 | `IAiConnectionRepository` | `InMemoryAiConnectionRepository` | Singleton |
 | `IAiConnectionService` | `AiConnectionService` | Singleton |
 | `IAiProfileRepository` | `InMemoryAiProfileRepository` | Singleton |

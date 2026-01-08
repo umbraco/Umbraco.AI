@@ -208,7 +208,7 @@ builder.AiChatMiddleware()
 
 ### Settings System
 
-Provider settings use `[AiSetting]` attributes for UI generation. Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:ApiKey"` reads from config).
+Provider settings use `[AiField]` attributes for UI generation. Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:ApiKey"` reads from config).
 
 ### Management API
 
@@ -260,7 +260,7 @@ await profileService.GetProfileIdAsync(idOrAlias, cancellationToken);
    - `Models/` - Shared domain models used across features
    - `Providers/` - Provider SDK (base classes, interfaces, collections)
    - `Registry/` - Provider discovery
-   - `Settings/` - Settings infrastructure
+   - `EditableModels/` - Editable model infrastructure (schemas, field definitions, resolution)
    - `Extensions/` - Utility extensions
    - `Configuration/` - DI registration
 
@@ -323,7 +323,7 @@ Located in `src/Umbraco.Ai.Web.StaticAssets/Client/`:
 ## Creating a New Provider
 
 1. Create a new project referencing `Umbraco.Ai.Core`
-2. Create settings class with `[AiSetting]` attributes
+2. Create settings class with `[AiField]` attributes
 3. Create provider class with `[AiProvider]` attribute extending `AiProviderBase<TSettings>`
 4. Register capabilities using `WithCapability<T>()` in constructor
 5. Implement capability classes extending `AiChatCapabilityBase<TSettings>` or `AiEmbeddingCapabilityBase<TSettings>`
@@ -352,7 +352,7 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 - `Umbraco.Ai.Core.Providers` - Provider SDK (base classes, capabilities, collections)
 - `Umbraco.Ai.Core.Models` - Shared domain models (`AiCapability`, `AiModelRef`, `AiOptions`)
 - `Umbraco.Ai.Core.Registry` - Provider registry (`IAiRegistry`)
-- `Umbraco.Ai.Core.Settings` - Settings infrastructure (`AiSettingAttribute`)
+- `Umbraco.Ai.Core.EditableModels` - Editable model infrastructure (`AiFieldAttribute`, `AiEditableModelSchema`, `IAiEditableModelResolver`)
 
 **Persistence namespaces:**
 - `Umbraco.Ai.Persistence.Connections` - EF Core connection repository and entity

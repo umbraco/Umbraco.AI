@@ -1,4 +1,4 @@
-﻿using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 
 namespace Umbraco.Ai.Core.Providers;
 
@@ -11,9 +11,9 @@ public interface IAiProviderInfrastructure
     /// Factory for creating AI capability instances.
     /// </summary>
     IAiCapabilityFactory CapabilityFactory { get; }
-    
+
     /// <summary>
-    /// Builder for AI setting definitions.
+    /// Builder for editable model schemas.
     /// </summary>
-    IAiSettingDefinitionBuilder SettingDefinitionBuilder { get; }
+    IAiEditableModelSchemaBuilder SchemaBuilder { get; }
 }

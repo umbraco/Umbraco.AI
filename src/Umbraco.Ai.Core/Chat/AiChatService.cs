@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
+using Umbraco.Ai.Core.Context.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 
@@ -129,6 +130,14 @@ internal sealed class AiChatService : IAiChatService
     {
         var chatSettings = profile.Settings as AiChatProfileSettings;
 
+        // Create additional properties with profile ID for context middleware
+        var additionalProperties = callerOptions?.AdditionalProperties != null
+            ? new AdditionalPropertiesDictionary(callerOptions.AdditionalProperties)
+            : new AdditionalPropertiesDictionary();
+
+        // Always set the profile ID for context injection middleware
+        additionalProperties[ContextInjectingChatClient.ProfileIdKey] = profile.Id;
+
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings
         if (callerOptions != null)
@@ -146,7 +155,7 @@ internal sealed class AiChatService : IAiChatService
                 ResponseFormat = callerOptions.ResponseFormat,
                 Tools = callerOptions.Tools,
                 ToolMode = callerOptions.ToolMode,
-                AdditionalProperties = callerOptions.AdditionalProperties
+                AdditionalProperties = additionalProperties
             };
         }
 
@@ -155,7 +164,8 @@ internal sealed class AiChatService : IAiChatService
         {
             ModelId = profile.Model.ModelId,
             Temperature = chatSettings?.Temperature,
-            MaxOutputTokens = chatSettings?.MaxTokens
+            MaxOutputTokens = chatSettings?.MaxTokens,
+            AdditionalProperties = additionalProperties
         };
     }
     

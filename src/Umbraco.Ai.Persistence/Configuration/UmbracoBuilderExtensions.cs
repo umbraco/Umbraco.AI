@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Core.Context;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Connections;
+using Umbraco.Ai.Persistence.Context;
 using Umbraco.Ai.Persistence.Notifications;
 using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Cms.Core;
@@ -34,6 +36,7 @@ public static class UmbracoBuilderExtensions
         // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
         builder.Services.AddSingleton<IAiConnectionRepository, EfCoreAiConnectionRepository>();
         builder.Services.AddSingleton<IAiProfileRepository, EfCoreAiProfileRepository>();
+        builder.Services.AddSingleton<IAiContextRepository, EfCoreAiContextRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAiMigrationNotificationHandler>();

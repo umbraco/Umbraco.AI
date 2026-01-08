@@ -6,7 +6,7 @@ export const connectionMenuManifests: ManifestMenuItem[] = [
         type: "menuItem",
         alias: "UmbracoAi.MenuItem.Connections",
         name: "Connections Menu Item",
-        weight: 100,
+        weight: 200,
         meta: {
             label: "Connections",
             icon: UAI_CONNECTION_ICON,

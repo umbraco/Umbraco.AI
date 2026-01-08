@@ -70,6 +70,7 @@ export const UaiProfileTypeMapper = {
                 temperature: (settings.temperature as number) ?? null,
                 maxTokens: (settings.maxTokens as number) ?? null,
                 systemPromptTemplate: (settings.systemPromptTemplate as string) ?? null,
+                contextIds: (settings.contextIds as string[] | undefined) ?? [],
             } as UaiChatProfileSettings;
         }
 
@@ -92,6 +93,7 @@ export const UaiProfileTypeMapper = {
                 temperature: settings.temperature,
                 maxTokens: settings.maxTokens,
                 systemPromptTemplate: settings.systemPromptTemplate,
+                contextIds: settings.contextIds,
             } as ChatProfileSettingsModel;
         }
 

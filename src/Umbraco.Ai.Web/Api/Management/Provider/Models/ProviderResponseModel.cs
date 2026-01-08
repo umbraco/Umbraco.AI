@@ -28,6 +28,5 @@ public class ProviderResponseModel
     /// <summary>
     /// The settings schema for this provider.
     /// </summary>
-    [Required]
-    public IEnumerable<SettingDefinitionModel> SettingDefinitions { get; set; } = [];
+    public EditableModelSchemaModel? SettingsSchema { get; set; }
 }

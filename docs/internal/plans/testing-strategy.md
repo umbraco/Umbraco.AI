@@ -210,14 +210,14 @@ Umbraco.Ai.Tests.Unit/
 │   ├── AiEmbeddingServiceTests.cs
 │   └── AiProfileServiceTests.cs
 └── Settings/
-    └── AiSettingsResolverTests.cs
+    └── AiEditableModelResolverTests.cs
 ```
 
 ### Core Service Tests
 
 | Test Class | Covers |
 |------------|--------|
-| `AiSettingsResolverTests` | JSON deserialization, `$ConfigKey` resolution, validation |
+| `AiEditableModelResolverTests` | JSON deserialization, `$ConfigKey` resolution, validation |
 | `AiChatClientFactoryTests` | Client creation, connection validation, middleware application |
 | `AiProfileServiceTests` | Profile CRUD, default profile resolution |
 | `AiConnectionServiceTests` | Connection CRUD, validation, test connection |
@@ -399,7 +399,7 @@ When JS services are created (mirroring C# services for Management API consumpti
 
 | File | Purpose |
 |------|---------|
-| `src/Umbraco.Ai.Core/Settings/AiSettingsResolver.cs` | Settings resolution logic |
+| `src/Umbraco.Ai.Core/EditableModels/AiEditableModelResolver.cs` | Editable model resolution logic |
 | `src/Umbraco.Ai.Core/Factories/AiChatClientFactory.cs` | Client creation and middleware |
 | `src/Umbraco.Ai.Core/Profiles/AiProfileService.cs` | Profile CRUD |
 | `src/Umbraco.Ai.Core/Connections/AiConnectionService.cs` | Connection CRUD |

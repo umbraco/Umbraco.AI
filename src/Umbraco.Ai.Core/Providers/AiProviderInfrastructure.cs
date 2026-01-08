@@ -1,13 +1,13 @@
-﻿using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 
 namespace Umbraco.Ai.Core.Providers;
 
 internal sealed class AiProviderInfrastructure(
     IAiCapabilityFactory capabilityFactory,
-    IAiSettingDefinitionBuilder settingDefinitionBuilder)
+    IAiEditableModelSchemaBuilder schemaBuilder)
     : IAiProviderInfrastructure
 {
     public IAiCapabilityFactory CapabilityFactory { get; } = capabilityFactory;
-    
-    public IAiSettingDefinitionBuilder SettingDefinitionBuilder { get; } = settingDefinitionBuilder;
+
+    public IAiEditableModelSchemaBuilder SchemaBuilder { get; } = schemaBuilder;
 }

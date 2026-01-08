@@ -23,6 +23,7 @@ export interface UaiChatProfileSettings extends UaiProfileSettings {
     temperature: number | null;
     maxTokens: number | null;
     systemPromptTemplate: string | null;
+    contextIds: string[];
 }
 
 /**

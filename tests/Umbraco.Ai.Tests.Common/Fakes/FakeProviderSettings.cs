@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Settings;
 
 namespace Umbraco.Ai.Tests.Common.Fakes;
 
@@ -9,16 +9,16 @@ namespace Umbraco.Ai.Tests.Common.Fakes;
 /// </summary>
 public class FakeProviderSettings
 {
-    [AiSetting(Label = "API Key", Description = "Enter your API key")]
+    [AiField(Label = "API Key", Description = "Enter your API key")]
     [Required(ErrorMessage = "API Key is required")]
     public string? ApiKey { get; set; }
 
-    [AiSetting(Label = "Base URL", Description = "The base URL for the API")]
+    [AiField(Label = "Base URL", Description = "The base URL for the API")]
     public string? BaseUrl { get; set; }
 
-    [AiSetting(Label = "Max Retries", Description = "Maximum retry attempts")]
+    [AiField(Label = "Max Retries", Description = "Maximum retry attempts")]
     public int MaxRetries { get; set; } = 3;
 
-    [AiSetting(Label = "Enabled", Description = "Enable this feature")]
+    [AiField(Label = "Enabled", Description = "Enable this feature")]
     public bool Enabled { get; set; } = true;
 }

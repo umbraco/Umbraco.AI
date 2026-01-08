@@ -72,6 +72,6 @@ internal static class AiProfileFactory
         entity.ModelId = profile.Model.ModelId;
         entity.ConnectionId = profile.ConnectionId;
         entity.Settings = AiProfileSettingsSerializer.Serialize(profile.Settings);
-        entity.Tags = profile.Tags.Count > 0 ? JsonSerializer.Serialize(profile.Tags) : null;
+        entity.Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null;
     }
 }

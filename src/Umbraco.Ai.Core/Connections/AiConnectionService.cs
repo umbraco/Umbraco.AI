@@ -1,6 +1,6 @@
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
 
 namespace Umbraco.Ai.Core.Connections;
 
@@ -11,16 +11,16 @@ internal sealed class AiConnectionService : IAiConnectionService
 {
     private readonly IAiConnectionRepository _repository;
     private readonly AiProviderCollection _providers;
-    private readonly IAiSettingsResolver _settingsResolver;
+    private readonly IAiEditableModelResolver _modelResolver;
 
     public AiConnectionService(
         IAiConnectionRepository repository,
         AiProviderCollection providers,
-        IAiSettingsResolver settingsResolver)
+        IAiEditableModelResolver modelResolver)
     {
         _repository = repository;
         _providers = providers;
-        _settingsResolver = settingsResolver;
+        _modelResolver = modelResolver;
     }
 
     /// <inheritdoc />
@@ -129,7 +129,7 @@ internal sealed class AiConnectionService : IAiConnectionService
             }
 
             // ResolveSettingsForProvider will validate the settings
-            _settingsResolver.ResolveSettingsForProvider(provider, settings);
+            _modelResolver.ResolveSettingsForProvider(provider, settings);
             return Task.FromResult(true);
         }
         catch (InvalidOperationException)
@@ -185,7 +185,7 @@ internal sealed class AiConnectionService : IAiConnectionService
             return null;
         }
 
-        var resolvedSettings = _settingsResolver.ResolveSettingsForProvider(provider, connection.Settings);
+        var resolvedSettings = _modelResolver.ResolveSettingsForProvider(provider, connection.Settings);
         if (resolvedSettings is null)
         {
             return null;

@@ -26,9 +26,9 @@ public sealed class AiResolvedResource
     public string? Description { get; init; }
 
     /// <summary>
-    /// JSON blob containing the type-specific data.
+    /// Type-specific data object.
     /// </summary>
-    public required string Data { get; init; }
+    public object? Data { get; init; }
 
     /// <summary>
     /// Determines how and when this resource is included in AI operations.

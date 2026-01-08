@@ -1,5 +1,6 @@
 using Umbraco.Ai.Core.Context.ResourceTypes;
 using Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Models;
+using Umbraco.Ai.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Mapping;
@@ -27,5 +28,8 @@ public class ContextResourceTypeMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.Icon = source.Icon;
+        target.DataSchema = source.DataType is not null
+            ? context.Map<EditableModelSchemaModel>(source.GetDataSchema())
+            : null;
     }
 }

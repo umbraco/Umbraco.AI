@@ -1,4 +1,4 @@
-using Umbraco.Cms.Core.Serialization;
+using Umbraco.Ai.Core.EditableModels;
 
 namespace Umbraco.Ai.Core.Context.ResourceTypes;
 
@@ -8,7 +8,12 @@ namespace Umbraco.Ai.Core.Context.ResourceTypes;
 public interface IAiContextResourceTypeInfrastructure
 {
     /// <summary>
-    /// JSON serializer for deserializing resource data.
+    /// Builder for editable model schemas.
     /// </summary>
-    IJsonSerializer JsonSerializer { get; }
+    IAiEditableModelSchemaBuilder SchemaBuilder { get; }
+
+    /// <summary>
+    /// Resolver for converting stored data to typed models.
+    /// </summary>
+    IAiEditableModelResolver ModelResolver { get; }
 }

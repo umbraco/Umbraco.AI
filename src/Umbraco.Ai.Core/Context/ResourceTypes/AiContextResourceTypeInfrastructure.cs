@@ -1,4 +1,4 @@
-using Umbraco.Cms.Core.Serialization;
+using Umbraco.Ai.Core.EditableModels;
 
 namespace Umbraco.Ai.Core.Context.ResourceTypes;
 
@@ -8,14 +8,21 @@ namespace Umbraco.Ai.Core.Context.ResourceTypes;
 internal sealed class AiContextResourceTypeInfrastructure : IAiContextResourceTypeInfrastructure
 {
     /// <inheritdoc />
-    public IJsonSerializer JsonSerializer { get; }
+    public IAiEditableModelSchemaBuilder SchemaBuilder { get; }
+
+    /// <inheritdoc />
+    public IAiEditableModelResolver ModelResolver { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiContextResourceTypeInfrastructure"/> class.
     /// </summary>
-    /// <param name="jsonSerializer">The JSON serializer.</param>
-    public AiContextResourceTypeInfrastructure(IJsonSerializer jsonSerializer)
+    /// <param name="schemaBuilder">The editable model schema builder.</param>
+    /// <param name="modelResolver">The editable model resolver.</param>
+    public AiContextResourceTypeInfrastructure(
+        IAiEditableModelSchemaBuilder schemaBuilder,
+        IAiEditableModelResolver modelResolver)
     {
-        JsonSerializer = jsonSerializer;
+        SchemaBuilder = schemaBuilder;
+        ModelResolver = modelResolver;
     }
 }

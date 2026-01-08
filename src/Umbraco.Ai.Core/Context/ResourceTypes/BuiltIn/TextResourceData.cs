@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.EditableModels;
+
 namespace Umbraco.Ai.Core.Context.ResourceTypes.BuiltIn;
 
 /// <summary>
@@ -8,5 +10,6 @@ public sealed class TextResourceData
     /// <summary>
     /// The text content (can be plain text or markdown).
     /// </summary>
+    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", SortOrder = 10)]
     public string? Content { get; set; }
 }

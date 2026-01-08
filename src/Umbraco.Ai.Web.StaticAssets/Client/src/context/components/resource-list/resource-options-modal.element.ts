@@ -11,6 +11,8 @@ import type {
     UaiResourceOptionsModalValue,
     UaiResourceOptionsData,
 } from './resource-options-modal.token.js';
+import '../../../core/components/model-editor/model-editor.element.js';
+import type { UaiModelEditorChangeEventDetail } from '../../../core/components/exports.js';
 
 const elementName = 'uai-resource-options-modal';
 
@@ -26,7 +28,7 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
     private _resourceDescription = '';
 
     @state()
-    private _resourceContent = '';
+    private _resourceData: Record<string, unknown> = {};
 
     @state()
     private _injectionMode: UaiContextResourceInjectionMode = 'Always';
@@ -38,7 +40,7 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
         if (this.data?.resource) {
             this._resourceName = this.data.resource.name;
             this._resourceDescription = this.data.resource.description ?? '';
-            this._resourceContent = this.data.resource.data;
+            this._resourceData = this.data.resource.data ?? {};
             this._injectionMode = this.data.resource.injectionMode;
         } else {
             // Default name from resource type
@@ -52,7 +54,7 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
         const resource: UaiResourceOptionsData = {
             name: this._resourceName.trim(),
             description: this._resourceDescription.trim() || null,
-            data: this._resourceContent,
+            data: this._resourceData,
             injectionMode: this._injectionMode,
         };
 
@@ -72,8 +74,8 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
         this._resourceDescription = (e.target as HTMLInputElement).value;
     }
 
-    #onContentChange(e: Event) {
-        this._resourceContent = (e.target as HTMLTextAreaElement).value;
+    #onDataChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
+        this._resourceData = e.detail.model;
     }
 
     #onInjectionModeChange(e: Event) {
@@ -88,56 +90,50 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
 
         return html`
             <umb-body-layout headline=${headline}>
-                <div id="main">
-                    <uui-box>
-                        <uui-form>
-                            <uui-form-layout-item>
-                                <uui-label for="name" slot="label" required>Name</uui-label>
+                <div >
+                    <uui-box headline="General">
+                        <umb-property-layout label="Name" description="The name of the resource as referenced by AI models.">
+                            <div slot="editor">
                                 <uui-input
                                     id="name"
                                     .value=${this._resourceName}
                                     @input=${this.#onNameChange}
                                     placeholder="Enter resource name"
                                     required></uui-input>
-                            </uui-form-layout-item>
+                            </div>
+                        </umb-property-layout>
 
-                            <uui-form-layout-item>
-                                <uui-label for="description" slot="label">Description</uui-label>
-                                <span slot="description">Optional description for this resource</span>
+                        <umb-property-layout label="Description" description="An optional description for the resource.">
+                            <div slot="editor">
                                 <uui-input
                                     id="description"
                                     .value=${this._resourceDescription}
                                     @input=${this.#onDescriptionChange}
                                     placeholder="Enter description"></uui-input>
-                            </uui-form-layout-item>
+                            </div>
+                        </umb-property-layout>
 
-                            <uui-form-layout-item>
-                                <uui-label for="injectionMode" slot="label">Injection Mode</uui-label>
-                                <span slot="description">How this resource should be injected into AI requests</span>
+                        <umb-property-layout label="Injection Mode" description="How this resource should be injected into AI requests">
+                            <div slot="editor">
                                 <uui-select
-                                    id="injectionMode"
-                                    .value=${this._injectionMode}
-                                    @change=${this.#onInjectionModeChange}>
-                                    <uui-select-option value="Always" ?selected=${this._injectionMode === 'Always'}>
-                                        Always - Include in every request
-                                    </uui-select-option>
-                                    <uui-select-option value="OnDemand" ?selected=${this._injectionMode === 'OnDemand'}>
-                                        On-Demand - Available via tool for LLM to retrieve
-                                    </uui-select-option>
+                                        id="injectionMode"
+                                        .value=${this._injectionMode}
+                                        .options=${[
+                                            { value: 'Always', name: ' Always - Include in every request' },
+                                            { value: 'OnDemand', name: 'On-Demand - Available via tool for LLM to retrieve' },
+                                        ]}
+                                        @change=${this.#onInjectionModeChange}>
                                 </uui-select>
-                            </uui-form-layout-item>
+                            </div>
+                        </umb-property-layout>
+                    </uui-box>
 
-                            <uui-form-layout-item>
-                                <uui-label for="content" slot="label">Content</uui-label>
-                                <span slot="description">The content of this resource</span>
-                                <uui-textarea
-                                    id="content"
-                                    .value=${this._resourceContent}
-                                    @input=${this.#onContentChange}
-                                    placeholder="Enter resource content..."
-                                    rows="10"></uui-textarea>
-                            </uui-form-layout-item>
-                        </uui-form>
+                    <uui-box headline="Data">
+                        <uai-model-editor
+                            .schema=${this.data?.resourceType?.dataSchema}
+                            .model=${this._resourceData}
+                            @change=${this.#onDataChange}>
+                        </uai-model-editor>
                     </uui-box>
                 </div>
                 <div slot="actions">
@@ -165,19 +161,20 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
                 padding: var(--uui-size-layout-1);
             }
 
+            uui-box {
+                --uui-box-default-padding: 0 var(--uui-size-space-5);
+            }
+            uui-box:not(:first-child) {
+                margin-top: var(--uui-size-layout-1);
+            }
+
             uui-form-layout-item {
                 margin-bottom: var(--uui-size-space-5);
             }
 
             uui-input,
-            uui-select,
-            uui-textarea {
+            uui-select {
                 width: 100%;
-            }
-
-            uui-textarea {
-                min-height: 200px;
-                font-family: var(--uui-font-family-monospace);
             }
         `,
     ];

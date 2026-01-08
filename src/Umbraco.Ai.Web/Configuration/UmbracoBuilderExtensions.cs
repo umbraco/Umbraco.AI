@@ -102,6 +102,12 @@ public static class UmbracoBuilderExtensions
                 {
                     options.MapType<IdOrAlias>(() => new OpenApiSchema { Type = JsonSchemaType.String });
                 }
+
+                // Map System.Type to string in OpenAPI schema (JsonStringTypeConverter handles serialization)
+                if (!options.SchemaGeneratorOptions.CustomTypeMappings.ContainsKey(typeof(Type)))
+                {
+                    options.MapType<Type>(() => new OpenApiSchema { Type = JsonSchemaType.String });
+                }
             });
         }
 

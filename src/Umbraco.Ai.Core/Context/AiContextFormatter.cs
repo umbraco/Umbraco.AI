@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Umbraco.Ai.Core.Context.ResourceTypes;
 
 namespace Umbraco.Ai.Core.Context;
@@ -50,8 +51,13 @@ internal sealed class AiContextFormatter : IAiContextFormatter
         var resourceType = _resourceTypes.GetById(resource.ResourceTypeId);
         if (resourceType is null)
         {
-            // Fallback: return the data as-is if resource type not found
-            return resource.Data;
+            // Fallback: return the data as JSON string if resource type not found
+            if (resource.Data is null)
+                return string.Empty;
+
+            return resource.Data is JsonElement jsonElement
+                ? jsonElement.ToString()
+                : JsonSerializer.Serialize(resource.Data);
         }
 
         return resourceType.FormatForInjection(resource.Data);

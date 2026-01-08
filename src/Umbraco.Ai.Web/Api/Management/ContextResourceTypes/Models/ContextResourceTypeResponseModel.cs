@@ -1,3 +1,5 @@
+using Umbraco.Ai.Web.Api.Management.Provider.Models;
+
 namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Models;
 
 /// <summary>
@@ -24,4 +26,9 @@ public class ContextResourceTypeResponseModel
     /// The icon alias for the resource type.
     /// </summary>
     public string? Icon { get; set; }
+
+    /// <summary>
+    /// The data schema for this resource type.
+    /// </summary>
+    public EditableModelSchemaModel? DataSchema { get; set; }
 }

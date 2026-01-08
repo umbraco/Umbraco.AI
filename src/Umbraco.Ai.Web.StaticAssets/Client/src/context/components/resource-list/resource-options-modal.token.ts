@@ -5,7 +5,7 @@ import type { UaiContextResourceTypeItemModel } from '../../../context-resource-
 export interface UaiResourceOptionsData {
     name: string;
     description: string | null;
-    data: string;
+    data: Record<string, unknown>;
     injectionMode: UaiContextResourceInjectionMode;
 }
 

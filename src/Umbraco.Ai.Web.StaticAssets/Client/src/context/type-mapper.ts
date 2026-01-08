@@ -1,4 +1,4 @@
-import type { ContextResponseModel, ContextItemResponseModel, ContextResourceModel } from "../api";
+import type { ContextResponseModel, ContextItemResponseModel, ContextResourceModel, CreateContextRequestModel, UpdateContextRequestModel } from "../api";
 import { UAI_CONTEXT_ENTITY_TYPE } from "./constants.js";
 import type { UaiContextDetailModel, UaiContextItemModel, UaiContextResourceModel, UaiContextResourceInjectionMode } from "./types.js";
 
@@ -30,12 +30,13 @@ export const UaiContextTypeMapper = {
             name: resource.name,
             description: resource.description ?? null,
             sortOrder: resource.sortOrder,
-            data: resource.data,
+            // API returns object but generated types show string - cast through unknown until regenerated
+            data: (resource.data as unknown as Record<string, unknown>) ?? null,
             injectionMode: resource.injectionMode as UaiContextResourceInjectionMode,
         };
     },
 
-    toCreateRequest(model: UaiContextDetailModel) {
+    toCreateRequest(model: UaiContextDetailModel): CreateContextRequestModel {
         return {
             alias: model.alias,
             name: model.name,
@@ -43,7 +44,7 @@ export const UaiContextTypeMapper = {
         };
     },
 
-    toUpdateRequest(model: UaiContextDetailModel) {
+    toUpdateRequest(model: UaiContextDetailModel): UpdateContextRequestModel {
         return {
             alias: model.alias,
             name: model.name,
@@ -51,14 +52,15 @@ export const UaiContextTypeMapper = {
         };
     },
 
-    toResourceRequest(resource: UaiContextResourceModel) {
+    toResourceRequest(resource: UaiContextResourceModel): ContextResourceModel {
         return {
             id: resource.id,
             resourceTypeId: resource.resourceTypeId,
             name: resource.name,
             description: resource.description,
             sortOrder: resource.sortOrder,
-            data: resource.data,
+            // API expects object but generated types show string - cast through unknown until regenerated
+            data: resource.data as unknown as string,
             injectionMode: resource.injectionMode,
         };
     },

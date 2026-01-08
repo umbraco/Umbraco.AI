@@ -172,13 +172,14 @@ export class UaiResourceListElement extends UmbLitElement {
 
     #renderItem(card: UaiResourceCardModel) {
         const injectionLabel = card.injectionMode === 'Always' ? 'Always' : 'On-Demand';
+        const tagColor = card.injectionMode === 'Always' ? 'positive' : 'default';
         return html`
             <uui-card-block-type
                 name=${card.name}
-                description=${injectionLabel}
                 @open=${() => this.#onEdit(card)}
                 ?readonly=${this.readonly}>
                 <umb-icon name=${card.resourceType?.icon ?? 'icon-document'}></umb-icon>
+                <uui-tag slot="tag" size="s" color=${tagColor}>${injectionLabel}</uui-tag>
                 <uui-action-bar slot="actions">
                     ${this.#renderRemoveAction(card)}
                 </uui-action-bar>

@@ -3,7 +3,7 @@ using Umbraco.Ai.Core.Context;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PropertyEditors;
 
-namespace Umbraco.Ai.Core.PropertyEditors.ValueConverters;
+namespace Umbraco.Ai.Core.PropertyEditors;
 
 /// <summary>
 /// Converts AI Context Picker property values to strongly typed <see cref="AiContext"/> instances.
@@ -17,16 +17,15 @@ namespace Umbraco.Ai.Core.PropertyEditors.ValueConverters;
 /// When disabled, returns a single <see cref="AiContext"/> or null.
 /// </para>
 /// </remarks>
-[DefaultPropertyValueConverter]
-public class AiContextPropertyValueConverter : PropertyValueConverterBase
+public class AiContextPickerPropertyValueConverter : PropertyValueConverterBase
 {
     private readonly IAiContextService _contextService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextPropertyValueConverter"/> class.
+    /// Initializes a new instance of the <see cref="AiContextPickerPropertyValueConverter"/> class.
     /// </summary>
     /// <param name="contextService">The AI context service.</param>
-    public AiContextPropertyValueConverter(IAiContextService contextService)
+    public AiContextPickerPropertyValueConverter(IAiContextService contextService)
     {
         _contextService = contextService;
     }
@@ -55,20 +54,17 @@ public class AiContextPropertyValueConverter : PropertyValueConverterBase
         object? source,
         bool preview)
     {
-        if (source is not string json || string.IsNullOrWhiteSpace(json))
+        return source switch
         {
-            return null;
-        }
-
-        try
-        {
-            var ids = JsonSerializer.Deserialize<Guid[]>(json);
-            return ids;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
+            // Handle null source
+            null => null,
+            // Handle the case where the source is already a Guid array
+            Guid[] ids => ids,
+            // Handle the case where the source is a JSON string
+            string json when !string.IsNullOrWhiteSpace(json) => JsonSerializer.Deserialize<Guid[]>(json),
+            // Unhandled source type
+            _ => null
+        };
     }
 
     /// <inheritdoc />

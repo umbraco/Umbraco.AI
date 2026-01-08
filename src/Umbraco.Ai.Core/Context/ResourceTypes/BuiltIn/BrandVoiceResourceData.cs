@@ -10,13 +10,13 @@ public sealed class BrandVoiceResourceData
     /// <summary>
     /// Description of the tone to use (e.g., "Professional but approachable").
     /// </summary>
-    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextBox", SortOrder = 10)]
+    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", EditorConfig = "[{ \"alias\": \"rows\", \"value\": 10 }]", SortOrder = 10)]
     public string? ToneDescription { get; set; }
 
     /// <summary>
     /// Description of the target audience (e.g., "B2B tech decision makers").
     /// </summary>
-    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextBox", SortOrder = 20)]
+    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", SortOrder = 20)]
     public string? TargetAudience { get; set; }
 
     /// <summary>

@@ -179,7 +179,7 @@ export class UaiResourceListElement extends UmbLitElement {
                 @open=${() => this.#onEdit(card)}
                 ?readonly=${this.readonly}>
                 <umb-icon name=${card.resourceType?.icon ?? 'icon-document'}></umb-icon>
-                <uui-tag slot="tag" size="s" color=${tagColor}>${injectionLabel}</uui-tag>
+                <uui-tag slot="tag" color=${tagColor}>${injectionLabel}</uui-tag>
                 <uui-action-bar slot="actions">
                     ${this.#renderRemoveAction(card)}
                 </uui-action-bar>

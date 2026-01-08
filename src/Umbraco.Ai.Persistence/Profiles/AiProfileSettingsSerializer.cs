@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 
@@ -9,12 +10,6 @@ namespace Umbraco.Ai.Persistence.Profiles;
 /// </summary>
 internal static class AiProfileSettingsSerializer
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false
-    };
-
     /// <summary>
     /// Serializes profile settings to JSON.
     /// </summary>
@@ -25,7 +20,7 @@ internal static class AiProfileSettingsSerializer
             return null;
         }
 
-        return JsonSerializer.Serialize(settings, settings.GetType(), JsonOptions);
+        return JsonSerializer.Serialize(settings, settings.GetType(), Constants.DefaultJsonSerializerOptions);
     }
 
     /// <summary>
@@ -40,8 +35,8 @@ internal static class AiProfileSettingsSerializer
 
         return capability switch
         {
-            AiCapability.Chat => JsonSerializer.Deserialize<AiChatProfileSettings>(json, JsonOptions),
-            AiCapability.Embedding => JsonSerializer.Deserialize<AiEmbeddingProfileSettings>(json, JsonOptions),
+            AiCapability.Chat => JsonSerializer.Deserialize<AiChatProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
+            AiCapability.Embedding => JsonSerializer.Deserialize<AiEmbeddingProfileSettings>(json, Constants.DefaultJsonSerializerOptions),
             // Future: Add Media, Moderation cases when implemented
             _ => null
         };

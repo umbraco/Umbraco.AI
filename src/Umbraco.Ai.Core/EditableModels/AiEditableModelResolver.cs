@@ -13,18 +13,6 @@ namespace Umbraco.Ai.Core.EditableModels;
 /// </summary>
 internal sealed class AiEditableModelResolver : IAiEditableModelResolver
 {
-    private static JsonSerializerOptions _defaultJsonSerializerOptions = new()
-    {
-        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        Converters =
-        {
-            new JsonStringEnumConverter(),
-            new JsonStringTypeConverter()
-        }
-    };
-
     private const string ConfigPrefix = "$";
 
     private readonly AiProviderCollection _providers;
@@ -57,7 +45,7 @@ internal sealed class AiEditableModelResolver : IAiEditableModelResolver
         // Handle JsonElement deserialization
         if (data is JsonElement jsonElement)
         {
-            var deserialized = jsonElement.Deserialize<TModel>(_defaultJsonSerializerOptions);
+            var deserialized = jsonElement.Deserialize<TModel>(Constants.DefaultJsonSerializerOptions);
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
@@ -69,8 +57,8 @@ internal sealed class AiEditableModelResolver : IAiEditableModelResolver
         // Try to serialize/deserialize through JSON as fallback
         try
         {
-            var json = JsonSerializer.Serialize(data, _defaultJsonSerializerOptions);
-            var deserialized = JsonSerializer.Deserialize<TModel>(json, _defaultJsonSerializerOptions);
+            var json = JsonSerializer.Serialize(data, Constants.DefaultJsonSerializerOptions);
+            var deserialized = JsonSerializer.Deserialize<TModel>(json, Constants.DefaultJsonSerializerOptions);
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);

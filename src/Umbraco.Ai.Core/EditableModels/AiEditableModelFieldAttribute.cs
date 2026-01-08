@@ -23,6 +23,11 @@ public class AiEditableModelFieldAttribute : Attribute
     public string? EditorUiAlias { get; set; }
 
     /// <summary>
+    /// The configuration for the editor used for the field.
+    /// </summary>
+    public string? EditorConfig { get; set; }
+
+    /// <summary>
     /// Default value for the field.
     /// </summary>
     public object? DefaultValue { get; set; }

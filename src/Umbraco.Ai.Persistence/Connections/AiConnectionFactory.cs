@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Connections;
 
 namespace Umbraco.Ai.Persistence.Connections;
@@ -20,7 +21,7 @@ internal static class AiConnectionFactory
         {
             // Settings are stored as JSON, deserialize to dynamic object
             // The actual typed deserialization happens at the service layer
-            settings = JsonSerializer.Deserialize<JsonElement>(entity.Settings);
+            settings = JsonSerializer.Deserialize<JsonElement>(entity.Settings, Constants.DefaultJsonSerializerOptions);
         }
 
         return new AiConnection
@@ -49,7 +50,7 @@ internal static class AiConnectionFactory
             Alias = connection.Alias,
             Name = connection.Name,
             ProviderId = connection.ProviderId,
-            Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings),
+            Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings, Constants.DefaultJsonSerializerOptions),
             IsActive = connection.IsActive,
             DateCreated = connection.DateCreated,
             DateModified = connection.DateModified
@@ -66,7 +67,7 @@ internal static class AiConnectionFactory
         entity.Alias = connection.Alias;
         entity.Name = connection.Name;
         entity.ProviderId = connection.ProviderId;
-        entity.Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings);
+        entity.Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings, Constants.DefaultJsonSerializerOptions);
         entity.IsActive = connection.IsActive;
         entity.DateModified = connection.DateModified;
     }

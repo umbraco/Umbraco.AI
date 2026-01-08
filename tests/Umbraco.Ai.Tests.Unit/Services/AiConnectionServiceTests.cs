@@ -1,7 +1,7 @@
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 
@@ -10,12 +10,12 @@ namespace Umbraco.Ai.Tests.Unit.Services;
 public class AiConnectionServiceTests
 {
     private readonly Mock<IAiConnectionRepository> _repositoryMock;
-    private readonly Mock<IAiSettingsResolver> _settingsResolverMock;
+    private readonly Mock<IAiEditableModelResolver> _settingsResolverMock;
 
     public AiConnectionServiceTests()
     {
         _repositoryMock = new Mock<IAiConnectionRepository>();
-        _settingsResolverMock = new Mock<IAiSettingsResolver>();
+        _settingsResolverMock = new Mock<IAiEditableModelResolver>();
     }
 
     private AiConnectionService CreateService(params IAiProvider[] providers)
@@ -200,8 +200,8 @@ public class AiConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
-            .Returns(connection.Settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings))
+            .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
@@ -233,8 +233,8 @@ public class AiConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
-            .Returns(connection.Settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings))
+            .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
@@ -281,8 +281,8 @@ public class AiConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings))
-            .Returns(connection.Settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings))
+            .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
             .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
@@ -293,7 +293,7 @@ public class AiConnectionServiceTests
 
         // Assert - Settings resolver should be called to validate
         _settingsResolverMock.Verify(
-            x => x.ResolveSettingsForProvider(fakeProvider, connection.Settings),
+            x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, connection.Settings),
             Times.Once);
     }
 
@@ -380,8 +380,8 @@ public class AiConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns(settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)settings);
 
         // Act
         var result = await service.ValidateConnectionAsync("fake-provider", settings);
@@ -415,7 +415,7 @@ public class AiConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
             .Throws(new InvalidOperationException("Validation failed: API Key is required"));
 
         // Act
@@ -423,8 +423,7 @@ public class AiConnectionServiceTests
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
-        exception.Message.ShouldContain("Validation failed");
-        exception.Message.ShouldContain("API Key is required");
+        exception.Message.ShouldContain("Failed to validate settings for provider");
     }
 
     #endregion
@@ -454,8 +453,8 @@ public class AiConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns(settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)settings);
 
         // Act
         var result = await service.TestConnectionAsync(connectionId);
@@ -530,8 +529,8 @@ public class AiConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns(settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)settings);
 
         // Act
         var act = () => service.TestConnectionAsync(connectionId);
@@ -573,8 +572,8 @@ public class AiConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns(settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)settings);
 
         // Act
         var result = await service.TestConnectionAsync(connectionId);
@@ -610,8 +609,8 @@ public class AiConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns(settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)settings);
 
         // Act
         var result = await service.GetConfiguredProviderAsync(connectionId);
@@ -682,8 +681,8 @@ public class AiConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns((object?)null); // Settings resolution failed
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)null); // Settings resolution failed
 
         // Act
         var result = await service.GetConfiguredProviderAsync(connectionId);
@@ -717,8 +716,8 @@ public class AiConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns(settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)settings);
 
         // Act
         var result = await service.GetConfiguredProviderAsync(connectionId);
@@ -756,8 +755,8 @@ public class AiConnectionServiceTests
             .ReturnsAsync(connection);
 
         _settingsResolverMock
-            .Setup(x => x.ResolveSettingsForProvider(fakeProvider, settings))
-            .Returns(settings);
+            .Setup(x => x.ResolveModel<FakeProviderSettings>(fakeProvider.Id, settings))
+            .Returns((FakeProviderSettings?)settings);
 
         // Act
         var result = await service.GetConfiguredProviderAsync(connectionId);

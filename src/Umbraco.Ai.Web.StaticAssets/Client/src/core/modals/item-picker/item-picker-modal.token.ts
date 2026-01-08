@@ -13,12 +13,12 @@ export interface UaiItemPickerModalData {
 }
 
 export interface UaiItemPickerModalValue {
-    value?: UaiPickableItemModel;
+    selection: UaiPickableItemModel[];
 }
 
 export const UAI_ITEM_PICKER_MODAL = new UmbModalToken<
     UaiItemPickerModalData,
-    UaiPickableItemModel
+    UaiItemPickerModalValue
 >('Uai.Modal.ItemPicker', {
     modal: {
         type: 'sidebar',

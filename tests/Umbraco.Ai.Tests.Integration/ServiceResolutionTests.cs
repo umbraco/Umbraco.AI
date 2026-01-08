@@ -6,7 +6,7 @@ using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Tests.Common.Fakes;
 
 namespace Umbraco.Ai.Tests.Integration;
@@ -91,9 +91,9 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiSettingsResolver_CanBeResolved()
+    public void IAiEditableModelResolver_CanBeResolved()
     {
-        var resolver = _serviceProvider.GetService<IAiSettingsResolver>();
+        var resolver = _serviceProvider.GetService<IAiEditableModelResolver>();
 
         resolver.ShouldNotBeNull();
     }
@@ -119,9 +119,9 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiSettingDefinitionBuilder_CanBeResolved()
+    public void IAiEditableModelSchemaBuilder_CanBeResolved()
     {
-        var builder = _serviceProvider.GetService<IAiSettingDefinitionBuilder>();
+        var builder = _serviceProvider.GetService<IAiEditableModelSchemaBuilder>();
 
         builder.ShouldNotBeNull();
     }
@@ -180,7 +180,7 @@ public class ServiceResolutionTests : IDisposable
     /// </summary>
     private static void RegisterAiServices(IServiceCollection services, IConfiguration configuration)
     {
-        // Register configuration (required by AiSettingsResolver)
+        // Register configuration (required by AiEditableModelResolver)
         services.AddSingleton<IConfiguration>(configuration);
 
         // Bind AiOptions
@@ -188,7 +188,7 @@ public class ServiceResolutionTests : IDisposable
 
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
-        services.AddSingleton<IAiSettingDefinitionBuilder, AiSettingDefinitionBuilder>();
+        services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
         services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
 
         // Register a fake provider (in real scenario, these are auto-discovered)
@@ -211,7 +211,7 @@ public class ServiceResolutionTests : IDisposable
             _ => new AiEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAiEmbeddingMiddleware>()));
 
         // Settings resolution
-        services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();
+        services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();
 
         // Connection system
         services.AddSingleton<IAiConnectionRepository, InMemoryAiConnectionRepository>();

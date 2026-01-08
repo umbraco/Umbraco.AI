@@ -1,5 +1,5 @@
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Settings;
 using Umbraco.Cms.Core.Composing;
 
 namespace Umbraco.Ai.Core.Providers;
@@ -17,23 +17,23 @@ public interface IAiProvider : IDiscoverable
     /// The unique id of this AI component.
     /// </summary>
     string Id { get; }
-    
+
     /// <summary>
     /// The name of this AI component.
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     /// Gets the type that represents the settings for this provider.
     /// </summary>
     Type? SettingsType { get; }
-    
+
     /// <summary>
-    /// Get the setting definitions that describe the configuration schema for this provider.
+    /// Gets the settings schema that describes the configuration for this provider.
     /// Used by the UI to render connection configuration forms.
     /// </summary>
-    /// <returns></returns>
-    IReadOnlyList<AiSettingDefinition> GetSettingDefinitions();
+    /// <returns>The settings schema, or null if the provider has no settings.</returns>
+    AiEditableModelSchema? GetSettingsSchema();
     
     /// <summary>
     /// Gets all capabilities supported by this provider.

@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Settings;
 using Umbraco.Extensions;
 
 namespace Umbraco.Ai.Core.Providers;
@@ -96,10 +96,10 @@ public abstract class AiProviderBase : IAiProvider
         => TryGetCapability<TCapability>(out _);
 
     /// <inheritdoc />
-    public virtual IReadOnlyList<AiSettingDefinition> GetSettingDefinitions()
+    public virtual AiEditableModelSchema? GetSettingsSchema()
     {
-        // Base implementation returns empty list (no settings)
-        return Array.Empty<AiSettingDefinition>();
+        // Base implementation returns null (no settings)
+        return null;
     }
 
     /// <summary>
@@ -132,8 +132,8 @@ public abstract class AiProviderBase<TSettings> : AiProviderBase
     { }
 
     /// <inheritdoc />
-    public override IReadOnlyList<AiSettingDefinition> GetSettingDefinitions()
-        => Infrastructure.SettingDefinitionBuilder.BuildForType<TSettings>(Id);
+    public override AiEditableModelSchema? GetSettingsSchema()
+        => Infrastructure.SchemaBuilder.BuildForType<TSettings>(Id);
 
     /// <summary>
     /// Adds a capability to this AI provider.

@@ -60,6 +60,78 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiConnection", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAiContext", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ContextId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InjectionMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResourceTypeId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContextId");
+
+                    b.HasIndex("ResourceTypeId");
+
+                    b.ToTable("umbracoAiContextResource", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -111,6 +183,17 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiProfile", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Context.AiContextEntity", "Context")
+                        .WithMany("Resources")
+                        .HasForeignKey("ContextId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Context");
+                });
+
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
                     b.HasOne("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", null)
@@ -118,6 +201,11 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
+                {
+                    b.Navigation("Resources");
                 });
 #pragma warning restore 612, 618
         }

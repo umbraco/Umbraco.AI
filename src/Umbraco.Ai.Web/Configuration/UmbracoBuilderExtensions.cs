@@ -10,6 +10,8 @@ using Umbraco.Ai.Web.Api.Management.Chat.Mapping;
 using Umbraco.Ai.Web.Api.Management.Common.Mapping;
 using Umbraco.Ai.Web.Api.Management.Configuration;
 using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
+using Umbraco.Ai.Web.Api.Management.Context.Mapping;
+using Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Mapping;
 using Umbraco.Ai.Web.Api.Management.Embedding.Mapping;
 using Umbraco.Ai.Web.Api.Management.Profile.Mapping;
 using Umbraco.Ai.Web.Api.Management.Provider.Mapping;
@@ -43,6 +45,8 @@ public static class UmbracoBuilderExtensions
             .Add<CommonMapDefinition>()
             .Add<ConnectionMapDefinition>()
             .Add<ProfileMapDefinition>()
+            .Add<ContextMapDefinition>()
+            .Add<ContextResourceTypeMapDefinition>()
             .Add<ProviderMapDefinition>()
             .Add<EmbeddingMapDefinition>()
             .Add<ChatMapDefinition>();
@@ -97,6 +101,12 @@ public static class UmbracoBuilderExtensions
                 if (!options.SchemaGeneratorOptions.CustomTypeMappings.ContainsKey(typeof(IdOrAlias)))
                 {
                     options.MapType<IdOrAlias>(() => new OpenApiSchema { Type = JsonSchemaType.String });
+                }
+
+                // Map System.Type to string in OpenAPI schema (JsonStringTypeConverter handles serialization)
+                if (!options.SchemaGeneratorOptions.CustomTypeMappings.ContainsKey(typeof(Type)))
+                {
+                    options.MapType<Type>(() => new OpenApiSchema { Type = JsonSchemaType.String });
                 }
             });
         }

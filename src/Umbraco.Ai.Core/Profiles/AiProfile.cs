@@ -1,4 +1,4 @@
-﻿using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Profiles;
 

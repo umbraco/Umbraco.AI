@@ -37,9 +37,12 @@ public class ByIdProviderControllerTests
         {
             Id = provider.Id,
             Name = provider.Name,
-            SettingDefinitions = new List<SettingDefinitionModel>
+            SettingsSchema = new EditableModelSchemaModel
             {
-                new() { Key = "ApiKey", Label = "API Key", IsRequired = true }
+                Fields = new List<EditableModelFieldModel>
+                {
+                    new() { Key = "ApiKey", Label = "API Key", IsRequired = true }
+                }
             }
         };
 
@@ -57,7 +60,8 @@ public class ByIdProviderControllerTests
         var model = okResult.Value.ShouldBeOfType<ProviderResponseModel>();
         model.Id.ShouldBe(providerId);
         model.Name.ShouldBe("OpenAI");
-        model.SettingDefinitions.ShouldNotBeEmpty();
+        model.SettingsSchema.ShouldNotBeNull();
+        model.SettingsSchema!.Fields.ShouldNotBeEmpty();
     }
 
     [Fact]

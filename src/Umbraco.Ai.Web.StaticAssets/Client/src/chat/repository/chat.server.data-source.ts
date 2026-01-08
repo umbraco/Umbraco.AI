@@ -19,13 +19,20 @@ export class UaiChatServerDataSource {
     async complete(request: UaiChatRequest): Promise<{ data?: UaiChatResult; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            ChatService.completeChat({
-                body: {
-                    profileIdOrAlias: request.profileIdOrAlias ?? null,
-                    messages: request.messages.map(m => ({ role: m.role, content: m.content }))
-                },
-                signal: request.signal
-            })
+            request.profileIdOrAlias 
+                ? ChatService.completeChatWithProfile({
+                    path: { profileIdOrAlias: request.profileIdOrAlias },
+                    body: {
+                        messages: request.messages.map(m => ({ role: m.role, content: m.content }))
+                    },
+                    signal: request.signal
+                })
+                : ChatService.completeChat({
+                    body: {
+                        messages: request.messages.map(m => ({ role: m.role, content: m.content }))
+                    },
+                    signal: request.signal
+                })
         );
 
         if (error || !data) {

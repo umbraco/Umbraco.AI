@@ -1,4 +1,5 @@
 using System.Reflection;
+using Umbraco.Ai.Core.EditableModels;
 
 namespace Umbraco.Ai.Core.Context.ResourceTypes;
 
@@ -7,7 +8,7 @@ namespace Umbraco.Ai.Core.Context.ResourceTypes;
 /// </summary>
 /// <typeparam name="TData">The data model type for the resource.</typeparam>
 public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
-    where TData : class
+    where TData : class, new()
 {
     private readonly IAiContextResourceTypeInfrastructure _infrastructure;
 
@@ -27,6 +28,13 @@ public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
     /// Gets the data model type for this resource type.
     /// </summary>
     public Type DataType => typeof(TData);
+
+    /// <inheritdoc />
+    Type? IAiContextResourceType.DataType => DataType;
+
+    /// <inheritdoc />
+    public AiEditableModelSchema? GetDataSchema()
+        => _infrastructure.SchemaBuilder.BuildForType<TData>(Id);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiContextResourceTypeBase{TData}"/> class.
@@ -53,12 +61,13 @@ public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
     protected abstract string FormatForInjection(TData data);
 
     /// <inheritdoc />
-    public string FormatForInjection(string jsonData)
+    public string FormatForInjection(object? dataObject)
     {
-        if (string.IsNullOrWhiteSpace(jsonData))
+        if (dataObject is null)
             return string.Empty;
 
-        var data = _infrastructure.JsonSerializer.Deserialize<TData>(jsonData);
+        // Use the model resolver to convert from stored format to typed model
+        var data = _infrastructure.ModelResolver.ResolveModel<TData>(Id, dataObject);
         if (data is null)
             return string.Empty;
 

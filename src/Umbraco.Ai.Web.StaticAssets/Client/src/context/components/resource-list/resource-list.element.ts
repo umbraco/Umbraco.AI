@@ -24,7 +24,7 @@ export interface UaiResourceCardModel extends UaiContextResourceModel {
 
 @customElement(elementName)
 export class UaiResourceListElement extends UmbLitElement {
-    #contextResourceTypeRepository = new UaiContextResourceTypeItemRepository(this);
+    #contextResourceTypeItemRepository = new UaiContextResourceTypeItemRepository(this);
     #contextResourceTypes: UaiContextResourceTypeItemModel[] = [];
 
     @property({ type: Array })
@@ -51,7 +51,7 @@ export class UaiResourceListElement extends UmbLitElement {
     }
 
     async #loadContextResourceTypes() {
-        const { data } = await this.#contextResourceTypeRepository.requestItems();
+        const { data } = await this.#contextResourceTypeItemRepository.requestItems();
         if (data) {
             this.#contextResourceTypes = data;
             this.#updateCards();
@@ -117,7 +117,12 @@ export class UaiResourceListElement extends UmbLitElement {
         const optionsModal = modalManager.open(this, UAI_RESOURCE_OPTIONS_MODAL, {
             data: {
                 resourceType: card.resourceType,
-                resource: card,
+                resource: {
+                    name: card.name,
+                    description: card.description,
+                    data: card.data ?? {},
+                    injectionMode: card.injectionMode,
+                },
             },
         });
 

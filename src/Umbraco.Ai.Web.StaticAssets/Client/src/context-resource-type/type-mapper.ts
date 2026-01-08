@@ -1,5 +1,6 @@
 import type { UaiContextResourceTypeDetailModel, UaiContextResourceTypeItemModel } from "./types.js";
 import { ContextResourceTypeResponseModel } from "../api";
+import { UaiCommonTypeMapper } from "../core/type-mapper.js";
 
 export const UaiContextResourceTypeTypeMapper = {
     toItemModel(response: ContextResourceTypeResponseModel): UaiContextResourceTypeItemModel {
@@ -8,6 +9,9 @@ export const UaiContextResourceTypeTypeMapper = {
             name: response.name,
             description: response.description,
             icon: response.icon,
+            dataSchema: response.dataSchema
+                ? UaiCommonTypeMapper.toEditableModelSchemaModel(response.dataSchema)
+                : null,
         };
     },
 
@@ -17,6 +21,9 @@ export const UaiContextResourceTypeTypeMapper = {
             name: response.name,
             description: response.description,
             icon: response.icon,
+            dataSchema: response.dataSchema
+                ? UaiCommonTypeMapper.toEditableModelSchemaModel(response.dataSchema)
+                : null,
         };
     },
 };

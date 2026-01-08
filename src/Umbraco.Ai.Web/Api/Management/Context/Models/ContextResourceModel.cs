@@ -35,10 +35,9 @@ public class ContextResourceModel
     public int SortOrder { get; set; }
 
     /// <summary>
-    /// JSON blob containing the type-specific data.
+    /// Type-specific data object.
     /// </summary>
-    [Required]
-    public string Data { get; set; } = string.Empty;
+    public object? Data { get; set; }
 
     /// <summary>
     /// Injection mode (Always, OnDemand).

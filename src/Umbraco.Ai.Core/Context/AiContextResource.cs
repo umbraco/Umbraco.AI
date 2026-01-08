@@ -33,9 +33,9 @@ public sealed class AiContextResource
     public int SortOrder { get; set; }
 
     /// <summary>
-    /// JSON blob containing the type-specific data.
+    /// Type-specific data object.
     /// </summary>
-    public required string Data { get; set; }
+    public object? Data { get; set; }
 
     /// <summary>
     /// Determines how and when this resource is included in AI operations.

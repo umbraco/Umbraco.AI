@@ -1,3 +1,4 @@
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Cms.Core.Composing;
 
 namespace Umbraco.Ai.Core.Context.ResourceTypes;
@@ -33,9 +34,21 @@ public interface IAiContextResourceType : IDiscoverable
     string? Icon { get; }
 
     /// <summary>
+    /// Gets the type that represents the data model for this resource type.
+    /// </summary>
+    Type? DataType { get; }
+
+    /// <summary>
+    /// Gets the data schema that describes the fields for this resource type.
+    /// Used by the UI to render resource data forms.
+    /// </summary>
+    /// <returns>The data schema, or null if the resource type has no data model.</returns>
+    AiEditableModelSchema? GetDataSchema();
+
+    /// <summary>
     /// Formats the resource data for injection into the system prompt.
     /// </summary>
-    /// <param name="jsonData">The JSON-encoded resource data.</param>
+    /// <param name="data">The resource data object.</param>
     /// <returns>Formatted text suitable for AI consumption.</returns>
-    string FormatForInjection(string jsonData);
+    string FormatForInjection(object? data);
 }

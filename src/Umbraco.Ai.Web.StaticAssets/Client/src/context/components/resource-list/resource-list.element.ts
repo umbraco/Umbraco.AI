@@ -10,7 +10,7 @@ import {
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
 import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
-import type { UaiContextResourceModel, UaiContextResourceInjectionMode } from '../../types.js';
+import type { UaiContextResourceModel } from '../../types.js';
 import type { UaiContextResourceTypeItemModel } from '../../../context-resource-type/types.js';
 import { UaiContextResourceTypeItemRepository } from '../../../context-resource-type/repository/item/context-resource-type-item.repository.js';
 import { UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL } from './context-resource-type-picker-modal.token.js';
@@ -171,28 +171,19 @@ export class UaiResourceListElement extends UmbLitElement {
     }
 
     #renderItem(card: UaiResourceCardModel) {
+        const injectionLabel = card.injectionMode === 'Always' ? 'Always' : 'On-Demand';
         return html`
-            <uui-card-content-node
+            <uui-card-block-type
                 name=${card.name}
+                description=${injectionLabel}
                 @open=${() => this.#onEdit(card)}
                 ?readonly=${this.readonly}>
-                <umb-icon
-                    slot="icon"
-                    name=${card.resourceType?.icon ?? 'icon-document'}></umb-icon>
-                <span slot="tag">
-                    ${this.#renderInjectionModeBadge(card.injectionMode)}
-                </span>
+                <umb-icon name=${card.resourceType?.icon ?? 'icon-document'}></umb-icon>
                 <uui-action-bar slot="actions">
                     ${this.#renderRemoveAction(card)}
                 </uui-action-bar>
-            </uui-card-content-node>
+            </uui-card-block-type>
         `;
-    }
-
-    #renderInjectionModeBadge(mode: UaiContextResourceInjectionMode) {
-        const color = mode === 'Always' ? 'positive' : 'default';
-        const label = mode === 'Always' ? 'Always' : 'On-Demand';
-        return html`<uui-tag size="s" color=${color}>${label}</uui-tag>`;
     }
 
     #renderRemoveAction(card: UaiResourceCardModel) {
@@ -227,16 +218,16 @@ export class UaiResourceListElement extends UmbLitElement {
                 height: 100%;
             }
 
-            uui-card-content-node {
+            uui-card-block-type {
                 cursor: pointer;
                 min-width: auto;
             }
 
-            uui-card-content-node[readonly] {
+            uui-card-block-type[readonly] {
                 cursor: default;
             }
 
-            uui-card-content-node:hover:not([readonly]) {
+            uui-card-block-type:hover:not([readonly]) {
                 background-color: var(--uui-color-surface-emphasis);
             }
         `,

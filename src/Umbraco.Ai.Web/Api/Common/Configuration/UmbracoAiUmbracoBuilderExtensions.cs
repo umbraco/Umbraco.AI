@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Core.Serialization;
 using Umbraco.Ai.Web.Api.Common.Json;
 using Umbraco.Cms.Api.Common.DependencyInjection;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -36,6 +37,7 @@ public static class UmbracoAiUmbracoBuilderExtensions
 
                 options.JsonSerializerOptions.Converters.Add(new IdOrAliasJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                options.JsonSerializerOptions.Converters.Add(new JsonStringTypeConverter());
 
                 configure?.Invoke(options.JsonSerializerOptions);
             });

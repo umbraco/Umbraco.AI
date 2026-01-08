@@ -1,6 +1,6 @@
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
 
 namespace Umbraco.Ai.Tests.Common.Fakes;
 
@@ -23,23 +23,25 @@ public class FakeAiProvider : IAiProvider
 
     public Type? SettingsType { get; set; } = typeof(FakeProviderSettings);
 
-    public IReadOnlyList<AiSettingDefinition> SettingDefinitions { get; set; } = new List<AiSettingDefinition>
-    {
-        new()
+    public AiEditableModelSchema? SettingsSchema { get; set; } = new AiEditableModelSchema(
+        typeof(FakeProviderSettings),
+        new List<AiEditableModelField>
         {
-            PropertyName = "ApiKey",
-            Key = "api-key",
-            Label = "API Key",
-            Description = "Enter your API key"
-        },
-        new()
-        {
-            PropertyName = "BaseUrl",
-            Key = "base-url",
-            Label = "Base URL",
-            Description = "The base URL for the API"
-        }
-    };
+            new()
+            {
+                PropertyName = "ApiKey",
+                Key = "api-key",
+                Label = "API Key",
+                Description = "Enter your API key"
+            },
+            new()
+            {
+                PropertyName = "BaseUrl",
+                Key = "base-url",
+                Label = "Base URL",
+                Description = "The base URL for the API"
+            }
+        });
 
     public FakeAiProvider WithCapability<TCapability>(TCapability capability) where TCapability : IAiCapability
     {
@@ -65,13 +67,13 @@ public class FakeAiProvider : IAiProvider
         return this;
     }
 
-    public FakeAiProvider WithSettingDefinitions(IReadOnlyList<AiSettingDefinition> definitions)
+    public FakeAiProvider WithSettingsSchema(AiEditableModelSchema? schema)
     {
-        SettingDefinitions = definitions;
+        SettingsSchema = schema;
         return this;
     }
 
-    public IReadOnlyList<AiSettingDefinition> GetSettingDefinitions() => SettingDefinitions;
+    public AiEditableModelSchema? GetSettingsSchema() => SettingsSchema;
 
     public IReadOnlyCollection<IAiCapability> GetCapabilities() => _capabilities.Values.ToList();
 

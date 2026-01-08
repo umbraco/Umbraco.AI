@@ -1,5 +1,6 @@
-import type { ProviderItemResponseModel, ProviderResponseModel, SettingDefinitionModel } from "../api/types.gen.js";
-import type { UaiProviderDetailModel, UaiProviderItemModel, UaiSettingDefinitionModel } from "./types.js";
+import type { ProviderItemResponseModel, ProviderResponseModel } from "../api/types.gen.js";
+import type { UaiProviderDetailModel, UaiProviderItemModel } from "./types.js";
+import { UaiCommonTypeMapper } from "../core/type-mapper.ts";
 
 export const UaiProviderTypeMapper = {
     toItemModel(response: ProviderItemResponseModel): UaiProviderItemModel {
@@ -15,20 +16,7 @@ export const UaiProviderTypeMapper = {
             id: response.id,
             name: response.name,
             capabilities: response.capabilities,
-            settingDefinitions: response.settingDefinitions.map(UaiProviderTypeMapper.toSettingDefinitionModel),
+            settingsSchema: UaiCommonTypeMapper.toEditableModelSchemaModel(response.settingsSchema ?? { fields: [] }),
         };
-    },
-
-    toSettingDefinitionModel(response: SettingDefinitionModel): UaiSettingDefinitionModel {
-        return {
-            key: response.key,
-            label: response.label,
-            description: response.description ?? undefined,
-            editorUiAlias: response.editorUiAlias ?? undefined,
-            editorConfig: response.editorConfig ?? undefined,
-            defaultValue: response.defaultValue ?? undefined,
-            sortOrder: response.sortOrder,
-            isRequired: response.isRequired,
-        };
-    },
+    }
 };

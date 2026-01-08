@@ -7,7 +7,7 @@ using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 
@@ -155,7 +155,7 @@ public class EndToEndServiceFlowTests : IDisposable
     public async Task FullFlow_SettingsResolutionFromConfiguration_WorksCorrectly()
     {
         // This test verifies that settings with $ConfigKey are resolved from configuration
-        // The actual resolution happens in AiSettingsResolver
+        // The actual resolution happens in AiEditableModelResolver
 
         // Arrange - Create connection with settings that contain a config reference
         var connectionId = Guid.NewGuid();
@@ -395,7 +395,7 @@ public class EndToEndServiceFlowTests : IDisposable
         IConfiguration configuration,
         FakeAiProvider fakeProvider)
     {
-        // Register configuration (required by AiSettingsResolver)
+        // Register configuration (required by AiEditableModelResolver)
         services.AddSingleton<IConfiguration>(configuration);
 
         // Bind AiOptions
@@ -403,7 +403,7 @@ public class EndToEndServiceFlowTests : IDisposable
 
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
-        services.AddSingleton<IAiSettingDefinitionBuilder, AiSettingDefinitionBuilder>();
+        services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
         services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
 
         // Register the fake provider
@@ -423,7 +423,7 @@ public class EndToEndServiceFlowTests : IDisposable
             _ => new AiEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAiEmbeddingMiddleware>()));
 
         // Settings resolution
-        services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();
+        services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();
 
         // Connection system
         services.AddSingleton<IAiConnectionRepository, InMemoryAiConnectionRepository>();

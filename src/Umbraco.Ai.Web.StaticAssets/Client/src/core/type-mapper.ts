@@ -1,9 +1,9 @@
-import { UaiEditableModelFieldModel, UiEditableModelSchemaModel } from "./types.ts";
+import { UaiEditableModelFieldModel, UaiEditableModelSchemaModel } from "./types.ts";
 import { EditableModelFieldModel, EditableModelSchemaModel } from "../api";
 
 export const UaiCommonTypeMapper = {
     
-    toEditableModelSchemaModel(response: EditableModelSchemaModel): UiEditableModelSchemaModel {
+    toEditableModelSchemaModel(response: EditableModelSchemaModel): UaiEditableModelSchemaModel {
         return {
             type: response.type ?? undefined,
             fields: response.fields.map(this.toEditableModelFieldModel),

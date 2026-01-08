@@ -2,7 +2,7 @@
 /**
  * Editable model schema for UI consumption.
  */
-export interface UiEditableModelSchemaModel {
+export interface UaiEditableModelSchemaModel {
     type?: string;
     fields: UaiEditableModelFieldModel[];
 }

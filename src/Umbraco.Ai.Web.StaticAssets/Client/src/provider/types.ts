@@ -1,4 +1,4 @@
-import { UiEditableModelSchemaModel } from "../core/types.ts";
+import type { UaiEditableModelSchemaModel } from "../core/types.js";
 
 /**
  * Provider item model for UI consumption.
@@ -19,5 +19,5 @@ export interface UaiProviderDetailModel {
     id: string;
     name: string;
     capabilities: string[];
-    settingsSchema: UiEditableModelSchemaModel;
+    settingsSchema: UaiEditableModelSchemaModel;
 }

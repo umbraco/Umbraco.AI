@@ -7,21 +7,10 @@ namespace Umbraco.Ai.Core.Context.Middleware;
 /// Chat middleware that injects AI context into chat requests.
 /// </summary>
 /// <remarks>
-/// This middleware resolves context based on the profile (passed via ChatOptions.AdditionalProperties)
-/// and injects "Always" mode resources into the system prompt. It also makes the resolved context
-/// available via <see cref="IAiContextAccessor"/> for OnDemand tools.
-///
-/// To use this middleware, register it in a Composer:
-/// <code>
-/// public class MyComposer : IComposer
-/// {
-///     public void Compose(IUmbracoBuilder builder)
-///     {
-///         builder.AiChatMiddleware()
-///             .Append&lt;AiContextInjectionChatMiddleware&gt;();
-///     }
-/// }
-/// </code>
+/// This middleware is registered by default and resolves context based on the profile
+/// (passed via ChatOptions.AdditionalProperties). It injects "Always" mode resources into
+/// the system prompt and makes the resolved context available via <see cref="IAiContextAccessor"/>
+/// for OnDemand tools.
 /// </remarks>
 public class AiContextInjectionChatMiddleware : IAiChatMiddleware
 {

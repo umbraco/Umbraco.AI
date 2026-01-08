@@ -16,18 +16,18 @@ public sealed class BrandVoiceResourceData
     /// <summary>
     /// Description of the target audience (e.g., "B2B tech decision makers").
     /// </summary>
-    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", SortOrder = 20)]
+    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", EditorConfig = "[{ \"alias\": \"rows\", \"value\": 10 }]", SortOrder = 20)]
     public string? TargetAudience { get; set; }
 
     /// <summary>
     /// Style guidelines to follow (e.g., "Use active voice, be concise").
     /// </summary>
-    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", SortOrder = 30)]
+    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", EditorConfig = "[{ \"alias\": \"rows\", \"value\": 10 }]", SortOrder = 30)]
     public string? StyleGuidelines { get; set; }
 
     /// <summary>
     /// Patterns and phrases to avoid (e.g., "Jargon, exclamation marks").
     /// </summary>
-    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", SortOrder = 40)]
+    [AiField(EditorUiAlias = "Umb.PropertyEditorUi.TextArea", EditorConfig = "[{ \"alias\": \"rows\", \"value\": 10 }]", SortOrder = 40)]
     public string? AvoidPatterns { get; set; }
 }

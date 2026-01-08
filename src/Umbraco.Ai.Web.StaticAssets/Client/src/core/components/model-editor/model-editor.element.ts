@@ -84,7 +84,11 @@ export class UaiModelEditorElement extends UmbLitElement {
     }
 
     #toPropertyConfig(config: unknown): Array<{ alias: string; value: unknown }> {
-        if (!config || typeof config !== "object") return [];
+        if (!config) return [];
+        // If it's already an array of alias-value pairs, return as is
+        if (Array.isArray(config)) return config as Array<{ alias: string; value: unknown }>;
+        // If it's an object, convert its entries to alias-value pairs
+        if (typeof config !== "object") return [];
         return Object.entries(config).map(([alias, value]) => ({ alias, value }));
     }
 

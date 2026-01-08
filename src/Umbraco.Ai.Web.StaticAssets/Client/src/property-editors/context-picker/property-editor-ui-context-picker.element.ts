@@ -16,8 +16,10 @@ import type { UaiContextPickerElement } from '../../context/components/context-p
 const elementName = 'uai-property-editor-ui-context-picker';
 
 @customElement(elementName)
-export class UaiPropertyEditorUIContextPickerElement
-    extends UmbFormControlMixin(UmbLitElement, '')
+export class UaiPropertyEditorUIContextPickerElement extends UmbFormControlMixin<
+    string[] | undefined,
+    typeof UmbLitElement
+>(UmbLitElement, undefined)
     implements UmbPropertyEditorUiElement
 {
     @property({ type: Boolean })
@@ -49,7 +51,7 @@ export class UaiPropertyEditorUIContextPickerElement
     override render() {
         return html`
             <uai-context-picker
-                .value=${this.value as string}
+                .value=${this.value}
                 ?multiple=${this._multiple}
                 ?readonly=${this.readonly}
                 .min=${this._min}

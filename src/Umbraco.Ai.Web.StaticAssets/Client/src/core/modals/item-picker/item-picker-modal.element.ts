@@ -4,12 +4,12 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UUIMenuItemEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiPickableItemModel } from "./types.js";
 import { UaiSelectedEvent } from '../../events'
-import type { UaiItemPickerModalData } from "./item-picker-modal.token.js";
+import type { UaiItemPickerModalData, UaiItemPickerModalValue } from "./item-picker-modal.token.js";
 
 @customElement('uai-item-picker-modal')
 export class UaiItemPickerModalElement extends UmbModalBaseElement<
     UaiItemPickerModalData,
-    UaiPickableItemModel
+    UaiItemPickerModalValue
 > {
     @state()
     private _loaded = false;
@@ -19,6 +19,9 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<
 
     @state()
 	private _filteredItems: Array<UaiPickableItemModel> = [];
+
+    @state()
+    private _selectedItems: Array<UaiPickableItemModel> = [];
 
     async connectedCallback() {
 		super.connectedCallback();
@@ -36,7 +39,10 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<
 
     #filter (event: { target: HTMLInputElement }) {
 		if (!this.data) return;
-
+        
+        this._selectedItems = [];
+        this.updateValue({ selection: undefined });
+        
 		if (event.target.value) {
 			const query = event.target.value.toLowerCase();
 			this._filteredItems =  this._items.filter(
@@ -49,9 +55,33 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<
 
     #onClick(event: UUIMenuItemEvent, item:UaiPickableItemModel) {
 		event.stopPropagation();
-        this.updateValue(item);
-        this.modalContext?.dispatchEvent(new UaiSelectedEvent(item.value, item));
+        if (this.data?.selectionMode === 'multiple') {
+            // Toggle selection for multiple mode
+            const index = this._selectedItems.findIndex(s => s.value === item.value);
+            if (index === -1) {
+                this._selectedItems = [...this._selectedItems, item];
+            } else {
+                this._selectedItems = this._selectedItems.filter(s => s.value !== item.value);
+            }
+            this.updateValue({ selection: this._selectedItems });
+        } else {
+            // Single selection - submit immediately
+            this.updateValue({ selection: [item] });
+            this.modalContext?.dispatchEvent(new UaiSelectedEvent(item.value, item));
+        }
 	}
+
+    #isSelected(item: UaiPickableItemModel): boolean {
+        return this._selectedItems.some(s => s.value === item.value);
+    }
+
+    #onConfirm() {
+        // Dispatch event for each selected item
+        for (const item of this._selectedItems) {
+            this.modalContext?.dispatchEvent(new UaiSelectedEvent(item.value, item));
+        }
+        this._submitModal();
+    }
 
     render() {
         if (!this.data) return;
@@ -72,7 +102,15 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<
                                         this._filteredItems,
                                         (item) => item.value,
                                         (item) => html`
-                                    <uui-ref-node name=${item.label} detail=${item.description} @open=${(e: UUIMenuItemEvent) => this.#onClick(e, item)}>
+                                    <uui-ref-node
+                                        name=${item.label}
+                                        detail=${item.description}
+                                        ?select-only=${this.data?.selectionMode === 'multiple'}
+                                        ?selectable=${this.data?.selectionMode === 'multiple'}
+                                        ?selected=${this.#isSelected(item)}
+                                        @open=${(e: UUIMenuItemEvent) => this.#onClick(e, item)}
+                                        @selected=${(e: UUIMenuItemEvent) => this.#onClick(e, item)}
+                                        @deselected=${(e: UUIMenuItemEvent) => this.#onClick(e, item)}>
                                         <umb-icon slot="icon" name=${item.icon!} style="--uui-icon-color: ${item.color ?? '#000000'}"></umb-icon>
                                         ${when(this.data!.tagTemplate, () => html`<div slot="tag" style="line-height: 1rem;text-align: right; padding-left: 10px; white-space: nowrap;">${this.data!.tagTemplate!(item)}</div>`)}
                                     </uui-ref-node>
@@ -88,8 +126,9 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<
 					id="confirm"
 					color="positive"
 					look="primary"
-					label=${this.data?.buttonLabel ? this.localize.string(this.data.buttonLabel) : this.localize.term("ucGeneral_select")}
-                    @click=${this._submitModal}
+					label=${this.data?.buttonLabel ? this.localize.string(this.data.buttonLabel) : this.localize.term("uaiGeneral_select")}
+                    @click=${this.#onConfirm}
+                    ?disabled=${this._selectedItems.length === 0}
 					type="button"></uui-button>`)}
 			</umb-body-layout>
 		`;
@@ -110,11 +149,14 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<
                 padding-top: calc(var(--uui-size-2, 6px) + 5px);
                 padding-bottom: calc(var(--uui-size-2, 6px) + 5px);
             }
+            //uui-ref-node:first-child{
+            //    padding-top: 0;
+            //}
+            //uui-ref-node:last-child{
+            //    padding-bottom: 0;
+            //}
             uui-ref-node::before {
                 border-top: 1px solid var(--uui-color-divider-standalone);
-            }
-            uui-ref-node button {
-                width: 100%;
             }
             uui-input {
                 width: 100%;

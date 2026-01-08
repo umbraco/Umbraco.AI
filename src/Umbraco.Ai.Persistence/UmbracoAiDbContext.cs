@@ -109,9 +109,6 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 
-            entity.Property(e => e.ContextIds)
-                .HasMaxLength(4000);
-
             entity.HasIndex(e => e.Alias)
                 .IsUnique();
 

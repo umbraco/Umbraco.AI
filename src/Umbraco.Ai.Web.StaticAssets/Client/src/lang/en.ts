@@ -1,6 +1,9 @@
 import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
 
 export default {
+    uaiGeneral: {
+        select: "Select",
+    },
     uaiCapabilities: {
         chat: "Chat",
         embedding: "Embedding",

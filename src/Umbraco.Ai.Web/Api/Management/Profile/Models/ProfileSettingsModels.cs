@@ -29,6 +29,11 @@ public class ChatProfileSettingsModel : ProfileSettingsModel
     /// The system prompt template to be used with the AI model.
     /// </summary>
     public string? SystemPromptTemplate { get; init; }
+
+    /// <summary>
+    /// Context IDs assigned to this profile for AI context injection.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; init; } = [];
 }
 
 /// <summary>

@@ -36,7 +36,6 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
             connectionId: "",
             settings,
             tags: [],
-            contextIds: [],
             ...preset,
         };
 
@@ -54,6 +53,7 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
                     temperature: null,
                     maxTokens: null,
                     systemPromptTemplate: null,
+                    contextIds: [],
                 } as UaiProfileDetailModel["settings"];
             case "embedding":
                 return {

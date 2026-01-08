@@ -7,6 +7,7 @@ import { profileManifests } from "./profile/manifests.js";
 import { providerManifests } from "./provider/manifests.js";
 import { propertyEditorManifests } from "./property-editors/manifests.js";
 import { manifests as langManifests } from "./lang/manifests.js";
+import { manifests as coreManifests } from "./core/manifests.js";
 
 // Re-export everything from index for easier imports
 export * from './index.js';
@@ -25,4 +26,5 @@ export const manifests: Array<UmbExtensionManifest> = [
   ...providerManifests,
   ...propertyEditorManifests,
   ...langManifests,
+  ...coreManifests,
 ];

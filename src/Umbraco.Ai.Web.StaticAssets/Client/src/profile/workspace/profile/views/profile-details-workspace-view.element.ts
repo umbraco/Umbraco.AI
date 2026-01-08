@@ -2,6 +2,7 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings } from "../../../types.js";
 import { isChatSettings } from "../../../types.js";
@@ -9,6 +10,7 @@ import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
+import "../../../../context/components/context-picker/index.js";
 
 /**
  * Workspace view for Profile details.
@@ -141,6 +143,12 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         this.#updateChatSettings({ systemPromptTemplate });
     }
 
+    #onContextIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
+        this.#updateChatSettings({ contextIds: picker.value });
+    }
+
     /**
      * Updates chat-specific settings while preserving other settings values.
      */
@@ -153,6 +161,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 temperature: updates.temperature ?? null,
                 maxTokens: updates.maxTokens ?? null,
                 systemPromptTemplate: updates.systemPromptTemplate ?? null,
+                contextIds: updates.contextIds ?? [],
             };
 
         this.#workspaceContext?.handleCommand(
@@ -226,6 +235,15 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         placeholder="Enter system prompt template..."
                         rows="6"
                     ></uui-textarea>
+                </umb-property-layout>
+
+                <umb-property-layout label="Contexts" description="Predefined contexts to include in chat sessions">
+                    <uai-context-picker
+                        slot="editor"
+                        multiple
+                        .value=${chatSettings?.contextIds}
+                        @change=${this.#onContextIdsChange}
+                    ></uai-context-picker>
                 </umb-property-layout>
             </uui-box>
         `;

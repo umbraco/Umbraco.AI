@@ -69,6 +69,7 @@ export type ChatProfileSettingsModel = ProfileSettingsModel & {
     temperature?: number | null;
     maxTokens?: number | null;
     systemPromptTemplate?: string | null;
+    contextIds: Array<string>;
 };
 
 export type ChatRequestModel = {
@@ -162,7 +163,6 @@ export type CreateProfileRequestModel = {
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
-    contextIds: Array<string>;
 };
 
 export type EditableModelFieldModel = {
@@ -261,7 +261,6 @@ export type ProfileResponseModel = {
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
-    contextIds: Array<string>;
 };
 
 export type ProfileSettingsModel = {
@@ -301,7 +300,6 @@ export type UpdateProfileRequestModel = {
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
-    contextIds: Array<string>;
 };
 
 export type UsageModel = {

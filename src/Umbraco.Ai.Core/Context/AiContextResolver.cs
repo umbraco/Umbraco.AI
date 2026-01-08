@@ -35,14 +35,14 @@ internal sealed class AiContextResolver : IAiContextResolver
         // Resolution order: Profile → Agent → Prompt → Content
         // Later levels can override earlier levels by having same resource ID
 
-        // 1. Profile-level context
+        // 1. Profile-level context (only for Chat profiles with settings)
         if (request.ProfileId.HasValue)
         {
             var profile = await _profileService.GetProfileAsync(request.ProfileId.Value, cancellationToken);
-            if (profile?.ContextIds is { Count: > 0 })
+            if (profile?.Settings is AiChatProfileSettings chatSettings && chatSettings.ContextIds.Count > 0)
             {
                 await ResolveContextIdsAsync(
-                    profile.ContextIds,
+                    chatSettings.ContextIds,
                     "Profile",
                     profile.Name,
                     sources,

@@ -11,13 +11,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "ContextIds",
-                table: "umbracoAiProfile",
-                type: "TEXT",
-                maxLength: 4000,
-                nullable: true);
-
             migrationBuilder.CreateTable(
                 name: "umbracoAiContext",
                 columns: table => new
@@ -82,10 +75,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 
             migrationBuilder.DropTable(
                 name: "umbracoAiContext");
-
-            migrationBuilder.DropColumn(
-                name: "ContextIds",
-                table: "umbracoAiProfile");
         }
     }
 }

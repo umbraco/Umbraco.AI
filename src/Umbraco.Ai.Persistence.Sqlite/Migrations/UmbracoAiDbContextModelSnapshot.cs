@@ -149,10 +149,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<Guid>("ConnectionId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ContextIds")
-                        .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ModelId")
                         .IsRequired()
                         .HasMaxLength(255)

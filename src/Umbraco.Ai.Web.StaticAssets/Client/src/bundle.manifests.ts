@@ -5,6 +5,7 @@ import { contextManifests } from "./context/manifests.js";
 import { contextResourceTypeManifests } from "./context-resource-type/manifests.js";
 import { profileManifests } from "./profile/manifests.js";
 import { providerManifests } from "./provider/manifests.js";
+import { propertyEditorManifests } from "./property-editors/manifests.js";
 import { manifests as langManifests } from "./lang/manifests.js";
 
 // Re-export everything from index for easier imports
@@ -22,5 +23,6 @@ export const manifests: Array<UmbExtensionManifest> = [
   ...contextManifests,
   ...profileManifests,
   ...providerManifests,
+  ...propertyEditorManifests,
   ...langManifests,
 ];

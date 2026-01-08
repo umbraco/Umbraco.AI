@@ -1,6 +1,6 @@
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Tests.Common.Fakes;
 
 namespace Umbraco.Ai.Tests.Unit.Providers;
@@ -9,16 +9,16 @@ public class AiProviderBaseTests
 {
     private readonly Mock<IAiProviderInfrastructure> _infrastructureMock;
     private readonly Mock<IAiCapabilityFactory> _capabilityFactoryMock;
-    private readonly Mock<IAiSettingDefinitionBuilder> _settingDefinitionBuilderMock;
+    private readonly Mock<IAiEditableModelSchemaBuilder> _schemaBuilderMock;
 
     public AiProviderBaseTests()
     {
         _capabilityFactoryMock = new Mock<IAiCapabilityFactory>();
-        _settingDefinitionBuilderMock = new Mock<IAiSettingDefinitionBuilder>();
+        _schemaBuilderMock = new Mock<IAiEditableModelSchemaBuilder>();
 
         _infrastructureMock = new Mock<IAiProviderInfrastructure>();
         _infrastructureMock.Setup(x => x.CapabilityFactory).Returns(_capabilityFactoryMock.Object);
-        _infrastructureMock.Setup(x => x.SettingDefinitionBuilder).Returns(_settingDefinitionBuilderMock.Object);
+        _infrastructureMock.Setup(x => x.SchemaBuilder).Returns(_schemaBuilderMock.Object);
     }
 
     #region Provider attribute
@@ -201,42 +201,44 @@ public class AiProviderBaseTests
 
     #endregion
 
-    #region GetSettingDefinitions
+    #region GetSettingsSchema
 
     [Fact]
-    public void GetSettingDefinitions_BaseProvider_ReturnsEmptyList()
+    public void GetSettingsSchema_BaseProvider_ReturnsNull()
     {
         // Arrange
         var provider = new TestProvider(_infrastructureMock.Object);
 
         // Act
-        var definitions = provider.GetSettingDefinitions();
+        var schema = provider.GetSettingsSchema();
 
         // Assert
-        definitions.ShouldBeEmpty();
+        schema.ShouldBeNull();
     }
 
     [Fact]
-    public void GetSettingDefinitions_GenericProvider_BuildsFromSettingsType()
+    public void GetSettingsSchema_GenericProvider_BuildsFromSettingsType()
     {
         // Arrange
-        var expectedDefinitions = new List<AiSettingDefinition>
-        {
-            new() { PropertyName = "ApiKey", Key = "api-key", Label = "API Key" }
-        };
+        var expectedSchema = new AiEditableModelSchema(
+            typeof(FakeProviderSettings),
+            new List<AiEditableModelField>
+            {
+                new() { PropertyName = "ApiKey", Key = "api-key", Label = "API Key" }
+            });
 
-        _settingDefinitionBuilderMock
+        _schemaBuilderMock
             .Setup(x => x.BuildForType<FakeProviderSettings>("typed-provider"))
-            .Returns(expectedDefinitions);
+            .Returns(expectedSchema);
 
         var provider = new TypedSettingsProvider(_infrastructureMock.Object);
 
         // Act
-        var definitions = provider.GetSettingDefinitions();
+        var schema = provider.GetSettingsSchema();
 
         // Assert
-        definitions.ShouldBe(expectedDefinitions);
-        _settingDefinitionBuilderMock.Verify(
+        schema.ShouldBe(expectedSchema);
+        _schemaBuilderMock.Verify(
             x => x.BuildForType<FakeProviderSettings>("typed-provider"),
             Times.Once);
     }

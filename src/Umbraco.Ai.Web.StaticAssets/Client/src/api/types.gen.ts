@@ -164,6 +164,22 @@ export type CreateProfileRequestModel = {
     contextIds: Array<string>;
 };
 
+export type EditableModelFieldModel = {
+    key: string;
+    label: string;
+    description?: string | null;
+    editorUiAlias?: string | null;
+    editorConfig?: unknown;
+    defaultValue?: unknown;
+    sortOrder: number;
+    isRequired: boolean;
+};
+
+export type EditableModelSchemaModel = {
+    type?: string | null;
+    fields: Array<EditableModelFieldModel>;
+};
+
 export type EmbeddingItemModel = {
     index: number;
     vector: Array<number>;
@@ -261,18 +277,7 @@ export type ProviderResponseModel = {
     id: string;
     name: string;
     capabilities: Array<string>;
-    settingDefinitions: Array<SettingDefinitionModel>;
-};
-
-export type SettingDefinitionModel = {
-    key: string;
-    label: string;
-    description?: string | null;
-    editorUiAlias?: string | null;
-    editorConfig?: unknown;
-    defaultValue?: unknown;
-    sortOrder: number;
-    isRequired: boolean;
+    settingsSchema?: EditableModelSchemaModel | null;
 };
 
 export type UpdateConnectionRequestModel = {

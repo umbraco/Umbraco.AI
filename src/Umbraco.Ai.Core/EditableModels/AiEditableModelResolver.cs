@@ -4,13 +4,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.Serialization;
 
-namespace Umbraco.Ai.Core.Settings;
+namespace Umbraco.Ai.Core.EditableModels;
 
 /// <summary>
-/// Service for resolving AI provider settings from various storage formats.
+/// Service for resolving editable models from various storage formats.
 /// </summary>
-internal sealed class AiSettingsResolver : IAiSettingsResolver
+internal sealed class AiEditableModelResolver : IAiEditableModelResolver
 {
     private static JsonSerializerOptions _defaultJsonSerializerOptions = new()
     {
@@ -19,7 +20,8 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
         WriteIndented = false,
         Converters =
         {
-            new JsonStringEnumConverter()
+            new JsonStringEnumConverter(),
+            new JsonStringTypeConverter()
         }
     };
 
@@ -28,38 +30,38 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
     private readonly AiProviderCollection _providers;
     private readonly IConfiguration _configuration;
 
-    public AiSettingsResolver(AiProviderCollection providers, IConfiguration configuration)
+    public AiEditableModelResolver(AiProviderCollection providers, IConfiguration configuration)
     {
         _providers = providers;
         _configuration = configuration;
     }
 
     /// <inheritdoc />
-    public TSettings? ResolveSettings<TSettings>(string providerId, object? settings)
-        where TSettings : class, new()
+    public TModel? ResolveModel<TModel>(string modelId, object? data)
+        where TModel : class, new()
     {
-        // If settings is null, return null (or new instance if required by validation)
-        if (settings is null)
+        // If data is null, return null (or new instance if required by validation)
+        if (data is null)
         {
             return null;
         }
 
-        // If already correct type, just resolve environment variables and validate
-        if (settings is TSettings typedSettings)
+        // If already correct type, just resolve configuration variables and validate
+        if (data is TModel typedModel)
         {
-            ResolveConfigurationVariablesInObject(typedSettings);
-            ValidateSettings(providerId, typedSettings);
-            return typedSettings;
+            ResolveConfigurationVariablesInObject(typedModel);
+            ValidateModel(modelId, typedModel);
+            return typedModel;
         }
 
         // Handle JsonElement deserialization
-        if (settings is JsonElement jsonElement)
+        if (data is JsonElement jsonElement)
         {
-            var deserialized = jsonElement.Deserialize<TSettings>(_defaultJsonSerializerOptions);
+            var deserialized = jsonElement.Deserialize<TModel>(_defaultJsonSerializerOptions);
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
-                ValidateSettings(providerId, deserialized);
+                ValidateModel(modelId, deserialized);
             }
             return deserialized;
         }
@@ -67,45 +69,21 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
         // Try to serialize/deserialize through JSON as fallback
         try
         {
-            var json = JsonSerializer.Serialize(settings,_defaultJsonSerializerOptions);
-            var deserialized = JsonSerializer.Deserialize<TSettings>(json, _defaultJsonSerializerOptions);
+            var json = JsonSerializer.Serialize(data, _defaultJsonSerializerOptions);
+            var deserialized = JsonSerializer.Deserialize<TModel>(json, _defaultJsonSerializerOptions);
             if (deserialized is not null)
             {
                 ResolveConfigurationVariablesInObject(deserialized);
-                ValidateSettings(providerId, deserialized);
+                ValidateModel(modelId, deserialized);
             }
             return deserialized;
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException(
-                $"Failed to resolve settings for provider '{providerId}' to type {typeof(TSettings).Name}",
+                $"Failed to resolve model '{modelId}' to type {typeof(TModel).Name}",
                 ex);
         }
-    }
-
-    /// <inheritdoc />
-    public object? ResolveSettingsForProvider(IAiProvider provider, object? settings)
-    {
-        if (settings is null)
-        {
-            return null;
-        }
-
-        // Get the provider's settings type
-        var settingsType = provider.SettingsType;
-        if (settingsType is not null)
-        {
-            // Use reflection to call ResolveSettings<TSettings>
-            var method = GetType()
-                .GetMethod(nameof(ResolveSettings))!
-                .MakeGenericMethod(settingsType);
-
-            return method.Invoke(this, [provider.Id, settings]);
-        }
-
-        // Provider doesn't have settings, return null
-        return null;
     }
 
     private void ResolveConfigurationVariablesInObject(object obj)
@@ -130,7 +108,7 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
 
     private object? ResolveConfigurationVariable(object? value, Type targetType)
     {
-        // Only handle string values with the $config: prefix
+        // Only handle string values with the $ prefix
         if (value is not string strValue || !strValue.StartsWith(ConfigPrefix))
         {
             return value;
@@ -144,7 +122,7 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
         {
             throw new InvalidOperationException(
                 $"Configuration key '{configKey}' not found. " +
-                $"Ensure the key is set in appsettings.json, environment variables, or other configuration sources before using $config:{configKey} in connection settings.");
+                $"Ensure the key is set in appsettings.json, environment variables, or other configuration sources before using ${configKey} in settings.");
         }
 
         // Convert to target type if needed (supports string, int, bool, etc.)
@@ -169,7 +147,7 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
                 return boolValue;
 
             throw new InvalidOperationException(
-                $"Cannot convert environment variable value '{value}' to boolean.");
+                $"Cannot convert configuration value '{value}' to boolean.");
         }
 
         // Integer types
@@ -179,7 +157,7 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
                 return intValue;
 
             throw new InvalidOperationException(
-                $"Cannot convert environment variable value '{value}' to integer.");
+                $"Cannot convert configuration value '{value}' to integer.");
         }
 
         // Other numeric types
@@ -194,49 +172,55 @@ internal sealed class AiSettingsResolver : IAiSettingsResolver
         return value;
     }
 
-    private void ValidateSettings(string providerId, object settings)
+    private void ValidateModel(string modelId, object model)
     {
-        var provider = _providers.GetById(providerId);
+        var provider = _providers.GetById(modelId);
         if (provider is null)
         {
-            throw new InvalidOperationException($"Provider '{providerId}' not found.");
+            // Not a provider model, skip provider-specific validation
+            return;
         }
 
-        var settingDefinitions = provider.GetSettingDefinitions();
-        var settingsType = settings.GetType();
+        var schema = provider.GetSettingsSchema();
+        if (schema is null)
+        {
+            return;
+        }
+
+        var modelType = model.GetType();
         var validationErrors = new List<string>();
 
-        foreach (var settingDef in settingDefinitions)
+        foreach (var field in schema.Fields)
         {
-            if (string.IsNullOrEmpty(settingDef.PropertyName))
+            if (string.IsNullOrEmpty(field.PropertyName))
                 continue;
 
-            var property = settingsType.GetProperty(settingDef.PropertyName);
+            var property = modelType.GetProperty(field.PropertyName);
             if (property is null)
                 continue;
 
-            var value = property.GetValue(settings);
+            var value = property.GetValue(model);
 
             // Validate using each validation attribute
-            foreach (var validationRule in settingDef.ValidationRules)
+            foreach (var validationRule in field.ValidationRules)
             {
-                var validationContext = new ValidationContext(settings)
+                var validationContext = new ValidationContext(model)
                 {
-                    MemberName = settingDef.PropertyName,
-                    DisplayName = settingDef.Label
+                    MemberName = field.PropertyName,
+                    DisplayName = field.Label
                 };
 
                 var validationResult = validationRule.GetValidationResult(value, validationContext);
                 if (validationResult != ValidationResult.Success)
                 {
-                    validationErrors.Add(validationResult?.ErrorMessage ?? $"Validation failed for {settingDef.Label}");
+                    validationErrors.Add(validationResult?.ErrorMessage ?? $"Validation failed for {field.Label}");
                 }
             }
         }
 
         if (validationErrors.Any())
         {
-            var errorMessage = $"Validation failed for provider '{providerId}' settings:\n" +
+            var errorMessage = $"Validation failed for model '{modelId}':\n" +
                                string.Join("\n", validationErrors);
             throw new InvalidOperationException(errorMessage);
         }

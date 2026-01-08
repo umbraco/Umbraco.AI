@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 
@@ -16,7 +16,6 @@ public class ProviderMapDefinition : IMapDefinition
     {
         mapper.Define<IAiProvider, ProviderItemResponseModel>((_, _) => new ProviderItemResponseModel(), Map);
         mapper.Define<IAiProvider, ProviderResponseModel>((_, _) => new ProviderResponseModel(), Map);
-        mapper.Define<AiSettingDefinition, SettingDefinitionModel>((_, _) => new SettingDefinitionModel(), Map);
     }
 
     // Umbraco.Code.MapAll
@@ -33,19 +32,8 @@ public class ProviderMapDefinition : IMapDefinition
         target.Id = source.Id;
         target.Name = source.Name;
         target.Capabilities = source.GetCapabilities().Select(c => c.Kind.ToString());
-        target.SettingDefinitions = context.MapEnumerable<AiSettingDefinition, SettingDefinitionModel>(source.GetSettingDefinitions());
-    }
-
-    // Umbraco.Code.MapAll
-    private static void Map(AiSettingDefinition source, SettingDefinitionModel target, MapperContext context)
-    {
-        target.Key = source.Key;
-        target.Label = source.Label;
-        target.Description = source.Description;
-        target.EditorUiAlias = source.EditorUiAlias;
-        target.EditorConfig = source.EditorConfig;
-        target.DefaultValue = source.DefaultValue;
-        target.SortOrder = source.SortOrder;
-        target.IsRequired = source.ValidationRules.OfType<RequiredAttribute>().Any();
+        target.SettingsSchema = source.SettingsType is not null
+            ? context.Map<EditableModelSchemaModel>(source.GetSettingsSchema())
+            : null;
     }
 }

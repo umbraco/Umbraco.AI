@@ -50,7 +50,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
 
     #populateProviderSettings() {
         if (!this._model || !this._provider) return;
-        this._providerSettings = this._provider.settingDefinitions.map((setting) => ({
+        this._providerSettings = this._provider.settingsSchema.fields.map((setting) => ({
             alias: setting.key,
             value: this._model!.settings?.[setting.key] ?? setting.defaultValue,
         }));
@@ -127,7 +127,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             return html`<uui-loader-bar></uui-loader-bar>`;
         }
 
-        if (this._provider.settingDefinitions.length === 0) {
+        if (this._provider.settingsSchema.fields.length === 0) {
             return html`
                 <p class="placeholder-text">
                     This provider has no configurable settings.
@@ -137,7 +137,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <umb-property-dataset .value=${this._providerSettings} @change=${this.#onSettingsChange}>
-                ${this._provider.settingDefinitions.map(
+                ${this._provider.settingsSchema.fields.map(
                     (setting) => html`
                         <umb-property
                             label=${this.localize.string(setting.label)}

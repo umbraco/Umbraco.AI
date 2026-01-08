@@ -2,17 +2,17 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Tests.Common.Fakes;
 
 namespace Umbraco.Ai.Tests.Unit.Settings;
 
-public class AiSettingsResolverTests
+public class AiEditableModelResolverTests
 {
     private readonly IConfiguration _configuration;
     private List<IAiProvider> _providers = new();
 
-    public AiSettingsResolverTests()
+    public AiEditableModelResolverTests()
     {
         var configData = new Dictionary<string, string?>
         {
@@ -27,23 +27,23 @@ public class AiSettingsResolverTests
             .Build();
     }
 
-    private AiSettingsResolver CreateResolver()
+    private AiEditableModelResolver CreateResolver()
     {
         var collection = new AiProviderCollection(() => _providers);
-        return new AiSettingsResolver(collection, _configuration);
+        return new AiEditableModelResolver(collection, _configuration);
     }
 
-    #region ResolveSettings<TSettings> - Null handling
+    #region ResolveModel<TModel> - Null handling
 
     [Fact]
-    public void ResolveSettings_WithNullSettings_ReturnsNull()
+    public void ResolveModel_WithNullData_ReturnsNull()
     {
         // Arrange
         SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", null);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", null);
 
         // Assert
         result.ShouldBeNull();
@@ -51,10 +51,10 @@ public class AiSettingsResolverTests
 
     #endregion
 
-    #region ResolveSettings<TSettings> - Already typed settings
+    #region ResolveModel<TModel> - Already typed data
 
     [Fact]
-    public void ResolveSettings_WithAlreadyTypedSettings_ReturnsSameInstance()
+    public void ResolveModel_WithAlreadyTypedData_ReturnsSameInstance()
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
@@ -62,14 +62,14 @@ public class AiSettingsResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldBeSameAs(settings);
     }
 
     [Fact]
-    public void ResolveSettings_WithAlreadyTypedSettings_ResolvesConfigurationVariables()
+    public void ResolveModel_WithAlreadyTypedData_ResolvesConfigurationVariables()
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "$OpenAI:ApiKey" };
@@ -77,7 +77,7 @@ public class AiSettingsResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -86,19 +86,19 @@ public class AiSettingsResolverTests
 
     #endregion
 
-    #region ResolveSettings<TSettings> - JsonElement deserialization
+    #region ResolveModel<TModel> - JsonElement deserialization
 
     [Fact]
-    public void ResolveSettings_WithJsonElement_DeserializesCorrectly()
+    public void ResolveModel_WithJsonElement_DeserializesCorrectly()
     {
-        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
         var json = """{"apiKey": "direct-key", "baseUrl": "https://custom.api.com", "maxRetries": 10}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert
         result.ShouldNotBeNull();
@@ -108,16 +108,16 @@ public class AiSettingsResolverTests
     }
 
     [Fact]
-    public void ResolveSettings_WithJsonElement_ResolvesConfigurationVariables()
+    public void ResolveModel_WithJsonElement_ResolvesConfigurationVariables()
     {
-        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
         var json = """{"apiKey": "$OpenAI:ApiKey", "baseUrl": "$OpenAI:BaseUrl"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert
         result.ShouldNotBeNull();
@@ -126,18 +126,18 @@ public class AiSettingsResolverTests
     }
 
     [Fact]
-    public void ResolveSettings_WithJsonElement_NonStringConfigVar_FailsDeserialization()
+    public void ResolveModel_WithJsonElement_NonStringConfigVar_FailsDeserialization()
     {
         // Arrange - Config vars in JsonElement for non-string properties fail at JSON parse time
         // because "$TestSettings:MaxRetries" (a string) cannot be parsed as int
-        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
         var json = """{"apiKey": "test-key", "maxRetries": "$TestSettings:MaxRetries"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider", requireApiKey: false);
         var resolver = CreateResolver();
 
         // Act
-        var act = () => resolver.ResolveSettings<FakeProviderSettings>("fake-provider", jsonElement);
+        var act = () => resolver.ResolveModel<FakeProviderSettings>("fake-provider", jsonElement);
 
         // Assert - Fails because JSON string cannot be deserialized to int
         // JsonException is thrown directly from JsonSerializer.Deserialize
@@ -146,7 +146,7 @@ public class AiSettingsResolverTests
     }
 
     [Fact]
-    public void ResolveSettings_ConfigVariablesOnlyWorkForStringProperties()
+    public void ResolveModel_ConfigVariablesOnlyWorkForStringProperties()
     {
         // Arrange - Non-string properties (int, bool) cannot hold "$ConfigVar" values
         // so config variable resolution only applies to string properties
@@ -160,7 +160,7 @@ public class AiSettingsResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert - Non-string values pass through unchanged
         result.ShouldNotBeNull();
@@ -170,10 +170,10 @@ public class AiSettingsResolverTests
 
     #endregion
 
-    #region ResolveSettings<TSettings> - Fallback JSON serialization
+    #region ResolveModel<TModel> - Fallback JSON serialization
 
     [Fact]
-    public void ResolveSettings_WithAnonymousObject_FallsBackToJsonSerialization()
+    public void ResolveModel_WithAnonymousObject_FallsBackToJsonSerialization()
     {
         // Arrange
         var settings = new { ApiKey = "anon-key", BaseUrl = "https://anon.api.com" };
@@ -181,7 +181,7 @@ public class AiSettingsResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -191,10 +191,10 @@ public class AiSettingsResolverTests
 
     #endregion
 
-    #region ResolveSettings<TSettings> - Configuration variable errors
+    #region ResolveModel<TModel> - Configuration variable errors
 
     [Fact]
-    public void ResolveSettings_WithMissingConfigKey_ThrowsInvalidOperationException()
+    public void ResolveModel_WithMissingConfigKey_ThrowsInvalidOperationException()
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "$NonExistent:Key" };
@@ -202,7 +202,7 @@ public class AiSettingsResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var act = () => resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var act = () => resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -213,10 +213,10 @@ public class AiSettingsResolverTests
 
     #endregion
 
-    #region ResolveSettings<TSettings> - Validation
+    #region ResolveModel<TModel> - Validation
 
     [Fact]
-    public void ResolveSettings_WithMissingRequiredField_ThrowsValidationError()
+    public void ResolveModel_WithMissingRequiredField_ThrowsValidationError()
     {
         // Arrange - ApiKey is required
         var settings = new FakeProviderSettings { ApiKey = null };
@@ -224,7 +224,7 @@ public class AiSettingsResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var act = () => resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var act = () => resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -234,7 +234,7 @@ public class AiSettingsResolverTests
     }
 
     [Fact]
-    public void ResolveSettings_WithValidRequiredField_PassesValidation()
+    public void ResolveModel_WithValidRequiredField_PassesValidation()
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "valid-key" };
@@ -242,7 +242,7 @@ public class AiSettingsResolverTests
         var resolver = CreateResolver();
 
         // Act
-        var result = resolver.ResolveSettings<FakeProviderSettings>("fake-provider", settings);
+        var result = resolver.ResolveModel<FakeProviderSettings>("fake-provider", settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -251,24 +251,22 @@ public class AiSettingsResolverTests
 
     #endregion
 
-    #region ResolveSettings<TSettings> - Provider not found
+    #region ResolveModel<TModel> - Provider not found (validation skip)
 
     [Fact]
-    public void ResolveSettings_WithUnknownProvider_ThrowsInvalidOperationException()
+    public void ResolveModel_WithUnknownProvider_SkipsValidation()
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "test" };
         // No providers registered
         var resolver = CreateResolver();
 
-        // Act
-        var act = () => resolver.ResolveSettings<FakeProviderSettings>("unknown-provider", settings);
+        // Act - Resolves successfully because unknown providers skip validation
+        var result = resolver.ResolveModel<FakeProviderSettings>("unknown-provider", settings);
 
         // Assert
-        var exception = Should.Throw<InvalidOperationException>(act);
-        exception.Message.ShouldContain("Provider");
-        exception.Message.ShouldContain("unknown-provider");
-        exception.Message.ShouldContain("not found");
+        result.ShouldNotBeNull();
+        result!.ApiKey.ShouldBe("test");
     }
 
     #endregion
@@ -312,7 +310,7 @@ public class AiSettingsResolverTests
         SetupProviderWithValidation("test-provider");
         var resolver = CreateResolver();
 
-        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiSettingsResolver
+        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
         var json = """{"apiKey": "provider-key"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
 
@@ -334,11 +332,11 @@ public class AiSettingsResolverTests
         var provider = new FakeAiProvider(providerId, "Test Provider");
         provider.SettingsType = typeof(FakeProviderSettings);
 
-        var definitions = new List<AiSettingDefinition>();
+        var fields = new List<AiEditableModelField>();
 
         if (requireApiKey)
         {
-            definitions.Add(new AiSettingDefinition
+            fields.Add(new AiEditableModelField
             {
                 PropertyName = "ApiKey",
                 Key = "api-key",
@@ -348,7 +346,7 @@ public class AiSettingsResolverTests
             });
         }
 
-        provider.SettingDefinitions = definitions;
+        provider.SettingsSchema = new AiEditableModelSchema(typeof(FakeProviderSettings), fields);
         _providers.Add(provider);
     }
 

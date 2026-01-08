@@ -1,7 +1,7 @@
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 
@@ -10,12 +10,12 @@ namespace Umbraco.Ai.Tests.Unit.Services;
 public class AiConnectionServiceTests
 {
     private readonly Mock<IAiConnectionRepository> _repositoryMock;
-    private readonly Mock<IAiSettingsResolver> _settingsResolverMock;
+    private readonly Mock<IAiEditableModelResolver> _settingsResolverMock;
 
     public AiConnectionServiceTests()
     {
         _repositoryMock = new Mock<IAiConnectionRepository>();
-        _settingsResolverMock = new Mock<IAiSettingsResolver>();
+        _settingsResolverMock = new Mock<IAiEditableModelResolver>();
     }
 
     private AiConnectionService CreateService(params IAiProvider[] providers)

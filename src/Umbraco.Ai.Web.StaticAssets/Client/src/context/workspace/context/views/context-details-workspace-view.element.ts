@@ -58,7 +58,7 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <uui-box headline="Resources" id="resources-box">
+            <uui-box headline="General">
                 <umb-property-layout label="Resources" description="Define resources to provide additional context to AI operations.">
                     <div slot="editor">
                         <uai-resource-list
@@ -96,10 +96,6 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
             }
             uui-box:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
-            }
-
-            #resources-box {
-                margin-bottom: var(--uui-size-layout-1);
             }
         `,
     ];

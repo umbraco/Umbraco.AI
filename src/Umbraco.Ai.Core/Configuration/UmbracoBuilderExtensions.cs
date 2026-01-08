@@ -3,11 +3,11 @@ using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Context;
 using Umbraco.Ai.Core.Context.ResourceTypes;
+using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -32,7 +32,7 @@ public static partial class UmbracoBuilderExtensions
 
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
-        services.AddSingleton<IAiSettingDefinitionBuilder, AiSettingDefinitionBuilder>();
+        services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
         services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
 
         // Auto-discover providers using TypeLoader (uses Umbraco's cached, efficient type discovery)
@@ -51,8 +51,8 @@ public static partial class UmbracoBuilderExtensions
         // Function factory for creating MEAI AIFunction instances
         services.AddSingleton<IAiFunctionFactory, AiFunctionFactory>();
 
-        // Settings resolution
-        services.AddSingleton<IAiSettingsResolver, AiSettingsResolver>();
+        // Editable model resolution
+        services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();
 
         // Connection system
         services.AddSingleton<IAiConnectionRepository, InMemoryAiConnectionRepository>();

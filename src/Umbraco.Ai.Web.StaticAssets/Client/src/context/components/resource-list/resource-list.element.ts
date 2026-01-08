@@ -112,23 +112,27 @@ export class UaiResourceListElement extends UmbLitElement {
             },
         });
 
-        const optionsResult = await optionsModal.onSubmit();
-        if (!optionsResult?.resource) return;
+        try {
+            const optionsResult = await optionsModal.onSubmit();
+            if (!optionsResult?.resource) return;
 
-        // Update the existing resource
-        this._items = this._items.map(item =>
-            item.id === card.id
-                ? {
-                    ...item,
-                    name: optionsResult.resource.name,
-                    description: optionsResult.resource.description ?? null,
-                    data: optionsResult.resource.data,
-                    injectionMode: optionsResult.resource.injectionMode,
-                }
-                : item
-        );
-        this.#updateCards();
-        this.dispatchEvent(new UmbChangeEvent());
+            // Update the existing resource
+            this._items = this._items.map(item =>
+                item.id === card.id
+                    ? {
+                        ...item,
+                        name: optionsResult.resource.name,
+                        description: optionsResult.resource.description ?? null,
+                        data: optionsResult.resource.data,
+                        injectionMode: optionsResult.resource.injectionMode,
+                    }
+                    : item
+            );
+            this.#updateCards();
+            this.dispatchEvent(new UmbChangeEvent());
+        } catch {
+            // Modal was cancelled - do nothing
+        }
     }
 
     #onRemove(card: UaiResourceCardModel) {

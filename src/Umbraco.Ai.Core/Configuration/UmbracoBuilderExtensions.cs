@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Context.Middleware;
 using Umbraco.Ai.Core.Context.ResourceTypes;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
@@ -39,9 +40,10 @@ public static partial class UmbracoBuilderExtensions
         builder.AiProviders()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
 
-        // Initialize middleware collection builders (empty by default, consumers can add via Composers)
-        // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add middleware
-        _ = builder.AiChatMiddleware();
+        // Initialize middleware collection builders with default middleware
+        // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
+        builder.AiChatMiddleware()
+            .Append<AiContextInjectionChatMiddleware>();
         _ = builder.AiEmbeddingMiddleware();
 
         // Tool infrastructure - auto-discover tools via [AiTool] attribute

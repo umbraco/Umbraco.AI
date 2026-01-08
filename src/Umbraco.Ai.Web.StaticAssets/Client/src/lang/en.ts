@@ -15,6 +15,13 @@ export default {
         deleteConfirm: "Are you sure you want to delete this profile?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} profile(s)?`,
     },
+    uaiContext: {
+        selectContext: "Select AI Context",
+        addContext: "Add context",
+        noContextsAvailable: "No AI contexts available. Create one in the AI section.",
+        deleteConfirm: "Are you sure you want to delete this context?",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} context(s)?`,
+    },
     uaiFields: {
         // Text resource fields
         textContentLabel: "Content",

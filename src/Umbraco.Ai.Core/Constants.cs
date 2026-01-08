@@ -17,4 +17,21 @@ internal static class Constants
             new JsonStringTypeConverter()
         }
     };
+
+    /// <summary>
+    /// Property editor constants for Umbraco.Ai.
+    /// </summary>
+    internal static class PropertyEditors
+    {
+        /// <summary>
+        /// Property editor aliases.
+        /// </summary>
+        internal static class Aliases
+        {
+            /// <summary>
+            /// Alias for the AI Context Picker property editor.
+            /// </summary>
+            public const string ContextPicker = "Uai.ContextPicker";
+        }
+    }
 }

@@ -49,9 +49,4 @@ public class AiProfileEntity
     /// Tags array serialized as a comma-separated string.
     /// </summary>
     public string? Tags { get; set; }
-
-    /// <summary>
-    /// Context IDs array serialized as a comma-separated string.
-    /// </summary>
-    public string? ContextIds { get; set; }
 }

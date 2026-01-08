@@ -22,7 +22,11 @@ import type { UaiContextItemModel } from '../../types.js';
 const elementName = 'uai-context-picker';
 
 @customElement(elementName)
-export class UaiContextPickerElement extends UmbFormControlMixin(UmbLitElement, '') {
+export class UaiContextPickerElement extends UmbFormControlMixin<
+    string[] | undefined,
+    typeof UmbLitElement,
+    undefined
+>(UmbLitElement, undefined) {
     /**
      * Allow selecting multiple contexts.
      */
@@ -50,11 +54,11 @@ export class UaiContextPickerElement extends UmbFormControlMixin(UmbLitElement, 
     /**
      * The selected context IDs as JSON array.
      */
-    override set value(val: string) {
+    override set value(val: string[] | undefined) {
         this.#setValue(val);
     }
-    override get value(): string {
-        return this._selection.length > 0 ? JSON.stringify(this._selection) : '';
+    override get value(): string[] | undefined {
+        return this._selection.length > 0 ? this._selection : undefined;
     }
 
     @state()
@@ -66,23 +70,14 @@ export class UaiContextPickerElement extends UmbFormControlMixin(UmbLitElement, 
     @state()
     private _loading = false;
 
-    #setValue(val: string | undefined) {
+    #setValue(val: string[] | undefined) {
         if (!val) {
             this._selection = [];
             this._items = [];
             return;
         }
-
-        try {
-            const ids = JSON.parse(val) as string[];
-            if (Array.isArray(ids)) {
-                this._selection = ids;
-                this.#loadItems();
-            }
-        } catch {
-            this._selection = [];
-            this._items = [];
-        }
+        this._selection = val;
+        this.#loadItems();
     }
 
     async #loadItems() {
@@ -125,8 +120,8 @@ export class UaiContextPickerElement extends UmbFormControlMixin(UmbLitElement, 
 
         try {
             const result = await modal.onSubmit();
-            if (result) {
-                this.#addSelection(result);
+            if (result?.selection?.length) {
+                this.#addSelections(result.selection);
             }
         } catch {
             // Modal was cancelled
@@ -152,13 +147,19 @@ export class UaiContextPickerElement extends UmbFormControlMixin(UmbLitElement, 
             }));
     }
 
-    #addSelection(item: UaiPickableItemModel) {
-        if (this._selection.includes(item.value)) return;
+    #addSelections(items: UaiPickableItemModel[]) {
+        // Filter out already selected items
+        const newValues = items
+            .map(item => item.value)
+            .filter(value => !this._selection.includes(value));
+
+        if (newValues.length === 0) return;
 
         if (this.multiple) {
-            this._selection = [...this._selection, item.value];
+            this._selection = [...this._selection, ...newValues];
         } else {
-            this._selection = [item.value];
+            // Single mode: only take the first item
+            this._selection = [newValues[0]];
         }
 
         this.#loadItems();
@@ -202,7 +203,8 @@ export class UaiContextPickerElement extends UmbFormControlMixin(UmbLitElement, 
         return html`
             <uui-ref-node
                 name=${item.name}
-                detail=${item.alias}>
+                detail=${item.alias}
+                readonly>
                 <umb-icon slot="icon" name="icon-wand"></umb-icon>
                 ${when(item.resourceCount > 0, () => html`
                     <uui-tag slot="tag" color="default">${item.resourceCount} resources</uui-tag>

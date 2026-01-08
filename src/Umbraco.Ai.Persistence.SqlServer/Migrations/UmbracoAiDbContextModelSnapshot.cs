@@ -154,10 +154,6 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<Guid>("ConnectionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ContextIds")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
                     b.Property<string>("ModelId")
                         .IsRequired()
                         .HasMaxLength(255)

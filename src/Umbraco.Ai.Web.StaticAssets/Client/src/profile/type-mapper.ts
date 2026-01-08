@@ -15,7 +15,6 @@ export const UaiProfileTypeMapper = {
             connectionId: response.connectionId,
             settings: this.mapResponseSettings(response),
             tags: response.tags ?? [],
-            contextIds: response.contextIds ?? [],
         };
     },
 
@@ -39,7 +38,6 @@ export const UaiProfileTypeMapper = {
             connectionId: model.connectionId,
             settings: this.mapRequestSettings(model.settings),
             tags: model.tags,
-            contextIds: model.contextIds,
         };
     },
 
@@ -51,7 +49,6 @@ export const UaiProfileTypeMapper = {
             connectionId: model.connectionId,
             settings: this.mapRequestSettings(model.settings),
             tags: model.tags,
-            contextIds: model.contextIds,
         };
     },
 
@@ -73,6 +70,7 @@ export const UaiProfileTypeMapper = {
                 temperature: (settings.temperature as number) ?? null,
                 maxTokens: (settings.maxTokens as number) ?? null,
                 systemPromptTemplate: (settings.systemPromptTemplate as string) ?? null,
+                contextIds: (settings.contextIds as string[] | undefined) ?? [],
             } as UaiChatProfileSettings;
         }
 
@@ -95,6 +93,7 @@ export const UaiProfileTypeMapper = {
                 temperature: settings.temperature,
                 maxTokens: settings.maxTokens,
                 systemPromptTemplate: settings.systemPromptTemplate,
+                contextIds: settings.contextIds,
             } as ChatProfileSettingsModel;
         }
 

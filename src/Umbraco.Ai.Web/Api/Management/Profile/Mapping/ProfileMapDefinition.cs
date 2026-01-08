@@ -55,7 +55,6 @@ public class ProfileMapDefinition : IMapDefinition
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
         target.Tags = source.Tags;
-        target.ContextIds = source.ContextIds.ToList();
     }
 
     // Umbraco.Code.MapAll -Id -Capability
@@ -68,7 +67,6 @@ public class ProfileMapDefinition : IMapDefinition
         target.ConnectionId = source.ConnectionId;
         target.Settings = MapSettingsFromRequest(target.Capability, source.Settings);
         target.Tags = source.Tags;
-        target.ContextIds = source.ContextIds.ToList();
     }
 
     // Umbraco.Code.MapAll
@@ -82,7 +80,6 @@ public class ProfileMapDefinition : IMapDefinition
         target.Model = context.Map<ModelRefModel>(source.Model);
         target.Settings = MapSettingsToResponse(source);
         target.Tags = source.Tags;
-        target.ContextIds = source.ContextIds;
     }
 
     // Umbraco.Code.MapAll
@@ -103,7 +100,8 @@ public class ProfileMapDefinition : IMapDefinition
             {
                 Temperature = chat.Temperature,
                 MaxTokens = chat.MaxTokens,
-                SystemPromptTemplate = chat.SystemPromptTemplate
+                SystemPromptTemplate = chat.SystemPromptTemplate,
+                ContextIds = chat.ContextIds
             },
             AiEmbeddingProfileSettings => new EmbeddingProfileSettingsModel(),
             _ => null
@@ -118,7 +116,8 @@ public class ProfileMapDefinition : IMapDefinition
             {
                 Temperature = chat.Temperature,
                 MaxTokens = chat.MaxTokens,
-                SystemPromptTemplate = chat.SystemPromptTemplate
+                SystemPromptTemplate = chat.SystemPromptTemplate,
+                ContextIds = chat.ContextIds
             },
             AiCapability.Chat => new AiChatProfileSettings(),
             AiCapability.Embedding => new AiEmbeddingProfileSettings(),

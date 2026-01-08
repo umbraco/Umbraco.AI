@@ -23,6 +23,7 @@ export interface UaiChatProfileSettings extends UaiProfileSettings {
     temperature: number | null;
     maxTokens: number | null;
     systemPromptTemplate: string | null;
+    contextIds: string[];
 }
 
 /**
@@ -45,7 +46,6 @@ export interface UaiProfileDetailModel extends UmbEntityModel {
     connectionId: string;
     settings: UaiProfileSettings | null;
     tags: string[];
-    contextIds: string[];
 }
 
 /**

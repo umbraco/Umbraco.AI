@@ -48,6 +48,7 @@ export class UaiContextResourceTypePickerModalElement extends UmbModalBaseElemen
                     slot="actions"
                     label=${this.localize.term('general_close')}
                     @click=${this._rejectModal}>
+                    ${this.localize.term('general_close')}
                 </uui-button>
             </umb-body-layout>
         `;

@@ -5,10 +5,11 @@ import {
     repeat,
     state,
 } from '@umbraco-cms/backoffice/external/lit';
-import { UmbModalBaseElement } from '@umbraco-cms/backoffice/modal';
+import { UmbModalBaseElement, UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
 import { UmbTextStyles } from '@umbraco-cms/backoffice/style';
 import type { UaiContextResourceTypeItemModel } from '../../../context-resource-type/types.js';
 import type { UaiContextResourceTypePickerModalData, UaiContextResourceTypePickerModalValue } from './context-resource-type-picker-modal.token.js';
+import { UAI_RESOURCE_OPTIONS_MODAL } from './resource-options-modal.token.js';
 
 const elementName = 'uai-context-resource-type-picker-modal';
 
@@ -25,9 +26,28 @@ export class UaiContextResourceTypePickerModalElement extends UmbModalBaseElemen
         this._contextResourceTypes = this.data?.contextResourceTypes ?? [];
     }
 
-    #handleSelect(contextResourceType: UaiContextResourceTypeItemModel) {
-        this.modalContext?.setValue({ contextResourceType });
-        this.modalContext?.submit();
+    async #handleSelect(contextResourceType: UaiContextResourceTypeItemModel) {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
+
+        // Open the options modal on top of this one
+        const optionsModal = modalManager.open(this, UAI_RESOURCE_OPTIONS_MODAL, {
+            data: {
+                resourceType: contextResourceType,
+                resource: undefined, // New resource
+            },
+        });
+
+        try {
+            const optionsResult = await optionsModal.onSubmit();
+            if (optionsResult?.resource) {
+                // Options modal succeeded - submit picker with both type and resource
+                this.modalContext?.setValue({ contextResourceType, resource: optionsResult.resource });
+                this.modalContext?.submit();
+            }
+        } catch {
+            // Options modal was cancelled - stay on picker (do nothing)
+        }
     }
 
     override render() {

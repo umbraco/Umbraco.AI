@@ -69,38 +69,24 @@ export class UaiResourceListElement extends UmbLitElement {
         const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
         if (!modalManager) return;
 
-        // Step 1: Pick a context resource type
-        const typePickerModal = modalManager.open(this, UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL, {
+        const pickerModal = modalManager.open(this, UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL, {
             data: {
                 contextResourceTypes: this.#contextResourceTypes,
             },
         });
 
-        const typePickerResult = await typePickerModal.onSubmit();
-        if (!typePickerResult?.contextResourceType) return;
-
-        const selectedType = typePickerResult.contextResourceType;
-
-        // Step 2: Open the resource options modal
-        const optionsModal = modalManager.open(this, UAI_RESOURCE_OPTIONS_MODAL, {
-            data: {
-                resourceType: selectedType,
-                resource: undefined, // New resource
-            },
-        });
-
-        const optionsResult = await optionsModal.onSubmit();
-        if (!optionsResult?.resource) return;
+        const result = await pickerModal.onSubmit();
+        if (!result?.contextResourceType || !result?.resource) return;
 
         // Create the new resource
         const newResource: UaiContextResourceModel = {
             id: crypto.randomUUID(),
-            resourceTypeId: selectedType.id,
-            name: optionsResult.resource.name,
-            description: optionsResult.resource.description ?? null,
+            resourceTypeId: result.contextResourceType.id,
+            name: result.resource.name,
+            description: result.resource.description ?? null,
             sortOrder: this._items.length,
-            data: optionsResult.resource.data,
-            injectionMode: optionsResult.resource.injectionMode,
+            data: result.resource.data,
+            injectionMode: result.resource.injectionMode,
         };
 
         this._items = [...this._items, newResource];

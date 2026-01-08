@@ -174,7 +174,7 @@ export class UaiResourceListElement extends UmbLitElement {
         return html`
             <uui-card-content-node
                 name=${card.name}
-                @click=${() => this.#onEdit(card)}
+                @open=${() => this.#onEdit(card)}
                 ?readonly=${this.readonly}>
                 <umb-icon
                     slot="icon"
@@ -229,6 +229,7 @@ export class UaiResourceListElement extends UmbLitElement {
 
             uui-card-content-node {
                 cursor: pointer;
+                min-width: auto;
             }
 
             uui-card-content-node[readonly] {

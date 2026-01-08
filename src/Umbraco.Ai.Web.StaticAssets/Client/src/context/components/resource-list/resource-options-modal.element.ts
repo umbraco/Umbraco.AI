@@ -119,8 +119,8 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
                                         id="injectionMode"
                                         .value=${this._injectionMode}
                                         .options=${[
-                                            { value: 'Always', name: ' Always - Include in every request' },
-                                            { value: 'OnDemand', name: 'On-Demand - Available via tool for LLM to retrieve' },
+                                            { value: 'Always', name: ' Always - Include in every request', selected: this._injectionMode === 'Always' },
+                                            { value: 'OnDemand', name: 'On-Demand - Available via tool for LLM to retrieve', selected: this._injectionMode === 'OnDemand' },
                                         ]}
                                         @change=${this.#onInjectionModeChange}>
                                 </uui-select>

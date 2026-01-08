@@ -57,7 +57,7 @@ internal sealed class AiContextFormatter : IAiContextFormatter
 
             return resource.Data is JsonElement jsonElement
                 ? jsonElement.ToString()
-                : JsonSerializer.Serialize(resource.Data);
+                : JsonSerializer.Serialize(resource.Data, Constants.DefaultJsonSerializerOptions);
         }
 
         return resourceType.FormatForInjection(resource.Data);

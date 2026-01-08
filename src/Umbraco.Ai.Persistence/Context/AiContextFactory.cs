@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Context;
 
 namespace Umbraco.Ai.Persistence.Context;
@@ -41,7 +42,7 @@ internal static class AiContextFactory
         {
             // Data is stored as JSON, deserialize to dynamic object
             // The actual typed deserialization happens at the service layer
-            data = JsonSerializer.Deserialize<JsonElement>(entity.Data);
+            data = JsonSerializer.Deserialize<JsonElement>(entity.Data, Constants.DefaultJsonSerializerOptions);
         }
 
         return new AiContextResource
@@ -92,7 +93,7 @@ internal static class AiContextFactory
             Name = resource.Name,
             Description = resource.Description,
             SortOrder = resource.SortOrder,
-            Data = resource.Data is null ? string.Empty : JsonSerializer.Serialize(resource.Data),
+            Data = resource.Data is null ? string.Empty : JsonSerializer.Serialize(resource.Data, Constants.DefaultJsonSerializerOptions),
             InjectionMode = (int)resource.InjectionMode
         };
     }
@@ -121,7 +122,7 @@ internal static class AiContextFactory
         entity.Name = resource.Name;
         entity.Description = resource.Description;
         entity.SortOrder = resource.SortOrder;
-        entity.Data = resource.Data is null ? string.Empty : JsonSerializer.Serialize(resource.Data);
+        entity.Data = resource.Data is null ? string.Empty : JsonSerializer.Serialize(resource.Data, Constants.DefaultJsonSerializerOptions);
         entity.InjectionMode = (int)resource.InjectionMode;
     }
 }

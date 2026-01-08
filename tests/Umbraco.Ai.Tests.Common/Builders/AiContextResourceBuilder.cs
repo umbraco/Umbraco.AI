@@ -1,3 +1,4 @@
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Context;
 
 namespace Umbraco.Ai.Tests.Common.Builders;
@@ -78,14 +79,15 @@ public class AiContextResourceBuilder
             targetAudience,
             styleGuidelines = (string?)null,
             avoidList = Array.Empty<string>()
-        });
+        },
+        Constants.DefaultJsonSerializerOptions);
         return this;
     }
 
     public AiContextResourceBuilder AsText(string content)
     {
         _resourceTypeId = "text";
-        _data = System.Text.Json.JsonSerializer.Serialize(new { content });
+        _data = System.Text.Json.JsonSerializer.Serialize(new { content }, Constants.DefaultJsonSerializerOptions);
         return this;
     }
 

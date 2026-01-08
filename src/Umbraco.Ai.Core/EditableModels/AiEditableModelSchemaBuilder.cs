@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Text.Json;
 using Umbraco.Ai.Extensions;
+using Umbraco.Cms.Core.Serialization;
 
 namespace Umbraco.Ai.Core.EditableModels;
 
@@ -29,6 +31,9 @@ internal sealed class AiEditableModelSchemaBuilder : IAiEditableModelSchemaBuild
             Label = attr?.Label ?? $"#uaiFields_{modelKey}{property.Name}Label",
             Description = attr?.Description ?? $"#uaiFields_{modelKey}{property.Name}Description",
             EditorUiAlias = attr?.EditorUiAlias ?? InferEditorUiAlias(property.PropertyType),
+            EditorConfig = attr?.EditorConfig != null
+                ? JsonSerializer.Deserialize<JsonElement>(attr.EditorConfig, Constants.DefaultJsonSerializerOptions)
+                : null,
             DefaultValue = attr?.DefaultValue,
             ValidationRules = InferValidationAttributes(property),
             SortOrder = attr?.SortOrder ?? 0

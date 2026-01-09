@@ -23,7 +23,7 @@ public sealed class BrandVoiceResourceType : AiContextResourceTypeBase<BrandVoic
     { }
 
     /// <inheritdoc />
-    protected override string FormatForInjection(BrandVoiceResourceData data)
+    protected override string FormatForLlm(BrandVoiceResourceData data)
     {
         var sb = new StringBuilder();
 

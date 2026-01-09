@@ -60,6 +60,6 @@ internal sealed class AiContextFormatter : IAiContextFormatter
                 : JsonSerializer.Serialize(resource.Data, Constants.DefaultJsonSerializerOptions);
         }
 
-        return resourceType.FormatForInjection(resource.Data);
+        return resourceType.FormatForLlm(resource.Data);
     }
 }

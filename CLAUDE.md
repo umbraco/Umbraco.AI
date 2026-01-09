@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Note:** This is the Umbraco.Ai core package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
+
 ## Build Commands
 
 ```bash
@@ -376,10 +378,6 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 - .NET 10.0 (`net10.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
-
-## Coding Standard
-
-- All extensions live in Umbraci.Ai.Extensions namespace for ease of discovery
 
 ## Database Migrations
 

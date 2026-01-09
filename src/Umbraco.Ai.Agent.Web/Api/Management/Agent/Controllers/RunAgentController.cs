@@ -32,7 +32,7 @@ public class RunAgentController : AgentControllerBase
 {
     private readonly IAiAgentService _agentService;
     private readonly IAiProfileService _profileService;
-    private readonly IAiChatClientFactory _chatClientFactory;
+    private readonly IAiChatService _chatService;
     private readonly AiToolCollection _toolCollection;
     private readonly IAiFunctionFactory _functionFactory;
     private readonly ILogger<RunAgentController> _logger;
@@ -43,14 +43,14 @@ public class RunAgentController : AgentControllerBase
     public RunAgentController(
         IAiAgentService agentService,
         IAiProfileService profileService,
-        IAiChatClientFactory chatClientFactory,
+        IAiChatService chatService,
         AiToolCollection toolCollection,
         IAiFunctionFactory functionFactory,
         ILogger<RunAgentController> logger)
     {
         _agentService = agentService;
         _profileService = profileService;
-        _chatClientFactory = chatClientFactory;
+        _chatService = chatService;
         _toolCollection = toolCollection;
         _functionFactory = functionFactory;
         _logger = logger;
@@ -114,13 +114,13 @@ public class RunAgentController : AgentControllerBase
         return new AguiEventStreamResult(events);
     }
 
+    // TODO: [MB] This is doing too much in a controller, this should be in a service
     private async IAsyncEnumerable<IAguiEvent> StreamAgentEventsAsync(
         AiAgent agent,
         AiProfile profile,
         AguiRunRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        
         var threadId = string.IsNullOrEmpty(request.ThreadId) ? Guid.NewGuid().ToString() : request.ThreadId;
         var runId = string.IsNullOrEmpty(request.RunId) ? Guid.NewGuid().ToString() : request.RunId;
         var messageId = Guid.NewGuid().ToString();
@@ -159,14 +159,14 @@ public class RunAgentController : AgentControllerBase
             try
             {
 
-                // Create chat client
-                var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
+                // Create chat client with base options (includes profile ID for context resolution)
+                var (chatClient, baseOptions) = await _chatService.GetChatClientWithOptionsAsync(profile.Id, cancellationToken);
 
                 // Convert AG-UI messages to M.E.AI ChatMessages (including context)
                 var chatMessages = ConvertToChatMessages(agent, request.Messages, request.Context);
 
-                // Build ChatOptions with profile settings
-                var chatOptions = BuildChatOptions(agent, profile, request.Tools);
+                // Build ChatOptions by merging agent settings onto base options
+                var chatOptions = BuildChatOptions(agent, baseOptions, request.Tools);
 
                 // DEBUG: Log tool schemas being sent to the LLM
                 if (chatOptions.Tools != null)
@@ -389,31 +389,17 @@ public class RunAgentController : AgentControllerBase
     }
 
     /// <summary>
-    /// Build ChatOptions with profile settings applied.
+    /// Build ChatOptions by merging agent settings onto base options from the profile.
     /// </summary>
-    private ChatOptions BuildChatOptions(AiAgent agent, AiProfile profile, IEnumerable<AguiTool>? frontendTools)
+    private ChatOptions BuildChatOptions(AiAgent agent, ChatOptions baseOptions, IEnumerable<AguiTool>? frontendTools)
     {
-        var chatOptions = new ChatOptions();
+        // Start with base options (already has ProfileIdKey set for context resolution)
+        var additionalProperties = baseOptions.AdditionalProperties != null
+            ? new AdditionalPropertiesDictionary(baseOptions.AdditionalProperties)
+            : new AdditionalPropertiesDictionary();
 
-        // Pass AgentId for context resolution
-        chatOptions.AdditionalProperties = new AdditionalPropertiesDictionary
-        {
-            [AgentContextResolver.AgentIdKey] = agent.Id
-        };
-
-        // Apply profile settings (Temperature, MaxTokens) if available
-        if (profile.Settings is AiChatProfileSettings chatSettings)
-        {
-            if (chatSettings.Temperature.HasValue)
-            {
-                chatOptions.Temperature = chatSettings.Temperature.Value;
-            }
-
-            if (chatSettings.MaxTokens.HasValue)
-            {
-                chatOptions.MaxOutputTokens = chatSettings.MaxTokens.Value;
-            }
-        }
+        // Add AgentId for agent context resolution
+        additionalProperties[AgentContextResolver.AgentIdKey] = agent.Id;
 
         // Build combined tool list (system + user + frontend)
         var allTools = new List<AITool>();
@@ -431,6 +417,15 @@ public class RunAgentController : AgentControllerBase
         {
             allTools.AddRange(ConvertToAITools(frontendTools));
         }
+
+        // Build final options merging base settings with agent-specific settings
+        var chatOptions = new ChatOptions
+        {
+            ModelId = baseOptions.ModelId,
+            Temperature = baseOptions.Temperature,
+            MaxOutputTokens = baseOptions.MaxOutputTokens,
+            AdditionalProperties = additionalProperties
+        };
 
         // Configure tools if any exist
         if (allTools.Count > 0)

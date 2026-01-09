@@ -31,6 +31,11 @@ public class AgentItemResponseModel
     public Guid ProfileId { get; set; }
 
     /// <summary>
+    /// Context IDs for AI context injection.
+    /// </summary>
+    public IEnumerable<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }

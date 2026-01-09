@@ -35,6 +35,11 @@ public class UpdateAgentRequestModel
     public required Guid ProfileId { get; init; }
 
     /// <summary>
+    /// Optional context IDs for AI context injection.
+    /// </summary>
+    public IEnumerable<Guid>? ContextIds { get; init; }
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; init; }

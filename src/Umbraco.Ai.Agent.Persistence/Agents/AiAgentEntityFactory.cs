@@ -25,6 +25,7 @@ internal static class AiAgentEntityFactory
             Name = entity.Name,
             Description = entity.Description,
             ProfileId = entity.ProfileId,
+            ContextIds = DeserializeContextIds(entity.ContextIds),
             Instructions = entity.Instructions,
             IsActive = entity.IsActive,
         };
@@ -42,6 +43,7 @@ internal static class AiAgentEntityFactory
             Name = aiAgent.Name,
             Description = aiAgent.Description,
             ProfileId = aiAgent.ProfileId,
+            ContextIds = SerializeContextIds(aiAgent.ContextIds),
             Instructions = aiAgent.Instructions,
             IsActive = aiAgent.IsActive
         };
@@ -56,7 +58,35 @@ internal static class AiAgentEntityFactory
         entity.Name = aiAgent.Name;
         entity.Description = aiAgent.Description;
         entity.ProfileId = aiAgent.ProfileId;
+        entity.ContextIds = SerializeContextIds(aiAgent.ContextIds);
         entity.Instructions = aiAgent.Instructions;
         entity.IsActive = aiAgent.IsActive;
+    }
+
+    private static string? SerializeContextIds(IReadOnlyList<Guid> contextIds)
+    {
+        if (contextIds.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(contextIds, JsonOptions);
+    }
+
+    private static IReadOnlyList<Guid> DeserializeContextIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<Guid>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 }

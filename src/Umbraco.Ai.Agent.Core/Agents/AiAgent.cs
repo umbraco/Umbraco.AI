@@ -31,6 +31,11 @@ public sealed class AiAgent
     public required Guid ProfileId { get; set; }
 
     /// <summary>
+    /// Context IDs assigned to this agent for AI context injection.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

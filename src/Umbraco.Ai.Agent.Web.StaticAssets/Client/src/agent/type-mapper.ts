@@ -12,6 +12,7 @@ export const UaiAgentTypeMapper = {
             name: response.name,
             description: response.description ?? null,
             profileId: response.profileId,
+            contextIds: response.contextIds ?? [],
             instructions: response.instructions ?? null,
             isActive: response.isActive,
         };
@@ -25,6 +26,7 @@ export const UaiAgentTypeMapper = {
             name: response.name,
             description: response.description ?? null,
             profileId: response.profileId,
+            contextIds: response.contextIds ?? [],
             isActive: response.isActive,
         };
     },
@@ -35,6 +37,7 @@ export const UaiAgentTypeMapper = {
             name: model.name,
             description: model.description,
             profileId: model.profileId,
+            contextIds: model.contextIds,
             instructions: model.instructions,
         };
     },
@@ -45,6 +48,7 @@ export const UaiAgentTypeMapper = {
             name: model.name,
             description: model.description,
             profileId: model.profileId,
+            contextIds: model.contextIds,
             instructions: model.instructions,
             isActive: model.isActive,
         };

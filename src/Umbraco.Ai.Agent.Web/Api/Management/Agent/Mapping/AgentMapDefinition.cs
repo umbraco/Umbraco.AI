@@ -50,6 +50,7 @@ public class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDefi
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.Instructions = source.Instructions;
         target.IsActive = true;
     }
@@ -61,6 +62,7 @@ public class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDefi
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
     }
@@ -73,6 +75,7 @@ public class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDefi
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds;
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
     }
@@ -85,6 +88,7 @@ public class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDefi
         target.Name = source.Name;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds;
         target.IsActive = source.IsActive;
     }
 }

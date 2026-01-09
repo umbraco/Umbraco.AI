@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.Ai.Agent.Core.Contexts;
 using Umbraco.Ai.Agent.Extensions;
 using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Events.Lifecycle;
@@ -165,7 +166,7 @@ public class RunAgentController : AgentControllerBase
                 var chatMessages = ConvertToChatMessages(agent, request.Messages, request.Context);
 
                 // Build ChatOptions with profile settings
-                var chatOptions = BuildChatOptions(profile, request.Tools);
+                var chatOptions = BuildChatOptions(agent, profile, request.Tools);
 
                 // DEBUG: Log tool schemas being sent to the LLM
                 if (chatOptions.Tools != null)
@@ -390,9 +391,15 @@ public class RunAgentController : AgentControllerBase
     /// <summary>
     /// Build ChatOptions with profile settings applied.
     /// </summary>
-    private ChatOptions BuildChatOptions(AiProfile profile, IEnumerable<AguiTool>? frontendTools)
+    private ChatOptions BuildChatOptions(AiAgent agent, AiProfile profile, IEnumerable<AguiTool>? frontendTools)
     {
         var chatOptions = new ChatOptions();
+
+        // Pass AgentId for context resolution
+        chatOptions.AdditionalProperties = new AdditionalPropertiesDictionary
+        {
+            [AgentContextResolver.AgentIdKey] = agent.Id
+        };
 
         // Apply profile settings (Temperature, MaxTokens) if available
         if (profile.Settings is AiChatProfileSettings chatSettings)

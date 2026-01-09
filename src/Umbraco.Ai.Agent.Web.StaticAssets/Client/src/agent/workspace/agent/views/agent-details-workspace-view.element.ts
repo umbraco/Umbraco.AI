@@ -1,8 +1,10 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UaiSelectedEvent } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
+import "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
@@ -62,6 +64,17 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onContextIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
+                { contextIds: picker.value ?? [] },
+                "contextIds"
+            )
+        );
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -94,6 +107,15 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         @input=${this.#onDescriptionChange}
                         placeholder="Enter description..."
                     ></uui-input>
+                </umb-property-layout>
+
+                <umb-property-layout label="Contexts" description="Predefined contexts to include when running this agent">
+                    <uai-context-picker
+                        slot="editor"
+                        multiple
+                        .value=${this._model.contextIds}
+                        @change=${this.#onContextIdsChange}
+                    ></uai-context-picker>
                 </umb-property-layout>
 
                 <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves">

@@ -31,6 +31,11 @@ public class AiAgentEntity
     public Guid ProfileId { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of context IDs.
+    /// </summary>
+    public string? ContextIds { get; set; }
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

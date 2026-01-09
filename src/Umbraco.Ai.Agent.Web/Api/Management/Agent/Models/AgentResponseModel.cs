@@ -31,6 +31,11 @@ public class AgentResponseModel
     public Guid ProfileId { get; set; }
 
     /// <summary>
+    /// Context IDs for AI context injection.
+    /// </summary>
+    public IEnumerable<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Agent.Core.Contexts;
 using Umbraco.Ai.Agent.Core.Models;
 using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Agent.Core.Configuration;
@@ -31,7 +33,10 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiAgentRepository, InMemoryAiAgentRepository>();
 
         // Register service
-        builder.Services.AddScoped<IAiAgentService, AiAgentService>();
+        builder.Services.AddSingleton<IAiAgentService, AiAgentService>();
+
+        // Register agent context resolver
+        builder.AiContextResolvers().Append<AgentContextResolver>();
 
         return builder;
     }

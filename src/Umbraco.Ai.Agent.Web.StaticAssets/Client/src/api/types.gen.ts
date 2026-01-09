@@ -10,6 +10,7 @@ export type AgentItemResponseModel = {
     name: string;
     description?: string | null;
     profileId: string;
+    contextIds: Array<string>;
     isActive: boolean;
 };
 
@@ -19,6 +20,7 @@ export type AgentResponseModel = {
     name: string;
     description?: string | null;
     profileId: string;
+    contextIds: Array<string>;
     instructions?: string | null;
     isActive: boolean;
 };
@@ -42,7 +44,7 @@ export type AguiMessageModel = {
     toolCallId?: string | null;
 };
 
-export type AguiMessageRoleModel = 'user' | 'assistant' | 'system' | 'tool' | 'developer' | 'activity';
+export type AguiMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
 
 export type AguiResumeInfoModel = {
     interruptId: string;
@@ -83,6 +85,7 @@ export type CreateAgentRequestModel = {
     name: string;
     description?: string | null;
     profileId: string;
+    contextIds?: Array<string> | null;
     instructions?: string | null;
 };
 
@@ -113,6 +116,7 @@ export type UpdateAgentRequestModel = {
     name: string;
     description?: string | null;
     profileId: string;
+    contextIds?: Array<string> | null;
     instructions?: string | null;
     isActive: boolean;
 };

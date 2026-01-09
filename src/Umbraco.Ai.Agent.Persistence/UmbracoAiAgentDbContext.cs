@@ -45,6 +45,9 @@ public class UmbracoAiAgentDbContext : DbContext
             entity.Property(e => e.ProfileId)
                 .IsRequired(true);
 
+            entity.Property(e => e.ContextIds)
+                .HasMaxLength(4000);
+
             entity.Property(e => e.Instructions);
 
             entity.Property(e => e.IsActive)

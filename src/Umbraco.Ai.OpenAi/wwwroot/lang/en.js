@@ -1,10 +1,10 @@
 export default {
-    uaiProviders: {
-        openaiSettingsApiKeyLabel: "OpenAI API Key",
-        openaiSettingsApiKeyDescription: "Enter your OpenAI API key to enable AI features.",
-        openaiSettingsOrganizationIdLabel: "OpenAI Organization ID",
-        openaiSettingsOrganizationIdDescription: "Optional: Specify your OpenAI Organization ID if applicable.",
-        openaiSettingsEndpointLabel: "OpenAI API Endpoint",
-        openaiSettingsEndpointDescription: "Optional: Specify a custom OpenAI API endpoint.",
+    uaiFields: {
+        openaiApiKeyLabel: "OpenAI API Key",
+        openaiApiKeyDescription: "Enter your OpenAI API key to enable AI features.",
+        openaiOrganizationIdLabel: "OpenAI Organization ID",
+        openaiOrganizationIdDescription: "Optional: Specify your OpenAI Organization ID if applicable.",
+        openaiEndpointLabel: "OpenAI API Endpoint",
+        openaiEndpointDescription: "Optional: Specify a custom OpenAI API endpoint.",
     },
 };

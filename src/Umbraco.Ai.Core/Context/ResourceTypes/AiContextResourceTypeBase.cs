@@ -54,14 +54,14 @@ public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
     }
 
     /// <summary>
-    /// Formats the strongly-typed resource data for injection into the system prompt.
+    /// Formats the strongly-typed resource data for injection into the LLM system prompt.
     /// </summary>
     /// <param name="data">The deserialized resource data.</param>
     /// <returns>Formatted text suitable for AI consumption.</returns>
-    protected abstract string FormatForInjection(TData data);
+    protected abstract string FormatForLlm(TData data);
 
     /// <inheritdoc />
-    public string FormatForInjection(object? dataObject)
+    public string FormatForLlm(object? dataObject)
     {
         if (dataObject is null)
             return string.Empty;
@@ -71,6 +71,6 @@ public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
         if (data is null)
             return string.Empty;
 
-        return FormatForInjection(data);
+        return FormatForLlm(data);
     }
 }

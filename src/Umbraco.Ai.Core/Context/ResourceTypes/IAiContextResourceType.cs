@@ -46,9 +46,9 @@ public interface IAiContextResourceType : IDiscoverable
     AiEditableModelSchema? GetDataSchema();
 
     /// <summary>
-    /// Formats the resource data for injection into the system prompt.
+    /// Formats the resource data for injection into the LLM system prompt.
     /// </summary>
     /// <param name="data">The resource data object.</param>
     /// <returns>Formatted text suitable for AI consumption.</returns>
-    string FormatForInjection(object? data);
+    string FormatForLlm(object? data);
 }

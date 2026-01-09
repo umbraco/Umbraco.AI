@@ -63,7 +63,7 @@ public class GetContextResourceTool : AiToolBase<GetContextResourceArgs>
                 $"Resource with ID '{args.ResourceId}' not found. Use list_context_resources to see available resources."));
         }
 
-        var formattedContent = _formatter.FormatResource(resource);
+        var formattedContent = _formatter.FormatResourceForLlm(resource);
 
         return Task.FromResult<object>(new GetContextResourceResult(
             true,

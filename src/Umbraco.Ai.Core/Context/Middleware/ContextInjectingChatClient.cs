@@ -114,14 +114,13 @@ internal sealed class ContextInjectingChatClient : IChatClient
         // Set the resolved context in the accessor for OnDemand tools
         var contextScope = _contextAccessor.SetContext(resolvedContext);
 
-        // If there are "Always" injection resources, inject them into the system prompt
-        if (resolvedContext.InjectedResources.Count > 0)
+        // Format and inject context into system prompt:
+        // - "Always" resources are injected with full content
+        // - "OnDemand" resources are listed so the LLM knows they're available
+        var contextContent = _contextFormatter.FormatContextForLlm(resolvedContext);
+        if (!string.IsNullOrWhiteSpace(contextContent))
         {
-            var contextContent = _contextFormatter.FormatForSystemPrompt(resolvedContext);
-            if (!string.IsNullOrWhiteSpace(contextContent))
-            {
-                messages = InjectContextIntoMessages(messages, contextContent);
-            }
+            messages = InjectContextIntoMessages(messages, contextContent);
         }
 
         return (messages, contextScope);

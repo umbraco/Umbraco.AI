@@ -45,7 +45,7 @@ internal sealed class AgentContextResolver : IAiContextResolver
             return AiContextResolverResult.Empty;
         }
 
-        var agent = await _agentService.GetAsync(agentId.Value, cancellationToken);
+        var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
         if (agent is null || agent.ContextIds.Count == 0)
         {
             return AiContextResolverResult.Empty;

@@ -16,19 +16,19 @@ internal sealed class AiAgentService : IAiAgentService
     }
 
     /// <inheritdoc />
-    public Task<AiAgent?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AiAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.GetByIdAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AiAgent?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AiAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default)
         => _repository.GetByAliasAsync(alias, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiAgent>> GetAllAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AiAgent>> GetAgentsAsync(CancellationToken cancellationToken = default)
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AiAgent>> GetPagedAsync(
+    public Task<PagedModel<AiAgent>> GetAgentsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -60,10 +60,10 @@ internal sealed class AiAgentService : IAiAgentService
     }
 
     /// <inheritdoc />
-    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<bool> DeleteAgentAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.DeleteAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    public Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 }

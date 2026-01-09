@@ -46,7 +46,7 @@ public class DeleteAgentController : AgentControllerBase
             return AgentNotFound();
         }
 
-        var deleted = await _AiAgentService.DeleteAsync(agentId.Value, cancellationToken);
+        var deleted = await _AiAgentService.DeleteAgentAsync(agentId.Value, cancellationToken);
         if (!deleted)
         {
             return AgentNotFound();

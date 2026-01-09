@@ -22,12 +22,12 @@ internal static class AgentServiceExtensions
     {
         if (idOrAlias is { IsId: true, Id: not null })
         {
-            return await service.GetAsync(idOrAlias.Id.Value, cancellationToken);
+            return await service.GetAgentAsync(idOrAlias.Id.Value, cancellationToken);
         }
 
         if (idOrAlias.Alias != null)
         {
-            return await service.GetByAliasAsync(idOrAlias.Alias, cancellationToken);
+            return await service.GetAgentByAliasAsync(idOrAlias.Alias, cancellationToken);
         }
 
         return null;
@@ -55,7 +55,7 @@ internal static class AgentServiceExtensions
         // For alias, we need to look up the agent
         if (idOrAlias.Alias != null)
         {
-            var agent = await service.GetByAliasAsync(idOrAlias.Alias, cancellationToken);
+            var agent = await service.GetAgentByAliasAsync(idOrAlias.Alias, cancellationToken);
             return agent?.Id;
         }
 

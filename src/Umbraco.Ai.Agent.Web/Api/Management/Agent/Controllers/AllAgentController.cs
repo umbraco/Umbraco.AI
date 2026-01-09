@@ -45,7 +45,7 @@ public class AllAgentController : AgentControllerBase
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await _AiAgentService.GetPagedAsync(skip, take, filter, profileId, cancellationToken);
+        var result = await _AiAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, cancellationToken);
 
         var viewModel = new PagedViewModel<AgentItemResponseModel>
         {

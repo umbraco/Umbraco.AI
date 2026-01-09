@@ -53,6 +53,7 @@ export const UaiPromptTypeMapper = {
             description: response.description ?? null,
             instructions: response.instructions,
             profileId: response.profileId ?? null,
+            contextIds: response.contextIds ?? [],
             tags: response.tags ?? [],
             scope: mapScopeFromApi(response.scope),
             isActive: response.isActive,
@@ -77,6 +78,7 @@ export const UaiPromptTypeMapper = {
             instructions: model.instructions,
             description: model.description,
             profileId: model.profileId,
+            contextIds: model.contextIds,
             tags: model.tags,
             scope: mapScopeToApi(model.scope),
         };
@@ -89,6 +91,7 @@ export const UaiPromptTypeMapper = {
             instructions: model.instructions,
             description: model.description,
             profileId: model.profileId,
+            contextIds: model.contextIds,
             tags: model.tags,
             scope: mapScopeToApi(model.scope),
             isActive: model.isActive,

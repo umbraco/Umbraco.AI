@@ -36,6 +36,11 @@ public class PromptResponseModel
     public Guid? ProfileId { get; set; }
 
     /// <summary>
+    /// Context IDs for AI context injection.
+    /// </summary>
+    public IEnumerable<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>
     /// Tags for categorization.
     /// </summary>
     public IEnumerable<string> Tags { get; set; } = [];

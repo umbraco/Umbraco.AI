@@ -1,6 +1,7 @@
 import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UaiSelectedEvent } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
@@ -82,6 +83,17 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onContextIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>(
+                { contextIds: picker.value ?? [] },
+                "contextIds"
+            )
+        );
+    }
+
     #updateScope(scope: UaiPromptScope) {
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiPromptDetailModel>({ scope }, "scope")
@@ -140,6 +152,15 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         @input=${this.#onDescriptionChange}
                         placeholder="Enter description..."
                     ></uui-input>
+                </umb-property-layout>
+
+                <umb-property-layout label="Contexts" description="Predefined contexts to include when executing this prompt">
+                    <uai-context-picker
+                        slot="editor"
+                        multiple
+                        .value=${this._model.contextIds}
+                        @change=${this.#onContextIdsChange}
+                    ></uai-context-picker>
                 </umb-property-layout>
 
                 <umb-property-layout label="Instructions" description="The prompt instructions template">

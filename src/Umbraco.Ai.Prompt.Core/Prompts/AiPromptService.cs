@@ -1,5 +1,7 @@
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Prompt.Core.Context;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -12,18 +14,18 @@ internal sealed class AiPromptService : IAiPromptService
     private readonly IAiPromptRepository _repository;
     private readonly IAiChatService _chatService;
     private readonly IAiPromptTemplateService _templateService;
-    private readonly IAiPromptScopeValidator _scopeValidator;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public AiPromptService(
         IAiPromptRepository repository,
         IAiChatService chatService,
         IAiPromptTemplateService templateService,
-        IAiPromptScopeValidator scopeValidator)
+        IServiceScopeFactory serviceScopeFactory)
     {
         _repository = repository;
         _chatService = chatService;
         _templateService = templateService;
-        _scopeValidator = scopeValidator;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     /// <inheritdoc />
@@ -95,7 +97,10 @@ internal sealed class AiPromptService : IAiPromptService
             ?? throw new InvalidOperationException($"Prompt {promptId} not found");
 
         // 2. Validate scope - ensure prompt is allowed to run for this context
-        var scopeValidation = await _scopeValidator.ValidateAsync(prompt, request, cancellationToken);
+        // Use a scope to resolve the scoped IAiPromptScopeValidator
+        using var scope = _serviceScopeFactory.CreateScope();
+        var scopeValidator = scope.ServiceProvider.GetRequiredService<IAiPromptScopeValidator>();
+        var scopeValidation = await scopeValidator.ValidateAsync(prompt, request, cancellationToken);
         if (!scopeValidation.IsAllowed)
         {
             throw new InvalidOperationException(
@@ -114,12 +119,21 @@ internal sealed class AiPromptService : IAiPromptService
             new(ChatRole.User, processedContent)
         };
 
-        // 6. Execute via chat service
-        var response = prompt.ProfileId.HasValue
-            ? await _chatService.GetResponseAsync(prompt.ProfileId.Value, messages, cancellationToken: cancellationToken)
-            : await _chatService.GetResponseAsync(messages, cancellationToken: cancellationToken);
+        // 6. Create ChatOptions with PromptId for context resolution
+        var chatOptions = new ChatOptions
+        {
+            AdditionalProperties = new AdditionalPropertiesDictionary
+            {
+                [PromptContextResolver.PromptIdKey] = prompt.Id
+            }
+        };
 
-        // 7. Map response
+        // 7. Execute via chat service
+        var response = prompt.ProfileId.HasValue
+            ? await _chatService.GetResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)
+            : await _chatService.GetResponseAsync(messages, chatOptions, cancellationToken);
+
+        // 8. Map response
         return new AiPromptExecutionResult
         {
             Content = response.Text ?? string.Empty,

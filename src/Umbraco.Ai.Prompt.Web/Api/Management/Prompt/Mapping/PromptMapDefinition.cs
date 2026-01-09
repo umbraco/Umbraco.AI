@@ -53,6 +53,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.Instructions = source.Instructions;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = true;
         target.Scope = MapScopeModelToDomain(source.Scope);
@@ -69,6 +70,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.Instructions = source.Instructions;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = source.IsActive;
         target.Scope = MapScopeModelToDomain(source.Scope);
@@ -83,6 +85,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.Description = source.Description;
         target.Instructions = source.Instructions;
         target.ProfileId = source.ProfileId;
+        target.ContextIds = source.ContextIds;
         target.Tags = source.Tags;
         target.IsActive = source.IsActive;
         target.Scope = MapScopeDomainToModel(source.Scope);

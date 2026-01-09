@@ -40,6 +40,11 @@ public class CreatePromptRequestModel
     public Guid? ProfileId { get; init; }
 
     /// <summary>
+    /// Optional context IDs for AI context injection.
+    /// </summary>
+    public IEnumerable<Guid>? ContextIds { get; init; }
+
+    /// <summary>
     /// Optional tags for categorization.
     /// </summary>
     public IEnumerable<string>? Tags { get; init; }

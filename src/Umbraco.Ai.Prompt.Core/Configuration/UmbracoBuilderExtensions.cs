@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Extensions;
+using Umbraco.Ai.Prompt.Core.Context;
 using Umbraco.Ai.Prompt.Core.Models;
 using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -36,8 +38,11 @@ public static class UmbracoBuilderExtensions
         // Register scope validator
         builder.Services.AddScoped<IAiPromptScopeValidator, AiPromptScopeValidator>();
 
-        // Register service
-        builder.Services.AddScoped<IAiPromptService, AiPromptService>();
+        // Register service (Singleton to match IAiProfileService pattern and allow use in context resolvers)
+        builder.Services.AddSingleton<IAiPromptService, AiPromptService>();
+
+        // Register prompt context resolver
+        builder.AiContextResolvers().Append<PromptContextResolver>();
 
         return builder;
     }

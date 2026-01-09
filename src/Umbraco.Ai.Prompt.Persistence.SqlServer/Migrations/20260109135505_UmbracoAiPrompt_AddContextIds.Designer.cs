@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Umbraco.Ai.Prompt.Persistence;
 
@@ -11,9 +12,11 @@ using Umbraco.Ai.Prompt.Persistence;
 namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAiPromptDbContext))]
-    partial class UmbracoAiPromptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260109135505_UmbracoAiPrompt_AddContextIds")]
+    partial class UmbracoAiPrompt_AddContextIds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

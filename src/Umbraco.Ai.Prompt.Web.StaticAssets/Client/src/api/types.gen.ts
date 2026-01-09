@@ -10,6 +10,7 @@ export type CreatePromptRequestModel = {
     instructions: string;
     description?: string | null;
     profileId?: string | null;
+    contextIds?: Array<string> | null;
     tags?: Array<string> | null;
     scope?: ScopeModel | null;
 };
@@ -71,11 +72,23 @@ export type PromptResponseModel = {
     description?: string | null;
     instructions: string;
     profileId?: string | null;
+    contextIds: Array<string>;
     tags: Array<string>;
     isActive: boolean;
     scope?: ScopeModel | null;
     dateCreated: string;
     dateModified: string;
+};
+
+export type ScopeModel = {
+    allowRules: Array<ScopeRuleModel>;
+    denyRules: Array<ScopeRuleModel>;
+};
+
+export type ScopeRuleModel = {
+    propertyEditorUiAliases?: Array<string> | null;
+    propertyAliases?: Array<string> | null;
+    contentTypeAliases?: Array<string> | null;
 };
 
 export type UpdatePromptRequestModel = {
@@ -84,6 +97,7 @@ export type UpdatePromptRequestModel = {
     instructions: string;
     description?: string | null;
     profileId?: string | null;
+    contextIds?: Array<string> | null;
     tags?: Array<string> | null;
     isActive: boolean;
     scope?: ScopeModel | null;
@@ -107,17 +121,6 @@ export type ValidationProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | {
         [key: string]: Array<string>;
     } | undefined;
-};
-
-export type ScopeModel = {
-    allowRules: Array<ScopeRuleModel>;
-    denyRules: Array<ScopeRuleModel>;
-};
-
-export type ScopeRuleModel = {
-    propertyEditorUiAliases?: Array<string> | null;
-    propertyAliases?: Array<string> | null;
-    contentTypeAliases?: Array<string> | null;
 };
 
 export type GetAllPromptsData = {

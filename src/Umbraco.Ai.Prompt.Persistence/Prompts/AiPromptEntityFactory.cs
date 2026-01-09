@@ -20,6 +20,7 @@ internal static class AiPromptEntityFactory
     {
         var tags = DeserializeTags(entity.Tags);
         var scope = DeserializeScope(entity.Scope);
+        var contextIds = DeserializeContextIds(entity.ContextIds);
 
         return new Core.Prompts.AiPrompt
         {
@@ -29,6 +30,7 @@ internal static class AiPromptEntityFactory
             Description = entity.Description,
             Instructions = entity.Instructions,
             ProfileId = entity.ProfileId,
+            ContextIds = contextIds,
             Tags = tags,
             IsActive = entity.IsActive,
             Scope = scope,
@@ -50,6 +52,7 @@ internal static class AiPromptEntityFactory
             Description = aiPrompt.Description,
             Instructions = aiPrompt.Instructions,
             ProfileId = aiPrompt.ProfileId,
+            ContextIds = SerializeContextIds(aiPrompt.ContextIds),
             Tags = SerializeTags(aiPrompt.Tags),
             IsActive = aiPrompt.IsActive,
             Scope = SerializeScope(aiPrompt.Scope),
@@ -68,6 +71,7 @@ internal static class AiPromptEntityFactory
         entity.Description = aiPrompt.Description;
         entity.Instructions = aiPrompt.Instructions;
         entity.ProfileId = aiPrompt.ProfileId;
+        entity.ContextIds = SerializeContextIds(aiPrompt.ContextIds);
         entity.Tags = SerializeTags(aiPrompt.Tags);
         entity.IsActive = aiPrompt.IsActive;
         entity.Scope = SerializeScope(aiPrompt.Scope);
@@ -114,6 +118,28 @@ internal static class AiPromptEntityFactory
         catch
         {
             return null;
+        }
+    }
+
+    private static string? SerializeContextIds(IReadOnlyList<Guid> contextIds)
+    {
+        return contextIds.Count == 0 ? null : JsonSerializer.Serialize(contextIds, JsonOptions);
+    }
+
+    private static IReadOnlyList<Guid> DeserializeContextIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<Guid>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
         }
     }
 }

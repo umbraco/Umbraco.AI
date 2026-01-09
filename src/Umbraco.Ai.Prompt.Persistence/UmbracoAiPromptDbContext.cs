@@ -47,6 +47,9 @@ public class UmbracoAiPromptDbContext : DbContext
 
             entity.Property(e => e.ProfileId);
 
+            entity.Property(e => e.ContextIds)
+                .HasMaxLength(4000);
+
             entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 

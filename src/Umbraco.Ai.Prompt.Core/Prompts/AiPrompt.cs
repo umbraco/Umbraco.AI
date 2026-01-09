@@ -37,6 +37,12 @@ public sealed class AiPrompt
     public Guid? ProfileId { get; set; }
 
     /// <summary>
+    /// Context IDs assigned to this prompt for AI context injection.
+    /// These contexts provide brand voice, guidelines, and reference materials for AI operations.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>
     /// Tags for categorization and filtering.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = [];

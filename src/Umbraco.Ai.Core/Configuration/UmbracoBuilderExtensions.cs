@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Context;
-using Umbraco.Ai.Core.Context.Middleware;
-using Umbraco.Ai.Core.Context.Resolvers;
-using Umbraco.Ai.Core.Context.ResourceTypes;
+using Umbraco.Ai.Core.Contexts;
+using Umbraco.Ai.Core.Contexts.Middleware;
+using Umbraco.Ai.Core.Contexts.Resolvers;
+using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.Models;

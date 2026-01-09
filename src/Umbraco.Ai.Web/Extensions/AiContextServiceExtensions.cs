@@ -1,4 +1,4 @@
-using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Extensions;

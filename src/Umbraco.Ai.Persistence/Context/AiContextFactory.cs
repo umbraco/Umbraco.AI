@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Contexts;
 
 namespace Umbraco.Ai.Persistence.Context;
 

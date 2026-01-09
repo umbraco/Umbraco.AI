@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Contexts;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
 namespace Umbraco.Ai.Persistence.Context;

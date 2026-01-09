@@ -2,7 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Context.ResourceTypes;
+using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;

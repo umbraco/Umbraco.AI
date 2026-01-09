@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Connections;

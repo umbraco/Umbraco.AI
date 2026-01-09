@@ -1,5 +1,5 @@
-using Umbraco.Ai.Core.Context;
-using Umbraco.Ai.Core.Context.ResourceTypes;
+using Umbraco.Ai.Core.Contexts;
+using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Ai.Web.Api.Management.Context.Models;
 using Umbraco.Cms.Core.Mapping;
 

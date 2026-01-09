@@ -1,5 +1,5 @@
-using Umbraco.Ai.Core.Context.Resolvers;
-using Umbraco.Ai.Core.Context.ResourceTypes;
+using Umbraco.Ai.Core.Contexts.Resolvers;
+using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;

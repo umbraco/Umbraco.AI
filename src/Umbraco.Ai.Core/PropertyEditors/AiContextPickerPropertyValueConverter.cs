@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Contexts;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PropertyEditors;
 

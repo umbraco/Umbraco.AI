@@ -31,10 +31,10 @@ public class AiChatServiceTests
             _optionsMock.Object);
     }
 
-    #region GetResponseAsync - Default profile
+    #region GetChatResponseAsync - Default profile
 
     [Fact]
-    public async Task GetResponseAsync_WithDefaultProfile_UsesDefaultProfile()
+    public async Task GetChatResponseAsync_WithDefaultProfile_UsesDefaultProfile()
     {
         // Arrange
         var messages = new List<ChatMessage>
@@ -59,7 +59,7 @@ public class AiChatServiceTests
             .ReturnsAsync(fakeChatClient);
 
         // Act
-        var response = await _service.GetResponseAsync(messages);
+        var response = await _service.GetChatResponseAsync(messages);
 
         // Assert
         response.ShouldNotBeNull();
@@ -71,10 +71,10 @@ public class AiChatServiceTests
 
     #endregion
 
-    #region GetResponseAsync - By profile ID
+    #region GetChatResponseAsync - By profile ID
 
     [Fact]
-    public async Task GetResponseAsync_WithProfileId_UsesSpecifiedProfile()
+    public async Task GetChatResponseAsync_WithProfileId_UsesSpecifiedProfile()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -100,7 +100,7 @@ public class AiChatServiceTests
             .ReturnsAsync(fakeChatClient);
 
         // Act
-        var response = await _service.GetResponseAsync(profileId, messages);
+        var response = await _service.GetChatResponseAsync(profileId, messages);
 
         // Assert
         response.ShouldNotBeNull();
@@ -111,7 +111,7 @@ public class AiChatServiceTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_WithNonExistentProfileId_ThrowsInvalidOperationException()
+    public async Task GetChatResponseAsync_WithNonExistentProfileId_ThrowsInvalidOperationException()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -125,7 +125,7 @@ public class AiChatServiceTests
             .ReturnsAsync((AiProfile?)null);
 
         // Act
-        var act = () => _service.GetResponseAsync(profileId, messages);
+        var act = () => _service.GetChatResponseAsync(profileId, messages);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -133,7 +133,7 @@ public class AiChatServiceTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_WithEmbeddingProfile_ThrowsInvalidOperationException()
+    public async Task GetChatResponseAsync_WithEmbeddingProfile_ThrowsInvalidOperationException()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -153,7 +153,7 @@ public class AiChatServiceTests
             .ReturnsAsync(embeddingProfile);
 
         // Act
-        var act = () => _service.GetResponseAsync(profileId, messages);
+        var act = () => _service.GetChatResponseAsync(profileId, messages);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -162,10 +162,10 @@ public class AiChatServiceTests
 
     #endregion
 
-    #region GetResponseAsync - Options merging
+    #region GetChatResponseAsync - Options merging
 
     [Fact]
-    public async Task GetResponseAsync_WithCallerOptions_MergesWithProfileDefaults()
+    public async Task GetChatResponseAsync_WithCallerOptions_MergesWithProfileDefaults()
     {
         // Arrange
         var messages = new List<ChatMessage>
@@ -196,7 +196,7 @@ public class AiChatServiceTests
             .ReturnsAsync(fakeChatClient);
 
         // Act
-        await _service.GetResponseAsync(messages, callerOptions);
+        await _service.GetChatResponseAsync(messages, callerOptions);
 
         // Assert
         fakeChatClient.ReceivedOptions.Count.ShouldBe(1);
@@ -209,7 +209,7 @@ public class AiChatServiceTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_WithNullOptions_UsesProfileDefaults()
+    public async Task GetChatResponseAsync_WithNullOptions_UsesProfileDefaults()
     {
         // Arrange
         var messages = new List<ChatMessage>
@@ -234,7 +234,7 @@ public class AiChatServiceTests
             .ReturnsAsync(fakeChatClient);
 
         // Act
-        await _service.GetResponseAsync(messages, null);
+        await _service.GetChatResponseAsync(messages, null);
 
         // Assert
         fakeChatClient.ReceivedOptions.Count.ShouldBe(1);
@@ -246,7 +246,7 @@ public class AiChatServiceTests
     }
 
     [Fact]
-    public async Task GetResponseAsync_CallerModelIdOverridesProfileModelId()
+    public async Task GetChatResponseAsync_CallerModelIdOverridesProfileModelId()
     {
         // Arrange
         var messages = new List<ChatMessage>
@@ -275,7 +275,7 @@ public class AiChatServiceTests
             .ReturnsAsync(fakeChatClient);
 
         // Act
-        await _service.GetResponseAsync(messages, callerOptions);
+        await _service.GetChatResponseAsync(messages, callerOptions);
 
         // Assert
         var receivedOptions = fakeChatClient.ReceivedOptions[0];
@@ -284,10 +284,10 @@ public class AiChatServiceTests
 
     #endregion
 
-    #region GetStreamingResponseAsync
+    #region GetStreamingChatResponseAsync
 
     [Fact]
-    public async Task GetStreamingResponseAsync_WithDefaultProfile_StreamsResponse()
+    public async Task GetStreamingChatResponseAsync_WithDefaultProfile_StreamsResponse()
     {
         // Arrange
         var messages = new List<ChatMessage>
@@ -312,7 +312,7 @@ public class AiChatServiceTests
 
         // Act
         var updates = new List<ChatResponseUpdate>();
-        await foreach (var update in _service.GetStreamingResponseAsync(messages))
+        await foreach (var update in _service.GetStreamingChatResponseAsync(messages))
         {
             updates.Add(update);
         }
@@ -324,7 +324,7 @@ public class AiChatServiceTests
     }
 
     [Fact]
-    public async Task GetStreamingResponseAsync_WithProfileId_StreamsResponse()
+    public async Task GetStreamingChatResponseAsync_WithProfileId_StreamsResponse()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -351,7 +351,7 @@ public class AiChatServiceTests
 
         // Act
         var updates = new List<ChatResponseUpdate>();
-        await foreach (var update in _service.GetStreamingResponseAsync(profileId, messages))
+        await foreach (var update in _service.GetStreamingChatResponseAsync(profileId, messages))
         {
             updates.Add(update);
         }
@@ -361,7 +361,7 @@ public class AiChatServiceTests
     }
 
     [Fact]
-    public async Task GetStreamingResponseAsync_WithNonExistentProfileId_ThrowsInvalidOperationException()
+    public async Task GetStreamingChatResponseAsync_WithNonExistentProfileId_ThrowsInvalidOperationException()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -377,7 +377,7 @@ public class AiChatServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
-            await foreach (var _ in _service.GetStreamingResponseAsync(profileId, messages))
+            await foreach (var _ in _service.GetStreamingChatResponseAsync(profileId, messages))
             {
                 // Should throw before yielding
             }
@@ -385,7 +385,7 @@ public class AiChatServiceTests
     }
 
     [Fact]
-    public async Task GetStreamingResponseAsync_WithEmbeddingProfile_ThrowsInvalidOperationException()
+    public async Task GetStreamingChatResponseAsync_WithEmbeddingProfile_ThrowsInvalidOperationException()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -407,7 +407,7 @@ public class AiChatServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
-            await foreach (var _ in _service.GetStreamingResponseAsync(profileId, messages))
+            await foreach (var _ in _service.GetStreamingChatResponseAsync(profileId, messages))
             {
                 // Should throw before yielding
             }

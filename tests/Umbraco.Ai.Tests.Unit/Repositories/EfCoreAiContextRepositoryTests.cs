@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Context;
 using Umbraco.Ai.Tests.Common.Builders;

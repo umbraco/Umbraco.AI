@@ -95,7 +95,7 @@ public class EndToEndServiceFlowTests : IDisposable
             new(ChatRole.User, "Hello, world!")
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
 
         // Assert
         response.ShouldNotBeNull();
@@ -140,7 +140,7 @@ public class EndToEndServiceFlowTests : IDisposable
             new(ChatRole.User, "Hello from specific profile!")
         };
 
-        var response = await _chatService.GetResponseAsync(profileId, messages);
+        var response = await _chatService.GetChatResponseAsync(profileId, messages);
 
         // Assert
         response.ShouldNotBeNull();
@@ -186,7 +186,7 @@ public class EndToEndServiceFlowTests : IDisposable
             new(ChatRole.User, "Test message")
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
 
         // Assert - The fact that we get a response means settings were resolved successfully
         response.ShouldNotBeNull();
@@ -228,7 +228,7 @@ public class EndToEndServiceFlowTests : IDisposable
         };
 
         var updates = new List<ChatResponseUpdate>();
-        await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+        await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
         {
             updates.Add(update);
         }
@@ -310,7 +310,7 @@ public class EndToEndServiceFlowTests : IDisposable
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(
-            async () => await _chatService.GetResponseAsync(nonExistentProfileId, messages));
+            async () => await _chatService.GetChatResponseAsync(nonExistentProfileId, messages));
     }
 
     [Fact]
@@ -348,7 +348,7 @@ public class EndToEndServiceFlowTests : IDisposable
         };
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await _chatService.GetResponseAsync(profileId, messages));
+            async () => await _chatService.GetChatResponseAsync(profileId, messages));
 
         exception.Message.ShouldContain("not active");
     }
@@ -377,7 +377,7 @@ public class EndToEndServiceFlowTests : IDisposable
         };
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await _chatService.GetResponseAsync(profileId, messages));
+            async () => await _chatService.GetChatResponseAsync(profileId, messages));
 
         exception.Message.ShouldContain("not found");
     }

@@ -1,5 +1,5 @@
 using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Context;
+using Umbraco.Ai.Core.Contexts;
 
 namespace Umbraco.Ai.Tests.Common.Builders;
 

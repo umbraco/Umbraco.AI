@@ -63,6 +63,7 @@ class WorkspaceRegistry {
     const eventType: WorkspaceChangeEvent["type"] = this.#entries.has(key) ? "updated" : "added";
     this.#entries.set(key, entry);
     this.#changes$.next({ type: eventType, key, entry });
+    console.debug(`[WorkspaceRegistry] ${eventType}: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
   }
 
   /** @internal */
@@ -74,6 +75,7 @@ class WorkspaceRegistry {
     this.#entries.delete(oldKey);
     this.#entries.set(newKey, entry);
     this.#changes$.next({ type: "updated", key: newKey, entry });
+    console.debug(`[WorkspaceRegistry] rekey: ${oldKey} → ${newKey} [size: ${this.#entries.size}]`);
   }
 
   /** @internal */
@@ -82,6 +84,7 @@ class WorkspaceRegistry {
     if (entry) {
       this.#entries.delete(key);
       this.#changes$.next({ type: "removed", key, entry });
+      console.debug(`[WorkspaceRegistry] removed: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
     }
   }
 
@@ -92,11 +95,16 @@ class WorkspaceRegistry {
   #cleanupDisconnected(): void {
     // Process in reverse (LIFO) order so children are removed before parents
     const entries = Array.from(this.#entries.entries()).reverse();
+    const sizeBefore = this.#entries.size;
     for (const [key, entry] of entries) {
       if (!isWorkspaceConnected(entry.context as WorkspaceContextLike)) {
         this.#entries.delete(key);
         this.#changes$.next({ type: "removed", key, entry });
+        console.debug(`[WorkspaceRegistry] cleanup: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
       }
+    }
+    if (sizeBefore !== this.#entries.size) {
+      console.debug(`[WorkspaceRegistry] cleanup complete: ${sizeBefore} → ${this.#entries.size}`);
     }
   }
 

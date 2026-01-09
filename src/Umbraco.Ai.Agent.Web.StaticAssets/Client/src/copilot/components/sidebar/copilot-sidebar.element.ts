@@ -5,6 +5,8 @@ import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.conte
 
 // Import native chat component (lightweight, no lazy loading needed)
 import "../chat/index.js";
+// Import entity selector component
+import "../entity-selector/index.js";
 
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
@@ -56,6 +58,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
             <uui-icon name="icon-delete"></uui-icon>
           </uui-button>
         </header>
+        <uai-entity-selector></uai-entity-selector>
         <div class="sidebar-content">
           <uai-copilot-chat></uai-copilot-chat>
         </div>

@@ -109,9 +109,9 @@ export class UaiFrontendToolExecutor {
           return;
         }
 
-        // Include approval response in args if needed
+        // Include typed approval response in args
         if (approvalResponse !== undefined) {
-          args.__approvalResponse = approvalResponse;
+          args.__approval = approvalResponse;
         }
       }
 
@@ -179,12 +179,39 @@ export class UaiFrontendToolExecutor {
       // Create UaiInterruptContext where resume() resolves our Promise
       const context: UaiInterruptContext = {
         resume: (response?: unknown) => {
-          // "deny" or empty response = cancelled
-          if (response === "deny" || response === undefined) {
+          // Empty response = cancelled
+          if (response === undefined) {
             resolve(null);
-          } else {
-            resolve(response);
+            return;
           }
+
+          // Parse JSON response from HITL approval element
+          let typedResponse: unknown = response;
+          if (typeof response === "string") {
+            try {
+              typedResponse = JSON.parse(response);
+            } catch {
+              // Not JSON, use as-is (legacy support)
+              typedResponse = response;
+            }
+          }
+
+          // Check for denial in typed response
+          if (typeof typedResponse === "object" && typedResponse !== null) {
+            const obj = typedResponse as Record<string, unknown>;
+            if (obj.approved === false || obj.cancelled === true) {
+              resolve(null);
+              return;
+            }
+          }
+
+          // Legacy string check for backward compatibility
+          if (typedResponse === "deny" || typedResponse === "no") {
+            resolve(null);
+            return;
+          }
+
+          resolve(typedResponse);
         },
         setAgentState: () => {
           // No-op for frontend approval - state is managed elsewhere

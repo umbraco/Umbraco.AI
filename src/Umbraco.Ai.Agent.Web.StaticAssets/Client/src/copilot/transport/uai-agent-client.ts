@@ -116,8 +116,13 @@ export class UaiAgentClient {
    * Send messages and start a new run.
    * @param messages The messages to send
    * @param tools Optional tools to include
+   * @param context Optional context items to include for LLM awareness
    */
-  sendMessage(messages: UaiChatMessage[], tools?: AguiTool[]): void {
+  sendMessage(
+    messages: UaiChatMessage[],
+    tools?: AguiTool[],
+    context?: Array<{ description: string; value: string }>,
+  ): void {
     const threadId = crypto.randomUUID();
     const runId = crypto.randomUUID();
 
@@ -135,7 +140,7 @@ export class UaiAgentClient {
       runId,
       messages: convertedMessages,
       tools: tools ?? [],
-      context: [],
+      context: context ?? [],
     }).pipe(
       transformChunks(false)
     ).subscribe({

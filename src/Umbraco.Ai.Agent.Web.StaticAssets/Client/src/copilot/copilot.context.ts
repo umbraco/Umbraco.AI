@@ -7,6 +7,8 @@ import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiCopilotAgentItem } from "./types.ts";
 import type { UaiFrontendToolManager } from "./services/frontend-tool.manager.ts";
+import { UaiEntityAdapterContext } from "../entity-adapter/index.js";
+import type { UaiPropertyChange, UaiPropertyChangeResult } from "../entity-adapter/index.js";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -33,6 +35,7 @@ export class UaiCopilotContext extends UmbControllerBase {
   #agentRepository: UaiCopilotAgentRepository;
   #runController: UaiCopilotRunController;
   #hitlContext: UaiHitlContext;
+  #entityAdapterContext: UaiEntityAdapterContext;
   #agents = new UmbArrayState<UaiCopilotAgentItem>([], (x) => x.id);
   #selectedAgent = new UmbBasicState<UaiCopilotAgentItem | undefined>(undefined);
   #agentsLoading = new UmbBooleanState(false);
@@ -89,12 +92,44 @@ export class UaiCopilotContext extends UmbControllerBase {
     return this.#hitlContext.interrupt$;
   }
 
+  // ─── Entity Context ─────────────────────────────────────────────────────────
+
+  /** Observable of all detected entities with adapters. */
+  get detectedEntities$() {
+    return this.#entityAdapterContext.detectedEntities$;
+  }
+
+  /** Observable of the currently selected entity for context injection. */
+  get selectedEntity$() {
+    return this.#entityAdapterContext.selectedEntity$;
+  }
+
+  /**
+   * Set the selected entity by key.
+   * Called by UI when user selects a different entity context.
+   * @param key The entity key (entityType:unique) to select
+   */
+  setSelectedEntityKey(key: string | undefined): void {
+    this.#entityAdapterContext.setSelectedEntityKey(key);
+  }
+
+  /**
+   * Apply a property change to the currently selected entity.
+   * Changes are staged in the workspace - user must click Save to persist.
+   * @param change The property change to apply (alias, value, optional culture/segment)
+   * @returns Result indicating success or failure with error message
+   */
+  async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
+    return this.#entityAdapterContext.applyPropertyChange(change);
+  }
+
   constructor(host: UmbControllerHost) {
     super(host);
 
     this.#agentRepository = new UaiCopilotAgentRepository(host);
     this.#hitlContext = new UaiHitlContext(host);
     this.#runController = new UaiCopilotRunController(host, this.#hitlContext);
+    this.#entityAdapterContext = new UaiEntityAdapterContext();
 
     // Sync selected agent to run controller
     this.observe(this.selectedAgent, (agent) => {
@@ -188,10 +223,24 @@ export class UaiCopilotContext extends UmbControllerBase {
 
   /**
    * Send a user message to the agent, starting or continuing a conversation.
+   * Automatically serializes the selected entity context and includes it in the request.
    * @param content The message content to send
    */
-  sendUserMessage(content: string): void {
-    this.#runController.sendUserMessage(content);
+  async sendUserMessage(content: string): Promise<void> {
+    // Serialize selected entity for context injection
+    const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
+
+    // Build context array for LLM (value must be JSON string for AG-UI protocol)
+    const context: Array<{ description: string; value: string }> = [];
+    if (entityContext) {
+      context.push({
+        description: `Currently editing ${entityContext.entityType}: ${entityContext.name}`,
+        value: JSON.stringify(entityContext),
+      });
+    }
+
+    // Pass to run controller with context
+    this.#runController.sendUserMessage(content, context);
   }
 
   /** Abort the current agent run. Cancels any in-flight execution. */

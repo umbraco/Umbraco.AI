@@ -79,8 +79,14 @@ export class UaiCopilotRunController extends UmbControllerBase {
     this.resetConversation();
   }
 
-  sendUserMessage(content: string): void {
+  /** Context items to include in the next request */
+  #pendingContext: Array<{ description: string; value: string }> = [];
+
+  sendUserMessage(content: string, context?: Array<{ description: string; value: string }>): void {
     if (!this.#client || !content.trim()) return;
+
+    // Store context for this request
+    this.#pendingContext = context ?? [];
 
     const userMessage: UaiChatMessage = {
       id: crypto.randomUUID(),
@@ -92,7 +98,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
     const nextMessages = [...this.#messages.value, userMessage];
     this.#messages.next(nextMessages);
     this.#agentState.next({ status: "thinking" });
-    this.#client.sendMessage(nextMessages, this.#frontendTools);
+    this.#client.sendMessage(nextMessages, this.#frontendTools, this.#pendingContext);
   }
 
   resetConversation(): void {
@@ -147,9 +153,9 @@ export class UaiCopilotRunController extends UmbControllerBase {
     this.#currentToolCalls = [];
     this.#currentAssistantMessageId = null;
 
-    // Trigger new generation
+    // Trigger new generation (use same context as last request)
     this.#agentState.next({ status: "thinking" });
-    this.#client.sendMessage(truncatedMessages, this.#frontendTools);
+    this.#client.sendMessage(truncatedMessages, this.#frontendTools, this.#pendingContext);
   }
 
   #createClient(): void {
@@ -377,7 +383,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
       this.#messages.next([...this.#messages.value, userMessage]);
     }
     this.#agentState.next({ status: "thinking" });
-    this.#client?.sendMessage(this.#messages.value, this.#frontendTools);
+    this.#client?.sendMessage(this.#messages.value, this.#frontendTools, this.#pendingContext);
   }
 
   /**

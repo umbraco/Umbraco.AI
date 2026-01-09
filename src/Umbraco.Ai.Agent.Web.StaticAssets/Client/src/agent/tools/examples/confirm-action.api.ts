@@ -15,8 +15,9 @@ interface ApprovalResponse {
  * Before executing, it pauses for user confirmation.
  * The LLM provides the action description, and the user approves or denies.
  *
- * The `__approval` field is automatically injected by the tool-renderer
- * after the user responds to the approval dialog.
+ * The `__approval` field is automatically injected by the frontend-tool.executor
+ * after the user responds to the approval dialog. The response is typed as
+ * { approved: boolean } from the approval element.
  */
 export default class ConfirmActionApi extends UmbControllerBase implements UaiAgentToolApi {
   async execute(args: Record<string, unknown>): Promise<string> {

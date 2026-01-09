@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Context.Middleware;
+using Umbraco.Ai.Core.Context.Resolvers;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 
@@ -135,8 +135,8 @@ internal sealed class AiChatService : IAiChatService
             ? new AdditionalPropertiesDictionary(callerOptions.AdditionalProperties)
             : new AdditionalPropertiesDictionary();
 
-        // Always set the profile ID for context injection middleware
-        additionalProperties[ContextInjectingChatClient.ProfileIdKey] = profile.Id;
+        // Always set the profile ID for context resolution
+        additionalProperties[ProfileContextResolver.ProfileIdKey] = profile.Id;
 
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings

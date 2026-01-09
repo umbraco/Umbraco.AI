@@ -7,29 +7,29 @@ namespace Umbraco.Ai.Core.Context.Middleware;
 /// Chat middleware that injects AI context into chat requests.
 /// </summary>
 /// <remarks>
-/// This middleware is registered by default and resolves context based on the profile
-/// (passed via ChatOptions.AdditionalProperties). It injects "Always" mode resources into
+/// This middleware is registered by default and resolves context from all registered
+/// resolvers (via ChatOptions.AdditionalProperties). It injects "Always" mode resources into
 /// the system prompt and makes the resolved context available via <see cref="IAiContextAccessor"/>
 /// for OnDemand tools.
 /// </remarks>
 public class AiContextInjectionChatMiddleware : IAiChatMiddleware
 {
-    private readonly IAiContextResolver _contextResolver;
+    private readonly IAiContextResolutionService _contextResolutionService;
     private readonly IAiContextFormatter _contextFormatter;
     private readonly IAiContextAccessor _contextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiContextInjectionChatMiddleware"/> class.
     /// </summary>
-    /// <param name="contextResolver">The context resolver.</param>
+    /// <param name="contextResolutionService">The context resolution service.</param>
     /// <param name="contextFormatter">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor.</param>
     public AiContextInjectionChatMiddleware(
-        IAiContextResolver contextResolver,
+        IAiContextResolutionService contextResolutionService,
         IAiContextFormatter contextFormatter,
         IAiContextAccessor contextAccessor)
     {
-        _contextResolver = contextResolver;
+        _contextResolutionService = contextResolutionService;
         _contextFormatter = contextFormatter;
         _contextAccessor = contextAccessor;
     }
@@ -39,7 +39,7 @@ public class AiContextInjectionChatMiddleware : IAiChatMiddleware
     {
         return new ContextInjectingChatClient(
             client,
-            _contextResolver,
+            _contextResolutionService,
             _contextFormatter,
             _contextAccessor);
     }

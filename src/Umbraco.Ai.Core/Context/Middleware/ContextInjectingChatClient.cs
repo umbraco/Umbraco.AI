@@ -8,19 +8,14 @@ namespace Umbraco.Ai.Core.Context.Middleware;
 /// </summary>
 /// <remarks>
 /// This client:
-/// - Resolves context based on the profile ID from request options
+/// - Resolves context using all registered resolvers via <see cref="IAiContextResolutionService"/>
 /// - Injects "Always" mode resources into the system prompt
 /// - Makes the resolved context available via <see cref="IAiContextAccessor"/> for OnDemand tools
 /// </remarks>
 internal sealed class ContextInjectingChatClient : IChatClient
 {
-    /// <summary>
-    /// Key used to pass the profile ID through ChatOptions.AdditionalProperties.
-    /// </summary>
-    public const string ProfileIdKey = "Umbraco.Ai.ProfileId";
-
     private readonly IChatClient _innerClient;
-    private readonly IAiContextResolver _contextResolver;
+    private readonly IAiContextResolutionService _contextResolutionService;
     private readonly IAiContextFormatter _contextFormatter;
     private readonly IAiContextAccessor _contextAccessor;
 
@@ -28,22 +23,23 @@ internal sealed class ContextInjectingChatClient : IChatClient
     /// Initializes a new instance of the <see cref="ContextInjectingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
-    /// <param name="contextResolver">The context resolver.</param>
+    /// <param name="contextResolutionService">The context resolution service.</param>
     /// <param name="contextFormatter">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor for tool access.</param>
     public ContextInjectingChatClient(
         IChatClient innerClient,
-        IAiContextResolver contextResolver,
+        IAiContextResolutionService contextResolutionService,
         IAiContextFormatter contextFormatter,
         IAiContextAccessor contextAccessor)
     {
         _innerClient = innerClient;
-        _contextResolver = contextResolver;
+        _contextResolutionService = contextResolutionService;
         _contextFormatter = contextFormatter;
         _contextAccessor = contextAccessor;
     }
 
-
+    #region IChatClient
+    
     /// <inheritdoc />
     public async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
@@ -97,21 +93,17 @@ internal sealed class ContextInjectingChatClient : IChatClient
         _innerClient.Dispose();
     }
 
+    #endregion
+
     private async Task<(IList<ChatMessage> ModifiedMessages, IDisposable? ContextScope)> PrepareContextAsync(
         IList<ChatMessage> messages,
         ChatOptions? options,
         CancellationToken cancellationToken)
     {
-        // Extract profile ID from options
-        var profileId = GetProfileIdFromOptions(options);
-        if (!profileId.HasValue)
-        {
-            // No profile ID, skip context injection
-            return (messages, null);
-        }
-
-        // Resolve context for this profile
-        var resolvedContext = await _contextResolver.ResolveForProfileAsync(profileId.Value, cancellationToken);
+        // Resolve context from all registered resolvers using ChatOptions properties
+        var resolvedContext = await _contextResolutionService.ResolveAsync(
+            options?.AdditionalProperties,
+            cancellationToken);
 
         // If no context resources, nothing to inject
         if (resolvedContext.AllResources.Count == 0)
@@ -133,26 +125,6 @@ internal sealed class ContextInjectingChatClient : IChatClient
         }
 
         return (messages, contextScope);
-    }
-
-    private static Guid? GetProfileIdFromOptions(ChatOptions? options)
-    {
-        if (options?.AdditionalProperties is null)
-        {
-            return null;
-        }
-
-        if (options.AdditionalProperties.TryGetValue(ProfileIdKey, out var value))
-        {
-            return value switch
-            {
-                Guid guid => guid,
-                string str when Guid.TryParse(str, out var parsed) => parsed,
-                _ => null
-            };
-        }
-
-        return null;
     }
 
     private static IList<ChatMessage> InjectContextIntoMessages(

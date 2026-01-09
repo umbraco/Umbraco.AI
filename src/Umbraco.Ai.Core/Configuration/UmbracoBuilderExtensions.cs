@@ -3,6 +3,7 @@ using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Context;
 using Umbraco.Ai.Core.Context.Middleware;
+using Umbraco.Ai.Core.Context.Resolvers;
 using Umbraco.Ai.Core.Context.ResourceTypes;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
@@ -81,9 +82,15 @@ public static partial class UmbracoBuilderExtensions
         // Context system
         services.AddSingleton<IAiContextRepository, InMemoryAiContextRepository>();
         services.AddSingleton<IAiContextService, AiContextService>();
-        services.AddSingleton<IAiContextResolver, AiContextResolver>();
         services.AddSingleton<IAiContextFormatter, AiContextFormatter>();
         services.AddSingleton<IAiContextAccessor, AiContextAccessor>();
+
+        // Context resolution - pluggable resolver system
+        // Order: Profile -> Content (content can override profile-level context)
+        builder.AiContextResolvers()
+            .Append<ProfileContextResolver>()
+            .Append<ContentContextResolver>();
+        services.AddSingleton<IAiContextResolutionService, AiContextResolutionService>();
 
         return builder;
     }

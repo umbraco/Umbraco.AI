@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CompleteChatData, CompleteChatErrors, CompleteChatResponses, CompleteChatWithProfileData, CompleteChatWithProfileErrors, CompleteChatWithProfileResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, StreamChatData, StreamChatErrors, StreamChatResponses, StreamChatWithProfileData, StreamChatWithProfileErrors, StreamChatWithProfileResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
+import type { CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, StreamChatData, StreamChatErrors, StreamChatResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -19,40 +19,6 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 export class ChatService {
-    public static completeChatWithProfile<ThrowOnError extends boolean = false>(options: Options<CompleteChatWithProfileData, ThrowOnError>) {
-        return (options.client ?? client).post<CompleteChatWithProfileResponses, CompleteChatWithProfileErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/chat/{profileIdOrAlias}/complete',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    public static streamChatWithProfile<ThrowOnError extends boolean = false>(options: Options<StreamChatWithProfileData, ThrowOnError>) {
-        return (options.client ?? client).sse.post<StreamChatWithProfileResponses, StreamChatWithProfileErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/chat/{profileIdOrAlias}/stream',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
     public static completeChat<ThrowOnError extends boolean = false>(options?: Options<CompleteChatData, ThrowOnError>) {
         return (options?.client ?? client).post<CompleteChatResponses, CompleteChatErrors, ThrowOnError>({
             security: [

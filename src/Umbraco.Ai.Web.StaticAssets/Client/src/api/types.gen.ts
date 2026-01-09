@@ -308,74 +308,11 @@ export type UsageModel = {
     totalTokens?: number | null;
 };
 
-export type CompleteChatWithProfileData = {
-    body?: ChatRequestModel;
-    path: {
-        profileIdOrAlias: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/chat/{profileIdOrAlias}/complete';
-};
-
-export type CompleteChatWithProfileErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-    /**
-     * Not Found
-     */
-    404: ProblemDetails;
-};
-
-export type CompleteChatWithProfileError = CompleteChatWithProfileErrors[keyof CompleteChatWithProfileErrors];
-
-export type CompleteChatWithProfileResponses = {
-    /**
-     * OK
-     */
-    200: ChatResponseModel;
-};
-
-export type CompleteChatWithProfileResponse = CompleteChatWithProfileResponses[keyof CompleteChatWithProfileResponses];
-
-export type StreamChatWithProfileData = {
-    body?: AguiRunRequestModel;
-    path: {
-        profileIdOrAlias: string;
-    };
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/chat/{profileIdOrAlias}/stream';
-};
-
-export type StreamChatWithProfileErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type StreamChatWithProfileError = StreamChatWithProfileErrors[keyof StreamChatWithProfileErrors];
-
-export type StreamChatWithProfileResponses = {
-    /**
-     * Server-Sent Events stream
-     */
-    200: string;
-};
-
-export type StreamChatWithProfileResponse = StreamChatWithProfileResponses[keyof StreamChatWithProfileResponses];
-
 export type CompleteChatData = {
     body?: ChatRequestModel;
+    headers?: {
+        profileIdOrAlias?: string;
+    };
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/chat/complete';
@@ -409,6 +346,9 @@ export type CompleteChatResponse = CompleteChatResponses[keyof CompleteChatRespo
 
 export type StreamChatData = {
     body?: AguiRunRequestModel;
+    headers?: {
+        profileIdOrAlias?: string;
+    };
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/chat/stream';

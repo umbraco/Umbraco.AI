@@ -235,7 +235,7 @@ export class UaiResourceListElement extends UmbLitElement {
     ];
 }
 
-export { UaiResourceListElement as element };
+export default UaiResourceListElement;
 
 declare global {
     interface HTMLElementTagNameMap {

@@ -5,7 +5,7 @@ import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import { ProfilesService } from "../../../api/sdk.gen.js";
 import type { ProfileItemResponseModel } from "../../../api/types.gen.js";
-import { UaiSelectedEvent } from "../../events/selected.event.js";
+import { UaiSelectedEvent } from "../../../core";
 
 /**
  * Profile picker component that allows selecting an AI profile.

@@ -126,6 +126,27 @@ internal sealed class AiChatService : IAiChatService
         return await _clientFactory.CreateClientAsync(profile, cancellationToken);
     }
 
+    public async Task<(IChatClient Client, ChatOptions BaseOptions)> GetChatClientWithOptionsAsync(
+        Guid? profileId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var profile = profileId.HasValue
+            ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
+            : await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+
+        if (profile is null)
+        {
+            throw new InvalidOperationException($"AI profile with ID '{profileId}' not found.");
+        }
+
+        EnsureProfileSupportsChat(profile);
+
+        var client = await _clientFactory.CreateClientAsync(profile, cancellationToken);
+        var baseOptions = MergeOptions(profile, null);
+
+        return (client, baseOptions);
+    }
+
     private static ChatOptions MergeOptions(AiProfile profile, ChatOptions? callerOptions)
     {
         var chatSettings = profile.Settings as AiChatProfileSettings;

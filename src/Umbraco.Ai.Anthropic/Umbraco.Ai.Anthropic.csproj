@@ -8,8 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Anthropic" />
+    <!-- TODO: Replace with PackageReference when SDK fix is released -->
+    <!-- <PackageReference Include="Anthropic" /> -->
 <!--    <PackageReference Include="Umbraco.Ai.Core" />-->
+  </ItemGroup>
+
+  <!-- Local SDK with InputSchema fix - replace with PackageReference when merged -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Ref\anthropic-sdk-csharp\src\Anthropic\Anthropic.csproj" />
   </ItemGroup>
 
   <ItemGroup>

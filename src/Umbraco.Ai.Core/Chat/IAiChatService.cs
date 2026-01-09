@@ -18,7 +18,7 @@ public interface IAiChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The chat completion response from the AI model.</returns>
-    Task<ChatResponse> GetResponseAsync(
+    Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
@@ -33,7 +33,7 @@ public interface IAiChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The chat completion response from the AI model.</returns>
-    Task<ChatResponse> GetResponseAsync(
+    Task<ChatResponse> GetChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
@@ -48,7 +48,7 @@ public interface IAiChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>An async stream of streaming chat updates.</returns>
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
@@ -63,7 +63,7 @@ public interface IAiChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>An async stream of streaming chat updates.</returns>
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,

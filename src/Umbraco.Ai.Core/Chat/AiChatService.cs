@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Context.Resolvers;
+using Umbraco.Ai.Core.Contexts.Resolvers;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 
@@ -23,16 +23,16 @@ internal sealed class AiChatService : IAiChatService
         _options = options.CurrentValue;
     }
 
-    public async Task<ChatResponse> GetResponseAsync(
+    public async Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
-        return await GetResponseInternalAsync(profile, messages, options, cancellationToken);
+        return await GetChatResponseInternalAsync(profile, messages, options, cancellationToken);
     }
 
-    public async Task<ChatResponse> GetResponseAsync(
+    public async Task<ChatResponse> GetChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
@@ -46,10 +46,10 @@ internal sealed class AiChatService : IAiChatService
         
         EnsureProfileSupportsChat(profile);
         
-        return await GetResponseInternalAsync(profile, messages, options, cancellationToken);
+        return await GetChatResponseInternalAsync(profile, messages, options, cancellationToken);
     }
 
-    private async Task<ChatResponse> GetResponseInternalAsync(
+    private async Task<ChatResponse> GetChatResponseInternalAsync(
         AiProfile profile,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options,
@@ -61,19 +61,19 @@ internal sealed class AiChatService : IAiChatService
         return await chatClient.GetResponseAsync(messages.ToList(), mergedOptions, cancellationToken);
     }
 
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
-        await foreach (var update in GetStreamingResponseInternalAsync(profile, messages, options, cancellationToken))
+        await foreach (var update in GetStreamingChatResponseInternalAsync(profile, messages, options, cancellationToken))
         {
             yield return update;
         }
     }
 
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
@@ -87,13 +87,13 @@ internal sealed class AiChatService : IAiChatService
 
         EnsureProfileSupportsChat(profile);
 
-        await foreach (var update in GetStreamingResponseInternalAsync(profile, messages, options, cancellationToken))
+        await foreach (var update in GetStreamingChatResponseInternalAsync(profile, messages, options, cancellationToken))
         {
             yield return update;
         }
     }
 
-    private async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseInternalAsync(
+    private async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseInternalAsync(
         AiProfile profile,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options,

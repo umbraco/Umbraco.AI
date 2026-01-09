@@ -105,8 +105,8 @@ public class StreamChatController : ChatControllerBase
 
                 // Get streaming response from chat service
                 var stream = profileId.HasValue
-                    ? _chatService.GetStreamingResponseAsync(profileId.Value, chatMessages, cancellationToken: cancellationToken)
-                    : _chatService.GetStreamingResponseAsync(chatMessages, cancellationToken: cancellationToken);
+                    ? _chatService.GetStreamingChatResponseAsync(profileId.Value, chatMessages, cancellationToken: cancellationToken)
+                    : _chatService.GetStreamingChatResponseAsync(chatMessages, cancellationToken: cancellationToken);
 
                 // Stream text content updates
                 await foreach (var update in stream.WithCancellation(cancellationToken))

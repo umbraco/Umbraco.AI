@@ -67,11 +67,11 @@ public class CompleteChatController : ChatControllerBase
 
             // Get chat response
             var response = profileId.HasValue
-                ? await _chatService.GetResponseAsync(
+                ? await _chatService.GetChatResponseAsync(
                     profileId.Value,
                     messages,
                     cancellationToken: cancellationToken)
-                : await _chatService.GetResponseAsync(
+                : await _chatService.GetChatResponseAsync(
                     messages,
                     cancellationToken: cancellationToken);
 

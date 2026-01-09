@@ -158,15 +158,14 @@ public class RunAgentController : AgentControllerBase
 
             try
             {
-
-                // Create chat client with base options (includes profile ID for context resolution)
-                var (chatClient, baseOptions) = await _chatService.GetChatClientWithOptionsAsync(profile.Id, cancellationToken);
+                // Create chat client (profile ID is automatically injected by ProfileBoundChatClient)
+                var chatClient = await _chatService.GetChatClientAsync(profile.Id, cancellationToken);
 
                 // Convert AG-UI messages to M.E.AI ChatMessages (including context)
                 var chatMessages = ConvertToChatMessages(agent, request.Messages, request.Context);
 
-                // Build ChatOptions by merging agent settings onto base options
-                var chatOptions = BuildChatOptions(agent, baseOptions, request.Tools);
+                // Build ChatOptions with agent-specific settings
+                var chatOptions = BuildChatOptions(agent, profile, request.Tools);
 
                 // DEBUG: Log tool schemas being sent to the LLM
                 if (chatOptions.Tools != null)
@@ -389,17 +388,33 @@ public class RunAgentController : AgentControllerBase
     }
 
     /// <summary>
-    /// Build ChatOptions by merging agent settings onto base options from the profile.
+    /// Build ChatOptions with agent-specific settings.
+    /// Note: Profile ID for context resolution is automatically injected by ProfileBoundChatClient.
     /// </summary>
-    private ChatOptions BuildChatOptions(AiAgent agent, ChatOptions baseOptions, IEnumerable<AguiTool>? frontendTools)
+    private ChatOptions BuildChatOptions(AiAgent agent, AiProfile profile, IEnumerable<AguiTool>? frontendTools)
     {
-        // Start with base options (already has ProfileIdKey set for context resolution)
-        var additionalProperties = baseOptions.AdditionalProperties != null
-            ? new AdditionalPropertiesDictionary(baseOptions.AdditionalProperties)
-            : new AdditionalPropertiesDictionary();
+        var chatOptions = new ChatOptions();
 
-        // Add AgentId for agent context resolution
-        additionalProperties[AgentContextResolver.AgentIdKey] = agent.Id;
+        // Set AgentId for agent context resolution
+        // Note: ProfileIdKey is automatically set by ProfileBoundChatClient
+        chatOptions.AdditionalProperties = new AdditionalPropertiesDictionary
+        {
+            [AgentContextResolver.AgentIdKey] = agent.Id
+        };
+
+        // Apply profile settings (Temperature, MaxTokens) if available
+        if (profile.Settings is AiChatProfileSettings chatSettings)
+        {
+            if (chatSettings.Temperature.HasValue)
+            {
+                chatOptions.Temperature = chatSettings.Temperature.Value;
+            }
+
+            if (chatSettings.MaxTokens.HasValue)
+            {
+                chatOptions.MaxOutputTokens = chatSettings.MaxTokens.Value;
+            }
+        }
 
         // Build combined tool list (system + user + frontend)
         var allTools = new List<AITool>();
@@ -417,15 +432,6 @@ public class RunAgentController : AgentControllerBase
         {
             allTools.AddRange(ConvertToAITools(frontendTools));
         }
-
-        // Build final options merging base settings with agent-specific settings
-        var chatOptions = new ChatOptions
-        {
-            ModelId = baseOptions.ModelId,
-            Temperature = baseOptions.Temperature,
-            MaxOutputTokens = baseOptions.MaxOutputTokens,
-            AdditionalProperties = additionalProperties
-        };
 
         // Configure tools if any exist
         if (allTools.Count > 0)

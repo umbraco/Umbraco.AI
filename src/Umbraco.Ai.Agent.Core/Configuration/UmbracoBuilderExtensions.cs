@@ -1,7 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agent.Core.Contexts;
 using Umbraco.Ai.Agent.Core.Models;
-using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -34,6 +35,9 @@ public static class UmbracoBuilderExtensions
 
         // Register service
         builder.Services.AddSingleton<IAiAgentService, AiAgentService>();
+
+        // Register agent factory (scoped - depends on scoped IAiChatService)
+        builder.Services.AddScoped<IAiAgentFactory, AiAgentFactory>();
 
         // Register agent context resolver
         builder.AiContextResolvers().Append<AgentContextResolver>();

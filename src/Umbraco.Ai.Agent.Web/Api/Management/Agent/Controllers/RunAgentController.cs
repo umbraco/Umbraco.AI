@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Core.Contexts;
+using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agent.Extensions;
 using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Events.Lifecycle;
@@ -16,10 +16,7 @@ using Umbraco.Ai.Agui.Events.Messages;
 using Umbraco.Ai.Agui.Events.Tools;
 using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
-using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Tools;
-using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
@@ -27,14 +24,24 @@ namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
 /// <summary>
 /// Controller for running agents with AG-UI streaming support.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This controller uses the Microsoft Agent Framework (MAF) for agent execution,
+/// but maintains a custom implementation rather than using MAF's built-in <c>MapAGUI()</c>
+/// for the following reasons:
+/// </para>
+/// <list type="bullet">
+///   <item>Frontend tool handling with <c>FunctionInvokingChatClient.CurrentContext.Terminate</c></item>
+///   <item>Umbraco authorization/security model integration</item>
+///   <item>Custom AG-UI context item handling</item>
+/// </list>
+/// </remarks>
 [ApiVersion("1.0")]
 public class RunAgentController : AgentControllerBase
 {
     private readonly IAiAgentService _agentService;
     private readonly IAiProfileService _profileService;
-    private readonly IAiChatService _chatService;
-    private readonly AiToolCollection _toolCollection;
-    private readonly IAiFunctionFactory _functionFactory;
+    private readonly IAiAgentFactory _agentFactory;
     private readonly ILogger<RunAgentController> _logger;
 
     /// <summary>
@@ -43,16 +50,12 @@ public class RunAgentController : AgentControllerBase
     public RunAgentController(
         IAiAgentService agentService,
         IAiProfileService profileService,
-        IAiChatService chatService,
-        AiToolCollection toolCollection,
-        IAiFunctionFactory functionFactory,
+        IAiAgentFactory agentFactory,
         ILogger<RunAgentController> logger)
     {
         _agentService = agentService;
         _profileService = profileService;
-        _chatService = chatService;
-        _toolCollection = toolCollection;
-        _functionFactory = functionFactory;
+        _agentFactory = agentFactory;
         _logger = logger;
     }
 
@@ -96,7 +99,7 @@ public class RunAgentController : AgentControllerBase
             });
         }
 
-        // Get the agent's profile
+        // Get the agent's profile (for validation only - factory handles profile binding)
         var profile = await _profileService.GetProfileAsync(agent.ProfileId, cancellationToken);
         if (profile is null)
         {
@@ -109,15 +112,13 @@ public class RunAgentController : AgentControllerBase
         }
 
         // Stream the response
-        var events = StreamAgentEventsAsync(agent, profile, request, cancellationToken);
-        
+        var events = StreamAgentEventsAsync(agent, request, cancellationToken);
+
         return new AguiEventStreamResult(events);
     }
 
-    // TODO: [MB] This is doing too much in a controller, this should be in a service
     private async IAsyncEnumerable<IAguiEvent> StreamAgentEventsAsync(
         AiAgent agent,
-        AiProfile profile,
         AguiRunRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -140,7 +141,6 @@ public class RunAgentController : AgentControllerBase
         // Use a channel to bridge between try-catch and yield
         var channel = Channel.CreateUnbounded<IAguiEvent>();
 
-        // Start the streaming task
         // Build frontend tool names set for quick lookup
         var frontendToolNames = new HashSet<string>(
             request.Tools?.Select(t => t.Name) ?? [],
@@ -158,29 +158,24 @@ public class RunAgentController : AgentControllerBase
 
             try
             {
-                // Create chat client (profile ID is automatically injected by ProfileBoundChatClient)
-                var chatClient = await _chatService.GetChatClientAsync(profile.Id, cancellationToken);
+                // Convert AG-UI frontend tools to AITool format (FrontendToolFunction)
+                var frontendTools = request.Tools?.Any() == true
+                    ? ConvertToFrontendTools(request.Tools)
+                    : null;
 
-                // Convert AG-UI messages to M.E.AI ChatMessages (including context)
-                var chatMessages = ConvertToChatMessages(agent, request.Messages, request.Context);
+                // Create MAF agent with all tools (system + user + frontend)
+                var mafAgent = await _agentFactory.CreateAgentAsync(agent, frontendTools, cancellationToken);
 
-                // Build ChatOptions with agent-specific settings
-                var chatOptions = BuildChatOptions(agent, profile, request.Tools);
+                // Convert AG-UI messages to M.E.AI ChatMessages (context items included)
+                // Note: Agent instructions are handled by AgentBoundChatClient, not here
+                var chatMessages = ConvertToChatMessages(request.Messages, request.Context);
 
-                // DEBUG: Log tool schemas being sent to the LLM
-                if (chatOptions.Tools != null)
-                {
-                    foreach (var tool in chatOptions.Tools.OfType<AIFunction>())
-                    {
-                        _logger.LogDebug(
-                            "Tool '{ToolName}' JsonSchema: {Schema}",
-                            tool.Name,
-                            tool.JsonSchema.GetRawText());
-                    }
-                }
+                // DEBUG: Log that we're using MAF streaming
+                _logger.LogDebug("Starting MAF agent streaming for agent '{AgentName}' ({AgentId})",
+                    agent.Name, agent.Id);
 
-                // Stream the response - emit events immediately as they arrive
-                await foreach (var update in chatClient.GetStreamingResponseAsync(chatMessages, chatOptions, cancellationToken))
+                // Use MAF streaming - AgentRunResponseUpdate has same Contents structure as ChatResponseUpdate
+                await foreach (var update in mafAgent.RunStreamingAsync(chatMessages, cancellationToken: cancellationToken))
                 {
                     // Check for tool calls and results FIRST (before text)
                     // This ensures tool call UI appears before any follow-up text
@@ -261,6 +256,7 @@ public class RunAgentController : AgentControllerBase
             {
                 hasError = true;
                 errorMessage = ex.Message;
+                _logger.LogError(ex, "Error streaming MAF agent response for agent '{AgentName}'", agent.Name);
             }
 
             // NOTE: No TextMessageEndEvent or batched tool events here.
@@ -317,10 +313,10 @@ public class RunAgentController : AgentControllerBase
     }
 
     /// <summary>
-    /// Convert AG-UI tools to M.E.AI AITool format.
-    /// These are "frontend tools" - the LLM can call them, but execution happens on the client.
+    /// Convert AG-UI tools to M.E.AI AITool format as frontend tools.
+    /// These tools expose their schema to the LLM but execution happens on the client.
     /// </summary>
-    private static IList<AITool> ConvertToAITools(IEnumerable<AguiTool> tools)
+    private static IList<AITool> ConvertToFrontendTools(IEnumerable<AguiTool> tools)
     {
         var aiTools = new List<AITool>();
 
@@ -388,83 +384,22 @@ public class RunAgentController : AgentControllerBase
     }
 
     /// <summary>
-    /// Build ChatOptions with agent-specific settings.
-    /// Note: Profile ID for context resolution is automatically injected by ProfileBoundChatClient.
+    /// Convert AG-UI messages to M.E.AI ChatMessages.
     /// </summary>
-    private ChatOptions BuildChatOptions(AiAgent agent, AiProfile profile, IEnumerable<AguiTool>? frontendTools)
-    {
-        var chatOptions = new ChatOptions();
-
-        // Set AgentId for agent context resolution
-        // Note: ProfileIdKey is automatically set by ProfileBoundChatClient
-        chatOptions.AdditionalProperties = new AdditionalPropertiesDictionary
-        {
-            [AgentContextResolver.AgentIdKey] = agent.Id
-        };
-
-        // Apply profile settings (Temperature, MaxTokens) if available
-        if (profile.Settings is AiChatProfileSettings chatSettings)
-        {
-            if (chatSettings.Temperature.HasValue)
-            {
-                chatOptions.Temperature = chatSettings.Temperature.Value;
-            }
-
-            if (chatSettings.MaxTokens.HasValue)
-            {
-                chatOptions.MaxOutputTokens = chatSettings.MaxTokens.Value;
-            }
-        }
-
-        // Build combined tool list (system + user + frontend)
-        var allTools = new List<AITool>();
-
-        // ALWAYS include system tools - these cannot be removed or configured
-        var systemFunctions = _toolCollection.ToSystemToolFunctions(_functionFactory);
-        allTools.AddRange(systemFunctions);
-
-        // Add user tools - these can be configured/filtered by agents in the future
-        var userFunctions = _toolCollection.ToUserToolFunctions(_functionFactory);
-        allTools.AddRange(userFunctions);
-
-        // Add frontend tools - these return to client for execution
-        if (frontendTools?.Any() == true)
-        {
-            allTools.AddRange(ConvertToAITools(frontendTools));
-        }
-
-        // Configure tools if any exist
-        if (allTools.Count > 0)
-        {
-            chatOptions.Tools = allTools;
-            chatOptions.ToolMode = ChatToolMode.Auto;
-            // Process one tool call at a time for more predictable behavior
-            chatOptions.AllowMultipleToolCalls = false;
-        }
-
-        return chatOptions;
-    }
-
+    /// <remarks>
+    /// Agent instructions are handled by <see cref="AgentBoundChatClient"/>, not here.
+    /// This method only handles AG-UI context items and message conversion.
+    /// </remarks>
     private static List<ChatMessage> ConvertToChatMessages(
-        AiAgent agent,
         IEnumerable<AguiMessage> messages,
         IEnumerable<AguiContextItem>? context)
     {
         var chatMessages = new List<ChatMessage>();
 
-        // Build system message with agent instructions + context
-        var systemContent = new StringBuilder();
-
-        // Add agent instructions
-        if (!string.IsNullOrWhiteSpace(agent.Instructions))
-        {
-            systemContent.AppendLine(agent.Instructions);
-        }
-
-        // Append context items (entity context, etc.)
+        // Build system message with context items only (agent instructions handled by AgentBoundChatClient)
         if (context?.Any() == true)
         {
-            systemContent.AppendLine();
+            var systemContent = new StringBuilder();
             systemContent.AppendLine("## Current Context");
             foreach (var item in context)
             {
@@ -476,11 +411,7 @@ public class RunAgentController : AgentControllerBase
                     systemContent.AppendLine("```");
                 }
             }
-        }
 
-        // Add combined system message if there's content
-        if (systemContent.Length > 0)
-        {
             chatMessages.Add(new ChatMessage(ChatRole.System, systemContent.ToString()));
         }
 

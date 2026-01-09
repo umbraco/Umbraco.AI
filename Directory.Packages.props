@@ -23,9 +23,10 @@
   <!-- Umbraco.Ai packages -->
   <ItemGroup>
     <PackageVersion Include="Umbraco.Ai" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Ai.Agui" Version="[17.0.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Core" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Ai.Web" Version="[17.0.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Startup" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Ai.Web" Version="[17.0.0, 17.999.999)" />
   </ItemGroup>
     
   <!-- Microsoft AI packages -->

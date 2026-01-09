@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Agents.AI" />
         <PackageReference Include="Umbraco.Cms.Core" />
     </ItemGroup>
 

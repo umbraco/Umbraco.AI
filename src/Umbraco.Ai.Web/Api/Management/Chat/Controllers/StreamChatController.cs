@@ -37,10 +37,11 @@ public class StreamChatController : ChatControllerBase
         _chatService = chatService;
         _profileService = profileService;
     }
-    
+
     /// <summary>
     /// Complete a chat conversation with AG-UI streaming response (SSE).
     /// </summary>
+    /// <param name="profileIdOrAlias"></param>
     /// <param name="request">The AG-UI run request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A stream of AG-UI events.</returns>
@@ -50,32 +51,13 @@ public class StreamChatController : ChatControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IResult> StreamChat(
+        [FromHeader] IdOrAlias?  profileIdOrAlias,
         AguiRunRequest request,
         CancellationToken cancellationToken = default)
     {
-        var events = StreamAguiEventsAsync(request, null, cancellationToken);
-        
-        return new AguiEventStreamResult(events);
-    }
-
-    /// <summary>
-    /// Complete a chat conversation with AG-UI streaming response (SSE).
-    /// </summary>
-    /// <param name="profileIdOrAlias"></param>
-    /// <param name="request">The AG-UI run request.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A stream of AG-UI events.</returns>
-    [HttpPost("{profileIdOrAlias}/stream")]
-    [MapToApiVersion("1.0")]
-    [Produces("text/event-stream")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<IResult> StreamChatWithProfile(
-        IdOrAlias profileIdOrAlias,
-        AguiRunRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var profileId = await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken);
+        var profileId = profileIdOrAlias != null
+            ? await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken)
+            : null;
         
         var events = StreamAguiEventsAsync(request, profileId, cancellationToken);
         

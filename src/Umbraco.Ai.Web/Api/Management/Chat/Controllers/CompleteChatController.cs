@@ -41,6 +41,7 @@ public class CompleteChatController : ChatControllerBase
     /// <summary>
     /// Complete a chat conversation (non-streaming).
     /// </summary>
+    /// <param name="profileIdOrAlias"></param>
     /// <param name="requestModel">The chat request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The chat completion response.</returns>
@@ -50,41 +51,17 @@ public class CompleteChatController : ChatControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CompleteChat(
+        [FromHeader] IdOrAlias? profileIdOrAlias,
         ChatRequestModel requestModel,
         CancellationToken cancellationToken = default)
-        => await CompleteChatAsync(
-            requestModel,
-            null,
-            cancellationToken);
-
-    /// <summary>
-    /// Complete a chat conversation (non-streaming).
-    /// </summary>
-    /// <param name="profileIdOrAlias"></param>
-    /// <param name="requestModel">The chat request.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The chat completion response.</returns>
-    [HttpPost("{profileIdOrAlias}/complete")]
-    [MapToApiVersion("1.0")]
-    [ProducesResponseType(typeof(ChatResponseModel), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CompleteChatWithProfile(
-        IdOrAlias profileIdOrAlias,
-        ChatRequestModel requestModel,
-        CancellationToken cancellationToken = default)
-        => await CompleteChatAsync(
-            requestModel,
-            await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken),
-            cancellationToken);
-    
-    private async Task<IActionResult> CompleteChatAsync(
-        ChatRequestModel requestModel,
-        Guid? profileId,
-        CancellationToken cancellationToken)
     {
         try
         {
+            // Resolve the profile ID
+            var profileId = profileIdOrAlias != null
+                ? await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken)
+                : null;
+                
             // Convert request messages to ChatMessage list
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
 

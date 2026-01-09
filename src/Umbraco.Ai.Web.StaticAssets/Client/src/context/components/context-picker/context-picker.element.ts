@@ -277,7 +277,7 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
     ];
 }
 
-export { UaiContextPickerElement as element };
+export default UaiContextPickerElement;
 
 declare global {
     interface HTMLElementTagNameMap {

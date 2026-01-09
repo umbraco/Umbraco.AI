@@ -23,10 +23,10 @@ public class CreatePromptRequestModel
     public required string Name { get; init; }
 
     /// <summary>
-    /// The prompt content.
+    /// The prompt instructions.
     /// </summary>
     [Required]
-    public required string Content { get; init; }
+    public required string Instructions { get; init; }
 
     /// <summary>
     /// Optional description.

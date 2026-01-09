@@ -26,9 +26,9 @@ public sealed class AiPrompt
     public string? Description { get; set; }
 
     /// <summary>
-    /// The prompt template content. May include placeholders like {{variable}}.
+    /// The prompt instructions template. May include placeholders like {{variable}}.
     /// </summary>
-    public required string Content { get; set; }
+    public required string Instructions { get; set; }
 
     /// <summary>
     /// Optional ID of the AI profile this prompt is designed for.

@@ -26,7 +26,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
             Id = Guid.Empty,
             Alias = string.Empty,
             Name = string.Empty,
-            Content = string.Empty
+            Instructions = string.Empty
         }, MapFromUpdateRequest);
     }
 
@@ -40,7 +40,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
                 ? source.Alias
                 : shortStringHelper.CleanStringForSafeAlias(source.Alias),
             Name = source.Name,
-            Content = source.Content,
+            Instructions = source.Instructions,
             DateCreated = now
         };
     }
@@ -50,7 +50,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
     {
         target.Alias = source.Alias;
         target.Name = source.Name;
-        target.Content = source.Content;
+        target.Instructions = source.Instructions;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.Tags = source.Tags?.ToList() ?? [];
@@ -66,7 +66,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         // DateModified will be set by the service
         target.Alias = source.Alias;
         target.Name = source.Name;
-        target.Content = source.Content;
+        target.Instructions = source.Instructions;
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.Tags = source.Tags?.ToList() ?? [];
@@ -81,7 +81,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.Description = source.Description;
-        target.Content = source.Content;
+        target.Instructions = source.Instructions;
         target.ProfileId = source.ProfileId;
         target.Tags = source.Tags;
         target.IsActive = source.IsActive;

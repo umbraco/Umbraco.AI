@@ -26,9 +26,9 @@ public class AiPromptEntity
     public string? Description { get; set; }
 
     /// <summary>
-    /// AiPrompt template content.
+    /// AiPrompt instructions template.
     /// </summary>
-    public string Content { get; set; } = string.Empty;
+    public string Instructions { get; set; } = string.Empty;
 
     /// <summary>
     /// Optional linked profile ID (soft FK).

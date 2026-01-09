@@ -7,7 +7,7 @@ export type ClientOptions = {
 export type CreatePromptRequestModel = {
     alias: string;
     name: string;
-    content: string;
+    instructions: string;
     description?: string | null;
     profileId?: string | null;
     tags?: Array<string> | null;
@@ -69,7 +69,7 @@ export type PromptResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
-    content: string;
+    instructions: string;
     profileId?: string | null;
     tags: Array<string>;
     isActive: boolean;
@@ -81,7 +81,7 @@ export type PromptResponseModel = {
 export type UpdatePromptRequestModel = {
     alias: string;
     name: string;
-    content: string;
+    instructions: string;
     description?: string | null;
     profileId?: string | null;
     tags?: Array<string> | null;

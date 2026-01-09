@@ -53,7 +53,7 @@ internal sealed class AiPromptService : IAiPromptService
         ArgumentNullException.ThrowIfNull(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Alias);
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Content);
+        ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Instructions);
 
         // Generate new ID if needed
         if (prompt.Id == Guid.Empty)
@@ -106,7 +106,7 @@ internal sealed class AiPromptService : IAiPromptService
         var context = BuildExecutionContext(request);
 
         // 4. Process template variables
-        var processedContent = _templateService.ProcessTemplate(prompt.Content, context);
+        var processedContent = _templateService.ProcessTemplate(prompt.Instructions, context);
 
         // 5. Create chat message
         var messages = new List<ChatMessage>

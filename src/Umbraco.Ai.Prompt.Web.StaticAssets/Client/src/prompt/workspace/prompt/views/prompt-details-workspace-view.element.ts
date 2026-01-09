@@ -26,7 +26,7 @@ function createDefaultScope(): UaiPromptScope {
 
 /**
  * Workspace view for Prompt details.
- * Displays content, description, scope configuration, tags, and status.
+ * Displays instructions, description, scope configuration, tags, and status.
  */
 @customElement("uai-prompt-details-workspace-view")
 export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
@@ -59,11 +59,11 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onContentChange(event: Event) {
+    #onInstructionsChange(event: Event) {
         event.stopPropagation();
         const value = (event.target as HTMLTextAreaElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ content: value }, "content")
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ instructions: value }, "instructions")
         );
     }
 
@@ -142,12 +142,12 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-input>
                 </umb-property-layout>
 
-                <umb-property-layout label="Content" description="The prompt template text">
+                <umb-property-layout label="Instructions" description="The prompt instructions template">
                     <uui-textarea
                         slot="editor"
-                        .value=${this._model.content}
-                        @input=${this.#onContentChange}
-                        placeholder="Enter prompt content..."
+                        .value=${this._model.instructions}
+                        @input=${this.#onInstructionsChange}
+                        placeholder="Enter prompt instructions..."
                         rows="12"
                     ></uui-textarea>
                 </umb-property-layout>

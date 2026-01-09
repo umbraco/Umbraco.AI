@@ -10,7 +10,7 @@ export interface UaiPromptDetailModel extends UmbEntityModel {
     alias: string;
     name: string;
     description: string | null;
-    content: string;
+    instructions: string;
     profileId: string | null;
     tags: string[];
     scope: UaiPromptScope | null;

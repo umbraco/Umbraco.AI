@@ -19,7 +19,7 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
                     Alias = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    Content = table.Column<string>(type: "TEXT", nullable: false),
+                    Instructions = table.Column<string>(type: "TEXT", nullable: false),
                     ProfileId = table.Column<Guid>(type: "TEXT", nullable: true),
                     Tags = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: true),

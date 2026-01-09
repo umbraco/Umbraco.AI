@@ -51,7 +51,7 @@ export const UaiPromptTypeMapper = {
             alias: response.alias,
             name: response.name,
             description: response.description ?? null,
-            content: response.content,
+            instructions: response.instructions,
             profileId: response.profileId ?? null,
             tags: response.tags ?? [],
             scope: mapScopeFromApi(response.scope),
@@ -74,7 +74,7 @@ export const UaiPromptTypeMapper = {
         return {
             alias: model.alias,
             name: model.name,
-            content: model.content,
+            instructions: model.instructions,
             description: model.description,
             profileId: model.profileId,
             tags: model.tags,
@@ -86,7 +86,7 @@ export const UaiPromptTypeMapper = {
         return {
             alias: model.alias,
             name: model.name,
-            content: model.content,
+            instructions: model.instructions,
             description: model.description,
             profileId: model.profileId,
             tags: model.tags,

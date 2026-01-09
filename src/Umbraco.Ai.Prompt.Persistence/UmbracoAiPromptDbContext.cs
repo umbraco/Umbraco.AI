@@ -42,7 +42,7 @@ public class UmbracoAiPromptDbContext : DbContext
             entity.Property(e => e.Description)
                 .HasMaxLength(1000);
 
-            entity.Property(e => e.Content)
+            entity.Property(e => e.Instructions)
                 .IsRequired();
 
             entity.Property(e => e.ProfileId);

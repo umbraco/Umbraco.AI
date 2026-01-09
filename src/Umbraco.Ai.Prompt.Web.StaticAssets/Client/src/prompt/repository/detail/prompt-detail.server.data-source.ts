@@ -28,7 +28,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             alias: "",
             name: "",
             description: null,
-            content: "",
+            instructions: "",
             profileId: null,
             tags: [],
             scope: null,

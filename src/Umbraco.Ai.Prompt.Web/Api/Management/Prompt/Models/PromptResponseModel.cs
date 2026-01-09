@@ -26,9 +26,9 @@ public class PromptResponseModel
     public string? Description { get; set; }
 
     /// <summary>
-    /// The prompt content.
+    /// The prompt instructions.
     /// </summary>
-    public string Content { get; set; } = string.Empty;
+    public string Instructions { get; set; } = string.Empty;
 
     /// <summary>
     /// Optional linked profile ID.

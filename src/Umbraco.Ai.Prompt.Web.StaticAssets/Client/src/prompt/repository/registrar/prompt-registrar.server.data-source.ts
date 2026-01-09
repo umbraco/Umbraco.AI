@@ -33,10 +33,10 @@ export class UaiPromptRegistrarServerDataSource {
             return { error };
         }
 
-        // Filter to only active prompts and fetch full details for content
+        // Filter to only active prompts and fetch full details for instructions
         const activePrompts = data.items.filter((item: PromptItemResponseModel) => item.isActive);
 
-        // We need to fetch full details for each prompt to get the content
+        // We need to fetch full details for each prompt to get the instructions
         const promptDetails = await Promise.all(
             activePrompts.map(async (item: PromptItemResponseModel) => {
                 const { data: detail, error: detailError } = await tryExecute(
@@ -55,7 +55,7 @@ export class UaiPromptRegistrarServerDataSource {
                     alias: detail.alias,
                     name: detail.name,
                     description: detail.description ?? null,
-                    content: detail.content,
+                    instructions: detail.instructions,
                     profileId: detail.profileId ?? null,
                     scope: detail.scope ? {
                         allowRules: detail.scope.allowRules?.map(r => ({

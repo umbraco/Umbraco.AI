@@ -28,7 +28,7 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Content")
+                    b.Property<string>("Instructions")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

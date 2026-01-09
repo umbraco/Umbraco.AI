@@ -27,7 +27,7 @@ internal static class AiPromptEntityFactory
             Alias = entity.Alias,
             Name = entity.Name,
             Description = entity.Description,
-            Content = entity.Content,
+            Instructions = entity.Instructions,
             ProfileId = entity.ProfileId,
             Tags = tags,
             IsActive = entity.IsActive,
@@ -48,7 +48,7 @@ internal static class AiPromptEntityFactory
             Alias = aiPrompt.Alias,
             Name = aiPrompt.Name,
             Description = aiPrompt.Description,
-            Content = aiPrompt.Content,
+            Instructions = aiPrompt.Instructions,
             ProfileId = aiPrompt.ProfileId,
             Tags = SerializeTags(aiPrompt.Tags),
             IsActive = aiPrompt.IsActive,
@@ -66,7 +66,7 @@ internal static class AiPromptEntityFactory
         entity.Alias = aiPrompt.Alias;
         entity.Name = aiPrompt.Name;
         entity.Description = aiPrompt.Description;
-        entity.Content = aiPrompt.Content;
+        entity.Instructions = aiPrompt.Instructions;
         entity.ProfileId = aiPrompt.ProfileId;
         entity.Tags = SerializeTags(aiPrompt.Tags);
         entity.IsActive = aiPrompt.IsActive;

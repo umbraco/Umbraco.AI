@@ -11,6 +11,8 @@ namespace Umbraco.Ai.Anthropic;
 /// </summary>
 public class AnthropicChatCapability(AnthropicProvider provider) : AiChatCapabilityBase<AnthropicProviderSettings>(provider)
 {
+    private const string DefaultChatModel = "claude-sonnet-4-20250514";
+    
     private new AnthropicProvider Provider => (AnthropicProvider)base.Provider;
 
     /// <summary>
@@ -37,8 +39,9 @@ public class AnthropicChatCapability(AnthropicProvider provider) : AiChatCapabil
     }
 
     /// <inheritdoc />
-    protected override IChatClient CreateClient(AnthropicProviderSettings settings)
-        => AnthropicProvider.CreateAnthropicClient(settings).AsIChatClient();
+    protected override IChatClient CreateClient(AnthropicProviderSettings settings, string? modelId)
+        => AnthropicProvider.CreateAnthropicClient(settings)
+            .AsIChatClient(modelId);
 
     private static bool IsChatModel(string modelId)
         => IncludePatterns.Any(p => p.IsMatch(modelId));

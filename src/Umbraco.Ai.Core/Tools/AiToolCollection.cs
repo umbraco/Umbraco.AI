@@ -52,4 +52,18 @@ public sealed class AiToolCollection : BuilderCollectionBase<IAiTool>
     /// <returns>Tools not marked as destructive.</returns>
     public IEnumerable<IAiTool> GetNonDestructive()
         => this.Where(t => !t.IsDestructive);
+
+    /// <summary>
+    /// Gets all system tools (tools that are always included in agent requests).
+    /// </summary>
+    /// <returns>System tools that cannot be removed or configured.</returns>
+    public IEnumerable<IAiTool> GetSystemTools()
+        => this.Where(t => t is IAiSystemTool);
+
+    /// <summary>
+    /// Gets all user tools (non-system tools that can be configured).
+    /// </summary>
+    /// <returns>User-configurable tools.</returns>
+    public IEnumerable<IAiTool> GetUserTools()
+        => this.Where(t => t is not IAiSystemTool);
 }

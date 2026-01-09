@@ -167,4 +167,94 @@ public class AiToolCollectionTests
     }
 
     #endregion
+
+    #region GetSystemTools / GetUserTools
+
+    [Fact]
+    public void GetSystemTools_ReturnsOnlyToolsImplementingIAiSystemTool()
+    {
+        // Arrange
+        var systemTool1 = new FakeSystemTool("system-1", "System Tool One");
+        var systemTool2 = new FakeSystemTool("system-2", "System Tool Two");
+        var userTool = new FakeTool("user-1", "User Tool");
+        var collection = new AiToolCollection(() => [systemTool1, systemTool2, userTool]);
+
+        // Act
+        var results = collection.GetSystemTools().ToList();
+
+        // Assert
+        results.Count.ShouldBe(2);
+        results.ShouldContain(systemTool1);
+        results.ShouldContain(systemTool2);
+        results.ShouldNotContain(userTool);
+    }
+
+    [Fact]
+    public void GetUserTools_ReturnsOnlyToolsNotImplementingIAiSystemTool()
+    {
+        // Arrange
+        var systemTool = new FakeSystemTool("system-1", "System Tool");
+        var userTool1 = new FakeTool("user-1", "User Tool One");
+        var userTool2 = new FakeTool("user-2", "User Tool Two");
+        var collection = new AiToolCollection(() => [systemTool, userTool1, userTool2]);
+
+        // Act
+        var results = collection.GetUserTools().ToList();
+
+        // Assert
+        results.Count.ShouldBe(2);
+        results.ShouldContain(userTool1);
+        results.ShouldContain(userTool2);
+        results.ShouldNotContain(systemTool);
+    }
+
+    [Fact]
+    public void GetSystemTools_WithNoSystemTools_ReturnsEmpty()
+    {
+        // Arrange - collection only has regular FakeTools (not system tools)
+
+        // Act
+        var results = _collection.GetSystemTools().ToList();
+
+        // Assert
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetUserTools_WithNoUserTools_ReturnsEmpty()
+    {
+        // Arrange
+        var systemTool1 = new FakeSystemTool("system-1", "System Tool One");
+        var systemTool2 = new FakeSystemTool("system-2", "System Tool Two");
+        var collection = new AiToolCollection(() => [systemTool1, systemTool2]);
+
+        // Act
+        var results = collection.GetUserTools().ToList();
+
+        // Assert
+        results.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetUserTools_WithMixedTools_ExcludesSystemTools()
+    {
+        // Arrange - use the default collection which has only user tools
+        // and add system tools to test mixed scenario
+        var systemTool = new FakeSystemTool("system-1", "System Tool");
+        var collection = new AiToolCollection(() => [_tool1, _tool2, systemTool]);
+
+        // Act
+        var systemResults = collection.GetSystemTools().ToList();
+        var userResults = collection.GetUserTools().ToList();
+
+        // Assert
+        systemResults.Count.ShouldBe(1);
+        systemResults.ShouldContain(systemTool);
+
+        userResults.Count.ShouldBe(2);
+        userResults.ShouldContain(_tool1);
+        userResults.ShouldContain(_tool2);
+    }
+
+    #endregion
 }

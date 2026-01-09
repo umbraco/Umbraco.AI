@@ -19,7 +19,7 @@ public record GetContextResourceArgs(
 /// Use list_context_resources first to see what's available.
 /// </remarks>
 [AiTool("get_context_resource", "Get Context Resource", Category = "Context")]
-public class GetContextResourceTool : AiToolBase<GetContextResourceArgs>
+public class GetContextResourceTool : AiToolBase<GetContextResourceArgs>, IAiSystemTool
 {
     private readonly IAiContextAccessor _contextAccessor;
     private readonly IAiContextFormatter _formatter;

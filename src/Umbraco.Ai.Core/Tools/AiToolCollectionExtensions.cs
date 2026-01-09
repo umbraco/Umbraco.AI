@@ -55,4 +55,32 @@ public static class AiToolCollectionExtensions
     {
         return factory.Create(tools);
     }
+
+    /// <summary>
+    /// Converts system tools to AIFunction instances.
+    /// System tools are always included in agent requests and cannot be removed.
+    /// </summary>
+    /// <param name="tools">The tool collection.</param>
+    /// <param name="factory">The function factory.</param>
+    /// <returns>A list of AIFunctions for system tools.</returns>
+    public static IReadOnlyList<AIFunction> ToSystemToolFunctions(
+        this AiToolCollection tools,
+        IAiFunctionFactory factory)
+    {
+        return factory.Create(tools.GetSystemTools());
+    }
+
+    /// <summary>
+    /// Converts user tools to AIFunction instances.
+    /// User tools can be configured and filtered by agents.
+    /// </summary>
+    /// <param name="tools">The tool collection.</param>
+    /// <param name="factory">The function factory.</param>
+    /// <returns>A list of AIFunctions for user tools.</returns>
+    public static IReadOnlyList<AIFunction> ToUserToolFunctions(
+        this AiToolCollection tools,
+        IAiFunctionFactory factory)
+    {
+        return factory.Create(tools.GetUserTools());
+    }
 }

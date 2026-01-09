@@ -108,3 +108,38 @@ public class FakeTypedTool<TArgs> : IAiTool where TArgs : class
 public record FakeToolArgs(
     [property: Description("A test message")] string Message,
     [property: Description("A test count")] int Count = 1);
+
+/// <summary>
+/// Fake implementation of <see cref="IAiSystemTool"/> for use in tests.
+/// </summary>
+public class FakeSystemTool : IAiTool, IAiSystemTool
+{
+    public FakeSystemTool(
+        string id = "fake-system-tool",
+        string name = "Fake System Tool",
+        string description = "A fake system tool for testing",
+        string category = "System",
+        bool isDestructive = false,
+        IReadOnlyList<string>? tags = null)
+    {
+        Id = id;
+        Name = name;
+        Description = description;
+        Category = category;
+        IsDestructive = isDestructive;
+        Tags = tags ?? [];
+    }
+
+    public string Id { get; }
+    public string Name { get; }
+    public string Description { get; }
+    public string Category { get; }
+    public bool IsDestructive { get; }
+    public IReadOnlyList<string> Tags { get; }
+    public Type? ArgsType => null;
+
+    public Task<object> ExecuteAsync(object? args, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<object>(new { Success = true });
+    }
+}

@@ -54,7 +54,7 @@ public class ExecutePromptController : PromptControllerBase
         try
         {
             var request = _mapper.Map<AiPromptExecutionRequest>(requestModel)!;
-            var result = await _promptService.ExecuteAsync(promptId.Value, request, cancellationToken);
+            var result = await _promptService.ExecutePromptAsync(promptId.Value, request, cancellationToken);
             return Ok(_mapper.Map<PromptExecutionResponseModel>(result));
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))

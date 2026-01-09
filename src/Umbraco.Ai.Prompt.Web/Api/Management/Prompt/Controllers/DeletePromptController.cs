@@ -46,7 +46,7 @@ public class DeletePromptController : PromptControllerBase
             return PromptNotFound();
         }
 
-        var deleted = await _aiPromptService.DeleteAsync(promptId.Value, cancellationToken);
+        var deleted = await _aiPromptService.DeletePromptAsync(promptId.Value, cancellationToken);
         if (!deleted)
         {
             return PromptNotFound();

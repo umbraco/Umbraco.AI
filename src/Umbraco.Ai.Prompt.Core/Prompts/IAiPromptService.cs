@@ -13,7 +13,7 @@ public interface IAiPromptService
     /// <param name="id">The prompt ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The prompt if found, null otherwise.</returns>
-    Task<AiPrompt?> GetAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AiPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a prompt by its alias.
@@ -21,14 +21,14 @@ public interface IAiPromptService
     /// <param name="alias">The prompt alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The prompt if found, null otherwise.</returns>
-    Task<AiPrompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AiPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all prompts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>All prompts.</returns>
-    Task<IEnumerable<AiPrompt>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AiPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paged list of prompts with optional filtering.
@@ -39,7 +39,7 @@ public interface IAiPromptService
     /// <param name="profileId">Optional profile ID filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged result containing prompts and total count.</returns>
-    Task<PagedModel<AiPrompt>> GetPagedAsync(
+    Task<PagedModel<AiPrompt>> GetPromptsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -61,7 +61,7 @@ public interface IAiPromptService
     /// <param name="id">The prompt ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted, false if not found.</returns>
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a prompt with the given alias exists.
@@ -70,7 +70,7 @@ public interface IAiPromptService
     /// <param name="excludeId">Optional ID to exclude from the check.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if alias exists.</returns>
-    Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
+    Task<bool> PromptAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes a prompt and returns the AI response.
@@ -79,7 +79,7 @@ public interface IAiPromptService
     /// <param name="request">The execution request containing context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The execution result containing the AI response.</returns>
-    Task<AiPromptExecutionResult> ExecuteAsync(
+    Task<AiPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
         AiPromptExecutionRequest request,
         CancellationToken cancellationToken = default);

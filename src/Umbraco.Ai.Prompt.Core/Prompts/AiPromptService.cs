@@ -1,7 +1,9 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Prompt.Core.Context;
+using Umbraco.Ai.Core.Tools;
+using Umbraco.Ai.Extensions;
+using Umbraco.Ai.Prompt.Core.Contexts;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -15,33 +17,39 @@ internal sealed class AiPromptService : IAiPromptService
     private readonly IAiChatService _chatService;
     private readonly IAiPromptTemplateService _templateService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly AiToolCollection _tools;
+    private readonly IAiFunctionFactory _functionFactory;
 
     public AiPromptService(
         IAiPromptRepository repository,
         IAiChatService chatService,
         IAiPromptTemplateService templateService,
-        IServiceScopeFactory serviceScopeFactory)
+        IServiceScopeFactory serviceScopeFactory,
+        AiToolCollection tools,
+        IAiFunctionFactory functionFactory)
     {
         _repository = repository;
         _chatService = chatService;
         _templateService = templateService;
         _serviceScopeFactory = serviceScopeFactory;
+        _tools = tools;
+        _functionFactory = functionFactory;
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AiPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.GetByIdAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AiPrompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AiPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default)
         => _repository.GetByAliasAsync(alias, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiPrompt>> GetAllAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AiPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default)
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AiPrompt>> GetPagedAsync(
+    public Task<PagedModel<AiPrompt>> GetPromptsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -77,15 +85,15 @@ internal sealed class AiPromptService : IAiPromptService
     }
 
     /// <inheritdoc />
-    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.DeleteAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    public Task<bool> PromptAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AiPromptExecutionResult> ExecuteAsync(
+    public async Task<AiPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
         AiPromptExecutionRequest request,
         CancellationToken cancellationToken = default)
@@ -93,7 +101,7 @@ internal sealed class AiPromptService : IAiPromptService
         ArgumentNullException.ThrowIfNull(request);
 
         // 1. Get the prompt
-        var prompt = await GetAsync(promptId, cancellationToken)
+        var prompt = await GetPromptAsync(promptId, cancellationToken)
             ?? throw new InvalidOperationException($"Prompt {promptId} not found");
 
         // 2. Validate scope - ensure prompt is allowed to run for this context
@@ -119,19 +127,21 @@ internal sealed class AiPromptService : IAiPromptService
             new(ChatRole.User, processedContent)
         };
 
-        // 6. Create ChatOptions with PromptId for context resolution
+        // 6. Create ChatOptions with PromptId for context resolution and system tools
         var chatOptions = new ChatOptions
         {
             AdditionalProperties = new AdditionalPropertiesDictionary
             {
                 [PromptContextResolver.PromptIdKey] = prompt.Id
-            }
+            },
+            Tools = _tools.ToSystemToolFunctions(_functionFactory).Cast<AITool>().ToList(),
+            ToolMode = ChatToolMode.Auto
         };
 
         // 7. Execute via chat service
         var response = prompt.ProfileId.HasValue
-            ? await _chatService.GetResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)
-            : await _chatService.GetResponseAsync(messages, chatOptions, cancellationToken);
+            ? await _chatService.GetChatResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)
+            : await _chatService.GetChatResponseAsync(messages, chatOptions, cancellationToken);
 
         // 8. Map response
         return new AiPromptExecutionResult

@@ -45,7 +45,7 @@ public class AllPromptController : PromptControllerBase
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await _aiPromptService.GetPagedAsync(skip, take, filter, profileId, cancellationToken);
+        var result = await _aiPromptService.GetPromptsPagedAsync(skip, take, filter, profileId, cancellationToken);
 
         var viewModel = new PagedViewModel<PromptItemResponseModel>
         {

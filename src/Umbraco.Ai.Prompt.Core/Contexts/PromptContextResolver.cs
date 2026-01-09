@@ -1,8 +1,8 @@
-using Umbraco.Ai.Core.Context;
-using Umbraco.Ai.Core.Context.Resolvers;
+using Umbraco.Ai.Core.Contexts;
+using Umbraco.Ai.Core.Contexts.Resolvers;
 using Umbraco.Ai.Prompt.Core.Prompts;
 
-namespace Umbraco.Ai.Prompt.Core.Context;
+namespace Umbraco.Ai.Prompt.Core.Contexts;
 
 /// <summary>
 /// Resolves context from prompt-level context assignments.
@@ -45,7 +45,7 @@ internal sealed class PromptContextResolver : IAiContextResolver
             return AiContextResolverResult.Empty;
         }
 
-        var prompt = await _promptService.GetAsync(promptId.Value, cancellationToken);
+        var prompt = await _promptService.GetPromptAsync(promptId.Value, cancellationToken);
         if (prompt is null || prompt.ContextIds.Count == 0)
         {
             return AiContextResolverResult.Empty;

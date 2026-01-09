@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Prompt.Core.Context;
+using Umbraco.Ai.Prompt.Core.Contexts;
 using Umbraco.Ai.Prompt.Core.Models;
 using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Cms.Core.DependencyInjection;

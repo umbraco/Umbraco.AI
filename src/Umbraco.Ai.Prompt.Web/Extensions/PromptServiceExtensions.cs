@@ -22,12 +22,12 @@ internal static class PromptServiceExtensions
     {
         if (idOrAlias is { IsId: true, Id: not null })
         {
-            return await service.GetAsync(idOrAlias.Id.Value, cancellationToken);
+            return await service.GetPromptAsync(idOrAlias.Id.Value, cancellationToken);
         }
 
         if (idOrAlias.Alias != null)
         {
-            return await service.GetByAliasAsync(idOrAlias.Alias, cancellationToken);
+            return await service.GetPromptByAliasAsync(idOrAlias.Alias, cancellationToken);
         }
 
         return null;
@@ -55,7 +55,7 @@ internal static class PromptServiceExtensions
         // For alias, we need to look up the prompt
         if (idOrAlias.Alias != null)
         {
-            var prompt = await service.GetByAliasAsync(idOrAlias.Alias, cancellationToken);
+            var prompt = await service.GetPromptByAliasAsync(idOrAlias.Alias, cancellationToken);
             return prompt?.Id;
         }
 

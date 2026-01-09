@@ -1,24 +1,38 @@
+using Microsoft.AspNetCore.Http;
+
 namespace Umbraco.Ai.Core.Contexts;
 
 /// <summary>
-/// Default implementation of <see cref="IAiContextAccessor"/> using AsyncLocal.
+/// Default implementation of <see cref="IAiContextAccessor"/> using HttpContext.Items.
 /// </summary>
-internal sealed class AiContextAccessor : IAiContextAccessor
+/// <remarks>
+/// Uses HttpContext.Items instead of AsyncLocal because AsyncLocal doesn't survive
+/// the async boundaries created by MEAI's FunctionInvokingChatClient during tool execution.
+/// HttpContext.Items is preserved across all async calls within an HTTP request.
+/// </remarks>
+internal sealed class AiContextAccessor(IHttpContextAccessor httpContextAccessor) : IAiContextAccessor
 {
-    private static readonly AsyncLocal<AiResolvedContext?> _context = new();
+    private const string ContextKey = "Umbraco.Ai.ResolvedContext";
 
     /// <inheritdoc />
-    public AiResolvedContext? Context => _context.Value;
+    public AiResolvedContext? Context =>
+        httpContextAccessor.HttpContext?.Items[ContextKey] as AiResolvedContext;
 
     /// <inheritdoc />
     public IDisposable SetContext(AiResolvedContext context)
     {
-        _context.Value = context;
-        return new ContextScope();
+        if (httpContextAccessor.HttpContext != null)
+        {
+            httpContextAccessor.HttpContext.Items[ContextKey] = context;
+        }
+        return new ContextScope(httpContextAccessor);
     }
 
-    private sealed class ContextScope : IDisposable
+    private sealed class ContextScope(IHttpContextAccessor httpContextAccessor) : IDisposable
     {
-        public void Dispose() => _context.Value = null;
+        public void Dispose()
+        {
+            httpContextAccessor.HttpContext?.Items.Remove(ContextKey);
+        }
     }
 }

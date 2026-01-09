@@ -18,6 +18,7 @@ using Umbraco.Ai.Agui.Streaming;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Tools;
+using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
@@ -407,15 +408,16 @@ public class RunAgentController : AgentControllerBase
             }
         }
 
-        // Build combined tool list (backend + frontend)
+        // Build combined tool list (system + user + frontend)
         var allTools = new List<AITool>();
 
-        // Add backend tools - these execute server-side automatically
-        if (_toolCollection.Any())
-        {
-            var backendFunctions = _functionFactory.Create(_toolCollection);
-            allTools.AddRange(backendFunctions);
-        }
+        // ALWAYS include system tools - these cannot be removed or configured
+        var systemFunctions = _toolCollection.ToSystemToolFunctions(_functionFactory);
+        allTools.AddRange(systemFunctions);
+
+        // Add user tools - these can be configured/filtered by agents in the future
+        var userFunctions = _toolCollection.ToUserToolFunctions(_functionFactory);
+        allTools.AddRange(userFunctions);
 
         // Add frontend tools - these return to client for execution
         if (frontendTools?.Any() == true)

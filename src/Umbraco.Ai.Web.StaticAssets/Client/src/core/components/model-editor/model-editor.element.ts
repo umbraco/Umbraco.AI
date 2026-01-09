@@ -50,9 +50,65 @@ export class UaiModelEditorElement extends UmbLitElement {
     @state()
     private _propertyValues: UmbPropertyValueData[] = [];
 
+    /**
+     * Tracks whether we've done the initial population for the current schema.
+     * This prevents re-populating on every model change which would reset cursor position.
+     */
+    #isInitialized = false;
+
+    /**
+     * Tracks the last model we emitted via the change event.
+     * Used to distinguish between echo updates (parent reflecting our change back)
+     * and external updates (loading different data, reset, etc.).
+     */
+    #lastEmittedModel: Record<string, unknown> | null = null;
+
+    override shouldUpdate(changedProperties: Map<string, unknown>): boolean {
+        // After initial population, check if model change is just an echo of our own change
+        if (this.#isInitialized &&
+            changedProperties.size === 1 &&
+            changedProperties.has("model")) {
+
+            // Compare with last emitted model - if it matches, skip re-render (echo update)
+            // If it differs, allow re-render (external update like loading different data)
+            if (this.#isModelEchoUpdate(this.model)) {
+                return false;
+            }
+
+            // External change - reset initialization to re-populate
+            this.#isInitialized = false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks if the incoming model matches what we last emitted (echo update).
+     */
+    #isModelEchoUpdate(incomingModel: Record<string, unknown> | undefined): boolean {
+        if (!this.#lastEmittedModel || !incomingModel) {
+            return false;
+        }
+
+        const lastKeys = Object.keys(this.#lastEmittedModel);
+        const incomingKeys = Object.keys(incomingModel);
+
+        if (lastKeys.length !== incomingKeys.length) {
+            return false;
+        }
+
+        return lastKeys.every(key => this.#lastEmittedModel![key] === incomingModel[key]);
+    }
+
     override updated(changedProperties: Map<string, unknown>) {
-        if (changedProperties.has("schema") || changedProperties.has("model")) {
+        // Only re-populate when schema changes (new form structure) or on first load.
+        if (changedProperties.has("schema")) {
+            this.#isInitialized = false;
+            this.#lastEmittedModel = null;
+        }
+
+        if (!this.#isInitialized && this.schema) {
             this.#populatePropertyValues();
+            this.#isInitialized = true;
         }
     }
 
@@ -73,6 +129,10 @@ export class UaiModelEditorElement extends UmbLitElement {
             (acc, curr) => ({ ...acc, [curr.alias]: curr.value }),
             {} as Record<string, unknown>
         );
+
+        // Track emitted model to detect echo updates vs external changes
+        this.#lastEmittedModel = model;
+
         this.dispatchEvent(new CustomEvent<UaiModelEditorChangeEventDetail>(
             "change",
             {

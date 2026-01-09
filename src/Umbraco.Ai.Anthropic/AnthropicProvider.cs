@@ -24,8 +24,8 @@ public class AnthropicProvider : AiProviderBase<AnthropicProviderSettings>
         : base(infrastructure)
     {
         _cache = cache;
+        
         WithCapability<AnthropicChatCapability>();
-        // Note: Anthropic does not provide an embeddings API
     }
 
     /// <summary>

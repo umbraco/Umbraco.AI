@@ -71,25 +71,14 @@ public interface IAiChatService
 
     /// <summary>
     /// Gets a configured chat client for advanced scenarios.
-    /// The returned client has all registered middleware applied and is configured
-    /// according to the specified profile.
+    /// The returned client has all registered middleware applied, is configured
+    /// according to the specified profile, and automatically includes the profile ID
+    /// for context resolution in all requests.
     /// </summary>
     /// <param name="profileId">Optional profile id. If not specified, uses the default chat profile.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A configured IChatClient instance with middleware applied.</returns>
     Task<IChatClient> GetChatClientAsync(
-        Guid? profileId = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a configured chat client along with base options that include profile context.
-    /// Use this when you need direct client access but still want profile contexts applied automatically.
-    /// The returned options include the profile ID for context resolution middleware.
-    /// </summary>
-    /// <param name="profileId">Optional profile id. If not specified, uses the default chat profile.</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>A configured IChatClient and base ChatOptions with profile ID set for context resolution.</returns>
-    Task<(IChatClient Client, ChatOptions BaseOptions)> GetChatClientWithOptionsAsync(
         Guid? profileId = null,
         CancellationToken cancellationToken = default);
 }

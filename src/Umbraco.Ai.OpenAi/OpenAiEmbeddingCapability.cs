@@ -11,6 +11,8 @@ namespace Umbraco.Ai.OpenAi;
 /// </summary>
 public class OpenAiEmbeddingCapability(OpenAiProvider provider) : AiEmbeddingCapabilityBase<OpenAiProviderSettings>(provider)
 {
+    private const string DefaultEmbeddingModel = "text-embedding-3-small";
+    
     private new OpenAiProvider Provider => (OpenAiProvider)base.Provider;
 
     /// <summary>
@@ -37,9 +39,9 @@ public class OpenAiEmbeddingCapability(OpenAiProvider provider) : AiEmbeddingCap
     }
 
     /// <inheritdoc />
-    protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(OpenAiProviderSettings settings)
+    protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(OpenAiProviderSettings settings, string? modelId)
         => OpenAiProvider.CreateOpenAiClient(settings)
-            .GetEmbeddingClient("text-embedding-3-small")
+            .GetEmbeddingClient(modelId ?? DefaultEmbeddingModel)
             .AsIEmbeddingGenerator();
 
     private static bool IsEmbeddingModel(string modelId)

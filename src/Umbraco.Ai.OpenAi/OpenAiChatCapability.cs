@@ -11,6 +11,8 @@ namespace Umbraco.Ai.OpenAi;
 /// </summary>
 public class OpenAiChatCapability(OpenAiProvider provider) : AiChatCapabilityBase<OpenAiProviderSettings>(provider)
 {
+    private const string DefaultChatModel = "gpt-4o";
+    
     private new OpenAiProvider Provider => (OpenAiProvider)base.Provider;
 
     /// <summary>
@@ -50,9 +52,9 @@ public class OpenAiChatCapability(OpenAiProvider provider) : AiChatCapabilityBas
     }
 
     /// <inheritdoc />
-    protected override IChatClient CreateClient(OpenAiProviderSettings settings)
+    protected override IChatClient CreateClient(OpenAiProviderSettings settings, string? modelId)
         => OpenAiProvider.CreateOpenAiClient(settings)
-            .GetChatClient("gpt-4o")
+            .GetChatClient(modelId ?? DefaultChatModel)
             .AsIChatClient();
 
     private static bool IsChatModel(string modelId)

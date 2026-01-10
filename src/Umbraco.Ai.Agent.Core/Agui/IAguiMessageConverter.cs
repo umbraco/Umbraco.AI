@@ -9,18 +9,15 @@ namespace Umbraco.Ai.Agent.Core.Agui;
 public interface IAguiMessageConverter
 {
     /// <summary>
-    /// Converts AG-UI messages and context items to M.E.AI chat messages.
+    /// Converts AG-UI messages to M.E.AI chat messages.
     /// </summary>
     /// <param name="messages">The AG-UI messages to convert.</param>
-    /// <param name="context">Optional context items to include as a system message.</param>
     /// <returns>A list of chat messages suitable for the AI model.</returns>
     /// <remarks>
-    /// Context items are converted to a system message with markdown formatting.
     /// Agent instructions are NOT included here - they are handled by AgentBoundChatClient.
+    /// Context is handled separately via <see cref="IAguiContextConverter"/>.
     /// </remarks>
-    List<ChatMessage> ConvertToChatMessages(
-        IEnumerable<AguiMessage>? messages,
-        IEnumerable<AguiContextItem>? context);
+    List<ChatMessage> ConvertToChatMessages(IEnumerable<AguiMessage>? messages);
 
     /// <summary>
     /// Converts a single AG-UI message to an M.E.AI chat message.

@@ -43,6 +43,7 @@ public static class UmbracoBuilderExtensions
         // Register AG-UI services
         builder.Services.AddSingleton<IAguiMessageConverter, AguiMessageConverter>();
         builder.Services.AddSingleton<IAguiToolConverter, AguiToolConverter>();
+        builder.Services.AddSingleton<IAguiContextConverter, AguiContextConverter>();
         builder.Services.AddScoped<IAguiStreamingService, AguiStreamingService>();
 
         // Register agent context resolver

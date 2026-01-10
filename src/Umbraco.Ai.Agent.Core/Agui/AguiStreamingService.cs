@@ -7,6 +7,7 @@ using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Events.Lifecycle;
 using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
+using Umbraco.Ai.Core.RequestContext;
 
 namespace Umbraco.Ai.Agent.Core.Agui;
 
@@ -23,6 +24,8 @@ namespace Umbraco.Ai.Agent.Core.Agui;
 internal sealed class AguiStreamingService : IAguiStreamingService
 {
     private readonly IAguiMessageConverter _messageConverter;
+    private readonly IAguiContextConverter _contextConverter;
+    private readonly AiRequestContextProcessorCollection _contextProcessors;
     private readonly ILogger<AguiStreamingService> _logger;
 
     /// <summary>
@@ -30,9 +33,13 @@ internal sealed class AguiStreamingService : IAguiStreamingService
     /// </summary>
     public AguiStreamingService(
         IAguiMessageConverter messageConverter,
+        IAguiContextConverter contextConverter,
+        AiRequestContextProcessorCollection contextProcessors,
         ILogger<AguiStreamingService> logger)
     {
         _messageConverter = messageConverter;
+        _contextConverter = contextConverter;
+        _contextProcessors = contextProcessors;
         _logger = logger;
     }
 
@@ -111,16 +118,22 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         HashSet<string> frontendToolNames,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        // Convert messages and handle resume
-        var chatMessages = BuildChatMessages(request);
+        // Process context first - this is used by multiple downstream operations
+        var requestContext = ProcessContext(request.Context);
+
+        // Build messages (may inject system message from context)
+        var chatMessages = BuildChatMessages(request, requestContext);
+
+        // Build agent options (sets ContentId for context resolution)
+        var agentOptions = BuildAgentOptions(requestContext);
 
         _logger.LogDebug(
             "Starting agent streaming with {MessageCount} messages, {ToolCount} frontend tools",
             chatMessages.Count,
             frontendToolNames.Count);
 
-        // Use MAF streaming
-        await foreach (var update in agent.RunStreamingAsync(chatMessages, cancellationToken: cancellationToken))
+        // Use MAF streaming with options (thread=null, options=agentOptions)
+        await foreach (var update in agent.RunStreamingAsync(chatMessages, thread: null, options: agentOptions, cancellationToken: cancellationToken))
         {
             // Process content items (tool calls and results first, then text)
             if (update.Contents != null)
@@ -156,9 +169,50 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         }
     }
 
-    private List<ChatMessage> BuildChatMessages(AguiRunRequest request)
+    /// <summary>
+    /// Processes AG-UI context items through registered processors.
+    /// </summary>
+    private AiRequestContext? ProcessContext(IEnumerable<AguiContextItem>? context)
     {
-        var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages, request.Context);
+        if (context?.Any() != true)
+        {
+            return null;
+        }
+
+        var coreItems = _contextConverter.ConvertToRequestContextItems(context);
+        return _contextProcessors.Process(coreItems);
+    }
+
+    /// <summary>
+    /// Builds chat messages from the request, injecting system message from context if present.
+    /// </summary>
+    private List<ChatMessage> BuildChatMessages(AguiRunRequest request, AiRequestContext? requestContext)
+    {
+        // Convert AG-UI messages
+        var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages);
+
+        // Inject system message from context processors
+        if (requestContext?.SystemMessageParts.Count > 0)
+        {
+            var contextContent = string.Join("\n\n", requestContext.SystemMessageParts);
+
+            // Check if there's already a system message to combine with
+            var existingSystemIndex = chatMessages.FindIndex(m => m.Role == ChatRole.System);
+            if (existingSystemIndex >= 0)
+            {
+                // Prepend context content to existing system message
+                var existingContent = chatMessages[existingSystemIndex].Text ?? string.Empty;
+                var combinedContent = string.IsNullOrEmpty(existingContent)
+                    ? contextContent
+                    : $"{contextContent}\n\n{existingContent}";
+                chatMessages[existingSystemIndex] = new ChatMessage(ChatRole.System, combinedContent);
+            }
+            else
+            {
+                // Insert new system message at the beginning
+                chatMessages.Insert(0, new ChatMessage(ChatRole.System, contextContent));
+            }
+        }
 
         // Handle resume - inject tool results from resume payload
         if (request.Resume != null)
@@ -173,6 +227,32 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         }
 
         return chatMessages;
+    }
+
+    /// <summary>
+    /// Builds agent run options with ChatOptions for context resolution.
+    /// </summary>
+    private static AgentRunOptions? BuildAgentOptions(AiRequestContext? requestContext)
+    {
+        if (requestContext is null)
+        {
+            return null;
+        }
+
+        // Extract EntityId for ContentContextResolver
+        var entityId = requestContext.GetValue<Guid>(AiRequestContextKeys.EntityId);
+        if (!entityId.HasValue)
+        {
+            return null;
+        }
+
+        return new ChatClientAgentRunOptions(new ChatOptions
+        {
+            AdditionalProperties = new AdditionalPropertiesDictionary
+            {
+                [AiRequestContextKeys.ContentId] = entityId.Value
+            }
+        });
     }
 
     private IAguiEvent? ProcessFunctionCall(

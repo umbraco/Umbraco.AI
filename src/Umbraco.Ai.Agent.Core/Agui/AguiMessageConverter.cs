@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Agui.Models;
@@ -7,24 +6,15 @@ namespace Umbraco.Ai.Agent.Core.Agui;
 
 /// <summary>
 /// Default implementation of <see cref="IAguiMessageConverter"/>.
+/// Responsible only for converting AG-UI messages to M.E.AI chat messages.
 /// </summary>
 public sealed class AguiMessageConverter : IAguiMessageConverter
 {
     /// <inheritdoc />
-    public List<ChatMessage> ConvertToChatMessages(
-        IEnumerable<AguiMessage>? messages,
-        IEnumerable<AguiContextItem>? context)
+    public List<ChatMessage> ConvertToChatMessages(IEnumerable<AguiMessage>? messages)
     {
         var chatMessages = new List<ChatMessage>();
 
-        // Build system message with context items only (agent instructions handled by AgentBoundChatClient)
-        if (context?.Any() == true)
-        {
-            var systemContent = BuildContextSystemMessage(context);
-            chatMessages.Add(new ChatMessage(ChatRole.System, systemContent));
-        }
-
-        // Convert AG-UI messages
         if (messages != null)
         {
             foreach (var msg in messages)
@@ -156,22 +146,4 @@ public sealed class AguiMessageConverter : IAguiMessageConverter
         return AguiMessageRole.User;
     }
 
-    private static string BuildContextSystemMessage(IEnumerable<AguiContextItem> context)
-    {
-        var systemContent = new StringBuilder();
-        systemContent.AppendLine("## Current Context");
-
-        foreach (var item in context)
-        {
-            systemContent.AppendLine($"### {item.Description}");
-            if (item.Value.HasValue)
-            {
-                systemContent.AppendLine("```json");
-                systemContent.AppendLine(item.Value.Value.GetRawText());
-                systemContent.AppendLine("```");
-            }
-        }
-
-        return systemContent.ToString();
-    }
 }

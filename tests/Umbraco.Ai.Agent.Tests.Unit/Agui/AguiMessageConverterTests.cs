@@ -17,7 +17,7 @@ public class AguiMessageConverterTests
     public void ConvertToChatMessages_WithNullMessages_ReturnsEmptyList()
     {
         // Act
-        var result = _converter.ConvertToChatMessages(null, null);
+        var result = _converter.ConvertToChatMessages(null);
 
         // Assert
         result.ShouldBeEmpty();
@@ -34,7 +34,7 @@ public class AguiMessageConverterTests
         };
 
         // Act
-        var result = _converter.ConvertToChatMessages(messages, null);
+        var result = _converter.ConvertToChatMessages(messages);
 
         // Assert
         result.Count.ShouldBe(2);
@@ -42,52 +42,6 @@ public class AguiMessageConverterTests
         result[0].Text.ShouldBe("Hello");
         result[1].Role.ShouldBe(ChatRole.Assistant);
         result[1].Text.ShouldBe("Hi there!");
-    }
-
-    [Fact]
-    public void ConvertToChatMessages_WithContext_AddsSystemMessage()
-    {
-        // Arrange
-        var context = new List<AguiContextItem>
-        {
-            new()
-            {
-                Description = "Current User",
-                Value = JsonSerializer.SerializeToElement(new { name = "John", role = "Admin" })
-            }
-        };
-
-        // Act
-        var result = _converter.ConvertToChatMessages(null, context);
-
-        // Assert
-        result.Count.ShouldBe(1);
-        result[0].Role.ShouldBe(ChatRole.System);
-        result[0].Text.ShouldContain("Current Context");
-        result[0].Text.ShouldContain("Current User");
-        result[0].Text.ShouldContain("John");
-    }
-
-    [Fact]
-    public void ConvertToChatMessages_WithContextAndMessages_ContextComesFirst()
-    {
-        // Arrange
-        var context = new List<AguiContextItem>
-        {
-            new() { Description = "Test Context", Value = JsonSerializer.SerializeToElement("value") }
-        };
-        var messages = new List<AguiMessage>
-        {
-            new() { Role = AguiMessageRole.User, Content = "Hello" }
-        };
-
-        // Act
-        var result = _converter.ConvertToChatMessages(messages, context);
-
-        // Assert
-        result.Count.ShouldBe(2);
-        result[0].Role.ShouldBe(ChatRole.System);
-        result[1].Role.ShouldBe(ChatRole.User);
     }
 
     #endregion

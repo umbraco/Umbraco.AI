@@ -11,9 +11,10 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
-      // Only externalize @umbraco packages (available in backoffice runtime)
+      // Externalize @umbraco packages (available in backoffice runtime)
+      // and @umbraco-ai packages (provided by Core via import map)
       // @ag-ui packages must be bundled as they're not provided by the runtime
-      external: [/^@umbraco/],
+      external: [/^@umbraco/, /^@umbraco-ai/],
     },
   },
 });

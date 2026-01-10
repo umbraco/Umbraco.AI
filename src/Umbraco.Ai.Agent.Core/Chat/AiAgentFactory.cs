@@ -35,7 +35,7 @@ internal sealed class AiAgentFactory : IAiAgentFactory
     /// <inheritdoc />
     public async Task<AIAgent> CreateAgentAsync(
         AiAgent agent,
-        IEnumerable<AITool>? frontendTools = null,
+        IEnumerable<AITool>? additionalTools = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(agent);
@@ -51,10 +51,10 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         tools.AddRange(_toolCollection.ToSystemToolFunctions(_functionFactory));
         tools.AddRange(_toolCollection.ToUserToolFunctions(_functionFactory));
 
-        // Add frontend tools if provided (for copilot UI)
-        if (frontendTools != null)
+        // Add additional (likely frontend) tools if provided (for copilot UI)
+        if (additionalTools != null)
         {
-            tools.AddRange(frontendTools);
+            tools.AddRange(additionalTools);
         }
 
         // Create MAF ChatClientAgent using the extension method

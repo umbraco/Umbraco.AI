@@ -35,13 +35,13 @@ public interface IAiAgentFactory
     /// Creates a MAF AIAgent for the given agent definition.
     /// </summary>
     /// <param name="agent">The agent definition containing instructions and context configuration.</param>
-    /// <param name="frontendTools">Optional frontend tools (for copilot UI). These are added to the
-    /// agent's tool list and use <c>FunctionInvokingChatClient.CurrentContext.Terminate</c> to signal
-    /// that execution should return to the client.</param>
+    /// <param name="additionalTools">Optional additional tools to include in the agent.
+    ///  Primarily used for frontend tool injection in AG-UI scenarios.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured <see cref="ChatClientAgent"/> with tools and context injection.</returns>
     Task<AIAgent> CreateAgentAsync(
         AiAgent agent,
-        IEnumerable<AITool>? frontendTools = null,
+        IEnumerable<AITool>? additionalTools = null,
         CancellationToken cancellationToken = default);
 }

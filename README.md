@@ -30,9 +30,11 @@ Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified 
 
 To quickly set up a local demo site for development and testing:
 
-```powershell
-.\scripts\Install-DemoSite.ps1
+```bash
+./scripts/install-demo-site.sh
 ```
+
+> **Note:** On Windows, run this script using Git Bash (included with Git for Windows).
 
 This script will:
 - Create a demo folder with a new Umbraco site (`Umbraco.Ai.DemoSite`)

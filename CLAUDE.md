@@ -19,8 +19,8 @@ npm run watch
 # Generate API client from OpenAPI spec (requires running server)
 npm run generate-client https://localhost:44331/umbraco/swagger/umbraco-ai/swagger.json
 
-# Set up demo site for local development
-.\scripts\Install-DemoSite.ps1
+# Set up demo site for local development (works on macOS, Linux, Windows via Git Bash)
+./scripts/install-demo-site.sh
 # Then open Umbraco.Ai.local.sln to work with both package and demo site
 ```
 

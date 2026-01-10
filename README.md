@@ -34,7 +34,7 @@ To quickly set up a local demo site for development and testing:
 ./scripts/install-demo-site.sh
 ```
 
-> **Note:** On Windows, run this script using Git Bash (included with Git for Windows).
+> **Windows users:** Run `scripts\install-demo-site.cmd` from Command Prompt or PowerShell (requires Git for Windows).
 
 This script will:
 - Create a demo folder with a new Umbraco site (`Umbraco.Ai.DemoSite`)

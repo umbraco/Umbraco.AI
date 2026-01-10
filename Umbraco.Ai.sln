@@ -24,8 +24,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Persistence.SqlS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Persistence.Sqlite", "src\Umbraco.Ai.Persistence.Sqlite\Umbraco.Ai.Persistence.Sqlite.csproj", "{5D759E09-0005-4A89-B473-FB049D08279E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agui", "src\Umbraco.Ai.Agui\Umbraco.Ai.Agui.csproj", "{8048B8F9-BB8D-478C-AD20-CBA199172143}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -168,18 +166,6 @@ Global
 		{5D759E09-0005-4A89-B473-FB049D08279E}.Release|x64.Build.0 = Release|Any CPU
 		{5D759E09-0005-4A89-B473-FB049D08279E}.Release|x86.ActiveCfg = Release|Any CPU
 		{5D759E09-0005-4A89-B473-FB049D08279E}.Release|x86.Build.0 = Release|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Debug|x64.Build.0 = Debug|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Debug|x86.Build.0 = Debug|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Release|x64.ActiveCfg = Release|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Release|x64.Build.0 = Release|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Release|x86.ActiveCfg = Release|Any CPU
-		{8048B8F9-BB8D-478C-AD20-CBA199172143}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

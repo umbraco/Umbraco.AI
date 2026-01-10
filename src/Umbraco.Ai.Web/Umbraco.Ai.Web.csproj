@@ -12,7 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.Ai.Agui\Umbraco.Ai.Agui.csproj" />
         <ProjectReference Include="..\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
     </ItemGroup>
 

@@ -1,7 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiChatServerDataSource } from "./chat.server.data-source.js";
-import type { UaiChatRequest, UaiChatResult, UaiChatStreamChunk } from "../types.js";
+import type { UaiChatRequest, UaiChatResult } from "../types.js";
 
 /**
  * Repository for chat operations.
@@ -19,12 +19,5 @@ export class UaiChatRepository extends UmbControllerBase {
      */
     async complete(request: UaiChatRequest): Promise<{ data?: UaiChatResult; error?: unknown }> {
         return this.#dataSource.complete(request);
-    }
-
-    /**
-     * Performs a streaming chat completion.
-     */
-    stream(request: UaiChatRequest): AsyncGenerator<UaiChatStreamChunk> {
-        return this.#dataSource.stream(request);
     }
 }

@@ -4,61 +4,6 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44388' | (string & {});
 };
 
-export type AguiContextItemModel = {
-    description: string;
-    value?: unknown;
-};
-
-export type AguiFunctionCallModel = {
-    name: string;
-    arguments: string;
-};
-
-export type AguiMessageModel = {
-    id?: string | null;
-    role: AguiMessageRoleModel;
-    content?: string | null;
-    name?: string | null;
-    toolCalls?: Array<AguiToolCallModel> | null;
-    toolCallId?: string | null;
-};
-
-export type AguiMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
-
-export type AguiResumeInfoModel = {
-    interruptId: string;
-    payload?: unknown;
-};
-
-export type AguiRunRequestModel = {
-    threadId: string;
-    runId: string;
-    messages: Array<AguiMessageModel>;
-    tools?: Array<AguiToolModel> | null;
-    state?: unknown;
-    context?: Array<AguiContextItemModel> | null;
-    resume?: AguiResumeInfoModel | null;
-    forwardedProps?: unknown;
-};
-
-export type AguiToolCallModel = {
-    id: string;
-    type: string;
-    function: AguiFunctionCallModel;
-};
-
-export type AguiToolModel = {
-    name: string;
-    description: string;
-    parameters: AguiToolParametersModel;
-};
-
-export type AguiToolParametersModel = {
-    type: string;
-    properties: unknown;
-    required?: Array<string> | null;
-};
-
 export type ChatMessageModel = {
     role: string;
     content: string;
@@ -343,38 +288,6 @@ export type CompleteChatResponses = {
 };
 
 export type CompleteChatResponse = CompleteChatResponses[keyof CompleteChatResponses];
-
-export type StreamChatData = {
-    body?: AguiRunRequestModel;
-    headers?: {
-        profileIdOrAlias?: string;
-    };
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/chat/stream';
-};
-
-export type StreamChatErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type StreamChatError = StreamChatErrors[keyof StreamChatErrors];
-
-export type StreamChatResponses = {
-    /**
-     * Server-Sent Events stream
-     */
-    200: string;
-};
-
-export type StreamChatResponse = StreamChatResponses[keyof StreamChatResponses];
 
 export type GetAllConnectionsData = {
     body?: never;

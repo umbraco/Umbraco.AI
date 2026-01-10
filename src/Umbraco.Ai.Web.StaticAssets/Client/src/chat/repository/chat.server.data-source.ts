@@ -1,7 +1,7 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { ChatService } from "../../api/sdk.gen.js";
-import type { UaiChatRequest, UaiChatResult, UaiChatStreamChunk, UaiChatRole } from "../types.js";
+import type { UaiChatRequest, UaiChatResult, UaiChatRole } from "../types.js";
 
 /**
  * Server data source for chat operations.
@@ -44,14 +44,5 @@ export class UaiChatServerDataSource {
                 usage: data.usage
             }
         };
-    }
-
-    /**
-     * Performs a streaming chat completion.
-     */
-    async *stream(_request: UaiChatRequest): AsyncGenerator<UaiChatStreamChunk> {
-        // TODO: Implement SSE streaming using createSseClient
-        // Will use ChatService.streamChat endpoint
-        throw new Error("Streaming not yet implemented");
     }
 }

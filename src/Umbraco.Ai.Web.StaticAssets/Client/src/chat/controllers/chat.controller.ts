@@ -1,7 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiChatRepository } from "../repository/chat.repository.js";
-import type { UaiChatMessage, UaiChatOptions, UaiChatResult, UaiChatStreamChunk } from "../types.js";
+import type { UaiChatMessage, UaiChatOptions, UaiChatResult } from "../types.js";
 
 /**
  * Public API for performing chat completions.
@@ -26,23 +26,6 @@ export class UaiChatController extends UmbControllerBase {
         options?: UaiChatOptions
     ): Promise<{ data?: UaiChatResult; error?: unknown }> {
         return this.#repository.complete({
-            profileIdOrAlias: options?.profileIdOrAlias,
-            messages,
-            signal: options?.signal
-        });
-    }
-
-    /**
-     * Performs a streaming chat completion.
-     * @param messages - The conversation messages.
-     * @param options - Optional configuration (profile ID/alias, abort signal).
-     * @returns AsyncGenerator yielding content chunks.
-     */
-    stream(
-        messages: UaiChatMessage[],
-        options?: UaiChatOptions
-    ): AsyncGenerator<UaiChatStreamChunk> {
-        return this.#repository.stream({
             profileIdOrAlias: options?.profileIdOrAlias,
             messages,
             signal: options?.signal

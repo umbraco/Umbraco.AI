@@ -15,7 +15,7 @@ public class ChatMapDefinition : IMapDefinition
     {
         mapper.Define<ChatMessageModel, ChatMessage>(Map);
         mapper.Define<ChatResponse, ChatResponseModel>((_, _) => new ChatResponseModel(), Map);
-        mapper.Define<ChatResponseUpdate, ChatStreamChunkModel>((_, _) => new ChatStreamChunkModel(), Map);
+        //mapper.Define<ChatResponseUpdate, ChatStreamChunkModel>((_, _) => new ChatStreamChunkModel(), Map);
     }
 
     // Umbraco.Code.MapAll
@@ -44,11 +44,11 @@ public class ChatMapDefinition : IMapDefinition
         target.Usage = source.Usage is not null ? context.Map<UsageModel>(source.Usage) : null;
     }
 
-    // Umbraco.Code.MapAll
-    private static void Map(ChatResponseUpdate source, ChatStreamChunkModel target, MapperContext context)
-    {
-        target.Content = source.Text;
-        target.FinishReason = source.FinishReason?.ToString();
-        target.IsComplete = source.FinishReason is not null;
-    }
+    // // Umbraco.Code.MapAll
+    // private static void Map(ChatResponseUpdate source, ChatStreamChunkModel target, MapperContext context)
+    // {
+    //     target.Content = source.Text;
+    //     target.FinishReason = source.FinishReason?.ToString();
+    //     target.IsComplete = source.FinishReason is not null;
+    // }
 }

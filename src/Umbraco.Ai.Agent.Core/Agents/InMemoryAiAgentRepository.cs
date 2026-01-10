@@ -8,34 +8,34 @@ namespace Umbraco.Ai.Agent.Core.Agents;
 /// </summary>
 internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
 {
-    private readonly ConcurrentDictionary<Guid, AiAgent> _Agents = new();
+    private readonly ConcurrentDictionary<Guid, AiAgent> _agents = new();
 
     /// <inheritdoc />
     public Task<AiAgent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _Agents.TryGetValue(id, out var agent);
+        _agents.TryGetValue(id, out var agent);
         return Task.FromResult(agent);
     }
 
     /// <inheritdoc />
     public Task<AiAgent?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        var agent = _Agents.Values.FirstOrDefault(p =>
+        var agent = _agents.Values.FirstOrDefault(p =>
             p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(agent);
     }
 
     /// <inheritdoc />
     public Task<IEnumerable<AiAgent>> GetAllAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult<IEnumerable<AiAgent>>(_Agents.Values.ToList());
+        => Task.FromResult<IEnumerable<AiAgent>>(_agents.Values.ToList());
 
     /// <inheritdoc />
     public Task<IEnumerable<AiAgent>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
-        var Agents = _Agents.Values
+        var agents = _agents.Values
             .Where(p => p.ProfileId == profileId)
             .ToList();
-        return Task.FromResult<IEnumerable<AiAgent>>(Agents);
+        return Task.FromResult<IEnumerable<AiAgent>>(agents);
     }
 
     /// <inheritdoc />
@@ -46,7 +46,7 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _Agents.Values.AsEnumerable();
+        var query = _agents.Values.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(filter))
         {
@@ -71,24 +71,24 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<AiAgent> SaveAsync(AiAgent AiAgent, CancellationToken cancellationToken = default)
+    public Task<AiAgent> SaveAsync(AiAgent aiAgent, CancellationToken cancellationToken = default)
     {
-        _Agents[AiAgent.Id] = AiAgent;
-        return Task.FromResult(AiAgent);
+        _agents[aiAgent.Id] = aiAgent;
+        return Task.FromResult(aiAgent);
     }
 
     /// <inheritdoc />
     public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
-        => Task.FromResult(_Agents.TryRemove(id, out _));
+        => Task.FromResult(_agents.TryRemove(id, out _));
 
     /// <inheritdoc />
     public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
-        => Task.FromResult(_Agents.ContainsKey(id));
+        => Task.FromResult(_agents.ContainsKey(id));
 
     /// <inheritdoc />
     public Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        var exists = _Agents.Values.Any(p =>
+        var exists = _agents.Values.Any(p =>
             p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase) &&
             (!excludeId.HasValue || p.Id != excludeId.Value));
         return Task.FromResult(exists);

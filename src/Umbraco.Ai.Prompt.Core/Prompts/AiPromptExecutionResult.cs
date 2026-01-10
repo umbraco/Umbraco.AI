@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using Umbraco.Ai.Core.EntityAdapter;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
 
@@ -16,4 +17,10 @@ public class AiPromptExecutionResult
     /// Token usage information from Microsoft.Extensions.AI.
     /// </summary>
     public UsageDetails? Usage { get; init; }
+
+    /// <summary>
+    /// Optional property changes to be applied to the entity.
+    /// Returned when the prompt generates structured output for property updates.
+    /// </summary>
+    public IReadOnlyList<AiPropertyChange>? PropertyChanges { get; init; }
 }

@@ -16,4 +16,10 @@ public class PromptExecutionResponseModel
     /// Token usage information.
     /// </summary>
     public UsageModel? Usage { get; init; }
+
+    /// <summary>
+    /// Optional property changes to be applied to the entity.
+    /// Returned when the prompt generates structured output for property updates.
+    /// </summary>
+    public IReadOnlyList<PropertyChangeModel>? PropertyChanges { get; init; }
 }

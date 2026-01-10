@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.RequestContext;
+
 namespace Umbraco.Ai.Prompt.Core.Prompts;
 
 /// <summary>
@@ -34,13 +36,9 @@ public class AiPromptExecutionRequest
     public string? Segment { get; init; }
 
     /// <summary>
-    /// Local content model for snapshot creation (future use).
-    /// Key = property alias, Value = property value.
+    /// Flexible context items array for passing frontend context to processors.
+    /// These items are processed by <see cref="AiRequestContextProcessorCollection"/>
+    /// to extract entity data, template variables, and system messages.
     /// </summary>
-    public IReadOnlyDictionary<string, object?>? LocalContent { get; init; }
-
-    /// <summary>
-    /// Additional context variables for template replacement.
-    /// </summary>
-    public IReadOnlyDictionary<string, object?>? Context { get; init; }
+    public IReadOnlyList<AiRequestContextItem>? Context { get; init; }
 }

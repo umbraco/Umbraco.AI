@@ -39,12 +39,8 @@ public class PromptExecutionRequestModel
     public string? Segment { get; init; }
 
     /// <summary>
-    /// Local content model for snapshot (future use).
+    /// Flexible context items array for passing frontend context to processors.
+    /// Each item contains a description and optional JSON value.
     /// </summary>
-    public IReadOnlyDictionary<string, object?>? LocalContent { get; init; }
-
-    /// <summary>
-    /// Additional context variables.
-    /// </summary>
-    public IReadOnlyDictionary<string, object?>? Context { get; init; }
+    public IReadOnlyList<RequestContextItemModel>? Context { get; init; }
 }

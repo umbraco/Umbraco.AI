@@ -2,7 +2,7 @@ using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.Contexts.Resolvers;
 using Umbraco.Ai.Prompt.Core.Prompts;
 
-namespace Umbraco.Ai.Prompt.Core.Contexts;
+namespace Umbraco.Ai.Prompt.Core.Context;
 
 /// <summary>
 /// Resolves context from prompt-level context assignments.

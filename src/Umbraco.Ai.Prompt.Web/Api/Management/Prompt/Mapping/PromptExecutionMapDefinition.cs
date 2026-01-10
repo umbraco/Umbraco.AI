@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.Ai.Core.RequestContext;
 using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Ai.Web.Api.Common.Models;
@@ -38,8 +40,11 @@ public class PromptExecutionMapDefinition : IMapDefinition
             PropertyAlias = source.PropertyAlias,
             Culture = source.Culture,
             Segment = source.Segment,
-            LocalContent = source.LocalContent,
-            Context = source.Context,
+            Context = source.Context?.Select(item => new AiRequestContextItem
+            {
+                Description = item.Description,
+                Value = item.Value
+            }).ToList(),
         };
     }
 
@@ -58,7 +63,14 @@ public class PromptExecutionMapDefinition : IMapDefinition
                     OutputTokens = source.Usage.OutputTokenCount,
                     TotalTokens = source.Usage.TotalTokenCount
                 }
-                : null
+                : null,
+            PropertyChanges = source.PropertyChanges?.Select(change => new PropertyChangeModel
+            {
+                Alias = change.Alias,
+                Value = change.Value,
+                Culture = change.Culture,
+                Segment = change.Segment
+            }).ToList()
         };
     }
 }

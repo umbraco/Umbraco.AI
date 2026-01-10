@@ -1,9 +1,11 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.Ai.Core.RequestContext;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Prompt.Core.Contexts;
+using Umbraco.Ai.Prompt.Core.Context;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -19,6 +21,7 @@ internal sealed class AiPromptService : IAiPromptService
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AiToolCollection _tools;
     private readonly IAiFunctionFactory _functionFactory;
+    private readonly AiRequestContextProcessorCollection _contextProcessors;
 
     public AiPromptService(
         IAiPromptRepository repository,
@@ -26,7 +29,8 @@ internal sealed class AiPromptService : IAiPromptService
         IAiPromptTemplateService templateService,
         IServiceScopeFactory serviceScopeFactory,
         AiToolCollection tools,
-        IAiFunctionFactory functionFactory)
+        IAiFunctionFactory functionFactory,
+        AiRequestContextProcessorCollection contextProcessors)
     {
         _repository = repository;
         _chatService = chatService;
@@ -34,6 +38,7 @@ internal sealed class AiPromptService : IAiPromptService
         _serviceScopeFactory = serviceScopeFactory;
         _tools = tools;
         _functionFactory = functionFactory;
+        _contextProcessors = contextProcessors;
     }
 
     /// <inheritdoc />
@@ -115,19 +120,29 @@ internal sealed class AiPromptService : IAiPromptService
                 $"Prompt execution denied: {scopeValidation.DenialReason}");
         }
 
-        // 3. Build context for template replacement
-        var context = BuildExecutionContext(request);
+        // 3. Process context items through registered processors
+        var requestContext = _contextProcessors.Process(request.Context ?? []);
 
-        // 4. Process template variables
-        var processedContent = _templateService.ProcessTemplate(prompt.Instructions, context);
-
-        // 5. Create chat message
-        var messages = new List<ChatMessage>
+        // 4. Build template context from basic request info + processor results
+        var templateContext = BuildExecutionContext(request);
+        foreach (var (key, value) in requestContext.Variables)
         {
-            new(ChatRole.User, processedContent)
-        };
+            templateContext[key] = value;
+        }
 
-        // 6. Create ChatOptions with PromptId for context resolution and system tools
+        // 5. Process template variables
+        var processedContent = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
+
+        // 6. Build chat messages with system message injection from processors
+        var messages = new List<ChatMessage>();
+        if (requestContext.SystemMessageParts.Count > 0)
+        {
+            var systemContent = string.Join("\n\n", requestContext.SystemMessageParts);
+            messages.Add(new ChatMessage(ChatRole.System, systemContent));
+        }
+        messages.Add(new ChatMessage(ChatRole.User, processedContent));
+
+        // 7. Create ChatOptions with PromptId for context resolution and system tools
         var chatOptions = new ChatOptions
         {
             AdditionalProperties = new AdditionalPropertiesDictionary
@@ -138,12 +153,24 @@ internal sealed class AiPromptService : IAiPromptService
             ToolMode = ChatToolMode.Auto
         };
 
-        // 7. Execute via chat service
+        // 8. If entity was extracted by processors, set ContentId for ContentContextResolver
+        var entityId = requestContext.GetValue<Guid>(AiRequestContextKeys.EntityId);
+        if (entityId.HasValue)
+        {
+            chatOptions.AdditionalProperties[AiRequestContextKeys.ContentId] = entityId.Value;
+        }
+        else if (request.EntityId != Guid.Empty)
+        {
+            // Fallback to request.EntityId if no entity extracted from context items
+            chatOptions.AdditionalProperties[AiRequestContextKeys.ContentId] = request.EntityId;
+        }
+
+        // 9. Execute via chat service
         var response = prompt.ProfileId.HasValue
             ? await _chatService.GetChatResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)
             : await _chatService.GetChatResponseAsync(messages, chatOptions, cancellationToken);
 
-        // 8. Map response
+        // 10. Map response
         return new AiPromptExecutionResult
         {
             Content = response.Text ?? string.Empty,
@@ -162,21 +189,6 @@ internal sealed class AiPromptService : IAiPromptService
             ["entityType"] = request.EntityType,
             ["propertyAlias"] = request.PropertyAlias,
         };
-
-        // Add request-level context if provided
-        if (request.Context is not null)
-        {
-            foreach (var kvp in request.Context)
-            {
-                context[kvp.Key] = kvp.Value;
-            }
-        }
-
-        // Add local content if provided
-        if (request.LocalContent is not null)
-        {
-            context["localContent"] = request.LocalContent;
-        }
 
         if (!string.IsNullOrEmpty(request.Culture))
         {

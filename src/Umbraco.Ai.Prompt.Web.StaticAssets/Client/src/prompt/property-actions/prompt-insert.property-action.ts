@@ -3,8 +3,9 @@ import { UmbPropertyActionBase, type UmbPropertyActionArgs } from '@umbraco-cms/
 import { UMB_PROPERTY_CONTEXT } from '@umbraco-cms/backoffice/property';
 import { UMB_CONTENT_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content';
 import { umbOpenModal } from '@umbraco-cms/backoffice/modal';
+import { UaiDocumentAdapter, createEntityContextItem } from '@umbraco-ai/core';
 import { UAI_PROMPT_PREVIEW_MODAL } from './prompt-preview-modal.token.js';
-import type { UaiPromptPropertyActionMeta } from './types.js';
+import type { UaiPromptPropertyActionMeta, UaiPromptContextItem } from './types.js';
 
 /**
  * Property action that opens a modal to preview and insert prompt content.
@@ -60,6 +61,9 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             throw new Error('Property alias is not available');
         }
 
+        // Serialize document context for AI operations
+        const context = await this.#serializeEntityContext();
+
         try {
             const result = await umbOpenModal(this, UAI_PROMPT_PREVIEW_MODAL, {
                 data: {
@@ -72,14 +76,54 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
                     propertyAlias,
                     culture: this.#propertyContext.getVariantId?.()?.culture ?? undefined,
                     segment: this.#propertyContext.getVariantId?.()?.segment ?? undefined,
+                    // Pass serialized entity context for AI context processing
+                    context,
                 },
             });
 
-            if (result.action === 'insert' && result.content) {
-                this.#propertyContext.setValue(result.content);
+            if (result.action === 'insert') {
+                // Apply content to the current property
+                // if (result.content) {
+                //     this.#propertyContext.setValue(result.content);
+                // }
+
+                // Apply any additional property changes returned by the AI
+                if (result.propertyChanges?.length && this.#workspaceContext) {
+                    const adapter = new UaiDocumentAdapter();
+                    if (adapter.canHandle(this.#workspaceContext)) {
+                        for (const change of result.propertyChanges) {
+                            await adapter.applyPropertyChange(this.#workspaceContext, change);
+                        }
+                    }
+                }
             }
         } catch {
             // Modal was rejected/cancelled - do nothing
+        }
+    }
+
+    /**
+     * Serialize the current entity for AI context injection.
+     * Uses the document adapter to extract property values.
+     */
+    async #serializeEntityContext(): Promise<UaiPromptContextItem[] | undefined> {
+        if (!this.#workspaceContext) {
+            return undefined;
+        }
+
+        // Use document adapter to serialize the workspace context
+        const adapter = new UaiDocumentAdapter();
+
+        if (!adapter.canHandle(this.#workspaceContext)) {
+            return undefined;
+        }
+
+        try {
+            const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
+            return [createEntityContextItem(serializedEntity)];
+        } catch {
+            // Serialization failed - continue without context
+            return undefined;
         }
     }
 }

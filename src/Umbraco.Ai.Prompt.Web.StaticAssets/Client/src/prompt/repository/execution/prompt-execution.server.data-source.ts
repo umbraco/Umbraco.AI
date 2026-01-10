@@ -1,7 +1,32 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { PromptsService } from "../../../api/index.js";
-import type { PromptExecutionRequestModel } from "../../../api/types.gen.js";
+
+/**
+ * Context item for passing data to AI operations.
+ * Matches backend AiRequestContextItem.
+ */
+export interface UaiPromptContextItem {
+    /** Human-readable description */
+    description: string;
+    /** The context data (any JSON-serializable value) */
+    value?: unknown;
+}
+
+/**
+ * Represents a property change to be applied to the entity.
+ * Matches backend PropertyChangeModel and Core's UaiPropertyChange.
+ */
+export interface UaiPromptPropertyChange {
+    /** The property alias. */
+    alias: string;
+    /** The new value to set. */
+    value: unknown;
+    /** The culture for variant content. */
+    culture?: string;
+    /** The segment for segmented content. */
+    segment?: string;
+}
 
 /**
  * Request model for prompt execution.
@@ -17,10 +42,8 @@ export interface UaiPromptExecutionRequest {
     culture?: string;
     /** The segment variant. */
     segment?: string;
-    /** Local content model for snapshot (future use). */
-    localContent?: Record<string, unknown>;
-    /** Additional context variables. */
-    context?: Record<string, unknown>;
+    /** Flexible context items array for passing frontend context to processors. */
+    context?: UaiPromptContextItem[];
 }
 
 /**
@@ -35,6 +58,8 @@ export interface UaiPromptExecutionResponse {
         outputTokens?: number;
         totalTokens?: number;
     };
+    /** Property changes to apply to the entity. */
+    propertyChanges?: UaiPromptPropertyChange[];
 }
 
 /**
@@ -58,15 +83,15 @@ export class UaiPromptExecutionServerDataSource {
         request: UaiPromptExecutionRequest,
         _signal?: AbortSignal
     ): Promise<{ data?: UaiPromptExecutionResponse; error?: unknown }> {
-        const body: PromptExecutionRequestModel = {
+        // Build the body with context items array (typed as any to bypass generated type mismatch)
+        const body = {
             entityId: request.entityId,
             entityType: request.entityType,
             propertyAlias: request.propertyAlias,
             culture: request.culture,
             segment: request.segment,
-            localContent: request.localContent,
             context: request.context,
-        };
+        } as any;
 
         const { data, error } = await tryExecute(
             this.#host,
@@ -88,6 +113,12 @@ export class UaiPromptExecutionServerDataSource {
                     outputTokens: data.usage.outputTokens ?? undefined,
                     totalTokens: data.usage.totalTokens ?? undefined,
                 } : undefined,
+                propertyChanges: data.propertyChanges?.map((change) => ({
+                    alias: change.alias,
+                    value: change.value,
+                    culture: change.culture ?? undefined,
+                    segment: change.segment ?? undefined,
+                })),
             },
         };
     }

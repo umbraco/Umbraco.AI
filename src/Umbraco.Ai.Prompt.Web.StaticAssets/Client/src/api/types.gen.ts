@@ -43,17 +43,13 @@ export type PromptExecutionRequestModel = {
     propertyAlias: string;
     culture?: string | null;
     segment?: string | null;
-    localContent?: {
-        [key: string]: unknown;
-    } | null;
-    context?: {
-        [key: string]: unknown;
-    } | null;
+    context?: Array<RequestContextItemModel> | null;
 };
 
 export type PromptExecutionResponseModel = {
     content: string;
     usage?: UsageModel | null;
+    propertyChanges?: Array<PropertyChangeModel> | null;
 };
 
 export type PromptItemResponseModel = {
@@ -78,6 +74,18 @@ export type PromptResponseModel = {
     scope?: ScopeModel | null;
     dateCreated: string;
     dateModified: string;
+};
+
+export type PropertyChangeModel = {
+    alias: string;
+    value?: unknown;
+    culture?: string | null;
+    segment?: string | null;
+};
+
+export type RequestContextItemModel = {
+    description: string;
+    value?: unknown;
 };
 
 export type ScopeModel = {

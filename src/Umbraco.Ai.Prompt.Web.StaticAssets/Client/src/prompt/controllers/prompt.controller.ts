@@ -1,6 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiPromptExecutionRepository } from "../repository/execution/prompt-execution.repository.js";
+import type { UaiPromptContextItem, UaiPromptPropertyChange } from "../repository/execution/prompt-execution.server.data-source.js";
 
 /**
  * Options for prompt execution.
@@ -18,10 +19,8 @@ export interface UaiPromptExecuteOptions {
     culture?: string;
     /** The segment variant. */
     segment?: string;
-    /** Local content model for snapshot (future use). */
-    localContent?: Record<string, unknown>;
-    /** Additional context variables. */
-    context?: Record<string, unknown>;
+    /** Flexible context items array for passing frontend context to processors. */
+    context?: UaiPromptContextItem[];
 }
 
 /**
@@ -30,6 +29,8 @@ export interface UaiPromptExecuteOptions {
 export interface UaiPromptExecuteResult {
     /** The generated response content. */
     content: string;
+    /** Property changes to apply to the entity. */
+    propertyChanges?: UaiPromptPropertyChange[];
 }
 
 /**
@@ -94,7 +95,6 @@ export class UaiPromptController extends UmbControllerBase {
                     propertyAlias: options.propertyAlias,
                     culture: options.culture,
                     segment: options.segment,
-                    localContent: options.localContent,
                     context: options.context,
                 },
                 options.signal
@@ -110,7 +110,10 @@ export class UaiPromptController extends UmbControllerBase {
 
             if (data) {
                 return {
-                    data: { content: data.content }
+                    data: {
+                        content: data.content,
+                        propertyChanges: data.propertyChanges,
+                    }
                 };
             }
 

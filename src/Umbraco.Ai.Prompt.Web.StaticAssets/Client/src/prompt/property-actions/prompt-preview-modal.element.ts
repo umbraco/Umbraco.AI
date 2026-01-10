@@ -2,7 +2,7 @@ import { html, css, customElement, state, nothing } from '@umbraco-cms/backoffic
 import { UmbModalBaseElement } from '@umbraco-cms/backoffice/modal';
 import { UMB_NOTIFICATION_CONTEXT } from '@umbraco-cms/backoffice/notification';
 import { UaiPromptController } from '../controllers/prompt.controller.js';
-import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue } from './types.js';
+import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue, UaiPromptPropertyChange } from './types.js';
 
 /**
  * Modal element for previewing prompt content with insert/copy options.
@@ -27,6 +27,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
     @state()
     private _error?: string;
+
+    @state()
+    private _propertyChanges?: UaiPromptPropertyChange[];
 
     override connectedCallback() {
         super.connectedCallback();
@@ -58,6 +61,8 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 propertyAlias: this.data.propertyAlias,
                 culture: this.data.culture,
                 segment: this.data.segment,
+                // Pass serialized entity context for AI processing
+                context: this.data.context,
             }
         );
 
@@ -67,6 +72,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             }
         } else if (data) {
             this._response = data.content;
+            this._propertyChanges = data.propertyChanges;
         }
 
         this._loading = false;
@@ -77,7 +83,11 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     }
 
     async #onInsert() {
-        this.updateValue({ action: 'insert', content: this._response });
+        this.updateValue({
+            action: 'insert',
+            content: this._response,
+            propertyChanges: this._propertyChanges,
+        });
         this._submitModal();
     }
 

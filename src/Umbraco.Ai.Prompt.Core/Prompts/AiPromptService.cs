@@ -133,14 +133,8 @@ internal sealed class AiPromptService : IAiPromptService
         // 5. Process template variables
         var processedContent = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
 
-        // 6. Build chat messages with system message injection from processors
-        var messages = new List<ChatMessage>();
-        if (requestContext.SystemMessageParts.Count > 0)
-        {
-            var systemContent = string.Join("\n\n", requestContext.SystemMessageParts);
-            messages.Add(new ChatMessage(ChatRole.System, systemContent));
-        }
-        messages.Add(new ChatMessage(ChatRole.User, processedContent));
+        // 6. Build chat messages (we don't inject a system prompt from contexts for prompts)
+        ChatMessage[] messages = [new(ChatRole.User, processedContent)];
 
         // 7. Create ChatOptions with PromptId for context resolution and system tools
         var chatOptions = new ChatOptions
@@ -174,7 +168,16 @@ internal sealed class AiPromptService : IAiPromptService
         return new AiPromptExecutionResult
         {
             Content = response.Text ?? string.Empty,
-            Usage = response.Usage
+            Usage = response.Usage,
+            PropertyChanges = [
+                new AiPropertyChange
+                {
+                    Alias = request.PropertyAlias,
+                    Value = response.Text ?? string.Empty,
+                    Culture = request.Culture,
+                    Segment = request.Segment
+                }
+            ]
         };
     }
 

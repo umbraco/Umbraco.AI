@@ -48,6 +48,17 @@ export interface UaiPromptPropertyActionMeta {
 }
 
 /**
+ * Context item for passing data to AI operations.
+ * Matches backend AiRequestContextItem.
+ */
+export interface UaiPromptContextItem {
+    /** Human-readable description */
+    description: string;
+    /** The context data (any JSON-serializable value) */
+    value?: unknown;
+}
+
+/**
  * Data passed to the prompt preview modal.
  * Contains entity context for server-side execution.
  */
@@ -61,6 +72,23 @@ export interface UaiPromptPreviewModalData {
     propertyAlias: string;
     culture?: string;
     segment?: string;
+    /** Serialized entity context for AI operations */
+    context?: UaiPromptContextItem[];
+}
+
+/**
+ * Property change to be applied to the entity.
+ * Matches core UaiPropertyChange type.
+ */
+export interface UaiPromptPropertyChange {
+    /** The property alias. */
+    alias: string;
+    /** The new value to set. */
+    value: unknown;
+    /** The culture for variant content. */
+    culture?: string;
+    /** The segment for segmented content. */
+    segment?: string;
 }
 
 /**
@@ -69,4 +97,6 @@ export interface UaiPromptPreviewModalData {
 export interface UaiPromptPreviewModalValue {
     action: 'insert' | 'copy' | 'cancel';
     content?: string;
+    /** Property changes to apply to the entity. */
+    propertyChanges?: UaiPromptPropertyChange[];
 }

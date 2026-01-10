@@ -4,15 +4,14 @@ import type {
 } from "@umbraco-cms/backoffice/extension-api";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 import { client } from "../api/client.gen.js";
-import { initWorkspaceDecorator } from "../workspace-registry/index.js";
 
 // load up the manifests here
 
-export const onInit: UmbEntryPointOnInit = (_host, extensionRegistry) => {
+export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
   console.log("Umbraco AI Entrypoint initialized");
 
-  // Initialize workspace decorator for cross-DOM workspace access
-  initWorkspaceDecorator(extensionRegistry);
+  // Workspace decorator is now initialized automatically via the
+  // UaiWorkspaceRegistryContext global context
 
   _host.consumeContext(UMB_AUTH_CONTEXT, async (authContext) => {
     const config = authContext?.getOpenApiConfiguration();

@@ -8,7 +8,6 @@ export {
 	UaiEntityAdapterContext,
 	UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
 	UaiDocumentAdapter,
-	entityAdapterManifests,
 	type ManifestEntityAdapter,
 	type UaiDetectedEntity,
 	type UaiEntityAdapterApi,

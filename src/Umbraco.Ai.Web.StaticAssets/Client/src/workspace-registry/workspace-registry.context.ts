@@ -1,16 +1,25 @@
 /**
- * Workspace Registry - Singleton service for tracking active workspace contexts
+ * Workspace Registry Context
  *
- * Enables cross-DOM access to workspace contexts for AI tools,
- * which may operate in a separate DOM subtree from workspace editors.
+ * Global context that tracks active workspace contexts across the backoffice.
+ * Enables cross-DOM access to workspace contexts for AI tools, which may operate
+ * in a separate DOM subtree from workspace editors.
+ *
+ * This context is auto-provided at the backoffice root level via the globalContext manifest.
+ *
+ * Components can consume this context to:
+ * - Get active workspaces by entity type and ID
+ * - Subscribe to workspace change events
+ * - Get all active workspaces
  */
 
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { Subject } from "@umbraco-cms/backoffice/external/rxjs";
-import type {
-	WorkspaceEntry,
-	WorkspaceChangeEvent,
-	WorkspaceContextLike,
-} from "./types.js";
+import { initWorkspaceDecorator } from "./workspace.decorator.js";
+import type { WorkspaceEntry, WorkspaceChangeEvent, WorkspaceContextLike } from "./types.js";
 
 /**
  * Check if a workspace context's host element is still connected to the DOM.
@@ -24,15 +33,31 @@ function isWorkspaceConnected(context: WorkspaceContextLike): boolean {
 	return true;
 }
 
-class WorkspaceRegistry {
+/**
+ * Global context providing workspace registry functionality.
+ * Registered as a globalContext manifest - auto-instantiated at backoffice root.
+ */
+export class UaiWorkspaceRegistryContext extends UmbControllerBase {
+	/** Type guard marker for context resolution. */
+	public readonly IS_WORKSPACE_REGISTRY_CONTEXT = true;
+
 	readonly #entries = new Map<string, WorkspaceEntry>();
 	readonly #changes$ = new Subject<WorkspaceChangeEvent>();
 
 	#navigationCleanupTimeout: ReturnType<typeof setTimeout> | null = null;
 	#isNavigationCleanupSetup = false;
 
-	constructor() {
+	constructor(host: UmbControllerHost) {
+		super(host);
+
+		// Set up navigation cleanup
 		this.#setupNavigationCleanup();
+
+		// Initialize the workspace decorator to track all workspaces
+		initWorkspaceDecorator(umbExtensionsRegistry, this);
+
+		// Provide this context for consumers
+		this.provideContext(UAI_WORKSPACE_REGISTRY_CONTEXT, this);
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────────
@@ -140,4 +165,23 @@ class WorkspaceRegistry {
 	}
 }
 
-export const workspaceRegistry = new WorkspaceRegistry();
+/**
+ * Context token for consuming the Workspace Registry.
+ * Use this to access active workspaces from any component.
+ *
+ * @example
+ * ```typescript
+ * this.consumeContext(UAI_WORKSPACE_REGISTRY_CONTEXT, (context) => {
+ *   const workspaces = context.getAll();
+ *   context.changes$.subscribe(event => console.log(event));
+ * });
+ * ```
+ */
+export const UAI_WORKSPACE_REGISTRY_CONTEXT = new UmbContextToken<UaiWorkspaceRegistryContext>(
+	"UaiWorkspaceRegistryContext",
+	undefined,
+	(context): context is UaiWorkspaceRegistryContext =>
+		(context as UaiWorkspaceRegistryContext).IS_WORKSPACE_REGISTRY_CONTEXT
+);
+
+export default UaiWorkspaceRegistryContext;

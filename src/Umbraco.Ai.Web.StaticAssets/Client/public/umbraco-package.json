@@ -8,12 +8,12 @@
       "name": "Umbraco Ai",
       "alias": "UmbracoAi.Bundle",
       "type": "bundle",
-      "js": "/App_Plugins/UmbracoAi/umbraco-ai.js"
+      "js": "/App_Plugins/UmbracoAi/umbraco-ai-bundle.js"
     }
   ],
   "importmap": {
     "imports": {
-      "@umbraco-ai/core": "/App_Plugins/UmbracoAi/umbraco-ai.js"
+      "@umbraco-ai/core": "/App_Plugins/UmbracoAi/umbraco-ai-app.js"
     }
   }
 }

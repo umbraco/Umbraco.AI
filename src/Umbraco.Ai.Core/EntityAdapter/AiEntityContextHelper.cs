@@ -30,7 +30,7 @@ internal sealed class AiEntityContextHelper : IAiEntityContextHelper
     }
 
     /// <inheritdoc />
-    public string FormatAsSystemMessage(AiSerializedEntity entity)
+    public string FormatForLlm(AiSerializedEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 

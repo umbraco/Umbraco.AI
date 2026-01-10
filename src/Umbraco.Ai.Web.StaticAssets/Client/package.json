@@ -2,9 +2,9 @@
   "name": "@umbraco-ai/core",
   "version": "17.0.0",
   "type": "module",
-  "types": "./types/umbraco-ai-public.d.ts",
+  "types": "./types/umbraco-ai-public-types.d.ts",
   "files": [
-    "types/umbraco-ai-public.d.ts",
+    "types/umbraco-ai-public-types.d.ts",
     "README.md"
   ],
   "scripts": {

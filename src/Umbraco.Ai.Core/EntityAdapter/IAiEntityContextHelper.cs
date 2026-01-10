@@ -19,5 +19,5 @@ public interface IAiEntityContextHelper
     /// </summary>
     /// <param name="entity">The serialized entity.</param>
     /// <returns>A formatted string describing the entity context.</returns>
-    string FormatAsSystemMessage(AiSerializedEntity entity);
+    string FormatForLlm(AiSerializedEntity entity);
 }

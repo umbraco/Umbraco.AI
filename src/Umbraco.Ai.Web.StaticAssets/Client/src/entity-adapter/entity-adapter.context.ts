@@ -2,10 +2,12 @@
  * Entity Adapter Context
  *
  * Provides entity detection and serialization for AI tools.
- * Consumes the Workspace Registry to track active workspaces and matches
+ * Consumes the Workspace Registry context to track active workspaces and matches
  * them with entity adapters for serialization.
  */
 
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import {
 	BehaviorSubject,
 	combineLatest,
@@ -13,8 +15,9 @@ import {
 	type Observable,
 	type Subscription,
 } from "@umbraco-cms/backoffice/external/rxjs";
-import { loadManifestApi, type UmbExtensionRegistry } from "@umbraco-cms/backoffice/extension-api";
-import { workspaceRegistry } from "../workspace-registry/index.js";
+import { loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import { UAI_WORKSPACE_REGISTRY_CONTEXT, type UaiWorkspaceRegistryContext } from "../workspace-registry/index.js";
 import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from "./extension-type.js";
 import type {
 	UaiDetectedEntity,
@@ -34,9 +37,9 @@ import type {
  * - Manage selected entity for context injection
  * - Serialize selected entity for LLM context
  */
-export class UaiEntityAdapterContext {
-	/** Extension registry for loading adapters */
-	readonly #extensionRegistry: UmbExtensionRegistry<any>;
+export class UaiEntityAdapterContext extends UmbControllerBase {
+	/** Workspace registry context (consumed) */
+	#workspaceRegistry?: UaiWorkspaceRegistryContext;
 
 	/** Cached adapter instances by manifest alias */
 	readonly #adaptersCache = new Map<string, UaiEntityAdapterApi>();
@@ -50,14 +53,29 @@ export class UaiEntityAdapterContext {
 	/** Subscriptions to workspace observables, keyed by entity key */
 	readonly #subscriptions = new Map<string, Subscription[]>();
 
-	constructor(extensionRegistry: UmbExtensionRegistry<any>) {
-		this.#extensionRegistry = extensionRegistry;
+	constructor(host: UmbControllerHost) {
+		super(host);
 
-		// Subscribe to workspace registry changes
-		workspaceRegistry.changes$.subscribe(() => this.#refresh());
+		// Consume the workspace registry context
+		this.consumeContext(UAI_WORKSPACE_REGISTRY_CONTEXT, (registry) => {
+			if (!registry) return;
 
-		// Initial detection
-		this.#refresh();
+			this.#workspaceRegistry = registry;
+
+			// Observe workspace registry changes
+			this.observe(registry.changes$, () => this.#refresh());
+
+			// Initial detection
+			this.#refresh();
+		});
+	}
+
+	override destroy(): void {
+		for (const subs of this.#subscriptions.values()) {
+			subs.forEach((s) => s.unsubscribe());
+		}
+		this.#subscriptions.clear();
+		super.destroy();
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────────
@@ -143,7 +161,7 @@ export class UaiEntityAdapterContext {
 	 * Find an adapter that can handle the given workspace context.
 	 */
 	async #findAdapterAsync(workspaceContext: unknown): Promise<UaiEntityAdapterApi | undefined> {
-		const manifests = this.#extensionRegistry.getByType(
+		const manifests = umbExtensionsRegistry.getByType(
 			UAI_ENTITY_ADAPTER_EXTENSION_TYPE
 		) as ManifestEntityAdapter[];
 
@@ -174,7 +192,9 @@ export class UaiEntityAdapterContext {
 	 * Refresh detected entities from workspace registry.
 	 */
 	async #refresh(): Promise<void> {
-		const entries = workspaceRegistry.getAll();
+		if (!this.#workspaceRegistry) return;
+
+		const entries = this.#workspaceRegistry.getAll();
 		const detected: UaiDetectedEntity[] = [];
 		const currentKeys = new Set<string>();
 

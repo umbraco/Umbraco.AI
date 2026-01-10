@@ -13,8 +13,8 @@
   },
   "dtsRollup": {
     "enabled": true,
-    "untrimmedFilePath": "<projectFolder>/types/umbraco-ai.d.ts",
-    "publicTrimmedFilePath": "<projectFolder>/types/umbraco-ai-public.d.ts"
+    "untrimmedFilePath": "<projectFolder>/types/umbraco-ai-types.d.ts",
+    "publicTrimmedFilePath": "<projectFolder>/types/umbraco-ai-public-types.d.ts"
   },
   "messages": {
     "extractorMessageReporting": {

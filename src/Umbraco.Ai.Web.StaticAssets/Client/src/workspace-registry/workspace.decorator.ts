@@ -2,13 +2,13 @@
  * Workspace Decorator - Intercepts workspace API instantiation
  *
  * Wraps workspace manifest API loaders to automatically register
- * workspace contexts in the global registry.
+ * workspace contexts in the registry context.
  */
 
 import { loadManifestApi, type ManifestBase, type UmbExtensionRegistry } from "@umbraco-cms/backoffice/extension-api";
 import type { ManifestWorkspace } from "@umbraco-cms/backoffice/workspace";
 import { map, distinctUntilChanged } from "@umbraco-cms/backoffice/external/rxjs";
-import { workspaceRegistry } from "./workspace.registry.js";
+import type { UaiWorkspaceRegistryContext } from "./workspace-registry.context.js";
 import type { WorkspaceEntry, WorkspaceContextLike } from "./types.js";
 
 // Track which manifests we've wrapped (by alias)
@@ -16,10 +16,14 @@ const wrappedAliases = new Set<string>();
 
 /**
  * Initialize workspace decoration by wrapping all workspace manifest API loaders.
- * Should be called once from the extension entrypoint.
+ * Called from the workspace registry context constructor.
+ *
+ * @param extensionRegistry The Umbraco extension registry
+ * @param registry The workspace registry context to register workspaces with
  */
 export function initWorkspaceDecorator(
-	extensionRegistry: UmbExtensionRegistry<ManifestBase>
+	extensionRegistry: UmbExtensionRegistry<ManifestBase>,
+	registry: UaiWorkspaceRegistryContext
 ): void {
 	extensionRegistry.extensions
 		.pipe(
@@ -35,7 +39,7 @@ export function initWorkspaceDecorator(
 
 				manifest.api = async () => {
 					const ApiClass = await loadManifestApi(originalApi);
-					return { api: ApiClass ? createDecoratedClass(ApiClass, alias) : ApiClass };
+					return { api: ApiClass ? createDecoratedClass(ApiClass, alias, registry) : ApiClass };
 				};
 
 				wrappedAliases.add(alias);
@@ -46,7 +50,11 @@ export function initWorkspaceDecorator(
 /**
  * Create a proxied class that auto-registers/unregisters with the registry
  */
-function createDecoratedClass(OriginalClass: any, alias: string): any {
+function createDecoratedClass(
+	OriginalClass: any,
+	alias: string,
+	registry: UaiWorkspaceRegistryContext
+): any {
 	if (!OriginalClass) return OriginalClass;
 
 	return new Proxy(OriginalClass, {
@@ -73,7 +81,7 @@ function createDecoratedClass(OriginalClass: any, alias: string): any {
 			});
 
 			// Register immediately
-			workspaceRegistry._register(currentKey, createEntry());
+			registry._register(currentKey, createEntry());
 
 			// Subscribe to unique observable for re-keying
 			const uniqueObservable = instance.unique;
@@ -84,7 +92,7 @@ function createDecoratedClass(OriginalClass: any, alias: string): any {
 					if (uniqueValue && currentKey.includes("-")) {
 						// Re-key with entity-based key
 						const entityKey = `${entityType}:${uniqueValue}`;
-						workspaceRegistry._rekey(currentKey, entityKey, createEntry(uniqueValue));
+						registry._rekey(currentKey, entityKey, createEntry(uniqueValue));
 						currentKey = entityKey;
 					}
 				});
@@ -102,7 +110,7 @@ function createDecoratedClass(OriginalClass: any, alias: string): any {
 				isDestroyed = true;
 
 				subscription?.unsubscribe?.();
-				workspaceRegistry._unregister(currentKey);
+				registry._unregister(currentKey);
 				originalDestroy?.();
 			};
 

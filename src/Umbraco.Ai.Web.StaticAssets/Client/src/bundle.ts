@@ -1,3 +1,17 @@
+/**
+ * Bundle Entry Point
+ *
+ * This file is the entry point for Umbraco's bundle loader.
+ * It ONLY exports the manifests array - nothing else.
+ *
+ * IMPORTANT: Umbraco's bundle loader iterates over ALL exports looking for
+ * manifest-like structures (objects with a `type` property). Exporting anything
+ * else (class instances, context tokens, singletons) will cause errors.
+ *
+ * For the public API (@umbraco-ai/core), see umbraco-ai.ts which exports
+ * the full public API for consumers.
+ */
+
 import { manifests as entrypoints } from "./entrypoints/manifest.js";
 import { sectionManifests } from "./section/manifests.js";
 import { connectionManifests } from "./connection/manifests.js";
@@ -9,14 +23,10 @@ import { providerManifests } from "./provider/manifests.js";
 import { propertyEditorManifests } from "./property-editors/manifests.js";
 import { manifests as langManifests } from "./lang/manifests.js";
 import { manifests as coreManifests } from "./core/manifests.js";
-
-// Re-export everything from index for easier imports
-export * from './index.js';
-
-// Public API exports for @umbraco-ai/core import map
-export * from './exports.js';
+import { workspaceRegistryManifests } from "./workspace-registry/manifests.js";
 
 // Aggregate all manifests into a single bundle
+// IMPORTANT: This should only include manifest arrays and nothing else
 export const manifests: Array<UmbExtensionManifest> = [
   ...entrypoints,
   ...sectionManifests,
@@ -29,4 +39,5 @@ export const manifests: Array<UmbExtensionManifest> = [
   ...propertyEditorManifests,
   ...langManifests,
   ...coreManifests,
+  ...workspaceRegistryManifests,
 ];

@@ -78,7 +78,7 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
             }
 
             // Add system message with entity context
-            var systemMessage = _contextHelper.FormatAsSystemMessage(entity);
+            var systemMessage = _contextHelper.FormatForLlm(entity);
             context.SystemMessageParts.Add(systemMessage);
         }
         catch

@@ -14,6 +14,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
     #propertyContext?: typeof UMB_PROPERTY_CONTEXT.TYPE;
     #workspaceContext?: typeof UMB_CONTENT_WORKSPACE_CONTEXT.TYPE;
     #init: Promise<unknown>;
+    #workspaceAdapter = new UaiDocumentAdapter();
 
     constructor(host: UmbControllerHost, args: UmbPropertyActionArgs<UaiPromptPropertyActionMeta>) {
         super(host, args);
@@ -89,11 +90,8 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
 
                 // Apply any additional property changes returned by the AI
                 if (result.propertyChanges?.length && this.#workspaceContext) {
-                    const adapter = new UaiDocumentAdapter();
-                    if (adapter.canHandle(this.#workspaceContext)) {
-                        for (const change of result.propertyChanges) {
-                            await adapter.applyPropertyChange(this.#workspaceContext, change);
-                        }
+                    for (const change of result.propertyChanges) {
+                        await this.#workspaceAdapter.applyPropertyChange(this.#workspaceContext, change);
                     }
                 }
             }
@@ -107,19 +105,11 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
      * Uses the document adapter to extract property values.
      */
     async #serializeEntityContext(): Promise<UaiPromptContextItem[] | undefined> {
-        if (!this.#workspaceContext) {
+        if (!this.#workspaceContext || !this.#workspaceAdapter.canHandle(this.#workspaceContext)) {
             return undefined;
         }
-
-        // Use document adapter to serialize the workspace context
-        const adapter = new UaiDocumentAdapter();
-
-        if (!adapter.canHandle(this.#workspaceContext)) {
-            return undefined;
-        }
-
         try {
-            const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
+            const serializedEntity = await this.#workspaceAdapter.serializeForLlm(this.#workspaceContext);
             return [createEntityContextItem(serializedEntity)];
         } catch {
             // Serialization failed - continue without context

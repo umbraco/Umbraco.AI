@@ -3,6 +3,7 @@ import { sectionManifests } from "./section/manifests.js";
 import { connectionManifests } from "./connection/manifests.js";
 import { contextManifests } from "./context/manifests.js";
 import { contextResourceTypeManifests } from "./context-resource-type/manifests.js";
+import { entityAdapterManifests } from "./entity-adapter/adapters/manifests.js";
 import { profileManifests } from "./profile/manifests.js";
 import { providerManifests } from "./provider/manifests.js";
 import { propertyEditorManifests } from "./property-editors/manifests.js";
@@ -22,6 +23,7 @@ export const manifests: Array<UmbExtensionManifest> = [
   ...connectionManifests,
   ...contextResourceTypeManifests,
   ...contextManifests,
+  ...entityAdapterManifests,
   ...profileManifests,
   ...providerManifests,
   ...propertyEditorManifests,

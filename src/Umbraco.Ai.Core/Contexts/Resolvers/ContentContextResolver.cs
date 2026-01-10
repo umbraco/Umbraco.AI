@@ -1,3 +1,4 @@
+using Umbraco.Ai.Core.RequestContext;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
@@ -9,7 +10,7 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This resolver reads the content ID from <see cref="ContentIdKey"/> in the request properties,
+/// This resolver reads the content ID from <see cref="AiRequestContextKeys.ContentId"/> in the request properties,
 /// then walks up the content tree (current node + ancestors) to find the nearest property
 /// using the AI Context Picker editor (<c>Uai.ContextPicker</c>).
 /// </para>
@@ -20,10 +21,6 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// </remarks>
 internal sealed class ContentContextResolver : IAiContextResolver
 {
-    /// <summary>
-    /// Key used to pass the content ID through ChatOptions.AdditionalProperties.
-    /// </summary>
-    internal const string ContentIdKey = "Umbraco.Ai.ContentId";
 
     private readonly IAiContextService _contextService;
     private readonly IUmbracoContextAccessor _umbracoContextAccessor;
@@ -46,7 +43,7 @@ internal sealed class ContentContextResolver : IAiContextResolver
         AiContextResolverRequest request,
         CancellationToken cancellationToken = default)
     {
-        var contentId = request.GetGuidProperty(ContentIdKey);
+        var contentId = request.GetGuidProperty(AiRequestContextKeys.ContentId);
         if (!contentId.HasValue)
         {
             return AiContextResolverResult.Empty;

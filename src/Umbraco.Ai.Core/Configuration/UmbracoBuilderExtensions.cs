@@ -7,9 +7,12 @@ using Umbraco.Ai.Core.Contexts.Resolvers;
 using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
+using Umbraco.Ai.Core.EntityAdapter;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RequestContext.Processors;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -91,6 +94,14 @@ public static partial class UmbracoBuilderExtensions
             .Append<ProfileContextResolver>()
             .Append<ContentContextResolver>();
         services.AddSingleton<IAiContextResolutionService, AiContextResolutionService>();
+
+        // Entity adapter infrastructure
+        services.AddSingleton<IAiEntityContextHelper, AiEntityContextHelper>();
+
+        // Request context processing - processes context items from frontend
+        builder.AiRequestContextProcessors()
+            .Append<SerializedEntityProcessor>()
+            .Append<DefaultSystemMessageProcessor>();
 
         return builder;
     }

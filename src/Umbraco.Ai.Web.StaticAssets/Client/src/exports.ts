@@ -2,4 +2,7 @@ export * from './chat/exports.js';
 export * from './context/exports.js';
 export * from './core/exports.js';
 export * from './embeddings/exports.js';
+export * from './entity-adapter/exports.js';
 export * from './profile/exports.js';
+export * from './request-context/exports.js';
+export * from './workspace-registry/exports.js';

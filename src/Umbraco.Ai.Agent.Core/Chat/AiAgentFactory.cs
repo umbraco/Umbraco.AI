@@ -58,11 +58,10 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         }
 
         // Create MAF ChatClientAgent using the extension method
-        // Note: Instructions are handled by AgentBoundChatClient, not passed to ChatClientAgentOptions.
-        // See AgentBoundChatClient remarks for alternative approach via ChatClientAgentOptions.Instructions.
         return agentBoundClient.CreateAIAgent(
             name: agent.Name,
             description: agent.Description,
+            instructions: agent.Instructions,
             tools: tools);
     }
 }

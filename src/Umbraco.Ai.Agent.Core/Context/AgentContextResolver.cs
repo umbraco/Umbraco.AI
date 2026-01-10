@@ -2,7 +2,7 @@ using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.Contexts.Resolvers;
 
-namespace Umbraco.Ai.Agent.Core.Contexts;
+namespace Umbraco.Ai.Agent.Core.Context;
 
 /// <summary>
 /// Resolves context from agent-level context assignments.

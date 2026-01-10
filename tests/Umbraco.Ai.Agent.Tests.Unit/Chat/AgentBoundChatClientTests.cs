@@ -3,7 +3,7 @@ using Moq;
 using Shouldly;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Agent.Core.Chat;
-using Umbraco.Ai.Agent.Core.Contexts;
+using Umbraco.Ai.Agent.Core.Context;
 using Xunit;
 
 namespace Umbraco.Ai.Agent.Tests.Unit.Chat;

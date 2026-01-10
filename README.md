@@ -7,6 +7,8 @@ Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified 
 - **Provider-agnostic architecture** - Support for multiple AI providers (OpenAI, Azure, and more) through a common interface
 - **Connection management** - Configure and manage multiple AI provider connections with different credentials and settings
 - **Profiles** - Create reusable AI profiles with predefined settings (temperature, max tokens, model selection)
+- **Contexts** - Define reusable AI contexts containing brand voice, guidelines, and reference materials that enrich AI operations
+- **Tools** - Register custom AI tools that can be invoked by AI models for function calling scenarios
 - **Middleware pipeline** - Extensible middleware system for logging, caching, rate limiting, and custom processing
 - **Chat completions** - Full support for chat-based AI interactions with streaming capabilities
 - **Embeddings** - Generate text embeddings for semantic search and similarity matching

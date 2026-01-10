@@ -2,13 +2,13 @@ import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbArrayState, UmbBasicState, UmbBooleanState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { UaiCopilotRunController } from "./services/copilot-run.controller.js";
 import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiCopilotAgentItem } from "./types.ts";
 import type { UaiFrontendToolManager } from "./services/frontend-tool.manager.ts";
-import { UaiEntityAdapterContext } from "../entity-adapter/index.js";
-import type { UaiPropertyChange, UaiPropertyChangeResult } from "../entity-adapter/index.js";
+import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChangeResult } from "@umbraco-ai/core";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -129,7 +129,7 @@ export class UaiCopilotContext extends UmbControllerBase {
     this.#agentRepository = new UaiCopilotAgentRepository(host);
     this.#hitlContext = new UaiHitlContext(host);
     this.#runController = new UaiCopilotRunController(host, this.#hitlContext);
-    this.#entityAdapterContext = new UaiEntityAdapterContext();
+    this.#entityAdapterContext = new UaiEntityAdapterContext(umbExtensionsRegistry);
 
     // Sync selected agent to run controller
     this.observe(this.selectedAgent, (agent) => {

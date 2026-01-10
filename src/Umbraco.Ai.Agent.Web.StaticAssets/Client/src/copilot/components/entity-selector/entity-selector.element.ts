@@ -13,7 +13,7 @@ import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
-import type { UaiDetectedEntity } from "../../../entity-adapter/types.js";
+import type { UaiDetectedEntity } from "@umbraco-ai/core";
 
 @customElement("uai-entity-selector")
 export class UaiEntitySelectorElement extends UmbLitElement {

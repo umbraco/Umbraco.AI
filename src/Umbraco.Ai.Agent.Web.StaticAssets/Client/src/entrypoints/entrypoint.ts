@@ -4,13 +4,11 @@ import type {
 } from "@umbraco-cms/backoffice/extension-api";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 import { client } from "../api/client.gen.js";
-import { initWorkspaceDecorator } from "../workspace-registry/index.js";
 
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
   console.log("Umbraco AI Agent Entrypoint initialized");
 
-  // Initialize workspace registry decorator
-  initWorkspaceDecorator(_extensionRegistry);
+  // Note: Workspace decorator is initialized by @umbraco-ai/core entrypoint
 
   _host.consumeContext(UMB_AUTH_CONTEXT, async (authContext) => {
     if (!authContext) return;

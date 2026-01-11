@@ -129,6 +129,9 @@ internal sealed class AiPromptService : IAiPromptService
         {
             templateContext[key] = value;
         }
+        templateContext["currentValue"] = templateContext.TryGetValue(request.PropertyAlias, out var propValue)
+            ? propValue
+            : null;
 
         // 5. Process template variables
         var processedContent = _templateService.ProcessTemplate(prompt.Instructions, templateContext);

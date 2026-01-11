@@ -179,7 +179,7 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
             JsonValueKind.False => false,
             JsonValueKind.Null => null,
             JsonValueKind.Undefined => null,
-            _ => element.GetRawText()
+            _ => element
         };
     }
 }

@@ -17,7 +17,7 @@ import type {
 } from "../types.js";
 
 // Supported text-based property editors for initial implementation
-const SUPPORTED_EDITOR_ALIASES = ["Umbraco.TextBox", "Umbraco.TextArea"];
+// const SUPPORTED_EDITOR_ALIASES = ["Umbraco.TextBox", "Umbraco.TextArea"];
 
 /**
  * Property structure from content type.
@@ -213,7 +213,7 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 			const editorAlias = valueEntry?.editorAlias ?? editorAliasByDataType.get(prop.dataType.unique);
 
 			// Only include if we know it's a supported editor
-			if (editorAlias && SUPPORTED_EDITOR_ALIASES.includes(editorAlias)) {
+			if (editorAlias) { // && SUPPORTED_EDITOR_ALIASES.includes(editorAlias)) {
 				properties.push({
 					alias: prop.alias,
 					label: prop.name,
@@ -226,14 +226,12 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 		// Fallback: if we couldn't get properties from structure, use values directly
 		if (propertyStructures.length === 0 && values.length > 0) {
 			for (const v of values) {
-				if (SUPPORTED_EDITOR_ALIASES.includes(v.editorAlias)) {
-					properties.push({
-						alias: v.alias,
-						label: v.alias,
-						editorAlias: v.editorAlias,
-						value: v.value,
-					});
-				}
+				properties.push({
+					alias: v.alias,
+					label: v.alias,
+					editorAlias: v.editorAlias,
+					value: v.value,
+				});
 			}
 		}
 
@@ -276,14 +274,14 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 		}
 
 		// Get the current values to check the editor type
-		const values = ctx.getValues() ?? [];
-		const existingValue = values.find((v) => v.alias === change.alias);
-		if (existingValue && !SUPPORTED_EDITOR_ALIASES.includes(existingValue.editorAlias)) {
-			return {
-				success: false,
-				error: `Property "${change.alias}" uses editor "${existingValue.editorAlias}" which is not yet supported. Only TextBox and TextArea are supported.`,
-			};
-		}
+		// const values = ctx.getValues() ?? [];
+		// const existingValue = values.find((v) => v.alias === change.alias);
+		// if (existingValue && !SUPPORTED_EDITOR_ALIASES.includes(existingValue.editorAlias)) {
+		// 	return {
+		// 		success: false,
+		// 		error: `Property "${change.alias}" uses editor "${existingValue.editorAlias}" which is not yet supported. Only TextBox and TextArea are supported.`,
+		// 	};
+		// }
 
 		// Build variant ID from culture/segment (undefined = invariant)
 		const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);

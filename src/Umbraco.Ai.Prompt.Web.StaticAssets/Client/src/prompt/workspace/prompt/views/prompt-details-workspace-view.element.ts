@@ -9,7 +9,6 @@ import type { UaiPromptDetailModel } from "../../../types.js";
 import type { UaiPromptScope, UaiScopeRule } from "../../../property-actions/types.js";
 import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../../property-actions/constants.js";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
-import "../../../components/scope-rules-editor/scope-rules-editor.element.js";
 
 /**
  * Creates a default scope with one allow rule for all text-based editors.

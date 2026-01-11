@@ -3,7 +3,6 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiScopeRule } from "../../property-actions/types.js";
 import { createEmptyRule } from "./scope-rule-editor.element.js";
-import "./scope-rule-editor.element.js";
 
 /**
  * Editor for managing a list of scope rules (allow or deny).

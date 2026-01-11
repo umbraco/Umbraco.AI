@@ -2,9 +2,6 @@ import { css, html, customElement, property, state } from "@umbraco-cms/backoffi
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiScopeRule } from "../../property-actions/types.js";
-import "../../../core/components/doctype-tags-input/doctype-tags-input.element.js";
-import "../../../core/components/property-tags-input/property-tags-input.element.js";
-import "../../../core/components/property-editor-ui-tags-input/property-editor-ui-tags-input.element.js";
 
 /**
  * Creates an empty scope rule.

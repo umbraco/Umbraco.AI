@@ -14,12 +14,12 @@
       "type": "backofficeEntryPoint",
       "name": "Umbraco AI Prompt Backoffice Entry Point",
       "alias": "Umbraco.Ai.Prompt.BackofficeEntryPoint",
-      "js": "/App_Plugins/UmbracoAiPrompt/umbraco-ai-prompt-api.js"
+      "js": "/App_Plugins/UmbracoAiPrompt/umbraco-ai-prompt-app.js"
     }
   ],
   "importmap": {
     "imports": {
-      "@umbraco-ai/prompt": "/App_Plugins/UmbracoAiPrompt/umbraco-ai-prompt-api.js"
+      "@umbraco-ai/prompt": "/App_Plugins/UmbracoAiPrompt/umbraco-ai-prompt-app.js"
     }
   }
 }

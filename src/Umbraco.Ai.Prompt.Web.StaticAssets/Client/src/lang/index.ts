@@ -1,1 +1,1 @@
-export * from "./manifests.js";
+// Language files - manifests are exported separately via manifests.ts

@@ -11,7 +11,6 @@ import { UaiProviderDetailRepository } from "../../../../provider/repository/det
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
 import { ConnectionsService } from "../../../../api/sdk.gen.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
-import "../../../../core/components/model-editor/model-editor.element.js";
 
 /**
  * Workspace view for Connection details.

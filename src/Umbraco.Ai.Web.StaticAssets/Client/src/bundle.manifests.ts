@@ -12,12 +12,11 @@
  * the full public API for consumers.
  */
 
-import { manifests as entrypoints } from "./entrypoints/manifest.js";
 import { sectionManifests } from "./section/manifests.js";
 import { connectionManifests } from "./connection/manifests.js";
 import { contextManifests } from "./context/manifests.js";
 import { contextResourceTypeManifests } from "./context-resource-type/manifests.js";
-import { entityAdapterManifests } from "./entity-adapter/adapters/manifests.js";
+import { entityAdapterManifests } from "./entity-adapter/manifests.js";
 import { profileManifests } from "./profile/manifests.js";
 import { providerManifests } from "./provider/manifests.js";
 import { propertyEditorManifests } from "./property-editors/manifests.js";
@@ -28,7 +27,6 @@ import { workspaceRegistryManifests } from "./workspace-registry/manifests.js";
 // Aggregate all manifests into a single bundle
 // IMPORTANT: This should only include manifest arrays and nothing else
 export const manifests: Array<UmbExtensionManifest> = [
-  ...entrypoints,
   ...sectionManifests,
   ...connectionManifests,
   ...contextResourceTypeManifests,

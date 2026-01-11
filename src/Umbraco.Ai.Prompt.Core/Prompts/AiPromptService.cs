@@ -159,6 +159,13 @@ internal sealed class AiPromptService : IAiPromptService
             chatOptions.AdditionalProperties[AiRequestContextKeys.ContentId] = request.EntityId;
         }
 
+        // Set ParentEntityId if available (for new entities, used by ContentContextResolver)
+        var parentEntityId = requestContext.GetValue<Guid>(AiRequestContextKeys.ParentEntityId);
+        if (parentEntityId.HasValue)
+        {
+            chatOptions.AdditionalProperties[AiRequestContextKeys.ParentEntityId] = parentEntityId.Value;
+        }
+
         // 9. Execute via chat service
         var response = prompt.ProfileId.HasValue
             ? await _chatService.GetChatResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)

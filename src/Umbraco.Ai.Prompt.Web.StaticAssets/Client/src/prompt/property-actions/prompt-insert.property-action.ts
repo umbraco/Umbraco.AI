@@ -3,7 +3,11 @@ import { UmbPropertyActionBase, type UmbPropertyActionArgs } from '@umbraco-cms/
 import { UMB_PROPERTY_CONTEXT } from '@umbraco-cms/backoffice/property';
 import { UMB_CONTENT_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content';
 import { umbOpenModal } from '@umbraco-cms/backoffice/modal';
-import { UaiDocumentAdapter, createEntityContextItem } from '@umbraco-ai/core';
+import {
+    createEntityContextItem,
+    resolveEntityAdapterByType,
+    type UaiEntityAdapterApi,
+} from '@umbraco-ai/core';
 import { UAI_PROMPT_PREVIEW_MODAL } from './prompt-preview-modal.token.js';
 import type { UaiPromptPropertyActionMeta, UaiPromptContextItem } from './types.js';
 
@@ -14,7 +18,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
     #propertyContext?: typeof UMB_PROPERTY_CONTEXT.TYPE;
     #workspaceContext?: typeof UMB_CONTENT_WORKSPACE_CONTEXT.TYPE;
     #init: Promise<unknown>;
-    #workspaceAdapter = new UaiDocumentAdapter();
+    #workspaceAdapter?: UaiEntityAdapterApi;
 
     constructor(host: UmbControllerHost, args: UmbPropertyActionArgs<UaiPromptPropertyActionMeta>) {
         super(host, args);
@@ -83,15 +87,13 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             });
 
             if (result.action === 'insert') {
-                // Apply content to the current property
-                // if (result.content) {
-                //     this.#propertyContext.setValue(result.content);
-                // }
-
-                // Apply any additional property changes returned by the AI
+                // Apply any property changes returned by the AI
                 if (result.propertyChanges?.length && this.#workspaceContext) {
-                    for (const change of result.propertyChanges) {
-                        await this.#workspaceAdapter.applyPropertyChange(this.#workspaceContext, change);
+                    const adapter = await this.#resolveAdapter();
+                    if (adapter?.applyPropertyChange) {
+                        for (const change of result.propertyChanges) {
+                            await adapter.applyPropertyChange(this.#workspaceContext, change);
+                        }
                     }
                 }
             }
@@ -101,15 +103,43 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
     }
 
     /**
-     * Serialize the current entity for AI context injection.
-     * Uses the document adapter to extract property values.
+     * Resolve the entity adapter for the current workspace context.
+     * Caches the adapter instance for reuse within this action.
      */
-    async #serializeEntityContext(): Promise<UaiPromptContextItem[] | undefined> {
-        if (!this.#workspaceContext || !this.#workspaceAdapter.canHandle(this.#workspaceContext)) {
+    async #resolveAdapter(): Promise<UaiEntityAdapterApi | undefined> {
+        if (this.#workspaceAdapter) {
+            return this.#workspaceAdapter;
+        }
+
+        if (!this.#workspaceContext) {
             return undefined;
         }
+
+        const entityType = this.#workspaceContext.getEntityType();
+        if (!entityType) {
+            return undefined;
+        }
+
+        this.#workspaceAdapter = await resolveEntityAdapterByType(entityType);
+        return this.#workspaceAdapter;
+    }
+
+    /**
+     * Serialize the current entity for AI context injection.
+     * Resolves the appropriate adapter based on the workspace entity type.
+     */
+    async #serializeEntityContext(): Promise<UaiPromptContextItem[] | undefined> {
+        if (!this.#workspaceContext) {
+            return undefined;
+        }
+
+        const adapter = await this.#resolveAdapter();
+        if (!adapter || !adapter.canHandle(this.#workspaceContext)) {
+            return undefined;
+        }
+
         try {
-            const serializedEntity = await this.#workspaceAdapter.serializeForLlm(this.#workspaceContext);
+            const serializedEntity = await adapter.serializeForLlm(this.#workspaceContext);
             return [createEntityContextItem(serializedEntity)];
         } catch {
             // Serialization failed - continue without context

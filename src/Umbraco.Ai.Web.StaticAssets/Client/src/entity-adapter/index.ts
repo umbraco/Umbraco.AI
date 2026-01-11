@@ -26,11 +26,11 @@ export { UaiEntityAdapterContext } from "./entity-adapter.context.js";
 // Extension type
 export { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from "./extension-type.js";
 
+// Helpers
+export { resolveEntityAdapterByType, hasEntityAdapter } from "./helpers.js";
+
 // Adapters
 export { UaiDocumentAdapter } from "./adapters/document.adapter.js";
-
-// Manifests
-export { entityAdapterManifests } from "./adapters/manifests.js";
 
 // Types
 export type {

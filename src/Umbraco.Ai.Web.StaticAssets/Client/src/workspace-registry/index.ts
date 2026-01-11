@@ -29,8 +29,5 @@ export {
 	UAI_WORKSPACE_REGISTRY_CONTEXT,
 } from "./workspace-registry.context.js";
 
-// Manifests
-export { workspaceRegistryManifests } from "./manifests.js";
-
 // Types
 export type { WorkspaceEntry, WorkspaceChangeEvent } from "./types.js";

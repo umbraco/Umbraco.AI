@@ -23,6 +23,8 @@ export interface UaiSerializedEntity {
 	unique: string;
 	name: string;
 	contentType?: string;
+	/** Parent unique when creating a new entity. Undefined for existing entities. */
+	parentUnique?: string | null;
 	properties: UaiSerializedProperty[];
 }
 

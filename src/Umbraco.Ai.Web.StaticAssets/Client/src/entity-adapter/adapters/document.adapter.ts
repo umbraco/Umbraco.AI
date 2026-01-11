@@ -57,6 +57,12 @@ interface DocumentWorkspaceContextLike {
 	};
 	// Property mutation - sets value in workspace (staged, not persisted)
 	setPropertyValue?<T>(alias: string, value: T, variantId?: UmbVariantId): Promise<void>;
+	// Check if entity is new (being created)
+	getIsNew?(): boolean | undefined;
+	// Internal method for parent access when creating new entities
+	// Note: Uses internal API as UMB_PARENT_ENTITY_CONTEXT is not reliably available
+	// See: https://github.com/umbraco/Umbraco-CMS/issues/21368
+	_internal_getCreateUnderParent?(): { entityType: string; unique: string | null } | undefined;
 }
 
 /**
@@ -176,6 +182,12 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 		const contentType = ctx.getContentTypeUnique();
 		const values = ctx.getValues() ?? [];
 
+		// Get parent unique for new documents
+		const isNew = ctx.getIsNew?.();
+		const parentUnique = isNew
+			? ctx._internal_getCreateUnderParent?.()?.unique
+			: undefined;
+
 		// Build maps for quick lookup
 		// Map: alias -> value entry (for getting current value and editorAlias)
 		const valuesByAlias = new Map(values.map((v) => [v.alias, v]));
@@ -230,6 +242,7 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 			unique: unique ?? "new",
 			name,
 			contentType: contentType ?? undefined,
+			parentUnique,
 			properties,
 		};
 	}

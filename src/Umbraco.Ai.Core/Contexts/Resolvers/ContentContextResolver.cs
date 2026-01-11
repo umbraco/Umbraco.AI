@@ -10,9 +10,11 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This resolver reads the content ID from <see cref="AiRequestContextKeys.ContentId"/> in the request properties,
-/// then walks up the content tree (current node + ancestors) to find the nearest property
-/// using the AI Context Picker editor (<c>Uai.ContextPicker</c>).
+/// This resolver reads the content ID from request properties, preferring
+/// <see cref="AiRequestContextKeys.ParentEntityId"/> (for new entities) over
+/// <see cref="AiRequestContextKeys.ContentId"/>, then walks up the content tree
+/// (current node + ancestors) to find the nearest property using the AI Context
+/// Picker editor (<c>Uai.ContextPicker</c>).
 /// </para>
 /// <para>
 /// The first non-empty context picker value found while walking up the tree is used.
@@ -43,7 +45,9 @@ internal sealed class ContentContextResolver : IAiContextResolver
         AiContextResolverRequest request,
         CancellationToken cancellationToken = default)
     {
-        var contentId = request.GetGuidProperty(AiRequestContextKeys.ContentId);
+        // Prefer ParentEntityId (for new entities) over ContentId for ancestor lookup
+        var contentId = request.GetGuidProperty(AiRequestContextKeys.ParentEntityId)
+            ?? request.GetGuidProperty(AiRequestContextKeys.ContentId);
         if (!contentId.HasValue)
         {
             return AiContextResolverResult.Empty;

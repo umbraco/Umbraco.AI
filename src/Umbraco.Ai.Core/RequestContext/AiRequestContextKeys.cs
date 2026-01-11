@@ -21,6 +21,12 @@ public static class AiRequestContextKeys
     public const string EntityId = "Umbraco.Ai.EntityId";
 
     /// <summary>
+    /// Key for the parent entity unique identifier (as Guid).
+    /// Set when creating a new entity under a parent.
+    /// </summary>
+    public const string ParentEntityId = "Umbraco.Ai.ParentEntityId";
+
+    /// <summary>
     /// Key for the entity type string.
     /// </summary>
     public const string EntityType = "Umbraco.Ai.EntityType";

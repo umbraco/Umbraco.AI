@@ -28,6 +28,12 @@ public sealed class AiSerializedEntity
     public string? ContentType { get; init; }
 
     /// <summary>
+    /// The unique identifier of the parent entity when creating a new entity.
+    /// Null for existing entities or when parent is root.
+    /// </summary>
+    public string? ParentUnique { get; init; }
+
+    /// <summary>
     /// The serialized properties of the entity.
     /// </summary>
     public IReadOnlyList<AiSerializedProperty> Properties { get; init; } = [];

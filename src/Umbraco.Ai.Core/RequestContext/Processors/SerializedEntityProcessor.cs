@@ -67,6 +67,12 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
                 context.SetValue(AiRequestContextKeys.EntityId, entityId);
             }
 
+            // Extract parent entity ID as Guid if available (for new entities)
+            if (!string.IsNullOrEmpty(entity.ParentUnique) && Guid.TryParse(entity.ParentUnique, out var parentEntityId))
+            {
+                context.SetValue(AiRequestContextKeys.ParentEntityId, parentEntityId);
+            }
+
             // Store entity type
             context.Data[AiRequestContextKeys.EntityType] = entity.EntityType;
 
@@ -111,6 +117,12 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
                 contentType = contentTypeElement.GetString();
             }
 
+            string? parentUnique = null;
+            if (element.TryGetProperty("parentUnique", out var parentUniqueElement))
+            {
+                parentUnique = parentUniqueElement.GetString();
+            }
+
             var properties = new List<AiSerializedProperty>();
             if (element.TryGetProperty("properties", out var propsElement) && propsElement.ValueKind == JsonValueKind.Array)
             {
@@ -147,6 +159,7 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
                 Unique = unique,
                 Name = name,
                 ContentType = contentType,
+                ParentUnique = parentUnique,
                 Properties = properties
             };
         }

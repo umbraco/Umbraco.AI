@@ -6,9 +6,6 @@ import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.
 import { UAI_CONTEXT_WORKSPACE_CONTEXT } from "../context-workspace.context-token.js";
 import type { UaiResourceListElement } from "../../../components/resource-list/resource-list.element.js";
 
-// Import the resource list element for side effects
-import "../../../components/resource-list/resource-list.element.js";
-
 /**
  * Workspace view for Context details.
  * Displays and manages context resources.

@@ -5,8 +5,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
-        "umbraco-ai-manifests": resolve(__dirname, "src/bundle.manifests.ts"),
-        "umbraco-ai-api": resolve(__dirname, "src/bundle.api.ts"),
+        "umbraco-ai-manifests": resolve(__dirname, "src/manifests.ts"),
+        "umbraco-ai-app": resolve(__dirname, "src/app.ts"),
       },
       formats: ["es"],
     },

@@ -5,7 +5,6 @@ export * from './context/index.js';
 export * from './context-resource-type/index.js';
 export * from './entity-adapter/index.js';
 export * from './profile/index.js';
-export * from './profile/index.js';
 export * from './property-editors/index.js';
 export * from './provider/index.js';
 export * from './request-context/index.js';

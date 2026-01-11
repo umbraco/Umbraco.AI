@@ -9,8 +9,6 @@ import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
 import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
 import type { UmbPropertyEditorConfigCollection, UmbPropertyEditorUiElement } from '@umbraco-cms/backoffice/property-editor';
 
-// Import the context picker element
-import '../../context/components/context-picker/context-picker.element.js';
 import type { UaiContextPickerElement } from '../../context/components/context-picker/context-picker.element.js';
 
 const elementName = 'uai-property-editor-ui-context-picker';

@@ -10,7 +10,6 @@ import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
-import "../../../../context/components/context-picker/index.js";
 
 /**
  * Workspace view for Profile details.

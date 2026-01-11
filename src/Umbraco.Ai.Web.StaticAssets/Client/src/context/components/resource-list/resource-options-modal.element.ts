@@ -11,7 +11,6 @@ import type {
     UaiResourceOptionsModalValue,
     UaiResourceOptionsData,
 } from './resource-options-modal.token.js';
-import '../../../core/components/model-editor/model-editor.element.js';
 import type { UaiModelEditorChangeEventDetail } from '../../../core/components/exports.js';
 
 const elementName = 'uai-resource-options-modal';

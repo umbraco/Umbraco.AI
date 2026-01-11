@@ -246,12 +246,21 @@ internal sealed class AguiStreamingService : IAguiStreamingService
             return null;
         }
 
+        var additionalProperties = new AdditionalPropertiesDictionary
+        {
+            [AiRequestContextKeys.ContentId] = entityId.Value
+        };
+
+        // Include ParentEntityId if available (for new entities)
+        var parentEntityId = requestContext.GetValue<Guid>(AiRequestContextKeys.ParentEntityId);
+        if (parentEntityId.HasValue)
+        {
+            additionalProperties[AiRequestContextKeys.ParentEntityId] = parentEntityId.Value;
+        }
+
         return new ChatClientAgentRunOptions(new ChatOptions
         {
-            AdditionalProperties = new AdditionalPropertiesDictionary
-            {
-                [AiRequestContextKeys.ContentId] = entityId.Value
-            }
+            AdditionalProperties = additionalProperties
         });
     }
 

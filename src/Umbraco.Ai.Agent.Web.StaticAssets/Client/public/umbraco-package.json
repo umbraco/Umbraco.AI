@@ -14,12 +14,12 @@
       "type": "backofficeEntryPoint",
       "name": "Umbraco AI Agent Backoffice Entry Point",
       "alias": "Umbraco.Ai.Agent.BackofficeEntryPoint",
-      "js": "/App_Plugins/UmbracoAiAgent/umbraco-ai-agent-api.js"
+      "js": "/App_Plugins/UmbracoAiAgent/umbraco-ai-agent-app.js"
     }
   ],
   "importmap": {
     "imports": {
-      "@umbraco-ai/agent": "/App_Plugins/UmbracoAiAgent/umbraco-ai-agent-api.js"
+      "@umbraco-ai/agent": "/App_Plugins/UmbracoAiAgent/umbraco-ai-agent-app.js"
     }
   }
 }

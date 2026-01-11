@@ -3,11 +3,6 @@ import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
 
-// Import native chat component (lightweight, no lazy loading needed)
-import "../chat/index.js";
-// Import entity selector component
-import "../entity-selector/index.js";
-
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
@@ -29,6 +24,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
       if (context) {
         this.#copilotContext = context;
         this.observe(context.isOpen, (isOpen) => {
+          console.debug(`Copilot Sidebar is now ${isOpen ? "open" : "closed"}`);
           this._isOpen = isOpen;
           this.#updateContentOffset(isOpen);
         });

@@ -1,9 +1,6 @@
 import type { UmbEntryPointOnInit, UmbEntryPointOnUnload } from "@umbraco-cms/backoffice/extension-api";
 import { UaiCopilotContext } from "../../copilot.context.js";
 
-// The sidebar element - imported so it registers the custom element
-import "./copilot-sidebar.element.js";
-
 let sidebarElement: HTMLElement | null = null;
 
 export const onInit: UmbEntryPointOnInit = (host, _extensionRegistry) => {

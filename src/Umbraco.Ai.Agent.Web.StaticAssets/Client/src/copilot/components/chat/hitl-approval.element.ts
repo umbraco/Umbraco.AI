@@ -4,7 +4,6 @@ import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registr
 import type { ManifestUaiAgentTool } from "../../../agent/tools/index.js";
 import type { UaiInterruptInfo } from "../../types.js";
 import type { UaiApprovalBaseConfig } from "./approval-base.element.js";
-import "./approval-base.element.js";
 
 /**
  * HITL (Human-in-the-Loop) approval element for interrupt handling.

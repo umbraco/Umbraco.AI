@@ -1,1 +1,1 @@
-export { UaiCopilotAgentRepository } from './copilot-agent.repository.js';
+export { UaiCopilotAgentRepository } from "./copilot-agent.repository.ts";

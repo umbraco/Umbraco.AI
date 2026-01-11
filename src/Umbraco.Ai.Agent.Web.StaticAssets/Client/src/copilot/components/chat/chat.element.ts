@@ -3,12 +3,6 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo } from "../../types.js";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
 
-import "./message.element.js";
-import "./input.element.js";
-import "./agent-status.element.js";
-import "./hitl-approval.element.js";
-import "./tool-renderer.element.js";
-
 /**
  * Main chat component.
  * Renders observables from the Copilot run controller and forwards user input.

@@ -10,9 +10,6 @@ import { safeParseJson } from "../../utils";
 import { UAI_COPILOT_CONTEXT } from "../../copilot.context.js";
 import type { UaiFrontendToolManager } from "../../services/frontend-tool.manager.ts";
 
-// Import default tool status component
-import "../../../agent/tools/tool-status.element.js";
-
 /**
  * Tool renderer component that dynamically renders tool UI based on registered extensions.
  *

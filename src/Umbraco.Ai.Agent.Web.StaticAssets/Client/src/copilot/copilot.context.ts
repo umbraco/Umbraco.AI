@@ -26,7 +26,7 @@ import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChange
  * - **Tool management**: Exposes the frontend tool manager for custom tool rendering
  * - **HITL interrupts**: Handles human-in-the-loop approval flows
  */
-export class UaiCopilotContext extends UmbControllerBase {
+export class UaiCopilotContext extends UmbControllerBase { 
   /** Type guard marker for context resolution. */
   public readonly IS_COPILOT_CONTEXT = true;
 

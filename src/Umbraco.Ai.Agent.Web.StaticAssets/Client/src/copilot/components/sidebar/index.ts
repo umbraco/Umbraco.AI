@@ -1,0 +1,1 @@
+export { UaiCopilotSidebarElement } from "./copilot-sidebar.element.ts";

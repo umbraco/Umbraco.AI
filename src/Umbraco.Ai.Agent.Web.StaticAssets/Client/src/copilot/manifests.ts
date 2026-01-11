@@ -1,6 +1,5 @@
 import type { ManifestGlobalContext } from "@umbraco-cms/backoffice/extension-registry";
-import { headerAppManifests } from "./components/header-app/manifests.js";
-import { sidebarManifests } from "./components/sidebar/manifests.js";
+import { componentManifests } from "./components/manifests.js";
 
 const globalContextManifest: ManifestGlobalContext = {
   type: "globalContext",
@@ -10,7 +9,6 @@ const globalContextManifest: ManifestGlobalContext = {
 };
 
 export const copilotManifests = [
-  ...headerAppManifests,
-  ...sidebarManifests,
+  ...componentManifests,
   globalContextManifest,
 ];

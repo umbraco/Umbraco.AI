@@ -4,11 +4,6 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { marked } from "@umbraco-cms/backoffice/external/marked";
 import type { UaiChatMessage } from "../../types.js";
 
-// Import the tool renderer element (handles extension lookup and custom UI)
-import "./tool-renderer.element.js";
-import "./message-copy-button.element.js";
-import "./message-regenerate-button.element.js";
-
 /**
  * Chat message component.
  * Renders a single message with markdown support and embedded tool status.

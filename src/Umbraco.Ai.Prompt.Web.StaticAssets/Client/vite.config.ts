@@ -1,11 +1,14 @@
 import { defineConfig } from "vite";
+import { resolve } from "path";
 
 export default defineConfig({
   build: {
     lib: {
-      entry: "src/bundle.manifests.ts",
+      entry: {
+        "umbraco-ai-prompt-manifests": resolve(__dirname, "src/bundle.manifests.ts"),
+        "umbraco-ai-prompt-api": resolve(__dirname, "src/bundle.api.ts"),
+      },
       formats: ["es"],
-      fileName: "umbraco-ai-prompt",
     },
     outDir: "../wwwroot",
     emptyOutDir: true,

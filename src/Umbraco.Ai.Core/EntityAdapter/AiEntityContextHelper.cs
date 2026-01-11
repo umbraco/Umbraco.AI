@@ -23,7 +23,7 @@ internal sealed class AiEntityContextHelper : IAiEntityContextHelper
         // Add each property value with its alias as key
         foreach (var property in entity.Properties)
         {
-            context[$"property_{property.Alias}"] = property.Value;
+            context[property.Alias] = property.Value;
         }
 
         return context;

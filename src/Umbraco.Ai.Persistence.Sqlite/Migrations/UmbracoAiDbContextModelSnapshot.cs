@@ -132,6 +132,179 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiContextResource", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Governance.AiExecutionSpanEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InputData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OutputData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ParentSpanId")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RetryCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SequenceNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SpanId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SpanName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SpanType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TokensUsed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("TraceId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpanId");
+
+                    b.HasIndex("TraceId");
+
+                    b.HasIndex("TraceId", "SequenceNumber");
+
+                    b.ToTable("umbracoAiExecutionSpan", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Governance.AiTraceEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DetailLevel")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ErrorCategory")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("InputTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OperationType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("OutputTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ProfileAlias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PromptSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResponseSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SpanId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TotalTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TraceId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProfileId");
+
+                    b.HasIndex("StartTime");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TraceId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("EntityId", "EntityType");
+
+                    b.HasIndex("StartTime", "Status");
+
+                    b.ToTable("umbracoAiTrace", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -194,6 +367,17 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Navigation("Context");
                 });
 
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Governance.AiExecutionSpanEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Governance.AiTraceEntity", "Trace")
+                        .WithMany("Spans")
+                        .HasForeignKey("TraceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trace");
+                });
+
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
                     b.HasOne("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", null)
@@ -206,6 +390,11 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
                 {
                     b.Navigation("Resources");
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Governance.AiTraceEntity", b =>
+                {
+                    b.Navigation("Spans");
                 });
 #pragma warning restore 612, 618
         }

@@ -38,6 +38,8 @@ internal static class AiTraceFactory
             ProfileAlias = entity.ProfileAlias,
             ProviderId = entity.ProviderId,
             ModelId = entity.ModelId,
+            FeatureType = entity.FeatureType,
+            FeatureId = entity.FeatureId,
             InputTokens = entity.InputTokens,
             OutputTokens = entity.OutputTokens,
             TotalTokens = entity.TotalTokens,
@@ -74,6 +76,8 @@ internal static class AiTraceFactory
             ProfileAlias = trace.ProfileAlias,
             ProviderId = trace.ProviderId,
             ModelId = trace.ModelId,
+            FeatureType = trace.FeatureType,
+            FeatureId = trace.FeatureId,
             InputTokens = trace.InputTokens,
             OutputTokens = trace.OutputTokens,
             TotalTokens = trace.TotalTokens,
@@ -107,6 +111,8 @@ internal static class AiTraceFactory
         entity.ProfileAlias = trace.ProfileAlias;
         entity.ProviderId = trace.ProviderId;
         entity.ModelId = trace.ModelId;
+        entity.FeatureType = trace.FeatureType;
+        entity.FeatureId = trace.FeatureId;
         entity.InputTokens = trace.InputTokens;
         entity.OutputTokens = trace.OutputTokens;
         entity.TotalTokens = trace.TotalTokens;

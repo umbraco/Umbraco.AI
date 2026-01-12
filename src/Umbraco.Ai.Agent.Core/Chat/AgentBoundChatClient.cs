@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Agent.Core.Context;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Governance;
 
 namespace Umbraco.Ai.Agent.Core.Chat;
 
@@ -30,8 +31,8 @@ internal sealed class AgentBoundChatClient : BoundChatClientBase
         options ??= new ChatOptions();
         options.AdditionalProperties ??= new AdditionalPropertiesDictionary();
         options.AdditionalProperties.TryAdd(AgentContextResolver.AgentIdKey, _agent.Id);
-        options.AdditionalProperties.TryAdd("ai.feature.type", "agent");
-        options.AdditionalProperties.TryAdd("ai.feature.id", _agent.Id);
+        options.AdditionalProperties.TryAdd(AiTelemetrySource.FeatureTypeTag, "agent");
+        options.AdditionalProperties.TryAdd(AiTelemetrySource.FeatureIdTag, _agent.Id);
         return options;
     }
 

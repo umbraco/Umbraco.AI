@@ -27,6 +27,8 @@ export interface UaiTraceItemModel extends UmbEntityModel {
     operationType: string;
     modelId: string;
     providerId: string;
+    featureType: string | null;
+    featureId: string | null;
     inputTokens: number | null;
     outputTokens: number | null;
     errorMessage: string | null;

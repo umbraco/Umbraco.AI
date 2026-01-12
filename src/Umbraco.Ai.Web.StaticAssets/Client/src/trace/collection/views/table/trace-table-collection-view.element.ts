@@ -28,6 +28,7 @@ export class UaiTraceTableCollectionViewElement extends UmbLitElement {
         { name: "Timestamp", alias: "timestamp" },
         { name: "User", alias: "user" },
         { name: "Operation", alias: "operation" },
+        { name: "Feature", alias: "feature" },
         { name: "Model", alias: "model" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
@@ -78,6 +79,15 @@ export class UaiTraceTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "operation",
                     value: item.operationType,
+                },
+                {
+                    columnAlias: "feature",
+                    value: item.featureType
+                        ? html`<div style="font-size: 0.9em;">
+                            <div style="text-transform: capitalize;">${item.featureType}</div>
+                            ${item.featureId ? html`<div style="color: var(--uui-color-text-alt); font-size: 0.75em; font-family: monospace;">${item.featureId}</div>` : ""}
+                          </div>`
+                        : "—",
                 },
                 {
                     columnAlias: "model",

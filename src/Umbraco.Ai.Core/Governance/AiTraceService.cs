@@ -48,9 +48,9 @@ internal sealed class AiTraceService : IAiTraceService
             throw new InvalidOperationException("No active Activity found. Ensure telemetry middleware is configured.");
         }
 
-        // Extract profile ID from additional properties
+        // Extract profile ID from additional properties (using telemetry tag names)
         Guid profileId = Guid.Empty;
-        if (additionalProperties?.TryGetValue("ProfileId", out object? profileIdObj) == true)
+        if (additionalProperties?.TryGetValue(AiTelemetrySource.ProfileIdTag, out object? profileIdObj) == true)
         {
             if (profileIdObj is Guid guid)
             {
@@ -62,25 +62,31 @@ internal sealed class AiTraceService : IAiTraceService
             }
         }
 
-        // Get profile details
+        // Extract profile alias and provider ID directly from tags (in case profile lookup fails)
+        string? profileAlias = additionalProperties?.TryGetValue(AiTelemetrySource.ProfileAliasTag, out object? aliasObj) == true
+            ? aliasObj?.ToString()
+            : null;
+
+        string? providerId = additionalProperties?.TryGetValue(AiTelemetrySource.ProviderIdTag, out object? providerObj) == true
+            ? providerObj?.ToString()
+            : null;
+
+        // Get model ID from tags
+        string? modelId = additionalProperties?.TryGetValue(AiTelemetrySource.ModelIdTag, out object? modelObj) == true
+            ? modelObj?.ToString()
+            : null;
+
+        // Get profile details for additional information (optional)
         AiProfile? profile = null;
         if (profileId != Guid.Empty)
         {
             profile = await _profileService.GetProfileAsync(profileId, ct);
         }
 
-        if (profile is null)
+        // Use profile if found, otherwise use tag values directly
+        if (profile is null && profileId != Guid.Empty)
         {
-            _logger.LogWarning("Profile {ProfileId} not found for trace", profileId);
-            // Create a placeholder profile info
-            profile = new AiProfile
-            {
-                Id = profileId,
-                Alias = "unknown",
-                Name = "Unknown Profile",
-                Model = new AiModelRef("unknown", "unknown"),
-                ConnectionId = Guid.Empty
-            };
+            _logger.LogDebug("Profile {ProfileId} not found, using tag values for trace", profileId);
         }
 
         // Get current user
@@ -89,11 +95,11 @@ internal sealed class AiTraceService : IAiTraceService
         string? userName = backOfficeIdentity?.Name;
 
         // Extract entity context from additional properties
-        string? entityId = additionalProperties?.TryGetValue("EntityId", out object? entityIdObj) == true
+        string? entityId = additionalProperties?.TryGetValue(AiTelemetrySource.EntityIdTag, out object? entityIdObj) == true
             ? entityIdObj?.ToString()
             : null;
 
-        string? entityType = additionalProperties?.TryGetValue("EntityType", out object? entityTypeObj) == true
+        string? entityType = additionalProperties?.TryGetValue(AiTelemetrySource.EntityTypeTag, out object? entityTypeObj) == true
             ? entityTypeObj?.ToString()
             : null;
 
@@ -105,7 +111,7 @@ internal sealed class AiTraceService : IAiTraceService
             _ => "unknown"
         };
 
-        if (additionalProperties?.TryGetValue("OperationType", out object? opTypeObj) == true)
+        if (additionalProperties?.TryGetValue(AiTelemetrySource.OperationTypeTag, out object? opTypeObj) == true)
         {
             operationType = opTypeObj?.ToString() ?? operationType;
         }
@@ -123,10 +129,10 @@ internal sealed class AiTraceService : IAiTraceService
             EntityId = entityId,
             EntityType = entityType,
             OperationType = operationType,
-            ProfileId = profile.Id,
-            ProfileAlias = profile.Alias,
-            ProviderId = profile.Model.ProviderId,
-            ModelId = profile.Model.ModelId,
+            ProfileId = profile?.Id ?? profileId,
+            ProfileAlias = profile?.Alias ?? profileAlias ?? "unknown",
+            ProviderId = profile?.Model.ProviderId ?? providerId ?? "unknown",
+            ModelId = profile?.Model.ModelId ?? modelId ?? "unknown",
             DetailLevel = _options.CurrentValue.DetailLevel
         };
 

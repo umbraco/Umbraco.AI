@@ -45,6 +45,16 @@ public static class AiTelemetrySource
     public const string ProfileIdTag = "ai.profile.id";
 
     /// <summary>
+    /// Tag for AI profile alias.
+    /// </summary>
+    public const string ProfileAliasTag = "ai.profile.alias";
+
+    /// <summary>
+    /// Tag for AI provider ID.
+    /// </summary>
+    public const string ProviderIdTag = "ai.provider.id";
+
+    /// <summary>
     /// Tag for AI model ID.
     /// </summary>
     public const string ModelIdTag = "ai.model.id";

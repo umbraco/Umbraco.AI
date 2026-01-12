@@ -139,12 +139,14 @@ internal sealed class AiPromptService : IAiPromptService
         // 6. Build chat messages (we don't inject a system prompt from contexts for prompts)
         ChatMessage[] messages = [new(ChatRole.User, processedContent)];
 
-        // 7. Create ChatOptions with PromptId for context resolution and system tools
+        // 7. Create ChatOptions with PromptId for context resolution, feature tracking, and system tools
         var chatOptions = new ChatOptions
         {
             AdditionalProperties = new AdditionalPropertiesDictionary
             {
-                [PromptContextResolver.PromptIdKey] = prompt.Id
+                [PromptContextResolver.PromptIdKey] = prompt.Id,
+                ["ai.feature.type"] = "prompt",
+                ["ai.feature.id"] = prompt.Id
             },
             Tools = _tools.ToSystemToolFunctions(_functionFactory).Cast<AITool>().ToList(),
             ToolMode = ChatToolMode.Auto

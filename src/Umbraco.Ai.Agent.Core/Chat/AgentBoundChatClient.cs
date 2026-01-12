@@ -30,6 +30,8 @@ internal sealed class AgentBoundChatClient : BoundChatClientBase
         options ??= new ChatOptions();
         options.AdditionalProperties ??= new AdditionalPropertiesDictionary();
         options.AdditionalProperties.TryAdd(AgentContextResolver.AgentIdKey, _agent.Id);
+        options.AdditionalProperties.TryAdd("ai.feature.type", "agent");
+        options.AdditionalProperties.TryAdd("ai.feature.id", _agent.Id);
         return options;
     }
 

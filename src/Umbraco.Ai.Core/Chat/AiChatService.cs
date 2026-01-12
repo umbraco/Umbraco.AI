@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Governance;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 
@@ -130,17 +129,7 @@ internal sealed class AiChatService : IAiChatService
     {
         var chatSettings = profile.Settings as AiChatProfileSettings;
 
-        // Note: Profile ID for context resolution is automatically injected by ProfileBoundChatClient
-
-        // Add telemetry metadata to AdditionalProperties
-        var additionalProps = callerOptions?.AdditionalProperties != null
-            ? new AdditionalPropertiesDictionary(callerOptions.AdditionalProperties)
-            : new AdditionalPropertiesDictionary();
-
-        // Add profile metadata for telemetry/governance
-        additionalProps[AiTelemetrySource.ProfileIdTag] = profile.Id;
-        additionalProps[AiTelemetrySource.ProfileAliasTag] = profile.Alias;
-        additionalProps[AiTelemetrySource.ProviderIdTag] = profile.Model.ProviderId;
+        // Note: Profile ID and telemetry metadata are automatically injected by ProfileBoundChatClient
 
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings
@@ -159,7 +148,7 @@ internal sealed class AiChatService : IAiChatService
                 ResponseFormat = callerOptions.ResponseFormat,
                 Tools = callerOptions.Tools,
                 ToolMode = callerOptions.ToolMode,
-                AdditionalProperties = additionalProps
+                AdditionalProperties = callerOptions.AdditionalProperties
             };
         }
 
@@ -168,8 +157,7 @@ internal sealed class AiChatService : IAiChatService
         {
             ModelId = profile.Model.ModelId,
             Temperature = chatSettings?.Temperature,
-            MaxOutputTokens = chatSettings?.MaxTokens,
-            AdditionalProperties = additionalProps
+            MaxOutputTokens = chatSettings?.MaxTokens
         };
     }
     

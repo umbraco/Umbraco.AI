@@ -152,6 +152,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Context Resource Types";
             }
+
+            /// <summary>
+            /// Defines constants for Trace features.
+            /// </summary>
+            public static class Trace
+            {
+                /// <summary>
+                /// The route segment for Trace features.
+                /// </summary>
+                public const string RouteSegment = "trace";
+
+                /// <summary>
+                /// The Swagger group name for Trace features.
+                /// </summary>
+                public const string GroupName = "Trace";
+            }
         }
     }
 }

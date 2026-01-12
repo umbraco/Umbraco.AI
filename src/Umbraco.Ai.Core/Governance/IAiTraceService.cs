@@ -25,15 +25,15 @@ public interface IAiTraceService
     /// </summary>
     /// <param name="traceId">The local database ID of the trace.</param>
     /// <param name="status">The final status of the operation.</param>
+    /// <param name="ct">Cancellation token.</param>
     /// <param name="response">The response object from the AI operation.</param>
     /// <param name="exception">The exception if the operation failed.</param>
-    /// <param name="ct">Cancellation token.</param>
     Task CompleteTraceAsync(
         Guid traceId,
         AiTraceStatus status,
+        CancellationToken ct,
         object? response = null,
-        Exception? exception = null,
-        CancellationToken ct);
+        Exception? exception = null);
 
     /// <summary>
     /// Records an execution span within a trace.
@@ -54,10 +54,10 @@ public interface IAiTraceService
     /// Retrieves a trace by its local database ID.
     /// </summary>
     /// <param name="id">The unique identifier of the trace.</param>
-    /// <param name="includeSpans">Whether to include execution spans in the result.</param>
     /// <param name="ct">Cancellation token.</param>
+    /// <param name="includeSpans">Whether to include execution spans in the result.</param>
     /// <returns>The trace if found; otherwise, null.</returns>
-    Task<AiTrace?> GetTraceAsync(Guid id, bool includeSpans = false, CancellationToken ct);
+    Task<AiTrace?> GetTraceAsync(Guid id, CancellationToken ct, bool includeSpans = false);
 
     /// <summary>
     /// Retrieves a trace by its OpenTelemetry trace ID.

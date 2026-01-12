@@ -116,6 +116,24 @@ internal sealed class AiTraceService : IAiTraceService
             operationType = opTypeObj?.ToString() ?? operationType;
         }
 
+        // Extract feature context (prompt/agent)
+        string? featureType = additionalProperties?.TryGetValue(AiTelemetrySource.FeatureTypeTag, out object? featureTypeObj) == true
+            ? featureTypeObj?.ToString()
+            : null;
+
+        Guid? featureId = null;
+        if (additionalProperties?.TryGetValue(AiTelemetrySource.FeatureIdTag, out object? featureIdObj) == true)
+        {
+            if (featureIdObj is Guid guid)
+            {
+                featureId = guid;
+            }
+            else if (featureIdObj is string featureIdStr && Guid.TryParse(featureIdStr, out Guid parsedFeatureId))
+            {
+                featureId = parsedFeatureId;
+            }
+        }
+
         // Create trace record
         var trace = new AiTrace
         {
@@ -133,6 +151,8 @@ internal sealed class AiTraceService : IAiTraceService
             ProfileAlias = profile?.Alias ?? profileAlias ?? "unknown",
             ProviderId = profile?.Model.ProviderId ?? providerId ?? "unknown",
             ModelId = profile?.Model.ModelId ?? modelId ?? "unknown",
+            FeatureType = featureType,
+            FeatureId = featureId,
             DetailLevel = _options.CurrentValue.DetailLevel
         };
 

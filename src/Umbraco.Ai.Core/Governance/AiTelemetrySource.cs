@@ -60,6 +60,16 @@ public static class AiTelemetrySource
     public const string ModelIdTag = "ai.model.id";
 
     /// <summary>
+    /// Tag for feature type (e.g., "prompt", "agent").
+    /// </summary>
+    public const string FeatureTypeTag = "ai.feature.type";
+
+    /// <summary>
+    /// Tag for feature ID (prompt or agent ID).
+    /// </summary>
+    public const string FeatureIdTag = "ai.feature.id";
+
+    /// <summary>
     /// Tag for user ID.
     /// </summary>
     public const string UserIdTag = "ai.user.id";

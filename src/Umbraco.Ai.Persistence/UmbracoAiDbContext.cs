@@ -249,6 +249,11 @@ public class UmbracoAiDbContext : DbContext
                 .HasMaxLength(255)
                 .IsRequired();
 
+            entity.Property(e => e.FeatureType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.FeatureId);
+
             entity.Property(e => e.InputTokens);
             entity.Property(e => e.OutputTokens);
             entity.Property(e => e.TotalTokens);
@@ -267,6 +272,8 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.ProfileId);
             entity.HasIndex(e => new { e.EntityId, e.EntityType });
             entity.HasIndex(e => new { e.StartTime, e.Status });
+            entity.HasIndex(e => e.FeatureId);
+            entity.HasIndex(e => new { e.FeatureType, e.FeatureId });
 
             // Relationship to execution spans
             entity.HasMany(e => e.Spans)

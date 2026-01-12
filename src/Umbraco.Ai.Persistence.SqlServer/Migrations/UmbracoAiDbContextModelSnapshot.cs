@@ -228,6 +228,13 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<Guid?>("FeatureId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FeatureType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<int?>("InputTokens")
                         .HasColumnType("int");
 
@@ -293,6 +300,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FeatureId");
+
                     b.HasIndex("ProfileId");
 
                     b.HasIndex("StartTime");
@@ -304,6 +313,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.HasIndex("UserId");
 
                     b.HasIndex("EntityId", "EntityType");
+
+                    b.HasIndex("FeatureType", "FeatureId");
 
                     b.HasIndex("StartTime", "Status");
 

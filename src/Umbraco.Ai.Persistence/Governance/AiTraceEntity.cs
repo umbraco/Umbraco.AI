@@ -91,6 +91,16 @@ public class AiTraceEntity
     public string ModelId { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the feature type that initiated this operation (e.g., "prompt", "agent").
+    /// </summary>
+    public string? FeatureType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the feature ID (prompt or agent ID) that initiated this operation.
+    /// </summary>
+    public Guid? FeatureId { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of input tokens.
     /// </summary>
     public int? InputTokens { get; set; }

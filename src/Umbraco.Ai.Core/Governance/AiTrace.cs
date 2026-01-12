@@ -97,6 +97,18 @@ public sealed class AiTrace
     public string ModelId { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the feature type that initiated this operation (e.g., "prompt", "agent").
+    /// Null for direct API calls or when not applicable.
+    /// </summary>
+    public string? FeatureType { get; init; }
+
+    /// <summary>
+    /// Gets the feature ID (prompt or agent ID) that initiated this operation.
+    /// Null for direct API calls or when not applicable.
+    /// </summary>
+    public Guid? FeatureId { get; init; }
+
+    /// <summary>
     /// Gets or sets the number of input tokens consumed.
     /// </summary>
     public int? InputTokens { get; set; }

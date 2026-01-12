@@ -8,6 +8,8 @@ using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.Ai.Core.Governance;
+using Umbraco.Ai.Core.Governance.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
@@ -35,6 +37,9 @@ public static partial class UmbracoBuilderExtensions
         // Bind AiOptions from "Umbraco:Ai" section
         services.Configure<AiOptions>(config.GetSection("Umbraco:Ai"));
 
+        // Bind AiGovernanceOptions from "Umbraco:Ai:Governance" section
+        services.Configure<AiGovernanceOptions>(config.GetSection("Umbraco:Ai:Governance"));
+
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
         services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
@@ -47,8 +52,11 @@ public static partial class UmbracoBuilderExtensions
         // Initialize middleware collection builders with default middleware
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         builder.AiChatMiddleware()
+            .Append<AiTelemetryChatMiddleware>()      // Telemetry first for accurate tracking
             .Append<AiContextInjectionChatMiddleware>();
-        _ = builder.AiEmbeddingMiddleware();
+
+        builder.AiEmbeddingMiddleware()
+            .Append<AiTelemetryEmbeddingMiddleware>();  // Telemetry first for accurate tracking
 
         // Tool infrastructure - auto-discover tools via [AiTool] attribute
         builder.AiTools()
@@ -102,6 +110,17 @@ public static partial class UmbracoBuilderExtensions
         builder.AiRequestContextProcessors()
             .Append<SerializedEntityProcessor>()
             .Append<DefaultSystemMessageProcessor>();
+
+        // Governance and tracing infrastructure
+        // Note: IAiTraceRepository and IAiExecutionSpanRepository are registered by persistence layer
+        services.AddSingleton<IAiTraceService, AiTraceService>();
+
+        // Activity listener for OpenTelemetry integration
+        services.AddSingleton<AiGovernanceActivityListener>();
+        services.AddHostedService<AiGovernanceActivityListenerHost>();
+
+        // Background job for trace cleanup
+        services.AddHostedService<AiTraceCleanupBackgroundJob>();
 
         return builder;
     }

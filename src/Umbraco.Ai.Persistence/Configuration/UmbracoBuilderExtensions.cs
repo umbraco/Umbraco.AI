@@ -2,10 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Contexts;
+using Umbraco.Ai.Core.Governance;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Connections;
 using Umbraco.Ai.Persistence.Context;
+using Umbraco.Ai.Persistence.Governance;
 using Umbraco.Ai.Persistence.Notifications;
 using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Cms.Core;
@@ -37,6 +39,8 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiConnectionRepository, EfCoreAiConnectionRepository>();
         builder.Services.AddSingleton<IAiProfileRepository, EfCoreAiProfileRepository>();
         builder.Services.AddSingleton<IAiContextRepository, EfCoreAiContextRepository>();
+        builder.Services.AddSingleton<IAiTraceRepository, EfCoreAiTraceRepository>();
+        builder.Services.AddSingleton<IAiExecutionSpanRepository, EfCoreAiExecutionSpanRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAiMigrationNotificationHandler>();

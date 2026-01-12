@@ -29,8 +29,8 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         // Apply middleware in order
         chatClient = ApplyMiddleware(chatClient);
 
-        // Wrap with profile-bound client to ensure profile ID is always available for context resolution
-        chatClient = new ProfileBoundChatClient(chatClient, profile.Id);
+        // Wrap with profile-bound client to ensure profile metadata is always available for context resolution and telemetry
+        chatClient = new ProfileBoundChatClient(chatClient, profile);
 
         return chatClient;
     }

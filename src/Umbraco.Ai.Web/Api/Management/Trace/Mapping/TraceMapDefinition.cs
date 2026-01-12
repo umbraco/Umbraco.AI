@@ -58,12 +58,14 @@ public class TraceMapDefinition : IMapDefinition
         target.OperationType = source.OperationType;
         target.ModelId = source.ModelId;
         target.ProviderId = source.ProviderId;
+        target.FeatureType = source.FeatureType;
+        target.FeatureId = source.FeatureId;
         target.InputTokens = source.InputTokens;
         target.OutputTokens = source.OutputTokens;
         target.ErrorMessage = source.ErrorMessage;
     }
 
-    // Umbraco.Code.MapAll -Id -TraceId -StartTime -DurationMs -Status -UserId -UserName -EntityId -OperationType -ModelId -ProviderId -InputTokens -OutputTokens -ErrorMessage
+    // Umbraco.Code.MapAll -Id -TraceId -StartTime -DurationMs -Status -UserId -UserName -EntityId -OperationType -ModelId -ProviderId -FeatureType -FeatureId -InputTokens -OutputTokens -ErrorMessage
     private static void MapToDetailResponse(AiTrace source, TraceDetailResponseModel target, MapperContext context)
     {
         // First map all base properties from TraceItemResponseModel (mapped via MapToItemResponse)

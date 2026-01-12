@@ -71,6 +71,16 @@ public class TraceItemResponseModel
     public string ProviderId { get; set; } = string.Empty;
 
     /// <summary>
+    /// The feature type that initiated this operation (e.g., "prompt", "agent").
+    /// </summary>
+    public string? FeatureType { get; set; }
+
+    /// <summary>
+    /// The feature ID (prompt or agent ID) that initiated this operation.
+    /// </summary>
+    public Guid? FeatureId { get; set; }
+
+    /// <summary>
     /// Number of input tokens consumed.
     /// </summary>
     public int? InputTokens { get; set; }

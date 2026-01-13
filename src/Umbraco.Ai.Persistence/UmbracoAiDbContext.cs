@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Persistence.Connections;
 using Umbraco.Ai.Persistence.Context;
+using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Profiles;
 
 namespace Umbraco.Ai.Persistence;
@@ -29,6 +30,11 @@ public class UmbracoAiDbContext : DbContext
     /// AI context resources.
     /// </summary>
     public DbSet<AiContextResourceEntity> ContextResources { get; set; } = null!;
+
+    /// <summary>
+    /// AI audit-log records.
+    /// </summary>
+    public DbSet<AiAuditLogEntity> AuditLogs { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -178,6 +184,85 @@ public class UmbracoAiDbContext : DbContext
 
             entity.HasIndex(e => e.ContextId);
             entity.HasIndex(e => e.ResourceTypeId);
+        });
+
+        modelBuilder.Entity<AiAuditLogEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiAuditLog");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.StartTime)
+                .IsRequired();
+
+            entity.Property(e => e.EndTime);
+
+            entity.Property(e => e.Status)
+                .IsRequired();
+
+            entity.Property(e => e.ErrorCategory);
+
+            entity.Property(e => e.ErrorMessage)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.UserId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.UserName)
+                .HasMaxLength(255);
+
+            entity.Property(e => e.EntityId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.Capability)
+                .IsRequired();
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired();
+
+            entity.Property(e => e.ProfileAlias)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.ProviderId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.ModelId)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.FeatureType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.FeatureId);
+
+            entity.Property(e => e.InputTokens);
+            entity.Property(e => e.OutputTokens);
+            entity.Property(e => e.TotalTokens);
+
+            entity.Property(e => e.PromptSnapshot);
+            entity.Property(e => e.ResponseSnapshot);
+
+            entity.Property(e => e.DetailLevel)
+                .IsRequired();
+
+            entity.Property(e => e.ParentAuditLogId);
+
+            entity.Property(e => e.Metadata);
+
+            // Indexes for query performance
+            entity.HasIndex(e => e.StartTime);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ProfileId);
+            entity.HasIndex(e => new { e.EntityId, e.EntityType });
+            entity.HasIndex(e => new { e.StartTime, e.Status });
+            entity.HasIndex(e => e.FeatureId);
+            entity.HasIndex(e => new { e.FeatureType, e.FeatureId });
+            entity.HasIndex(e => e.ParentAuditLogId);
         });
     }
 }

@@ -152,6 +152,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Context Resource Types";
             }
+
+            /// <summary>
+            /// Defines constants for AuditLog features.
+            /// </summary>
+            public static class AuditLog
+            {
+                /// <summary>
+                /// The route segment for AuditLog features.
+                /// </summary>
+                public const string RouteSegment = "audit-log-logs";
+
+                /// <summary>
+                /// The Swagger group name for AuditLog features.
+                /// </summary>
+                public const string GroupName = "AuditLog Logs";
+            }
         }
     }
 }

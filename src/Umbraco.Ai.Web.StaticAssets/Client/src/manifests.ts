@@ -20,6 +20,7 @@ import { entityAdapterManifests } from "./entity-adapter/manifests.js";
 import { profileManifests } from "./profile/manifests.js";
 import { providerManifests } from "./provider/manifests.js";
 import { propertyEditorManifests } from "./property-editors/manifests.js";
+import { auditLogManifests } from "./audit-log/manifests.js";
 import { manifests as langManifests } from "./lang/manifests.js";
 import { manifests as coreManifests } from "./core/manifests.js";
 import { workspaceRegistryManifests } from "./workspace-registry/manifests.js";
@@ -35,6 +36,7 @@ export const manifests: Array<UmbExtensionManifest> = [
   ...profileManifests,
   ...providerManifests,
   ...propertyEditorManifests,
+  ...auditLogManifests,
   ...langManifests,
   ...coreManifests,
   ...workspaceRegistryManifests,

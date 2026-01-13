@@ -129,7 +129,7 @@ internal sealed class AiChatService : IAiChatService
     {
         var chatSettings = profile.Settings as AiChatProfileSettings;
 
-        // Note: Profile ID for context resolution is automatically injected by ProfileBoundChatClient
+        // Note: Profile ID and telemetry metadata are automatically injected by ProfileBoundChatClient
 
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings

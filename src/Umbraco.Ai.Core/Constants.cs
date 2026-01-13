@@ -4,7 +4,10 @@ using Umbraco.Ai.Core.Serialization;
 
 namespace Umbraco.Ai.Core;
 
-internal static class Constants
+/// <summary>
+/// Constants for Umbraco.Ai.
+/// </summary>
+public static class Constants
 {
     internal static JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
@@ -33,5 +36,56 @@ internal static class Constants
             /// </summary>
             public const string ContextPicker = "Uai.ContextPicker";
         }
+    }
+    
+    /// <summary>
+    /// Keys for metadata in metadata collections.
+    /// </summary>
+    public static class MetadataKeys
+    {
+        /// <summary>
+        /// Key for profile ID in metadata collections.
+        /// </summary>
+        public const string ProfileId = "Umbraco.Ai.ProfileId";
+    
+        /// <summary>
+        /// Key for profile alias in metadata collections.
+        /// </summary>
+        public const string ProfileAlias = "Umbraco.Ai.ProfileAlias";
+    
+        /// <summary>
+        /// Key for provider ID in metadata collections.
+        /// </summary>
+        public const string ProviderId = "Umbraco.Ai.ProviderId";
+    
+        /// <summary>
+        /// Key for model ID in metadata collections.
+        /// </summary>
+        public const string ModelId = "Umbraco.Ai.ModelId";
+    
+        /// <summary>
+        /// Key for feature ID in metadata collections.
+        /// </summary>
+        public const string FeatureId = "Umbraco.Ai.FeatureId";
+    
+        /// <summary>
+        /// Key for feature alias in metadata collections.
+        /// </summary>
+        public const string FeatureAlias = "Umbraco.Ai.FeatureAlias";
+    
+        /// <summary>
+        /// Key for feature type in metadata collections.
+        /// </summary>
+        public const string FeatureType = "Umbraco.Ai.FeatureType";
+    
+        /// <summary>
+        /// Key for entity ID in metadata collections.
+        /// </summary>
+        public const string EntityId = "Umbraco.Ai.EntityId";
+    
+        /// <summary>
+        /// Key for entity type in metadata collections.
+        /// </summary>
+        public const string EntityType = "Umbraco.Ai.EntityType";
     }
 }

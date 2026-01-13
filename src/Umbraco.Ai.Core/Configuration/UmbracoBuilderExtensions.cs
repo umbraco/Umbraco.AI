@@ -8,6 +8,8 @@ using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.Ai.Core.AuditLog;
+using Umbraco.Ai.Core.AuditLog.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
@@ -35,6 +37,9 @@ public static partial class UmbracoBuilderExtensions
         // Bind AiOptions from "Umbraco:Ai" section
         services.Configure<AiOptions>(config.GetSection("Umbraco:Ai"));
 
+        // Bind AiAuditLogOptions from "Umbraco:Ai:AuditLog" section
+        services.Configure<AiAuditLogOptions>(config.GetSection("Umbraco:Ai:AuditLog"));
+
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
         services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
@@ -47,8 +52,11 @@ public static partial class UmbracoBuilderExtensions
         // Initialize middleware collection builders with default middleware
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         builder.AiChatMiddleware()
+            .Append<AiTelemetryChatMiddleware>()      // Telemetry first for accurate tracking
             .Append<AiContextInjectionChatMiddleware>();
-        _ = builder.AiEmbeddingMiddleware();
+
+        builder.AiEmbeddingMiddleware()
+            .Append<AiTelemetryEmbeddingMiddleware>();  // Telemetry first for accurate tracking
 
         // Tool infrastructure - auto-discover tools via [AiTool] attribute
         builder.AiTools()
@@ -102,6 +110,13 @@ public static partial class UmbracoBuilderExtensions
         builder.AiRequestContextProcessors()
             .Append<SerializedEntityProcessor>()
             .Append<DefaultSystemMessageProcessor>();
+
+        // AuditLog infrastructure
+        // Note: IAiAuditLogRepository is registered by persistence layer
+        services.AddSingleton<IAiAuditLogService, AiAuditLogService>();
+
+        // Background job for audit-log cleanup
+        services.AddHostedService<AiAuditLogCleanupBackgroundJob>();
 
         return builder;
     }

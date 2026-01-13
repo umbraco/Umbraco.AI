@@ -11,7 +11,6 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// <para>
 /// Each resolver should define its own key constants internally for reading from
 /// <see cref="AiContextResolverRequest.Properties"/>. For example, ProfileContextResolver
-/// defines <c>ProfileIdKey = "Umbraco.Ai.ProfileId"</c> internally.
 /// </para>
 /// </remarks>
 public interface IAiContextResolver

@@ -8,15 +8,11 @@ namespace Umbraco.Ai.Prompt.Core.Context;
 /// Resolves context from prompt-level context assignments.
 /// </summary>
 /// <remarks>
-/// This resolver reads the prompt ID from <see cref="PromptIdKey"/> in the request properties,
+/// This resolver reads the prompt ID from <see cref="Constants.MetadataKeys.PromptId"/> in the request properties,
 /// then resolves any context IDs configured on the prompt.
 /// </remarks>
 internal sealed class PromptContextResolver : IAiContextResolver
 {
-    /// <summary>
-    /// Key used to pass the prompt ID through ChatOptions.AdditionalProperties.
-    /// </summary>
-    internal const string PromptIdKey = "Umbraco.Ai.Prompt.PromptId";
 
     private readonly IAiContextService _contextService;
     private readonly IAiPromptService _promptService;
@@ -39,7 +35,7 @@ internal sealed class PromptContextResolver : IAiContextResolver
         AiContextResolverRequest request,
         CancellationToken cancellationToken = default)
     {
-        var promptId = request.GetGuidProperty(PromptIdKey);
+        var promptId = request.GetGuidProperty(Constants.MetadataKeys.PromptId);
         if (!promptId.HasValue)
         {
             return AiContextResolverResult.Empty;

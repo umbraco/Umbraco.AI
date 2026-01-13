@@ -1,13 +1,13 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.EntityAdapter;
-using Umbraco.Ai.Core.Governance;
 using Umbraco.Ai.Core.RequestContext;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Prompt.Core.Context;
 using Umbraco.Cms.Core.Models;
+using CoreConstants = Umbraco.Ai.Core.Constants;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
 
@@ -145,9 +145,11 @@ internal sealed class AiPromptService : IAiPromptService
         {
             AdditionalProperties = new AdditionalPropertiesDictionary
             {
-                [PromptContextResolver.PromptIdKey] = prompt.Id,
-                [AiTelemetrySource.FeatureTypeTag] = "prompt",
-                [AiTelemetrySource.FeatureIdTag] = prompt.Id
+                [Constants.MetadataKeys.PromptId] = prompt.Id,
+                [Constants.MetadataKeys.PromptAlias] = prompt.Alias,
+                [CoreConstants.MetadataKeys.FeatureType] = "prompt",
+                [CoreConstants.MetadataKeys.FeatureId] = prompt.Id,
+                [CoreConstants.MetadataKeys.FeatureAlias] = prompt.Alias
             },
             Tools = _tools.ToSystemToolFunctions(_functionFactory).Cast<AITool>().ToList(),
             ToolMode = ChatToolMode.Auto

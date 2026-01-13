@@ -42,48 +42,7 @@ public class AiAuditLogOptions
     public bool PersistFailureDetails { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets the sampling rate for detailed traces (0.0 to 1.0).
-    /// Only applies when DetailLevel is set to Sampled.
-    /// Default is 0.1 (10%).
-    /// </summary>
-    public double SamplingRate { get; set; } = 0.1;
-
-    /// <summary>
     /// Gets or sets the list of regex patterns for redacting sensitive data.
     /// </summary>
     public List<string> RedactionPatterns { get; set; } = new();
-
-    /// <summary>
-    /// Gets or sets the list of allowed model configurations.
-    /// Empty list means all models are allowed.
-    /// </summary>
-    public List<AllowedModelConfig> AllowedModels { get; set; } = new();
-
-    /// <summary>
-    /// Gets or sets the maximum tokens allowed per request.
-    /// Null means no limit.
-    /// </summary>
-    public int? MaxTokensPerRequest { get; set; }
-}
-
-/// <summary>
-/// Configuration for allowed AI models.
-/// </summary>
-public class AllowedModelConfig
-{
-    /// <summary>
-    /// Gets or sets the provider ID.
-    /// </summary>
-    public string ProviderId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the model ID pattern (supports wildcards).
-    /// </summary>
-    public string ModelIdPattern { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the maximum tokens allowed for this model.
-    /// Null means no specific limit for this model.
-    /// </summary>
-    public int? MaxTokens { get; set; }
 }

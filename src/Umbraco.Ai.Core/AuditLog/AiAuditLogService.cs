@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -81,9 +82,11 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         // Capture prompt snapshot if configured
         if (_options.CurrentValue.PersistPrompts && context.Prompt is not null)
         {
-            audit.PromptSnapshot = FormatPromptSnapshot(context.Prompt, context.Capability);
+            var prompt = FormatPromptSnapshot(context.Prompt, context.Capability);
+            prompt = ApplyRedaction(prompt);
+            audit.PromptSnapshot = prompt;
             _logger.LogDebug("Captured prompt snapshot for audit-log {AuditLogId}: {Length} characters",
-                audit.Id, audit.PromptSnapshot?.Length ?? 0);
+                audit.Id, prompt?.Length ?? 0);
         }
 
         await _auditLogRepository.SaveAsync(audit, ct);
@@ -131,7 +134,7 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         
         if (_options.CurrentValue.PersistResponses && !string.IsNullOrEmpty(response?.Text))
         {
-            audit.ResponseSnapshot = response.Text;
+            audit.ResponseSnapshot = ApplyRedaction(response.Text);
         }
 
         await _auditLogRepository.SaveAsync(audit, ct);
@@ -285,5 +288,25 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         }
 
         return AiAuditLogErrorCategory.Unknown;
+    }
+    
+    private string? ApplyRedaction(string? input)
+    {
+        if (string.IsNullOrEmpty(input) || _options.CurrentValue.RedactionPatterns.Count == 0)
+            return input;
+
+        var result = input;
+        foreach (var pattern in _options.CurrentValue.RedactionPatterns)
+        {
+            try
+            {
+                result = Regex.Replace(result, pattern, "[REDACTED]", RegexOptions.IgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to apply redaction pattern: {Pattern}", pattern);
+            }
+        }
+        return result;
     }
 }

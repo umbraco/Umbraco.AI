@@ -61,7 +61,7 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         return agentBoundClient.CreateAIAgent(
             name: agent.Name,
             description: agent.Description,
-            instructions: agent.Instructions,
+            //instructions: agent.Instructions,
             tools: tools);
     }
 }

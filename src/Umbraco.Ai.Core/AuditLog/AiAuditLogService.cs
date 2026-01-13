@@ -109,43 +109,29 @@ internal sealed class AiAuditLogService : IAiAuditLogService
     /// <inheritdoc />
     public async Task CompleteAuditLogAsync(
         AiAuditLog audit,
-        object? response,
+        AiAuditResponse? response,
         CancellationToken ct = default)
     {
 
         audit.EndTime = DateTime.UtcNow;
         audit.Status = AiAuditLogStatus.Succeeded;
-
-        // Extract token counts from response
-        if (response is ChatResponse chatResponse && chatResponse.Usage is not null)
+        
+        if (response?.Usage is not null)
         {
-            audit.InputTokens = chatResponse.Usage.InputTokenCount.HasValue
-                ? (int?)chatResponse.Usage.InputTokenCount.Value
+            audit.InputTokens = response.Usage.InputTokenCount.HasValue
+                ? (int?)response.Usage.InputTokenCount.Value
                 : null;
-            audit.OutputTokens = chatResponse.Usage.OutputTokenCount.HasValue
-                ? (int?)chatResponse.Usage.OutputTokenCount.Value
+            audit.OutputTokens = response.Usage.OutputTokenCount.HasValue
+                ? (int?)response.Usage.OutputTokenCount.Value
                 : null;
-            audit.TotalTokens = chatResponse.Usage.TotalTokenCount.HasValue
-                ? (int?)chatResponse.Usage.TotalTokenCount.Value
+            audit.TotalTokens = response.Usage.TotalTokenCount.HasValue
+                ? (int?)response.Usage.TotalTokenCount.Value
                 : null;
-
-            // Optionally persist response snapshot
-            if (_options.CurrentValue.PersistResponses && !string.IsNullOrEmpty(chatResponse.Text))
-            {
-                audit.ResponseSnapshot = chatResponse.Text;
-            }
         }
-        else if (response is GeneratedEmbeddings<Embedding<float>> embeddingResponse && embeddingResponse.Usage is not null)
+        
+        if (_options.CurrentValue.PersistResponses && !string.IsNullOrEmpty(response?.Text))
         {
-            audit.InputTokens = embeddingResponse.Usage.InputTokenCount.HasValue
-                ? (int?)embeddingResponse.Usage.InputTokenCount.Value
-                : null;
-            audit.OutputTokens = embeddingResponse.Usage.OutputTokenCount.HasValue
-                ? (int?)embeddingResponse.Usage.OutputTokenCount.Value
-                : null;
-            audit.TotalTokens = embeddingResponse.Usage.TotalTokenCount.HasValue
-                ? (int?)embeddingResponse.Usage.TotalTokenCount.Value
-                : null;
+            audit.ResponseSnapshot = response.Text;
         }
 
         await _auditLogRepository.SaveAsync(audit, ct);

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
@@ -80,7 +81,11 @@ public sealed class AiTelemetryChatMiddleware : IAiChatMiddleware
                 {
                     await _auditLogService.CompleteAuditLogAsync(
                         auditLogHandle.AuditLog,
-                        response,
+                        new AiAuditResponse
+                        {
+                            Text = response.Text,
+                            Usage = response.Usage,
+                        },
                         cancellationToken);
                 }
 
@@ -145,18 +150,29 @@ public sealed class AiTelemetryChatMiddleware : IAiChatMiddleware
                 throw;
             }
 
+            var lastUpdate = default(ChatResponseUpdate);
+            var lastContents = new StringBuilder();
+            
             // Stream updates - audit-log completion handled after streaming completes
             await foreach (var update in stream.WithCancellation(cancellationToken))
             {
+                lastUpdate = update;
+                lastContents.Append(update.Text);
                 yield return update;
             }
 
             // Mark audit-log as completed (no response capture for streaming)
             if (auditLogHandle is not null)
             {
+                var usage = lastUpdate?.Contents.OfType<UsageContent>().FirstOrDefault();
+                
                 await _auditLogService.CompleteAuditLogAsync(
                     auditLogHandle.AuditLog,
-                    null,  // No complete response for streaming
+                    new AiAuditResponse
+                    {
+                        Text = lastContents.ToString(),
+                        Usage = usage?.Details,
+                    },
                     cancellationToken);
             }
 

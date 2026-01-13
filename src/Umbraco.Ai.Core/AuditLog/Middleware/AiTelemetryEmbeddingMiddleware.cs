@@ -73,7 +73,10 @@ public sealed class AiTelemetryEmbeddingMiddleware : IAiEmbeddingMiddleware
                 {
                     await _auditLogService.CompleteAuditLogAsync(
                         auditLogHandle.AuditLog,
-                        result,
+                        new AiAuditResponse
+                        {
+                            Usage = result.Usage,
+                        },
                         cancellationToken);
                 }
 

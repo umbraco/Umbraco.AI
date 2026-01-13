@@ -43,7 +43,7 @@ public interface IAiAuditLogService
     /// <param name="ct">Cancellation token.</param>
     Task CompleteAuditLogAsync(
         AiAuditLog audit,
-        object? response,
+        AiAuditResponse? response,
         CancellationToken ct = default);
 
     /// <summary>

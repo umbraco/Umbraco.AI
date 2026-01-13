@@ -80,7 +80,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "feature",
                     value: item.featureType
-                        ? html`<div style="font-size: 0.9em;">
+                        ? html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
                             <div style="text-transform: capitalize;">${item.featureType}</div>
                             ${item.featureId ? html`<div style="color: var(--uui-color-text-alt); font-size: 0.75em; font-family: monospace;">${item.featureId}</div>` : ""}
                           </div>`
@@ -89,7 +89,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "profile",
                     value: item.profileAlias
-                        ? html`<div style="font-size: 0.9em;">
+                        ? html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
                             <div style="text-transform: capitalize;">${item.profileAlias}</div>
                             ${item.profileId ? html`<div style="color: var(--uui-color-text-alt); font-size: 0.75em; font-family: monospace;">${item.profileId}</div>` : ""}
                           </div>`
@@ -97,7 +97,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                 },
                 {
                     columnAlias: "model",
-                    value: html`<div style="font-size: 0.9em;">
+                    value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
                         <div>${item.modelId}</div>
                         <div style="color: var(--uui-color-text-alt); font-size: 0.85em;">${item.providerId}</div>
                     </div>`,

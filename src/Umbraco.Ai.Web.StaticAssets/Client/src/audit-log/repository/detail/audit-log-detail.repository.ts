@@ -1,8 +1,8 @@
 import { UmbDetailRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbRequestReloadChildrenOfEntityEvent } from "@umbraco-cms/backoffice/entity-action";
-import { UaiAuditLogDetailServerDataSource } from "./audit-detail.server.data-source.ts";
-import { UAI_AUDIT_LOG_DETAIL_STORE_CONTEXT } from "./audit-detail.store.ts";
+import { UaiAuditLogDetailServerDataSource } from "./audit-log-detail.server.data-source.ts";
+import { UAI_AUDIT_LOG_DETAIL_STORE_CONTEXT } from "./audit-log-detail.store.ts";
 import type { UaiAuditLogDetailModel } from "../../types.js";
 import { UAI_AUDIT_LOG_ROOT_ENTITY_TYPE } from "../../entity.js";
 

@@ -1,7 +1,7 @@
 import type { UmbCollectionFilterModel, UmbCollectionRepository } from "@umbraco-cms/backoffice/collection";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
-import { UaiAuditLogCollectionServerDataSource } from "./audit-collection.server.data-source.ts";
+import { UaiAuditLogCollectionServerDataSource } from "./audit-log-collection.server.data-source.ts";
 
 /**
  * Repository for AuditLog collection operations.

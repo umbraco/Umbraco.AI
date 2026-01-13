@@ -1,20 +1,20 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import type { UmbDetailDataSource } from "@umbraco-cms/backoffice/repository";
-// import { tryExecute } from "@umbraco-cms/backoffice/resources";  // TODO: Uncomment when API is available
-// TODO: Replace with actual import once API is regenerated
-// import { AuditLogService } from "../../../api/sdk.gen.js";
-// import { UaiAuditLogTypeMapper } from "../../type-mapper.js";  // TODO: Uncomment when API is available
 import type { UaiAuditLogDetailModel } from "../../types.js";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { AuditLogsService } from "../../../api";
+import { UaiAuditLogTypeMapper } from "../../type-mapper.js";
 
 /**
  * Server data source for AuditLog detail operations.
  * AuditLog Logs are read-only - they're created by the system, not by users.
  */
 export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<UaiAuditLogDetailModel> {
-    // #host: UmbControllerHost;  // TODO: Uncomment when API is available
+    
+    #host: UmbControllerHost; 
 
-    constructor(_host: UmbControllerHost) {
-        // this.#host = host;  // TODO: Uncomment when API is available
+    constructor(host: UmbControllerHost) {
+        this.#host = host; 
     }
 
     /**
@@ -27,12 +27,10 @@ export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<Ua
     /**
      * Reads a trace by its unique identifier (can be either Guid or OpenTelemetry AuditLogId).
      */
-    async read(_unique: string) {
-        // TODO: Uncomment once AuditLogService is available in generated API
-        /*
+    async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            AuditLogService.getAuditLogByIdentifier({ path: { identifier: unique } })
+            AuditLogsService.getAuditLogByIdentifier({ path: { auditLogId: unique } })
         );
 
         if (error || !data) {
@@ -40,11 +38,6 @@ export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<Ua
         }
 
         return { data: UaiAuditLogTypeMapper.toDetailModel(data) };
-        */
-
-        // Temporary mock until API is available
-        console.warn('AuditLogService not yet available - read operation will fail');
-        return { error: { message: 'AuditLogService not yet available' } as any };
     }
 
     /**
@@ -64,12 +57,11 @@ export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<Ua
     /**
      * Deletes a trace by its unique identifier.
      */
-    async delete(_unique: string) {
-        // TODO: Uncomment once AuditLogService is available in generated API
-        /*
+    async delete(unique: string) {
+
         const { error } = await tryExecute(
             this.#host,
-            AuditLogService.deleteAuditLog({ path: { identifier: unique } })
+            AuditLogsService.deleteAuditLog({ path: { auditLogId: unique } })
         );
 
         if (error) {
@@ -77,10 +69,5 @@ export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<Ua
         }
 
         return {};
-        */
-
-        // Temporary mock until API is available
-        console.warn('AuditLogService not yet available - delete operation will fail');
-        return { error: { message: 'AuditLogService not yet available' } as any };
     }
 }

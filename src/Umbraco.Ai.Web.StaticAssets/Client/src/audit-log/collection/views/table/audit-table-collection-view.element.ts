@@ -5,6 +5,7 @@ import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collec
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiAuditLogItemModel, UaiAuditLogStatus } from "../../../types.js";
+import { UAI_AUDIT_LOG_ICON } from "../../constants.ts";
 
 /**
  * Table view for the AuditLog collection.
@@ -27,8 +28,8 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
     private _columns: UmbTableColumn[] = [
         { name: "Timestamp", alias: "timestamp" },
         { name: "User", alias: "user" },
-        { name: "Operation", alias: "operation" },
         { name: "Feature", alias: "feature" },
+        { name: "Profile", alias: "profile" },
         { name: "Model", alias: "model" },
         { name: "Status", alias: "status" },
         { name: "Duration", alias: "duration" },
@@ -66,7 +67,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
     #createTableItems(items: UaiAuditLogItemModel[]) {
         this._items = items.map((item) => ({
             id: item.unique,
-            icon: "icon-pulse",
+            icon: UAI_AUDIT_LOG_ICON,
             data: [
                 {
                     columnAlias: "timestamp",
@@ -77,15 +78,20 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                     value: item.userName ?? item.userId,
                 },
                 {
-                    columnAlias: "operation",
-                    value: item.operationType,
-                },
-                {
                     columnAlias: "feature",
                     value: item.featureType
                         ? html`<div style="font-size: 0.9em;">
                             <div style="text-transform: capitalize;">${item.featureType}</div>
                             ${item.featureId ? html`<div style="color: var(--uui-color-text-alt); font-size: 0.75em; font-family: monospace;">${item.featureId}</div>` : ""}
+                          </div>`
+                        : "—",
+                },
+                {
+                    columnAlias: "profile",
+                    value: item.profileAlias
+                        ? html`<div style="font-size: 0.9em;">
+                            <div style="text-transform: capitalize;">${item.profileAlias}</div>
+                            ${item.profileId ? html`<div style="color: var(--uui-color-text-alt); font-size: 0.75em; font-family: monospace;">${item.profileId}</div>` : ""}
                           </div>`
                         : "—",
                 },

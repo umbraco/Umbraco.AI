@@ -53,16 +53,28 @@ public class AuditLogItemResponseModel
     public string Capability { get; set; } = string.Empty;
 
     /// <summary>
-    /// The model ID used for this request.
+    /// The profile ID used for this request.
     /// </summary>
     [Required]
-    public string ModelId { get; set; } = string.Empty;
+    public string ProfileId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The profile alias used for this request.
+    /// </summary>
+    [Required]
+    public string ProfileAlias { get; set; } = string.Empty;
 
     /// <summary>
     /// The provider ID (e.g., "openai", "azure-openai").
     /// </summary>
     [Required]
     public string ProviderId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The model ID used for this request.
+    /// </summary>
+    [Required]
+    public string ModelId { get; set; } = string.Empty;
 
     /// <summary>
     /// The feature type that initiated this operation (e.g., "prompt", "agent").

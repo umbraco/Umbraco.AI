@@ -4,6 +4,59 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44388' | (string & {});
 };
 
+export type AuditLogDetailResponseModel = {
+    id: string;
+    startTime: string;
+    durationMs?: number | null;
+    status: string;
+    userId: string;
+    userName?: string | null;
+    entityId?: string | null;
+    capability: string;
+    modelId: string;
+    providerId: string;
+    featureType?: string | null;
+    featureId?: string | null;
+    parentAuditLogId?: string | null;
+    metadata?: {
+        [key: string]: string;
+    } | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    errorMessage?: string | null;
+    endTime?: string | null;
+    entityType?: string | null;
+    profileId: string;
+    profileAlias: string;
+    errorCategory?: string | null;
+    totalTokens?: number | null;
+    promptSnapshot?: string | null;
+    responseSnapshot?: string | null;
+    detailLevel: string;
+};
+
+export type AuditLogItemResponseModel = {
+    id: string;
+    startTime: string;
+    durationMs?: number | null;
+    status: string;
+    userId: string;
+    userName?: string | null;
+    entityId?: string | null;
+    capability: string;
+    modelId: string;
+    providerId: string;
+    featureType?: string | null;
+    featureId?: string | null;
+    parentAuditLogId?: string | null;
+    metadata?: {
+        [key: string]: string;
+    } | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    errorMessage?: string | null;
+};
+
 export type ChatMessageModel = {
     role: string;
     content: string;
@@ -165,6 +218,11 @@ export type NotificationHeaderModel = {
     type: EventMessageTypeModel;
 };
 
+export type PagedAuditLogItemResponseModel = {
+    total: number;
+    items: Array<AuditLogItemResponseModel>;
+};
+
 export type PagedConnectionItemResponseModel = {
     total: number;
     items: Array<ConnectionItemResponseModel>;
@@ -252,6 +310,125 @@ export type UsageModel = {
     outputTokens?: number | null;
     totalTokens?: number | null;
 };
+
+export type GetAuditLogsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        status?: string;
+        userId?: string;
+        profileId?: string;
+        providerId?: string;
+        entityId?: string;
+        fromDate?: string;
+        toDate?: string;
+        searchText?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/audit-logs';
+};
+
+export type GetAuditLogsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAuditLogsResponses = {
+    /**
+     * OK
+     */
+    200: PagedAuditLogItemResponseModel;
+};
+
+export type GetAuditLogsResponse = GetAuditLogsResponses[keyof GetAuditLogsResponses];
+
+export type DeleteAuditLogData = {
+    body?: never;
+    path: {
+        auditLogId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/audit-logs/{auditLogId}';
+};
+
+export type DeleteAuditLogErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type DeleteAuditLogError = DeleteAuditLogErrors[keyof DeleteAuditLogErrors];
+
+export type DeleteAuditLogResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteAuditLogResponse = DeleteAuditLogResponses[keyof DeleteAuditLogResponses];
+
+export type GetAuditLogByIdentifierData = {
+    body?: never;
+    path: {
+        auditLogId: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/audit-logs/{auditLogId}';
+};
+
+export type GetAuditLogByIdentifierErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetAuditLogByIdentifierError = GetAuditLogByIdentifierErrors[keyof GetAuditLogByIdentifierErrors];
+
+export type GetAuditLogByIdentifierResponses = {
+    /**
+     * OK
+     */
+    200: AuditLogDetailResponseModel;
+};
+
+export type GetAuditLogByIdentifierResponse = GetAuditLogByIdentifierResponses[keyof GetAuditLogByIdentifierResponses];
+
+export type CleanupAuditLogsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/audit-logs/cleanup';
+};
+
+export type CleanupAuditLogsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type CleanupAuditLogsResponses = {
+    /**
+     * OK
+     */
+    200: number;
+};
+
+export type CleanupAuditLogsResponse = CleanupAuditLogsResponses[keyof CleanupAuditLogsResponses];
 
 export type CompleteChatData = {
     body?: ChatRequestModel;

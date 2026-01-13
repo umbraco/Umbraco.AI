@@ -75,12 +75,12 @@ public class AllAuditLogController : AuditLogControllerBase
         };
 
         var filter = _umbracoMapper.Map<AiAuditLogFilter>(filterRequest) ?? new AiAuditLogFilter();
-        var (auditLogLogs, total) = await _auditLogService.GetAuditLogsPagedAsync(filter, skip, take, cancellationToken);
+        var (auditLogs, total) = await _auditLogService.GetAuditLogsPagedAsync(filter, skip, take, cancellationToken);
 
         var viewModel = new PagedViewModel<AuditLogItemResponseModel>
         {
             Total = total,
-            Items = _umbracoMapper.MapEnumerable<AiAuditLog, AuditLogItemResponseModel>(auditLogLogs)
+            Items = _umbracoMapper.MapEnumerable<AiAuditLog, AuditLogItemResponseModel>(auditLogs)
         };
 
         return Ok(viewModel);

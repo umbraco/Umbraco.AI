@@ -68,8 +68,10 @@ public class AuditLogMapDefinition : IMapDefinition
         target.UserName = source.UserName;
         target.EntityId = source.EntityId;
         target.Capability = source.Capability.ToString();
-        target.ModelId = source.ModelId;
+        target.ProfileId = source.ProfileId.ToString();
+        target.ProfileAlias = source.ProfileAlias;
         target.ProviderId = source.ProviderId;
+        target.ModelId = source.ModelId;
         target.FeatureType = source.FeatureType;
         target.FeatureId = source.FeatureId;
         target.ParentAuditLogId = source.ParentAuditLogId;

@@ -161,12 +161,12 @@ public class Constants
                 /// <summary>
                 /// The route segment for AuditLog features.
                 /// </summary>
-                public const string RouteSegment = "audit-log-logs";
+                public const string RouteSegment = "audit-logs";
 
                 /// <summary>
                 /// The Swagger group name for AuditLog features.
                 /// </summary>
-                public const string GroupName = "AuditLog Logs";
+                public const string GroupName = "Audit Logs";
             }
         }
     }

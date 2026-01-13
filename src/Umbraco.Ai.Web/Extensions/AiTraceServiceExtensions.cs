@@ -1,23 +1,23 @@
-using Umbraco.Ai.Core.Governance;
+using Umbraco.Ai.Core.Audit;
 using Umbraco.Ai.Web.Api.Common.Models;
 
 namespace Umbraco.Ai.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="IAiTraceService"/> to support TraceIdentifier lookups.
+/// Extension methods for <see cref="IAiAuditService"/> to support TraceIdentifier lookups.
 /// </summary>
 internal static class AiTraceServiceExtensions
 {
     /// <summary>
-    /// Tries to get a trace ID by local ID or OpenTelemetry TraceId.
+    /// Tries to get a audit ID by local ID or OpenTelemetry TraceId.
     /// If already a local ID, returns it directly without a database lookup.
     /// </summary>
-    /// <param name="service">The trace service.</param>
+    /// <param name="service">The audit service.</param>
     /// <param name="identifier">The local ID or OpenTelemetry TraceId to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The trace ID if found, otherwise null.</returns>
+    /// <returns>The audit ID if found, otherwise null.</returns>
     public static async Task<Guid?> TryGetTraceIdAsync(
-        this IAiTraceService service,
+        this IAiAuditService service,
         TraceIdentifier identifier,
         CancellationToken cancellationToken = default)
     {
@@ -27,10 +27,10 @@ internal static class AiTraceServiceExtensions
             return identifier.LocalId.Value;
         }
 
-        // For OpenTelemetry TraceId, we need to look up the trace
+        // For OpenTelemetry TraceId, we need to look up the audit
         if (identifier.OTelTraceId != null)
         {
-            var trace = await service.GetTraceByTraceIdAsync(identifier.OTelTraceId, cancellationToken);
+            var trace = await service.GetAuditByTraceIdAsync(identifier.OTelTraceId, cancellationToken);
             return trace?.Id;
         }
 
@@ -38,15 +38,15 @@ internal static class AiTraceServiceExtensions
     }
 
     /// <summary>
-    /// Gets a trace ID by local ID or OpenTelemetry TraceId, throwing if not found.
+    /// Gets a audit ID by local ID or OpenTelemetry TraceId, throwing if not found.
     /// </summary>
-    /// <param name="service">The trace service.</param>
+    /// <param name="service">The audit service.</param>
     /// <param name="identifier">The local ID or OpenTelemetry TraceId to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The trace ID.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the trace is not found.</exception>
+    /// <returns>The audit ID.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the audit is not found.</exception>
     public static async Task<Guid> GetTraceIdAsync(
-        this IAiTraceService service,
+        this IAiAuditService service,
         TraceIdentifier identifier,
         CancellationToken cancellationToken = default)
     {
@@ -58,7 +58,7 @@ internal static class AiTraceServiceExtensions
                 : identifier.OTelTraceId;
 
             throw new InvalidOperationException(
-                $"Unable to find a trace with the identifier '{identifierValue}'");
+                $"Unable to find a audit with the identifier '{identifierValue}'");
         }
 
         return traceId.Value;

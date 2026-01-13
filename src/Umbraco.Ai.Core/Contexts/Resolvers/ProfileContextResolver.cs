@@ -11,11 +11,6 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// </remarks>
 internal sealed class ProfileContextResolver : IAiContextResolver
 {
-    /// <summary>
-    /// Key used to pass the profile ID through ChatOptions.AdditionalProperties.
-    /// </summary>
-    internal const string ProfileIdKey = "Umbraco.Ai.ProfileId";
-
     private readonly IAiContextService _contextService;
     private readonly IAiProfileService _profileService;
 
@@ -37,7 +32,7 @@ internal sealed class ProfileContextResolver : IAiContextResolver
         AiContextResolverRequest request,
         CancellationToken cancellationToken = default)
     {
-        var profileId = request.GetGuidProperty(ProfileIdKey);
+        var profileId = request.GetGuidProperty(Constants.MetadataKeys.ProfileId);
         if (!profileId.HasValue)
         {
             return AiContextResolverResult.Empty;

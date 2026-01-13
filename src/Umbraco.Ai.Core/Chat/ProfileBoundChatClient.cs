@@ -1,6 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.Governance;
+using Umbraco.Ai.Core.Audit;
 using Umbraco.Ai.Core.Profiles;
 
 namespace Umbraco.Ai.Core.Chat;
@@ -30,14 +30,10 @@ internal sealed class ProfileBoundChatClient : BoundChatClientBase
     {
         options ??= new ChatOptions();
         options.AdditionalProperties ??= new AdditionalPropertiesDictionary();
-
-        // Add profile ID for context resolution
-        options.AdditionalProperties.TryAdd(ProfileContextResolver.ProfileIdKey, _profile.Id);
-
-        // Add telemetry metadata for governance tracing
-        options.AdditionalProperties.TryAdd(AiTelemetrySource.ProfileIdTag, _profile.Id);
-        options.AdditionalProperties.TryAdd(AiTelemetrySource.ProfileAliasTag, _profile.Alias);
-        options.AdditionalProperties.TryAdd(AiTelemetrySource.ProviderIdTag, _profile.Model.ProviderId);
+        
+        options.AdditionalProperties.TryAdd(Constants.MetadataKeys.ProfileId, _profile.Id);
+        options.AdditionalProperties.TryAdd(Constants.MetadataKeys.ProfileAlias, _profile.Alias);
+        options.AdditionalProperties.TryAdd(Constants.MetadataKeys.ProviderId, _profile.Model.ProviderId);
         // Note: ModelId should come from options.ModelId, not profile, as it can be overridden
 
         return options;

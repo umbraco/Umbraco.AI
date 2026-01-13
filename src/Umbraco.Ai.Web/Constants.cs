@@ -154,19 +154,19 @@ public class Constants
             }
 
             /// <summary>
-            /// Defines constants for Trace features.
+            /// Defines constants for Audit features.
             /// </summary>
-            public static class Trace
+            public static class Audit
             {
                 /// <summary>
-                /// The route segment for Trace features.
+                /// The route segment for Audit features.
                 /// </summary>
-                public const string RouteSegment = "trace";
+                public const string RouteSegment = "audits";
 
                 /// <summary>
-                /// The Swagger group name for Trace features.
+                /// The Swagger group name for Audit features.
                 /// </summary>
-                public const string GroupName = "Trace";
+                public const string GroupName = "Audits";
             }
         }
     }

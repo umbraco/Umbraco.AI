@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Persistence.Connections;
 using Umbraco.Ai.Persistence.Context;
-using Umbraco.Ai.Persistence.Governance;
+using Umbraco.Ai.Persistence.Audit;
 using Umbraco.Ai.Persistence.Profiles;
 
 namespace Umbraco.Ai.Persistence;
@@ -32,14 +32,14 @@ public class UmbracoAiDbContext : DbContext
     public DbSet<AiContextResourceEntity> ContextResources { get; set; } = null!;
 
     /// <summary>
-    /// AI governance traces.
+    /// AI audit records.
     /// </summary>
-    public DbSet<AiTraceEntity> Traces { get; set; } = null!;
+    public DbSet<AiAuditEntity> Audits { get; set; } = null!;
 
     /// <summary>
-    /// AI execution spans.
+    /// AI audit activities.
     /// </summary>
-    public DbSet<AiExecutionSpanEntity> ExecutionSpans { get; set; } = null!;
+    public DbSet<AiAuditActivityEntity> AuditActivities { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -191,9 +191,9 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.ResourceTypeId);
         });
 
-        modelBuilder.Entity<AiTraceEntity>(entity =>
+        modelBuilder.Entity<AiAuditEntity>(entity =>
         {
-            entity.ToTable("umbracoAiTrace");
+            entity.ToTable("umbracoAiAudit");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.TraceId)
@@ -275,33 +275,33 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.FeatureId);
             entity.HasIndex(e => new { e.FeatureType, e.FeatureId });
 
-            // Relationship to execution spans
-            entity.HasMany(e => e.Spans)
-                .WithOne(s => s.Trace)
-                .HasForeignKey(s => s.TraceId)
+            // Relationship to audit activities
+            entity.HasMany(e => e.Activities)
+                .WithOne(s => s.Audit)
+                .HasForeignKey(s => s.AuditId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<AiExecutionSpanEntity>(entity =>
+        modelBuilder.Entity<AiAuditActivityEntity>(entity =>
         {
-            entity.ToTable("umbracoAiExecutionSpan");
+            entity.ToTable("umbracoAiAuditActivity");
             entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.TraceId)
+            entity.Property(e => e.AuditId)
                 .IsRequired();
 
-            entity.Property(e => e.SpanId)
+            entity.Property(e => e.ActivityId)
                 .HasMaxLength(16)
                 .IsRequired();
 
-            entity.Property(e => e.ParentSpanId)
+            entity.Property(e => e.ParentActivityId)
                 .HasMaxLength(16);
 
-            entity.Property(e => e.SpanName)
+            entity.Property(e => e.ActivityName)
                 .HasMaxLength(255)
                 .IsRequired();
 
-            entity.Property(e => e.SpanType)
+            entity.Property(e => e.ActivityType)
                 .IsRequired();
 
             entity.Property(e => e.SequenceNumber)
@@ -323,9 +323,9 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.TokensUsed);
 
             // Indexes
-            entity.HasIndex(e => e.TraceId);
-            entity.HasIndex(e => e.SpanId);
-            entity.HasIndex(e => new { e.TraceId, e.SequenceNumber });
+            entity.HasIndex(e => e.AuditId);
+            entity.HasIndex(e => e.ActivityId);
+            entity.HasIndex(e => new { e.AuditId, e.SequenceNumber });
         });
     }
 }

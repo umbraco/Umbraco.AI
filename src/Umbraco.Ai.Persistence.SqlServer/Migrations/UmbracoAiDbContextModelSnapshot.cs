@@ -22,75 +22,14 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Audit.AiAuditActivityEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.AuditLog.AiAuditLogEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ActivityId")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<string>("ActivityName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("ActivityType")
+                    b.Property<int>("Capability")
                         .HasColumnType("int");
-
-                    b.Property<Guid>("AuditId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("EndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ErrorData")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InputData")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OutputData")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentActivityId")
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<int?>("RetryCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SequenceNumber")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("TokensUsed")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ActivityId");
-
-                    b.HasIndex("AuditId");
-
-                    b.HasIndex("AuditId", "SequenceNumber");
-
-                    b.ToTable("umbracoAiAuditActivity", (string)null);
-                });
-
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Audit.AiAuditEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("DetailLevel")
                         .HasColumnType("int");
@@ -123,18 +62,19 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<int?>("InputTokens")
                         .HasColumnType("int");
 
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ModelId")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("OperationType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<int?>("OutputTokens")
                         .HasColumnType("int");
+
+                    b.Property<Guid?>("ParentAuditLogId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ProfileAlias")
                         .IsRequired()
@@ -155,11 +95,6 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<string>("ResponseSnapshot")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SpanId")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
-
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
 
@@ -169,13 +104,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<int?>("TotalTokens")
                         .HasColumnType("int");
 
-                    b.Property<string>("TraceId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -187,13 +116,13 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
 
                     b.HasIndex("FeatureId");
 
+                    b.HasIndex("ParentAuditLogId");
+
                     b.HasIndex("ProfileId");
 
                     b.HasIndex("StartTime");
 
                     b.HasIndex("Status");
-
-                    b.HasIndex("TraceId");
 
                     b.HasIndex("UserId");
 
@@ -203,7 +132,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
 
                     b.HasIndex("StartTime", "Status");
 
-                    b.ToTable("umbracoAiAudit", (string)null);
+                    b.ToTable("umbracoAiAuditLog", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", b =>
@@ -372,17 +301,6 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAiProfile", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Audit.AiAuditActivityEntity", b =>
-                {
-                    b.HasOne("Umbraco.Ai.Persistence.Audit.AiAuditEntity", "Audit")
-                        .WithMany("Activities")
-                        .HasForeignKey("AuditId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Audit");
-                });
-
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>
                 {
                     b.HasOne("Umbraco.Ai.Persistence.Context.AiContextEntity", "Context")
@@ -401,11 +319,6 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Audit.AiAuditEntity", b =>
-                {
-                    b.Navigation("Activities");
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>

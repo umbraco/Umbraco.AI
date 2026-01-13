@@ -1,6 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.Audit;
+using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Profiles;
 
 namespace Umbraco.Ai.Core.Chat;

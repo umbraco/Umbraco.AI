@@ -8,8 +8,8 @@ using Umbraco.Ai.Core.Contexts.ResourceTypes;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.EntityAdapter;
-using Umbraco.Ai.Core.Audit;
-using Umbraco.Ai.Core.Audit.Middleware;
+using Umbraco.Ai.Core.AuditLog;
+using Umbraco.Ai.Core.AuditLog.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
@@ -37,8 +37,8 @@ public static partial class UmbracoBuilderExtensions
         // Bind AiOptions from "Umbraco:Ai" section
         services.Configure<AiOptions>(config.GetSection("Umbraco:Ai"));
 
-        // Bind AiAuditOptions from "Umbraco:Ai:Audit" section
-        services.Configure<AiAuditOptions>(config.GetSection("Umbraco:Ai:Audit"));
+        // Bind AiAuditLogOptions from "Umbraco:Ai:AuditLog" section
+        services.Configure<AiAuditLogOptions>(config.GetSection("Umbraco:Ai:AuditLog"));
 
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
@@ -111,12 +111,12 @@ public static partial class UmbracoBuilderExtensions
             .Append<SerializedEntityProcessor>()
             .Append<DefaultSystemMessageProcessor>();
 
-        // Audit infrastructure
-        // Note: IAiAuditRepository and IAiAuditActivityRepository are registered by persistence layer
-        services.AddSingleton<IAiAuditService, AiAuditService>();
+        // AuditLog infrastructure
+        // Note: IAiAuditLogRepository is registered by persistence layer
+        services.AddSingleton<IAiAuditLogService, AiAuditLogService>();
 
-        // Background job for audit cleanup
-        services.AddHostedService<AiAuditCleanupBackgroundJob>();
+        // Background job for audit-log cleanup
+        services.AddHostedService<AiAuditLogCleanupBackgroundJob>();
 
         return builder;
     }

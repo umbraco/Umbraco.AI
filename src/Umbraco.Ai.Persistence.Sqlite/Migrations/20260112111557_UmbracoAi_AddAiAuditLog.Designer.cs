@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Umbraco.Ai.Persistence;
 
@@ -10,125 +11,14 @@ using Umbraco.Ai.Persistence;
 namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAiDbContext))]
-    partial class UmbracoAiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112111557_UmbracoAi_AddAiAuditLog")]
+    partial class UmbracoAi_AddAiAuditLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
-
-            modelBuilder.Entity("Umbraco.Ai.Persistence.AuditLog.AiAuditLogEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Capability")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DetailLevel")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("EndTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EntityId")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EntityType")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ErrorCategory")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("FeatureId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FeatureType")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("InputTokens")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Metadata")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ModelId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("OutputTokens")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("ParentAuditLogId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProfileAlias")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ProfileId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PromptSnapshot")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProviderId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ResponseSnapshot")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("TotalTokens")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FeatureId");
-
-                    b.HasIndex("ParentAuditLogId");
-
-                    b.HasIndex("ProfileId");
-
-                    b.HasIndex("StartTime");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("EntityId", "EntityType");
-
-                    b.HasIndex("FeatureType", "FeatureId");
-
-                    b.HasIndex("StartTime", "Status");
-
-                    b.ToTable("umbracoAiAuditLog", (string)null);
-                });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", b =>
                 {
@@ -243,6 +133,119 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.HasIndex("ResourceTypeId");
 
                     b.ToTable("umbracoAiContextResource", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.AuditLog.AiAuditLogEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Capability")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DetailLevel")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ErrorCategory")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("FeatureId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FeatureType")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("InputTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("OutputTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ParentAuditLogId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProfileAlias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PromptSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResponseSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("TotalTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeatureId");
+
+                    b.HasIndex("ParentAuditLogId");
+
+                    b.HasIndex("ProfileId");
+
+                    b.HasIndex("StartTime");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("EntityId", "EntityType");
+
+                    b.HasIndex("FeatureType", "FeatureId");
+
+                    b.HasIndex("StartTime", "Status");
+
+                    b.ToTable("umbracoAiAuditLog", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>

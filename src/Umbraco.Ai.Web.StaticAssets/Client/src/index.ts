@@ -8,5 +8,5 @@ export * from './profile/index.js';
 export * from './property-editors/index.js';
 export * from './provider/index.js';
 export * from './request-context/index.js';
-export * from './audit/index.js';
+export * from './audit-log/index.js';
 export * from './workspace-registry/index.js';

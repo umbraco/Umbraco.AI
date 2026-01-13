@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Persistence.Connections;
 using Umbraco.Ai.Persistence.Context;
-using Umbraco.Ai.Persistence.Audit;
+using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Profiles;
 
 namespace Umbraco.Ai.Persistence;
@@ -32,14 +32,9 @@ public class UmbracoAiDbContext : DbContext
     public DbSet<AiContextResourceEntity> ContextResources { get; set; } = null!;
 
     /// <summary>
-    /// AI audit records.
+    /// AI audit-log records.
     /// </summary>
-    public DbSet<AiAuditEntity> Audits { get; set; } = null!;
-
-    /// <summary>
-    /// AI audit activities.
-    /// </summary>
-    public DbSet<AiAuditActivityEntity> AuditActivities { get; set; } = null!;
+    public DbSet<AiAuditLogEntity> AuditLogs { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -191,18 +186,10 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.ResourceTypeId);
         });
 
-        modelBuilder.Entity<AiAuditEntity>(entity =>
+        modelBuilder.Entity<AiAuditLogEntity>(entity =>
         {
-            entity.ToTable("umbracoAiAudit");
+            entity.ToTable("umbracoAiAuditLog");
             entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.TraceId)
-                .HasMaxLength(32)
-                .IsRequired();
-
-            entity.Property(e => e.SpanId)
-                .HasMaxLength(16)
-                .IsRequired();
 
             entity.Property(e => e.StartTime)
                 .IsRequired();
@@ -218,8 +205,7 @@ public class UmbracoAiDbContext : DbContext
                 .HasMaxLength(2000);
 
             entity.Property(e => e.UserId)
-                .HasMaxLength(100)
-                .IsRequired();
+                .HasMaxLength(100);
 
             entity.Property(e => e.UserName)
                 .HasMaxLength(255);
@@ -230,8 +216,7 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.EntityType)
                 .HasMaxLength(50);
 
-            entity.Property(e => e.OperationType)
-                .HasMaxLength(100)
+            entity.Property(e => e.Capability)
                 .IsRequired();
 
             entity.Property(e => e.ProfileId)
@@ -264,8 +249,11 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.DetailLevel)
                 .IsRequired();
 
+            entity.Property(e => e.ParentAuditLogId);
+
+            entity.Property(e => e.Metadata);
+
             // Indexes for query performance
-            entity.HasIndex(e => e.TraceId);
             entity.HasIndex(e => e.StartTime);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.UserId);
@@ -274,58 +262,7 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => new { e.StartTime, e.Status });
             entity.HasIndex(e => e.FeatureId);
             entity.HasIndex(e => new { e.FeatureType, e.FeatureId });
-
-            // Relationship to audit activities
-            entity.HasMany(e => e.Activities)
-                .WithOne(s => s.Audit)
-                .HasForeignKey(s => s.AuditId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        modelBuilder.Entity<AiAuditActivityEntity>(entity =>
-        {
-            entity.ToTable("umbracoAiAuditActivity");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.AuditId)
-                .IsRequired();
-
-            entity.Property(e => e.ActivityId)
-                .HasMaxLength(16)
-                .IsRequired();
-
-            entity.Property(e => e.ParentActivityId)
-                .HasMaxLength(16);
-
-            entity.Property(e => e.ActivityName)
-                .HasMaxLength(255)
-                .IsRequired();
-
-            entity.Property(e => e.ActivityType)
-                .IsRequired();
-
-            entity.Property(e => e.SequenceNumber)
-                .IsRequired();
-
-            entity.Property(e => e.StartTime)
-                .IsRequired();
-
-            entity.Property(e => e.EndTime);
-
-            entity.Property(e => e.Status)
-                .IsRequired();
-
-            entity.Property(e => e.InputData);
-            entity.Property(e => e.OutputData);
-            entity.Property(e => e.ErrorData);
-
-            entity.Property(e => e.RetryCount);
-            entity.Property(e => e.TokensUsed);
-
-            // Indexes
-            entity.HasIndex(e => e.AuditId);
-            entity.HasIndex(e => e.ActivityId);
-            entity.HasIndex(e => new { e.AuditId, e.SequenceNumber });
+            entity.HasIndex(e => e.ParentAuditLogId);
         });
     }
 }

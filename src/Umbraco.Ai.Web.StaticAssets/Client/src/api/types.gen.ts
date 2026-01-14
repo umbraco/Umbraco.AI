@@ -13,26 +13,24 @@ export type AuditLogDetailResponseModel = {
     userName?: string | null;
     entityId?: string | null;
     capability: string;
-    modelId: string;
+    profileId: string;
     providerId: string;
+    modelId: string;
     featureType?: string | null;
     featureId?: string | null;
     parentAuditLogId?: string | null;
-    metadata?: {
-        [key: string]: string;
-    } | null;
     inputTokens?: number | null;
     outputTokens?: number | null;
     errorMessage?: string | null;
     endTime?: string | null;
     entityType?: string | null;
-    profileId: string;
     profileAlias: string;
     errorCategory?: string | null;
     totalTokens?: number | null;
     promptSnapshot?: string | null;
     responseSnapshot?: string | null;
     detailLevel: string;
+    metadata?: Array<KeyValuePair2> | null;
 };
 
 export type AuditLogItemResponseModel = {
@@ -44,14 +42,13 @@ export type AuditLogItemResponseModel = {
     userName?: string | null;
     entityId?: string | null;
     capability: string;
-    modelId: string;
+    profileId: string;
+    profileAlias: string;
     providerId: string;
+    modelId: string;
     featureType?: string | null;
     featureId?: string | null;
     parentAuditLogId?: string | null;
-    metadata?: {
-        [key: string]: string;
-    } | null;
     inputTokens?: number | null;
     outputTokens?: number | null;
     errorMessage?: string | null;
@@ -199,6 +196,11 @@ export type GenerateEmbeddingRequestModel = {
     values: Array<string>;
 };
 
+export type KeyValuePair2 = {
+    key?: string | null;
+    value?: string | null;
+};
+
 export type ModelDescriptorResponseModel = {
     model: ModelRefModel;
     name: string;
@@ -305,11 +307,223 @@ export type UpdateProfileRequestModel = {
     tags: Array<string>;
 };
 
+export type UsageBreakdownItemModel = {
+    dimension: string;
+    requestCount: number;
+    totalTokens: number;
+    percentage: number;
+};
+
 export type UsageModel = {
     inputTokens?: number | null;
     outputTokens?: number | null;
     totalTokens?: number | null;
 };
+
+export type UsageSummaryResponseModel = {
+    totalRequests: number;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    successCount: number;
+    failureCount: number;
+    successRate: number;
+    averageDurationMs: number;
+};
+
+export type UsageTimeSeriesPointModel = {
+    timestamp: string;
+    requestCount: number;
+    totalTokens: number;
+    successCount: number;
+    failureCount: number;
+};
+
+export type GetUsageBreakdownByModelData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        granularity?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/analytics/usage-by-model';
+};
+
+export type GetUsageBreakdownByModelErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetUsageBreakdownByModelResponses = {
+    /**
+     * OK
+     */
+    200: Array<UsageBreakdownItemModel>;
+};
+
+export type GetUsageBreakdownByModelResponse = GetUsageBreakdownByModelResponses[keyof GetUsageBreakdownByModelResponses];
+
+export type GetUsageBreakdownByProfileData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        granularity?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/analytics/usage-by-profile';
+};
+
+export type GetUsageBreakdownByProfileErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetUsageBreakdownByProfileResponses = {
+    /**
+     * OK
+     */
+    200: Array<UsageBreakdownItemModel>;
+};
+
+export type GetUsageBreakdownByProfileResponse = GetUsageBreakdownByProfileResponses[keyof GetUsageBreakdownByProfileResponses];
+
+export type GetUsageBreakdownByProviderData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        granularity?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/analytics/usage-by-provider';
+};
+
+export type GetUsageBreakdownByProviderErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetUsageBreakdownByProviderResponses = {
+    /**
+     * OK
+     */
+    200: Array<UsageBreakdownItemModel>;
+};
+
+export type GetUsageBreakdownByProviderResponse = GetUsageBreakdownByProviderResponses[keyof GetUsageBreakdownByProviderResponses];
+
+export type GetUsageBreakdownByUserData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        granularity?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/analytics/usage-by-user';
+};
+
+export type GetUsageBreakdownByUserErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetUsageBreakdownByUserResponses = {
+    /**
+     * OK
+     */
+    200: Array<UsageBreakdownItemModel>;
+};
+
+export type GetUsageBreakdownByUserResponse = GetUsageBreakdownByUserResponses[keyof GetUsageBreakdownByUserResponses];
+
+export type GetUsageSummaryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        granularity?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/analytics/usage-summary';
+};
+
+export type GetUsageSummaryErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetUsageSummaryResponses = {
+    /**
+     * OK
+     */
+    200: UsageSummaryResponseModel;
+};
+
+export type GetUsageSummaryResponse = GetUsageSummaryResponses[keyof GetUsageSummaryResponses];
+
+export type GetUsageTimeSeriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        from?: string;
+        to?: string;
+        granularity?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/analytics/usage-time-series';
+};
+
+export type GetUsageTimeSeriesErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetUsageTimeSeriesResponses = {
+    /**
+     * OK
+     */
+    200: Array<UsageTimeSeriesPointModel>;
+};
+
+export type GetUsageTimeSeriesResponse = GetUsageTimeSeriesResponses[keyof GetUsageTimeSeriesResponses];
 
 export type GetAuditLogsData = {
     body?: never;

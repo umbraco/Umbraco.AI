@@ -32,7 +32,7 @@ internal sealed class AiProfileAiBoundChatClient : AiBoundChatClientBase
         options.AdditionalProperties.TryAdd(Constants.MetadataKeys.ProfileId, _profile.Id);
         options.AdditionalProperties.TryAdd(Constants.MetadataKeys.ProfileAlias, _profile.Alias);
         options.AdditionalProperties.TryAdd(Constants.MetadataKeys.ProviderId, _profile.Model.ProviderId);
-        // Note: ModelId should come from options.ModelId, not profile, as it can be overridden
+        options.AdditionalProperties.TryAdd(Constants.MetadataKeys.ModelId, _profile.Model.ModelId);
 
         return options;
     }

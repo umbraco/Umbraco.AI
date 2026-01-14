@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Umbraco.Ai.Core.Analytics;
+using Umbraco.Cms.Persistence.EFCore.Scoping;
 
 namespace Umbraco.Ai.Persistence.Analytics;
 
@@ -9,30 +10,38 @@ namespace Umbraco.Ai.Persistence.Analytics;
 /// </summary>
 internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
 {
-    private readonly UmbracoAiDbContext _context;
+    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
     private readonly ILogger<EfCoreAiUsageRecordRepository> _logger;
 
     public EfCoreAiUsageRecordRepository(
-        UmbracoAiDbContext context,
+        IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider,
         ILogger<EfCoreAiUsageRecordRepository> logger)
     {
-        _context = context;
+        _scopeProvider = scopeProvider;
         _logger = logger;
     }
 
     /// <inheritdoc />
     public async Task SaveAsync(AiUsageRecord record, CancellationToken ct = default)
     {
-        var entity = AiUsageRecordFactory.BuildUsageRecordEntity(record);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        await _context.UsageRecords.AddAsync(entity, ct);
-        await _context.SaveChangesAsync(ct);
+        await scope.ExecuteWithContextAsync(async db =>
+        {
+            var entity = AiUsageRecordFactory.BuildUsageRecordEntity(record);
+            await db.UsageRecords.AddAsync(entity, ct);
+            await db.SaveChangesAsync(ct);
 
-        _logger.LogDebug(
-            "Saved usage record {RecordId} for profile {ProfileAlias} at {Timestamp}",
-            record.Id,
-            record.ProfileAlias,
-            record.Timestamp);
+            _logger.LogDebug(
+                "Saved usage record {RecordId} for profile {ProfileAlias} at {Timestamp}",
+                record.Id,
+                record.ProfileAlias,
+                record.Timestamp);
+
+            return true;
+        });
+
+        scope.Complete();
     }
 
     /// <inheritdoc />
@@ -41,10 +50,13 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
         DateTime to,
         CancellationToken ct = default)
     {
-        var entities = await _context.UsageRecords
-            .Where(r => r.Timestamp >= from && r.Timestamp < to)
-            .OrderBy(r => r.Timestamp)
-            .ToListAsync(ct);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var entities = await scope.ExecuteWithContextAsync(async db =>
+            await db.UsageRecords
+                .Where(r => r.Timestamp >= from && r.Timestamp < to)
+                .OrderBy(r => r.Timestamp)
+                .ToListAsync(ct));
 
         _logger.LogDebug(
             "Retrieved {Count} usage records for period {From} to {To}",
@@ -52,6 +64,7 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
             from,
             to);
 
+        scope.Complete();
         return entities.Select(AiUsageRecordFactory.BuildUsageRecordDomain);
     }
 
@@ -61,37 +74,49 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
         DateTime to,
         CancellationToken ct = default)
     {
-        var recordsToDelete = await _context.UsageRecords
-            .Where(r => r.Timestamp >= from && r.Timestamp < to)
-            .ToListAsync(ct);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        if (recordsToDelete.Count == 0)
+        await scope.ExecuteWithContextAsync(async db =>
         {
-            _logger.LogDebug(
-                "No usage records found to delete for period {From} to {To}",
+            var recordsToDelete = await db.UsageRecords
+                .Where(r => r.Timestamp >= from && r.Timestamp < to)
+                .ToListAsync(ct);
+
+            if (recordsToDelete.Count == 0)
+            {
+                _logger.LogDebug(
+                    "No usage records found to delete for period {From} to {To}",
+                    from,
+                    to);
+                return true;
+            }
+
+            db.UsageRecords.RemoveRange(recordsToDelete);
+            await db.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "Deleted {Count} usage records for period {From} to {To}",
+                recordsToDelete.Count,
                 from,
                 to);
-            return;
-        }
 
-        _context.UsageRecords.RemoveRange(recordsToDelete);
-        await _context.SaveChangesAsync(ct);
+            return true;
+        });
 
-        _logger.LogInformation(
-            "Deleted {Count} usage records for period {From} to {To}",
-            recordsToDelete.Count,
-            from,
-            to);
+        scope.Complete();
     }
 
     /// <inheritdoc />
     public async Task<DateTime?> GetLastRecordTimestampAsync(CancellationToken ct = default)
     {
-        var lastTimestamp = await _context.UsageRecords
-            .MaxAsync(r => (DateTime?)r.Timestamp, ct);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var lastTimestamp = await scope.ExecuteWithContextAsync(async db =>
+            await db.UsageRecords.MaxAsync(r => (DateTime?)r.Timestamp, ct));
 
         _logger.LogDebug("Last usage record timestamp: {Timestamp}", lastTimestamp);
 
+        scope.Complete();
         return lastTimestamp;
     }
 }

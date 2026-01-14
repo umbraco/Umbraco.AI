@@ -156,4 +156,47 @@ public class UsageBreakdownController : AnalyticsControllerBase
 
         return Ok(responseModels);
     }
+
+    /// <summary>
+    /// Get usage breakdown by user.
+    /// </summary>
+    /// <param name="from">Start time (inclusive, ISO 8601 format).</param>
+    /// <param name="to">End time (exclusive, ISO 8601 format).</param>
+    /// <param name="granularity">Optional granularity (Hourly or Daily). If not provided, auto-selected based on date range.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Usage breakdown by user.</returns>
+    [HttpGet("usage-by-user")]
+    [MapToApiVersion("1.0")]
+    [ProducesResponseType(typeof(IEnumerable<UsageBreakdownItemModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<UsageBreakdownItemModel>>> GetUsageBreakdownByUser(
+        DateTime from,
+        DateTime to,
+        string? granularity = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (from >= to)
+        {
+            return BadRequest("'from' must be before 'to'");
+        }
+
+        // Parse granularity if provided
+        AiUsagePeriod? requestedGranularity = null;
+        if (!string.IsNullOrEmpty(granularity))
+        {
+            if (Enum.TryParse<AiUsagePeriod>(granularity, true, out var parsed))
+            {
+                requestedGranularity = parsed;
+            }
+            else
+            {
+                return BadRequest($"Invalid granularity '{granularity}'. Valid values: Hourly, Daily");
+            }
+        }
+
+        var breakdown = await _analyticsService.GetBreakdownByUserAsync(from, to, requestedGranularity, cancellationToken);
+        var responseModels = _umbracoMapper.MapEnumerable<AiUsageBreakdownItem, UsageBreakdownItemModel>(breakdown);
+
+        return Ok(responseModels);
+    }
 }

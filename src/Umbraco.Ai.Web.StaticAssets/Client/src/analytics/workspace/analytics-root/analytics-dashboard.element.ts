@@ -1,83 +1,96 @@
-import { css, html, customElement } from "@umbraco-cms/backoffice/external/lit";
-import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { UaiAnalyticsBaseViewElement } from '../analytics-base-view.element.js';
+import { analyticsRepository, type UaiAnalyticsQueryParams } from '../../repository/index.js';
+import type {
+    UsageSummaryResponseModel,
+    UsageTimeSeriesPointModel,
+    UsageBreakdownItemModel
+} from '../../../api/types.gen.js';
+import './analytics-summary-cards.element.js';
+import './analytics-time-series.element.js';
+import './analytics-breakdown-table.element.js';
 
 @customElement("uai-analytics-dashboard")
-export class UaiAnalyticsDashboardElement extends UmbLitElement {
+export class UaiAnalyticsDashboardElement extends UaiAnalyticsBaseViewElement {
+
+    @state()
+    private _summary?: UsageSummaryResponseModel;
+
+    @state()
+    private _timeSeries?: UsageTimeSeriesPointModel[];
+
+    @state()
+    private _providerBreakdown?: UsageBreakdownItemModel[];
+
+    @state()
+    private _modelBreakdown?: UsageBreakdownItemModel[];
+
+    @state()
+    private _profileBreakdown?: UsageBreakdownItemModel[];
+
+    @state()
+    private _userBreakdown?: UsageBreakdownItemModel[];
 
     constructor() {
         super();
+        this.headline = 'Usage';
     }
 
-    override render() {
+    protected async loadData(params: UaiAnalyticsQueryParams): Promise<void> {
+        const [summary, timeSeries, providerBreakdown, modelBreakdown, profileBreakdown, userBreakdown] = await Promise.all([
+            analyticsRepository.getSummary(params),
+            analyticsRepository.getTimeSeries(params),
+            analyticsRepository.getBreakdownByProvider(params),
+            analyticsRepository.getBreakdownByModel(params),
+            analyticsRepository.getBreakdownByProfile(params),
+            analyticsRepository.getBreakdownByUser(params)
+        ]);
+
+        this._summary = summary;
+        this._timeSeries = timeSeries;
+        this._providerBreakdown = providerBreakdown;
+        this._modelBreakdown = modelBreakdown;
+        this._profileBreakdown = profileBreakdown;
+        this._userBreakdown = userBreakdown;
+    }
+
+    protected renderContent() {
         return html`
-            <div class="dashboard-container">
-                <uui-box headline="AI Usage Analytics">
-                    <div class="placeholder">
-                        <div class="placeholder-icon">
-                            <uui-icon name="icon-chart"></uui-icon>
-                        </div>
-                        <h3>Analytics Dashboard</h3>
-                        <p>AI usage analytics dashboard will be displayed here.</p>
-                        <p class="info">
-                            Track token consumption, request patterns, and performance metrics across your AI integrations.
-                        </p>
-                    </div>
-                </uui-box>
+            <uai-analytics-summary-cards .summary=${this._summary}></uai-analytics-summary-cards>
+
+            <uai-analytics-time-series .data=${this._timeSeries}></uai-analytics-time-series>
+
+            <div class="breakdowns">
+                <uai-analytics-breakdown-table
+                    headline="By Provider"
+                    .data=${this._providerBreakdown}>
+                </uai-analytics-breakdown-table>
+
+                <uai-analytics-breakdown-table
+                    headline="By Model"
+                    .data=${this._modelBreakdown}>
+                </uai-analytics-breakdown-table>
+
+                <uai-analytics-breakdown-table
+                    headline="By Profile"
+                    .data=${this._profileBreakdown}>
+                </uai-analytics-breakdown-table>
+
+                <uai-analytics-breakdown-table
+                    headline="By User"
+                    .data=${this._userBreakdown}>
+                </uai-analytics-breakdown-table>
             </div>
         `;
     }
 
     static override styles = [
-        UmbTextStyles,
+        ...UaiAnalyticsBaseViewElement.styles,
         css`
-            :host {
-                display: block;
-                height: 100%;
-                padding: var(--uui-size-space-6);
-            }
-
-            .dashboard-container {
-                height: 100%;
-            }
-
-            uui-box {
-                height: 100%;
-            }
-
-            .placeholder {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: var(--uui-size-space-6);
-                text-align: center;
-                min-height: 400px;
-            }
-
-            .placeholder-icon {
-                margin-bottom: var(--uui-size-space-5);
-            }
-
-            .placeholder-icon uui-icon {
-                font-size: 4rem;
-                color: var(--uui-color-border-emphasis);
-            }
-
-            .placeholder h3 {
-                margin: 0 0 var(--uui-size-space-3);
-                font-size: var(--uui-type-h4-size);
-                font-weight: 600;
-            }
-
-            .placeholder p {
-                margin: var(--uui-size-space-2) 0;
-                color: var(--uui-color-text-alt);
-            }
-
-            .placeholder .info {
-                max-width: 500px;
-                font-size: var(--uui-type-small-size);
+            .breakdowns {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: var(--uui-size-space-4);
             }
         `,
     ];

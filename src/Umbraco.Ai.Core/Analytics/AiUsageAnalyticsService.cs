@@ -142,6 +142,22 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
             "Unknown Profile");
     }
 
+    /// <inheritdoc />
+    public async Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByUserAsync(
+        DateTime from,
+        DateTime to,
+        AiUsagePeriod? requestedGranularity = null,
+        CancellationToken ct = default)
+    {
+        var granularity = DetermineGranularity(from, to, requestedGranularity);
+        var statistics = await GetStatisticsAsync(from, to, granularity, filter: null, ct);
+
+        return CalculateBreakdown(
+            statistics,
+            s => s.UserId ?? "Anonymous",
+            "Anonymous");
+    }
+
     /// <summary>
     /// Determines the appropriate granularity based on date range.
     /// </summary>

@@ -111,7 +111,7 @@ public sealed class AiAuditContext
             ProfileId = GetGuid(additionalProperties, Constants.MetadataKeys.ProfileId),
             ProfileAlias = GetString(additionalProperties, Constants.MetadataKeys.ProfileAlias),
             ProviderId = GetString(additionalProperties, Constants.MetadataKeys.ProviderId),
-            ModelId = modelId,
+            ModelId = modelId ?? GetString(additionalProperties, Constants.MetadataKeys.ModelId),
             EntityId = GetString(additionalProperties, Constants.MetadataKeys.EntityId),
             EntityType = GetString(additionalProperties, Constants.MetadataKeys.EntityType),
             FeatureType = GetString(additionalProperties, Constants.MetadataKeys.FeatureType),

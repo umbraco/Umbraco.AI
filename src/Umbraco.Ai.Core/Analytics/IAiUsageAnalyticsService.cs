@@ -81,6 +81,20 @@ public interface IAiUsageAnalyticsService
         DateTime to,
         AiUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets a breakdown of usage statistics by user.
+    /// </summary>
+    /// <param name="from">Start time (inclusive).</param>
+    /// <param name="to">End time (exclusive).</param>
+    /// <param name="requestedGranularity">Optional granularity override. If null, auto-selects based on date range.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Usage breakdown by user.</returns>
+    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByUserAsync(
+        DateTime from,
+        DateTime to,
+        AiUsagePeriod? requestedGranularity = null,
+        CancellationToken ct = default);
 }
 
 /// <summary>

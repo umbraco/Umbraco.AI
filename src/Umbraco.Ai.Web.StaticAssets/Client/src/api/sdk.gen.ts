@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
+import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -17,6 +17,86 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: Record<string, unknown>;
 };
+
+export class AnalyticsService {
+    public static getUsageBreakdownByModel<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByModelData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetUsageBreakdownByModelResponses, GetUsageBreakdownByModelErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/analytics/usage-by-model',
+            ...options
+        });
+    }
+    
+    public static getUsageBreakdownByProfile<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByProfileData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProfileErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/analytics/usage-by-profile',
+            ...options
+        });
+    }
+    
+    public static getUsageBreakdownByProvider<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByProviderData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetUsageBreakdownByProviderResponses, GetUsageBreakdownByProviderErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/analytics/usage-by-provider',
+            ...options
+        });
+    }
+    
+    public static getUsageBreakdownByUser<ThrowOnError extends boolean = false>(options?: Options<GetUsageBreakdownByUserData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetUsageBreakdownByUserResponses, GetUsageBreakdownByUserErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/analytics/usage-by-user',
+            ...options
+        });
+    }
+    
+    public static getUsageSummary<ThrowOnError extends boolean = false>(options?: Options<GetUsageSummaryData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetUsageSummaryResponses, GetUsageSummaryErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/analytics/usage-summary',
+            ...options
+        });
+    }
+    
+    public static getUsageTimeSeries<ThrowOnError extends boolean = false>(options?: Options<GetUsageTimeSeriesData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetUsageTimeSeriesResponses, GetUsageTimeSeriesErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/analytics/usage-time-series',
+            ...options
+        });
+    }
+}
 
 export class AuditLogsService {
     public static getAuditLogs<ThrowOnError extends boolean = false>(options?: Options<GetAuditLogsData, ThrowOnError>) {

@@ -114,7 +114,7 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
                 ProfileId = context.ProfileId ?? Guid.Empty,
                 ProfileAlias = context.ProfileAlias ?? "unknown",
                 ProviderId = context.ProviderId ?? "unknown",
-                ModelId = context.ModelId ?? "unknown",
+                ModelId = options?.ModelId ?? context.ModelId ?? "unknown",
                 FeatureType = _options.CurrentValue.IncludeUsageFeatureTypeDimension ? context.FeatureType : null,
                 FeatureId = _options.CurrentValue.IncludeUsageFeatureTypeDimension ? context.FeatureId : null,
                 EntityId = context.EntityId,

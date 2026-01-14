@@ -7,7 +7,7 @@ export const analyticsMenuManifests: ManifestMenuItem[] = [
         type: "menuItem",
         alias: UAI_ANALYTICS_MENU_ITEM_ALIAS,
         name: "AI Analytics Menu Item",
-        weight: -200,
+        weight: -90,
         meta: {
             label: "Analytics",
             icon: "icon-chart",

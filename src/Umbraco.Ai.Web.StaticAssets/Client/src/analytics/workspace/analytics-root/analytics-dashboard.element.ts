@@ -9,7 +9,6 @@ import type {
 import './analytics-summary-cards.element.js';
 import './analytics-time-series.element.js';
 import './analytics-breakdown-table.element.js';
-import { uaiWithProfile } from "../../../profile/directives/with-profile.directive.ts";
 
 @customElement("uai-analytics-dashboard")
 export class UaiAnalyticsDashboardElement extends UaiAnalyticsBaseViewElement {

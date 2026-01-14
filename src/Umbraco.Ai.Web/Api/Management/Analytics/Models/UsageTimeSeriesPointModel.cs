@@ -26,6 +26,18 @@ public class UsageTimeSeriesPointModel
     public long TotalTokens { get; set; }
 
     /// <summary>
+    /// Gets or sets the input tokens consumed in this time period.
+    /// </summary>
+    [Required]
+    public long InputTokens { get; set; }
+
+    /// <summary>
+    /// Gets or sets the output tokens consumed in this time period.
+    /// </summary>
+    [Required]
+    public long OutputTokens { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of successful requests.
     /// </summary>
     [Required]

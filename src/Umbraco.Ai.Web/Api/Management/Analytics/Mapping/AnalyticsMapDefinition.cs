@@ -36,6 +36,8 @@ public class AnalyticsMapDefinition : IMapDefinition
     {
         target.Timestamp = source.Timestamp;
         target.RequestCount = source.RequestCount;
+        target.InputTokens = source.InputTokens;
+        target.OutputTokens = source.OutputTokens;
         target.TotalTokens = source.TotalTokens;
         target.SuccessCount = source.SuccessCount;
         target.FailureCount = source.FailureCount;

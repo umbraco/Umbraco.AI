@@ -85,6 +85,8 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
                 Timestamp = g.Key,
                 RequestCount = g.Sum(s => s.RequestCount),
                 TotalTokens = g.Sum(s => s.TotalTokens),
+                InputTokens = g.Sum(s => s.InputTokens),
+                OutputTokens = g.Sum(s => s.OutputTokens),
                 SuccessCount = g.Sum(s => s.SuccessCount),
                 FailureCount = g.Sum(s => s.FailureCount)
             })

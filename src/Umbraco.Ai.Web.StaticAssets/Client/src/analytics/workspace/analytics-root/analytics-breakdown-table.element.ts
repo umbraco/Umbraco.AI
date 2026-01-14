@@ -85,6 +85,10 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
             uui-box {
                 height: 100%;
             }
+
+            uui-table-row:nth-child(even) {
+                background-color: var(--uui-color-surface-emphasis);
+            }
         `,
     ];
 }

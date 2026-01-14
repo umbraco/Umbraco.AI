@@ -164,6 +164,16 @@ public sealed class AiUsageTimeSeriesPoint
     public required long TotalTokens { get; init; }
 
     /// <summary>
+    /// Gets the input tokens consumed in this time period.
+    /// </summary>
+    public required long InputTokens { get; init; }
+
+    /// <summary>
+    /// Gets the output tokens consumed in this time period.
+    /// </summary>
+    public required long OutputTokens { get; init; }
+
+    /// <summary>
     /// Gets the number of successful requests.
     /// </summary>
     public required int SuccessCount { get; init; }

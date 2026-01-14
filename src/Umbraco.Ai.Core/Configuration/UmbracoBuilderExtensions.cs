@@ -10,6 +10,7 @@ using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.EntityAdapter;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.AuditLog.Middleware;
+using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
@@ -52,11 +53,13 @@ public static partial class UmbracoBuilderExtensions
         // Initialize middleware collection builders with default middleware
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         builder.AiChatMiddleware()
-            .Append<AiTelemetryChatMiddleware>()      // Telemetry first for accurate tracking
-            .Append<AiContextInjectionChatMiddleware>();
+            .Append<AiTrackingChatMiddleware>() 
+            .Append<AiAuditingChatMiddleware>()      // Telemetry first for accurate tracking
+            .Append<AiContextInjectingChatMiddleware>();
 
         builder.AiEmbeddingMiddleware()
-            .Append<AiTelemetryEmbeddingMiddleware>();  // Telemetry first for accurate tracking
+            .Append<AiTrackingEmbeddingMiddleware>()
+            .Append<AiAuditingEmbeddingMiddleware>();  // Telemetry first for accurate tracking
 
         // Tool infrastructure - auto-discover tools via [AiTool] attribute
         builder.AiTools()

@@ -12,19 +12,19 @@ namespace Umbraco.Ai.Core.Contexts.Middleware;
 /// the system prompt and makes the resolved context available via <see cref="IAiContextAccessor"/>
 /// for OnDemand tools.
 /// </remarks>
-public class AiContextInjectionChatMiddleware : IAiChatMiddleware
+public class AiContextInjectingChatMiddleware : IAiChatMiddleware
 {
     private readonly IAiContextResolutionService _contextResolutionService;
     private readonly IAiContextFormatter _contextFormatter;
     private readonly IAiContextAccessor _contextAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextInjectionChatMiddleware"/> class.
+    /// Initializes a new instance of the <see cref="AiContextInjectingChatMiddleware"/> class.
     /// </summary>
     /// <param name="contextResolutionService">The context resolution service.</param>
     /// <param name="contextFormatter">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor.</param>
-    public AiContextInjectionChatMiddleware(
+    public AiContextInjectingChatMiddleware(
         IAiContextResolutionService contextResolutionService,
         IAiContextFormatter contextFormatter,
         IAiContextAccessor contextAccessor)
@@ -37,7 +37,7 @@ public class AiContextInjectionChatMiddleware : IAiChatMiddleware
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new ContextInjectingChatClient(
+        return new AiContextInjectingChatClient(
             client,
             _contextResolutionService,
             _contextFormatter,

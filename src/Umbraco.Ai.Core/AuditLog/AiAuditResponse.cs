@@ -8,9 +8,9 @@ namespace Umbraco.Ai.Core.AuditLog;
 public sealed class AiAuditResponse
 {
     /// <summary>
-    /// Gets or sets the generated response text.
+    /// Gets or sets the generated data.
     /// </summary>
-    public string? Text { get; init; }
+    public object? Data { get; init; }
 
     /// <summary>
     /// Gets or sets the token usage information from Microsoft.Extensions.AI.

@@ -132,9 +132,9 @@ internal sealed class AiAuditLogService : IAiAuditLogService
                 : null;
         }
         
-        if (_options.CurrentValue.PersistResponses && !string.IsNullOrEmpty(response?.Text))
+        if (_options.CurrentValue.PersistResponses && response?.Data != null && !string.IsNullOrEmpty(response.Data.ToString()))
         {
-            audit.ResponseSnapshot = ApplyRedaction(response.Text);
+            audit.ResponseSnapshot = ApplyRedaction(response.Data.ToString());
         }
 
         await _auditLogRepository.SaveAsync(audit, ct);

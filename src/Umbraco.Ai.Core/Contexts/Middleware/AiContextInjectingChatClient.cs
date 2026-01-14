@@ -12,27 +12,26 @@ namespace Umbraco.Ai.Core.Contexts.Middleware;
 /// - Injects "Always" mode resources into the system prompt
 /// - Makes the resolved context available via <see cref="IAiContextAccessor"/> for OnDemand tools
 /// </remarks>
-internal sealed class ContextInjectingChatClient : IChatClient
+internal sealed class AiContextInjectingChatClient : DelegatingChatClient
 {
-    private readonly IChatClient _innerClient;
     private readonly IAiContextResolutionService _contextResolutionService;
     private readonly IAiContextFormatter _contextFormatter;
     private readonly IAiContextAccessor _contextAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ContextInjectingChatClient"/> class.
+    /// Initializes a new instance of the <see cref="AiContextInjectingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
     /// <param name="contextResolutionService">The context resolution service.</param>
     /// <param name="contextFormatter">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor for tool access.</param>
-    public ContextInjectingChatClient(
+    public AiContextInjectingChatClient(
         IChatClient innerClient,
         IAiContextResolutionService contextResolutionService,
         IAiContextFormatter contextFormatter,
         IAiContextAccessor contextAccessor)
+        : base(innerClient)
     {
-        _innerClient = innerClient;
         _contextResolutionService = contextResolutionService;
         _contextFormatter = contextFormatter;
         _contextAccessor = contextAccessor;
@@ -41,7 +40,7 @@ internal sealed class ContextInjectingChatClient : IChatClient
     #region IChatClient
     
     /// <inheritdoc />
-    public async Task<ChatResponse> GetResponseAsync(
+    public override async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
@@ -51,7 +50,7 @@ internal sealed class ContextInjectingChatClient : IChatClient
 
         try
         {
-            return await _innerClient.GetResponseAsync(modifiedMessages, options, cancellationToken);
+            return await InnerClient.GetResponseAsync(modifiedMessages, options, cancellationToken);
         }
         finally
         {
@@ -60,7 +59,7 @@ internal sealed class ContextInjectingChatClient : IChatClient
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public override async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -70,7 +69,7 @@ internal sealed class ContextInjectingChatClient : IChatClient
 
         try
         {
-            await foreach (var update in _innerClient.GetStreamingResponseAsync(modifiedMessages, options, cancellationToken))
+            await foreach (var update in InnerClient.GetStreamingResponseAsync(modifiedMessages, options, cancellationToken))
             {
                 yield return update;
             }
@@ -79,18 +78,6 @@ internal sealed class ContextInjectingChatClient : IChatClient
         {
             contextScope?.Dispose();
         }
-    }
-
-    /// <inheritdoc />
-    public object? GetService(Type serviceType, object? key = null)
-    {
-        return _innerClient.GetService(serviceType, key);
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _innerClient.Dispose();
     }
 
     #endregion

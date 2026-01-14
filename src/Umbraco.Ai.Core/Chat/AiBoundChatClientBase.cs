@@ -11,7 +11,7 @@ namespace Umbraco.Ai.Core.Chat;
 /// Subclasses override <see cref="TransformMessages"/> and/or <see cref="TransformOptions"/>
 /// to customize behavior.
 /// </remarks>
-public abstract class BoundChatClientBase : IChatClient
+public abstract class AiBoundChatClientBase : IChatClient
 {
     /// <summary>
     /// Gets the inner chat client that this decorator delegates to.
@@ -19,16 +19,16 @@ public abstract class BoundChatClientBase : IChatClient
     protected IChatClient InnerClient { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BoundChatClientBase"/> class.
+    /// Initializes a new instance of the <see cref="AiBoundChatClientBase"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
-    protected BoundChatClientBase(IChatClient innerClient)
+    protected AiBoundChatClientBase(IChatClient innerClient)
     {
         InnerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
     }
 
     /// <inheritdoc />
-    public Task<ChatResponse> GetResponseAsync(
+    public virtual Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
@@ -40,7 +40,7 @@ public abstract class BoundChatClientBase : IChatClient
     }
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    public virtual async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
         IEnumerable<ChatMessage> chatMessages,
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)

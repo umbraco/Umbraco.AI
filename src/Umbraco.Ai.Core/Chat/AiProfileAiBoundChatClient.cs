@@ -1,6 +1,4 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Profiles;
 
 namespace Umbraco.Ai.Core.Chat;
@@ -10,16 +8,16 @@ namespace Umbraco.Ai.Core.Chat;
 /// This ensures profile contexts are always resolved and telemetry data is captured without callers needing
 /// to remember to pass metadata in ChatOptions.
 /// </summary>
-internal sealed class ProfileBoundChatClient : BoundChatClientBase
+internal sealed class AiProfileAiBoundChatClient : AiBoundChatClientBase
 {
     private readonly AiProfile _profile;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ProfileBoundChatClient"/> class.
+    /// Initializes a new instance of the <see cref="AiProfileAiBoundChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
     /// <param name="profile">The profile to bind to all requests.</param>
-    public ProfileBoundChatClient(IChatClient innerClient, AiProfile profile)
+    public AiProfileAiBoundChatClient(IChatClient innerClient, AiProfile profile)
         : base(innerClient)
     {
         _profile = profile ?? throw new ArgumentNullException(nameof(profile));

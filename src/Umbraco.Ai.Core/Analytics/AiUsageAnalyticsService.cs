@@ -107,6 +107,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         return CalculateBreakdown(
             statistics,
             s => s.ProviderId,
+            null, // Providers don't have friendly names
             "Unknown Provider");
     }
 
@@ -123,6 +124,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         return CalculateBreakdown(
             statistics,
             s => s.ModelId,
+            null, // Models don't have friendly names
             "Unknown Model");
     }
 
@@ -139,6 +141,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         return CalculateBreakdown(
             statistics,
             s => s.ProfileId.ToString(),
+            s => s.ProfileAlias, // Include profile alias as friendly name
             "Unknown Profile");
     }
 
@@ -155,6 +158,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         return CalculateBreakdown(
             statistics,
             s => s.UserId ?? "Anonymous",
+            s => s.UserName, // Include user name as friendly name
             "Anonymous");
     }
 
@@ -282,8 +286,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
                 r.ProviderId,
                 r.ModelId,
                 r.ProfileId,
+                r.ProfileAlias,
                 r.Capability,
                 r.UserId,
+                r.UserName,
                 r.EntityType,
                 r.FeatureType
             })
@@ -294,8 +300,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
                 ProviderId = g.Key.ProviderId,
                 ModelId = g.Key.ModelId,
                 ProfileId = g.Key.ProfileId,
+                ProfileAlias = g.Key.ProfileAlias,
                 Capability = g.Key.Capability,
                 UserId = g.Key.UserId,
+                UserName = g.Key.UserName,
                 EntityType = g.Key.EntityType,
                 FeatureType = g.Key.FeatureType,
                 RequestCount = g.Count(),
@@ -356,6 +364,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     private static IEnumerable<AiUsageBreakdownItem> CalculateBreakdown(
         IEnumerable<AiUsageStatistics> statistics,
         Func<AiUsageStatistics, string> dimensionSelector,
+        Func<AiUsageStatistics, string?>? nameSelector,
         string unknownLabel)
     {
         var statsList = statistics.ToList();
@@ -366,10 +375,15 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         var totalRequests = statsList.Sum(s => s.RequestCount);
 
         var breakdown = statsList
-            .GroupBy(dimensionSelector)
+            .GroupBy(s => new
+            {
+                Dimension = dimensionSelector(s),
+                Name = nameSelector?.Invoke(s)
+            })
             .Select(g => new AiUsageBreakdownItem
             {
-                Dimension = string.IsNullOrEmpty(g.Key) ? unknownLabel : g.Key,
+                Dimension = string.IsNullOrEmpty(g.Key.Dimension) ? unknownLabel : g.Key.Dimension,
+                DimensionName = g.Key.Name,
                 RequestCount = g.Sum(s => s.RequestCount),
                 TotalTokens = g.Sum(s => s.TotalTokens),
                 Percentage = totalRequests > 0

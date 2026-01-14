@@ -45,6 +45,7 @@ public class AnalyticsMapDefinition : IMapDefinition
     private static void MapToBreakdownItem(AiUsageBreakdownItem source, UsageBreakdownItemModel target, MapperContext context)
     {
         target.Dimension = source.Dimension;
+        target.DimensionName = source.DimensionName;
         target.RequestCount = source.RequestCount;
         target.TotalTokens = source.TotalTokens;
         target.Percentage = source.Percentage;

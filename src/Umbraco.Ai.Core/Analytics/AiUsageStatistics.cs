@@ -43,6 +43,16 @@ public sealed class AiUsageStatistics
     public string? UserId { get; init; }
 
     /// <summary>
+    /// Gets the user name for the UserId dimension.
+    /// </summary>
+    public string? UserName { get; init; }
+
+    /// <summary>
+    /// Gets the profile alias for the ProfileId dimension.
+    /// </summary>
+    public string? ProfileAlias { get; init; }
+
+    /// <summary>
     /// Gets the entity type dimension, if included in aggregation.
     /// </summary>
     public string? EntityType { get; init; }

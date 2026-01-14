@@ -177,7 +177,6 @@ export abstract class UaiAnalyticsBaseViewElement extends UmbLitElement {
         css`
             :host {
                 display: block;
-                height: 100%;
                 padding: var(--uui-size-space-6);
             }
 

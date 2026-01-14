@@ -11,6 +11,9 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
 
     @property({ type: Array })
     data?: UsageBreakdownItemModel[];
+    
+    @property({ type: Function })
+    nameTemplate: (name: string) => unknown = (name: string) => name;
 
     private _formatNumber(num: number): string {
         return new Intl.NumberFormat().format(num);
@@ -40,7 +43,7 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
                     </uui-table-head>
                     ${this.data.map(item => html`
                         <uui-table-row>
-                            <uui-table-cell>${item.dimension}</uui-table-cell>
+                            <uui-table-cell>${item.dimensionName ?? this.nameTemplate(item.dimension)}</uui-table-cell>
                             <uui-table-cell style="text-align: right;">${this._formatNumber(item.requestCount)}</uui-table-cell>
                             <uui-table-cell style="text-align: right;">${this._formatNumber(item.totalTokens)}</uui-table-cell>
                             <uui-table-cell style="text-align: right;">${this._formatPercentage(item.percentage / 100)}</uui-table-cell>

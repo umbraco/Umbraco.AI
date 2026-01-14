@@ -42,6 +42,16 @@ public class AiUsageStatisticsDailyEntity
     public string? UserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the user name for the UserId dimension.
+    /// </summary>
+    public string? UserName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the profile alias for the ProfileId dimension.
+    /// </summary>
+    public string? ProfileAlias { get; set; }
+
+    /// <summary>
     /// Gets or sets the entity type dimension, if included in aggregation.
     /// </summary>
     public string? EntityType { get; set; }

@@ -309,6 +309,7 @@ export type UpdateProfileRequestModel = {
 
 export type UsageBreakdownItemModel = {
     dimension: string;
+    dimensionName: string;
     requestCount: number;
     totalTokens: number;
     percentage: number;

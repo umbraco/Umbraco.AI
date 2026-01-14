@@ -145,6 +145,9 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<DateTime>("Period")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ProfileAlias")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uniqueidentifier");
 
@@ -168,6 +171,9 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<string>("UserId")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -223,6 +229,9 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<DateTime>("Period")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ProfileAlias")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uniqueidentifier");
 
@@ -246,6 +255,9 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<string>("UserId")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

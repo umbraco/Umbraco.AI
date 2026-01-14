@@ -9,12 +9,46 @@ export class UaiAnalyticsSummaryCardsElement extends UmbLitElement {
     @property({ type: Object })
     summary?: UsageSummaryResponseModel;
 
-    private _formatNumber(num: number): string {
-        return new Intl.NumberFormat().format(num);
+    private _formatIntWithK(value: number, decimals: number = 1): string {
+
+        const abs = Math.abs(value);
+
+        if (abs < 1000) {
+            return value.toString();
+        }
+
+        const formatted = (abs / 1000).toFixed(decimals);
+        const clean = formatted.replace(/\.0+$/, "");
+
+        return `${value < 0 ? "-" : ""}${clean}k`;
     }
 
     private _formatPercentage(num: number): string {
         return `${(num * 100).toFixed(1)}%`;
+    }
+
+    private _formatMs(ms: number, decimals: number = 1): string {
+        
+        const units = [
+            { label: "d", value: 24 * 60 * 60 * 1000 },
+            { label: "h", value: 60 * 60 * 1000 },
+            { label: "m", value: 60 * 1000 },
+            { label: "s", value: 1000 },
+            { label: "ms", value: 1 },
+        ];
+
+        for (const unit of units) {
+            if (ms >= unit.value) {
+                const result = ms / unit.value;
+                const rounded =
+                    unit.label === "ms"
+                        ? Math.round(result)
+                        : Number(result.toFixed(decimals));
+                return `${rounded}${unit.label}`;
+            }
+        }
+
+        return "0ms";
     }
 
     override render() {
@@ -27,19 +61,32 @@ export class UaiAnalyticsSummaryCardsElement extends UmbLitElement {
                 <uui-card class="summary-card">
                     <div class="card-icon"><uui-icon name="icon-activity"></uui-icon></div>
                     <div class="card-content">
-                        <div class="card-value">${this._formatNumber(totalRequests)}</div>
+                        <div class="card-value">${this._formatIntWithK(totalRequests)}</div>
                         <div class="card-label">Total Requests</div>
+                    </div>
+                </uui-card>
+
+                <uui-card class="summary-card">
+                    <div class="card-icon"><uui-icon name="icon-page-down"></uui-icon></div>
+                    <div class="card-content">
+                        <div class="card-value">${this._formatIntWithK(inputTokens)}</div>
+                        <div class="card-label">Input Tokens</div>
+                    </div>
+                </uui-card>
+
+                <uui-card class="summary-card">
+                    <div class="card-icon"><uui-icon name="icon-page-up"></uui-icon></div>
+                    <div class="card-content">
+                        <div class="card-value">${this._formatIntWithK(outputTokens)}</div>
+                        <div class="card-label">Output Tokens</div>
                     </div>
                 </uui-card>
 
                 <uui-card class="summary-card">
                     <div class="card-icon"><uui-icon name="icon-coin"></uui-icon></div>
                     <div class="card-content">
-                        <div class="card-value">${this._formatNumber(totalTokens)}</div>
+                        <div class="card-value">${this._formatIntWithK(totalTokens)}</div>
                         <div class="card-label">Total Tokens</div>
-                        <div class="card-detail">
-                            ${this._formatNumber(inputTokens)} in · ${this._formatNumber(outputTokens)} out
-                        </div>
                     </div>
                 </uui-card>
 
@@ -54,7 +101,7 @@ export class UaiAnalyticsSummaryCardsElement extends UmbLitElement {
                 <uui-card class="summary-card">
                     <div class="card-icon"><uui-icon name="icon-time"></uui-icon></div>
                     <div class="card-content">
-                        <div class="card-value">${averageDurationMs}ms</div>
+                        <div class="card-value">${this._formatMs(averageDurationMs)}</div>
                         <div class="card-label">Avg Duration</div>
                     </div>
                 </uui-card>
@@ -77,7 +124,7 @@ export class UaiAnalyticsSummaryCardsElement extends UmbLitElement {
 
             .summary-card {
                 display: flex;
-                gap: var(--uui-size-space-4);
+                gap: var(--uui-size-space-2);
                 padding: var(--uui-size-space-5);
             }
 
@@ -98,13 +145,12 @@ export class UaiAnalyticsSummaryCardsElement extends UmbLitElement {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
-                gap: var(--uui-size-space-1);
             }
 
             .card-value {
                 font-size: var(--uui-type-h3-size);
                 font-weight: 700;
-                line-height: 1.2;
+                line-height: 1;
             }
 
             .card-label {

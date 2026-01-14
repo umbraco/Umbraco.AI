@@ -185,6 +185,12 @@ public sealed class AiUsageBreakdownItem
     public required string Dimension { get; init; }
 
     /// <summary>
+    /// Gets the friendly name for this dimension (e.g., profile alias, user name).
+    /// Null for dimensions that don't have friendly names (provider, model).
+    /// </summary>
+    public string? DimensionName { get; init; }
+
+    /// <summary>
     /// Gets the number of requests for this dimension.
     /// </summary>
     public required int RequestCount { get; init; }

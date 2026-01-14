@@ -14,6 +14,12 @@ public class UsageBreakdownItemModel
     public string Dimension { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the friendly name for this dimension (e.g., profile alias, user name).
+    /// Null for dimensions that don't have friendly names (provider, model).
+    /// </summary>
+    public string? DimensionName { get; set; }
+
+    /// <summary>
     /// Gets or sets the number of requests for this dimension.
     /// </summary>
     [Required]

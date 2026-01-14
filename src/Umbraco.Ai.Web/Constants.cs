@@ -168,6 +168,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Audit Logs";
             }
+
+            /// <summary>
+            /// Defines constants for Analytics features.
+            /// </summary>
+            public static class Analytics
+            {
+                /// <summary>
+                /// The route segment for Analytics features.
+                /// </summary>
+                public const string RouteSegment = "analytics";
+
+                /// <summary>
+                /// The Swagger group name for Analytics features.
+                /// </summary>
+                public const string GroupName = "Analytics";
+            }
         }
     }
 }

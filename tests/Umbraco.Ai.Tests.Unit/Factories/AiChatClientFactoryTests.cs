@@ -355,8 +355,8 @@ public class AiChatClientFactoryTests
         var client = await factoryWithMiddleware.CreateClientAsync(profile);
 
         // Assert - verify middleware applied in correct order
-        // Note: The factory wraps the final client in ProfileBoundChatClient for automatic context resolution
-        client.ShouldBeOfType<ProfileBoundChatClient>();
+        // Note: The factory wraps the final client in AiProfileAiBoundChatClient for automatic context resolution
+        client.ShouldBeOfType<AiProfileAiBoundChatClient>();
         applicationOrder.ShouldBe(new[] { "middleware1", "middleware2" });
         middleware1Mock.Verify(m => m.Apply(It.IsAny<IChatClient>()), Times.Once);
         middleware2Mock.Verify(m => m.Apply(It.IsAny<IChatClient>()), Times.Once);

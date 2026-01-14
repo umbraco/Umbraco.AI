@@ -3,6 +3,7 @@ using Umbraco.Ai.Persistence.Connections;
 using Umbraco.Ai.Persistence.Context;
 using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Profiles;
+using Umbraco.Ai.Persistence.Analytics;
 
 namespace Umbraco.Ai.Persistence;
 
@@ -35,6 +36,21 @@ public class UmbracoAiDbContext : DbContext
     /// AI audit-log records.
     /// </summary>
     public DbSet<AiAuditLogEntity> AuditLogs { get; set; } = null!;
+
+    /// <summary>
+    /// AI usage records (raw, ephemeral).
+    /// </summary>
+    public DbSet<AiUsageRecordEntity> UsageRecords { get; set; } = null!;
+
+    /// <summary>
+    /// AI usage statistics (hourly aggregation).
+    /// </summary>
+    public DbSet<AiUsageStatisticsHourlyEntity> UsageStatisticsHourly { get; set; } = null!;
+
+    /// <summary>
+    /// AI usage statistics (daily aggregation).
+    /// </summary>
+    public DbSet<AiUsageStatisticsDailyEntity> UsageStatisticsDaily { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -263,6 +279,208 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.FeatureId);
             entity.HasIndex(e => new { e.FeatureType, e.FeatureId });
             entity.HasIndex(e => e.ParentAuditLogId);
+        });
+
+        modelBuilder.Entity<AiUsageRecordEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiUsageRecord");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Timestamp)
+                .IsRequired();
+
+            entity.Property(e => e.Capability)
+                .IsRequired();
+
+            entity.Property(e => e.UserId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.UserName)
+                .HasMaxLength(255);
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired();
+
+            entity.Property(e => e.ProfileAlias)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.ProviderId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.ModelId)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.FeatureType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.FeatureId);
+
+            entity.Property(e => e.EntityId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.InputTokens)
+                .IsRequired();
+
+            entity.Property(e => e.OutputTokens)
+                .IsRequired();
+
+            entity.Property(e => e.TotalTokens)
+                .IsRequired();
+
+            entity.Property(e => e.DurationMs)
+                .IsRequired();
+
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(e => e.ErrorMessage)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+
+            // Indexes for query performance (critical for hourly aggregation queries)
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => new { e.Timestamp, e.Status });
+        });
+
+        modelBuilder.Entity<AiUsageStatisticsHourlyEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiUsageStatisticsHourly");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Period)
+                .IsRequired();
+
+            entity.Property(e => e.ProviderId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.ModelId)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired();
+
+            entity.Property(e => e.Capability)
+                .IsRequired();
+
+            entity.Property(e => e.UserId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.FeatureType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.RequestCount)
+                .IsRequired();
+
+            entity.Property(e => e.SuccessCount)
+                .IsRequired();
+
+            entity.Property(e => e.FailureCount)
+                .IsRequired();
+
+            entity.Property(e => e.InputTokens)
+                .IsRequired();
+
+            entity.Property(e => e.OutputTokens)
+                .IsRequired();
+
+            entity.Property(e => e.TotalTokens)
+                .IsRequired();
+
+            entity.Property(e => e.TotalDurationMs)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+
+            // Indexes for query performance
+            entity.HasIndex(e => e.Period);
+            entity.HasIndex(e => new { e.Period, e.ProviderId });
+            entity.HasIndex(e => new { e.Period, e.ModelId });
+            entity.HasIndex(e => new { e.Period, e.ProfileId });
+
+            // Composite unique index for idempotent upserts
+            entity.HasIndex(e => new { e.Period, e.ProviderId, e.ModelId, e.ProfileId, e.Capability, e.UserId, e.EntityType, e.FeatureType })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<AiUsageStatisticsDailyEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiUsageStatisticsDaily");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Period)
+                .IsRequired();
+
+            entity.Property(e => e.ProviderId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.ModelId)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired();
+
+            entity.Property(e => e.Capability)
+                .IsRequired();
+
+            entity.Property(e => e.UserId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.FeatureType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.RequestCount)
+                .IsRequired();
+
+            entity.Property(e => e.SuccessCount)
+                .IsRequired();
+
+            entity.Property(e => e.FailureCount)
+                .IsRequired();
+
+            entity.Property(e => e.InputTokens)
+                .IsRequired();
+
+            entity.Property(e => e.OutputTokens)
+                .IsRequired();
+
+            entity.Property(e => e.TotalTokens)
+                .IsRequired();
+
+            entity.Property(e => e.TotalDurationMs)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+
+            // Indexes for query performance
+            entity.HasIndex(e => e.Period);
+            entity.HasIndex(e => new { e.Period, e.ProviderId });
+            entity.HasIndex(e => new { e.Period, e.ModelId });
+            entity.HasIndex(e => new { e.Period, e.ProfileId });
+
+            // Composite unique index for idempotent upserts
+            entity.HasIndex(e => new { e.Period, e.ProviderId, e.ModelId, e.ProfileId, e.Capability, e.UserId, e.EntityType, e.FeatureType })
+                .IsUnique();
         });
     }
 }

@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Core.Analytics;
+using Umbraco.Ai.Core.Analytics.Middleware;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Contexts;
@@ -16,6 +18,7 @@ using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.RequestContext;
 using Umbraco.Ai.Core.RequestContext.Processors;
+using Umbraco.Ai.Core.TaskQueue;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -41,6 +44,9 @@ public static partial class UmbracoBuilderExtensions
         // Bind AiAuditLogOptions from "Umbraco:Ai:AuditLog" section
         services.Configure<AiAuditLogOptions>(config.GetSection("Umbraco:Ai:AuditLog"));
 
+        // Bind AiAnalyticsOptions from "Umbraco:Ai:Analytics" section
+        services.Configure<AiAnalyticsOptions>(config.GetSection("Umbraco:Ai:Analytics"));
+
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
         services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
@@ -53,17 +59,23 @@ public static partial class UmbracoBuilderExtensions
         // Initialize middleware collection builders with default middleware
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         builder.AiChatMiddleware()
-            .Append<AiTrackingChatMiddleware>() 
-            .Append<AiAuditingChatMiddleware>()      // Telemetry first for accurate tracking
-            .Append<AiContextInjectingChatMiddleware>();
+            .Append<AiTrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
+            .Append<AiUsageRecordingChatMiddleware>()    // Records usage to database for analytics
+            .Append<AiAuditingChatMiddleware>()          // Audit logging (optional, can be disabled)
+            .Append<AiContextInjectingChatMiddleware>(); // Context injection
 
         builder.AiEmbeddingMiddleware()
-            .Append<AiTrackingEmbeddingMiddleware>()
-            .Append<AiAuditingEmbeddingMiddleware>();  // Telemetry first for accurate tracking
+            .Append<AiTrackingEmbeddingMiddleware>()        // Tracks usage details
+            .Append<AiUsageRecordingEmbeddingMiddleware>()  // Records usage to database for analytics
+            .Append<AiAuditingEmbeddingMiddleware>();       // Audit logging (optional, can be disabled)
 
         // Tool infrastructure - auto-discover tools via [AiTool] attribute
         builder.AiTools()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiTool, AiToolAttribute>(cache: true));
+        
+        // Background task queue for async audit recording
+        services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+        services.AddHostedService<BackgroundTaskQueueWorker>();
 
         // Function factory for creating MEAI AIFunction instances
         services.AddSingleton<IAiFunctionFactory, AiFunctionFactory>();
@@ -120,6 +132,17 @@ public static partial class UmbracoBuilderExtensions
 
         // Background job for audit-log cleanup
         services.AddHostedService<AiAuditLogCleanupBackgroundJob>();
+
+        // Analytics infrastructure
+        // Note: IAiUsageRecordRepository and IAiUsageStatisticsRepository are registered by persistence layer
+        services.AddSingleton<IAiUsageRecordingService, AiUsageRecordingService>();
+        services.AddSingleton<IAiUsageAggregationService, AiUsageAggregationService>();
+        services.AddSingleton<IAiUsageAnalyticsService, AiUsageAnalyticsService>();
+
+        // Background jobs for analytics aggregation and cleanup
+        services.AddHostedService<AiUsageHourlyAggregationJob>();
+        services.AddHostedService<AiUsageDailyRollupJob>();
+        services.AddHostedService<AiUsageStatisticsCleanupJob>();
 
         return builder;
     }

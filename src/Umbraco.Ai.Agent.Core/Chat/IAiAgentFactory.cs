@@ -38,10 +38,12 @@ public interface IAiAgentFactory
     /// <param name="additionalTools">Optional additional tools to include in the agent.
     ///  Primarily used for frontend tool injection in AG-UI scenarios.
     /// </param>
+    /// <param name="additionalProperties">Optional additional to pass to chat client</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured <see cref="ChatClientAgent"/> with tools and context injection.</returns>
     Task<AIAgent> CreateAgentAsync(
         AiAgent agent,
         IEnumerable<AITool>? additionalTools = null,
+        IEnumerable<KeyValuePair<string, object?>>? additionalProperties = null,
         CancellationToken cancellationToken = default);
 }

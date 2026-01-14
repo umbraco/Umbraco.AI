@@ -10,6 +10,9 @@ using Umbraco.Ai.Agui.Streaming;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Web.Api.Common.Models;
 
+using AiCoreConstants = Umbraco.Ai.Core.Constants;
+using AgentCoreConstants = Umbraco.Ai.Agent.Core.Constants;
+
 namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
@@ -107,7 +110,17 @@ public class RunAgentController : AgentControllerBase
 
         // 3. Convert frontend tools and create MAF agent
         var frontendTools = _toolConverter.ConvertToFrontendTools(request.Tools);
-        var mafAgent = await _agentFactory.CreateAgentAsync(agent, frontendTools, cancellationToken);
+        var additionalProperties = new Dictionary<string, object?>
+        {
+            { AgentCoreConstants.MetadataKeys.RunId, request.RunId },
+            { AgentCoreConstants.MetadataKeys.ThreadId, request.ThreadId },
+            { AiCoreConstants.MetadataKeys.LogKeys, new []{ 
+                AgentCoreConstants.MetadataKeys.RunId,
+                AgentCoreConstants.MetadataKeys.ThreadId 
+            }}
+        };
+        var mafAgent = await _agentFactory.CreateAgentAsync(agent, frontendTools, 
+            additionalProperties, cancellationToken);
 
         // 4. Stream via service
         var events = _streamingService.StreamAgentAsync(

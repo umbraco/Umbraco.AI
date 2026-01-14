@@ -36,6 +36,7 @@ internal sealed class AiAgentFactory : IAiAgentFactory
     public async Task<AIAgent> CreateAgentAsync(
         AiAgent agent,
         IEnumerable<AITool>? additionalTools = null,
+        IEnumerable<KeyValuePair<string, object?>>? additionalProperties = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(agent);
@@ -44,7 +45,7 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         var chatClient = await _chatService.GetChatClientAsync(agent.ProfileId, cancellationToken);
 
         // Wrap with AgentBoundChatClient for agent-specific injection
-        var agentBoundClient = new AgentBoundChatClient(chatClient, agent);
+        var agentBoundClient = new AgentBoundChatClient(chatClient, agent, additionalProperties);
 
         // Build tool list - all tools included by default
         var tools = new List<AITool>();

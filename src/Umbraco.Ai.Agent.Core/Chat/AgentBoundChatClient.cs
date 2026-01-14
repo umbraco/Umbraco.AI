@@ -12,16 +12,20 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 internal sealed class AgentBoundChatClient : BoundChatClientBase
 {
     private readonly AiAgent _agent;
+    private readonly IEnumerable<KeyValuePair<string, object?>>? _additionalProperties;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentBoundChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
     /// <param name="agent">The agent definition containing instructions and configuration.</param>
-    public AgentBoundChatClient(IChatClient innerClient, AiAgent agent)
+    /// <param name="additionalProperties">Additional properties to pass to the chat options</param>
+    public AgentBoundChatClient(IChatClient innerClient, AiAgent agent, 
+        IEnumerable<KeyValuePair<string, object?>>? additionalProperties = null)
         : base(innerClient)
     {
         _agent = agent ?? throw new ArgumentNullException(nameof(agent));
+        _additionalProperties = additionalProperties;
     }
 
     /// <inheritdoc />
@@ -34,6 +38,15 @@ internal sealed class AgentBoundChatClient : BoundChatClientBase
         options.AdditionalProperties.TryAdd(CoreConstants.MetadataKeys.FeatureType, "agent");
         options.AdditionalProperties.TryAdd(CoreConstants.MetadataKeys.FeatureId, _agent.Id);
         options.AdditionalProperties.TryAdd(CoreConstants.MetadataKeys.FeatureAlias, _agent.Alias);
+        
+        if (_additionalProperties != null)
+        {
+            foreach (var kvp in _additionalProperties)
+            {
+                options.AdditionalProperties[kvp.Key] = kvp.Value;
+            }
+        }
+        
         return options;
     }
     

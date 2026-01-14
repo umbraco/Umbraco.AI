@@ -4,6 +4,13 @@ export default {
     uaiGeneral: {
         select: "Select",
     },
+    uaiComponents: {
+        pollingButtonTogglePolling: "Toggle Polling",
+        pollingButtonPolling: "Polling",
+        pollingButtonChoosePollingInterval: "Choose Polling Interval",
+        pollingButtonPollingActive: "Polling {0} seconds",
+        pollingButtonPollingInterval: "Every {0} seconds",
+    },
     uaiCapabilities: {
         chat: "Chat",
         embedding: "Embedding",

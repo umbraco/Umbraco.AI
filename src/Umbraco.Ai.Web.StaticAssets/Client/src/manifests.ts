@@ -13,6 +13,7 @@
  */
 
 import { sectionManifests } from "./section/manifests.js";
+import { analyticsManifests } from "./analytics/manifests.js";
 import { connectionManifests } from "./connection/manifests.js";
 import { contextManifests } from "./context/manifests.js";
 import { contextResourceTypeManifests } from "./context-resource-type/manifests.js";
@@ -29,6 +30,7 @@ import { workspaceRegistryManifests } from "./workspace-registry/manifests.js";
 // IMPORTANT: This should only include manifest arrays and nothing else
 export const manifests: Array<UmbExtensionManifest> = [
   ...sectionManifests,
+  ...analyticsManifests,
   ...connectionManifests,
   ...contextResourceTypeManifests,
   ...contextManifests,

@@ -66,7 +66,7 @@ export const UaiAuditLogTypeMapper = {
             promptSnapshot: response.promptSnapshot ?? null,
             responseSnapshot: response.responseSnapshot ?? null,
             detailLevel: response.detailLevel,
-            hasActivities: response.hasActivities,
+            metadata: response.metadata ?? null,
         };
     },
 };

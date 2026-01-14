@@ -75,7 +75,6 @@ public class AuditLogMapDefinition : IMapDefinition
         target.FeatureType = source.FeatureType;
         target.FeatureId = source.FeatureId;
         target.ParentAuditLogId = source.ParentAuditLogId;
-        target.Metadata = source.Metadata is not null ? new Dictionary<string, string>(source.Metadata) : null;
         target.InputTokens = source.InputTokens;
         target.OutputTokens = source.OutputTokens;
         target.ErrorMessage = source.ErrorMessage;
@@ -97,5 +96,6 @@ public class AuditLogMapDefinition : IMapDefinition
         target.PromptSnapshot = source.PromptSnapshot;
         target.ResponseSnapshot = source.ResponseSnapshot;
         target.DetailLevel = source.DetailLevel.ToString();
+        target.Metadata = source.Metadata is not null ? new Dictionary<string, string>(source.Metadata) : null;
     }
 }

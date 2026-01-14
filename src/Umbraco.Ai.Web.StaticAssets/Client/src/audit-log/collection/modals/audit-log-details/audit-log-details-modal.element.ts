@@ -1,4 +1,4 @@
-import { css, customElement, html, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UaiAuditLogDetailsModalData, UaiAuditLogDetailsModalValue, } from "./audit-log-details-modal.token.js";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -194,6 +194,20 @@ export class UaiAuditLogDetailsModalElement extends UmbModalBaseElement<
                                         </td>
                                     </tr>
                                 ` : ''}
+                                ${this._auditLog?.metadata ? html`
+                                    <tr>
+                                        <th>Metadata</th>
+                                        <td>
+                                            ${repeat(this._auditLog?.metadata ?? [],
+                                                (item) => item.key,
+                                                (item) => html`<div class="metadata-entry">
+                                                    <div><strong>${item.key}:</strong></div>
+                                                    <div><pre>${item.value ?? "—"}</pre></div>
+                                                </div>
+                                            `)}
+                                        </td>
+                                    </tr>
+                                ` : ''}
                             </table>
                         `
                     }
@@ -263,6 +277,13 @@ export class UaiAuditLogDetailsModalElement extends UmbModalBaseElement<
             
             uui-button {
                 user-select: none
+            }
+            
+            .metadata-entry {
+                margin-bottom: var(--uui-size-space-4);
+            }
+            .metadata-entry:last-child {
+                margin-bottom: 0;
             }
         `,
     ];

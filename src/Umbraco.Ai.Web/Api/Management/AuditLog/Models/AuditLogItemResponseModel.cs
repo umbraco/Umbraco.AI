@@ -92,11 +92,6 @@ public class AuditLogItemResponseModel
     public Guid? ParentAuditLogId { get; set; }
 
     /// <summary>
-    /// Extensible metadata dictionary for feature-specific context (e.g., AgentRunId, ThreadId).
-    /// </summary>
-    public Dictionary<string, string>? Metadata { get; set; }
-
-    /// <summary>
     /// Number of input tokens consumed.
     /// </summary>
     public int? InputTokens { get; set; }

@@ -58,9 +58,19 @@ public sealed class AiTelemetryEmbeddingMiddleware : IAiEmbeddingMiddleware
                     AiCapability.Embedding,
                     options,
                     values.ToList());
+                
+                Dictionary<string, string>? metadata = null;
+                var logKeys = options?.AdditionalProperties?[Constants.MetadataKeys.LogKeys];
+                if (logKeys is IEnumerable<string> keys)
+                {
+                    metadata = keys.ToDictionary(
+                        key => key,
+                        key => options?.AdditionalProperties?[key]?.ToString() ?? string.Empty);
+                }
 
                 auditLogHandle = await _auditLogService.StartAuditLogScopeAsync(
                     auditLogContext,
+                    metadata: metadata,
                     ct: cancellationToken);
             }
 

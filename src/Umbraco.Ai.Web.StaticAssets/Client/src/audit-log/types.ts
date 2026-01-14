@@ -43,7 +43,7 @@ export interface UaiAuditLogDetailModel extends UaiAuditLogItemModel {
     promptSnapshot: string | null;
     responseSnapshot: string | null;
     detailLevel: string;
-    hasActivities: boolean;
+    metadata: Array<{ key: string, value?:string | null}> | null;
 }
 
 /**

@@ -87,5 +87,10 @@ public static class Constants
         /// Key for entity type in metadata collections.
         /// </summary>
         public const string EntityType = "Umbraco.Ai.EntityType";
+    
+        /// <summary>
+        /// Key for log keys in metadata collections.
+        /// </summary>
+        public const string LogKeys = "Umbraco.Ai.LogKeys";
     }
 }

@@ -479,3 +479,6 @@ src/Umbraco.Commerce.PaymentProviders.Buckaroo/packages.lock.json
 src/**/packages.lock.json
 
 .claude/
+
+# Claude Code temporary session files
+tmpclaude*

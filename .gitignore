@@ -69,3 +69,6 @@ demo/*/App_Plugins/
 demo/*/appsettings.local.json
 
 nul
+
+# Claude Code temporary session files
+tmpclaude*

@@ -41,11 +41,11 @@ internal sealed class AiAgentFactory : IAiAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        // Get base chat client from profile (already has ProfileBoundChatClient wrapping)
+        // Get base chat client from profile (already has AiProfileAiBoundChatClient wrapping)
         var chatClient = await _chatService.GetChatClientAsync(agent.ProfileId, cancellationToken);
 
         // Wrap with AgentBoundChatClient for agent-specific injection
-        var agentBoundClient = new AgentBoundChatClient(chatClient, agent, additionalProperties);
+        var agentBoundClient = new AiAgentBoundChatClient(chatClient, agent, additionalProperties);
 
         // Build tool list - all tools included by default
         var tools = new List<AITool>();

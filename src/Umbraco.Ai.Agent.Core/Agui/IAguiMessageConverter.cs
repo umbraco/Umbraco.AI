@@ -14,7 +14,7 @@ public interface IAguiMessageConverter
     /// <param name="messages">The AG-UI messages to convert.</param>
     /// <returns>A list of chat messages suitable for the AI model.</returns>
     /// <remarks>
-    /// Agent instructions are NOT included here - they are handled by AgentBoundChatClient.
+    /// Agent instructions are NOT included here - they are handled by AiAgentBoundChatClient.
     /// Context is handled separately via <see cref="IAguiContextConverter"/>.
     /// </remarks>
     List<ChatMessage> ConvertToChatMessages(IEnumerable<AguiMessage>? messages);

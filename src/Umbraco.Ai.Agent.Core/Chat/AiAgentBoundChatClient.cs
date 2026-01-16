@@ -9,18 +9,18 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// <summary>
 /// A chat client decorator that binds an agent's configuration to all requests.
 /// </summary>
-internal sealed class AgentBoundChatClient : BoundChatClientBase
+internal sealed class AiAgentBoundChatClient : AiBoundChatClientBase
 {
     private readonly AiAgent _agent;
     private readonly IEnumerable<KeyValuePair<string, object?>>? _additionalProperties;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AgentBoundChatClient"/> class.
+    /// Initializes a new instance of the <see cref="AiAgentBoundChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
     /// <param name="agent">The agent definition containing instructions and configuration.</param>
     /// <param name="additionalProperties">Additional properties to pass to the chat options</param>
-    public AgentBoundChatClient(IChatClient innerClient, AiAgent agent, 
+    public AiAgentBoundChatClient(IChatClient innerClient, AiAgent agent, 
         IEnumerable<KeyValuePair<string, object?>>? additionalProperties = null)
         : base(innerClient)
     {

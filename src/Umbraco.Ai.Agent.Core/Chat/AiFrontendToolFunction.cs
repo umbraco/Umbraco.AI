@@ -20,17 +20,17 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// and the client can resume with tool results.
 /// </para>
 /// </remarks>
-public sealed class FrontendToolFunction : AIFunction
+public sealed class AiFrontendToolFunction : AIFunction
 {
     private readonly string _name;
     private readonly string _description;
     private readonly JsonElement _jsonSchema;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FrontendToolFunction"/> class.
+    /// Initializes a new instance of the <see cref="AiFrontendToolFunction"/> class.
     /// </summary>
     /// <param name="tool">The AG-UI tool definition.</param>
-    public FrontendToolFunction(AguiTool tool)
+    public AiFrontendToolFunction(AguiTool tool)
     {
         ArgumentNullException.ThrowIfNull(tool);
 
@@ -40,12 +40,12 @@ public sealed class FrontendToolFunction : AIFunction
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FrontendToolFunction"/> class.
+    /// Initializes a new instance of the <see cref="AiFrontendToolFunction"/> class.
     /// </summary>
     /// <param name="name">The tool name.</param>
     /// <param name="description">The tool description.</param>
     /// <param name="jsonSchema">The JSON schema for the tool parameters.</param>
-    public FrontendToolFunction(string name, string description, JsonElement jsonSchema)
+    public AiFrontendToolFunction(string name, string description, JsonElement jsonSchema)
     {
         ArgumentNullException.ThrowIfNull(name);
 

@@ -15,6 +15,6 @@ internal sealed class AguiToolConverter : IAguiToolConverter
             return null;
         }
 
-        return tools.Select(t => (AITool)new FrontendToolFunction(t)).ToList();
+        return tools.Select(t => (AITool)new AiFrontendToolFunction(t)).ToList();
     }
 }

@@ -71,3 +71,6 @@ demo/*/App_Data/
 demo/*/App_Plugins/
 demo/*/appsettings.local.json
 .worktrees
+
+# Claude Code temporary session files
+tmpclaude*

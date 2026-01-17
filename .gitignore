@@ -75,3 +75,6 @@ demo/
 .claude/
 nul
 tmpclaude*
+
+# References
+refs/

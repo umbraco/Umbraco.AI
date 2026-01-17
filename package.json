@@ -14,7 +14,7 @@
     "build:prompt": "npm run build -w @umbraco-ai/prompt",
     "build:agent": "npm run build -w @umbraco-ai/agent",
 
-    "watch": "npm run watch --workspaces --if-present",
+    "watch": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run watch:core\" \"npm run watch:prompt\" \"npm run watch:agent\"",
     "watch:core": "npm run watch -w @umbraco-ai/core",
     "watch:prompt": "npm run watch -w @umbraco-ai/prompt",
     "watch:agent": "npm run watch -w @umbraco-ai/agent",

@@ -5,15 +5,15 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <UseLocalUmbracoAi Condition="'$(UseLocalUmbracoAi)' == ''">false</UseLocalUmbracoAi>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(UseLocalUmbracoAi)' == 'true'">
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\Umbraco.Ai.Agui\Umbraco.Ai.Agui.csproj" />
         <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Web\Umbraco.Ai.Web.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(UseLocalUmbracoAi)' != 'true'">
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
         <PackageReference Include="Umbraco.Ai.Agui" />
         <PackageReference Include="Umbraco.Ai.Web" />
     </ItemGroup>

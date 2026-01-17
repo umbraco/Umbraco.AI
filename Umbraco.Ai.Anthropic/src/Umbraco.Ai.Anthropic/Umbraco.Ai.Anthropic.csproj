@@ -7,10 +7,13 @@
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- TODO: Replace with PackageReference when SDK fix is released -->
     <!-- <PackageReference Include="Anthropic" /> -->
-<!--    <PackageReference Include="Umbraco.Ai.Core" />-->
   </ItemGroup>
 
   <!-- Local SDK with InputSchema fix - replace with PackageReference when merged -->
@@ -18,8 +21,12 @@
     <ProjectReference Include="..\..\..\Ref\anthropic-sdk-csharp\src\Anthropic\Anthropic.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
     <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+    <PackageReference Include="Umbraco.Ai.Core" />
   </ItemGroup>
 
   <ItemGroup>

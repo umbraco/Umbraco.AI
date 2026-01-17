@@ -5,14 +5,14 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <UseLocalUmbracoAi Condition="'$(UseLocalUmbracoAi)' == ''">false</UseLocalUmbracoAi>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(UseLocalUmbracoAi)' == 'true'">
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
         <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(UseLocalUmbracoAi)' != 'true'">
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
         <PackageReference Include="Umbraco.Ai.Core" />
     </ItemGroup>
 

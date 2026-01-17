@@ -395,7 +395,7 @@ export class UaiAnalyticsTimeSeriesElement extends UmbLitElement {
             .chart-container {
                 position: relative;
                 height: 350px;
-                padding: var(--uui-size-space-4);
+                padding: 0 var(--uui-size-space-4);
             }
 
             .empty-state {

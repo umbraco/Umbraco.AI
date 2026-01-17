@@ -36,17 +36,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         // This method just handles parent ID resolution and persists to the database.
 
         // Set parent ID from explicit parameter or auto-detect from ambient scope
-        var resolvedParentId = AiAuditScope.Current?.AuditLogId;
-        if (resolvedParentId.HasValue && auditLog.ParentAuditLogId != resolvedParentId.Value)
+        if (!auditLog.ParentAuditLogId.HasValue)
         {
-            // ParentAuditLogId is init-only, so we need to recreate the instance
-            // This is expected to be rare - only when the caller didn't provide parentId to Create
-            // but we detected it from AuditScope
-            _logger.LogDebug(
-                "Overriding parent audit log ID from {OldParentId} to {NewParentId} for audit {AuditLogId}",
-                auditLog.ParentAuditLogId, resolvedParentId, auditLog.Id);
-
-            auditLog.ParentAuditLogId = resolvedParentId;
+            var resolvedParentId = AiAuditScope.Current?.AuditLogId;
+            if (resolvedParentId.HasValue)
+            {
+                auditLog.ParentAuditLogId = resolvedParentId;
+            }
         }
 
         // Ensure status is set to Running
@@ -134,10 +130,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
     {
         // IMPORTANT: Resolve parent ID from ambient scope NOW, before queuing,
         // because AuditScope.Current won't be available in the background worker context
-        var resolvedParentId = AiAuditScope.Current?.AuditLogId;
-        if (resolvedParentId.HasValue && auditLog.ParentAuditLogId != resolvedParentId.Value)
+        if (!auditLog.ParentAuditLogId.HasValue)
         {
-            auditLog.ParentAuditLogId = resolvedParentId.Value;
+            var resolvedParentId = AiAuditScope.Current?.AuditLogId;
+            if (resolvedParentId.HasValue)
+            {
+                auditLog.ParentAuditLogId = resolvedParentId.Value;
+            }
         }
 
         // Ensure status is set to Running

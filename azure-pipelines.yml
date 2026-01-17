@@ -1,0 +1,194 @@
+# Umbraco.Ai Monorepo CI/CD Pipeline
+# Supports independent versioning and building per product
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
+      - hotfix/*
+  tags:
+    include:
+      - release-*
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+# Pipeline variables
+variables:
+  - name: configuration
+    value: 'Release'
+  - name: vmImage
+    value: 'ubuntu-latest'
+
+stages:
+  # Stage 1: Detect Changes
+  - stage: DetectChanges
+    displayName: 'Detect Changed Products'
+    jobs:
+      - job: DetectChanges
+        displayName: 'Analyze changes and set variables'
+        pool:
+          vmImage: $(vmImage)
+
+        steps:
+          - checkout: self
+            fetchDepth: 2  # Need last 2 commits for diff
+
+          - task: PowerShell@2
+            name: detectChanges
+            displayName: 'Run change detection'
+            inputs:
+              filePath: '$(Build.SourcesDirectory)/build/scripts/detect-changes.ps1'
+              arguments: '-SourceBranch "$(Build.SourceBranch)" -SourceVersion "$(Build.SourceVersion)"'
+
+  # Stage 2: Build Products (Parallel)
+  - stage: Build
+    displayName: 'Build Products'
+    dependsOn: DetectChanges
+    jobs:
+      # Core
+      - template: build/templates/build-product.yml
+        parameters:
+          productName: 'Umbraco.Ai'
+          productPath: 'Umbraco.Ai'
+          hasFrontend: true
+          configuration: $(configuration)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.CoreChanged'], 'true')
+
+      # Agent
+      - template: build/templates/build-product.yml
+        parameters:
+          productName: 'Umbraco.Ai.Agent'
+          productPath: 'Umbraco.Ai.Agent'
+          hasFrontend: true
+          configuration: $(configuration)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AgentChanged'], 'true')
+
+      # Prompt
+      - template: build/templates/build-product.yml
+        parameters:
+          productName: 'Umbraco.Ai.Prompt'
+          productPath: 'Umbraco.Ai.Prompt'
+          hasFrontend: true
+          configuration: $(configuration)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.PromptChanged'], 'true')
+
+      # OpenAI
+      - template: build/templates/build-product.yml
+        parameters:
+          productName: 'Umbraco.Ai.OpenAi'
+          productPath: 'Umbraco.Ai.OpenAi'
+          hasFrontend: false
+          configuration: $(configuration)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.OpenAiChanged'], 'true')
+
+      # Anthropic
+      - template: build/templates/build-product.yml
+        parameters:
+          productName: 'Umbraco.Ai.Anthropic'
+          productPath: 'Umbraco.Ai.Anthropic'
+          hasFrontend: false
+          configuration: $(configuration)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AnthropicChanged'], 'true')
+
+  # Stage 3: Run Tests (Parallel)
+  - stage: Test
+    displayName: 'Run Tests'
+    dependsOn: Build
+    jobs:
+      - job: TestCore
+        displayName: 'Test Umbraco.Ai (Core)'
+        pool:
+          vmImage: $(vmImage)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.CoreChanged'], 'true')
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Run Core tests'
+            inputs:
+              command: 'test'
+              projects: 'Umbraco.Ai/Umbraco.Ai.sln'
+              arguments: '--configuration $(configuration) --collect:"XPlat Code Coverage"'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish code coverage'
+            inputs:
+              summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+
+      - job: TestAgent
+        displayName: 'Test Umbraco.Ai.Agent'
+        pool:
+          vmImage: $(vmImage)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AgentChanged'], 'true')
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Run Agent tests'
+            inputs:
+              command: 'test'
+              projects: 'Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln'
+              arguments: '--configuration $(configuration)'
+
+      - job: TestPrompt
+        displayName: 'Test Umbraco.Ai.Prompt'
+        pool:
+          vmImage: $(vmImage)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.PromptChanged'], 'true')
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'Run Prompt tests'
+            inputs:
+              command: 'test'
+              projects: 'Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln'
+              arguments: '--configuration $(configuration)'
+
+  # Stage 4: Deploy to MyGet (optional, requires variable group)
+  # - stage: DeployMyGet
+  #   displayName: 'Deploy to MyGet'
+  #   dependsOn: Test
+  #   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  #   jobs:
+  #     - job: Deploy
+  #       displayName: 'Push packages to MyGet'
+  #       pool:
+  #         vmImage: $(vmImage)
+  #       steps:
+  #         - task: DownloadPipelineArtifact@2
+  #           displayName: 'Download all artifacts'
+  #           inputs:
+  #             downloadPath: '$(Pipeline.Workspace)/artifacts'
+  #
+  #         - task: NuGetCommand@2
+  #           displayName: 'Push to MyGet'
+  #           inputs:
+  #             command: 'push'
+  #             packagesToPush: '$(Pipeline.Workspace)/artifacts/**/*.nupkg'
+  #             nuGetFeedType: 'external'
+  #             publishFeedCredentials: 'MyGet-Umbraco-Ai'
+
+  # Stage 5: Deploy to NuGet (release tags only)
+  # - stage: DeployNuGet
+  #   displayName: 'Deploy to NuGet'
+  #   dependsOn: Test
+  #   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'))
+  #   jobs:
+  #     - job: Deploy
+  #       displayName: 'Push packages to NuGet'
+  #       pool:
+  #         vmImage: $(vmImage)
+  #       steps:
+  #         - task: DownloadPipelineArtifact@2
+  #           displayName: 'Download all artifacts'
+  #           inputs:
+  #             downloadPath: '$(Pipeline.Workspace)/artifacts'
+  #
+  #         - task: NuGetCommand@2
+  #           displayName: 'Push to NuGet'
+  #           inputs:
+  #             command: 'push'
+  #             packagesToPush: '$(Pipeline.Workspace)/artifacts/**/*.nupkg'
+  #             nuGetFeedType: 'external'
+  #             publishFeedCredentials: 'NuGet-Umbraco-Ai'

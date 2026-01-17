@@ -9,9 +9,10 @@ This is a monorepo containing Umbraco.Ai and its add-on packages:
 | Product | Description | Location |
 |---------|-------------|----------|
 | **Umbraco.Ai** | Core AI integration layer for Umbraco CMS | `Umbraco.Ai/` |
-| **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Prompt** | Prompt template management add-on | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.Agent** | AI agent management add-on | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
+| **Umbraco.Ai.Anthropic** | Anthropic provider plugin | `Umbraco.Ai.Anthropic/` |
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
@@ -100,6 +101,7 @@ Output goes to `dist/nupkg/`.
 ```
 Umbraco.Ai (Core)
     ├── Umbraco.Ai.OpenAi (Provider - depends on Core)
+    ├── Umbraco.Ai.Anthropic (Provider - depends on Core)
     ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
     └── Umbraco.Ai.Agent (Add-on - depends on Core)
 ```

@@ -10,6 +10,7 @@ namespace Umbraco.Ai.Core.AuditLog.Middleware;
 public sealed class AiAuditingChatMiddleware : IAiChatMiddleware
 {
     private readonly IAiAuditLogService _auditLogService;
+    private readonly IAiAuditLogFactory _auditLogFactory;
     private readonly IOptionsMonitor<AiAuditLogOptions> _auditLogOptions;
 
     /// <summary>
@@ -17,15 +18,17 @@ public sealed class AiAuditingChatMiddleware : IAiChatMiddleware
     /// </summary>
     public AiAuditingChatMiddleware(
         IAiAuditLogService auditLogService,
+        IAiAuditLogFactory auditLogFactory,
         IOptionsMonitor<AiAuditLogOptions> auditLogOptions)
     {
         _auditLogService = auditLogService;
+        _auditLogFactory = auditLogFactory;
         _auditLogOptions = auditLogOptions;
     }
 
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new AiAuditingChatClient(client, _auditLogService, _auditLogOptions);
+        return new AiAuditingChatClient(client, _auditLogService, _auditLogFactory, _auditLogOptions);
     }
 }

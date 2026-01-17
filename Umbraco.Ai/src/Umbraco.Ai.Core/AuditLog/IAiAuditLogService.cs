@@ -10,27 +10,13 @@ public interface IAiAuditLogService
     /// Starts a new AI audit-log record. Completely independent of OpenTelemetry Activity.
     /// Automatically detects parent audit-log from AuditLogScope.Current.
     /// </summary>
-    /// <param name="context">The audit-log context containing all metadata.</param>
-    /// <param name="metadata">Optional extensible metadata for feature-specific context.</param>
+    /// <param name="auditLog">The audit-log record to start.</param>
+    /// <param name="parentId">Optional specific parent ID to use for the audit-log. If null, will use AuditLogScope.Current.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The newly created audit-log record.</returns>
     Task<AiAuditLog> StartAuditLogAsync(
-        AiAuditContext context,
-        IReadOnlyDictionary<string, string>? metadata = null,
-        CancellationToken ct = default);
-
-    /// <summary>
-    /// Starts a new audit-log and immediately creates an AuditLogScope for it.
-    /// This is a convenience method that combines StartAuditLogAsync + AuditLogScope.Begin.
-    /// Dispose the returned scope when the operation completes.
-    /// </summary>
-    /// <param name="context">The audit-log context containing all metadata.</param>
-    /// <param name="metadata">Optional extensible metadata for feature-specific context.</param>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>A disposable handle that combines the scope and audit-log.</returns>
-    Task<AiAuditScopeHandle> StartAuditLogScopeAsync(
-        AiAuditContext context,
-        IReadOnlyDictionary<string, string>? metadata = null,
+        AiAuditLog auditLog,
+        Guid? parentId = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -51,6 +37,45 @@ public interface IAiAuditLogService
     /// <param name="exception">The exception that caused the failure.</param>
     /// <param name="ct">Cancellation token.</param>
     Task RecordAuditLogFailureAsync(
+        AiAuditLog audit,
+        Exception exception,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Queues starting an audit-log record in the background.
+    /// This is a fire-and-forget operation that uses the background task queue.
+    /// </summary>
+    /// <param name="auditLog">The audit-log record to start.</param>
+    /// <param name="parentId">Optional specific parent ID to use for the audit-log. If null, will use AuditLogScope.Current.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
+    ValueTask QueueStartAuditLogAsync(
+        AiAuditLog auditLog,
+        Guid? parentId = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Queues completing an audit-log record in the background.
+    /// This is a fire-and-forget operation that uses the background task queue.
+    /// </summary>
+    /// <param name="audit">The audit-log record to complete.</param>
+    /// <param name="response">The response object from the AI operation.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
+    ValueTask QueueCompleteAuditLogAsync(
+        AiAuditLog audit,
+        AiAuditResponse? response,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Queues recording an audit-log failure in the background.
+    /// This is a fire-and-forget operation that uses the background task queue.
+    /// </summary>
+    /// <param name="audit">The audit-log record that failed.</param>
+    /// <param name="exception">The exception that caused the failure.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
+    ValueTask QueueRecordAuditLogFailureAsync(
         AiAuditLog audit,
         Exception exception,
         CancellationToken ct = default);

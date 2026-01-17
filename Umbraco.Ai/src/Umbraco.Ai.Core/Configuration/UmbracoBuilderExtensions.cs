@@ -128,6 +128,7 @@ public static partial class UmbracoBuilderExtensions
 
         // AuditLog infrastructure
         // Note: IAiAuditLogRepository is registered by persistence layer
+        services.AddSingleton<IAiAuditLogFactory, AiAuditLogFactory>();
         services.AddSingleton<IAiAuditLogService, AiAuditLogService>();
 
         // Background job for audit-log cleanup

@@ -1,10 +1,8 @@
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Cms.Core.Security;
+using Umbraco.Ai.Core.TaskQueue;
 
 namespace Umbraco.Ai.Core.AuditLog;
 
@@ -14,99 +12,57 @@ namespace Umbraco.Ai.Core.AuditLog;
 internal sealed class AiAuditLogService : IAiAuditLogService
 {
     private readonly IAiAuditLogRepository _auditLogRepository;
-    private readonly IAiProfileService _profileService;
-    private readonly IBackOfficeSecurityAccessor _securityAccessor;
     private readonly IOptionsMonitor<AiAuditLogOptions> _options;
+    private readonly IBackgroundTaskQueue _backgroundTaskQueue;
     private readonly ILogger<AiAuditLogService> _logger;
 
     public AiAuditLogService(
         IAiAuditLogRepository auditLogRepository,
-        IAiProfileService profileService,
-        IBackOfficeSecurityAccessor securityAccessor,
         IOptionsMonitor<AiAuditLogOptions> options,
-        ILogger<AiAuditLogService> logger)
+        IBackgroundTaskQueue backgroundTaskQueue,
+        ILoggerFactory loggerFactory)
     {
         _auditLogRepository = auditLogRepository;
-        _profileService = profileService;
-        _securityAccessor = securityAccessor;
         _options = options;
-        _logger = logger;
+        _backgroundTaskQueue = backgroundTaskQueue;
+        _logger = loggerFactory.CreateLogger<AiAuditLogService>();
     }
 
     /// <inheritdoc />
-    public async Task<AiAuditLog> StartAuditLogAsync(
-        AiAuditContext context,
-        IReadOnlyDictionary<string, string>? metadata = null,
+    public async Task<AiAuditLog> StartAuditLogAsync(AiAuditLog auditLog,
+        Guid? parentId = null,
         CancellationToken ct = default)
     {
-        // Automatically detect parent from ambient scope
-        var parentAuditLogId = AiAuditScope.Current?.AuditLogId;
+        // The AiAuditLog.Create factory method should have already set most properties.
+        // This method just handles parent ID resolution and persists to the database.
 
-        // Get profile details for additional information (optional)
-        AiProfile? profile = null;
-        
-        if (context.ProfileId.HasValue)
+        // Set parent ID from explicit parameter or auto-detect from ambient scope
+        var resolvedParentId = parentId ?? AiAuditScope.Current?.AuditLogId;
+        if (resolvedParentId.HasValue && auditLog.ParentAuditLogId != resolvedParentId.Value)
         {
-            profile = await _profileService.GetProfileAsync(context.ProfileId.Value, ct);
-            if (profile is null)
-            {
-                _logger.LogDebug("Profile {ProfileId} not found, using context values for audit-log", context.ProfileId);
-            }
+            // ParentAuditLogId is init-only, so we need to recreate the instance
+            // This is expected to be rare - only when the caller didn't provide parentId to Create
+            // but we detected it from AuditScope
+            _logger.LogDebug(
+                "Overriding parent audit log ID from {OldParentId} to {NewParentId} for audit {AuditLogId}",
+                auditLog.ParentAuditLogId, resolvedParentId, auditLog.Id);
+
+            auditLog.ParentAuditLogId = resolvedParentId;
         }
 
-        // Get current user
-        var backOfficeIdentity = _securityAccessor.BackOfficeSecurity?.CurrentUser;
-
-        // Create audit-log record
-        var audit = new AiAuditLog
+        // Ensure status is set to Running
+        if (auditLog.Status != AiAuditLogStatus.Running)
         {
-            Id = Guid.NewGuid(),
-            StartTime = DateTime.UtcNow,
-            Status = AiAuditLogStatus.Running,
-            UserId = backOfficeIdentity?.Key.ToString(),
-            UserName = backOfficeIdentity?.Name ?? "anonymous",
-            EntityId = context.EntityId,
-            EntityType = context.EntityType,
-            Capability = context.Capability, // Use capability directly instead of operation type string
-            ProfileId = (Guid)(profile?.Id ?? context.ProfileId)!,
-            ProfileAlias = profile?.Alias ?? context.ProfileAlias ?? "unknown",
-            ProviderId = profile?.Model.ProviderId ?? context.ProviderId ?? "unknown",
-            ModelId = profile?.Model.ModelId ?? context.ModelId ?? "unknown",
-            FeatureType = context.FeatureType,
-            FeatureId = context.FeatureId,
-            DetailLevel = _options.CurrentValue.DetailLevel,
-            ParentAuditLogId = parentAuditLogId, // Automatic parent detection
-            Metadata = metadata ?? context.Metadata // Use provided metadata or context metadata
-        };
-
-        // Capture prompt snapshot if configured
-        if (_options.CurrentValue.PersistPrompts && context.Prompt is not null)
-        {
-            var prompt = FormatPromptSnapshot(context.Prompt, context.Capability);
-            prompt = ApplyRedaction(prompt);
-            audit.PromptSnapshot = prompt;
-            _logger.LogDebug("Captured prompt snapshot for audit-log {AuditLogId}: {Length} characters",
-                audit.Id, prompt?.Length ?? 0);
+            auditLog.Status = AiAuditLogStatus.Running;
         }
 
-        await _auditLogRepository.SaveAsync(audit, ct);
+        await _auditLogRepository.SaveAsync(auditLog, ct);
 
         _logger.LogDebug(
             "Started audit-log {AuditLogId} for {Capability} operation by user {UserId} (Parent: {ParentId})",
-            audit.Id, audit.Capability, audit.UserId, audit.ParentAuditLogId);
+            auditLog.Id, auditLog.Capability, auditLog.UserId, auditLog.ParentAuditLogId);
 
-        return audit;
-    }
-
-    /// <inheritdoc />
-    public async Task<AiAuditScopeHandle> StartAuditLogScopeAsync(
-        AiAuditContext context,
-        IReadOnlyDictionary<string, string>? metadata = null,
-        CancellationToken ct = default)
-    {
-        var audit = await StartAuditLogAsync(context, metadata, ct);
-        var scope = AiAuditScope.Begin(audit.Id);
-        return new AiAuditScopeHandle(scope, audit);
+        return auditLog;
     }
 
     /// <inheritdoc />
@@ -173,6 +129,127 @@ internal sealed class AiAuditLogService : IAiAuditLogService
     }
 
     /// <inheritdoc />
+    public async ValueTask QueueStartAuditLogAsync(
+        AiAuditLog auditLog,
+        Guid? parentId = null,
+        CancellationToken ct = default)
+    {
+        // IMPORTANT: Resolve parent ID from ambient scope NOW, before queuing,
+        // because AuditScope.Current won't be available in the background worker context
+        var resolvedParentId = parentId ?? AiAuditScope.Current?.AuditLogId;
+        if (resolvedParentId.HasValue && auditLog.ParentAuditLogId != resolvedParentId.Value)
+        {
+            auditLog.ParentAuditLogId = resolvedParentId.Value;
+        }
+
+        // Ensure status is set to Running
+        if (auditLog.Status != AiAuditLogStatus.Running)
+        {
+            auditLog.Status = AiAuditLogStatus.Running;
+        }
+
+        // Queue the persistence operation (all business logic already resolved above)
+        var workItem = new BackgroundWorkItem(
+            Name: "StartAuditLog",
+            CorrelationId: auditLog.Id.ToString(),
+            RunAsync: async (sp, token) =>
+            {
+                var repository = sp.GetRequiredService<IAiAuditLogRepository>();
+                await repository.SaveAsync(auditLog, token);
+            });
+
+        await _backgroundTaskQueue.QueueAsync(workItem, ct);
+
+        _logger.LogDebug("Queued StartAuditLog for audit {AuditLogId} (Parent: {ParentId})",
+            auditLog.Id, auditLog.ParentAuditLogId);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask QueueCompleteAuditLogAsync(
+        AiAuditLog audit,
+        AiAuditResponse? response,
+        CancellationToken ct = default)
+    {
+        // Do all the business logic NOW, before queuing
+        audit.EndTime = DateTime.UtcNow;
+        audit.Status = AiAuditLogStatus.Succeeded;
+
+        if (response?.Usage is not null)
+        {
+            audit.InputTokens = response.Usage.InputTokenCount.HasValue
+                ? (int?)response.Usage.InputTokenCount.Value
+                : null;
+            audit.OutputTokens = response.Usage.OutputTokenCount.HasValue
+                ? (int?)response.Usage.OutputTokenCount.Value
+                : null;
+            audit.TotalTokens = response.Usage.TotalTokenCount.HasValue
+                ? (int?)response.Usage.TotalTokenCount.Value
+                : null;
+        }
+
+        if (_options.CurrentValue.PersistResponses && response?.Data != null && !string.IsNullOrEmpty(response.Data.ToString()))
+        {
+            audit.ResponseSnapshot = ApplyRedaction(response.Data.ToString());
+        }
+
+        // Queue just the persistence operation
+        var workItem = new BackgroundWorkItem(
+            Name: "CompleteAuditLog",
+            CorrelationId: audit.Id.ToString(),
+            RunAsync: async (sp, token) =>
+            {
+                var repository = sp.GetRequiredService<IAiAuditLogRepository>();
+                await repository.SaveAsync(audit, token);
+            });
+
+        await _backgroundTaskQueue.QueueAsync(workItem, ct);
+
+        _logger.LogDebug("Queued CompleteAuditLog for audit {AuditLogId} (Duration: {Duration}ms, Tokens: {TotalTokens})",
+            audit.Id, audit.Duration?.TotalMilliseconds, audit.TotalTokens);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask QueueRecordAuditLogFailureAsync(
+        AiAuditLog audit,
+        Exception exception,
+        CancellationToken ct = default)
+    {
+        // Do all the business logic NOW, before queuing
+        audit.EndTime = DateTime.UtcNow;
+        audit.Status = AiAuditLogStatus.Failed;
+        audit.ErrorMessage = exception.Message;
+        audit.ErrorCategory = CategorizeError(exception);
+
+        // Log immediately based on options
+        if (_options.CurrentValue.PersistFailureDetails)
+        {
+            _logger.LogError(exception,
+                "AuditLog {AuditLogId} failed with error: {ErrorMessage} (Duration: {Duration}ms)",
+                audit.Id, exception.Message, audit.Duration?.TotalMilliseconds);
+        }
+        else
+        {
+            _logger.LogDebug(
+                "AuditLog {AuditLogId} failed with error: {ErrorMessage} (Duration: {Duration}ms)",
+                audit.Id, exception.Message, audit.Duration?.TotalMilliseconds);
+        }
+
+        // Queue just the persistence operation
+        var workItem = new BackgroundWorkItem(
+            Name: "RecordAuditLogFailure",
+            CorrelationId: audit.Id.ToString(),
+            RunAsync: async (sp, token) =>
+            {
+                var repository = sp.GetRequiredService<IAiAuditLogRepository>();
+                await repository.SaveAsync(audit, token);
+            });
+
+        await _backgroundTaskQueue.QueueAsync(workItem, ct);
+
+        _logger.LogDebug("Queued RecordAuditLogFailure for audit {AuditLogId}", audit.Id);
+    }
+
+    /// <inheritdoc />
     public async Task<AiAuditLog?> GetAuditLogAsync(Guid id, CancellationToken ct = default)
         => await _auditLogRepository.GetByIdAsync(id, ct);
 
@@ -212,33 +289,6 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         }
 
         return deleted;
-    }
-
-    private static string? FormatPromptSnapshot(object? promptObj, AiCapability capability)
-    {
-        if (promptObj is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            return capability switch
-            {
-                AiCapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
-                    string.Join("\n", messages.Select(m => $"[{m.Role}] {m.Text}")),
-
-                AiCapability.Embedding when promptObj is IEnumerable<string> values =>
-                    string.Join("\n", values.Select((v, i) => $"[{i}] {v}")),
-
-                _ => promptObj.ToString()
-            };
-        }
-        catch
-        {
-            // If formatting fails, return a fallback representation
-            return $"[Unable to format {capability} prompt]";
-        }
     }
 
     private static AiAuditLogErrorCategory CategorizeError(Exception exception)

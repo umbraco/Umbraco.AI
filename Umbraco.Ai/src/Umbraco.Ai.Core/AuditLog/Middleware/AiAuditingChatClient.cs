@@ -1,8 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.AuditLog.Middleware;
 
@@ -10,16 +12,19 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
 {
     private readonly IChatClient _innerClient;
     private readonly IAiAuditLogService _auditLogService;
+    private readonly IAiAuditLogFactory _auditLogFactory;
     private readonly IOptionsMonitor<AiAuditLogOptions> _auditLogOptions;
 
     public AiAuditingChatClient(
         IChatClient innerClient,
         IAiAuditLogService auditLogService,
+        IAiAuditLogFactory auditLogFactory,
         IOptionsMonitor<AiAuditLogOptions> auditLogOptions)
         : base(innerClient)
     {
         _innerClient = innerClient;
         _auditLogService = auditLogService;
+        _auditLogFactory = auditLogFactory;
         _auditLogOptions = auditLogOptions;
     }
 
@@ -29,10 +34,12 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         CancellationToken cancellationToken = default)
     {
         // Start audit-log recording if enabled
-        AiAuditScopeHandle? auditLogHandle = null;
-        
+        AiAuditScope? auditScope = null;
+        AiAuditLog? auditLog = null;
+
         if (_auditLogOptions.CurrentValue.Enabled)
         {
+            // Extract audit context from options and messages
             var auditLogContext = AiAuditContext.ExtractFromOptions(
                 AiCapability.Chat,
                 options,
@@ -48,10 +55,17 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
                     key => options?.AdditionalProperties?[key]?.ToString() ?? string.Empty);
             }
 
-            auditLogHandle = await _auditLogService.StartAuditLogScopeAsync(
+            // Create audit-log entry using factory
+            auditLog = _auditLogFactory.Create(
                 auditLogContext,
-                metadata: metadata,
-                ct: cancellationToken);
+                metadata,
+                parentId: AiAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
+
+            // Create scope synchronously (for nested operation tracking)
+            auditScope = AiAuditScope.Begin(auditLog.Id);
+
+            // Queue persistence in background (fire-and-forget)
+            await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
         }
 
         try
@@ -59,12 +73,13 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
             var response = await _innerClient.GetResponseAsync(chatMessages, options, cancellationToken);
 
             // Complete audit-log (if exists)
-            if (auditLogHandle is not null)
+            if (auditLog is not null)
             {
                 var trackingChatClient = _innerClient.GetService<AiTrackingChatClient>();
 
-                await _auditLogService.CompleteAuditLogAsync(
-                    auditLogHandle.AuditLog,
+                // Queue completion in background (fire-and-forget)
+                await _auditLogService.QueueCompleteAuditLogAsync(
+                    auditLog,
                     new AiAuditResponse
                     {
                         Data = trackingChatClient?.LastResponse,
@@ -78,10 +93,11 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         catch (Exception ex)
         {
             // Record audit-log failure (if exists)
-            if (auditLogHandle is not null)
+            if (auditLog is not null)
             {
-                await _auditLogService.RecordAuditLogFailureAsync(
-                    auditLogHandle.AuditLog,
+                // Queue failure in background (fire-and-forget)
+                await _auditLogService.QueueRecordAuditLogFailureAsync(
+                    auditLog,
                     ex,
                     cancellationToken);
             }
@@ -90,7 +106,8 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         }
         finally
         {
-            auditLogHandle?.Dispose();
+            // Dispose scope to restore previous audit context
+            auditScope?.Dispose();
         }
     }
 
@@ -100,14 +117,18 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // Start audit-log recording if enabled
-        AiAuditScopeHandle? auditLogHandle = null;
+        AiAuditScope? auditScope = null;
+        AiAuditLog? auditLog = null;
+
         if (_auditLogOptions.CurrentValue.Enabled)
         {
+            // Extract audit context from options and messages
             var auditLogContext = AiAuditContext.ExtractFromOptions(
                 AiCapability.Chat,
                 options,
                 chatMessages.ToList());
 
+            // Extract metadata from options if present
             Dictionary<string, string>? metadata = null;
             if (options?.AdditionalProperties?.TryGetValue(Constants.MetadataKeys.LogKeys, out var logKeys) == true
                 && logKeys is IEnumerable<string> keys)
@@ -116,11 +137,18 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
                     key => key,
                     key => options?.AdditionalProperties?[key]?.ToString() ?? string.Empty);
             }
-            
-            auditLogHandle = await _auditLogService.StartAuditLogScopeAsync(
+
+            // Create audit-log entry using factory
+            auditLog = _auditLogFactory.Create(
                 auditLogContext,
-                metadata: metadata,
-                ct: cancellationToken);
+                metadata,
+                parentId: AiAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
+
+            // Create scope synchronously (for nested operation tracking)
+            auditScope = AiAuditScope.Begin(auditLog.Id);
+
+            // Queue persistence in background (fire-and-forget)
+            await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
         }
 
         IAsyncEnumerable<ChatResponseUpdate> stream;
@@ -132,18 +160,19 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         catch (Exception ex)
         {
             // Record audit-log failure (if exists)
-            if (auditLogHandle is not null)
+            if (auditLog is not null)
             {
-                await _auditLogService.RecordAuditLogFailureAsync(
-                    auditLogHandle.AuditLog,
+                // Queue failure in background (fire-and-forget)
+                await _auditLogService.QueueRecordAuditLogFailureAsync(
+                    auditLog,
                     ex,
                     cancellationToken);
             }
 
-            auditLogHandle?.Dispose();
+            auditScope?.Dispose();
             throw;
         }
-        
+
         // Stream updates - audit-log completion handled after streaming completes
         await foreach (var update in stream.WithCancellation(cancellationToken))
         {
@@ -151,12 +180,13 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         }
 
         // Mark audit-log as completed (no response capture for streaming)
-        if (auditLogHandle is not null)
+        if (auditLog is not null)
         {
             var trackingChatClient = _innerClient.GetService<AiTrackingChatClient>();
 
-            await _auditLogService.CompleteAuditLogAsync(
-                auditLogHandle.AuditLog,
+            // Queue completion in background (fire-and-forget)
+            await _auditLogService.QueueCompleteAuditLogAsync(
+                auditLog,
                 new AiAuditResponse
                 {
                     Data = trackingChatClient?.LastResponse,
@@ -165,6 +195,7 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
                 cancellationToken);
         }
 
-        auditLogHandle?.Dispose();
+        // Dispose scope to restore previous audit context
+        auditScope?.Dispose();
     }
 }

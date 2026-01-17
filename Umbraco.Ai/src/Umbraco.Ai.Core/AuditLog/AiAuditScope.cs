@@ -19,31 +19,24 @@ public sealed class AiAuditScope : IDisposable
     /// </summary>
     public Guid AuditLogId { get; }
 
-    /// <summary>
-    /// Gets the parent audit-log ID (if this scope was nested within another).
-    /// </summary>
-    public Guid? ParentAuditLogId { get; }
-
     private readonly AiAuditScope? _previousScope;
 
-    private AiAuditScope(Guid auditLogId, Guid? parentAuditLogId)
+    private AiAuditScope(Guid auditLogId)
     {
         AuditLogId = auditLogId;
-        ParentAuditLogId = parentAuditLogId;
         _previousScope = _current.Value;
         _current.Value = this;
     }
 
     /// <summary>
-    /// Begins a new audit-log scope. If called within another scope, automatically
-    /// sets the parent relationship.
+    /// Begins a new audit-log scope. If called within another scope, the parent relationship
+    /// can be obtained via <see cref="Current"/>.<see cref="AuditLogId"/>.
     /// </summary>
     /// <param name="auditLogId">The audit-log ID for this scope.</param>
     /// <returns>A disposable scope that restores the previous scope on disposal.</returns>
     public static AiAuditScope Begin(Guid auditLogId)
     {
-        var parentId = Current?.AuditLogId;
-        return new AiAuditScope(auditLogId, parentId);
+        return new AiAuditScope(auditLogId);
     }
 
     /// <summary>

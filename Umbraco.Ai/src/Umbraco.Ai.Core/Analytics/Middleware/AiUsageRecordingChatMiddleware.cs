@@ -2,7 +2,6 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
-using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Analytics.Middleware;
 
@@ -12,18 +11,18 @@ namespace Umbraco.Ai.Core.Analytics.Middleware;
 internal sealed class AiUsageRecordingChatMiddleware : IAiChatMiddleware
 {
     private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IBackOfficeSecurityAccessor _securityAccessor;
+    private readonly IAiUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
     private readonly ILogger<AiUsageRecordingChatClient> _logger;
 
     public AiUsageRecordingChatMiddleware(
         IAiUsageRecordingService usageRecordingService,
-        IBackOfficeSecurityAccessor securityAccessor,
+        IAiUsageRecordFactory factory,
         IOptionsMonitor<AiAnalyticsOptions> options,
         ILogger<AiUsageRecordingChatClient> logger)
     {
         _usageRecordingService = usageRecordingService;
-        _securityAccessor = securityAccessor;
+        _factory = factory;
         _options = options;
         _logger = logger;
     }
@@ -34,7 +33,7 @@ internal sealed class AiUsageRecordingChatMiddleware : IAiChatMiddleware
         return new AiUsageRecordingChatClient(
             client,
             _usageRecordingService,
-            _securityAccessor,
+            _factory,
             _options,
             _logger);
     }

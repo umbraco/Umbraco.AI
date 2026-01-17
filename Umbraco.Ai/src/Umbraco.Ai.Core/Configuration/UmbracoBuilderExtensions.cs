@@ -136,6 +136,7 @@ public static partial class UmbracoBuilderExtensions
 
         // Analytics infrastructure
         // Note: IAiUsageRecordRepository and IAiUsageStatisticsRepository are registered by persistence layer
+        services.AddSingleton<IAiUsageRecordFactory, AiUsageRecordFactory>();
         services.AddSingleton<IAiUsageRecordingService, AiUsageRecordingService>();
         services.AddSingleton<IAiUsageAggregationService, AiUsageAggregationService>();
         services.AddSingleton<IAiUsageAnalyticsService, AiUsageAnalyticsService>();

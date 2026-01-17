@@ -6,7 +6,6 @@ using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Analytics.Middleware;
 
@@ -17,20 +16,20 @@ namespace Umbraco.Ai.Core.Analytics.Middleware;
 internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
 {
     private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IBackOfficeSecurityAccessor _securityAccessor;
+    private readonly IAiUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
     private readonly ILogger<AiUsageRecordingChatClient> _logger;
 
     public AiUsageRecordingChatClient(
         IChatClient innerClient,
         IAiUsageRecordingService usageRecordingService,
-        IBackOfficeSecurityAccessor securityAccessor,
+        IAiUsageRecordFactory factory,
         IOptionsMonitor<AiAnalyticsOptions> options,
         ILogger<AiUsageRecordingChatClient> logger)
         : base(innerClient)
     {
         _usageRecordingService = usageRecordingService;
-        _securityAccessor = securityAccessor;
+        _factory = factory;
         _options = options;
         _logger = logger;
     }
@@ -154,7 +153,7 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
         try
         {
             // Extract context from options
-            var context = AiUsageContext.ExtractFromOptions(AiCapability.Chat, options);
+            var usageContext = AiUsageContext.ExtractFromOptions(AiCapability.Chat, options);
 
             // Try to get tracking data from inner client
             var trackingClient = InnerClient.GetService<AiTrackingChatClient>();
@@ -167,35 +166,23 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
                 return;
             }
 
-            // Get current user
-            var backOfficeIdentity = _securityAccessor.BackOfficeSecurity?.CurrentUser;
+            // Convert to factory context
+            var context = AiUsageRecordContext.FromUsageContext(usageContext);
 
-            // Create usage record
-            var record = new AiUsageRecord
+            // Create result object
+            var result = new AiUsageRecordResult
             {
-                Id = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow,
-                Capability = AiCapability.Chat,
-                UserId = _options.CurrentValue.IncludeUsageUserDimension ? backOfficeIdentity?.Key.ToString() : null,
-                UserName = _options.CurrentValue.IncludeUsageUserDimension ? backOfficeIdentity?.Name : null,
-                ProfileId = context.ProfileId ?? Guid.Empty,
-                ProfileAlias = context.ProfileAlias ?? "unknown",
-                ProviderId = context.ProviderId ?? "unknown",
-                ModelId = context.ModelId ?? "unknown",
-                FeatureType = _options.CurrentValue.IncludeUsageFeatureTypeDimension ? context.FeatureType : null,
-                FeatureId = _options.CurrentValue.IncludeUsageFeatureTypeDimension ? context.FeatureId : null,
-                EntityId = context.EntityId,
-                EntityType = _options.CurrentValue.IncludeUsageEntityTypeDimension ? context.EntityType : null,
-                InputTokens = (int)(usageDetails.InputTokenCount ?? 0),
-                OutputTokens = (int)(usageDetails.OutputTokenCount ?? 0),
-                TotalTokens = (int)(usageDetails.TotalTokenCount ?? 0),
+                Usage = usageDetails,
                 DurationMs = durationMs,
-                Status = succeeded ? "Succeeded" : "Failed",
-                ErrorMessage = errorMessage,
-                CreatedAt = DateTime.UtcNow
+                Succeeded = succeeded,
+                ErrorMessage = errorMessage
             };
 
-            await _usageRecordingService.RecordUsageAsync(record, ct);
+            // Create record via factory (validates and captures user)
+            var record = _factory.Create(context, result);
+
+            // Queue for background persistence
+            await _usageRecordingService.QueueRecordUsageAsync(record, ct);
         }
         catch (Exception ex)
         {

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Analytics.Middleware;
 
@@ -17,20 +16,20 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
     where TEmbedding : Embedding
 {
     private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IBackOfficeSecurityAccessor _securityAccessor;
+    private readonly IAiUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
     private readonly ILogger<AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> _logger;
 
     public AiUsageRecordingEmbeddingGenerator(
         IEmbeddingGenerator<TInput, TEmbedding> innerGenerator,
         IAiUsageRecordingService usageRecordingService,
-        IBackOfficeSecurityAccessor securityAccessor,
+        IAiUsageRecordFactory factory,
         IOptionsMonitor<AiAnalyticsOptions> options,
         ILogger<AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> logger)
         : base(innerGenerator)
     {
         _usageRecordingService = usageRecordingService;
-        _securityAccessor = securityAccessor;
+        _factory = factory;
         _options = options;
         _logger = logger;
     }
@@ -87,7 +86,7 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
         try
         {
             // Extract context from options
-            var context = AiUsageContext.ExtractFromOptions(AiCapability.Embedding, options);
+            var usageContext = AiUsageContext.ExtractFromOptions(AiCapability.Embedding, options);
 
             // Try to get tracking data from inner generator
             var trackingGenerator = InnerGenerator.GetService<AiTrackingEmbeddingGenerator<TInput, TEmbedding>>();
@@ -100,35 +99,23 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
                 return;
             }
 
-            // Get current user
-            var backOfficeIdentity = _securityAccessor.BackOfficeSecurity?.CurrentUser;
+            // Convert to factory context
+            var context = AiUsageRecordContext.FromUsageContext(usageContext);
 
-            // Create usage record
-            var record = new AiUsageRecord
+            // Create result object
+            var result = new AiUsageRecordResult
             {
-                Id = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow,
-                Capability = AiCapability.Embedding,
-                UserId = _options.CurrentValue.IncludeUsageUserDimension ? backOfficeIdentity?.Key.ToString() : null,
-                UserName = _options.CurrentValue.IncludeUsageUserDimension ? backOfficeIdentity?.Name : null,
-                ProfileId = context.ProfileId ?? Guid.Empty,
-                ProfileAlias = context.ProfileAlias ?? "unknown",
-                ProviderId = context.ProviderId ?? "unknown",
-                ModelId = options?.ModelId ?? context.ModelId ?? "unknown",
-                FeatureType = _options.CurrentValue.IncludeUsageFeatureTypeDimension ? context.FeatureType : null,
-                FeatureId = _options.CurrentValue.IncludeUsageFeatureTypeDimension ? context.FeatureId : null,
-                EntityId = context.EntityId,
-                EntityType = _options.CurrentValue.IncludeUsageEntityTypeDimension ? context.EntityType : null,
-                InputTokens = (int)(usageDetails.InputTokenCount ?? 0),
-                OutputTokens = (int)(usageDetails.OutputTokenCount ?? 0),
-                TotalTokens = (int)(usageDetails.TotalTokenCount ?? 0),
+                Usage = usageDetails,
                 DurationMs = durationMs,
-                Status = succeeded ? "Succeeded" : "Failed",
-                ErrorMessage = errorMessage,
-                CreatedAt = DateTime.UtcNow
+                Succeeded = succeeded,
+                ErrorMessage = errorMessage
             };
 
-            await _usageRecordingService.RecordUsageAsync(record, ct);
+            // Create record via factory (validates and captures user)
+            var record = _factory.Create(context, result);
+
+            // Queue for background persistence
+            await _usageRecordingService.QueueRecordUsageAsync(record, ct);
         }
         catch (Exception ex)
         {

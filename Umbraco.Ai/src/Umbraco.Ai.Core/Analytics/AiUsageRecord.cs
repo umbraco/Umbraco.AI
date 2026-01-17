@@ -77,17 +77,17 @@ public sealed class AiUsageRecord
     /// <summary>
     /// Gets the number of input tokens consumed.
     /// </summary>
-    public required int InputTokens { get; init; }
+    public required long InputTokens { get; init; }
 
     /// <summary>
     /// Gets the number of output tokens generated.
     /// </summary>
-    public required int OutputTokens { get; init; }
+    public required long OutputTokens { get; init; }
 
     /// <summary>
     /// Gets the total number of tokens (input + output).
     /// </summary>
-    public required int TotalTokens { get; init; }
+    public required long TotalTokens { get; init; }
 
     /// <summary>
     /// Gets the duration of the operation in milliseconds.

@@ -75,17 +75,17 @@ public class AiUsageRecordEntity
     /// <summary>
     /// Gets or sets the number of input tokens consumed.
     /// </summary>
-    public int InputTokens { get; set; }
+    public long InputTokens { get; set; }
 
     /// <summary>
     /// Gets or sets the number of output tokens generated.
     /// </summary>
-    public int OutputTokens { get; set; }
+    public long OutputTokens { get; set; }
 
     /// <summary>
     /// Gets or sets the total number of tokens (input + output).
     /// </summary>
-    public int TotalTokens { get; set; }
+    public long TotalTokens { get; set; }
 
     /// <summary>
     /// Gets or sets the duration of the operation in milliseconds.

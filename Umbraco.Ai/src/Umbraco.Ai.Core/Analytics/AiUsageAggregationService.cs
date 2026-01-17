@@ -88,9 +88,9 @@ internal sealed class AiUsageAggregationService : IAiUsageAggregationService
                     RequestCount = g.Count(),
                     SuccessCount = g.Count(r => r.Status == "Succeeded"),
                     FailureCount = g.Count(r => r.Status == "Failed"),
-                    InputTokens = g.Sum(r => (long)r.InputTokens),
-                    OutputTokens = g.Sum(r => (long)r.OutputTokens),
-                    TotalTokens = g.Sum(r => (long)r.TotalTokens),
+                    InputTokens = g.Sum(r => r.InputTokens),
+                    OutputTokens = g.Sum(r => r.OutputTokens),
+                    TotalTokens = g.Sum(r => r.TotalTokens),
                     TotalDurationMs = g.Sum(r => r.DurationMs),
                     CreatedAt = DateTime.UtcNow
                 })

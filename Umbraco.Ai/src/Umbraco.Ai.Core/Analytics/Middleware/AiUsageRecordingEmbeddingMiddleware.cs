@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Embeddings;
-using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Analytics.Middleware;
 
@@ -13,18 +12,18 @@ namespace Umbraco.Ai.Core.Analytics.Middleware;
 internal sealed class AiUsageRecordingEmbeddingMiddleware : IAiEmbeddingMiddleware
 {
     private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IBackOfficeSecurityAccessor _securityAccessor;
+    private readonly IAiUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
     private readonly ILoggerFactory _loggerFactory;
 
     public AiUsageRecordingEmbeddingMiddleware(
         IAiUsageRecordingService usageRecordingService,
-        IBackOfficeSecurityAccessor securityAccessor,
+        IAiUsageRecordFactory factory,
         IOptionsMonitor<AiAnalyticsOptions> options,
         ILoggerFactory loggerFactory)
     {
         _usageRecordingService = usageRecordingService;
-        _securityAccessor = securityAccessor;
+        _factory = factory;
         _options = options;
         _loggerFactory = loggerFactory;
     }
@@ -35,7 +34,7 @@ internal sealed class AiUsageRecordingEmbeddingMiddleware : IAiEmbeddingMiddlewa
         return new AiUsageRecordingEmbeddingGenerator<string, Embedding<float>>(
             generator,
             _usageRecordingService,
-            _securityAccessor,
+            _factory,
             _options,
             _loggerFactory.CreateLogger<AiUsageRecordingEmbeddingGenerator<string, Embedding<float>>>());
     }

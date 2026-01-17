@@ -57,7 +57,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("InputTokens")
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("ModelId")
                         .IsRequired()
@@ -65,7 +65,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<int>("OutputTokens")
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("ProfileAlias")
                         .IsRequired()
@@ -89,7 +89,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("TotalTokens")
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("UserId")
                         .HasMaxLength(100)

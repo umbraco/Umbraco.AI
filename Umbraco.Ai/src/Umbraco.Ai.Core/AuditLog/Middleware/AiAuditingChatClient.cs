@@ -40,8 +40,8 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
 
             // Extract metadata from options if present
             Dictionary<string, string>? metadata = null;
-            var logKeys = options?.AdditionalProperties?[Constants.MetadataKeys.LogKeys];
-            if (logKeys is IEnumerable<string> keys)
+            if (options?.AdditionalProperties?.TryGetValue(Constants.MetadataKeys.LogKeys, out var logKeys) == true
+                && logKeys is IEnumerable<string> keys)
             {
                 metadata = keys.ToDictionary(
                     key => key,
@@ -61,8 +61,8 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
             // Complete audit-log (if exists)
             if (auditLogHandle is not null)
             {
-                var trackingChatClient = _innerClient as AiTrackingChatClient;
-                
+                var trackingChatClient = _innerClient.GetService<AiTrackingChatClient>();
+
                 await _auditLogService.CompleteAuditLogAsync(
                     auditLogHandle.AuditLog,
                     new AiAuditResponse
@@ -107,10 +107,10 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
                 AiCapability.Chat,
                 options,
                 chatMessages.ToList());
-            
+
             Dictionary<string, string>? metadata = null;
-            var logKeys = options?.AdditionalProperties?[Constants.MetadataKeys.LogKeys];
-            if (logKeys is IEnumerable<string> keys)
+            if (options?.AdditionalProperties?.TryGetValue(Constants.MetadataKeys.LogKeys, out var logKeys) == true
+                && logKeys is IEnumerable<string> keys)
             {
                 metadata = keys.ToDictionary(
                     key => key,
@@ -153,8 +153,8 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         // Mark audit-log as completed (no response capture for streaming)
         if (auditLogHandle is not null)
         {
-            var trackingChatClient = _innerClient as AiTrackingChatClient;
-            
+            var trackingChatClient = _innerClient.GetService<AiTrackingChatClient>();
+
             await _auditLogService.CompleteAuditLogAsync(
                 auditLogHandle.AuditLog,
                 new AiAuditResponse

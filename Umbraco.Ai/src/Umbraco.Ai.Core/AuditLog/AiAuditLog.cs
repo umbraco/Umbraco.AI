@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Cms.Core.Models.Membership;
 
 namespace Umbraco.Ai.Core.AuditLog;
 
@@ -140,4 +141,48 @@ public sealed class AiAuditLog
     /// Stored as a JSON dictionary in the database.
     /// </summary>
     public IReadOnlyDictionary<string, string>? Metadata { get; init; }
+
+    /// <summary>
+    /// Creates a new AiAuditLog instance from the given AiAuditContext.
+    /// </summary>
+    /// <param name="context">The AiAuditContext containing operation details.</param>
+    /// <param name="metadata">Optional metadata to include in the audit-log.</param>
+    /// <param name="detailLevel">The detail level for this audit-log.</param>
+    /// <param name="user">The user who initiated the operation.</param>
+    /// <param name="id">Optional specific ID for the audit-log; a new GUID will be generated if not provided.</param>
+    /// <param name="parentId">Optional parent audit-log ID if this log is part of a nested operation.</param>
+    /// <returns></returns>
+    public static AiAuditLog Create(AiAuditContext context,
+        IReadOnlyDictionary<string, string>? metadata = null,
+        AiAuditLogDetailLevel detailLevel = AiAuditLogDetailLevel.FailuresOnly,
+        IUser? user = null,
+        Guid? id = null,
+        Guid? parentId = null)
+    {
+        if (!context.ProfileId.HasValue) throw new ArgumentException("ProfileId must be set in the AiAuditContext.", nameof(context));
+        if (string.IsNullOrWhiteSpace(context.ProfileAlias)) throw new ArgumentException("ProfileAlias must be set in the AiAuditContext.", nameof(context));
+        if (string.IsNullOrWhiteSpace(context.ProviderId)) throw new ArgumentException("ProviderId must be set in the AiAuditContext.", nameof(context));
+        if (string.IsNullOrWhiteSpace(context.ModelId)) throw new ArgumentException("ModelId must be set in the AiAuditContext.", nameof(context));
+        
+        return new AiAuditLog
+        {
+            Id = id ?? Guid.NewGuid(),
+            ParentAuditLogId = parentId,
+            UserId = user?.Id.ToString(),
+            UserName = user?.Name,
+            Capability = context.Capability,
+            ProfileId = context.ProfileId.Value,
+            ProfileAlias = context.ProfileAlias,
+            ProviderId = context.ProviderId,
+            ModelId = context.ModelId,
+            EntityId = context.EntityId,
+            EntityType = context.EntityType,
+            FeatureType = context.FeatureType,
+            FeatureId = context.FeatureId,
+            Metadata = metadata != null
+                ? new Dictionary<string, string>(metadata)
+                : null,
+            DetailLevel = detailLevel
+        };
+    }
 }

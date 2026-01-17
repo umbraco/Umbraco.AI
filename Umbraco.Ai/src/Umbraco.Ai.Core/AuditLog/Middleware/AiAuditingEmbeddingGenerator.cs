@@ -33,10 +33,10 @@ internal sealed class AiAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
                 AiCapability.Embedding,
                 options,
                 values.ToList());
-            
+
             Dictionary<string, string>? metadata = null;
-            var logKeys = options?.AdditionalProperties?[Constants.MetadataKeys.LogKeys];
-            if (logKeys is IEnumerable<string> keys)
+            if (options?.AdditionalProperties?.TryGetValue(Constants.MetadataKeys.LogKeys, out var logKeys) == true
+                && logKeys is IEnumerable<string> keys)
             {
                 metadata = keys.ToDictionary(
                     key => key,

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco Ai Agent</Title>
+        <Description>Agent management plugin for Umbraco Ai</Description>
+        <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+        <PackageTags>umbraco ai agent umbraco-marketplace</PackageTags>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeSymbols>false</IncludeSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="..\..\README.md" Pack="true" PackagePath="docs\" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.Ai.Agent.Startup\Umbraco.Ai.Agent.Startup.csproj" />
+        <ProjectReference Include="..\Umbraco.Ai.Agent.Web.StaticAssets\Umbraco.Ai.Agent.Web.StaticAssets.csproj" />
+    </ItemGroup>
+</Project>

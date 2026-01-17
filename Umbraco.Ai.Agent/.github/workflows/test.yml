@@ -1,0 +1,62 @@
+name: Tests
+
+# Disabled until Umbraco.Ai packages are published to NuGet
+# Re-enable by uncommenting the triggers below
+on:
+  workflow_dispatch: # Manual trigger only for now
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Umbraco.Ai.Agent.sln
+
+      - name: Build
+        run: dotnet build Umbraco.Ai.Agent.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Umbraco.Ai.Agent.sln --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage --settings coverage.runsettings
+
+      - name: Merge coverage reports
+        if: success()
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage/merged -reporttypes:Cobertura
+
+      - name: Code Coverage Summary
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        if: success()
+        with:
+          filename: ./coverage/merged/Cobertura.xml
+          badge: true
+          format: markdown
+          output: both
+          thresholds: '60 80'
+
+      - name: Write to Job Summary
+        if: success()
+        run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: coverage-report
+          path: ./coverage/**/coverage.cobertura.xml
+          retention-days: 30

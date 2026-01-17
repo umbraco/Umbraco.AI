@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "D:\\Work\\Umbraco\\Umbraco.Ai\\Umbraco.Ai",
+      "D:\\Work\\Umbraco\\Umbraco.CMS\\Umbraco.CMS",
+      "D:\\Work\\Umbraco\\Umbraco.UIBuilder\\Umbraco.UIBuilder",
+      "D:\\Work\\Umbraco\\Umbraco.Ai\\Ref\\CopilotKit-main\\src\\v2.x",
+      "D:\\Work\\Umbraco\\Umbraco.Ai\\Ref\\agent-framework"
+    ]
+  }
+}

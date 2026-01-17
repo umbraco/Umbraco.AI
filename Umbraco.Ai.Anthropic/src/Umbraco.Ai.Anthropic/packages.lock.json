@@ -2,6 +2,15 @@
   "version": 2,
   "dependencies": {
     "net10.0": {
+      "Anthropic": {
+        "type": "Direct",
+        "requested": "[12.2.0, )",
+        "resolved": "12.2.0",
+        "contentHash": "W9Zy4L2vJYZvYA8BsnOrteLyIe8U8RgmFf/7jtf5k9TZZBTgYOouKyo/NWl/FP6ULZWkYjRN0j9JphazEgQfDA==",
+        "dependencies": {
+          "Microsoft.Extensions.AI.Abstractions": "10.2.0"
+        }
+      },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",
         "requested": "[1.1.1, )",
@@ -374,8 +383,8 @@
       },
       "Microsoft.Extensions.AI.Abstractions": {
         "type": "Transitive",
-        "resolved": "10.0.1",
-        "contentHash": "SR78I0BV7ljDovyVsZQqpt2NezdLoDtoIOCNwqAteuPc8f5PEmvDjokOQxKnTwXo/9RBKnmrzuPzbsuvueZcrg=="
+        "resolved": "10.2.0",
+        "contentHash": "ONGlIBht0ygEdKc0bCt9XWUiq19/460dAu7fCKzPM34OFJSMQIohEDTJwjCJ8vVp8znNakloc9xFF9+R/eDCYQ=="
       },
       "Microsoft.Extensions.Caching.Abstractions": {
         "type": "Transitive",

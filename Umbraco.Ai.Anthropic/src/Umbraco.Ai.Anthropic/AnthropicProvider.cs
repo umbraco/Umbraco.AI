@@ -53,7 +53,7 @@ public class AnthropicProvider : AiProviderBase<AnthropicProviderSettings>
         var client = CreateAnthropicClient(settings);
         var result = await client.Models.List(cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        var modelIds = result.Data
+        var modelIds = result.Items
             .Select(m => m.ID)
             .OrderBy(id => id)
             .ToList();
@@ -74,11 +74,11 @@ public class AnthropicProvider : AiProviderBase<AnthropicProviderSettings>
         }
 
         return string.IsNullOrWhiteSpace(settings.Endpoint)
-            ? new AnthropicClient { APIKey = settings.ApiKey }
+            ? new AnthropicClient { ApiKey = settings.ApiKey }
             : new AnthropicClient
             {
-                APIKey = settings.ApiKey,
-                BaseUrl = new Uri(settings.Endpoint)
+                ApiKey = settings.ApiKey,
+                BaseUrl = settings.Endpoint
             };
     }
 

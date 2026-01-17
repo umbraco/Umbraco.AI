@@ -12,13 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- TODO: Replace with PackageReference when SDK fix is released -->
-    <!-- <PackageReference Include="Anthropic" /> -->
-  </ItemGroup>
-
-  <!-- Local SDK with InputSchema fix - replace with PackageReference when merged -->
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Ref\anthropic-sdk-csharp\src\Anthropic\Anthropic.csproj" />
+    <PackageReference Include="Anthropic" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Title>Umbraco Ai Anthropic Provider</Title>
+    <Description>Anthropic provider for Umbraco Ai</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAiAnthropic</StaticWebAssetBasePath>
+    <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- TODO: Replace with PackageReference when SDK fix is released -->
+    <!-- <PackageReference Include="Anthropic" /> -->
+<!--    <PackageReference Include="Umbraco.Ai.Core" />-->
+  </ItemGroup>
+
+  <!-- Local SDK with InputSchema fix - replace with PackageReference when merged -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Ref\anthropic-sdk-csharp\src\Anthropic\Anthropic.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Umbraco.Ai.Anthropic.Tests.Unit</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

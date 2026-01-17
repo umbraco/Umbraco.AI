@@ -258,7 +258,7 @@ Closes #123
 Before submitting a PR:
 
 - [ ] Branch name follows convention (`feature/<product>-<description>`)
-- [ ] Code follows [coding standards](../CLAUDE.md#coding-standards)
+- [ ] Code follows [coding standards](CLAUDE.md#coding-standards)
 - [ ] All tests pass
 - [ ] Frontend builds (if frontend changes)
 - [ ] Documentation updated (if needed)
@@ -511,7 +511,7 @@ forceReleaseAnthropic: true
 
 ## Coding Standards
 
-All contributions must follow the [coding standards in CLAUDE.md](../CLAUDE.md#coding-standards).
+All contributions must follow the [coding standards in CLAUDE.md](CLAUDE.md#coding-standards).
 
 ### Key Conventions
 
@@ -568,8 +568,8 @@ Update documentation when:
 |------|----------|
 | Product-specific guidance | `<Product>/CLAUDE.md` |
 | Shared coding standards | `CLAUDE.md` |
+| Contributing guide | `CONTRIBUTING.md` (this file) |
 | Monorepo structure | `docs/migration-guide.md` |
-| Contributing guide | `docs/contributing.md` (this file) |
 | User guides | `docs/<topic>.md` |
 | API documentation | XML comments in code |
 

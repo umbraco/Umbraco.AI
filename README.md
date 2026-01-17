@@ -125,8 +125,14 @@ This monorepo supports independent versioning per product:
 
 ## Contributing
 
-See [CLAUDE.md](CLAUDE.md) for coding standards and contribution guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+- Development workflow and branch naming
+- Pull request process
+- Release and deployment procedures
+- Coding standards and conventions
+
+For technical details, see [CLAUDE.md](CLAUDE.md).
 
 ## License
 
-[License information to be added]
+This project is licensed under the MIT License. See [LICENSE.md](LICENSE.md) for details.

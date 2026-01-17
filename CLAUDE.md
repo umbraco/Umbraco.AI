@@ -54,6 +54,7 @@ dotnet build Umbraco.Ai.local.sln
 # Build individual product
 dotnet build Umbraco.Ai/Umbraco.Ai.sln
 dotnet build Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.sln
+dotnet build Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.sln
 dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
 dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
 
@@ -116,7 +117,7 @@ Umbraco.Ai (Core)
 
 ### Standard Project Structure
 
-Each product follows the same structure:
+**Core and Add-on packages** (Umbraco.Ai, Umbraco.Ai.Agent, Umbraco.Ai.Prompt) follow this structure:
 
 ```
 ProductName/
@@ -136,6 +137,18 @@ ProductName/
 │   └── ProductName.Tests.Common/
 ├── ProductName.sln                 # Individual solution
 └── CLAUDE.md                       # Product-specific guidance
+```
+
+**Provider packages** (Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic) use a simplified structure:
+
+```
+ProviderName/
+├── src/
+│   └── ProviderName/               # Single project with provider, capabilities, settings
+├── tests/
+│   └── ProviderName.Tests.Unit/
+├── ProviderName.sln
+└── CLAUDE.md
 ```
 
 ### Core Concepts (Umbraco.Ai)

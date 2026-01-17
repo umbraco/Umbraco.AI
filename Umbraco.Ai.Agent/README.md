@@ -12,6 +12,10 @@ An agent management add-on for Umbraco.Ai that provides storage, execution, and 
 - **Backoffice UI** - Full management interface integrated into Umbraco
 - **Management API** - RESTful API for agent CRUD operations and execution
 
+## Monorepo Context
+
+This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
+
 ## Installation
 
 ```bash
@@ -103,6 +107,12 @@ Built on the [Microsoft Agent Framework (MAF)](https://github.com/microsoft/Agen
 - Frontend tool handling with client-side execution
 - Custom context item injection
 
-## Contributing
+## Documentation
 
-See the [CLAUDE.md](CLAUDE.md) file for development setup and coding standards.
+- **[CLAUDE.md](CLAUDE.md)** - Development guide, architecture, and technical details for this package
+- **[Root CLAUDE.md](../CLAUDE.md)** - Shared coding standards and conventions
+- **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to the monorepo
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.

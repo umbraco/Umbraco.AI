@@ -25,24 +25,37 @@ Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified 
 - **Umbraco.Ai.Startup** - Composition and startup configuration
 - **Umbraco.Ai** - Meta-package that references all components
 
-Provider packages (separate repositories):
-- **Umbraco.Ai.OpenAi** - OpenAI provider implementation
+## Monorepo Context
+
+This package is part of the [Umbraco.Ai monorepo](../README.md). Provider packages are also included in the monorepo:
+- **Umbraco.Ai.OpenAi** - Located in `../Umbraco.Ai.OpenAi/`
+- **Umbraco.Ai.Anthropic** - Located in `../Umbraco.Ai.Anthropic/`
 
 ## Getting Started
 
-### Setting Up a Demo Site
+### Installation
 
-To quickly set up a local demo site for development and testing:
-
-```powershell
-.\scripts\Install-DemoSite.ps1
+```bash
+dotnet add package Umbraco.Ai
 ```
 
-This script will:
-- Create a demo folder with a new Umbraco site (`Umbraco.Ai.DemoSite`)
-- Copy `Umbraco.Ai.sln` to `Umbraco.Ai.local.sln`
-- Add the demo site to the local solution in a "Demo" solution folder
-- Add project references to `Umbraco.Ai.Startup` and `Umbraco.Ai.Web.StaticAssets`
-- Configure the demo site to work with local package development (disables central package management)
+### Local Development
 
-After running the script, you can open `Umbraco.Ai.local.sln` to work with both the package source code and the demo site.
+For local development and testing, use the monorepo setup script from the repository root:
+
+```powershell
+# From repository root
+.\Install-DemoSite.ps1
+```
+
+This creates a unified solution (`Umbraco.Ai.local.sln`) with all packages and a demo site. See the [root README](../README.md) for details.
+
+## Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** - Development guide, architecture, and technical details for this package
+- **[Root CLAUDE.md](../CLAUDE.md)** - Shared coding standards and conventions
+- **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to the monorepo
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.

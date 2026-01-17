@@ -1,0 +1,54 @@
+import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
+
+export default {
+    uaiGeneral: {
+        select: "Select",
+    },
+    uaiComponents: {
+        pollingButtonTogglePolling: "Toggle Polling",
+        pollingButtonPolling: "Polling",
+        pollingButtonChoosePollingInterval: "Choose Polling Interval",
+        pollingButtonPollingActive: "Polling {0} seconds",
+        pollingButtonPollingInterval: "Every {0} seconds",
+    },
+    uaiCapabilities: {
+        chat: "Chat",
+        embedding: "Embedding",
+        media: "Media",
+        moderation: "Moderation",
+    },
+    uaiConnection: {
+        deleteConfirm: "Are you sure you want to delete this connection?",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} connection(s)?`,
+        actions: "Actions",
+        testConnection: "Test Connection",
+        testConnectionSuccess: "Connection test successful",
+        testConnectionFailed: "Connection test failed",
+    },
+    uaiProfile: {
+        deleteConfirm: "Are you sure you want to delete this profile?",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} profile(s)?`,
+    },
+    uaiContext: {
+        selectContext: "Select AI Context",
+        addContext: "Add context",
+        noContextsAvailable: "No AI contexts available. Create one in the AI section.",
+        deleteConfirm: "Are you sure you want to delete this context?",
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} context(s)?`,
+    },
+    uaiFields: {
+        // Text resource fields
+        textContentLabel: "Content",
+        textContentDescription: "The text content (plain text or markdown)",
+
+        // Brand Voice resource fields
+        brandVoiceToneDescriptionLabel: "Tone",
+        brandVoiceToneDescriptionDescription: "Description of the tone to use (e.g., \"Professional but approachable\")",
+        brandVoiceTargetAudienceLabel: "Target Audience",
+        brandVoiceTargetAudienceDescription: "Description of the target audience (e.g., \"B2B tech decision makers\")",
+        brandVoiceStyleGuidelinesLabel: "Style Guidelines",
+        brandVoiceStyleGuidelinesDescription: "Style guidelines to follow (e.g., \"Use active voice, be concise\")",
+        brandVoiceAvoidPatternsLabel: "Patterns to Avoid",
+        brandVoiceAvoidPatternsDescription: "Patterns and phrases to avoid (e.g., \"Jargon, exclamation marks\")",
+    },
+} as UmbLocalizationDictionary;

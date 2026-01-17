@@ -1,0 +1,149 @@
+using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Ai.Core.Analytics;
+using Umbraco.Ai.Core.Analytics.Middleware;
+using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Core.Contexts;
+using Umbraco.Ai.Core.Contexts.Middleware;
+using Umbraco.Ai.Core.Contexts.Resolvers;
+using Umbraco.Ai.Core.Contexts.ResourceTypes;
+using Umbraco.Ai.Core.EditableModels;
+using Umbraco.Ai.Core.Embeddings;
+using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.Ai.Core.AuditLog;
+using Umbraco.Ai.Core.AuditLog.Middleware;
+using Umbraco.Ai.Core.Chat.Middleware;
+using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RequestContext.Processors;
+using Umbraco.Ai.Core.TaskQueue;
+using Umbraco.Ai.Core.Tools;
+using Umbraco.Cms.Core.DependencyInjection;
+
+namespace Umbraco.Ai.Extensions;
+
+/// <summary>
+/// Extension methods for <see cref="IUmbracoBuilder"/> for AI services registration.
+/// </summary>
+public static partial class UmbracoBuilderExtensions
+{
+    internal static IUmbracoBuilder AddUmbracoAiCore(this IUmbracoBuilder builder)
+    {
+        var services = builder.Services;
+        var config = builder.Config;
+
+        // Prevent multiple registrations
+        if (services.Any(x => x.ServiceType == typeof(AiProviderCollection)))
+            return builder;
+
+        // Bind AiOptions from "Umbraco:Ai" section
+        services.Configure<AiOptions>(config.GetSection("Umbraco:Ai"));
+
+        // Bind AiAuditLogOptions from "Umbraco:Ai:AuditLog" section
+        services.Configure<AiAuditLogOptions>(config.GetSection("Umbraco:Ai:AuditLog"));
+
+        // Bind AiAnalyticsOptions from "Umbraco:Ai:Analytics" section
+        services.Configure<AiAnalyticsOptions>(config.GetSection("Umbraco:Ai:Analytics"));
+
+        // Provider infrastructure
+        services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
+        services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
+        services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
+
+        // Auto-discover providers using TypeLoader (uses Umbraco's cached, efficient type discovery)
+        builder.AiProviders()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
+
+        // Initialize middleware collection builders with default middleware
+        // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
+        builder.AiChatMiddleware()
+            .Append<AiTrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
+            .Append<AiUsageRecordingChatMiddleware>()    // Records usage to database for analytics
+            .Append<AiAuditingChatMiddleware>()          // Audit logging (optional, can be disabled)
+            .Append<AiContextInjectingChatMiddleware>(); // Context injection
+
+        builder.AiEmbeddingMiddleware()
+            .Append<AiTrackingEmbeddingMiddleware>()        // Tracks usage details
+            .Append<AiUsageRecordingEmbeddingMiddleware>()  // Records usage to database for analytics
+            .Append<AiAuditingEmbeddingMiddleware>();       // Audit logging (optional, can be disabled)
+
+        // Tool infrastructure - auto-discover tools via [AiTool] attribute
+        builder.AiTools()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiTool, AiToolAttribute>(cache: true));
+        
+        // Background task queue for async audit recording
+        services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+        services.AddHostedService<BackgroundTaskQueueWorker>();
+
+        // Function factory for creating MEAI AIFunction instances
+        services.AddSingleton<IAiFunctionFactory, AiFunctionFactory>();
+
+        // Editable model resolution
+        services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();
+
+        // Connection system
+        services.AddSingleton<IAiConnectionRepository, InMemoryAiConnectionRepository>();
+        services.AddSingleton<IAiConnectionService, AiConnectionService>();
+
+        // Profile resolution
+        services.AddSingleton<IAiProfileRepository, InMemoryAiProfileRepository>();
+        services.AddSingleton<IAiProfileService, AiProfileService>();
+
+        // Client factories
+        services.AddSingleton<IAiChatClientFactory, AiChatClientFactory>();
+        services.AddSingleton<IAiEmbeddingGeneratorFactory, AiEmbeddingGeneratorFactory>();
+
+        // High-level services
+        services.AddSingleton<IAiChatService, AiChatService>();
+        services.AddSingleton<IAiEmbeddingService, AiEmbeddingService>();
+        // TODO: services.AddSingleton<IAiToolService, AiToolService>();
+
+        // Context resource type infrastructure - auto-discover via [AiContextResourceType] attribute
+        services.AddSingleton<IAiContextResourceTypeInfrastructure, AiContextResourceTypeInfrastructure>();
+        builder.AiContextResourceTypes()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiContextResourceType, AiContextResourceTypeAttribute>(cache: true));
+
+        // Context system
+        services.AddSingleton<IAiContextRepository, InMemoryAiContextRepository>();
+        services.AddSingleton<IAiContextService, AiContextService>();
+        services.AddSingleton<IAiContextFormatter, AiContextFormatter>();
+        services.AddSingleton<IAiContextAccessor, AiContextAccessor>();
+
+        // Context resolution - pluggable resolver system
+        // Order: Profile -> Content (content can override profile-level context)
+        builder.AiContextResolvers()
+            .Append<ProfileContextResolver>()
+            .Append<ContentContextResolver>();
+        services.AddSingleton<IAiContextResolutionService, AiContextResolutionService>();
+
+        // Entity adapter infrastructure
+        services.AddSingleton<IAiEntityContextHelper, AiEntityContextHelper>();
+
+        // Request context processing - processes context items from frontend
+        builder.AiRequestContextProcessors()
+            .Append<SerializedEntityProcessor>()
+            .Append<DefaultSystemMessageProcessor>();
+
+        // AuditLog infrastructure
+        // Note: IAiAuditLogRepository is registered by persistence layer
+        services.AddSingleton<IAiAuditLogService, AiAuditLogService>();
+
+        // Background job for audit-log cleanup
+        services.AddHostedService<AiAuditLogCleanupBackgroundJob>();
+
+        // Analytics infrastructure
+        // Note: IAiUsageRecordRepository and IAiUsageStatisticsRepository are registered by persistence layer
+        services.AddSingleton<IAiUsageRecordingService, AiUsageRecordingService>();
+        services.AddSingleton<IAiUsageAggregationService, AiUsageAggregationService>();
+        services.AddSingleton<IAiUsageAnalyticsService, AiUsageAnalyticsService>();
+
+        // Background jobs for analytics aggregation and cleanup
+        services.AddHostedService<AiUsageHourlyAggregationJob>();
+        services.AddHostedService<AiUsageDailyRollupJob>();
+        services.AddHostedService<AiUsageStatisticsCleanupJob>();
+
+        return builder;
+    }
+}

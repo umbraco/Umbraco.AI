@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Umbraco AI Web</Title>
+        <Description>Management API for Umbraco AI</Description>
+        <RootNamespace>Umbraco.Ai.Web</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Humanizer.Core" />
+        <PackageReference Include="Umbraco.Cms.Api.Management" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.Ai.Startup</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+</Project>

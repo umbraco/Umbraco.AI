@@ -1,0 +1,25 @@
+{
+  "id": "Umbraco.Ai",
+  "name": "Umbraco Ai",
+  "version": "0.0.0",
+  "allowTelemetry": true,
+  "extensions": [
+    {
+      "name": "Umbraco Ai",
+      "alias": "UmbracoAi.Bundle",
+      "type": "bundle",
+      "js": "/App_Plugins/UmbracoAi/umbraco-ai-manifests.js"
+    },
+    {
+      "type": "backofficeEntryPoint",
+      "name": "Umbraco AI Backoffice Entry Point",
+      "alias": "Umbraco.Ai.BackofficeEntryPoint",
+      "js": "/App_Plugins/UmbracoAi/umbraco-ai-app.js"
+    }
+  ],
+  "importmap": {
+    "imports": {
+      "@umbraco-ai/core": "/App_Plugins/UmbracoAi/umbraco-ai-app.js"
+    }
+  }
+}

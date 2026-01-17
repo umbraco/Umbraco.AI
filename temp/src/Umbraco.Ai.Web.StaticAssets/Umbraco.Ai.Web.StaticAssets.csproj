@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <Title>Umbraco Ai</Title>
+        <Description>Contains static assets for Umbraco Ai</Description>
+        <StaticWebAssetBasePath>App_Plugins/UmbracoAi</StaticWebAssetBasePath>
+        <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Dont include the client folder as part of packaging nuget build -->
+        <Content Remove="Client\**" />
+        <Content Include="Client\api-extractor.json" />
+        <Content Include="Client\package-lock.json" />
+        <Content Include="Client\package.json" />
+        <Content Include="Client\tsconfig.api.json" />
+        <Content Include="Client\tsconfig.app.json" />
+        <Content Include="Client\tsconfig.json" />
+
+        <!-- However make the Umbraco-package.json included for dotnet pack or nuget package and visible to the solution -->
+        <None Include="Client\public\umbraco-package.json" Pack="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+    <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild" DependsOnTargets="GetBuildVersion;GetUmbracoBuildVersion" Condition="Exists('wwwroot\umbraco-package.json')">
+        <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
+        <ItemGroup>
+            <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
+        </ItemGroup>
+        <JsonPathUpdateValue JsonFile="%(_PackageManifestFiles.FullPath)" Path="$.version" Value="&quot;$(PackageVersion)&quot;" />
+    </Target>
+    
+</Project>

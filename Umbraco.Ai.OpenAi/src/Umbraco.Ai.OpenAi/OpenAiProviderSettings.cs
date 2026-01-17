@@ -1,0 +1,29 @@
+﻿using System.ComponentModel.DataAnnotations;
+using Umbraco.Ai.Core.EditableModels;
+
+namespace Umbraco.Ai.OpenAi;
+
+/// <summary>
+/// Settings for the OpenAI provider.
+/// </summary>
+public class OpenAiProviderSettings
+{
+    /// <summary>
+    /// The API key for authenticating with OpenAI services.
+    /// </summary>
+    [AiField]
+    [Required]
+    public string? ApiKey { get; set; }
+
+    /// <summary>
+    /// Optional organization ID for OpenAI API requests.
+    /// </summary>
+    [AiField]
+    public string? OrganizationId { get; set; }
+
+    /// <summary>
+    /// Custom API endpoint URL.
+    /// </summary>
+    [AiField(DefaultValue = "https://api.openai.com/v1")]
+    public string? Endpoint { get; set; }
+}

@@ -1,6 +1,10 @@
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Runtime;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Sync;
+using Umbraco.Cms.Infrastructure.HostedServices;
 
 namespace Umbraco.Ai.Core.Analytics;
 
@@ -8,63 +12,77 @@ namespace Umbraco.Ai.Core.Analytics;
 /// Background service that periodically rolls up hourly statistics into daily statistics.
 /// Runs daily, processing completed days and catching up on any missed periods.
 /// </summary>
-internal sealed class AiUsageDailyRollupJob : BackgroundService
+internal sealed class AiUsageDailyRollupJob : RecurringHostedServiceBase
 {
     private readonly IAiUsageAggregationService _aggregationService;
     private readonly IAiUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IRuntimeState _runtimeState;
+    private readonly IServerRoleAccessor _serverRoleAccessor;
+    private readonly IMainDom _mainDom;
     private readonly ILogger<AiUsageDailyRollupJob> _logger;
 
-    // Run every 6 hours (will process if needed)
-    private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(6);
+    // Run every hour (will process if needed)
+    private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(1);
+    private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(1);
 
     public AiUsageDailyRollupJob(
         IAiUsageAggregationService aggregationService,
         IAiUsageStatisticsRepository statisticsRepository,
         IOptionsMonitor<AiAnalyticsOptions> options,
+        IRuntimeState runtimeState,
+        IServerRoleAccessor serverRoleAccessor,
+        IMainDom mainDom,
         ILogger<AiUsageDailyRollupJob> logger)
+        : base(logger, CheckInterval, StartupDelay)
     {
         _aggregationService = aggregationService;
         _statisticsRepository = statisticsRepository;
         _options = options;
+        _runtimeState = runtimeState;
+        _serverRoleAccessor = serverRoleAccessor;
+        _mainDom = mainDom;
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public override async Task PerformExecuteAsync(object? state)
     {
-        _logger.LogInformation("AI Usage Daily Rollup Job started");
-
-        // Wait a bit on startup to let other services initialize
-        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
+        // Don't run if analytics is disabled
+        if (!_options.CurrentValue.Enabled)
         {
-            try
-            {
-                if (!_options.CurrentValue.Enabled)
-                {
-                    _logger.LogDebug("Analytics disabled, skipping daily rollup");
-                    await Task.Delay(CheckInterval, stoppingToken);
-                    continue;
-                }
-
-                await ProcessMissingDaysAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                // Expected when shutting down
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in daily rollup job, will retry on next run");
-            }
-
-            // Wait before next check
-            await Task.Delay(CheckInterval, stoppingToken);
+            _logger.LogDebug("Analytics disabled, skipping daily rollup");
+            return;
         }
 
-        _logger.LogInformation("AI Usage Daily Rollup Job stopped");
+        // Don't run unless Umbraco is running
+        if (_runtimeState.Level != RuntimeLevel.Run)
+        {
+            return;
+        }
+
+        // Don't run on replicas nor unknown role servers
+        switch (_serverRoleAccessor.CurrentServerRole)
+        {
+            case ServerRole.Subscriber:
+                _logger.LogDebug("AI Usage Daily Rollup will not run on subscriber servers.");
+                return;
+            case ServerRole.Unknown:
+                _logger.LogDebug("AI Usage Daily Rollup will not run on servers with unknown role.");
+                return;
+            case ServerRole.Single:
+            case ServerRole.SchedulingPublisher:
+            default:
+                break;
+        }
+
+        // Ensure we do not run if not main domain
+        if (!_mainDom.IsMainDom)
+        {
+            _logger.LogDebug("AI Usage Daily Rollup will not run if not MainDom.");
+            return;
+        }
+
+        await ProcessMissingDaysAsync(CancellationToken.None);
     }
 
     /// <summary>

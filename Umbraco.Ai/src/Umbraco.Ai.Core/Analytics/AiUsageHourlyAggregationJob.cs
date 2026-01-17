@@ -1,6 +1,10 @@
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Runtime;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Sync;
+using Umbraco.Cms.Infrastructure.HostedServices;
 
 namespace Umbraco.Ai.Core.Analytics;
 
@@ -8,66 +12,80 @@ namespace Umbraco.Ai.Core.Analytics;
 /// Background service that periodically aggregates raw usage records into hourly statistics.
 /// Runs continuously, processing completed hours and catching up on any missed periods.
 /// </summary>
-internal sealed class AiUsageHourlyAggregationJob : BackgroundService
+internal sealed class AiUsageHourlyAggregationJob : RecurringHostedServiceBase
 {
     private readonly IAiUsageAggregationService _aggregationService;
     private readonly IAiUsageRecordRepository _recordRepository;
     private readonly IAiUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IRuntimeState _runtimeState;
+    private readonly IServerRoleAccessor _serverRoleAccessor;
+    private readonly IMainDom _mainDom;
     private readonly ILogger<AiUsageHourlyAggregationJob> _logger;
 
     // Run every 5 minutes
     private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan StartupDelay = TimeSpan.FromSeconds(30);
 
     public AiUsageHourlyAggregationJob(
         IAiUsageAggregationService aggregationService,
         IAiUsageRecordRepository recordRepository,
         IAiUsageStatisticsRepository statisticsRepository,
         IOptionsMonitor<AiAnalyticsOptions> options,
+        IRuntimeState runtimeState,
+        IServerRoleAccessor serverRoleAccessor,
+        IMainDom mainDom,
         ILogger<AiUsageHourlyAggregationJob> logger)
+        : base(logger, CheckInterval, StartupDelay)
     {
         _aggregationService = aggregationService;
         _recordRepository = recordRepository;
         _statisticsRepository = statisticsRepository;
         _options = options;
+        _runtimeState = runtimeState;
+        _serverRoleAccessor = serverRoleAccessor;
+        _mainDom = mainDom;
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public override async Task PerformExecuteAsync(object? state)
     {
-        _logger.LogInformation("AI Usage Hourly Aggregation Job started");
-
-        // Wait a bit on startup to let other services initialize
-        await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
+        // Don't run if analytics is disabled
+        if (!_options.CurrentValue.Enabled)
         {
-            try
-            {
-                if (!_options.CurrentValue.Enabled)
-                {
-                    _logger.LogDebug("Analytics disabled, skipping hourly aggregation");
-                    await Task.Delay(CheckInterval, stoppingToken);
-                    continue;
-                }
-
-                await ProcessMissingHoursAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                // Expected when shutting down
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in hourly aggregation job, will retry on next run");
-            }
-
-            // Wait before next check
-            await Task.Delay(CheckInterval, stoppingToken);
+            _logger.LogDebug("Analytics disabled, skipping hourly aggregation");
+            return;
         }
 
-        _logger.LogInformation("AI Usage Hourly Aggregation Job stopped");
+        // Don't run unless Umbraco is running
+        if (_runtimeState.Level != RuntimeLevel.Run)
+        {
+            return;
+        }
+
+        // Don't run on replicas nor unknown role servers
+        switch (_serverRoleAccessor.CurrentServerRole)
+        {
+            case ServerRole.Subscriber:
+                _logger.LogDebug("AI Usage Hourly Aggregation will not run on subscriber servers.");
+                return;
+            case ServerRole.Unknown:
+                _logger.LogDebug("AI Usage Hourly Aggregation will not run on servers with unknown role.");
+                return;
+            case ServerRole.Single:
+            case ServerRole.SchedulingPublisher:
+            default:
+                break;
+        }
+
+        // Ensure we do not run if not main domain
+        if (!_mainDom.IsMainDom)
+        {
+            _logger.LogDebug("AI Usage Hourly Aggregation will not run if not MainDom.");
+            return;
+        }
+
+        await ProcessMissingHoursAsync(CancellationToken.None);
     }
 
     /// <summary>

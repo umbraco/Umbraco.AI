@@ -37,6 +37,32 @@ dotnet build Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.sln
 dotnet build Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.sln
 ```
 
+### Frontend Development (npm Workspaces)
+
+This monorepo uses **npm workspaces** for frontend dependency management. Add-on packages (`@umbraco-ai/prompt`, `@umbraco-ai/agent`) automatically reference the local `@umbraco-ai/core` during development using the `workspace:*` protocol.
+
+```bash
+# Install all workspace dependencies (run from monorepo root)
+npm install
+
+# Build all frontends (sequential: core -> prompt -> agent)
+npm run build
+
+# Watch all frontends in parallel
+npm run watch
+
+# Build/watch specific packages
+npm run build:core
+npm run build:prompt
+npm run watch:agent
+```
+
+**Workspace Benefits:**
+- Single `npm install` installs all dependencies across all packages
+- Automatic local package linking (no manual `npm link` required)
+- Common dependencies are hoisted to the root `node_modules`
+- `workspace:*` automatically replaced with published version during `npm pack`
+
 ## Architecture
 
 ```

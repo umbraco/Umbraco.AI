@@ -63,9 +63,11 @@ dotnet test Umbraco.Ai/Umbraco.Ai.sln
 
 ### Frontend (npm)
 
+This monorepo uses **npm workspaces** for efficient dependency management. Add-on packages reference the local core package using `workspace:*`, which automatically resolves to the local workspace during development and to the published version during release.
+
 ```bash
-# Install all Client dependencies
-npm run install:all
+# Install all workspace dependencies (run from root)
+npm install
 
 # Build all frontends (sequential: core -> prompt -> agent)
 npm run build
@@ -84,6 +86,12 @@ npm run watch:core
 npm run watch:prompt
 npm run watch:agent
 ```
+
+**Workspace Benefits:**
+- Single `npm install` installs all dependencies across all packages
+- Add-ons automatically use the local `@umbraco-ai/core` during development
+- Common dependencies are hoisted to the root `node_modules`
+- When you run `npm pack`, `workspace:*` is automatically replaced with the actual version
 
 ### Distribution Build
 

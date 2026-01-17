@@ -11,12 +11,10 @@ public interface IAiAuditLogService
     /// Automatically detects parent audit-log from AuditLogScope.Current.
     /// </summary>
     /// <param name="auditLog">The audit-log record to start.</param>
-    /// <param name="parentId">Optional specific parent ID to use for the audit-log. If null, will use AuditLogScope.Current.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The newly created audit-log record.</returns>
     Task<AiAuditLog> StartAuditLogAsync(
         AiAuditLog auditLog,
-        Guid? parentId = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -46,12 +44,10 @@ public interface IAiAuditLogService
     /// This is a fire-and-forget operation that uses the background task queue.
     /// </summary>
     /// <param name="auditLog">The audit-log record to start.</param>
-    /// <param name="parentId">Optional specific parent ID to use for the audit-log. If null, will use AuditLogScope.Current.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
     ValueTask QueueStartAuditLogAsync(
         AiAuditLog auditLog,
-        Guid? parentId = null,
         CancellationToken ct = default);
 
     /// <summary>

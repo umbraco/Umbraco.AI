@@ -30,14 +30,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
     /// <inheritdoc />
     public async Task<AiAuditLog> StartAuditLogAsync(AiAuditLog auditLog,
-        Guid? parentId = null,
         CancellationToken ct = default)
     {
         // The AiAuditLog.Create factory method should have already set most properties.
         // This method just handles parent ID resolution and persists to the database.
 
         // Set parent ID from explicit parameter or auto-detect from ambient scope
-        var resolvedParentId = parentId ?? AiAuditScope.Current?.AuditLogId;
+        var resolvedParentId = AiAuditScope.Current?.AuditLogId;
         if (resolvedParentId.HasValue && auditLog.ParentAuditLogId != resolvedParentId.Value)
         {
             // ParentAuditLogId is init-only, so we need to recreate the instance
@@ -131,12 +130,11 @@ internal sealed class AiAuditLogService : IAiAuditLogService
     /// <inheritdoc />
     public async ValueTask QueueStartAuditLogAsync(
         AiAuditLog auditLog,
-        Guid? parentId = null,
         CancellationToken ct = default)
     {
         // IMPORTANT: Resolve parent ID from ambient scope NOW, before queuing,
         // because AuditScope.Current won't be available in the background worker context
-        var resolvedParentId = parentId ?? AiAuditScope.Current?.AuditLogId;
+        var resolvedParentId = AiAuditScope.Current?.AuditLogId;
         if (resolvedParentId.HasValue && auditLog.ParentAuditLogId != resolvedParentId.Value)
         {
             auditLog.ParentAuditLogId = resolvedParentId.Value;

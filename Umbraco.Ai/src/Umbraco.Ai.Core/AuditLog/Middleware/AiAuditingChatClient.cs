@@ -1,10 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.AuditLog.Middleware;
 

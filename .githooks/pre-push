@@ -1,0 +1,17 @@
+#!/bin/sh
+# Cross-platform pre-push hook wrapper
+# Detects OS and runs the appropriate script
+
+# Get the directory containing this script
+HOOK_DIR="$(dirname "$0")"
+
+# Check if we're on Windows (Git Bash or WSL)
+if [ -n "$WINDIR" ] || [ -n "$SYSTEMROOT" ]; then
+    # Windows - use PowerShell
+    powershell.exe -ExecutionPolicy Bypass -File "$HOOK_DIR/pre-push.ps1"
+    exit $?
+else
+    # Unix/Linux/macOS - use bash
+    bash "$HOOK_DIR/pre-push.sh"
+    exit $?
+fi

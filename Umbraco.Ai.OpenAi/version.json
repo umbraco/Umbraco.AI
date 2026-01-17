@@ -10,7 +10,9 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/tags/release-"
+    "^refs/heads/release/openai-",
+    "^refs/heads/hotfix/openai-",
+    "^refs/tags/release-openai-"
   ],
   "cloudBuild": {
     "buildNumber": {
@@ -18,6 +20,6 @@
     }
   },
   "release": {
-    "branchName": "release/{version}"
+    "branchName": "release/openai-{version}"
   }
 }

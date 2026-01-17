@@ -10,9 +10,16 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/tags/release-"
+    "^refs/heads/release/agent-",
+    "^refs/heads/hotfix/agent-",
+    "^refs/tags/release-agent-"
   ],
+  "cloudBuild": {
+    "buildNumber": {
+      "enabled": true
+    }
+  },
   "release": {
-    "branchName": "release/{version}"
+    "branchName": "release/agent-{version}"
   }
 }

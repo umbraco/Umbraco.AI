@@ -10,7 +10,9 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/tags/release-"
+    "^refs/heads/release/core-",
+    "^refs/heads/hotfix/core-",
+    "^refs/tags/release-core-"
   ],
   "cloudBuild": {
     "buildNumber": {
@@ -18,6 +20,6 @@
     }
   },
   "release": {
-    "branchName": "release/{version}"
+    "branchName": "release/core-{version}"
   }
 }

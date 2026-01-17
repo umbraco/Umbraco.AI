@@ -22,7 +22,8 @@ Each product has its own solution file, CLAUDE.md, and can be built independentl
 
 ```bash
 # One-time setup: creates unified solution + demo site
-.\Install-DemoSite.ps1
+.\scripts\install-demo-site.ps1  # Windows
+./scripts/install-demo-site.sh   # Linux/Mac
 
 # Configure git hooks (enforces branch naming convention)
 .\scripts\setup-git-hooks.ps1  # Windows
@@ -43,9 +44,13 @@ The setup script creates:
 
 **Credentials:** admin@example.com / password1234
 
-**Script options:**
+**Script options (PowerShell):**
 - `-SkipTemplateInstall` - Skip reinstalling Umbraco.Templates
 - `-Force` - Recreate demo if it already exists
+
+**Script options (Bash):**
+- `-s, --skip-template-install` - Skip reinstalling Umbraco.Templates
+- `-f, --force` - Recreate demo if it already exists
 
 ## Build Commands
 
@@ -97,15 +102,6 @@ npm run watch:agent
 - Add-ons automatically use the local `@umbraco-ai/core` during development
 - Common dependencies are hoisted to the root `node_modules`
 - When you run `npm pack`, `workspace:*` is automatically replaced with the actual version
-
-### Distribution Build
-
-```bash
-# Build all NuGet packages for distribution
-.\Build-Distribution.ps1
-```
-
-Output goes to `dist/nupkg/`.
 
 ## Architecture Overview
 
@@ -168,8 +164,8 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 
 | File | Purpose |
 |------|---------|
-| `Install-DemoSite.ps1` | Creates unified local dev environment |
-| `Build-Distribution.ps1` | Builds all NuGet packages |
+| `scripts/install-demo-site.ps1` | Creates unified local dev environment (Windows) |
+| `scripts/install-demo-site.sh` | Creates unified local dev environment (Linux/Mac) |
 | `Umbraco.Ai.local.sln` | Unified solution (generated) |
 | `package.json` | Root npm scripts for frontend builds |
 

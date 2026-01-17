@@ -19,9 +19,6 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 ```bash
 # Build all products
 dotnet build Umbraco.Ai.sln
-
-# Build distribution packages
-.\Build-Distribution.ps1
 ```
 
 ## Local Development
@@ -80,20 +77,6 @@ Umbraco.Ai (Core)
   - [Umbraco.Ai/CLAUDE.md](Umbraco.Ai/CLAUDE.md) - Core package
   - [Umbraco.Ai.Agent/CLAUDE.md](Umbraco.Ai.Agent/CLAUDE.md) - Agent add-on
   - [Umbraco.Ai.Prompt/CLAUDE.md](Umbraco.Ai.Prompt/CLAUDE.md) - Prompt add-on
-
-## Building for Distribution
-
-The monorepo uses conditional references to support both local development and distribution builds:
-
-- **Local development** (default): Uses project references for cross-project debugging
-- **Distribution**: Uses package references via `-p:UseProjectReferences=false`
-
-```bash
-# Build all products as standalone NuGet packages
-.\Build-Distribution.ps1
-
-# Output: dist/nupkg/*.nupkg
-```
 
 ## Release Process
 

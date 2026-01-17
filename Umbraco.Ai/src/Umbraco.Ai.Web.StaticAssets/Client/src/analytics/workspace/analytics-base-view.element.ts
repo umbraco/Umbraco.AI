@@ -23,7 +23,7 @@ export abstract class UaiAnalyticsBaseViewElement extends UmbLitElement {
     protected _error?: string;
 
     @state()
-    protected _dateRange: DateRangeType = 'last7d';
+    protected _dateRange: DateRangeType = 'last24h';
 
     constructor() {
         super();

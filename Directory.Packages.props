@@ -43,6 +43,11 @@
     <PackageVersion Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251219.1" />
   </ItemGroup>
 
+    <!-- Provider packages -->
+    <ItemGroup>
+        <PackageVersion Include="Anthropic" Version="12.2.0" />
+    </ItemGroup>
+
   <!-- Shared dependencies -->
   <ItemGroup>
     <PackageVersion Include="Humanizer.Core" Version="2.14.1" />

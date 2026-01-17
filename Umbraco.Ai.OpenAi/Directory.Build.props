@@ -40,8 +40,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)\assets\logo-128.png" Pack="true" PackagePath="" Visible="false" />
-    <Content Include="$(MSBuildThisFileDirectory)\LICENSE.md" Pack="true" PackagePath="" Visible="false" />
+    <Content Include="$(MSBuildThisFileDirectory)\..\assets\logo-128.png" Pack="true" PackagePath="" Visible="false" />
+    <Content Include="$(MSBuildThisFileDirectory)\..\LICENSE.md" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 
   <PropertyGroup>

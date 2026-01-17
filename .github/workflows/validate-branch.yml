@@ -14,6 +14,14 @@ jobs:
     name: Validate Branch Naming Convention
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            Umbraco.Ai
+            Umbraco.Ai.*
+          sparse-checkout-cone-mode: false
+
       - name: Check branch name
         run: |
           # Get the branch name
@@ -25,8 +33,30 @@ jobs:
 
           echo "Validating branch: $BRANCH_NAME"
 
-          # List of valid products
-          PRODUCTS="core agent prompt openai anthropic"
+          # Dynamically discover valid products from directory structure
+          # Umbraco.Ai/ -> "core"
+          # Umbraco.Ai.<name>/ -> "<name>" (lowercase)
+          PRODUCTS=""
+          for dir in Umbraco.Ai*/; do
+            if [ -d "$dir" ]; then
+              dir_name=$(basename "$dir")
+              if [ "$dir_name" = "Umbraco.Ai" ]; then
+                PRODUCTS="$PRODUCTS core"
+              elif [[ "$dir_name" =~ ^Umbraco\.Ai\.(.+)$ ]]; then
+                product_name="${BASH_REMATCH[1]}"
+                # Convert to lowercase
+                PRODUCTS="$PRODUCTS ${product_name,,}"
+              fi
+            fi
+          done
+          PRODUCTS=$(echo "$PRODUCTS" | xargs)  # Trim whitespace
+
+          if [ -z "$PRODUCTS" ]; then
+            echo "ERROR: No Umbraco.Ai products found in repository"
+            exit 1
+          fi
+
+          echo "Discovered products: $PRODUCTS"
 
           # Allow main and develop branches
           if [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "develop" ]; then

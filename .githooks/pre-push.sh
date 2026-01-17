@@ -6,7 +6,9 @@
 #   - feature/<product>-<description>
 #   - release/<product>-<version>
 #   - hotfix/<product>-<version>
-# Where <product> is one of: core, agent, prompt, openai, anthropic
+# Where <product> is dynamically discovered from the directory structure:
+#   - Umbraco.Ai/ -> core
+#   - Umbraco.Ai.<name>/ -> <name> (lowercase)
 
 # Get current branch name
 current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
@@ -16,8 +18,35 @@ if [ -z "$current_branch" ]; then
     exit 1
 fi
 
-# List of valid products (dynamically discovered from directory structure)
-products=("core" "agent" "prompt" "openai" "anthropic")
+# Get the repository root directory
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$repo_root" ]; then
+    echo "Unable to determine repository root"
+    exit 1
+fi
+
+# Dynamically discover valid products from directory structure
+# Umbraco.Ai/ -> "core"
+# Umbraco.Ai.<name>/ -> "<name>" (lowercase)
+products=()
+
+for dir in "$repo_root"/Umbraco.Ai*/; do
+    if [ -d "$dir" ]; then
+        dir_name=$(basename "$dir")
+        if [ "$dir_name" = "Umbraco.Ai" ]; then
+            products+=("core")
+        elif [[ "$dir_name" =~ ^Umbraco\.Ai\.(.+)$ ]]; then
+            product_name="${BASH_REMATCH[1]}"
+            # Convert to lowercase
+            products+=("${product_name,,}")
+        fi
+    fi
+done
+
+if [ ${#products[@]} -eq 0 ]; then
+    echo "No Umbraco.Ai products found in repository"
+    exit 1
+fi
 
 # Allow main and develop branches
 if [ "$current_branch" = "main" ] || [ "$current_branch" = "develop" ]; then

@@ -5,7 +5,9 @@
 #   - feature/<product>-<description>
 #   - release/<product>-<version>
 #   - hotfix/<product>-<version>
-# Where <product> is one of: core, agent, prompt, openai, anthropic
+# Where <product> is dynamically discovered from the directory structure:
+#   - Umbraco.Ai/ -> core
+#   - Umbraco.Ai.<name>/ -> <name> (lowercase)
 
 $ErrorActionPreference = "Stop"
 
@@ -17,8 +19,31 @@ if ([string]::IsNullOrEmpty($currentBranch)) {
     exit 1
 }
 
-# List of valid products
-$products = @("core", "agent", "prompt", "openai", "anthropic")
+# Get the repository root directory
+$repoRoot = git rev-parse --show-toplevel 2>$null
+if ([string]::IsNullOrEmpty($repoRoot)) {
+    Write-Error "Unable to determine repository root"
+    exit 1
+}
+
+# Dynamically discover valid products from directory structure
+# Umbraco.Ai/ -> "core"
+# Umbraco.Ai.<name>/ -> "<name>" (lowercase)
+$products = @()
+
+Get-ChildItem -Path $repoRoot -Directory -Filter "Umbraco.Ai*" | ForEach-Object {
+    $dirName = $_.Name
+    if ($dirName -eq "Umbraco.Ai") {
+        $products += "core"
+    } elseif ($dirName -match "^Umbraco\.Ai\.(.+)$") {
+        $products += $Matches[1].ToLower()
+    }
+}
+
+if ($products.Count -eq 0) {
+    Write-Error "No Umbraco.Ai products found in repository"
+    exit 1
+}
 
 # Allow main and develop branches
 if ($currentBranch -eq "main" -or $currentBranch -eq "develop") {

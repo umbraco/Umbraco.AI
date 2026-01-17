@@ -16,7 +16,7 @@
     "pack:api": "npm pack --pack-destination ./artifacts",
     "postpack:api": "node ./scripts/copy-package-to-output-dir.js",
     "build-and-pack:api": "npm run build:api && npm run pack:api",
-    "generate-client": "node scripts/generate-openapi.js https://localhost:44388/umbraco/swagger/ai-management/swagger.json"
+    "generate-client": "node scripts/generate-openapi.js https://localhost:44355/umbraco/swagger/ai-management/swagger.json"
   },
   "peerDependencies": {
     "@umbraco-cms/backoffice": "^17.0.0"

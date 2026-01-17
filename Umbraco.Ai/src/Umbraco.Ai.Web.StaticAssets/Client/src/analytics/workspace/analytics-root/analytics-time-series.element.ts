@@ -13,6 +13,15 @@ export class UaiAnalyticsTimeSeriesElement extends UmbLitElement {
     @property({ type: String })
     metric: 'tokens' | 'requests' = 'tokens';
 
+    @property({ type: String })
+    dateRangeType?: 'last24h' | 'last7d' | 'last30d';
+
+    @property({ type: String })
+    fromDate?: string;
+
+    @property({ type: String })
+    toDate?: string;
+
     @state()
     private _chart?: Chart;
 
@@ -65,11 +74,12 @@ export class UaiAnalyticsTimeSeriesElement extends UmbLitElement {
 
     private _getChartConfig(): ChartConfiguration {
         return {
-            type: 'line',
+            type: 'bar',
             data: this._prepareChartData(),
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: false,
                 interaction: {
                     mode: 'index',
                     intersect: false,
@@ -80,8 +90,25 @@ export class UaiAnalyticsTimeSeriesElement extends UmbLitElement {
                         labels: {
                             usePointStyle: true,
                             boxWidth: 8,
+                            padding: 20,
                             font: {
                                 family: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                            },
+                            generateLabels: (chart) => {
+                                const datasets = chart.data.datasets;
+                                return datasets.map((dataset, i) => ({
+                                    text: '  ' + dataset.label,
+                                    fillStyle: dataset.backgroundColor as string,
+                                    hidden: !chart.isDatasetVisible(i),
+                                    lineCap: 'round',
+                                    lineDash: [],
+                                    lineDashOffset: 0,
+                                    lineJoin: 'round',
+                                    lineWidth: 0,
+                                    strokeStyle: dataset.borderColor as string,
+                                    pointStyle: 'circle',
+                                    datasetIndex: i
+                                }));
                             }
                         }
                     },
@@ -97,15 +124,39 @@ export class UaiAnalyticsTimeSeriesElement extends UmbLitElement {
                 },
                 scales: {
                     x: {
+                        stacked: true,
                         grid: {
-                            display: false
+                            display: true,
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                            color: (context) => {
+                                // Make grid lines for labeled ticks darker
+                                const index = context.index;
+                                const totalTicks = context.chart.scales.x.ticks.length;
+                                const skipInterval = Math.ceil(totalTicks / 12);
+                                return index % skipInterval === 0
+                                    ? 'rgba(0, 0, 0, 0.1)'
+                                    : 'rgba(0, 0, 0, 0.03)';
+                            },
+                            tickLength: 8
                         },
                         ticks: {
                             maxRotation: 45,
-                            minRotation: 45
+                            minRotation: 0,
+                            autoSkip: false,
+                            callback: (value, index, ticks) => {
+                                // Show label for every Nth tick to avoid crowding
+                                const skipInterval = Math.ceil(ticks.length / 12);
+                                if (index % skipInterval === 0) {
+                                    // Get the actual label from the chart data
+                                    return this._chart?.data.labels?.[index] || '';
+                                }
+                                return '';
+                            }
                         }
                     },
                     y: {
+                        stacked: true,
                         beginAtZero: true,
                         ticks: {
                             callback: (value) => this._formatIntWithK(Number(value))
@@ -126,8 +177,15 @@ export class UaiAnalyticsTimeSeriesElement extends UmbLitElement {
             (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
 
+        // Determine granularity (hourly vs daily)
+        const isHourly = sortedData.length >= 2 &&
+            (new Date(sortedData[1].timestamp).getTime() - new Date(sortedData[0].timestamp).getTime()) < 2 * 60 * 60 * 1000;
+
+        // Generate complete time series with gaps filled
+        const filledData = this._fillTimeSeriesGaps(sortedData, isHourly);
+
         // Extract labels (x-axis: timestamps)
-        const labels = sortedData.map(point =>
+        const labels = filledData.map(point =>
             this._formatTimestamp(new Date(point.timestamp))
         );
 
@@ -136,33 +194,104 @@ export class UaiAnalyticsTimeSeriesElement extends UmbLitElement {
             ? [
                 {
                     label: 'Input Tokens',
-                    data: sortedData.map(p => p.inputTokens),
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                    fill: true,
-                    tension: 0.4
+                    data: filledData.map(p => p.inputTokens),
+                    backgroundColor: 'rgb(27, 38, 79)',
+                    borderColor: 'rgb(27, 38, 79)',
+                    borderWidth: 1
                 },
                 {
                     label: 'Output Tokens',
-                    data: sortedData.map(p => p.outputTokens),
-                    borderColor: 'rgb(255, 99, 132)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                    fill: true,
-                    tension: 0.4
+                    data: filledData.map(p => p.outputTokens),
+                    backgroundColor: 'rgb(245, 193, 188)',
+                    borderColor: 'rgb(245, 193, 188)',
+                    borderWidth: 1
                 }
               ]
             : [
                 {
                     label: 'Total Requests',
-                    data: sortedData.map(p => p.requestCount),
-                    borderColor: 'rgb(54, 162, 235)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                    fill: true,
-                    tension: 0.4
+                    data: filledData.map(p => p.requestCount),
+                    backgroundColor: 'rgb(27, 38, 79)',
+                    borderColor: 'rgb(27, 38, 79)',
+                    borderWidth: 1
                 }
               ];
 
         return { labels, datasets };
+    }
+
+    private _fillTimeSeriesGaps(sortedData: UsageTimeSeriesPointModel[], isHourly: boolean): UsageTimeSeriesPointModel[] {
+        // Use the provided date range, or fall back to data range if not provided
+        const startDate = this.fromDate
+            ? this._normalizeDate(new Date(this.fromDate), isHourly)
+            : sortedData.length > 0
+                ? this._normalizeDate(new Date(sortedData[0].timestamp), isHourly)
+                : new Date();
+
+        const endDate = this.toDate
+            ? this._normalizeDate(new Date(this.toDate), isHourly)
+            : sortedData.length > 0
+                ? this._normalizeDate(new Date(sortedData[sortedData.length - 1].timestamp), isHourly)
+                : new Date();
+
+        const result: UsageTimeSeriesPointModel[] = [];
+        const dataMap = new Map<number, UsageTimeSeriesPointModel>();
+
+        // Create a map of existing data points by normalized timestamp
+        sortedData.forEach(point => {
+            const date = new Date(point.timestamp);
+            const normalizedTime = this._normalizeDate(date, isHourly).getTime();
+            dataMap.set(normalizedTime, point);
+        });
+
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+            const currentTime = currentDate.getTime();
+            const existingPoint = dataMap.get(currentTime);
+
+            if (existingPoint) {
+                result.push(existingPoint);
+            } else {
+                // Create a zero-value point for missing period
+                result.push({
+                    timestamp: currentDate.toISOString(),
+                    requestCount: 0,
+                    totalTokens: 0,
+                    inputTokens: 0,
+                    outputTokens: 0,
+                    successCount: 0,
+                    failureCount: 0
+                });
+            }
+
+            // Move to next period
+            if (isHourly) {
+                currentDate.setHours(currentDate.getHours() + 1);
+            } else {
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        }
+
+        return result;
+    }
+
+    private _normalizeDate(date: Date, isHourly: boolean): Date {
+        const normalized = new Date(date);
+        if (isHourly) {
+            normalized.setMinutes(0, 0, 0);
+        } else {
+            normalized.setHours(0, 0, 0, 0);
+        }
+        return normalized;
+    }
+
+    private _getTimeSeriesKey(date: Date, isHourly: boolean): string {
+        if (isHourly) {
+            return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+        } else {
+            return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        }
     }
 
     private _formatTimestamp(date: Date): string {

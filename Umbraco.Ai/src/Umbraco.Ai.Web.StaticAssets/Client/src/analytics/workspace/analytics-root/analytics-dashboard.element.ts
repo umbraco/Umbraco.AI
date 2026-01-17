@@ -55,10 +55,16 @@ export class UaiAnalyticsDashboardElement extends UaiAnalyticsBaseViewElement {
     }
 
     protected renderContent() {
+        const dateRange = this._getDateRange();
         return html`
             <uai-analytics-summary-cards .summary=${this._summary}></uai-analytics-summary-cards>
 
-            <uai-analytics-time-series .data=${this._timeSeries}></uai-analytics-time-series>
+            <uai-analytics-time-series
+                .data=${this._timeSeries}
+                .dateRangeType=${this._dateRange}
+                .fromDate=${dateRange.from}
+                .toDate=${dateRange.to}>
+            </uai-analytics-time-series>
 
             <div class="breakdowns">
                 <uai-analytics-breakdown-table

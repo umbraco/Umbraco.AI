@@ -24,6 +24,10 @@ Each product has its own solution file, CLAUDE.md, and can be built independentl
 # One-time setup: creates unified solution + demo site
 .\Install-DemoSite.ps1
 
+# Configure git hooks (enforces branch naming convention)
+.\scripts\setup-git-hooks.ps1  # Windows
+./scripts/setup-git-hooks.sh   # Linux/Mac
+
 # Open the unified solution
 # Umbraco.Ai.local.sln
 

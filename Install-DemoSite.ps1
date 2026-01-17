@@ -64,6 +64,12 @@ Push-Location "demo"
 dotnet new umbraco --force -n "Umbraco.Ai.DemoSite" --friendly-name "Administrator" --email "admin@example.com" --password "password1234" --development-database-type SQLite
 Pop-Location
 
+# Step 3.1: Install Clean starter kit
+Write-Host "Installing Clean starter kit..." -ForegroundColor Green
+Push-Location "demo\Umbraco.Ai.DemoSite"
+dotnet add package Clean
+Pop-Location
+
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green
 dotnet new sln -n "Umbraco.Ai.local" --force

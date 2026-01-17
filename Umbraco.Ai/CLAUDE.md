@@ -23,7 +23,8 @@ npm run generate-client https://localhost:44331/umbraco/swagger/umbraco-ai/swagg
 
 # Set up demo site for local development (run from monorepo root)
 cd ..
-.\Install-DemoSite.ps1
+.\scripts\install-demo-site.ps1  # Windows
+./scripts/install-demo-site.sh   # Linux/Mac
 # Then open Umbraco.Ai.local.sln to work with both package and demo site
 ```
 

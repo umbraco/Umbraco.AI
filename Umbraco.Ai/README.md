@@ -43,9 +43,10 @@ dotnet add package Umbraco.Ai
 
 For local development and testing, use the monorepo setup script from the repository root:
 
-```powershell
+```bash
 # From repository root
-.\Install-DemoSite.ps1
+.\scripts\install-demo-site.ps1  # Windows
+./scripts/install-demo-site.sh   # Linux/Mac
 ```
 
 This creates a unified solution (`Umbraco.Ai.local.sln`) with all packages and a demo site. See the [root README](../README.md) for details.

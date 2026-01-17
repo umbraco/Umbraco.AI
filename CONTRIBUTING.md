@@ -30,7 +30,8 @@ git clone https://github.com/umbraco/Umbraco.Ai.git
 cd Umbraco.Ai
 
 # Run setup script (creates unified solution + demo site)
-.\Install-DemoSite.ps1
+.\scripts\install-demo-site.ps1  # Windows
+./scripts/install-demo-site.sh   # Linux/Mac
 
 # Configure git hooks (enforces branch naming)
 .\scripts\setup-git-hooks.ps1  # Windows
@@ -196,7 +197,7 @@ By default, all products use **project references** to Core (changes visible imm
 
 This means:
 - **Local builds**: Agent/Prompt/Providers automatically use your local Core changes
-- **Distribution builds**: Use `Build-Distribution.ps1` to build with package references
+- **Distribution builds**: CI/CD builds with `UseProjectReferences=false` for package references
 
 ### Running Tests
 

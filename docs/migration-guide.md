@@ -82,8 +82,11 @@ Umbraco.Ai/                    # Monorepo root (formerly just "Core" repo)
 ├── Umbraco.Ai.Anthropic/      # Anthropic (merged via git subtree)
 ├── Directory.Packages.props   # Unified package management
 ├── Umbraco.Ai.sln            # Master solution
-├── Build-Distribution.ps1     # Distribution build script
-├── Install-DemoSite.ps1       # Local dev setup
+├── scripts/                   # Setup and utility scripts
+│   ├── install-demo-site.ps1  # Local dev setup (Windows)
+│   ├── install-demo-site.sh   # Local dev setup (Linux/Mac)
+│   ├── setup-git-hooks.ps1    # Git hooks setup (Windows)
+│   └── setup-git-hooks.sh     # Git hooks setup (Linux/Mac)
 └── docs/                      # Shared documentation
 ```
 
@@ -167,7 +170,8 @@ git clone https://github.com/umbraco/Umbraco.Ai.git
 cd Umbraco.Ai
 
 # One-time setup: creates unified solution + demo site
-.\Install-DemoSite.ps1
+.\scripts\install-demo-site.ps1  # Windows
+./scripts/install-demo-site.sh   # Linux/Mac
 
 # Configure git hooks (enforces branch naming)
 .\scripts\setup-git-hooks.ps1  # Windows
@@ -281,22 +285,6 @@ git shortlog -sn --all
 
 ## Known Limitations
 
-### Distribution Builds Require Local Feeds
-
-Full distribution builds (via `Build-Distribution.ps1`) require:
-
-**NuGet Feed:**
-- Core must be published to a local NuGet feed
-- Dependent products (Agent, Prompt, Providers) fetch Core from this feed during pack
-
-**npm Registry:**
-- `@umbraco-ai/core` npm package must be published to a local registry (e.g., Verdaccio)
-- Dependent frontends fetch Core frontend package during build
-
-**Solution:**
-- CI/CD handles this automatically (publishes Core first, then dependents)
-- For local testing, use `dotnet build Umbraco.Ai.local.sln` (uses project references)
-
 ### Pre-Existing Test Errors
 
 Some test failures existed before migration and are not regression issues:
@@ -314,19 +302,6 @@ error NU1010: The following PackageReference items do not define a corresponding
 ```
 
 **Solution:** Check `Directory.Packages.props` includes all referenced packages. Compare with individual product `Directory.Packages.props` files in git history if needed.
-
-### "Solution not found" Error in Build-Distribution.ps1
-
-**Problem:**
-```
-Solution not found: Umbraco.Ai/Umbraco.Ai.sln
-```
-
-**Solution:** Ensure each product has its own solution file:
-```bash
-cd Umbraco.Ai
-dotnet sln list  # Should show all projects
-```
 
 ### Branch Push Rejected
 

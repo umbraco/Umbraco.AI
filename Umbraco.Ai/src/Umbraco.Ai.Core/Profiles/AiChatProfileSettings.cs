@@ -4,7 +4,7 @@ namespace Umbraco.Ai.Core.Profiles;
 /// Settings specific to Chat capability profiles. 
 /// </summary> 
 public sealed class AiChatProfileSettings : IAiProfileSettings
-{
+{ 
     /// <summary>
     /// The temperature setting for the AI model, influencing randomness in responses.
     /// </summary>

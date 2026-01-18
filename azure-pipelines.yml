@@ -123,6 +123,9 @@ stages:
         strategy:
           matrix: $[ dependencies.SetupMatrix.outputs['matrix_output.buildMatrix'] ]
         steps:
+          - checkout: self
+            fetchDepth: 0
+
           - bash: |
               echo "Matrix variable values:"
               echo "name=$(name)"

@@ -1,7 +1,7 @@
 # Pre-push hook to validate branch naming conventions for Umbraco.Ai monorepo
 # Valid patterns:
 #   - main
-#   - develop
+#   - dev
 #   - feature/<product>-<description>
 #   - release/<product>-<version>
 #   - hotfix/<product>-<version>
@@ -45,8 +45,8 @@ if ($products.Count -eq 0) {
     exit 1
 }
 
-# Allow main and develop branches
-if ($currentBranch -eq "main" -or $currentBranch -eq "develop") {
+# Allow main and dev branches
+if ($currentBranch -eq "main" -or $currentBranch -eq "dev") {
     exit 0
 }
 
@@ -84,7 +84,7 @@ if (-not $validBranch) {
     Write-Host ""
     Write-Host "Branch names must follow one of these patterns:"
     Write-Host "  main"
-    Write-Host "  develop"
+    Write-Host "  dev"
     Write-Host "  feature/<product>-<description>"
     Write-Host "  release/<product>-<version>"
     Write-Host "  hotfix/<product>-<version>"

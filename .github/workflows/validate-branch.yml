@@ -58,8 +58,8 @@ jobs:
 
           echo "Discovered products: $PRODUCTS"
 
-          # Allow main and develop branches
-          if [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "develop" ]; then
+          # Allow main and dev branches
+          if [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "dev" ]; then
             echo "✓ Valid branch: $BRANCH_NAME"
             exit 0
           fi
@@ -111,7 +111,7 @@ jobs:
             echo ""
             echo "Branch names must follow one of these patterns:"
             echo "  main"
-            echo "  develop"
+            echo "  dev"
             echo "  feature/<product>-<description>"
             echo "  release/<product>-<version>"
             echo "  hotfix/<product>-<version>"

@@ -21,6 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0  # Fetch full history for Nerdbank.GitVersioning
           sparse-checkout: |
             Umbraco.Ai
             Umbraco.Ai.*
@@ -89,6 +90,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for Nerdbank.GitVersioning
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4

@@ -74,27 +74,33 @@ internal sealed class AiUsageAggregationService : IAiUsageAggregationService
                     r.EntityType,
                     r.FeatureType
                 })
-                .Select(g => new AiUsageStatistics
+                .Select(g =>
                 {
-                    Id = Guid.NewGuid(),
-                    Period = hourStart,
-                    ProviderId = g.Key.ProviderId,
-                    ModelId = g.Key.ModelId,
-                    ProfileId = g.Key.ProfileId,
-                    ProfileAlias = g.First().ProfileAlias,
-                    Capability = g.Key.Capability,
-                    UserId = g.Key.UserId,
-                    UserName = g.First().UserName,
-                    EntityType = g.Key.EntityType,
-                    FeatureType = g.Key.FeatureType,
-                    RequestCount = g.Count(),
-                    SuccessCount = g.Count(r => r.Status == "Succeeded"),
-                    FailureCount = g.Count(r => r.Status == "Failed"),
-                    InputTokens = g.Sum(r => r.InputTokens),
-                    OutputTokens = g.Sum(r => r.OutputTokens),
-                    TotalTokens = g.Sum(r => r.TotalTokens),
-                    TotalDurationMs = g.Sum(r => r.DurationMs),
-                    CreatedAt = DateTime.UtcNow
+                    // Find first record with non-null/non-empty ProfileAlias and UserName
+                    var recordWithNames = g.FirstOrDefault(r => !string.IsNullOrEmpty(r.ProfileAlias)) ?? g.First();
+
+                    return new AiUsageStatistics
+                    {
+                        Id = Guid.NewGuid(),
+                        Period = hourStart,
+                        ProviderId = g.Key.ProviderId,
+                        ModelId = g.Key.ModelId,
+                        ProfileId = g.Key.ProfileId,
+                        ProfileAlias = recordWithNames.ProfileAlias,
+                        Capability = g.Key.Capability,
+                        UserId = g.Key.UserId,
+                        UserName = recordWithNames.UserName,
+                        EntityType = g.Key.EntityType,
+                        FeatureType = g.Key.FeatureType,
+                        RequestCount = g.Count(),
+                        SuccessCount = g.Count(r => r.Status == "Succeeded"),
+                        FailureCount = g.Count(r => r.Status == "Failed"),
+                        InputTokens = g.Sum(r => r.InputTokens),
+                        OutputTokens = g.Sum(r => r.OutputTokens),
+                        TotalTokens = g.Sum(r => r.TotalTokens),
+                        TotalDurationMs = g.Sum(r => r.DurationMs),
+                        CreatedAt = DateTime.UtcNow
+                    };
                 })
                 .ToList();
 
@@ -180,27 +186,33 @@ internal sealed class AiUsageAggregationService : IAiUsageAggregationService
                     s.EntityType,
                     s.FeatureType
                 })
-                .Select(g => new AiUsageStatistics
+                .Select(g =>
                 {
-                    Id = Guid.NewGuid(),
-                    Period = day,
-                    ProviderId = g.Key.ProviderId,
-                    ModelId = g.Key.ModelId,
-                    ProfileId = g.Key.ProfileId,
-                    ProfileAlias = g.First().ProfileAlias,
-                    Capability = g.Key.Capability,
-                    UserId = g.Key.UserId,
-                    UserName = g.First().UserName,
-                    EntityType = g.Key.EntityType,
-                    FeatureType = g.Key.FeatureType,
-                    RequestCount = g.Sum(s => s.RequestCount),
-                    SuccessCount = g.Sum(s => s.SuccessCount),
-                    FailureCount = g.Sum(s => s.FailureCount),
-                    InputTokens = g.Sum(s => s.InputTokens),
-                    OutputTokens = g.Sum(s => s.OutputTokens),
-                    TotalTokens = g.Sum(s => s.TotalTokens),
-                    TotalDurationMs = g.Sum(s => s.TotalDurationMs),
-                    CreatedAt = DateTime.UtcNow
+                    // Find first record with non-null/non-empty ProfileAlias and UserName
+                    var statsWithNames = g.FirstOrDefault(s => !string.IsNullOrEmpty(s.ProfileAlias)) ?? g.First();
+
+                    return new AiUsageStatistics
+                    {
+                        Id = Guid.NewGuid(),
+                        Period = day,
+                        ProviderId = g.Key.ProviderId,
+                        ModelId = g.Key.ModelId,
+                        ProfileId = g.Key.ProfileId,
+                        ProfileAlias = statsWithNames.ProfileAlias,
+                        Capability = g.Key.Capability,
+                        UserId = g.Key.UserId,
+                        UserName = statsWithNames.UserName,
+                        EntityType = g.Key.EntityType,
+                        FeatureType = g.Key.FeatureType,
+                        RequestCount = g.Sum(s => s.RequestCount),
+                        SuccessCount = g.Sum(s => s.SuccessCount),
+                        FailureCount = g.Sum(s => s.FailureCount),
+                        InputTokens = g.Sum(s => s.InputTokens),
+                        OutputTokens = g.Sum(s => s.OutputTokens),
+                        TotalTokens = g.Sum(s => s.TotalTokens),
+                        TotalDurationMs = g.Sum(s => s.TotalDurationMs),
+                        CreatedAt = DateTime.UtcNow
+                    };
                 })
                 .ToList();
 

@@ -1,4 +1,4 @@
-name: 🏷️ Auto-label by Component
+name: 🏷️ Auto Labeler
 on:
   issues:
     types: [opened, edited]

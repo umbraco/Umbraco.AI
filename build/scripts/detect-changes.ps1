@@ -100,7 +100,7 @@ Write-Host "Applying dependency propagation..." -ForegroundColor Cyan
 $propagated = $false
 do {
     $propagated = $false
-    foreach ($productKey in $changedProducts.Keys) {
+    foreach ($productKey in @($changedProducts.Keys)) {
         if ($changedProducts[$productKey] -and $dependencies.ContainsKey($productKey)) {
             foreach ($dependent in $dependencies[$productKey]) {
                 if (-not $changedProducts[$dependent]) {

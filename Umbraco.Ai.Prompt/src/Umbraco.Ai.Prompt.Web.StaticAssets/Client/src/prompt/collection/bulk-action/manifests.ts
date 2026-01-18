@@ -1,4 +1,6 @@
+import { UMB_COLLECTION_ALIAS_CONDITION } from "@umbraco-cms/backoffice/collection";
 import { UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
+import { UAI_PROMPT_COLLECTION_ALIAS } from "../constants.js";
 
 export const promptBulkActionManifests: Array<UmbExtensionManifest> = [
     {
@@ -13,5 +15,11 @@ export const promptBulkActionManifests: Array<UmbExtensionManifest> = [
             icon: "icon-trash",
             label: "#actions_delete",
         },
+        conditions: [
+            {
+                alias: UMB_COLLECTION_ALIAS_CONDITION,
+                match: UAI_PROMPT_COLLECTION_ALIAS,
+            },
+        ],
     },
 ];

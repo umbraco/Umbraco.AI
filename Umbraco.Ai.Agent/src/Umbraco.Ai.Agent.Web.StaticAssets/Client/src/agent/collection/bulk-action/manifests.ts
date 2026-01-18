@@ -1,4 +1,6 @@
+import { UMB_COLLECTION_ALIAS_CONDITION } from "@umbraco-cms/backoffice/collection";
 import { UAI_AGENT_ENTITY_TYPE } from "../../constants.js";
+import { UAI_AGENT_COLLECTION_ALIAS } from "../constants.js";
 
 export const agentBulkActionManifests: Array<UmbExtensionManifest> = [
     {
@@ -13,5 +15,11 @@ export const agentBulkActionManifests: Array<UmbExtensionManifest> = [
             icon: "icon-trash",
             label: "#actions_delete",
         },
+        conditions: [
+            {
+                alias: UMB_COLLECTION_ALIAS_CONDITION,
+                match: UAI_AGENT_COLLECTION_ALIAS,
+            },
+        ],
     },
 ];

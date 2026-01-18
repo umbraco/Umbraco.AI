@@ -46,6 +46,28 @@ stages:
               filePath: '$(Build.SourcesDirectory)/build/scripts/detect-changes.ps1'
               arguments: '-SourceBranch "$(Build.SourceBranch)" -SourceVersion "$(Build.SourceVersion)"'
 
+  # Debug stage to verify variables
+  - stage: DebugVariables
+    displayName: 'Debug Output Variables'
+    dependsOn: DetectChanges
+    jobs:
+      - job: ShowVariables
+        displayName: 'Show detected variables'
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - script: |
+              echo "Level0Changed: $LEVEL0_CHANGED"
+              echo "Level1Changed: $LEVEL1_CHANGED"
+              echo "Level0Matrix: $LEVEL0_MATRIX"
+              echo "Level1Matrix: $LEVEL1_MATRIX"
+            displayName: 'Display variables'
+            env:
+              LEVEL0_CHANGED: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
+              LEVEL1_CHANGED: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
+              LEVEL0_MATRIX: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
+              LEVEL1_MATRIX: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
+
   # Stage 2-6: Build Products by Dependency Level (DYNAMIC)
   # Products are automatically discovered and built based on detect-changes.ps1 output
   # Products at each level are built in parallel using matrix strategy

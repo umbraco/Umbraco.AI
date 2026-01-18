@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.TaskQueue;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for recording raw AI usage data.

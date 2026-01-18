@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Analytics;
-using Umbraco.Ai.Core.Analytics.Middleware;
+using Umbraco.Ai.Core.Analytics.Usage;
+using Umbraco.Ai.Core.Analytics.Usage.Middleware;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Contexts;

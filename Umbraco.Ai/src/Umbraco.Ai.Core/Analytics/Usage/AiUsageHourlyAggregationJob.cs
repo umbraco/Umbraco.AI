@@ -6,7 +6,7 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.HostedServices;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Background service that periodically aggregates raw usage records into hourly statistics.

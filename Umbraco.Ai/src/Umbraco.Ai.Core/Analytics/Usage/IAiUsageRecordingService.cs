@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for recording raw AI usage data.

@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Persistence.Analytics;
+namespace Umbraco.Ai.Persistence.Analytics.Usage;
 
 /// <summary>
 /// EF Core entity for raw AI usage records.

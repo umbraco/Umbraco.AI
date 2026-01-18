@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.Analytics;
+using Umbraco.Ai.Core.Analytics.Usage;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Analytics;
+using Umbraco.Ai.Persistence.Analytics.Usage;
 using Umbraco.Ai.Persistence.Connections;
 using Umbraco.Ai.Persistence.Context;
 using Umbraco.Ai.Persistence.AuditLog;

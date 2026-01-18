@@ -1,6 +1,6 @@
 using Umbraco.Ai.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Represents aggregated AI usage statistics for a specific time period and dimension combination.

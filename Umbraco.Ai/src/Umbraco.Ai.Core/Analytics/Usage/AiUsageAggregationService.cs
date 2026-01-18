@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for aggregating raw usage records into hourly and daily statistics.

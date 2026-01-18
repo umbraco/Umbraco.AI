@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Factory for creating AiUsageRecord instances with proper dependency injection.

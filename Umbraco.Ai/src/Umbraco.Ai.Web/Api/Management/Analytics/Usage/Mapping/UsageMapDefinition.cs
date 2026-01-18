@@ -1,14 +1,13 @@
-using Umbraco.Ai.Core.Analytics;
 using Umbraco.Ai.Core.Analytics.Usage;
-using Umbraco.Ai.Web.Api.Management.Analytics.Models;
+using Umbraco.Ai.Web.Api.Management.Analytics.Usage.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.Analytics.Mapping;
+namespace Umbraco.Ai.Web.Api.Management.Analytics.Usage.Mapping;
 
 /// <summary>
 /// Map definitions for Analytics models.
 /// </summary>
-public class AnalyticsMapDefinition : IMapDefinition
+public class UsageMapDefinition : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)

@@ -1,6 +1,6 @@
 using Umbraco.Ai.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Context information for creating an AI usage record.

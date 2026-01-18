@@ -1,8 +1,7 @@
-using Umbraco.Ai.Core.Analytics;
 using Umbraco.Ai.Core.Analytics.Usage;
 using Umbraco.Ai.Core.Models;
 
-namespace Umbraco.Ai.Persistence.Analytics;
+namespace Umbraco.Ai.Persistence.Analytics.Usage;
 
 /// <summary>
 /// Factory for mapping between usage analytics domain models and database entities.

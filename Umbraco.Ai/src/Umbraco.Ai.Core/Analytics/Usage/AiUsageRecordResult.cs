@@ -1,6 +1,6 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Result details for an AI usage record.

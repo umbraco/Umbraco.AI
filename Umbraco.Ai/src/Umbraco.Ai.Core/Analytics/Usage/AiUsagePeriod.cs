@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Defines the granularity period for usage statistics aggregation.

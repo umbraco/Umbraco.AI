@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for querying aggregated AI usage statistics.

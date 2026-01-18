@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
 
-namespace Umbraco.Ai.Core.Analytics.Middleware;
+namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
 
 /// <summary>
 /// Middleware that records AI chat usage to the analytics system.

@@ -1,6 +1,6 @@
 using Umbraco.Ai.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Represents a raw AI usage record captured from a single AI operation.

@@ -1,10 +1,9 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Embeddings;
 
-namespace Umbraco.Ai.Core.Analytics.Middleware;
+namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
 
 /// <summary>
 /// Middleware that records AI embedding usage to the analytics system.

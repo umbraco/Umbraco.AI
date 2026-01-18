@@ -6,7 +6,7 @@ using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics.Middleware;
+namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
 
 /// <summary>
 /// Embedding generator that records usage data to the analytics system.

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.Ai.Core.Analytics.Usage;
 
 /// <summary>
 /// Contains metadata for an AI usage operation.

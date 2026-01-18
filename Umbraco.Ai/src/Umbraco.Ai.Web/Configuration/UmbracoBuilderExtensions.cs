@@ -6,7 +6,7 @@ using Umbraco.Ai.Web;
 using Umbraco.Ai.Web.Api;
 using Umbraco.Ai.Web.Api.Common.Configuration;
 using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Analytics.Mapping;
+using Umbraco.Ai.Web.Api.Management.Analytics.Usage.Mapping;
 using Umbraco.Ai.Web.Api.Management.AuditLog.Mapping;
 using Umbraco.Ai.Web.Api.Management.Chat.Mapping;
 using Umbraco.Ai.Web.Api.Management.Common.Mapping;
@@ -53,7 +53,7 @@ public static class UmbracoBuilderExtensions
             .Add<EmbeddingMapDefinition>()
             .Add<ChatMapDefinition>()
             .Add<AuditLogMapDefinition>()
-            .Add<AnalyticsMapDefinition>();
+            .Add<UsageMapDefinition>();
 
         return builder;
     }

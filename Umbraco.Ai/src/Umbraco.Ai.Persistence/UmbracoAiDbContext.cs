@@ -4,6 +4,7 @@ using Umbraco.Ai.Persistence.Context;
 using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Ai.Persistence.Analytics;
+using Umbraco.Ai.Persistence.Analytics.Usage;
 
 namespace Umbraco.Ai.Persistence;
 

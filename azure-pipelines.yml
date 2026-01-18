@@ -99,9 +99,17 @@ stages:
         displayName: 'Build Level 0 Products'
         pool:
           vmImage: $(vmImage)
+        variables:
+          MatrixJson: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         steps:
+          - script: |
+              echo "MatrixJson variable content:"
+              echo "$(MatrixJson)"
+            displayName: 'Debug: Matrix JSON content'
+
+
           - script: |
               echo "=== Matrix Variables ==="
               echo "name: $(name)"

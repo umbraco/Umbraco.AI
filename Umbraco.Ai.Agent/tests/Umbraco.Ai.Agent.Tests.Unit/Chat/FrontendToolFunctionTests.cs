@@ -28,7 +28,7 @@ public class FrontendToolFunctionTests
         };
 
         // Act
-        var function = new FrontendToolFunction(tool);
+        var function = new AiFrontendToolFunction(tool);
 
         // Assert
         function.Name.ShouldBe("test-tool");
@@ -56,7 +56,7 @@ public class FrontendToolFunctionTests
         };
 
         // Act
-        var function = new FrontendToolFunction(tool);
+        var function = new AiFrontendToolFunction(tool);
 
         // Assert
         function.JsonSchema.TryGetProperty("type", out var typeElement).ShouldBeTrue();
@@ -80,7 +80,7 @@ public class FrontendToolFunctionTests
         });
 
         // Act
-        var function = new FrontendToolFunction("my-tool", "My description", schema);
+        var function = new AiFrontendToolFunction("my-tool", "My description", schema);
 
         // Assert
         function.Name.ShouldBe("my-tool");
@@ -95,7 +95,7 @@ public class FrontendToolFunctionTests
         var schema = JsonSerializer.SerializeToElement(new { type = "object" });
 
         // Act
-        var function = new FrontendToolFunction("my-tool", null!, schema);
+        var function = new AiFrontendToolFunction("my-tool", null!, schema);
 
         // Assert
         function.Description.ShouldBe(string.Empty);
@@ -105,7 +105,7 @@ public class FrontendToolFunctionTests
     public void Constructor_WithNullTool_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => new FrontendToolFunction(null!));
+        Should.Throw<ArgumentNullException>(() => new AiFrontendToolFunction(null!));
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class FrontendToolFunctionTests
         var schema = JsonSerializer.SerializeToElement(new { type = "object" });
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => new FrontendToolFunction(null!, "desc", schema));
+        Should.Throw<ArgumentNullException>(() => new AiFrontendToolFunction(null!, "desc", schema));
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class FrontendToolFunctionTests
                 Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
             }
         };
-        var function = new FrontendToolFunction(tool);
+        var function = new AiFrontendToolFunction(tool);
         var arguments = new AIFunctionArguments(new Dictionary<string, object?>
         {
             ["param1"] = "value1"
@@ -165,7 +165,7 @@ public class FrontendToolFunctionTests
         };
 
         // Act
-        var function = new FrontendToolFunction(tool);
+        var function = new AiFrontendToolFunction(tool);
 
         // Assert
         function.JsonSchema.TryGetProperty("required", out _).ShouldBeFalse();
@@ -191,7 +191,7 @@ public class FrontendToolFunctionTests
         };
 
         // Act
-        var function = new FrontendToolFunction(tool);
+        var function = new AiFrontendToolFunction(tool);
 
         // Assert
         function.JsonSchema.TryGetProperty("required", out _).ShouldBeFalse();

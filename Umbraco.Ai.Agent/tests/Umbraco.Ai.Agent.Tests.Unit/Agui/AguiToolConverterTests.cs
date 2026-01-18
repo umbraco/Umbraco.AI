@@ -60,7 +60,7 @@ public class AguiToolConverterTests
         // Assert
         result.ShouldNotBeNull();
         result.Count.ShouldBe(1);
-        result[0].ShouldBeOfType<FrontendToolFunction>();
+        result[0].ShouldBeOfType<AiFrontendToolFunction>();
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public class AguiToolConverterTests
     }
 
     [Fact]
-    public void ConvertToFrontendTools_ReturnsFrontendToolFunctionInstances()
+    public void ConvertToFrontendTools_ReturnsAiFrontendToolFunctionInstances()
     {
         // Arrange
         var tools = new List<AguiTool>
@@ -170,7 +170,7 @@ public class AguiToolConverterTests
 
         // Assert
         result.ShouldNotBeNull();
-        result.All(t => t is FrontendToolFunction).ShouldBeTrue();
+        result.All(t => t is AiFrontendToolFunction).ShouldBeTrue();
     }
 
     #endregion

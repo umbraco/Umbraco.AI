@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Moq;
 using Shouldly;
+using Umbraco.Ai.Agent.Core;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agent.Core.Context;
@@ -43,7 +44,7 @@ public class AgentBoundChatClientTests
             })
             .ReturnsAsync(new ChatResponse([]));
 
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, _testAgent);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, _testAgent);
         var messages = new List<ChatMessage>
         {
             new(ChatRole.User, "Hello")
@@ -55,8 +56,8 @@ public class AgentBoundChatClientTests
         // Assert
         capturedOptions.ShouldNotBeNull();
         capturedOptions.AdditionalProperties.ShouldNotBeNull();
-        capturedOptions.AdditionalProperties.ShouldContainKey(AgentContextResolver.AgentIdKey);
-        capturedOptions.AdditionalProperties[AgentContextResolver.AgentIdKey].ShouldBe(_testAgent.Id);
+        capturedOptions.AdditionalProperties.ShouldContainKey(Constants.MetadataKeys.AgentId);
+        capturedOptions.AdditionalProperties[Constants.MetadataKeys.AgentId].ShouldBe(_testAgent.Id);
     }
 
     [Fact]
@@ -75,7 +76,7 @@ public class AgentBoundChatClientTests
             })
             .ReturnsAsync(new ChatResponse([]));
 
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, _testAgent);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, _testAgent);
         var messages = new List<ChatMessage>
         {
             new(ChatRole.User, "Hello")
@@ -110,7 +111,7 @@ public class AgentBoundChatClientTests
             })
             .ReturnsAsync(new ChatResponse([]));
 
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, _testAgent);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, _testAgent);
         var messages = new List<ChatMessage>
         {
             new(ChatRole.System, existingSystemContent),
@@ -155,7 +156,7 @@ public class AgentBoundChatClientTests
             })
             .ReturnsAsync(new ChatResponse([]));
 
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, agentWithoutInstructions);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, agentWithoutInstructions);
         var messages = new List<ChatMessage>
         {
             new(ChatRole.User, "Hello")
@@ -187,7 +188,7 @@ public class AgentBoundChatClientTests
             })
             .Returns(AsyncEnumerable.Empty<ChatResponseUpdate>());
 
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, _testAgent);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, _testAgent);
         var messages = new List<ChatMessage>
         {
             new(ChatRole.User, "Hello")
@@ -202,18 +203,18 @@ public class AgentBoundChatClientTests
         // Assert
         capturedOptions.ShouldNotBeNull();
         capturedOptions.AdditionalProperties.ShouldNotBeNull();
-        capturedOptions.AdditionalProperties.ShouldContainKey(AgentContextResolver.AgentIdKey);
-        capturedOptions.AdditionalProperties[AgentContextResolver.AgentIdKey].ShouldBe(_testAgent.Id);
+        capturedOptions.AdditionalProperties.ShouldContainKey(Constants.MetadataKeys.AgentId);
+        capturedOptions.AdditionalProperties[Constants.MetadataKeys.AgentId].ShouldBe(_testAgent.Id);
     }
 
     [Fact]
     public void GetService_ReturnsSelf_WhenAgentBoundChatClientRequested()
     {
         // Arrange
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, _testAgent);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, _testAgent);
 
         // Act
-        var service = client.GetService(typeof(AgentBoundChatClient));
+        var service = client.GetService(typeof(AiAgentBoundChatClient));
 
         // Assert
         service.ShouldBe(client);
@@ -228,7 +229,7 @@ public class AgentBoundChatClientTests
             .Setup(x => x.GetService(typeof(string), null))
             .Returns(expectedService);
 
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, _testAgent);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, _testAgent);
 
         // Act
         var service = client.GetService(typeof(string));
@@ -241,7 +242,7 @@ public class AgentBoundChatClientTests
     public void Dispose_DisposesInnerClient()
     {
         // Arrange
-        var client = new AgentBoundChatClient(_mockInnerClient.Object, _testAgent);
+        var client = new AiAgentBoundChatClient(_mockInnerClient.Object, _testAgent);
 
         // Act
         client.Dispose();

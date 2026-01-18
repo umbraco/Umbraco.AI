@@ -97,12 +97,13 @@ stages:
     variables:
       Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
       Level0Matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
-    condition: eq(variables['Level0Changed'], 'true')
+    # Stage always runs - SetupMatrix job checks if anything changed
     jobs:
       - job: SetupMatrix
         displayName: 'Setup Build Matrix'
         pool:
           vmImage: $(vmImage)
+        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'], 'true')
         steps:
           - task: PowerShell@2
             name: matrix_output

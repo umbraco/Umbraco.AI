@@ -23,7 +23,7 @@ const elementName = 'uai-context-picker';
 
 @customElement(elementName)
 export class UaiContextPickerElement extends UmbFormControlMixin<
-    string[] | undefined,
+    string | string[] | undefined,
     typeof UmbLitElement,
     undefined
 >(UmbLitElement, undefined) {
@@ -52,13 +52,16 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
     public max?: number;
 
     /**
-     * The selected context IDs as JSON array.
+     * The selected context ID(s).
+     * - Single mode: string | undefined
+     * - Multiple mode: string[] | undefined
      */
-    override set value(val: string[] | undefined) {
+    override set value(val: string | string[] | undefined) {
         this.#setValue(val);
     }
-    override get value(): string[] | undefined {
-        return this._selection.length > 0 ? this._selection : undefined;
+    override get value(): string | string[] | undefined {
+        if (this._selection.length === 0) return undefined;
+        return this.multiple ? this._selection : this._selection[0];
     }
 
     @state()
@@ -70,13 +73,14 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
     @state()
     private _loading = false;
 
-    #setValue(val: string[] | undefined) {
+    #setValue(val: string | string[] | undefined) {
         if (!val) {
             this._selection = [];
             this._items = [];
             return;
         }
-        this._selection = val;
+        // Normalize to array internally
+        this._selection = Array.isArray(val) ? val : [val];
         this.#loadItems();
     }
 
@@ -207,7 +211,7 @@ export class UaiContextPickerElement extends UmbFormControlMixin<
                 readonly>
                 <umb-icon slot="icon" name="icon-wand"></umb-icon>
                 ${when(item.resourceCount > 0, () => html`
-                    <uui-tag slot="tag" color="default">${item.resourceCount} resources</uui-tag>
+                    <uui-tag slot="tag" look="secondary">${item.resourceCount} resources</uui-tag>
                 `)}
                 ${when(!this.readonly, () => html`
                     <uui-action-bar slot="actions">

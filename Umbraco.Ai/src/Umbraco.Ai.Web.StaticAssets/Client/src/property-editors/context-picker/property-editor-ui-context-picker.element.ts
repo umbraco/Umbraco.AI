@@ -15,7 +15,7 @@ const elementName = 'uai-property-editor-ui-context-picker';
 
 @customElement(elementName)
 export class UaiPropertyEditorUIContextPickerElement extends UmbFormControlMixin<
-    string[] | undefined,
+    string | string[] | undefined,
     typeof UmbLitElement
 >(UmbLitElement, undefined)
     implements UmbPropertyEditorUiElement

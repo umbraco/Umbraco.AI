@@ -89,7 +89,7 @@ export class UaiUsageSummaryCardsElement extends UmbLitElement {
 
             <uai-analytics-summary-card
                     icon="icon-time"
-                    label=">Avg Duration"
+                    label="Avg Duration"
                     .value=${this._formatMs(averageDurationMs)}
             ></uai-analytics-summary-card>
         `;

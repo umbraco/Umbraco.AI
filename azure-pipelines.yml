@@ -55,18 +55,26 @@ stages:
         displayName: 'Show detected variables'
         pool:
           vmImage: $(vmImage)
+        variables:
+          Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
+          Level1Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
+          Level0Matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
+          Level1Matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
         steps:
-          - script: |
-              echo "Level0Changed: $LEVEL0_CHANGED"
-              echo "Level1Changed: $LEVEL1_CHANGED"
-              echo "Level0Matrix: $LEVEL0_MATRIX"
-              echo "Level1Matrix: $LEVEL1_MATRIX"
+          - task: PowerShell@2
             displayName: 'Display variables'
-            env:
-              LEVEL0_CHANGED: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
-              LEVEL1_CHANGED: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
-              LEVEL0_MATRIX: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
-              LEVEL1_MATRIX: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "=== Output Variables from DetectChanges ==="
+                Write-Host "Level0Changed: $(Level0Changed)"
+                Write-Host "Level1Changed: $(Level1Changed)"
+                Write-Host ""
+                Write-Host "Level0Matrix:"
+                Write-Host "$(Level0Matrix)"
+                Write-Host ""
+                Write-Host "Level1Matrix:"
+                Write-Host "$(Level1Matrix)"
 
   # Stage 2-6: Build Products by Dependency Level (DYNAMIC)
   # Products are automatically discovered and built based on detect-changes.ps1 output

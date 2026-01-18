@@ -21,4 +21,8 @@
         </AssemblyAttribute>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Api\Management\Analytics\Usage\" />
+    </ItemGroup>
+
 </Project>

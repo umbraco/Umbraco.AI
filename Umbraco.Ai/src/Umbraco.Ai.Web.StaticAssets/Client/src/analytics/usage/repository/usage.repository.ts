@@ -1,17 +1,12 @@
-import { AnalyticsService } from '../../api/sdk.gen.js';
-import type {
+import {
+    AnalyticsService,
+    UsageBreakdownItemModel,
     UsageSummaryResponseModel,
-    UsageTimeSeriesPointModel,
-    UsageBreakdownItemModel
-} from '../../api/types.gen.js';
+    UsageTimeSeriesPointModel
+} from "../../../api";
+import { UaiAnalyticsQueryParams } from "../../types.js";
 
-export interface UaiAnalyticsQueryParams {
-    from: string;
-    to: string;
-    granularity?: 'Hourly' | 'Daily';
-}
-
-export class UaiAnalyticsRepository {
+export class UaiAnalyticsUsageRepository {
     async getSummary(params: UaiAnalyticsQueryParams): Promise<UsageSummaryResponseModel> {
         const { data } = await AnalyticsService.getUsageSummary({
             query: params
@@ -55,4 +50,4 @@ export class UaiAnalyticsRepository {
     }
 }
 
-export const analyticsRepository = new UaiAnalyticsRepository();
+export const usageRepository = new UaiAnalyticsUsageRepository();

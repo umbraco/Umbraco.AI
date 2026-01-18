@@ -1,1 +1,1 @@
-export * from './analytics.repository.js';
+export * from './usage.repository.ts';

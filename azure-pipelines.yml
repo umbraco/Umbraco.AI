@@ -105,16 +105,14 @@ stages:
           vmImage: $(vmImage)
         condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'], 'true')
         steps:
-          - task: PowerShell@2
+          - bash: |
+              echo "Level0Matrix value:"
+              echo '$(Level0Matrix)'
+              echo ""
+              echo "Setting buildMatrix output variable:"
+              echo "##vso[task.setvariable variable=buildMatrix;isOutput=true]$(Level0Matrix)"
             name: matrix_output
             displayName: 'Output matrix for build jobs'
-            inputs:
-              targetType: 'inline'
-              pwsh: true
-              script: |
-                $matrix = '$(Level0Matrix)'
-                Write-Host "Matrix JSON: $matrix"
-                Write-Host "##vso[task.setvariable variable=buildMatrix;isOutput=true]$matrix"
 
       - job: Build_Level_0
         displayName: 'Build Level 0 Products'
@@ -124,16 +122,15 @@ stages:
         strategy:
           matrix: $[ dependencies.SetupMatrix.outputs['matrix_output.buildMatrix'] ]
         steps:
-          - task: PowerShell@2
-            displayName: 'Debug: Show matrix variables'
-            inputs:
-              targetType: 'inline'
-              pwsh: true
-              script: |
-                Write-Host "Matrix variables:"
-                Write-Host "  name=$(name)"
-                Write-Host "  path=$(path)"
-                Write-Host "  hasFrontend=$(hasFrontend)"
+          - bash: |
+              echo "Matrix variables from strategy:"
+              echo "  name: $(name)"
+              echo "  path: $(path)"
+              echo "  hasFrontend: $(hasFrontend)"
+              echo ""
+              echo "Agent OS: $(Agent.OS)"
+              echo "Bash path: $(which bash)"
+            displayName: 'Debug: Matrix variables'
 
           - template: build/templates/build-steps.yml
             parameters:

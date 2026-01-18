@@ -105,12 +105,6 @@ stages:
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         steps:
-          - bash: |
-              echo "Level0Changed: $(Level0Changed)"
-              echo "Building product: $(name) at $(path)"
-              echo "Has frontend: $(hasFrontend)"
-            displayName: 'Debug: Show variables'
-
           - template: build/templates/build-steps.yml
             parameters:
               configuration: $(configuration)

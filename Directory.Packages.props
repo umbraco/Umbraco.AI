@@ -26,8 +26,6 @@
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
-    <PackageVersion Include="Microsoft.Extensions.AI.Anthropic" Version="10.0.1-preview.1.25571.5" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.0, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.0, 10.999.999)" />
   </ItemGroup>
@@ -44,10 +42,11 @@
     <PackageVersion Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.251219.1" />
   </ItemGroup>
 
-    <!-- Provider packages -->
-    <ItemGroup>
-        <PackageVersion Include="Anthropic" Version="12.2.0" />
-    </ItemGroup>
+  <!-- Provider packages -->
+  <ItemGroup>
+    <PackageVersion Include="Anthropic" Version="12.2.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
+  </ItemGroup>
 
   <!-- Shared dependencies -->
   <ItemGroup>

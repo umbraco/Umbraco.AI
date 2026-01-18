@@ -67,8 +67,18 @@ stages:
               targetType: 'inline'
               script: |
                 Write-Host "=== Output Variables from DetectChanges ==="
-                Write-Host "Level0Changed: $(Level0Changed)"
-                Write-Host "Level1Changed: $(Level1Changed)"
+                Write-Host "Level0Changed: '$(Level0Changed)'"
+                Write-Host "Level0Changed type: $('$(Level0Changed)'.GetType().Name)"
+                Write-Host "Level0Changed length: $('$(Level0Changed)'.Length)"
+                Write-Host ""
+                Write-Host "Level1Changed: '$(Level1Changed)'"
+                Write-Host ""
+                Write-Host "Testing condition expression:"
+                $level0 = '$(Level0Changed)'
+                Write-Host "  Variable value: '$level0'"
+                Write-Host "  eq(level0, 'true'): $($level0 -eq 'true')"
+                Write-Host "  eq(level0, 'True'): $($level0 -eq 'True')"
+                Write-Host "  Trimmed: '$($level0.Trim())'"
                 Write-Host ""
                 Write-Host "Level0Matrix:"
                 Write-Host "$(Level0Matrix)"

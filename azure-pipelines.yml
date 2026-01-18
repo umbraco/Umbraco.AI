@@ -94,35 +94,29 @@ stages:
   - stage: BuildLevel0
     displayName: 'Build Level 0 (No Dependencies)'
     dependsOn: DetectChanges
-    variables:
-      Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
-    # TEMPORARY: Condition removed for testing - stage will always run
-    # condition: eq(variables['Level0Changed'], 'true')
     jobs:
-      - job: DebugLevel0Condition
-        displayName: 'Debug Level 0 Condition'
-        pool:
-          vmImage: $(vmImage)
-        steps:
-          - task: PowerShell@2
-            displayName: 'Show Level0Changed variable'
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "Level0Changed value in BuildLevel0 stage: '$(Level0Changed)'"
-                Write-Host "Condition should evaluate to true if value is 'true'"
-
       - job: Build_Level_0
         displayName: 'Build Level 0 Products'
         pool:
           vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         variables:
+          Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
           productName: $(name)
           productPath: $(path)
           hasFrontend: $(hasFrontend)
+        condition: eq(variables['Level0Changed'], 'true')
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         steps:
+          - task: PowerShell@2
+            displayName: 'Debug: Show variables'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Level0Changed: '$(Level0Changed)'"
+                Write-Host "Building product: $(productName) at $(productPath)"
+                Write-Host "Has frontend: $(hasFrontend)"
+
           - template: build/templates/build-steps.yml
             parameters:
               configuration: $(configuration)
@@ -132,20 +126,19 @@ stages:
     dependsOn:
       - DetectChanges
       - BuildLevel0
-    variables:
-      Level1Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
-    condition: and(or(succeeded(), eq(dependencies.BuildLevel0.result, 'Skipped')), eq(variables['Level1Changed'], 'true'))
     jobs:
       - job: Build_Level_1
         displayName: 'Build Level 1 Products'
         pool:
           vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
         variables:
+          Level1Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
           productName: $(name)
           productPath: $(path)
           hasFrontend: $(hasFrontend)
+        condition: eq(variables['Level1Changed'], 'true')
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
         steps:
           - template: build/templates/build-steps.yml
             parameters:
@@ -156,20 +149,19 @@ stages:
     dependsOn:
       - DetectChanges
       - BuildLevel1
-    variables:
-      Level2Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Changed'] ]
-    condition: and(or(succeeded(), eq(dependencies.BuildLevel1.result, 'Skipped')), eq(variables['Level2Changed'], 'true'))
     jobs:
       - job: Build_Level_2
         displayName: 'Build Level 2 Products'
         pool:
           vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Matrix'] ]
         variables:
+          Level2Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Changed'] ]
           productName: $(name)
           productPath: $(path)
           hasFrontend: $(hasFrontend)
+        condition: eq(variables['Level2Changed'], 'true')
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Matrix'] ]
         steps:
           - template: build/templates/build-steps.yml
             parameters:
@@ -180,20 +172,19 @@ stages:
     dependsOn:
       - DetectChanges
       - BuildLevel2
-    variables:
-      Level3Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Changed'] ]
-    condition: and(or(succeeded(), eq(dependencies.BuildLevel2.result, 'Skipped')), eq(variables['Level3Changed'], 'true'))
     jobs:
       - job: Build_Level_3
         displayName: 'Build Level 3 Products'
         pool:
           vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Matrix'] ]
         variables:
+          Level3Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Changed'] ]
           productName: $(name)
           productPath: $(path)
           hasFrontend: $(hasFrontend)
+        condition: eq(variables['Level3Changed'], 'true')
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Matrix'] ]
         steps:
           - template: build/templates/build-steps.yml
             parameters:
@@ -204,20 +195,19 @@ stages:
     dependsOn:
       - DetectChanges
       - BuildLevel3
-    variables:
-      Level4Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Changed'] ]
-    condition: and(or(succeeded(), eq(dependencies.BuildLevel3.result, 'Skipped')), eq(variables['Level4Changed'], 'true'))
     jobs:
       - job: Build_Level_4
         displayName: 'Build Level 4 Products'
         pool:
           vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Matrix'] ]
         variables:
+          Level4Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Changed'] ]
           productName: $(name)
           productPath: $(path)
           hasFrontend: $(hasFrontend)
+        condition: eq(variables['Level4Changed'], 'true')
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Matrix'] ]
         steps:
           - template: build/templates/build-steps.yml
             parameters:

@@ -70,6 +70,28 @@ Push-Location "demo\Umbraco.Ai.DemoSite"
 dotnet add package Clean
 Pop-Location
 
+# Step 3.2: Set fixed port for consistent development
+Write-Host "Configuring fixed port (44355)..." -ForegroundColor Green
+$launchSettings = @"
+{
+  "`$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "Umbraco.Ai.DemoSite": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:44355",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+"@
+$launchSettingsPath = "demo\Umbraco.Ai.DemoSite\Properties\launchSettings.json"
+New-Item -ItemType Directory -Path (Split-Path $launchSettingsPath) -Force | Out-Null
+Set-Content -Path $launchSettingsPath -Value $launchSettings
+
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green
 dotnet new sln -n "Umbraco.Ai.local" --force

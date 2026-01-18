@@ -97,6 +97,26 @@ pushd "demo/Umbraco.Ai.DemoSite" > /dev/null
 dotnet add package Clean
 popd > /dev/null
 
+# Step 3.2: Set fixed port for consistent development
+echo "Configuring fixed port (44355)..."
+mkdir -p "demo/Umbraco.Ai.DemoSite/Properties"
+cat > "demo/Umbraco.Ai.DemoSite/Properties/launchSettings.json" << 'EOF'
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "Umbraco.Ai.DemoSite": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:44355",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+EOF
+
 # Step 4: Create unified solution
 echo "Creating unified solution..."
 dotnet new sln -n "Umbraco.Ai.local" --force

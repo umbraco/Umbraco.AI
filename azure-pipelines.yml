@@ -119,7 +119,7 @@ stages:
         displayName: 'Build Level 0 Products'
         dependsOn: SetupMatrix
         pool:
-          vmImage: $(vmImage)
+          vmImage: 'ubuntu-latest'
         strategy:
           matrix: $[ dependencies.SetupMatrix.outputs['matrix_output.buildMatrix'] ]
         steps:

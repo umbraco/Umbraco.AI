@@ -103,19 +103,17 @@ stages:
           vmImage: $(vmImage)
         condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'], 'true')
         steps:
-          - task: PowerShell@2
+          - bash: |
+              # Read the matrix JSON from stage variable
+              MATRIX_JSON='$(Level0Matrix)'
+              echo "Matrix JSON from stage variable:"
+              echo "$MATRIX_JSON"
+              echo ""
+
+              # Output it directly - NO PowerShell, NO manipulation
+              echo "##vso[task.setvariable variable=buildMatrix;isOutput=true]$MATRIX_JSON"
             name: matrix_output
             displayName: 'Output matrix for build jobs'
-            inputs:
-              targetType: 'inline'
-              script: |
-                # Get the JSON string
-                $matrixJson = '$(Level0Matrix)'
-                Write-Host "Original matrix JSON:"
-                Write-Host $matrixJson
-
-                # Set it as output WITHOUT any manipulation
-                Write-Host "##vso[task.setvariable variable=buildMatrix;isOutput=true]$matrixJson"
 
       - job: Build_Level_0
         displayName: 'Build Level 0 Products'

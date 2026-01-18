@@ -10,7 +10,11 @@ namespace Umbraco.Ai.Core.PropertyEditors;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The property value is stored as a JSON array of GUID strings: <c>["guid1", "guid2"]</c>.
+/// The property value is stored as JSON:
+/// <list type="bullet">
+/// <item><description>Single selection (multiple = false): <c>"guid1"</c></description></item>
+/// <item><description>Multiple selection (multiple = true): <c>["guid1", "guid2"]</c></description></item>
+/// </list>
 /// </para>
 /// <para>
 /// When "Allow Multiple" is enabled, returns <see cref="IEnumerable{AiContext}"/>.
@@ -60,11 +64,45 @@ public class AiContextPickerPropertyValueConverter : PropertyValueConverterBase
             null => null,
             // Handle the case where the source is already a Guid array
             Guid[] ids => ids,
-            // Handle the case where the source is a JSON string
-            string json when !string.IsNullOrWhiteSpace(json) => JsonSerializer.Deserialize<Guid[]>(json),
+            // Handle single Guid value (when multiple = false)
+            Guid singleId => new[] { singleId },
+            // Handle JSON string
+            string json when !string.IsNullOrWhiteSpace(json) => ParseJsonValue(json),
             // Unhandled source type
             _ => null
         };
+    }
+
+    /// <summary>
+    /// Parses a JSON value that could be either a single GUID or an array of GUIDs.
+    /// </summary>
+    private static Guid[]? ParseJsonValue(string json)
+    {
+        // Try to parse as single GUID string first (when multiple = false)
+        if (json.StartsWith('"') && json.EndsWith('"'))
+        {
+            var guidString = json.Trim('"');
+            if (Guid.TryParse(guidString, out var singleGuid))
+            {
+                return new[] { singleGuid };
+            }
+        }
+
+        // Try to parse as GUID directly (unquoted single value)
+        if (Guid.TryParse(json, out var directGuid))
+        {
+            return new[] { directGuid };
+        }
+
+        // Try to parse as array of GUIDs (when multiple = true)
+        try
+        {
+            return JsonSerializer.Deserialize<Guid[]>(json);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <inheritdoc />

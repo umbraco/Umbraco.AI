@@ -1,7 +1,7 @@
 # Reusable build steps for a single Umbraco.Ai product
 # Uses runtime variables set by the matrix strategy:
-#   - productName: Display name (e.g., "Umbraco.Ai")
-#   - productPath: Folder path (e.g., "Umbraco.Ai")
+#   - name: Display name (e.g., "Umbraco.Ai")
+#   - path: Folder path (e.g., "Umbraco.Ai")
 #   - hasFrontend: Whether product has frontend assets to build
 
 parameters:
@@ -26,7 +26,7 @@ steps:
       versionSpec: '20.x'
 
   - script: |
-      cd $(productPath)/src/$(productName).Web.StaticAssets/Client
+      cd $(path)/src/$(name).Web.StaticAssets/Client
       npm ci
       npm run build
     displayName: 'Build frontend assets'
@@ -41,7 +41,7 @@ steps:
       arguments: 'install --global nbgv'
 
   - script: |
-      cd $(productPath)
+      cd $(path)
       nbgv cloud
     displayName: 'Set version from NBGV'
 
@@ -50,21 +50,21 @@ steps:
     displayName: 'Restore NuGet packages'
     inputs:
       command: 'restore'
-      projects: '$(productPath)/$(productName).sln'
+      projects: '$(path)/$(name).sln'
 
   # Build + Pack with package references (not project references)
   - task: DotNetCoreCLI@2
     displayName: 'Build solution'
     inputs:
       command: 'build'
-      projects: '$(productPath)/$(productName).sln'
+      projects: '$(path)/$(name).sln'
       arguments: '--configuration ${{ parameters.configuration }} --no-restore -p:UseProjectReferences=false'
 
   - task: DotNetCoreCLI@2
     displayName: 'Pack NuGet packages'
     inputs:
       command: 'pack'
-      packagesToPack: '$(productPath)/$(productName).sln'
+      packagesToPack: '$(path)/$(name).sln'
       configuration: '${{ parameters.configuration }}'
       packDirectory: '$(Build.ArtifactStagingDirectory)/nupkg'
       nobuild: true
@@ -75,4 +75,4 @@ steps:
     displayName: 'Publish NuGet packages'
     inputs:
       targetPath: '$(Build.ArtifactStagingDirectory)/nupkg'
-      artifactName: '$(productName)-packages'
+      artifactName: '$(name)-packages'

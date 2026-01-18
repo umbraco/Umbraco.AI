@@ -101,21 +101,15 @@ stages:
           vmImage: $(vmImage)
         variables:
           Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
-          productName: $(name)
-          productPath: $(path)
-          hasFrontend: $(hasFrontend)
         condition: eq(variables['Level0Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         steps:
-          - task: PowerShell@2
+          - bash: |
+              echo "Level0Changed: $(Level0Changed)"
+              echo "Building product: $(name) at $(path)"
+              echo "Has frontend: $(hasFrontend)"
             displayName: 'Debug: Show variables'
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "Level0Changed: '$(Level0Changed)'"
-                Write-Host "Building product: $(productName) at $(productPath)"
-                Write-Host "Has frontend: $(hasFrontend)"
 
           - template: build/templates/build-steps.yml
             parameters:
@@ -133,9 +127,6 @@ stages:
           vmImage: $(vmImage)
         variables:
           Level1Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
-          productName: $(name)
-          productPath: $(path)
-          hasFrontend: $(hasFrontend)
         condition: eq(variables['Level1Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
@@ -156,9 +147,6 @@ stages:
           vmImage: $(vmImage)
         variables:
           Level2Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Changed'] ]
-          productName: $(name)
-          productPath: $(path)
-          hasFrontend: $(hasFrontend)
         condition: eq(variables['Level2Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Matrix'] ]
@@ -179,9 +167,6 @@ stages:
           vmImage: $(vmImage)
         variables:
           Level3Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Changed'] ]
-          productName: $(name)
-          productPath: $(path)
-          hasFrontend: $(hasFrontend)
         condition: eq(variables['Level3Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Matrix'] ]
@@ -202,9 +187,6 @@ stages:
           vmImage: $(vmImage)
         variables:
           Level4Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Changed'] ]
-          productName: $(name)
-          productPath: $(path)
-          hasFrontend: $(hasFrontend)
         condition: eq(variables['Level4Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Matrix'] ]

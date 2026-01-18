@@ -126,7 +126,7 @@ stages:
           - checkout: self
             fetchDepth: 0
 
-          - bash: |
+          - script: |
               echo "Matrix variable values:"
               echo "name=$(name)"
               echo "path=$(path)"

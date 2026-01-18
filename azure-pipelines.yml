@@ -46,8 +46,9 @@ stages:
               filePath: '$(Build.SourcesDirectory)/build/scripts/detect-changes.ps1'
               arguments: '-SourceBranch "$(Build.SourceBranch)" -SourceVersion "$(Build.SourceVersion)"'
 
-  # Stage 2-6: Build Products by Dependency Level
-  # Products at each level are built in parallel, but levels are sequential
+  # Stage 2-6: Build Products by Dependency Level (DYNAMIC)
+  # Products are automatically discovered and built based on detect-changes.ps1 output
+  # Products at each level are built in parallel using matrix strategy
   # Level 0 = no dependencies, Level 1 = depends on Level 0, etc.
 
   - stage: BuildLevel0
@@ -55,13 +56,20 @@ stages:
     dependsOn: DetectChanges
     condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'], 'true')
     jobs:
-      - template: build/templates/build-product.yml
-        parameters:
-          productName: 'Umbraco.Ai'
-          productPath: 'Umbraco.Ai'
-          hasFrontend: true
-          configuration: $(configuration)
-          condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.CoreChanged'], 'true')
+      - job: Build_Level_0
+        displayName: 'Build Level 0 Products'
+        pool:
+          vmImage: $(vmImage)
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
+        variables:
+          productName: $(name)
+          productPath: $(path)
+          hasFrontend: $(hasFrontend)
+        steps:
+          - template: build/templates/build-steps.yml
+            parameters:
+              configuration: $(configuration)
 
   - stage: BuildLevel1
     displayName: 'Build Level 1'
@@ -70,39 +78,21 @@ stages:
       - BuildLevel0
     condition: and(or(succeeded(), eq(dependencies.BuildLevel0.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'], 'true'))
     jobs:
-      - template: build/templates/build-product.yml
-        parameters:
-          productName: 'Umbraco.Ai.Agent'
-          productPath: 'Umbraco.Ai.Agent'
-          hasFrontend: true
-          configuration: $(configuration)
-          condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AgentChanged'], 'true')
+      - job: Build_Level_1
+        displayName: 'Build Level 1 Products'
+        pool:
+          vmImage: $(vmImage)
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
+        variables:
+          productName: $(name)
+          productPath: $(path)
+          hasFrontend: $(hasFrontend)
+        steps:
+          - template: build/templates/build-steps.yml
+            parameters:
+              configuration: $(configuration)
 
-      - template: build/templates/build-product.yml
-        parameters:
-          productName: 'Umbraco.Ai.Prompt'
-          productPath: 'Umbraco.Ai.Prompt'
-          hasFrontend: true
-          configuration: $(configuration)
-          condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.PromptChanged'], 'true')
-
-      - template: build/templates/build-product.yml
-        parameters:
-          productName: 'Umbraco.Ai.OpenAi'
-          productPath: 'Umbraco.Ai.OpenAi'
-          hasFrontend: false
-          configuration: $(configuration)
-          condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.OpenAiChanged'], 'true')
-
-      - template: build/templates/build-product.yml
-        parameters:
-          productName: 'Umbraco.Ai.Anthropic'
-          productPath: 'Umbraco.Ai.Anthropic'
-          hasFrontend: false
-          configuration: $(configuration)
-          condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AnthropicChanged'], 'true')
-
-  # Level 2-4 stages are available for future products with deeper dependency chains
   - stage: BuildLevel2
     displayName: 'Build Level 2'
     dependsOn:
@@ -110,11 +100,20 @@ stages:
       - BuildLevel1
     condition: and(or(succeeded(), eq(dependencies.BuildLevel1.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Changed'], 'true'))
     jobs:
-      # Add future products that depend on Level 1 products here
-      - job: Placeholder
-        displayName: 'No Level 2 products yet'
+      - job: Build_Level_2
+        displayName: 'Build Level 2 Products'
+        pool:
+          vmImage: $(vmImage)
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Matrix'] ]
+        variables:
+          productName: $(name)
+          productPath: $(path)
+          hasFrontend: $(hasFrontend)
         steps:
-          - script: echo "No Level 2 products configured"
+          - template: build/templates/build-steps.yml
+            parameters:
+              configuration: $(configuration)
 
   - stage: BuildLevel3
     displayName: 'Build Level 3'
@@ -123,10 +122,20 @@ stages:
       - BuildLevel2
     condition: and(or(succeeded(), eq(dependencies.BuildLevel2.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Changed'], 'true'))
     jobs:
-      - job: Placeholder
-        displayName: 'No Level 3 products yet'
+      - job: Build_Level_3
+        displayName: 'Build Level 3 Products'
+        pool:
+          vmImage: $(vmImage)
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Matrix'] ]
+        variables:
+          productName: $(name)
+          productPath: $(path)
+          hasFrontend: $(hasFrontend)
         steps:
-          - script: echo "No Level 3 products configured"
+          - template: build/templates/build-steps.yml
+            parameters:
+              configuration: $(configuration)
 
   - stage: BuildLevel4
     displayName: 'Build Level 4'
@@ -135,10 +144,20 @@ stages:
       - BuildLevel3
     condition: and(or(succeeded(), eq(dependencies.BuildLevel3.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Changed'], 'true'))
     jobs:
-      - job: Placeholder
-        displayName: 'No Level 4 products yet'
+      - job: Build_Level_4
+        displayName: 'Build Level 4 Products'
+        pool:
+          vmImage: $(vmImage)
+        strategy:
+          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Matrix'] ]
+        variables:
+          productName: $(name)
+          productPath: $(path)
+          hasFrontend: $(hasFrontend)
         steps:
-          - script: echo "No Level 4 products configured"
+          - template: build/templates/build-steps.yml
+            parameters:
+              configuration: $(configuration)
 
   # Stage 7: Run Tests (Parallel)
   - stage: Test

@@ -420,7 +420,8 @@ function Write-PipelineVariables {
     param(
         [hashtable]$Products,
         [hashtable]$ChangedProducts,
-        [hashtable]$BuildLevels
+        [hashtable]$BuildLevels,
+        [string]$RootPath
     )
 
     Write-Host ""
@@ -439,21 +440,40 @@ function Write-PipelineVariables {
         Write-Host "  $status $productKey (level $level)" -ForegroundColor $color
     }
 
-    # Output level-based variables
+    # Build level-based product lists
     $maxLevel = if ($BuildLevels.Count -gt 0) { ($BuildLevels.Values | Measure-Object -Maximum).Maximum } else { 0 }
 
     Write-Host ""
     Write-Host "Build levels:" -ForegroundColor Cyan
 
+    # Create JSON structure for dynamic pipeline generation (matrix format)
     for ($level = 0; $level -le $maxLevel; $level++) {
         $productsAtLevel = @()
         $changedAtLevel = @()
+        $matrixJson = @{}
 
         foreach ($productKey in $Products.Keys) {
             if ($BuildLevels[$productKey] -eq $level) {
+                $product = $Products[$productKey]
+
+                # Add to all products at this level
                 $productsAtLevel += $productKey
+
+                # If changed, add to matrix JSON with Azure Pipelines matrix format
                 if ($ChangedProducts[$productKey]) {
                     $changedAtLevel += $productKey
+
+                    # Create matrix key (replace dots and hyphens with underscores)
+                    $matrixKey = $product.DisplayName -replace '[.-]', '_'
+
+                    # Check if product has frontend
+                    $hasFrontend = Test-Path (Join-Path $RootPath $product.Path "src" "$($product.DisplayName).Web.StaticAssets")
+
+                    $matrixJson[$matrixKey] = @{
+                        name = $product.DisplayName
+                        path = $product.Path.TrimEnd('/')
+                        hasFrontend = $hasFrontend.ToString().ToLower()
+                    }
                 }
             }
         }
@@ -467,10 +487,17 @@ function Write-PipelineVariables {
 
             # Set level variables
             $anyChanged = ($changedAtLevel.Count -gt 0).ToString().ToLower()
-            $changedListStr = $changedAtLevel -join ","
+            $changedKeysStr = $changedAtLevel -join ","
 
             Write-Host "##vso[task.setvariable variable=Level${level}Changed;isOutput=true]$anyChanged"
-            Write-Host "##vso[task.setvariable variable=Level${level}Products;isOutput=true]$changedListStr"
+            Write-Host "##vso[task.setvariable variable=Level${level}Products;isOutput=true]$changedKeysStr"
+
+            # Output matrix JSON for this level
+            if ($matrixJson.Count -gt 0) {
+                $matrixJsonStr = $matrixJson | ConvertTo-Json -Depth 3 -Compress
+                Write-Host "##vso[task.setvariable variable=Level${level}Matrix;isOutput=true]$matrixJsonStr"
+                Write-Host "    Matrix JSON: $matrixJsonStr" -ForegroundColor Magenta
+            }
         }
     }
 }
@@ -507,7 +534,7 @@ $changedProducts = Get-ChangedProducts -Products $products -SourceBranch $Source
 Add-DependentChanges -ChangedProducts $changedProducts -Dependents $dependents -Products $products
 
 # 6. Output pipeline variables
-Write-PipelineVariables -Products $products -ChangedProducts $changedProducts -BuildLevels $buildLevels
+Write-PipelineVariables -Products $products -ChangedProducts $changedProducts -BuildLevels $buildLevels -RootPath $RootPath
 
 Write-Host ""
 Write-Host "Change detection complete" -ForegroundColor Green

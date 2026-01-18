@@ -68,6 +68,7 @@ export class UaiItemPickerModalElement extends UmbModalBaseElement<
             // Single selection - submit immediately
             this.updateValue({ selection: [item] });
             this.modalContext?.dispatchEvent(new UaiSelectedEvent(item.value, item));
+            this._submitModal();
         }
 	}
 

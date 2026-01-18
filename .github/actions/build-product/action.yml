@@ -15,10 +15,6 @@ inputs:
     description: 'Build configuration (Release/Debug)'
     required: false
     default: 'Release'
-  dotnet-version:
-    description: '.NET SDK version'
-    required: false
-    default: '10.x'
   node-version:
     description: 'Node.js version'
     required: false
@@ -30,7 +26,7 @@ runs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ inputs.dotnet-version }}
+        global-json-file: global.json
 
     - name: Setup Node.js
       if: inputs.has-frontend == 'true'

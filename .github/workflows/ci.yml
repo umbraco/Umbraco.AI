@@ -15,7 +15,6 @@ on:
       - dev
 
 env:
-  DOTNET_VERSION: '10.x'
   NODE_VERSION: '20.x'
   CONFIGURATION: 'Release'
 
@@ -87,7 +86,6 @@ jobs:
           path: ${{ matrix.path }}
           has-frontend: ${{ matrix.hasFrontend }}
           configuration: ${{ env.CONFIGURATION }}
-          dotnet-version: ${{ env.DOTNET_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
 
   # Build Level 1 - Products depending on Level 0
@@ -111,7 +109,6 @@ jobs:
           path: ${{ matrix.path }}
           has-frontend: ${{ matrix.hasFrontend }}
           configuration: ${{ env.CONFIGURATION }}
-          dotnet-version: ${{ env.DOTNET_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
 
   # Build Level 2
@@ -135,7 +132,6 @@ jobs:
           path: ${{ matrix.path }}
           has-frontend: ${{ matrix.hasFrontend }}
           configuration: ${{ env.CONFIGURATION }}
-          dotnet-version: ${{ env.DOTNET_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
 
   # Build Level 3
@@ -159,7 +155,6 @@ jobs:
           path: ${{ matrix.path }}
           has-frontend: ${{ matrix.hasFrontend }}
           configuration: ${{ env.CONFIGURATION }}
-          dotnet-version: ${{ env.DOTNET_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
 
   # Build Level 4
@@ -183,7 +178,6 @@ jobs:
           path: ${{ matrix.path }}
           has-frontend: ${{ matrix.hasFrontend }}
           configuration: ${{ env.CONFIGURATION }}
-          dotnet-version: ${{ env.DOTNET_VERSION }}
           node-version: ${{ env.NODE_VERSION }}
 
   # Run tests
@@ -205,7 +199,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          global-json-file: global.json
 
       - name: Run Core tests
         if: needs.detect-changes.outputs.level0-changed == 'true'

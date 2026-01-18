@@ -1,7 +1,7 @@
 namespace Umbraco.Ai.Core.Profiles;
 
 /// <summary>
-/// Settings specific to Chat capability profiles. 
+/// Settings specific to Chat capability profiles.
 /// </summary> 
 public sealed class AiChatProfileSettings : IAiProfileSettings
 { 

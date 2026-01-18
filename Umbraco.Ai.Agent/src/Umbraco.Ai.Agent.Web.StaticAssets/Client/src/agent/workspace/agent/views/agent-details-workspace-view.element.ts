@@ -2,7 +2,6 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
-import type { UaiSelectedEvent } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
@@ -57,10 +56,12 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onProfileChange(event: UaiSelectedEvent) {
+    #onProfileChange(event: UmbChangeEvent) {
         event.stopPropagation();
+        const picker = event.target as HTMLElement & { value: string | undefined };
+        const profileId = picker.value ?? "";
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId: event.unique ?? "" }, "profileId")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId }, "profileId")
         );
     }
 
@@ -95,8 +96,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     <uai-profile-picker
                         slot="editor"
                         .value=${this._model.profileId || undefined}
-                        placeholder="-- Select Profile --"
-                        @selected=${this.#onProfileChange}
+                        @change=${this.#onProfileChange}
                     ></uai-profile-picker>
                 </umb-property-layout>
 

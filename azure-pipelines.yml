@@ -96,8 +96,22 @@ stages:
     dependsOn: DetectChanges
     variables:
       Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
-    condition: eq(variables['Level0Changed'], 'true')
+    # TEMPORARY: Condition removed for testing - stage will always run
+    # condition: eq(variables['Level0Changed'], 'true')
     jobs:
+      - job: DebugLevel0Condition
+        displayName: 'Debug Level 0 Condition'
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - task: PowerShell@2
+            displayName: 'Show Level0Changed variable'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Level0Changed value in BuildLevel0 stage: '$(Level0Changed)'"
+                Write-Host "Condition should evaluate to true if value is 'true'"
+
       - job: Build_Level_0
         displayName: 'Build Level 0 Products'
         pool:

@@ -46,12 +46,15 @@ stages:
               filePath: '$(Build.SourcesDirectory)/build/scripts/detect-changes.ps1'
               arguments: '-SourceBranch "$(Build.SourceBranch)" -SourceVersion "$(Build.SourceVersion)"'
 
-  # Stage 2: Build Products (Parallel)
-  - stage: Build
-    displayName: 'Build Products'
+  # Stage 2-6: Build Products by Dependency Level
+  # Products at each level are built in parallel, but levels are sequential
+  # Level 0 = no dependencies, Level 1 = depends on Level 0, etc.
+
+  - stage: BuildLevel0
+    displayName: 'Build Level 0 (No Dependencies)'
     dependsOn: DetectChanges
+    condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'], 'true')
     jobs:
-      # Core
       - template: build/templates/build-product.yml
         parameters:
           productName: 'Umbraco.Ai'
@@ -60,7 +63,13 @@ stages:
           configuration: $(configuration)
           condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.CoreChanged'], 'true')
 
-      # Agent
+  - stage: BuildLevel1
+    displayName: 'Build Level 1'
+    dependsOn:
+      - DetectChanges
+      - BuildLevel0
+    condition: and(or(succeeded(), eq(dependencies.BuildLevel0.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'], 'true'))
+    jobs:
       - template: build/templates/build-product.yml
         parameters:
           productName: 'Umbraco.Ai.Agent'
@@ -69,7 +78,6 @@ stages:
           configuration: $(configuration)
           condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AgentChanged'], 'true')
 
-      # Prompt
       - template: build/templates/build-product.yml
         parameters:
           productName: 'Umbraco.Ai.Prompt'
@@ -78,7 +86,6 @@ stages:
           configuration: $(configuration)
           condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.PromptChanged'], 'true')
 
-      # OpenAI
       - template: build/templates/build-product.yml
         parameters:
           productName: 'Umbraco.Ai.OpenAi'
@@ -87,7 +94,6 @@ stages:
           configuration: $(configuration)
           condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.OpenAiChanged'], 'true')
 
-      # Anthropic
       - template: build/templates/build-product.yml
         parameters:
           productName: 'Umbraco.Ai.Anthropic'
@@ -96,10 +102,53 @@ stages:
           configuration: $(configuration)
           condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AnthropicChanged'], 'true')
 
-  # Stage 3: Run Tests (Parallel)
+  # Level 2-4 stages are available for future products with deeper dependency chains
+  - stage: BuildLevel2
+    displayName: 'Build Level 2'
+    dependsOn:
+      - DetectChanges
+      - BuildLevel1
+    condition: and(or(succeeded(), eq(dependencies.BuildLevel1.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Changed'], 'true'))
+    jobs:
+      # Add future products that depend on Level 1 products here
+      - job: Placeholder
+        displayName: 'No Level 2 products yet'
+        steps:
+          - script: echo "No Level 2 products configured"
+
+  - stage: BuildLevel3
+    displayName: 'Build Level 3'
+    dependsOn:
+      - DetectChanges
+      - BuildLevel2
+    condition: and(or(succeeded(), eq(dependencies.BuildLevel2.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Changed'], 'true'))
+    jobs:
+      - job: Placeholder
+        displayName: 'No Level 3 products yet'
+        steps:
+          - script: echo "No Level 3 products configured"
+
+  - stage: BuildLevel4
+    displayName: 'Build Level 4'
+    dependsOn:
+      - DetectChanges
+      - BuildLevel3
+    condition: and(or(succeeded(), eq(dependencies.BuildLevel3.result, 'Skipped')), eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Changed'], 'true'))
+    jobs:
+      - job: Placeholder
+        displayName: 'No Level 4 products yet'
+        steps:
+          - script: echo "No Level 4 products configured"
+
+  # Stage 7: Run Tests (Parallel)
   - stage: Test
     displayName: 'Run Tests'
-    dependsOn: Build
+    dependsOn:
+      - BuildLevel0
+      - BuildLevel1
+      - BuildLevel2
+      - BuildLevel3
+      - BuildLevel4
     jobs:
       - job: TestCore
         displayName: 'Test Umbraco.Ai (Core)'

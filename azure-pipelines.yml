@@ -102,6 +102,25 @@ stages:
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         steps:
+          - script: |
+              echo "=== Matrix Variables ==="
+              echo "name: $(name)"
+              echo "path: $(path)"
+              echo "hasFrontend: $(hasFrontend)"
+              echo ""
+              echo "=== Environment ==="
+              echo "Agent.OS: $(Agent.OS)"
+              echo "Agent.OSArchitecture: $(Agent.OSArchitecture)"
+              echo "vmImage: $(vmImage)"
+              echo ""
+              echo "=== Shell availability ==="
+              which bash || echo "bash not found in PATH"
+              which sh || echo "sh not found in PATH"
+              which pwsh || echo "pwsh not found in PATH"
+              echo ""
+              echo "PATH: $PATH"
+            displayName: 'Debug: Environment and Matrix'
+
           - template: build/templates/build-steps.yml
             parameters:
               configuration: $(configuration)

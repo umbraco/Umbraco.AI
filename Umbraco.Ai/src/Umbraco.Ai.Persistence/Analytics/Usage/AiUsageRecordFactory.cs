@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Analytics;
+using Umbraco.Ai.Core.Analytics.Usage;
 using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Persistence.Analytics;

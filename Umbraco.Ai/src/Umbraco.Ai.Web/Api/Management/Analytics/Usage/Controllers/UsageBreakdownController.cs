@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.Ai.Core.Analytics;
+using Umbraco.Ai.Core.Analytics.Usage;
 using Umbraco.Ai.Web.Api.Management.Analytics.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;

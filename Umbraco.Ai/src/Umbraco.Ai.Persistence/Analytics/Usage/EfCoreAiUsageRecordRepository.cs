@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Umbraco.Ai.Core.Analytics;
+using Umbraco.Ai.Core.Analytics.Usage;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
 namespace Umbraco.Ai.Persistence.Analytics;

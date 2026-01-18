@@ -1,0 +1,35 @@
+name: 🏷️ Auto-label by Component
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  label-by-component:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract component and apply label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const componentField = context.payload.issue.body.match(/### Which component is this issue related to\?\n\n(.+)/);
+            if (!componentField) return;
+
+            const componentMap = {
+              "Umbraco.Ai (Core)": "component/core",
+              "Umbraco.Ai.OpenAi": "component/provider-openai",
+              "Umbraco.Ai.Anthropic": "component/provider-anthropic",
+              "Umbraco.Ai.Prompt": "component/prompt",
+              "Umbraco.Ai.Agent": "component/agent",
+              "Other / Not sure": "component/other"
+            };
+
+            const selected = componentField[1].trim();
+            const label = componentMap[selected];
+            if (label) {
+              await github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: [label]
+              });
+            }

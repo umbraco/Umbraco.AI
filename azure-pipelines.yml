@@ -99,9 +99,6 @@ stages:
         displayName: 'Build Level 0 Products'
         pool:
           vmImage: $(vmImage)
-        variables:
-          Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
-        condition: eq(variables['Level0Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
         steps:
@@ -119,9 +116,6 @@ stages:
         displayName: 'Build Level 1 Products'
         pool:
           vmImage: $(vmImage)
-        variables:
-          Level1Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
-        condition: eq(variables['Level1Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
         steps:
@@ -139,9 +133,6 @@ stages:
         displayName: 'Build Level 2 Products'
         pool:
           vmImage: $(vmImage)
-        variables:
-          Level2Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Changed'] ]
-        condition: eq(variables['Level2Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Matrix'] ]
         steps:
@@ -159,9 +150,6 @@ stages:
         displayName: 'Build Level 3 Products'
         pool:
           vmImage: $(vmImage)
-        variables:
-          Level3Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Changed'] ]
-        condition: eq(variables['Level3Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Matrix'] ]
         steps:
@@ -179,9 +167,6 @@ stages:
         displayName: 'Build Level 4 Products'
         pool:
           vmImage: $(vmImage)
-        variables:
-          Level4Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Changed'] ]
-        condition: eq(variables['Level4Changed'], 'true')
         strategy:
           matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Matrix'] ]
         steps:

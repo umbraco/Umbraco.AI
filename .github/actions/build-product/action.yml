@@ -1,0 +1,83 @@
+name: 'Build Umbraco.Ai Product'
+description: 'Builds an Umbraco.Ai product with optional frontend assets and NuGet packaging'
+
+inputs:
+  name:
+    description: 'Product name (e.g., Umbraco.Ai)'
+    required: true
+  path:
+    description: 'Product path (e.g., Umbraco.Ai)'
+    required: true
+  has-frontend:
+    description: 'Whether product has frontend assets (true/false)'
+    required: true
+  configuration:
+    description: 'Build configuration (Release/Debug)'
+    required: false
+    default: 'Release'
+  dotnet-version:
+    description: '.NET SDK version'
+    required: false
+    default: '10.x'
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '20.x'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Setup Node.js
+      if: inputs.has-frontend == 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Build frontend assets
+      if: inputs.has-frontend == 'true'
+      shell: bash
+      working-directory: ${{ inputs.path }}/src/${{ inputs.name }}.Web.StaticAssets/Client
+      run: |
+        npm ci
+        npm run build
+
+    - name: Install NBGV
+      shell: bash
+      run: dotnet tool install --global nbgv
+
+    - name: Set version from NBGV
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: nbgv cloud
+
+    - name: Restore NuGet packages
+      shell: bash
+      run: dotnet restore ${{ inputs.path }}/${{ inputs.name }}.sln
+
+    - name: Build solution
+      shell: bash
+      run: |
+        dotnet build ${{ inputs.path }}/${{ inputs.name }}.sln \
+          --configuration ${{ inputs.configuration }} \
+          --no-restore \
+          -p:UseProjectReferences=false
+
+    - name: Pack NuGet packages
+      shell: bash
+      run: |
+        dotnet pack ${{ inputs.path }}/${{ inputs.name }}.sln \
+          --configuration ${{ inputs.configuration }} \
+          --output ./artifacts/nupkg \
+          --no-build \
+          -p:UseProjectReferences=false
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.name }}-packages
+        path: ./artifacts/nupkg/*.nupkg

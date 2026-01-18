@@ -80,54 +80,15 @@ jobs:
         with:
           fetch-depth: 0  # Full history for NBGV
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Build product
+        uses: ./.github/actions/build-product
         with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+          has-frontend: ${{ matrix.hasFrontend }}
+          configuration: ${{ env.CONFIGURATION }}
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Setup Node.js
-        if: matrix.hasFrontend == 'true'
-        uses: actions/setup-node@v4
-        with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: Build frontend assets
-        if: matrix.hasFrontend == 'true'
-        working-directory: ${{ matrix.path }}/src/${{ matrix.name }}.Web.StaticAssets/Client
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install NBGV
-        run: dotnet tool install --global nbgv
-
-      - name: Set version from NBGV
-        working-directory: ${{ matrix.path }}
-        run: nbgv cloud
-
-      - name: Restore NuGet packages
-        run: dotnet restore ${{ matrix.path }}/${{ matrix.name }}.sln
-
-      - name: Build solution
-        run: |
-          dotnet build ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --no-restore \
-            -p:UseProjectReferences=false
-
-      - name: Pack NuGet packages
-        run: |
-          dotnet pack ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --output ./artifacts/nupkg \
-            --no-build \
-            -p:UseProjectReferences=false
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-packages
-          path: ./artifacts/nupkg/*.nupkg
 
   # Build Level 1 - Products depending on Level 0
   build-level-1:
@@ -143,54 +104,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Build product
+        uses: ./.github/actions/build-product
         with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+          has-frontend: ${{ matrix.hasFrontend }}
+          configuration: ${{ env.CONFIGURATION }}
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Setup Node.js
-        if: matrix.hasFrontend == 'true'
-        uses: actions/setup-node@v4
-        with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: Build frontend assets
-        if: matrix.hasFrontend == 'true'
-        working-directory: ${{ matrix.path }}/src/${{ matrix.name }}.Web.StaticAssets/Client
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install NBGV
-        run: dotnet tool install --global nbgv
-
-      - name: Set version from NBGV
-        working-directory: ${{ matrix.path }}
-        run: nbgv cloud
-
-      - name: Restore NuGet packages
-        run: dotnet restore ${{ matrix.path }}/${{ matrix.name }}.sln
-
-      - name: Build solution
-        run: |
-          dotnet build ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --no-restore \
-            -p:UseProjectReferences=false
-
-      - name: Pack NuGet packages
-        run: |
-          dotnet pack ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --output ./artifacts/nupkg \
-            --no-build \
-            -p:UseProjectReferences=false
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-packages
-          path: ./artifacts/nupkg/*.nupkg
 
   # Build Level 2
   build-level-2:
@@ -206,54 +128,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Build product
+        uses: ./.github/actions/build-product
         with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+          has-frontend: ${{ matrix.hasFrontend }}
+          configuration: ${{ env.CONFIGURATION }}
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Setup Node.js
-        if: matrix.hasFrontend == 'true'
-        uses: actions/setup-node@v4
-        with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: Build frontend assets
-        if: matrix.hasFrontend == 'true'
-        working-directory: ${{ matrix.path }}/src/${{ matrix.name }}.Web.StaticAssets/Client
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install NBGV
-        run: dotnet tool install --global nbgv
-
-      - name: Set version from NBGV
-        working-directory: ${{ matrix.path }}
-        run: nbgv cloud
-
-      - name: Restore NuGet packages
-        run: dotnet restore ${{ matrix.path }}/${{ matrix.name }}.sln
-
-      - name: Build solution
-        run: |
-          dotnet build ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --no-restore \
-            -p:UseProjectReferences=false
-
-      - name: Pack NuGet packages
-        run: |
-          dotnet pack ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --output ./artifacts/nupkg \
-            --no-build \
-            -p:UseProjectReferences=false
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-packages
-          path: ./artifacts/nupkg/*.nupkg
 
   # Build Level 3
   build-level-3:
@@ -269,54 +152,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Build product
+        uses: ./.github/actions/build-product
         with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+          has-frontend: ${{ matrix.hasFrontend }}
+          configuration: ${{ env.CONFIGURATION }}
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Setup Node.js
-        if: matrix.hasFrontend == 'true'
-        uses: actions/setup-node@v4
-        with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: Build frontend assets
-        if: matrix.hasFrontend == 'true'
-        working-directory: ${{ matrix.path }}/src/${{ matrix.name }}.Web.StaticAssets/Client
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install NBGV
-        run: dotnet tool install --global nbgv
-
-      - name: Set version from NBGV
-        working-directory: ${{ matrix.path }}
-        run: nbgv cloud
-
-      - name: Restore NuGet packages
-        run: dotnet restore ${{ matrix.path }}/${{ matrix.name }}.sln
-
-      - name: Build solution
-        run: |
-          dotnet build ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --no-restore \
-            -p:UseProjectReferences=false
-
-      - name: Pack NuGet packages
-        run: |
-          dotnet pack ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --output ./artifacts/nupkg \
-            --no-build \
-            -p:UseProjectReferences=false
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-packages
-          path: ./artifacts/nupkg/*.nupkg
 
   # Build Level 4
   build-level-4:
@@ -332,54 +176,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Build product
+        uses: ./.github/actions/build-product
         with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+          has-frontend: ${{ matrix.hasFrontend }}
+          configuration: ${{ env.CONFIGURATION }}
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Setup Node.js
-        if: matrix.hasFrontend == 'true'
-        uses: actions/setup-node@v4
-        with:
           node-version: ${{ env.NODE_VERSION }}
-
-      - name: Build frontend assets
-        if: matrix.hasFrontend == 'true'
-        working-directory: ${{ matrix.path }}/src/${{ matrix.name }}.Web.StaticAssets/Client
-        run: |
-          npm ci
-          npm run build
-
-      - name: Install NBGV
-        run: dotnet tool install --global nbgv
-
-      - name: Set version from NBGV
-        working-directory: ${{ matrix.path }}
-        run: nbgv cloud
-
-      - name: Restore NuGet packages
-        run: dotnet restore ${{ matrix.path }}/${{ matrix.name }}.sln
-
-      - name: Build solution
-        run: |
-          dotnet build ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --no-restore \
-            -p:UseProjectReferences=false
-
-      - name: Pack NuGet packages
-        run: |
-          dotnet pack ${{ matrix.path }}/${{ matrix.name }}.sln \
-            --configuration ${{ env.CONFIGURATION }} \
-            --output ./artifacts/nupkg \
-            --no-build \
-            -p:UseProjectReferences=false
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-packages
-          path: ./artifacts/nupkg/*.nupkg
 
   # Run tests
   test:

@@ -1,6 +1,8 @@
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { loadManifestApi, loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { BehaviorSubject } from "@umbraco-cms/backoffice/external/rxjs";
 import type { UaiToolCallInfo } from "../types.js";
 import { ManifestUaiAgentTool, UaiAgentToolApi, UaiAgentToolElement } from "../../agent/tools";
 import { AguiTool } from "../transport";
@@ -9,58 +11,71 @@ import { AguiTool } from "../transport";
 type UaiToolElementConstructor = new () => UaiAgentToolElement;
 
 /**
- * Frontend tool registry manager.
+ * Tool registry manager with reactive updates.
  *
  * Responsibilities:
- * - Loading tool manifests from the extension registry
- * - Converting tools to AG-UI format for the LLM
- * - Resolving and caching tool API instances
- * - Providing manifest lookup for tool-renderer
+ * - Observing ALL tool manifests from the extension registry (frontend and backend)
+ * - Automatically updating when tools are added/removed dynamically
+ * - Converting frontend-executable tools to AG-UI format for the LLM
+ * - Resolving and caching tool API instances (frontend tools only)
+ * - Providing manifest lookup for tool-renderer (all tools)
+ * - Providing element constructors for custom UI (all tools)
  */
-export class UaiFrontendToolManager {
-  #host: UmbControllerHost;
-  #toolManifests: Map<string, ManifestUaiAgentTool> = new Map();
+export class UaiToolManager extends UmbControllerBase {
+  #toolManifests = new BehaviorSubject<Map<string, ManifestUaiAgentTool>>(new Map());
   #apiCache: Map<string, UaiAgentToolApi> = new Map();
   #elementCache: Map<string, UaiToolElementConstructor> = new Map();
-  #tools: AguiTool[] = [];
+  #frontendTools = new BehaviorSubject<AguiTool[]>([]);
+
+  /**
+   * Observable stream of frontend-executable tools.
+   * Emits when tools are added, removed, or updated in the registry.
+   */
+  readonly frontendTools$ = this.#frontendTools.asObservable();
+
+  /**
+   * Get the current snapshot of frontend-executable tools in AG-UI format.
+   * These are tools with an `api` property that can be executed in the browser.
+   * @returns Array of AG-UI tool definitions for the LLM
+   */
+  get frontendTools(): AguiTool[] {
+    return [...this.#frontendTools.value];
+  }
 
   constructor(host: UmbControllerHost) {
-    this.#host = host;
+    super(host);
+
+    // Observe extension registry for tool changes
+    this.observe(
+      umbExtensionsRegistry.byType("uaiAgentTool"),
+      (manifests) => this.#updateTools(manifests as ManifestUaiAgentTool[])
+    );
   }
 
   /**
-   * Get the loaded frontend tools in AG-UI format.
+   * Update internal state when registry changes.
+   * @private
    */
-  get tools(): AguiTool[] {
-    return [...this.#tools];
-  }
-
-  /**
-   * Load frontend tool definitions from the extension registry.
-   * Tools with an `api` property are frontend-executable tools.
-   * @returns The loaded tools in AG-UI format
-   */
-  loadFromRegistry(): AguiTool[] {
-    // Get all uaiAgentTool manifests that have an API (frontend tools)
-    const manifests = umbExtensionsRegistry.getByTypeAndFilter<
-      "uaiAgentTool",
-      ManifestUaiAgentTool
-    >("uaiAgentTool", (manifest) => manifest.api !== undefined);
-
-    // Clear existing and rebuild
-    this.#toolManifests.clear();
-    this.#tools = [];
+  #updateTools(manifests: ManifestUaiAgentTool[]) {
+    const manifestMap = new Map<string, ManifestUaiAgentTool>();
+    const frontendTools: AguiTool[] = [];
 
     for (const manifest of manifests) {
-      this.#toolManifests.set(manifest.meta.toolName, manifest);
-      this.#tools.push({
-        name: manifest.meta.toolName,
-        description: manifest.meta.description ?? "",
-        parameters: manifest.meta.parameters ?? { type: "object", properties: {} },
-      });
+      // Store ALL manifests (for rendering and element lookup)
+      manifestMap.set(manifest.meta.toolName, manifest);
+
+      // Only add frontend-executable tools (with api) to AG-UI tools list
+      if (manifest.api !== undefined) {
+        frontendTools.push({
+          name: manifest.meta.toolName,
+          description: manifest.meta.description ?? "",
+          parameters: manifest.meta.parameters ?? { type: "object", properties: {} },
+        });
+      }
     }
 
-    return this.#tools;
+    this.#toolManifests.next(manifestMap);
+    this.#frontendTools.next(frontendTools);
   }
 
   /**
@@ -68,8 +83,9 @@ export class UaiFrontendToolManager {
    * @param toolName The name of the tool
    */
   isFrontendTool(toolName: string): boolean {
-    return this.#toolManifests.has(toolName)
-        && this.#toolManifests.get(toolName)?.api !== undefined;
+    const manifests = this.#toolManifests.value;
+    return manifests.has(toolName)
+        && manifests.get(toolName)?.api !== undefined;
   }
 
   /**
@@ -78,7 +94,7 @@ export class UaiFrontendToolManager {
    * @returns The tool manifest, or undefined if not found
    */
   getManifest(toolName: string): ManifestUaiAgentTool | undefined {
-    return this.#toolManifests.get(toolName);
+    return this.#toolManifests.value.get(toolName);
   }
 
   /**
@@ -95,7 +111,7 @@ export class UaiFrontendToolManager {
     }
 
     // Get manifest
-    const manifest = this.#toolManifests.get(toolName);
+    const manifest = this.#toolManifests.value.get(toolName);
     if (!manifest?.api) {
       throw new Error(`No API found for tool: ${toolName}`);
     }
@@ -106,7 +122,7 @@ export class UaiFrontendToolManager {
       throw new Error(`Failed to load API for tool: ${toolName}`);
     }
 
-    const api = new ApiConstructor(this.#host);
+    const api = new ApiConstructor(this.getHostElement());
     this.#apiCache.set(toolName, api);
     return api;
   }
@@ -124,7 +140,7 @@ export class UaiFrontendToolManager {
     }
 
     // Get manifest
-    const manifest = this.#toolManifests.get(toolName);
+    const manifest = this.#toolManifests.value.get(toolName);
     if (!manifest?.element) {
       return undefined;
     }

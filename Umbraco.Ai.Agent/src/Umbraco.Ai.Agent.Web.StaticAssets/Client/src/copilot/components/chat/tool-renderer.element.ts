@@ -8,7 +8,7 @@ import type {
 import type { UaiToolCallInfo } from "../../types.js";
 import { safeParseJson } from "../../utils";
 import { UAI_COPILOT_CONTEXT } from "../../copilot.context.js";
-import type { UaiFrontendToolManager } from "../../services/frontend-tool.manager.ts";
+import type { UaiToolManager } from "../../services/tool.manager.ts";
 
 /**
  * Tool renderer component that dynamically renders tool UI based on registered extensions.
@@ -25,7 +25,7 @@ import type { UaiFrontendToolManager } from "../../services/frontend-tool.manage
  */
 @customElement("uai-tool-renderer")
 export class UaiToolRendererElement extends UmbLitElement {
-  #toolManager?: UaiFrontendToolManager;
+  #toolManager?: UaiToolManager;
   #toolElement: UaiAgentToolElement | null = null;
   #manifest: ManifestUaiAgentTool | null = null;
 
@@ -72,7 +72,6 @@ export class UaiToolRendererElement extends UmbLitElement {
     if (!this.#toolManager || !this.toolCall?.name || this.#manifest) {
       return;
     }
-
     this.#manifest = this.#toolManager.getManifest(this.toolCall.name) ?? null;
     if (this.#manifest) {
       this.#loadElement();

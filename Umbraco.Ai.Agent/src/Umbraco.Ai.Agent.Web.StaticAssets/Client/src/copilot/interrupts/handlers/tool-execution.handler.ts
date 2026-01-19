@@ -1,5 +1,5 @@
 import type { UaiInterruptContext, UaiInterruptHandler } from "../types.js";
-import type { UaiFrontendToolManager } from "../../services/frontend-tool.manager.ts";
+import type { UaiToolManager } from "../../services/tool.manager.ts";
 import type { UaiFrontendToolExecutor } from "../../services/frontend-tool.executor.ts";
 import type { UaiInterruptInfo, UaiToolCallInfo } from "../../types.js";
 
@@ -15,7 +15,7 @@ export class UaiToolExecutionHandler implements UaiInterruptHandler {
   readonly reason = "tool_execution";
 
   constructor(
-    private toolManager: UaiFrontendToolManager,
+    private toolManager: UaiToolManager,
     private executor: UaiFrontendToolExecutor
   ) {}
 

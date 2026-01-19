@@ -6,7 +6,7 @@ import { UaiCopilotRunController } from "./services/copilot-run.controller.js";
 import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiCopilotAgentItem } from "./types.ts";
-import type { UaiFrontendToolManager } from "./services/frontend-tool.manager.ts";
+import type { UaiToolManager } from "./services/tool.manager.ts";
 import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChangeResult } from "@umbraco-ai/core";
 
 /**
@@ -80,7 +80,7 @@ export class UaiCopilotContext extends UmbControllerBase {
   // ─── Tool Management ───────────────────────────────────────────────────────
 
   /** Frontend tool manager for registering and rendering custom tool UI. */
-  get toolManager(): UaiFrontendToolManager {
+  get toolManager(): UaiToolManager {
     return this.#runController.toolManager;
   }
 

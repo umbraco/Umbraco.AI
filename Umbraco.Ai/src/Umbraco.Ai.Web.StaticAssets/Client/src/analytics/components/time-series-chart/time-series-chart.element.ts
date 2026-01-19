@@ -276,7 +276,26 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
     }
 
     private _isHourly(sortedData: AnalyticsTimeSeriesDataPoint[]): boolean {
-        if (sortedData.length < 2) return false;
+        // First, check if dateRangeType is provided (most reliable)
+        if (this.dateRangeType === 'last24h' || this.dateRangeType === 'last7d') {
+            return true; // Both 24h and 7d use hourly buckets
+        }
+        if (this.dateRangeType === 'last30d') {
+            return true; // 30d also uses hourly (per backend logic: <= 30 days)
+        }
+
+        // Second, calculate from fromDate/toDate if available
+        if (this.fromDate && this.toDate) {
+            const from = new Date(this.fromDate);
+            const to = new Date(this.toDate);
+            const daysAgo = (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24);
+            return daysAgo <= 30; // Match backend logic
+        }
+
+        // Fallback: infer from data points if we have at least 2
+        if (sortedData.length < 2) {
+            return true; // Default to hourly for single data point
+        }
         const diff = new Date(sortedData[1].timestamp).getTime() -
                      new Date(sortedData[0].timestamp).getTime();
         return diff < 2 * 60 * 60 * 1000; // Less than 2 hours = hourly

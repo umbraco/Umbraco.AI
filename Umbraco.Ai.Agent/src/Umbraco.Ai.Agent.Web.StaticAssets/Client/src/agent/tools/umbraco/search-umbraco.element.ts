@@ -18,36 +18,11 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 	@property({ type: Object })
 	result?: SearchUmbracoResult;
 
-	@state()
-	private _expandedItems: Set<string> = new Set();
-
 	#getIcon(item: UmbracoSearchResultItem): string {
 		if (item.type === "media") {
 			return "icon-picture";
 		}
 		return "icon-document";
-	}
-
-	#getTypeColor(type: string): string {
-		return type === "media" ? "#3b82f6" : "#10b981";
-	}
-
-	#formatDate(dateString: string): string {
-		try {
-			const date = new Date(dateString);
-			return date.toLocaleDateString();
-		} catch {
-			return dateString;
-		}
-	}
-
-	#toggleExpanded(id: string) {
-		if (this._expandedItems.has(id)) {
-			this._expandedItems.delete(id);
-		} else {
-			this._expandedItems.add(id);
-		}
-		this.requestUpdate();
 	}
 
 	#renderLoading() {
@@ -93,8 +68,6 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 	}
 
 	#renderMediaCard(item: UmbracoSearchResultItem) {
-		const isExpanded = this._expandedItems.has(item.id);
-
 		return html`
 			<div class="result-item">
 				<uui-card-media
@@ -110,14 +83,11 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 						<uui-tag color="default" look="secondary">${item.contentType}</uui-tag>
 					</div>
 				</uui-card-media>
-				${this.#renderItemMeta(item, isExpanded)}
 			</div>
 		`;
 	}
 
 	#renderContentCard(item: UmbracoSearchResultItem) {
-		const isExpanded = this._expandedItems.has(item.id);
-
 		return html`
 			<div class="result-item">
 				<uui-card
@@ -137,68 +107,14 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 						</div>
 					</div>
 				</uui-card>
-				${this.#renderItemMeta(item, isExpanded)}
-			</div>
-		`;
-	}
-
-	#renderItemMeta(item: UmbracoSearchResultItem, isExpanded: boolean) {
-		return html`
-			<div class="result-meta">
-				<div class="meta-info">
-					<uui-tag
-						style="--uui-tag-background: ${this.#getTypeColor(item.type)}; --uui-tag-color: white;">
-						${item.type}
-					</uui-tag>
-					<span class="result-date">${this.#formatDate(item.updateDate)}</span>
-					<span class="result-score">Score: ${Math.round(item.score * 100)}%</span>
-				</div>
-				<button class="result-toggle" @click=${() => this.#toggleExpanded(item.id)}>
-					<uui-icon name="${isExpanded ? "icon-arrow-up" : "icon-arrow-down"}"></uui-icon>
-				</button>
-			</div>
-			${isExpanded ? this.#renderItemDetails(item) : ""}
-		`;
-	}
-
-	#renderItemDetails(item: UmbracoSearchResultItem) {
-		return html`
-			<div class="result-details">
-				<div class="detail-row">
-					<span class="detail-label">Path:</span>
-					<span class="detail-value">${item.path}</span>
-				</div>
-				${item.url
-					? html`<div class="detail-row">
-							<span class="detail-label">URL:</span>
-							<span class="detail-value detail-url">${item.url}</span>
-					  </div>`
-					: ""}
-				<div class="detail-row">
-					<span class="detail-label">ID:</span>
-					<span class="detail-value detail-id">${item.id}</span>
-				</div>
 			</div>
 		`;
 	}
 
 	#renderResults() {
 		if (!this.result) return html``;
-		
-		console.log(this.args)
-
 		return html`
 			<div class="search-results">
-				<div class="search-header">
-					<div class="search-query-info">
-						<uui-icon name="icon-search"></uui-icon>
-						<span class="search-query">"${(this.args.query as string) || ""}"</span>
-						<span class="search-count">${this.result.results.length} result${this.result.results
-								.length === 1
-								? ""
-								: "s"}</span>
-					</div>
-				</div>
 				<div class="search-list">${this.result.results.map((item) => this.#renderResultItem(item))}</div>
 			</div>
 		`;

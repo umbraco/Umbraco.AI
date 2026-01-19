@@ -1,10 +1,12 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using SmartReader;
 
 namespace Umbraco.Ai.Core.Tools.Web;
 
 /// <summary>
-/// Extracts main content from HTML using HtmlAgilityPack.
+/// Extracts main content from HTML using SmartReader for article extraction
+/// and HtmlAgilityPack for additional sanitization.
 /// </summary>
 public class HtmlContentExtractor : IHtmlContentExtractor
 {
@@ -19,7 +21,60 @@ public class HtmlContentExtractor : IHtmlContentExtractor
         if (string.IsNullOrWhiteSpace(html))
             return Task.FromResult(new ExtractedContent(null, string.Empty, string.Empty));
 
-        // Parse HTML
+        // Try SmartReader first for intelligent article extraction
+        var article = TryExtractWithSmartReader(html, baseUrl);
+
+        if (article != null && !string.IsNullOrWhiteSpace(article.TextContent))
+        {
+            // SmartReader succeeded - use its extracted content
+            var textContent = CleanText(article.TextContent);
+            var excerpt = !string.IsNullOrWhiteSpace(article.Excerpt)
+                ? article.Excerpt
+                : GenerateExcerpt(textContent);
+
+            return Task.FromResult(new ExtractedContent(article.Title, textContent, excerpt));
+        }
+
+        // Fallback to basic HtmlAgilityPack extraction
+        return Task.FromResult(ExtractWithHtmlAgilityPack(html));
+    }
+
+    /// <summary>
+    /// Attempts to extract article content using SmartReader.
+    /// </summary>
+    private static Article? TryExtractWithSmartReader(string html, string baseUrl)
+    {
+        try
+        {
+            // Create a valid URI for SmartReader
+            if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+            {
+                uri = new Uri("https://example.com");
+            }
+
+            var reader = new Reader(baseUrl, html);
+            var article = reader.GetArticle();
+
+            // Check if SmartReader found meaningful content
+            if (article.IsReadable)
+            {
+                return article;
+            }
+
+            return null;
+        }
+        catch
+        {
+            // SmartReader failed - will fall back to basic extraction
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Fallback extraction using HtmlAgilityPack when SmartReader fails.
+    /// </summary>
+    private static ExtractedContent ExtractWithHtmlAgilityPack(string html)
+    {
         var doc = new HtmlDocument();
         doc.LoadHtml(html);
 
@@ -33,7 +88,6 @@ public class HtmlContentExtractor : IHtmlContentExtractor
         var title = ExtractTitle(doc);
 
         // Extract main content
-        // Try to find article or main content area first
         var contentNode = doc.DocumentNode.SelectSingleNode("//article") ??
                           doc.DocumentNode.SelectSingleNode("//main") ??
                           doc.DocumentNode.SelectSingleNode("//div[@class='content']") ??
@@ -43,12 +97,23 @@ public class HtmlContentExtractor : IHtmlContentExtractor
         // Get text content
         var textContent = CleanText(contentNode.InnerText);
 
-        // Generate excerpt (first 200 characters)
-        var excerpt = textContent.Length > 200
+        // Generate excerpt
+        var excerpt = GenerateExcerpt(textContent);
+
+        return new ExtractedContent(title, textContent, excerpt);
+    }
+
+    /// <summary>
+    /// Generates an excerpt from text content (first 200 characters).
+    /// </summary>
+    private static string GenerateExcerpt(string textContent)
+    {
+        if (string.IsNullOrWhiteSpace(textContent))
+            return string.Empty;
+
+        return textContent.Length > 200
             ? textContent.Substring(0, 200) + "..."
             : textContent;
-
-        return Task.FromResult(new ExtractedContent(title, textContent, excerpt));
     }
 
     /// <summary>

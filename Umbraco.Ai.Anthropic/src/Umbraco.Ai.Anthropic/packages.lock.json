@@ -48,6 +48,11 @@
         "resolved": "0.3.0",
         "contentHash": "pvgnrC9vQ/3GvYvAwhLHvqwMgyvndHtKi+io77cMNuY+e/eR0eBV5SyzXmW5q3MFnbV4AizdjZIsuoMszY7mxA=="
       },
+      "AngleSharp": {
+        "type": "Transitive",
+        "resolved": "1.1.2",
+        "contentHash": "aRFpAqixbuj1Vmqy2hsWPF0PJygo1SfjvmpBvVWZv6i+/u+C/L4wDdwFIzyCGUbjqr61NsZdPNPqDE8wlmG2qA=="
+      },
       "Asp.Versioning.Abstractions": {
         "type": "Transitive",
         "resolved": "8.1.0",
@@ -954,18 +959,13 @@
           "Umbraco.Cms.Infrastructure": "[17.0.0, 18.0.0)"
         }
       },
-      "Wasmtime": {
-        "type": "Transitive",
-        "resolved": "34.0.2",
-        "contentHash": "Oe+xuxyj8LgNxuEqotBhkEPbzuN8Ljfhc61fnSz+8c4p9vODQQmZpNmxmPFC7zmnh6BLDhvpQlmh1sE8xbxWmg=="
-      },
       "umbraco.ai.core": {
         "type": "Project",
         "dependencies": {
           "Microsoft.Extensions.AI": "[10.0.1, )",
           "Microsoft.Extensions.Caching.Memory": "[10.0.0, 10.999.999)",
           "Microsoft.Extensions.Options": "[10.0.0, 10.999.999)",
-          "Readability.NET": "[1.0.0, )",
+          "SmartReader": "[0.9.6, )",
           "Umbraco.Cms.Core": "[17.0.0, 17.999.999)",
           "Umbraco.Cms.Infrastructure": "[17.0.0, 17.999.999)",
           "Umbraco.Cms.Web.Common": "[17.0.0, 17.999.999)"
@@ -1013,13 +1013,13 @@
           "Microsoft.Extensions.Primitives": "10.0.0"
         }
       },
-      "Readability.NET": {
+      "SmartReader": {
         "type": "CentralTransitive",
-        "requested": "[0.9.0, )",
-        "resolved": "1.0.0",
-        "contentHash": "LhKYiBoSZUB6KPRTKawG7DvFn/s32lhBNMI54ZeO3WALaZcCTVM0T8ctQepKtNyTSlpO1XhDpEZxtS4VYIbWyw==",
+        "requested": "[0.9.6, )",
+        "resolved": "0.9.6",
+        "contentHash": "em5YZATAZk9OiXoM7FMZpR/571hyOHx9rkdS89spRgr0KvJZuj2Ik3oJOp83twOfO0UcgEMXU1Z+6Axiutu9hA==",
         "dependencies": {
-          "Wasmtime": "34.0.2"
+          "AngleSharp": "1.1.2"
         }
       },
       "Umbraco.Cms.Core": {

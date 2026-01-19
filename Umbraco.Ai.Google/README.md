@@ -1,12 +1,12 @@
-# Umbraco.Ai.Gemini
+# Umbraco.Ai.Google
 
-[![NuGet](https://img.shields.io/nuget/v/Umbraco.Ai.Gemini.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.Ai.Gemini/)
+[![NuGet](https://img.shields.io/nuget/v/Umbraco.Ai.Google.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.Ai.Google/)
 
-Google Gemini provider plugin for Umbraco.Ai, enabling integration with Google's Gemini models.
+Google provider plugin for Umbraco.Ai, enabling integration with Google's Gemini models.
 
 ## Features
 
-- **Gemini API Support** - Connect to Google's Gemini API (Gemini 2.0, 1.5 Pro, 1.5 Flash, etc.)
+- **Google AI Support** - Connect to Google's AI API (Gemini 2.0, 1.5 Pro, 1.5 Flash, etc.)
 - **Chat Capabilities** - Full support for chat completions with streaming
 - **Model Configuration** - Configure temperature, max tokens, and other model parameters
 - **Middleware Support** - Compatible with Umbraco.Ai's middleware pipeline
@@ -18,7 +18,7 @@ This package is part of the [Umbraco.Ai monorepo](../README.md). For local devel
 ## Installation
 
 ```bash
-dotnet add package Umbraco.Ai.Gemini
+dotnet add package Umbraco.Ai.Google
 ```
 
 ## Requirements
@@ -32,7 +32,7 @@ dotnet add package Umbraco.Ai.Gemini
 After installation, create a connection in the Umbraco backoffice:
 
 1. Navigate to the AI section
-2. Create a new Google Gemini connection
+2. Create a new Google connection
 3. Enter your API key from Google AI Studio
 4. Create a profile using this connection
 

@@ -4,10 +4,10 @@
     <Company>Umbraco HQ</Company>
     <Authors>Umbraco</Authors>
     <Copyright>Copyright © Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
-    <Product>Umbraco Ai Gemini Provider</Product>
-    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Ai.Gemini</PackageProjectUrl>
+    <Product>Umbraco Ai Google Provider</Product>
+    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Ai</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
-    <PackageTags>umbraco ai gemini google umbraco-marketplace</PackageTags>
+    <PackageTags>umbraco ai google gemini umbraco-marketplace</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <NeutralLanguage>en-US</NeutralLanguage>

@@ -85,44 +85,79 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 	}
 
 	#renderResultItem(item: UmbracoSearchResultItem) {
+		if (item.type === "media") {
+			return this.#renderMediaCard(item);
+		} else {
+			return this.#renderContentCard(item);
+		}
+	}
+
+	#renderMediaCard(item: UmbracoSearchResultItem) {
 		const isExpanded = this._expandedItems.has(item.id);
 
 		return html`
-			<div class="result-card" data-type="${item.type}">
-				<div class="result-main">
-					${item.type === "media" && item.thumbnailUrl
-						? html`<img class="result-thumbnail" src="${item.thumbnailUrl}" alt="${item.name}" />`
-						: html`<div class="result-icon">
-								<uui-icon name="${this.#getIcon(item)}"></uui-icon>
-						  </div>`}
-
-					<div class="result-content">
-						<div class="result-title">
-							${item.url
-								? html`<a href="${item.url}" target="_blank" rel="noopener noreferrer"
-										>${item.name}</a
-								  >`
-								: html`<span>${item.name}</span>`}
-						</div>
-
-						<div class="result-meta">
-							<uui-tag color="default" look="primary">${item.contentType}</uui-tag>
-							<uui-tag
-								style="--uui-tag-background: ${this.#getTypeColor(item.type)}; --uui-tag-color: white;"
-								>${item.type}</uui-tag
-							>
-							<span class="result-date">${this.#formatDate(item.updateDate)}</span>
-							<span class="result-score">Score: ${Math.round(item.score * 100)}%</span>
-						</div>
-
-						${isExpanded ? this.#renderItemDetails(item) : ""}
+			<div class="result-item">
+				<uui-card-media
+					name=${item.name}
+					href=${item.url || "#"}
+					@click=${(e: Event) => {
+						if (!item.url) e.preventDefault();
+					}}>
+					${item.thumbnailUrl
+						? html`<img src="${item.thumbnailUrl}" alt="${item.name}" />`
+						: html`<uui-icon name="${this.#getIcon(item)}"></uui-icon>`}
+					<div slot="tag">
+						<uui-tag color="default" look="secondary">${item.contentType}</uui-tag>
 					</div>
-
-					<button class="result-toggle" @click=${() => this.#toggleExpanded(item.id)}>
-						<uui-icon name="${isExpanded ? "icon-arrow-up" : "icon-arrow-down"}"></uui-icon>
-					</button>
-				</div>
+				</uui-card-media>
+				${this.#renderItemMeta(item, isExpanded)}
 			</div>
+		`;
+	}
+
+	#renderContentCard(item: UmbracoSearchResultItem) {
+		const isExpanded = this._expandedItems.has(item.id);
+
+		return html`
+			<div class="result-item">
+				<uui-card
+					href=${item.url || "#"}
+					@click=${(e: Event) => {
+						if (!item.url) e.preventDefault();
+					}}>
+					<div class="content-card-body">
+						<div class="content-icon">
+							<uui-icon name="${this.#getIcon(item)}"></uui-icon>
+						</div>
+						<div class="content-info">
+							<div class="content-name">${item.name}</div>
+							<div class="content-type">
+								<uui-tag color="default" look="secondary">${item.contentType}</uui-tag>
+							</div>
+						</div>
+					</div>
+				</uui-card>
+				${this.#renderItemMeta(item, isExpanded)}
+			</div>
+		`;
+	}
+
+	#renderItemMeta(item: UmbracoSearchResultItem, isExpanded: boolean) {
+		return html`
+			<div class="result-meta">
+				<div class="meta-info">
+					<uui-tag
+						style="--uui-tag-background: ${this.#getTypeColor(item.type)}; --uui-tag-color: white;">
+						${item.type}
+					</uui-tag>
+					<span class="result-date">${this.#formatDate(item.updateDate)}</span>
+					<span class="result-score">Score: ${Math.round(item.score * 100)}%</span>
+				</div>
+				<button class="result-toggle" @click=${() => this.#toggleExpanded(item.id)}>
+					<uui-icon name="${isExpanded ? "icon-arrow-up" : "icon-arrow-down"}"></uui-icon>
+				</button>
+			</div>
+			${isExpanded ? this.#renderItemDetails(item) : ""}
 		`;
 	}
 
@@ -149,13 +184,15 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 
 	#renderResults() {
 		if (!this.result) return html``;
+		
+		console.log(this.args)
 
 		return html`
 			<div class="search-results">
 				<div class="search-header">
 					<div class="search-query-info">
 						<uui-icon name="icon-search"></uui-icon>
-						<span class="search-query">"${this.args.query}"</span>
+						<span class="search-query">"${(this.args.query as string) || ""}"</span>
 						<span class="search-count">${this.result.results.length} result${this.result.results
 								.length === 1
 								? ""
@@ -279,43 +316,54 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 		}
 
 		.search-list {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+			gap: var(--uui-size-space-4);
+		}
+
+		.result-item {
 			display: flex;
 			flex-direction: column;
 			gap: var(--uui-size-space-2);
 		}
 
-		.result-card {
-			background: var(--uui-color-surface);
-			border: 1px solid var(--uui-color-border);
-			border-radius: var(--uui-border-radius);
-			padding: var(--uui-size-space-3);
-			transition:
-				border-color 0.2s,
-				box-shadow 0.2s;
+		uui-card-media {
+			width: 100%;
+			height: 200px;
 		}
 
-		.result-card:hover {
-			border-color: var(--uui-color-border-emphasis);
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+		uui-card-media img,
+		uui-card-media uui-icon {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
 		}
 
-		.result-main {
+		uui-card-media uui-icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 48px;
+			color: var(--uui-color-text-alt);
+			background: var(--uui-color-surface-alt);
+		}
+
+		uui-card {
+			width: 100%;
+			height: auto;
+			min-height: 80px;
+		}
+
+		.content-card-body {
 			display: flex;
 			gap: var(--uui-size-space-3);
-			align-items: flex-start;
+			align-items: center;
+			padding: var(--uui-size-space-4);
 		}
 
-		.result-thumbnail {
-			width: 80px;
-			height: 80px;
-			object-fit: cover;
-			border-radius: var(--uui-border-radius);
-			flex-shrink: 0;
-		}
-
-		.result-icon {
-			width: 80px;
-			height: 80px;
+		.content-icon {
+			width: 48px;
+			height: 48px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -324,41 +372,42 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 			flex-shrink: 0;
 		}
 
-		.result-icon uui-icon {
-			font-size: 32px;
+		.content-icon uui-icon {
+			font-size: 24px;
 			color: var(--uui-color-text-alt);
 		}
 
-		.result-content {
+		.content-info {
 			flex: 1;
 			min-width: 0;
+			display: flex;
+			flex-direction: column;
+			gap: var(--uui-size-space-1);
 		}
 
-		.result-title {
-			font-size: var(--uui-type-default-size);
+		.content-name {
 			font-weight: 600;
-			margin-bottom: var(--uui-size-space-2);
-		}
-
-		.result-title a {
-			color: var(--uui-color-interactive);
-			text-decoration: none;
-		}
-
-		.result-title a:hover {
-			text-decoration: underline;
-		}
-
-		.result-title span {
 			color: var(--uui-color-text);
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 
 		.result-meta {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: var(--uui-size-space-2);
+			padding: 0 var(--uui-size-space-2);
+		}
+
+		.meta-info {
 			display: flex;
 			flex-wrap: wrap;
 			align-items: center;
 			gap: var(--uui-size-space-2);
 			font-size: var(--uui-type-small-size);
+			flex: 1;
 		}
 
 		.result-date,

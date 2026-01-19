@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
+  "version": "1.0.0",
+  "assemblyVersion": {
+    "precision": "build"
+  },
+  "gitCommitIdShortFixedLength": 7,
+  "nugetPackageVersion": {
+    "semVer": 2
+  },
+  "publicReleaseRefSpec": [
+    "^refs/heads/main$",
+    "^refs/heads/release/gemini-",
+    "^refs/heads/hotfix/gemini-",
+    "^refs/tags/release-gemini-"
+  ],
+  "cloudBuild": {
+    "buildNumber": {
+      "enabled": true
+    }
+  },
+  "release": {
+    "branchName": "release/gemini-{version}"
+  }
+}

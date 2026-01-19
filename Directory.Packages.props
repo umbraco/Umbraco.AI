@@ -45,6 +45,7 @@
   <!-- Provider packages -->
   <ItemGroup>
     <PackageVersion Include="Anthropic" Version="12.2.0" />
+    <PackageVersion Include="Google.GenAI" Version="0.12.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
   </ItemGroup>
 

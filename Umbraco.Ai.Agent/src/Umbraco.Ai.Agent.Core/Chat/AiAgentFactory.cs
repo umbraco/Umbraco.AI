@@ -2,6 +2,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Extensions;
 
@@ -12,22 +13,22 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// </summary>
 internal sealed class AiAgentFactory : IAiAgentFactory
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAiProfileService _profileService;
+    private readonly IAiChatClientFactory _chatClientFactory;
     private readonly AiToolCollection _toolCollection;
     private readonly IAiFunctionFactory _functionFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiAgentFactory"/> class.
     /// </summary>
-    /// <param name="chatService">The chat service for creating chat clients.</param>
-    /// <param name="toolCollection">The collection of registered tools.</param>
-    /// <param name="functionFactory">The factory for creating AI functions from tools.</param>
     public AiAgentFactory(
-        IAiChatService chatService,
+        IAiProfileService profileService,
+        IAiChatClientFactory chatClientFactory,
         AiToolCollection toolCollection,
         IAiFunctionFactory functionFactory)
     {
-        _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
+        _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
+        _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
         _toolCollection = toolCollection ?? throw new ArgumentNullException(nameof(toolCollection));
         _functionFactory = functionFactory ?? throw new ArgumentNullException(nameof(functionFactory));
     }
@@ -41,28 +42,44 @@ internal sealed class AiAgentFactory : IAiAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        // Get base chat client from profile (already has AiProfileAiBoundChatClient wrapping)
-        var chatClient = await _chatService.GetChatClientAsync(agent.ProfileId, cancellationToken);
-
-        // Wrap with AgentBoundChatClient for agent-specific injection
-        var agentBoundClient = new AiAgentBoundChatClient(chatClient, agent, additionalProperties);
-
-        // Build tool list - all tools included by default
+        // Build tool list
         var tools = new List<AITool>();
         tools.AddRange(_toolCollection.ToSystemToolFunctions(_functionFactory));
         tools.AddRange(_toolCollection.ToUserToolFunctions(_functionFactory));
 
-        // Add additional (likely frontend) tools if provided (for copilot UI)
+        // Collect frontend tool names and add them to additional properties
+        // AiToolReorderingChatMiddleware reads these to reorder tool calls
+        var frontendToolNames = additionalTools?.Select(t => t.Name).ToList() ?? [];
+
+        var allAdditionalProperties = new List<KeyValuePair<string, object?>>();
+        if (additionalProperties != null)
+        {
+            allAdditionalProperties.AddRange(additionalProperties);
+        }
+        allAdditionalProperties.Add(new KeyValuePair<string, object?>(
+            Constants.ChatOptionsKeys.FrontendToolNames,
+            frontendToolNames));
+
         if (additionalTools != null)
         {
             tools.AddRange(additionalTools);
         }
 
+        // Get profile and create chat client using standard factory
+        // The factory applies all middleware including AiToolReorderingChatMiddleware
+        var profile = await _profileService.GetProfileAsync(agent.ProfileId, cancellationToken)
+            ?? throw new InvalidOperationException($"Profile with ID '{agent.ProfileId}' not found.");
+
+        var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
+
+        // Wrap with AgentBoundChatClient for agent-specific injection
+        // This adds frontend tool names to ChatOptions.AdditionalProperties for the reordering middleware
+        var agentBoundClient = new AiAgentBoundChatClient(chatClient, agent, allAdditionalProperties);
+
         // Create MAF ChatClientAgent using the extension method
         return agentBoundClient.CreateAIAgent(
             name: agent.Name,
             description: agent.Description,
-            //instructions: agent.Instructions,
             tools: tools);
     }
 }

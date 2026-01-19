@@ -61,11 +61,13 @@ public static partial class UmbracoBuilderExtensions
 
         // Initialize middleware collection builders with default middleware
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
+        // Middleware is applied in order: first = innermost (closest to provider), last = outermost
         builder.AiChatMiddleware()
+            .Append<AiFunctionInvokingChatMiddleware>()  // Function/tool invocation (innermost - wraps provider)
             .Append<AiTrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
             .Append<AiUsageRecordingChatMiddleware>()    // Records usage to database for analytics
             .Append<AiAuditingChatMiddleware>()          // Audit logging (optional, can be disabled)
-            .Append<AiContextInjectingChatMiddleware>(); // Context injection
+            .Append<AiContextInjectingChatMiddleware>(); // Context injection (outermost)
 
         builder.AiEmbeddingMiddleware()
             .Append<AiTrackingEmbeddingMiddleware>()        // Tracks usage details

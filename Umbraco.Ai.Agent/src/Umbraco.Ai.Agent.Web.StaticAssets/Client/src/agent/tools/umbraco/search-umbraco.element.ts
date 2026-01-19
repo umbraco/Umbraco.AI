@@ -22,7 +22,7 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 	private _expandedItems: Set<string> = new Set();
 
 	#getIcon(item: UmbracoSearchResultItem): string {
-		if (item.Type === "media") {
+		if (item.type === "media") {
 			return "icon-picture";
 		}
 		return "icon-document";
@@ -85,40 +85,40 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 	}
 
 	#renderResultItem(item: UmbracoSearchResultItem) {
-		const isExpanded = this._expandedItems.has(item.Id);
+		const isExpanded = this._expandedItems.has(item.id);
 
 		return html`
-			<div class="result-card" data-type="${item.Type}">
+			<div class="result-card" data-type="${item.type}">
 				<div class="result-main">
-					${item.Type === "media" && item.ThumbnailUrl
-						? html`<img class="result-thumbnail" src="${item.ThumbnailUrl}" alt="${item.Name}" />`
+					${item.type === "media" && item.thumbnailUrl
+						? html`<img class="result-thumbnail" src="${item.thumbnailUrl}" alt="${item.name}" />`
 						: html`<div class="result-icon">
 								<uui-icon name="${this.#getIcon(item)}"></uui-icon>
 						  </div>`}
 
 					<div class="result-content">
 						<div class="result-title">
-							${item.Url
-								? html`<a href="${item.Url}" target="_blank" rel="noopener noreferrer"
-										>${item.Name}</a
+							${item.url
+								? html`<a href="${item.url}" target="_blank" rel="noopener noreferrer"
+										>${item.name}</a
 								  >`
-								: html`<span>${item.Name}</span>`}
+								: html`<span>${item.name}</span>`}
 						</div>
 
 						<div class="result-meta">
-							<uui-tag color="default" look="primary">${item.ContentType}</uui-tag>
+							<uui-tag color="default" look="primary">${item.contentType}</uui-tag>
 							<uui-tag
-								style="--uui-tag-background: ${this.#getTypeColor(item.Type)}; --uui-tag-color: white;"
-								>${item.Type}</uui-tag
+								style="--uui-tag-background: ${this.#getTypeColor(item.type)}; --uui-tag-color: white;"
+								>${item.type}</uui-tag
 							>
-							<span class="result-date">${this.#formatDate(item.UpdateDate)}</span>
-							<span class="result-score">Score: ${Math.round(item.Score * 100)}%</span>
+							<span class="result-date">${this.#formatDate(item.updateDate)}</span>
+							<span class="result-score">Score: ${Math.round(item.score * 100)}%</span>
 						</div>
 
 						${isExpanded ? this.#renderItemDetails(item) : ""}
 					</div>
 
-					<button class="result-toggle" @click=${() => this.#toggleExpanded(item.Id)}>
+					<button class="result-toggle" @click=${() => this.#toggleExpanded(item.id)}>
 						<uui-icon name="${isExpanded ? "icon-arrow-up" : "icon-arrow-down"}"></uui-icon>
 					</button>
 				</div>
@@ -131,17 +131,17 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 			<div class="result-details">
 				<div class="detail-row">
 					<span class="detail-label">Path:</span>
-					<span class="detail-value">${item.Path}</span>
+					<span class="detail-value">${item.path}</span>
 				</div>
-				${item.Url
+				${item.url
 					? html`<div class="detail-row">
 							<span class="detail-label">URL:</span>
-							<span class="detail-value detail-url">${item.Url}</span>
+							<span class="detail-value detail-url">${item.url}</span>
 					  </div>`
 					: ""}
 				<div class="detail-row">
 					<span class="detail-label">ID:</span>
-					<span class="detail-value detail-id">${item.Id}</span>
+					<span class="detail-value detail-id">${item.id}</span>
 				</div>
 			</div>
 		`;
@@ -156,13 +156,13 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 					<div class="search-query-info">
 						<uui-icon name="icon-search"></uui-icon>
 						<span class="search-query">"${this.args.query}"</span>
-						<span class="search-count">${this.result.Results.length} result${this.result.Results
+						<span class="search-count">${this.result.results.length} result${this.result.results
 								.length === 1
 								? ""
 								: "s"}</span>
 					</div>
 				</div>
-				<div class="search-list">${this.result.Results.map((item) => this.#renderResultItem(item))}</div>
+				<div class="search-list">${this.result.results.map((item) => this.#renderResultItem(item))}</div>
 			</div>
 		`;
 	}
@@ -176,7 +176,7 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 			return this.#renderLoading();
 		}
 
-		if (!this.result?.Success || !this.result.Results.length) {
+		if (!this.result?.success || !this.result.results.length) {
 			return this.#renderEmpty();
 		}
 

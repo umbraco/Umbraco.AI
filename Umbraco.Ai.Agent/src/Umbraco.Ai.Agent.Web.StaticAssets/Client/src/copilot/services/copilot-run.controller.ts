@@ -30,14 +30,8 @@ import { UaiAgentClient } from "../transport";
 export class UaiCopilotRunController extends UmbControllerBase {
   #toolManager: UaiToolManager;
   #toolExecutor: UaiFrontendToolExecutor;
-
-  /** Expose tool manager for context provision */
-  get toolManager(): UaiToolManager {
-    return this.#toolManager;
-  }
   #client?: UaiAgentClient;
   #agent?: UaiCopilotAgentItem;
-  #frontendTools: import("../transport/types.js").AguiTool[] = [];
   #currentToolCalls: UaiToolCallInfo[] = [];
   #subscriptions: Subscription[] = [];
   #handlerRegistry = new UaiInterruptHandlerRegistry();
@@ -55,10 +49,14 @@ export class UaiCopilotRunController extends UmbControllerBase {
   readonly agentState$ = this.#agentState.asObservable();
   readonly isRunning$ = this.agentState$.pipe(map((state) => state !== undefined));
 
+  /** Expose tool manager for context provision */
+  get toolManager(): UaiToolManager {
+    return this.#toolManager;
+  }
+
   constructor(host: UmbControllerHost, hitlContext: UaiHitlContext) {
     super(host);
     this.#toolManager = new UaiToolManager(host);
-    this.#frontendTools = this.#toolManager.loadFromRegistry();
     this.#toolExecutor = new UaiFrontendToolExecutor(this.#toolManager, hitlContext);
     this.#subscriptions.push(
       this.#toolExecutor.results$.subscribe((result) => this.#handleToolResult(result)),
@@ -98,7 +96,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
     const nextMessages = [...this.#messages.value, userMessage];
     this.#messages.next(nextMessages);
     this.#agentState.next({ status: "thinking" });
-    this.#client.sendMessage(nextMessages, this.#frontendTools, this.#pendingContext);
+    this.#client.sendMessage(nextMessages, this.#toolManager.frontendTools, this.#pendingContext);
   }
 
   resetConversation(): void {
@@ -155,7 +153,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
 
     // Trigger new generation (use same context as last request)
     this.#agentState.next({ status: "thinking" });
-    this.#client.sendMessage(truncatedMessages, this.#frontendTools, this.#pendingContext);
+    this.#client.sendMessage(truncatedMessages, this.#toolManager.frontendTools, this.#pendingContext);
   }
 
   #createClient(): void {
@@ -383,7 +381,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
       this.#messages.next([...this.#messages.value, userMessage]);
     }
     this.#agentState.next({ status: "thinking" });
-    this.#client?.sendMessage(this.#messages.value, this.#frontendTools, this.#pendingContext);
+    this.#client?.sendMessage(this.#messages.value, this.#toolManager.frontendTools, this.#pendingContext);
   }
 
   /**

@@ -52,7 +52,7 @@ public class HtmlContentExtractor : IHtmlContentExtractor
                 uri = new Uri("https://example.com");
             }
 
-            var reader = new Reader(baseUrl, html);
+            var reader = new Reader(uri.ToString(), html);
             var article = reader.GetArticle();
 
             // Check if SmartReader found meaningful content

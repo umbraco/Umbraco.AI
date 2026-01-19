@@ -1,4 +1,4 @@
-import type { ManifestUaiAgentTool } from "../../uai-agent-tool.extension.js";
+import type { ManifestUaiAgentTool } from "../uai-agent-tool.extension.js";
 
 export const searchUmbracoManifest: ManifestUaiAgentTool = {
 	type: "uaiAgentTool",

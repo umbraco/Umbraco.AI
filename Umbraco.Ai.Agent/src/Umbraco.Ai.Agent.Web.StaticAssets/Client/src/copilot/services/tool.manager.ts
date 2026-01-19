@@ -9,58 +9,68 @@ import { AguiTool } from "../transport";
 type UaiToolElementConstructor = new () => UaiAgentToolElement;
 
 /**
- * Frontend tool registry manager.
+ * Tool registry manager.
  *
  * Responsibilities:
- * - Loading tool manifests from the extension registry
- * - Converting tools to AG-UI format for the LLM
- * - Resolving and caching tool API instances
- * - Providing manifest lookup for tool-renderer
+ * - Loading ALL tool manifests from the extension registry (frontend and backend)
+ * - Converting frontend-executable tools to AG-UI format for the LLM
+ * - Resolving and caching tool API instances (frontend tools only)
+ * - Providing manifest lookup for tool-renderer (all tools)
+ * - Providing element constructors for custom UI (all tools)
  */
-export class UaiFrontendToolManager {
+export class UaiToolManager {
   #host: UmbControllerHost;
   #toolManifests: Map<string, ManifestUaiAgentTool> = new Map();
   #apiCache: Map<string, UaiAgentToolApi> = new Map();
   #elementCache: Map<string, UaiToolElementConstructor> = new Map();
-  #tools: AguiTool[] = [];
+  #frontendTools: AguiTool[] = [];
 
   constructor(host: UmbControllerHost) {
     this.#host = host;
   }
 
   /**
-   * Get the loaded frontend tools in AG-UI format.
+   * Get the frontend-executable tools in AG-UI format.
+   * These are tools with an `api` property that can be executed in the browser.
+   * @returns Array of AG-UI tool definitions for the LLM
    */
-  get tools(): AguiTool[] {
-    return [...this.#tools];
+  get frontendTools(): AguiTool[] {
+    return [...this.#frontendTools];
   }
 
   /**
-   * Load frontend tool definitions from the extension registry.
-   * Tools with an `api` property are frontend-executable tools.
-   * @returns The loaded tools in AG-UI format
+   * Load tool definitions from the extension registry.
+   * Loads ALL uaiAgentTool manifests (frontend and backend), but only exposes
+   * frontend-executable tools (those with `api`) via the `frontendTools` getter.
+   *
+   * @returns The frontend-executable tools in AG-UI format
    */
   loadFromRegistry(): AguiTool[] {
-    // Get all uaiAgentTool manifests that have an API (frontend tools)
-    const manifests = umbExtensionsRegistry.getByTypeAndFilter<
+    // Get ALL uaiAgentTool manifests (both frontend and backend)
+    const manifests = umbExtensionsRegistry.getByType<
       "uaiAgentTool",
       ManifestUaiAgentTool
-    >("uaiAgentTool", (manifest) => manifest.api !== undefined);
+    >("uaiAgentTool");
 
     // Clear existing and rebuild
     this.#toolManifests.clear();
-    this.#tools = [];
+    this.#frontendTools = [];
 
     for (const manifest of manifests) {
+      // Store ALL manifests (for rendering and element lookup)
       this.#toolManifests.set(manifest.meta.toolName, manifest);
-      this.#tools.push({
-        name: manifest.meta.toolName,
-        description: manifest.meta.description ?? "",
-        parameters: manifest.meta.parameters ?? { type: "object", properties: {} },
-      });
+
+      // Only add frontend-executable tools (with api) to AG-UI tools list
+      if (manifest.api !== undefined) {
+        this.#frontendTools.push({
+          name: manifest.meta.toolName,
+          description: manifest.meta.description ?? "",
+          parameters: manifest.meta.parameters ?? { type: "object", properties: {} },
+        });
+      }
     }
 
-    return this.#tools;
+    return this.#frontendTools;
   }
 
   /**

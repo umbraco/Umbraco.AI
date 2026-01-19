@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import type { UaiFrontendToolManager } from "./frontend-tool.manager.ts";
+import type { UaiToolManager } from "./tool.manager.ts";
 import type { UaiInterruptInfo, UaiToolCallInfo, UaiToolCallStatus } from "../types.js";
 import type { UaiInterruptContext } from "../interrupts/types.js";
 import type UaiHitlContext from "../hitl.context.js";
@@ -36,7 +36,7 @@ export interface UaiFrontendToolStatusUpdate {
  * - Publishing status updates and results via observables
  */
 export class UaiFrontendToolExecutor {
-  #toolManager: UaiFrontendToolManager;
+  #toolManager: UaiToolManager;
   #hitlContext?: UaiHitlContext;
 
   /** Observable streams for tool execution events */
@@ -46,7 +46,7 @@ export class UaiFrontendToolExecutor {
   #statusUpdates = new Subject<UaiFrontendToolStatusUpdate>();
   readonly statusUpdates$ = this.#statusUpdates.asObservable();
 
-  constructor(toolManager: UaiFrontendToolManager, hitlContext?: UaiHitlContext) {
+  constructor(toolManager: UaiToolManager, hitlContext?: UaiHitlContext) {
     this.#toolManager = toolManager;
     this.#hitlContext = hitlContext;
   }

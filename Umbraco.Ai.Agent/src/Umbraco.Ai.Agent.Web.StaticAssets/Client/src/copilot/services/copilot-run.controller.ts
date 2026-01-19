@@ -1,7 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject, Subscription, map } from "rxjs";
-import { UaiFrontendToolManager } from "./frontend-tool.manager.ts";
+import { UaiToolManager } from "./tool.manager.ts";
 import {
   UaiFrontendToolExecutor,
   type UaiFrontendToolResult,
@@ -28,11 +28,11 @@ import { UaiAgentClient } from "../transport";
  * and exposes RxJS streams that UI components observe.
  */
 export class UaiCopilotRunController extends UmbControllerBase {
-  #toolManager: UaiFrontendToolManager;
+  #toolManager: UaiToolManager;
   #toolExecutor: UaiFrontendToolExecutor;
 
   /** Expose tool manager for context provision */
-  get toolManager(): UaiFrontendToolManager {
+  get toolManager(): UaiToolManager {
     return this.#toolManager;
   }
   #client?: UaiAgentClient;
@@ -57,7 +57,7 @@ export class UaiCopilotRunController extends UmbControllerBase {
 
   constructor(host: UmbControllerHost, hitlContext: UaiHitlContext) {
     super(host);
-    this.#toolManager = new UaiFrontendToolManager(host);
+    this.#toolManager = new UaiToolManager(host);
     this.#frontendTools = this.#toolManager.loadFromRegistry();
     this.#toolExecutor = new UaiFrontendToolExecutor(this.#toolManager, hitlContext);
     this.#subscriptions.push(

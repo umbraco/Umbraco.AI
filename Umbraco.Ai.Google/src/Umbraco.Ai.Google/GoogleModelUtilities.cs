@@ -1,9 +1,9 @@
 namespace Umbraco.Ai.Extensions;
 
 /// <summary>
-/// Utility methods for working with Google Gemini models.
+/// Utility methods for working with Google AI models.
 /// </summary>
-internal static class GeminiModelUtilities
+internal static class GoogleModelUtilities
 {
     /// <summary>
     /// Formats a model ID into a human-readable display name.

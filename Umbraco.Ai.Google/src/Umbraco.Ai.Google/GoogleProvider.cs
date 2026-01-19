@@ -2,44 +2,44 @@ using Google.GenAI;
 using Microsoft.Extensions.Caching.Memory;
 using Umbraco.Ai.Core.Providers;
 
-namespace Umbraco.Ai.Gemini;
+namespace Umbraco.Ai.Google;
 
 /// <summary>
-/// AI provider for Google Gemini services.
+/// AI provider for Google AI services.
 /// </summary>
-[AiProvider("gemini", "Google Gemini")]
-public class GeminiProvider : AiProviderBase<GeminiProviderSettings>
+[AiProvider("google", "Google")]
+public class GoogleProvider : AiProviderBase<GoogleProviderSettings>
 {
-    private const string CacheKeyPrefix = "Gemini_Models_";
+    private const string CacheKeyPrefix = "Google_Models_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GeminiProvider"/> class.
+    /// Initializes a new instance of the <see cref="GoogleProvider"/> class.
     /// </summary>
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
-    public GeminiProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public GoogleProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         _cache = cache;
-        WithCapability<GeminiChatCapability>();
+        WithCapability<GoogleChatCapability>();
     }
 
     /// <summary>
-    /// Gets all available models from the Gemini API with caching.
+    /// Gets all available models from the Google AI API with caching.
     /// </summary>
     /// <param name="settings">The provider settings containing API credentials.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of all available model IDs.</returns>
     internal async Task<IReadOnlyList<string>> GetAvailableModelIdsAsync(
-        GeminiProviderSettings settings,
+        GoogleProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
         {
-            throw new InvalidOperationException("Gemini API key is required.");
+            throw new InvalidOperationException("Google API key is required.");
         }
 
         var cacheKey = GetCacheKey(settings);
@@ -49,7 +49,7 @@ public class GeminiProvider : AiProviderBase<GeminiProviderSettings>
             return cachedModels;
         }
 
-        var client = CreateGeminiClient(settings);
+        var client = CreateGoogleClient(settings);
         var modelsPager = await client.Models.ListAsync().ConfigureAwait(false);
 
         var allModels = new List<string>();
@@ -69,19 +69,19 @@ public class GeminiProvider : AiProviderBase<GeminiProviderSettings>
     }
 
     /// <summary>
-    /// Creates a Gemini client configured with the provided settings.
+    /// Creates a Google AI client configured with the provided settings.
     /// </summary>
-    internal static Client CreateGeminiClient(GeminiProviderSettings settings)
+    internal static Client CreateGoogleClient(GoogleProviderSettings settings)
     {
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
         {
-            throw new InvalidOperationException("Gemini API key is required.");
+            throw new InvalidOperationException("Google API key is required.");
         }
 
         return new Client(apiKey: settings.ApiKey);
     }
 
-    private static string GetCacheKey(GeminiProviderSettings settings)
+    private static string GetCacheKey(GoogleProviderSettings settings)
     {
         return $"{CacheKeyPrefix}{settings.ApiKey?.GetHashCode()}";
     }

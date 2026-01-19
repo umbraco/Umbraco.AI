@@ -1,15 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using Umbraco.Ai.Core.EditableModels;
 
-namespace Umbraco.Ai.Gemini;
+namespace Umbraco.Ai.Google;
 
 /// <summary>
-/// Settings for the Google Gemini provider.
+/// Settings for the Google provider.
 /// </summary>
-public class GeminiProviderSettings
+public class GoogleProviderSettings
 {
     /// <summary>
-    /// The API key for authenticating with Google Gemini services.
+    /// The API key for authenticating with Google AI services.
     /// </summary>
     [AiField]
     [Required]

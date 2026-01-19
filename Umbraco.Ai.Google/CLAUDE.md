@@ -2,21 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Note:** This is the Umbraco.Ai.Gemini provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
+> **Note:** This is the Umbraco.Ai.Google provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
 
 ## Build Commands
 
 ```bash
 # Build the solution
-dotnet build Umbraco.Ai.Gemini.sln
+dotnet build Umbraco.Ai.Google.sln
 
 # Run tests
-dotnet test Umbraco.Ai.Gemini.sln
+dotnet test Umbraco.Ai.Google.sln
 ```
 
 ## Architecture Overview
 
-Umbraco.Ai.Gemini is a provider plugin for Umbraco.Ai that enables integration with Google's Gemini models. It follows the provider plugin architecture defined by Umbraco.Ai.Core.
+Umbraco.Ai.Google is a provider plugin for Umbraco.Ai that enables integration with Google's Gemini models. It follows the provider plugin architecture defined by Umbraco.Ai.Core.
 
 ### Project Structure
 
@@ -24,28 +24,28 @@ This provider uses a simplified structure (single project):
 
 | Project | Purpose |
 |---------|---------|
-| `Umbraco.Ai.Gemini` | Provider implementation, capabilities, and settings |
+| `Umbraco.Ai.Google` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
 
 The provider is implemented using the `AiProviderBase<TSettings>` pattern:
 
 ```csharp
-[AiProvider("gemini", "Google Gemini")]
-public class GeminiProvider : AiProviderBase<GeminiProviderSettings>
+[AiProvider("google", "Google")]
+public class GoogleProvider : AiProviderBase<GoogleProviderSettings>
 {
-    public GeminiProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public GoogleProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
-        WithCapability<GeminiChatCapability>();
+        WithCapability<GoogleChatCapability>();
     }
 }
 ```
 
 ### Capabilities
 
-**Chat Capability** (`GeminiChatCapability`):
-- Extends `AiChatCapabilityBase<GeminiProviderSettings>`
+**Chat Capability** (`GoogleChatCapability`):
+- Extends `AiChatCapabilityBase<GoogleProviderSettings>`
 - Creates `IChatClient` instances using Google.GenAI SDK with `AsIChatClient()` extension
 - Supports Gemini 2.0, 1.5 Pro, 1.5 Flash models
 - Handles model configuration with extended context windows
@@ -55,7 +55,7 @@ public class GeminiProvider : AiProviderBase<GeminiProviderSettings>
 Settings use the `[AiField]` attribute for UI generation:
 
 ```csharp
-public class GeminiProviderSettings
+public class GoogleProviderSettings
 {
     [AiField]
     [Required]
@@ -63,7 +63,7 @@ public class GeminiProviderSettings
 }
 ```
 
-Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Gemini:ApiKey"`).
+Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:ApiKey"`).
 
 ### Supported Models
 
@@ -81,13 +81,13 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Gemini:Api
 
 ## Key Namespaces
 
-- `Umbraco.Ai.Gemini` - Root namespace for provider, capabilities, and settings
+- `Umbraco.Ai.Google` - Root namespace for provider, capabilities, and settings
 
 ## Configuration Example
 
 ```json
 {
-  "Gemini": {
+  "Google": {
     "ApiKey": "AIza..."
   }
 }

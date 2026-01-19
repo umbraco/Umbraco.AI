@@ -3,16 +3,16 @@ using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Extensions;
 
-namespace Umbraco.Ai.Gemini;
+namespace Umbraco.Ai.Google;
 
 /// <summary>
-/// AI chat capability for Google Gemini provider.
+/// AI chat capability for Google provider.
 /// </summary>
-public class GeminiChatCapability(GeminiProvider provider) : AiChatCapabilityBase<GeminiProviderSettings>(provider)
+public class GoogleChatCapability(GoogleProvider provider) : AiChatCapabilityBase<GoogleProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gemini-2.0-flash";
 
-    private new GeminiProvider Provider => (GeminiProvider)base.Provider;
+    private new GoogleProvider Provider => (GoogleProvider)base.Provider;
 
     /// <summary>
     /// Known Gemini models that support chat.
@@ -28,7 +28,7 @@ public class GeminiChatCapability(GeminiProvider provider) : AiChatCapabilityBas
 
     /// <inheritdoc />
     protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
-        GeminiProviderSettings settings,
+        GoogleProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         // Try to get models from API, fall back to known models if API call fails
@@ -46,7 +46,7 @@ public class GeminiChatCapability(GeminiProvider provider) : AiChatCapabilityBas
                 return availableModels
                     .Select(id => new AiModelDescriptor(
                         new AiModelRef(Provider.Id, id),
-                        GeminiModelUtilities.FormatDisplayName(id)))
+                        GoogleModelUtilities.FormatDisplayName(id)))
                     .ToList();
             }
         }
@@ -59,12 +59,12 @@ public class GeminiChatCapability(GeminiProvider provider) : AiChatCapabilityBas
         return KnownChatModels
             .Select(id => new AiModelDescriptor(
                 new AiModelRef(Provider.Id, id),
-                GeminiModelUtilities.FormatDisplayName(id)))
+                GoogleModelUtilities.FormatDisplayName(id)))
             .ToList();
     }
 
     /// <inheritdoc />
-    protected override IChatClient CreateClient(GeminiProviderSettings settings, string? modelId)
-        => GeminiProvider.CreateGeminiClient(settings)
+    protected override IChatClient CreateClient(GoogleProviderSettings settings, string? modelId)
+        => GoogleProvider.CreateGoogleClient(settings)
             .AsIChatClient(modelId ?? DefaultChatModel);
 }

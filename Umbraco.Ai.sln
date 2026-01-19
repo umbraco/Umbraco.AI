@@ -79,9 +79,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AddOns", "AddOns", "{818C88C3-78F7-4D5F-A3B5-E77479E64C95}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gemini", "Gemini", "{06194DD1-4B1C-9C5F-0A91-E543EBC9FA7A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Google", "Google", "{06194DD1-4B1C-9C5F-0A91-E543EBC9FA7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Gemini", "Umbraco.Ai.Gemini\src\Umbraco.Ai.Gemini\Umbraco.Ai.Gemini.csproj", "{0BC5E228-5D6F-46DD-80BE-FBABA09C5D6A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Google", "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj", "{0BC5E228-5D6F-46DD-80BE-FBABA09C5D6A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

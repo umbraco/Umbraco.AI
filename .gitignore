@@ -78,3 +78,6 @@ tmpclaude*
 
 # References
 refs/
+
+# Auto Claude data directory
+.auto-claude/

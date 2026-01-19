@@ -134,9 +134,9 @@ Add-ProductProjects -ProductFolder "Umbraco.Ai.Agent" -SolutionFolder "Agent"
 Write-Host "Adding Umbraco.Ai.Anthropic projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.Ai.Anthropic" -SolutionFolder "Anthropic"
 
-# Step 10: Add Gemini provider projects
-Write-Host "Adding Umbraco.Ai.Gemini projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.Gemini" -SolutionFolder "Gemini"
+# Step 10: Add Google provider projects
+Write-Host "Adding Umbraco.Ai.Google projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.Ai.Google" -SolutionFolder "Google"
 
 # Step 12: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
@@ -160,9 +160,9 @@ if (Test-Path "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropi
     dotnet add $demoProject reference "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj"
 }
 
-# Gemini provider
-if (Test-Path "Umbraco.Ai.Gemini\src\Umbraco.Ai.Gemini\Umbraco.Ai.Gemini.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Gemini\src\Umbraco.Ai.Gemini\Umbraco.Ai.Gemini.csproj"
+# Google provider
+if (Test-Path "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj"
 }
 
 # Prompt add-on (meta-package + SQLite persistence)

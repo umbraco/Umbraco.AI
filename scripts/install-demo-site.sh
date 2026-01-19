@@ -159,9 +159,9 @@ add_product_projects "Umbraco.Ai.Agent" "Agent"
 echo "Adding Umbraco.Ai.Anthropic projects..."
 add_product_projects "Umbraco.Ai.Anthropic" "Anthropic"
 
-# Step 10: Add Gemini provider projects
-echo "Adding Umbraco.Ai.Gemini projects..."
-add_product_projects "Umbraco.Ai.Gemini" "Gemini"
+# Step 10: Add Google provider projects
+echo "Adding Umbraco.Ai.Google projects..."
+add_product_projects "Umbraco.Ai.Google" "Google"
 
 # Step 12: Add demo site to solution
 echo "Adding demo site to solution..."
@@ -185,9 +185,9 @@ if [ -f "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.cspr
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj"
 fi
 
-# Gemini provider
-if [ -f "Umbraco.Ai.Gemini/src/Umbraco.Ai.Gemini/Umbraco.Ai.Gemini.csproj" ]; then
-    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Gemini/src/Umbraco.Ai.Gemini/Umbraco.Ai.Gemini.csproj"
+# Google provider
+if [ -f "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj"
 fi
 
 # Prompt add-on (meta-package + SQLite persistence)

@@ -10,9 +10,9 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/gemini-",
-    "^refs/heads/hotfix/gemini-",
-    "^refs/tags/release-gemini-"
+    "^refs/heads/release/google-",
+    "^refs/heads/hotfix/google-",
+    "^refs/tags/release-google-"
   ],
   "cloudBuild": {
     "buildNumber": {
@@ -20,6 +20,6 @@
     }
   },
   "release": {
-    "branchName": "release/gemini-{version}"
+    "branchName": "release/google-{version}"
   }
 }

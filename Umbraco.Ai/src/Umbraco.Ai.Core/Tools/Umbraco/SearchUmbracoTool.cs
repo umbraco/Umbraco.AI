@@ -51,8 +51,8 @@ public class SearchUmbracoTool : AiToolBase<SearchUmbracoArgs>
     public override string Description =>
         "Searches Umbraco content and media by text query. " +
         "Returns matching items with metadata including name, type, URL, and thumbnail for media. " +
-        "Use type parameter to filter results: 'content' for content only, 'media' for media only, or 'all' for both."  +
-        "Use the ID or Key from results to reference content or media items in other tools.";
+        "Use type parameter to filter results: 'content' for content only, 'media' for media only, or 'all' for both. "  +
+        "**IMPORTANT** Use the ID or Key from results to reference content or media items in other tools.";
 
     /// <inheritdoc />
     protected override Task<object> ExecuteAsync(SearchUmbracoArgs args, CancellationToken cancellationToken = default)

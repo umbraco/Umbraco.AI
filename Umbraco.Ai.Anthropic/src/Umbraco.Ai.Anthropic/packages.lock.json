@@ -954,12 +954,18 @@
           "Umbraco.Cms.Infrastructure": "[17.0.0, 18.0.0)"
         }
       },
+      "Wasmtime": {
+        "type": "Transitive",
+        "resolved": "34.0.2",
+        "contentHash": "Oe+xuxyj8LgNxuEqotBhkEPbzuN8Ljfhc61fnSz+8c4p9vODQQmZpNmxmPFC7zmnh6BLDhvpQlmh1sE8xbxWmg=="
+      },
       "umbraco.ai.core": {
         "type": "Project",
         "dependencies": {
           "Microsoft.Extensions.AI": "[10.0.1, )",
           "Microsoft.Extensions.Caching.Memory": "[10.0.0, 10.999.999)",
           "Microsoft.Extensions.Options": "[10.0.0, 10.999.999)",
+          "Readability.NET": "[1.0.0, )",
           "Umbraco.Cms.Core": "[17.0.0, 17.999.999)",
           "Umbraco.Cms.Infrastructure": "[17.0.0, 17.999.999)",
           "Umbraco.Cms.Web.Common": "[17.0.0, 17.999.999)"
@@ -1005,6 +1011,15 @@
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.0",
           "Microsoft.Extensions.Primitives": "10.0.0"
+        }
+      },
+      "Readability.NET": {
+        "type": "CentralTransitive",
+        "requested": "[0.9.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "LhKYiBoSZUB6KPRTKawG7DvFn/s32lhBNMI54ZeO3WALaZcCTVM0T8ctQepKtNyTSlpO1XhDpEZxtS4VYIbWyw==",
+        "dependencies": {
+          "Wasmtime": "34.0.2"
         }
       },
       "Umbraco.Cms.Core": {

@@ -9,6 +9,7 @@
         <PackageReference Include="Microsoft.Extensions.AI" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
         <PackageReference Include="Microsoft.Extensions.Options" />
+        <PackageReference Include="Readability.NET" />
         <PackageReference Include="Umbraco.Cms.Core" />
         <PackageReference Include="Umbraco.Cms.Infrastructure" />
         <PackageReference Include="Umbraco.Cms.Web.Common" />

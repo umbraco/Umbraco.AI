@@ -85,7 +85,7 @@ export type PropertyChangeModel = {
 
 export type RequestContextItemModel = {
     description: string;
-    value?: unknown;
+    value?: string | null;
 };
 
 export type ScopeModel = {

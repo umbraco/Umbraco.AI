@@ -134,11 +134,11 @@ internal sealed class AiPromptService : IAiPromptService
             ? propValue
             : null;
 
-        // 5. Process template variables
-        var processedContent = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
-        
-        // 6. Build chat messages 
-        List<ChatMessage> messages = [new(ChatRole.User, processedContent)];
+        // 5. Process template variables (returns multimodal content list)
+        var contents = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
+
+        // 6. Build chat messages with multimodal content
+        List<ChatMessage> messages = [new(ChatRole.User, contents.ToList())];
 
         // 7. Inject system message from context processors
         if (requestContext?.SystemMessageParts.Count > 0)

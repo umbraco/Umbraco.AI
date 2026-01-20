@@ -14,7 +14,7 @@ public class AiRequestContextItem
     public required string Description { get; init; }
 
     /// <summary>
-    /// The context data - can be anything (JSON serializable).
+    /// The context data.
     /// </summary>
-    public JsonElement? Value { get; init; }
+    public string? Value { get; init; }
 }

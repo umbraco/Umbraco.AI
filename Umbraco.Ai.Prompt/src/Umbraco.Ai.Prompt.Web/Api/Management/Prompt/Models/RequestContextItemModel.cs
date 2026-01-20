@@ -18,5 +18,5 @@ public class RequestContextItemModel
     /// <summary>
     /// The context data - can be anything (JSON serializable).
     /// </summary>
-    public JsonElement? Value { get; init; }
+    public string? Value { get; init; }
 }

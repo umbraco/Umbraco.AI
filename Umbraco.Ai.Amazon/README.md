@@ -30,6 +30,32 @@ dotnet add package Umbraco.Ai.Amazon
 - .NET 10.0
 - AWS Account with Bedrock access
 
+## AWS Setup
+
+Before using this provider, you need to create IAM credentials with Bedrock permissions.
+
+### 1. Create an IAM User
+
+1. Go to the [AWS IAM Console](https://console.aws.amazon.com/iam/)
+2. Navigate to **Users** → **Create user**
+3. Enter a username (e.g., `umbraco-ai-bedrock`)
+4. Click **Next**
+
+### 2. Attach Bedrock Permissions
+
+Attach the following AWS managed policy to the user:
+
+- `AmazonBedrockLimitedAccess` - Grants limited access to Amazon Bedrock
+
+### 3. Create Access Keys
+
+1. Select your user → **Security credentials** tab
+2. Under **Access keys**, click **Create access key**
+3. Choose **Application running outside AWS**
+4. Save both the **Access Key ID** and **Secret Access Key**
+
+> **Note:** All Bedrock models are available through the API once you have the correct IAM permissions. You do not need to enable access to specific models in the Bedrock console.
+
 ## Configuration
 
 After installation, create a connection in the Umbraco backoffice:
@@ -49,15 +75,12 @@ After installation, create a connection in the Umbraco backoffice:
 }
 ```
 
-You can also reference configuration values using the `$` prefix (e.g., `$AWS:AccessKeyId`).
-
 ## Supported Models
 
 **Chat Models:**
 - Amazon Nova family (`amazon.nova-lite-v1:0`, `amazon.nova-pro-v1:0`, etc.)
-- Claude via Bedrock (`anthropic.claude-3-sonnet`, `anthropic.claude-3-haiku`, etc.)
+- Claude via Bedrock (`anthropic.claude-3-sonnet`, `anthropic.claude-3-haiku`, etc.) This requires permission from Anthropic to use.
 - Mistral models (`mistral.mistral-large`, etc.)
-- Meta Llama models (`meta.llama3-70b-instruct`, etc.)
 
 **Embedding Models:**
 - Amazon Titan Embeddings (`amazon.titan-embed-text-v2:0`, etc.)

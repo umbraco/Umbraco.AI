@@ -15,12 +15,16 @@ parameters:
   - name: configuration
     type: string
     default: 'Release'
+  - name: condition
+    type: string
+    default: 'true'
 
 jobs:
   - job: Build_${{ replace(parameters.productName, '.', '_') }}
     displayName: 'Build ${{ parameters.productName }}'
     pool:
       vmImage: 'ubuntu-latest'
+    condition: ${{ parameters.condition }}
 
     steps:
       - checkout: self

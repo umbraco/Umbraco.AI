@@ -4,6 +4,7 @@ using Umbraco.Ai.Agent.Core.Agui;
 using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agent.Core.Context;
 using Umbraco.Ai.Agent.Core.Models;
+using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -48,6 +49,10 @@ public static class UmbracoBuilderExtensions
 
         // Register agent context resolver
         builder.AiContextResolvers().Append<AgentContextResolver>();
+
+        // Register tool reordering middleware before function invocation
+        // This ensures server-side tools execute before frontend tools trigger termination
+        builder.AiChatMiddleware().InsertBefore<AiFunctionInvokingChatMiddleware, AiToolReorderingChatMiddleware>();
 
         return builder;
     }

@@ -6,7 +6,7 @@ import { UaiCopilotRunController } from "./services/copilot-run.controller.js";
 import UaiHitlContext, { UAI_HITL_CONTEXT } from "./hitl.context.js";
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiCopilotAgentItem } from "./types.ts";
-import type { UaiFrontendToolManager } from "./services/frontend-tool.manager.ts";
+import type { UaiToolManager } from "./services/tool.manager.ts";
 import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChangeResult } from "@umbraco-ai/core";
 
 /**
@@ -80,7 +80,7 @@ export class UaiCopilotContext extends UmbControllerBase {
   // ─── Tool Management ───────────────────────────────────────────────────────
 
   /** Frontend tool manager for registering and rendering custom tool UI. */
-  get toolManager(): UaiFrontendToolManager {
+  get toolManager(): UaiToolManager {
     return this.#runController.toolManager;
   }
 
@@ -198,14 +198,22 @@ export class UaiCopilotContext extends UmbControllerBase {
     this.#isOpen.setValue(true);
   }
 
-  /** Close the copilot panel. */
+  /** Close the copilot panel and reset the conversation. */
   close(): void {
     this.#isOpen.setValue(false);
+    this.#runController.abortRun();
+    this.#runController.resetConversation();
   }
 
-  /** Toggle the copilot panel visibility. */
+  /** Toggle the copilot panel visibility. Resets conversation when closing. */
   toggle(): void {
-    this.#isOpen.setValue(!this.#isOpen.getValue());
+    const wasOpen = this.#isOpen.getValue();
+    this.#isOpen.setValue(!wasOpen);
+    if (wasOpen) {
+      // Closing - clear the conversation
+      this.#runController.abortRun();
+      this.#runController.resetConversation();
+    }
   }
 
   // ─── HITL Actions ──────────────────────────────────────────────────────────

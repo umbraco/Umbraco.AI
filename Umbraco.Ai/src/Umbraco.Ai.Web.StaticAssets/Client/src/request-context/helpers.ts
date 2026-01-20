@@ -13,7 +13,7 @@ import type { UaiRequestContextItem } from "./types.js";
 export function createEntityContextItem(entity: UaiSerializedEntity): UaiRequestContextItem {
 	return {
 		description: `Currently editing ${entity.entityType}: ${entity.name}`,
-		value: entity,
+		value: JSON.stringify(entity),
 	};
 }
 

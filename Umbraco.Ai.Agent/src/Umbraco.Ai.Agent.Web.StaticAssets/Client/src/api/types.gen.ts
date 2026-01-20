@@ -27,7 +27,7 @@ export type AgentResponseModel = {
 
 export type AguiContextItemModel = {
     description: string;
-    value?: unknown;
+    value?: string | null;
 };
 
 export type AguiFunctionCallModel = {

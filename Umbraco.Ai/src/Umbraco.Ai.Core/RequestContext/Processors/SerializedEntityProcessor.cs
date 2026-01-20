@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.Extensions;
 
 namespace Umbraco.Ai.Core.RequestContext.Processors;
 
@@ -9,6 +10,10 @@ namespace Umbraco.Ai.Core.RequestContext.Processors;
 /// </summary>
 internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
 {
+    private readonly JsonSerializerOptions _jsonOptions = new(Constants.DefaultJsonSerializerOptions)
+    {
+        PropertyNameCaseInsensitive = true
+    };
     private readonly IAiEntityContextHelper _contextHelper;
 
     /// <summary>
@@ -24,14 +29,14 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
     public bool CanHandle(AiRequestContextItem item)
     {
         // Check if the value contains entity structure by looking for entityType and properties
-        if (!item.Value.HasValue)
+        if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
             return false;
         }
 
         try
         {
-            var value = item.Value.Value;
+            var value = JsonSerializer.Deserialize<JsonElement>(item.Value, _jsonOptions);
             return value.ValueKind == JsonValueKind.Object
                 && value.TryGetProperty("entityType", out _)
                 && value.TryGetProperty("properties", out _);
@@ -45,14 +50,15 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
     /// <inheritdoc />
     public void Process(AiRequestContextItem item, AiRequestContext context)
     {
-        if (!item.Value.HasValue)
+        if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
             return;
         }
 
         try
         {
-            var entity = DeserializeEntity(item.Value.Value);
+            var value = JsonSerializer.Deserialize<JsonElement>(item.Value, _jsonOptions);
+            var entity = DeserializeEntity(value);
             if (entity is null)
             {
                 return;
@@ -78,9 +84,9 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
 
             // Build template variables from entity
             var variables = _contextHelper.BuildContextDictionary(entity);
-            foreach (var (key, value) in variables)
+            foreach (var (varKey, varValue) in variables)
             {
-                context.Variables[key] = value;
+                context.Variables[varKey] = varValue;
             }
 
             // Add system message with entity context
@@ -95,11 +101,6 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
 
     private static AiSerializedEntity? DeserializeEntity(JsonElement element)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
         try
         {
             var entityType = element.GetProperty("entityType").GetString();

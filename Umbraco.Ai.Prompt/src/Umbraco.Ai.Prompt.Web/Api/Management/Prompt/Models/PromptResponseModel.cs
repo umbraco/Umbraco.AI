@@ -57,6 +57,11 @@ public class PromptResponseModel
     public ScopeModel? Scope { get; set; }
 
     /// <summary>
+    /// Whether to include the full entity context as a system message during prompt execution.
+    /// </summary>
+    public bool IncludeEntityContext { get; set; }
+
+    /// <summary>
     /// Creation timestamp.
     /// </summary>
     public DateTime DateCreated { get; set; }

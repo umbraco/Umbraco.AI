@@ -36,6 +36,9 @@ export default {
         deleteConfirm: "Are you sure you want to delete this context?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} context(s)?`,
     },
+    uaiAuditLog: {
+        bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,
+    },
     uaiFields: {
         // Text resource fields
         textContentLabel: "Content",

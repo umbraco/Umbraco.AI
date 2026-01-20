@@ -23,16 +23,6 @@ internal sealed class DefaultSystemMessageProcessor : IAiRequestContextProcessor
         // and doesn't look like it's already been processed (e.g., by SerializedEntityProcessor)
         if (!string.IsNullOrWhiteSpace(item.Description))
         {
-            // Check if this is an entity context item - SerializedEntityProcessor already handles these
-            if (item.Value.HasValue &&
-                item.Value.Value.ValueKind == System.Text.Json.JsonValueKind.Object &&
-                item.Value.Value.TryGetProperty("entityType", out _) &&
-                item.Value.Value.TryGetProperty("properties", out _))
-            {
-                // Skip - SerializedEntityProcessor handles this type
-                return;
-            }
-
             // Add the description as context
             context.SystemMessageParts.Add($"Context: {item.Description}");
         }

@@ -272,22 +272,30 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 				error: `Property "${change.alias}" not found on this document type`,
 			};
 		}
-
+		
 		// Get the current values to check the editor type
-		// const values = ctx.getValues() ?? [];
-		// const existingValue = values.find((v) => v.alias === change.alias);
-		// if (existingValue && !SUPPORTED_EDITOR_ALIASES.includes(existingValue.editorAlias)) {
-		// 	return {
-		// 		success: false,
-		// 		error: `Property "${change.alias}" uses editor "${existingValue.editorAlias}" which is not yet supported. Only TextBox and TextArea are supported.`,
-		// 	};
-		// }
+		const values = ctx.getValues() ?? [];
+		const existingValue = values.find((v) => v.alias === change.alias);
 
 		// Build variant ID from culture/segment (undefined = invariant)
 		const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
+		// Handle specific type conversions if needed
+		let valueToSet: any = change.value;
+
+		try
+		{
+			
+			valueToSet = JSON.parse(valueToSet);
+			if (existingValue && existingValue.editorAlias === "Umbraco.MediaPicker3")
+			{
+				valueToSet[0].key = this.#uuidv4();
+			}
+		}
+		catch (e) { }
+		
 		try {
-			await ctx.setPropertyValue(change.alias, change.value, variantId);
+			await ctx.setPropertyValue(change.alias, valueToSet, variantId);
 			return { success: true };
 		} catch (error) {
 			return {
@@ -295,6 +303,12 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 				error: error instanceof Error ? error.message : "Unknown error applying property change",
 			};
 		}
+	}
+
+	#uuidv4 = ()=> {
+		return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+			(+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+		);
 	}
 }
 

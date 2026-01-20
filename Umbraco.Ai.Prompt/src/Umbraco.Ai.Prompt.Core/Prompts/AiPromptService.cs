@@ -134,13 +134,22 @@ internal sealed class AiPromptService : IAiPromptService
             ? propValue
             : null;
 
-        // 5. Process template variables
-        var processedContent = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
+        // 5. Process template variables (returns multimodal content list)
+        var contents = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
 
-        // 6. Build chat messages (we don't inject a system prompt from contexts for prompts)
-        ChatMessage[] messages = [new(ChatRole.User, processedContent)];
+        // 6. Build chat messages with multimodal content
+        List<ChatMessage> messages = [new(ChatRole.User, contents.ToList())];
 
-        // 7. Create ChatOptions with PromptId for context resolution, feature tracking, and system tools
+        // 7. Inject system message from context processors (only if IncludeEntityContext is enabled)
+        if (prompt.IncludeEntityContext && requestContext?.SystemMessageParts.Count > 0)
+        {
+            var contextContent = string.Join("\n\n", requestContext.SystemMessageParts);
+
+            // Insert new system message at the beginning
+            messages.Insert(0, new ChatMessage(ChatRole.System, contextContent));
+        }
+
+        // 8. Create ChatOptions with PromptId for context resolution, feature tracking, and system tools
         var chatOptions = new ChatOptions
         {
             AdditionalProperties = new AdditionalPropertiesDictionary
@@ -167,19 +176,19 @@ internal sealed class AiPromptService : IAiPromptService
             chatOptions.AdditionalProperties[AiRequestContextKeys.ContentId] = request.EntityId;
         }
 
-        // Set ParentEntityId if available (for new entities, used by ContentContextResolver)
+        // 9. Set ParentEntityId if available (for new entities, used by ContentContextResolver)
         var parentEntityId = requestContext.GetValue<Guid>(AiRequestContextKeys.ParentEntityId);
         if (parentEntityId.HasValue)
         {
             chatOptions.AdditionalProperties[AiRequestContextKeys.ParentEntityId] = parentEntityId.Value;
         }
 
-        // 9. Execute via chat service
+        // 10. Execute via chat service
         var response = prompt.ProfileId.HasValue
             ? await _chatService.GetChatResponseAsync(prompt.ProfileId.Value, messages, chatOptions, cancellationToken)
             : await _chatService.GetChatResponseAsync(messages, chatOptions, cancellationToken);
 
-        // 10. Map response
+        // 11. Map response
         return new AiPromptExecutionResult
         {
             Content = response.Text ?? string.Empty,

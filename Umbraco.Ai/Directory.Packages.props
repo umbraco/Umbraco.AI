@@ -14,13 +14,13 @@
 
   <!-- Umbraco CMS -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.1.0, 17.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft.Extensions.AI -->

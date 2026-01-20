@@ -1,0 +1,58 @@
+using Microsoft.Extensions.AI;
+using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Providers;
+
+namespace Umbraco.Ai.MicrosoftFoundry;
+
+/// <summary>
+/// AI chat capability for Microsoft AI Foundry provider.
+/// </summary>
+/// <remarks>
+/// Supports all chat models available through Microsoft AI Foundry, including
+/// OpenAI (GPT-4, GPT-4o), Mistral, Llama, Cohere, Phi, and more.
+/// </remarks>
+public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) : AiChatCapabilityBase<MicrosoftFoundryProviderSettings>(provider)
+{
+    private const string DefaultChatModel = "gpt-4o";
+
+    private new MicrosoftFoundryProvider Provider => (MicrosoftFoundryProvider)base.Provider;
+
+    /// <inheritdoc />
+    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+        MicrosoftFoundryProviderSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        var allModels = await Provider.GetAvailableModelsAsync(settings, cancellationToken).ConfigureAwait(false);
+
+        return allModels
+            .Where(IsChatModel)
+            .Select(m => new AiModelDescriptor(
+                new AiModelRef(Provider.Id, m.Id),
+                MicrosoftFoundryModelUtilities.FormatDisplayName(m.Id)))
+            .ToList();
+    }
+
+    /// <inheritdoc />
+    protected override IChatClient CreateClient(MicrosoftFoundryProviderSettings settings, string? modelId)
+    {
+        var model = modelId ?? DefaultChatModel;
+        var client = MicrosoftFoundryProvider.CreateChatCompletionsClient(settings, model)
+            .AsIChatClient(model);
+
+        // Wrap with metadata filtering to remove Umbraco.Ai.* properties that the API rejects
+        return new MicrosoftFoundryMetadataFilteringChatClient(client);
+    }
+
+    private static bool IsChatModel(MicrosoftFoundryModelInfo model)
+    {
+        // If capabilities are provided, use them
+        if (model.Capabilities is not null)
+        {
+            return model.Capabilities.ChatCompletion;
+        }
+
+        // Fallback: exclude known embedding model patterns
+        var id = model.Id.ToLowerInvariant();
+        return !id.Contains("embedding") && !id.Contains("embed");
+    }
+}

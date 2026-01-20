@@ -45,6 +45,8 @@
   <!-- Provider packages -->
   <ItemGroup>
     <PackageVersion Include="Anthropic" Version="12.2.0" />
+    <PackageVersion Include="Azure.AI.Inference" Version="1.0.0-beta.5" />
+    <PackageVersion Include="Microsoft.Extensions.AI.AzureAIInference" Version="10.0.0-preview.1.25559.3" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
   </ItemGroup>
 

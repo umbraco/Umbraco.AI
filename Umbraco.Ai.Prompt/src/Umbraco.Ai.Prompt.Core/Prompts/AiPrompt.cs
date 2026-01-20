@@ -53,6 +53,13 @@ public sealed class AiPrompt
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Whether to include the full entity context as a system message during prompt execution.
+    /// When true, all entity properties are formatted as markdown and injected.
+    /// Variable replacement ({{property}}) works regardless of this setting.
+    /// </summary>
+    public bool IncludeEntityContext { get; set; } = true;
+
+    /// <summary>
     /// Scope configuration defining where this prompt can run.
     /// Controls both UI display and server-side enforcement.
     /// If null, the prompt is not allowed anywhere (denied by default).

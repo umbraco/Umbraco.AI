@@ -140,8 +140,8 @@ internal sealed class AiPromptService : IAiPromptService
         // 6. Build chat messages with multimodal content
         List<ChatMessage> messages = [new(ChatRole.User, contents.ToList())];
 
-        // 7. Inject system message from context processors
-        if (requestContext?.SystemMessageParts.Count > 0)
+        // 7. Inject system message from context processors (only if IncludeEntityContext is enabled)
+        if (prompt.IncludeEntityContext && requestContext?.SystemMessageParts.Count > 0)
         {
             var contextContent = string.Join("\n\n", requestContext.SystemMessageParts);
 

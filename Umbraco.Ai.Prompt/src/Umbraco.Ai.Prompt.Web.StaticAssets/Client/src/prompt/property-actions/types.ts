@@ -1,4 +1,11 @@
 /**
+ * UI mode for prompt property actions.
+ * - 'modal': Shows a centered dialog (default)
+ * - 'panel': Shows a slide-in side panel
+ */
+export type UaiPromptUiMode = 'modal' | 'panel';
+
+/**
  * A single scope rule that determines where a prompt can run.
  * All non-null properties use AND logic between them.
  * Values within each array use OR logic.
@@ -33,6 +40,8 @@ export interface UaiPromptRegistrationModel {
     instructions: string;
     profileId: string | null;
     scope: UaiPromptScope | null;
+    /** UI mode for the property action. Defaults to 'modal'. */
+    uiMode?: UaiPromptUiMode;
 }
 
 /**
@@ -45,6 +54,8 @@ export interface UaiPromptPropertyActionMeta {
     promptUnique: string;
     promptDescription: string | null;
     promptScope: UaiPromptScope | null;
+    /** UI mode for the property action. Defaults to 'modal'. */
+    uiMode?: UaiPromptUiMode;
 }
 
 /**

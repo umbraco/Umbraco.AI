@@ -8,11 +8,14 @@ import {
     resolveEntityAdapterByType,
     type UaiEntityAdapterApi,
 } from '@umbraco-ai/core';
-import { UAI_PROMPT_PREVIEW_MODAL } from './prompt-preview-modal.token.js';
-import type { UaiPromptPropertyActionMeta, UaiPromptContextItem } from './types.js';
+import { UAI_PROMPT_PREVIEW_MODAL, UAI_PROMPT_PREVIEW_SIDEBAR } from './prompt-preview-modal.token.js';
+import type { UaiPromptPropertyActionMeta, UaiPromptContextItem, UaiPromptPreviewModalData } from './types.js';
 
 /**
- * Property action that opens a modal to preview and insert prompt content.
+ * Property action that opens a modal or sidebar to preview and insert prompt content.
+ * The UI mode is determined by the meta.uiMode property:
+ * - 'modal' (default): Centered dialog
+ * - 'panel': Slide-in sidebar from the right
  */
 export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiPromptPropertyActionMeta> {
     #propertyContext?: typeof UMB_PROPERTY_CONTEXT.TYPE;
@@ -69,22 +72,25 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
         // Serialize document context for AI operations
         const context = await this.#serializeEntityContext();
 
+        // Build modal data
+        const data: UaiPromptPreviewModalData = {
+            promptUnique: meta.promptUnique,
+            promptName: meta.label,
+            promptDescription: meta.promptDescription,
+            entityId,
+            entityType,
+            propertyAlias,
+            culture: this.#propertyContext.getVariantId?.()?.culture ?? undefined,
+            segment: this.#propertyContext.getVariantId?.()?.segment ?? undefined,
+            context,
+        };
+
+        // Select modal token based on UI mode
+        const uiMode = meta.uiMode ?? 'modal';
+        const modalToken = uiMode === 'panel' ? UAI_PROMPT_PREVIEW_SIDEBAR : UAI_PROMPT_PREVIEW_MODAL;
+
         try {
-            const result = await umbOpenModal(this, UAI_PROMPT_PREVIEW_MODAL, {
-                data: {
-                    promptUnique: meta.promptUnique,
-                    promptName: meta.label,
-                    promptDescription: meta.promptDescription,
-                    // Pass entity context from workspace and property for server-side execution
-                    entityId,
-                    entityType,
-                    propertyAlias,
-                    culture: this.#propertyContext.getVariantId?.()?.culture ?? undefined,
-                    segment: this.#propertyContext.getVariantId?.()?.segment ?? undefined,
-                    // Pass serialized entity context for AI context processing
-                    context,
-                },
-            });
+            const result = await umbOpenModal(this, modalToken, { data });
 
             if (result.action === 'insert') {
                 // Apply any property changes returned by the AI

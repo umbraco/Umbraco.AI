@@ -69,6 +69,7 @@ export function generatePromptPropertyActionManifest(
             promptUnique: prompt.unique,
             promptDescription: prompt.description,
             promptScope: prompt.scope,
+            uiMode: prompt.uiMode ?? 'modal',
         },
         conditions: [
             {

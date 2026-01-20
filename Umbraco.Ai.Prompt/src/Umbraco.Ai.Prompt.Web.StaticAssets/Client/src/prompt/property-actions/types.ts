@@ -55,7 +55,7 @@ export interface UaiPromptContextItem {
     /** Human-readable description */
     description: string;
     /** The context data (any JSON-serializable value) */
-    value?: unknown;
+    value?: string;
 }
 
 /**

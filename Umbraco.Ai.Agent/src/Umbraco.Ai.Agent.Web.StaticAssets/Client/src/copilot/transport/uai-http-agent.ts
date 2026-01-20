@@ -139,7 +139,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     };
   }
 
-  #toAguiContext(ctx: { description: string; value: unknown }): AguiContextItemModel {
+  #toAguiContext(ctx: { description: string; value: string }): AguiContextItemModel {
     return {
       description: ctx.description,
       value: ctx.value,

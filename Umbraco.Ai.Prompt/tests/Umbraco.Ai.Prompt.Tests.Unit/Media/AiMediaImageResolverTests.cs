@@ -1,11 +1,13 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.Ai.Prompt.Core.Media;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Strings;
 using Xunit;
 
 namespace Umbraco.Ai.Prompt.Tests.Unit.Media;
@@ -13,7 +15,7 @@ namespace Umbraco.Ai.Prompt.Tests.Unit.Media;
 public class AiMediaImageResolverTests
 {
     private readonly Mock<IMediaService> _mockMediaService;
-    private readonly Mock<MediaFileManager> _mockMediaFileManager;
+    private readonly MediaFileManager _mediaFileManager;
     private readonly Mock<IFileSystem> _mockFileSystem;
     private readonly Mock<ILogger<AiMediaImageResolver>> _mockLogger;
     private readonly AiMediaImageResolver _resolver;
@@ -22,19 +24,22 @@ public class AiMediaImageResolverTests
     {
         _mockMediaService = new Mock<IMediaService>();
         _mockFileSystem = new Mock<IFileSystem>();
-        _mockMediaFileManager = new Mock<MediaFileManager>(
-            Mock.Of<IFileSystem>(),
+
+        // Create a real MediaFileManager with our mocked file system
+        // MediaFileManager is sealed so we can't mock it, but we can create a real instance
+#pragma warning disable CS0618 // Obsolete constructor - needed for testing
+        _mediaFileManager = new MediaFileManager(
+            _mockFileSystem.Object,
             Mock.Of<IMediaPathScheme>(),
-            Mock.Of<ILogger<MediaFileManager>>(),
+            NullLogger<MediaFileManager>.Instance,
             Mock.Of<IShortStringHelper>(),
-            Mock.Of<IServiceProvider>(),
-            Mock.Of<MediaFileManager.Options>());
-        _mockMediaFileManager.Setup(m => m.FileSystem).Returns(_mockFileSystem.Object);
+            Mock.Of<IServiceProvider>());
+#pragma warning restore CS0618
         _mockLogger = new Mock<ILogger<AiMediaImageResolver>>();
 
         _resolver = new AiMediaImageResolver(
             _mockMediaService.Object,
-            _mockMediaFileManager.Object,
+            _mediaFileManager,
             _mockLogger.Object);
     }
 

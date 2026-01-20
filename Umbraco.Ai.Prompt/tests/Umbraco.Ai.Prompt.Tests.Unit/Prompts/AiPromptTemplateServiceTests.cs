@@ -289,11 +289,11 @@ public class AiPromptTemplateServiceTests
     public void ProcessTemplate_WithUnknownPrefix_FallsBackToTextProcessor()
     {
         // Arrange
-        // Unknown prefixes fall back to text processor which looks for the full expression in context
+        // Unknown prefixes fall back to text processor, which receives just the path part (not the full expression)
         var template = "{{unknown:path}}";
         var context = new Dictionary<string, object?>
         {
-            ["unknown:path"] = "direct value"
+            ["path"] = "direct value"
         };
 
         // Act

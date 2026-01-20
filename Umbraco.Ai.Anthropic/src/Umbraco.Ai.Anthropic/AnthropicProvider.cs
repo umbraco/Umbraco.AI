@@ -51,7 +51,7 @@ public class AnthropicProvider : AiProviderBase<AnthropicProviderSettings>
         }
 
         var client = CreateAnthropicClient(settings);
-        var result = await client.Models.List(cancellationToken: cancellationToken).ConfigureAwait(false);
+        var result = await client.Models.List(cancellationToken: cancellationToken);
 
         var modelIds = result.Items
             .Select(m => m.ID)

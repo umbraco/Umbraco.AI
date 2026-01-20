@@ -28,7 +28,7 @@ public class OpenAiEmbeddingCapability(OpenAiProvider provider) : AiEmbeddingCap
         OpenAiProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken).ConfigureAwait(false);
+        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
 
         return allModels
             .Where(IsEmbeddingModel)

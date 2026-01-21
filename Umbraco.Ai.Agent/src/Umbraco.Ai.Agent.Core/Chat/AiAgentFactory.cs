@@ -3,8 +3,10 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Extensions;
+using CoreConstants = Umbraco.Ai.Core.Constants;
 
 namespace Umbraco.Ai.Agent.Core.Chat;
 
@@ -13,6 +15,7 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// </summary>
 internal sealed class AiAgentFactory : IAiAgentFactory
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiProfileService _profileService;
     private readonly IAiChatClientFactory _chatClientFactory;
     private readonly AiToolCollection _toolCollection;
@@ -22,11 +25,13 @@ internal sealed class AiAgentFactory : IAiAgentFactory
     /// Initializes a new instance of the <see cref="AiAgentFactory"/> class.
     /// </summary>
     public AiAgentFactory(
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiProfileService profileService,
         IAiChatClientFactory chatClientFactory,
         AiToolCollection toolCollection,
         IAiFunctionFactory functionFactory)
     {
+        _runtimeContextAccessor = runtimeContextAccessor ?? throw new ArgumentNullException(nameof(runtimeContextAccessor));
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
         _toolCollection = toolCollection ?? throw new ArgumentNullException(nameof(toolCollection));
@@ -50,16 +55,6 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         // Collect frontend tool names and add them to additional properties
         // AiToolReorderingChatMiddleware reads these to reorder tool calls
         var frontendToolNames = additionalTools?.Select(t => t.Name).ToList() ?? [];
-
-        var allAdditionalProperties = new List<KeyValuePair<string, object?>>();
-        if (additionalProperties != null)
-        {
-            allAdditionalProperties.AddRange(additionalProperties);
-        }
-        allAdditionalProperties.Add(new KeyValuePair<string, object?>(
-            Constants.ChatOptionsKeys.FrontendToolNames,
-            frontendToolNames));
-
         if (additionalTools != null)
         {
             tools.AddRange(additionalTools);
@@ -72,12 +67,34 @@ internal sealed class AiAgentFactory : IAiAgentFactory
 
         var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 
-        // Wrap with AgentBoundChatClient for agent-specific injection
-        // This adds frontend tool names to ChatOptions.AdditionalProperties for the reordering middleware
-        var agentBoundClient = new AiAgentBoundChatClient(chatClient, agent, allAdditionalProperties);
+        // Set agent metadata in runtime context for auditing and telemetry
+        if (_runtimeContextAccessor.Context is not null)
+        {
+            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.AgentId, agent.Id);
+            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.AgentAlias, agent.Alias);
+            
+            _runtimeContextAccessor.Context.SetValue(CoreConstants.MetadataKeys.FeatureType, "agent");
+            _runtimeContextAccessor.Context.SetValue(CoreConstants.MetadataKeys.FeatureId, agent.Id);
+            _runtimeContextAccessor.Context.SetValue(CoreConstants.MetadataKeys.FeatureAlias, agent.Alias);
+
+            if (additionalProperties != null)
+            {
+                foreach (var allAdditionalProperty in additionalProperties)
+                {
+                    _runtimeContextAccessor.Context.SetValue(allAdditionalProperty.Key, allAdditionalProperty.Value);
+                }
+            }
+
+            if (frontendToolNames.Count > 0)
+            {
+                _runtimeContextAccessor.Context.SetValue(
+                    Constants.ContextKeys.FrontendToolNames,
+                    frontendToolNames);
+            }
+        }
 
         // Create MAF ChatClientAgent using the extension method
-        return agentBoundClient.CreateAIAgent(
+        return chatClient.CreateAIAgent(
             name: agent.Name,
             description: agent.Description,
             tools: tools);

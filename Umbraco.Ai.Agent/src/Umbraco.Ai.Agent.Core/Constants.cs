@@ -32,12 +32,12 @@ public static class Constants
     }
 
     /// <summary>
-    /// Keys for ChatOptions.AdditionalProperties.
+    /// Keys for RuntimeContext.
     /// </summary>
-    public static class ChatOptionsKeys
+    public static class ContextKeys
     {
         /// <summary>
-        /// Key for frontend tool names in ChatOptions.AdditionalProperties.
+        /// Key for frontend tool names in RuntimeContext.
         /// Used by <see cref="Chat.AiToolReorderingChatClient"/> to identify which tools
         /// are frontend tools that should be processed last.
         /// </summary>

@@ -1,6 +1,7 @@
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.Contexts.Resolvers;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Agent.Core.Context;
 
@@ -13,28 +14,30 @@ namespace Umbraco.Ai.Agent.Core.Context;
 /// </remarks>
 internal sealed class AgentContextResolver : IAiContextResolver
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiContextService _contextService;
     private readonly IAiAgentService _agentService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentContextResolver"/> class.
     /// </summary>
+    /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
     /// <param name="contextService">The context service.</param>
     /// <param name="agentService">The agent service.</param>
     public AgentContextResolver(
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiContextService contextService,
         IAiAgentService agentService)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
         _agentService = agentService;
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(
-        AiContextResolverRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        var agentId = request.GetGuidProperty(Constants.MetadataKeys.AgentId);
+        var agentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.MetadataKeys.AgentId);
         if (!agentId.HasValue)
         {
             return AiContextResolverResult.Empty;

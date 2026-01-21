@@ -70,8 +70,8 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         // Set agent metadata in runtime context for auditing and telemetry
         if (_runtimeContextAccessor.Context is not null)
         {
-            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.AgentId, agent.Id);
-            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.AgentAlias, agent.Alias);
+            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.AgentId, agent.Id);
+            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.AgentAlias, agent.Alias);
             
             _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureType, "agent");
             _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureId, agent.Id);

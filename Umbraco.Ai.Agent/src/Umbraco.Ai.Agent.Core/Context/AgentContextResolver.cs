@@ -37,7 +37,7 @@ internal sealed class AgentContextResolver : IAiContextResolver
     /// <inheritdoc />
     public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        var agentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.MetadataKeys.AgentId);
+        var agentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.AgentId);
         if (!agentId.HasValue)
         {
             return AiContextResolverResult.Empty;

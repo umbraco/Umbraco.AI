@@ -138,12 +138,12 @@ internal sealed class AiAgentService : IAiAgentService
         // 5. Build additional properties for auditing
         var additionalProperties = new Dictionary<string, object?>
         {
-            { Constants.MetadataKeys.RunId, request.RunId },
-            { Constants.MetadataKeys.ThreadId, request.ThreadId },
+            { Constants.ContextKeys.RunId, request.RunId },
+            { Constants.ContextKeys.ThreadId, request.ThreadId },
             { CoreConstants.ContextKeys.LogKeys, new[]
             {
-                Constants.MetadataKeys.RunId,
-                Constants.MetadataKeys.ThreadId
+                Constants.ContextKeys.RunId,
+                Constants.ContextKeys.ThreadId
             }}
         };
 

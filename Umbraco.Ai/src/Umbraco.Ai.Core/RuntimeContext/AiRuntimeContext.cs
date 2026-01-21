@@ -50,17 +50,17 @@ public sealed class AiRuntimeContext
     }
 
     /// <summary>
-    /// Adds an image to the runtime context for injection into the next LLM call.
+    /// Adds data to the runtime context for injection into the next LLM call.
     /// </summary>
-    /// <param name="data">The image data.</param>
+    /// <param name="data">The data.</param>
     /// <param name="mediaType">The MIME type (e.g., "image/png").</param>
     /// <param name="description">Optional description for the AI to reference.</param>
-    public void AddImage(byte[] data, string mediaType, string? description = null)
+    public void AddData(byte[] data, string mediaType, string? description = null)
     {
         MultimodalContents.Add(new DataContent(data, mediaType));
         if (!string.IsNullOrEmpty(description))
         {
-            MultimodalContents.Add(new TextContent($" [Image: {description}]"));
+            MultimodalContents.Add(new TextContent($" [Data: {description}]"));
         }
         IsDirty = true;
     }
@@ -78,7 +78,7 @@ public sealed class AiRuntimeContext
     /// <summary>
     /// Marks the context as clean after multimodal content has been injected.
     /// </summary>
-    internal void MarkClean() => IsDirty = false;
+    internal void Clean() => IsDirty = false;
 
     /// <summary>
     /// Gets typed data from the bag.
@@ -88,6 +88,25 @@ public sealed class AiRuntimeContext
     /// <returns>The data if found and of the correct type; otherwise null.</returns>
     public T? GetData<T>(string key) where T : class
         => Data.TryGetValue(key, out var value) ? value as T : null;
+    
+    /// <summary>
+    /// Gets typed data from the bag.
+    /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="result">The output result.</param>
+    /// <typeparam name="T">The expected type of the data.</typeparam>
+    /// <returns></returns>
+    public bool TryGetData<T>(string key, out T result) where T : class
+    {
+        if (Data.TryGetValue(key, out var value) && value is T typed)
+        {
+            result = typed;
+            return true;
+        }
+
+        result = null!;
+        return false;
+    }
 
     /// <summary>
     /// Sets typed data in the bag.
@@ -104,15 +123,33 @@ public sealed class AiRuntimeContext
     /// <typeparam name="T">The expected value type.</typeparam>
     /// <param name="key">The key to look up.</param>
     /// <returns>The value if found; otherwise default.</returns>
-    public T? GetValue<T>(string key) where T : struct
-        => Data.TryGetValue(key, out var value) && value is T typed ? typed : null;
+    public T? GetValue<T>(string key)
+        => Data.TryGetValue(key, out var value) && value is T typed ? typed : default;
+
+    /// <summary>
+    /// Gets a value type from the data bag.
+    /// </summary>
+    /// <typeparam name="T">The expected value type.</typeparam>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="result"></param>
+    /// <returns>The value if found; otherwise default.</returns>
+    public bool TryGetValue<T>(string key, out T result)
+    {
+        if (Data.TryGetValue(key, out var value) && value is T typed)
+        {
+            result = typed;
+            return true;
+        }
+
+        result = default!;
+        return false;
+    }
 
     /// <summary>
     /// Sets a value type in the data bag.
     /// </summary>
-    /// <typeparam name="T">The type of the value.</typeparam>
     /// <param name="key">The key to store under.</param>
     /// <param name="value">The value to store.</param>
-    public void SetValue<T>(string key, T value) where T : struct
+    public void SetValue(string key, object? value) 
         => Data[key] = value;
 }

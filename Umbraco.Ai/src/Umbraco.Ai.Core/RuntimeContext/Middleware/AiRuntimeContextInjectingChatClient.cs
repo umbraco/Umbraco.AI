@@ -43,7 +43,7 @@ internal sealed class AiRuntimeContextInjectingChatClient : DelegatingChatClient
 
         // Inject multimodal content added by tools
         var modified = InjectMultimodalContent(chatMessages.ToList(), context);
-        context.MarkClean();
+        context.Clean();
 
         return await base.GetResponseAsync(modified, options, cancellationToken);
     }
@@ -68,7 +68,7 @@ internal sealed class AiRuntimeContextInjectingChatClient : DelegatingChatClient
 
         // Inject multimodal content added by tools
         var modified = InjectMultimodalContent(chatMessages.ToList(), context);
-        context.MarkClean();
+        context.Clean();
 
         await foreach (var update in base.GetStreamingResponseAsync(modified, options, cancellationToken))
         {

@@ -32,11 +32,6 @@ public static class AiRuntimeContextKeys
     public const string EntityType = "Umbraco.Ai.EntityType";
 
     /// <summary>
-    /// Key for content ID used by <c>ContentContextResolver</c> to resolve content contexts.
-    /// </summary>
-    public const string ContentId = "Umbraco.Ai.ContentId";
-
-    /// <summary>
     /// Key for the agent unique identifier (as Guid).
     /// </summary>
     public const string AgentId = "Umbraco.Ai.AgentId";

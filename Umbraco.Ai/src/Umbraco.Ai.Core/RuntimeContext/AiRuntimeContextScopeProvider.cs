@@ -6,8 +6,14 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// Provides runtime context scope management using HttpContext.Items for storage.
 /// </summary>
 /// <remarks>
-/// This implementation stores the runtime context in HttpContext.Items, making it
+/// <para>
+/// This implementation stores a stack of runtime contexts in HttpContext.Items, making it
 /// available across async boundaries within the same HTTP request.
+/// </para>
+/// <para>
+/// Nested scopes are supported: each call to <see cref="CreateScope(IEnumerable{AiRequestContextItem})"/>
+/// pushes a new context onto the stack, and disposing the scope pops it, restoring the previous context.
+/// </para>
 /// </remarks>
 internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProvider, IAiRuntimeContextAccessor
 {
@@ -25,7 +31,19 @@ internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
     }
 
     /// <inheritdoc />
-    public AiRuntimeContext? Context => _httpContextAccessor.HttpContext?.Items[ContextKey] as AiRuntimeContext;
+    public AiRuntimeContext? Context
+    {
+        get
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext?.Items[ContextKey] is Stack<AiRuntimeContext> stack && stack.Count > 0)
+            {
+                return stack.Peek();
+            }
+
+            return null;
+        }
+    }
 
     /// <inheritdoc />
     public IAiRuntimeContextScope CreateScope()
@@ -34,57 +52,99 @@ internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
     /// <inheritdoc />
     public IAiRuntimeContextScope CreateScope(IEnumerable<AiRequestContextItem> items)
     {
-        // If scope already exists, return no-op wrapper (one scope per request)
-        if (_httpContextAccessor.HttpContext?.Items[ContextKey] is AiRuntimeContext existing)
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        // If no HttpContext, return a detached scope
+        if (httpContext == null)
         {
-            return new NoOpScope(existing);
+            return new DetachedScope(new AiRuntimeContext(items));
         }
 
+        // Get or create stack
+        if (httpContext.Items[ContextKey] is not Stack<AiRuntimeContext> stack)
+        {
+            stack = new Stack<AiRuntimeContext>();
+            httpContext.Items[ContextKey] = stack;
+        }
+
+        var parentContext = stack.Count > 0 ? stack.Peek() : null;
         var context = new AiRuntimeContext(items);
-        if (_httpContextAccessor.HttpContext != null)
-        {
-            _httpContextAccessor.HttpContext.Items[ContextKey] = context;
-        }
+        stack.Push(context);
 
-        return new OwningScope(_httpContextAccessor, context);
+        return new StackScope(this, context, stack, parentContext);
     }
 
     /// <summary>
-    /// A scope that owns the context and removes it on dispose.
+    /// A scope that owns a context on the stack and pops it on dispose.
     /// </summary>
-    private sealed class OwningScope : IAiRuntimeContextScope
+    private sealed class StackScope : IAiRuntimeContextScope
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly AiRuntimeContextScopeProvider _provider;
+        private readonly Stack<AiRuntimeContext> _stack;
+        private bool _disposed;
 
-        public OwningScope(IHttpContextAccessor httpContextAccessor, AiRuntimeContext context)
+        public StackScope(
+            AiRuntimeContextScopeProvider provider,
+            AiRuntimeContext context,
+            Stack<AiRuntimeContext> stack,
+            AiRuntimeContext? parentContext)
         {
-            _httpContextAccessor = httpContextAccessor;
+            _provider = provider;
+            _stack = stack;
+            Context = context;
+            ParentContext = parentContext;
+            Depth = stack.Count;
+        }
+
+        public AiRuntimeContext Context { get; }
+
+        public AiRuntimeContext? ParentContext { get; }
+
+        public int Depth { get; }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            // Only pop if this context is still at the top of the stack.
+            // This handles out-of-order disposal gracefully.
+            if (_stack.Count > 0 && ReferenceEquals(_stack.Peek(), Context))
+            {
+                _stack.Pop();
+            }
+
+            // Clean up the stack from HttpContext.Items if empty
+            if (_stack.Count == 0)
+            {
+                _provider._httpContextAccessor.HttpContext?.Items.Remove(ContextKey);
+            }
+        }
+    }
+
+    /// <summary>
+    /// A detached scope for scenarios without HttpContext.
+    /// </summary>
+    private sealed class DetachedScope : IAiRuntimeContextScope
+    {
+        public DetachedScope(AiRuntimeContext context)
+        {
             Context = context;
         }
 
         public AiRuntimeContext Context { get; }
 
-        public void Dispose()
-        {
-            _httpContextAccessor.HttpContext?.Items.Remove(ContextKey);
-        }
-    }
+        public AiRuntimeContext? ParentContext => null;
 
-    /// <summary>
-    /// A no-op scope for nested usage - doesn't remove the context on dispose.
-    /// </summary>
-    private sealed class NoOpScope : IAiRuntimeContextScope
-    {
-        public NoOpScope(AiRuntimeContext context)
-        {
-            Context = context;
-        }
-
-        public AiRuntimeContext Context { get; }
+        public int Depth => 1;
 
         public void Dispose()
         {
-            // No-op: don't remove the context, it belongs to the outer scope
+            // No-op: detached scopes don't manage any shared state
         }
     }
 }

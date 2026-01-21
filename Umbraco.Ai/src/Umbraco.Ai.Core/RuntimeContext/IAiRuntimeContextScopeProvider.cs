@@ -10,7 +10,7 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// <see cref="IAiRuntimeContextAccessor"/> until the scope is disposed.
 /// </para>
 /// <para>
-/// Only one scope should be active per request. If <see cref="CreateScope"/> is called
+/// Only one scope should be active per request. If <see cref="CreateScope()"/> is called
 /// while a scope already exists, it returns a no-op wrapper around the existing scope
 /// to support nested usage patterns.
 /// </para>

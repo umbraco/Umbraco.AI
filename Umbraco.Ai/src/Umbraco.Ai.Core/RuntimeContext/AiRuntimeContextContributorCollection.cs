@@ -24,14 +24,8 @@ public sealed class AiRuntimeContextContributorCollection : BuilderCollectionBas
         // For each item, find contributors that can handle it
         foreach (var item in context.RequestContextItems)
         {
-            foreach (var contributor in this)
-            {
-                if (contributor.CanHandle(item))
-                {
-                    contributor.Contribute(item, context);
-                    // Continue to allow multiple contributors per item if needed
-                }
-            }
+            var contributor = this.FirstOrDefault(x => x.CanHandle(item));
+            contributor?.Contribute(item, context);
         }
     }
 }

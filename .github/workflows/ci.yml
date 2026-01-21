@@ -60,7 +60,7 @@ jobs:
           name: build-outputs
           path: |
             **/bin/Release/**
-            **/obj/Release/**
+            **/obj/**
           retention-days: 1
 
   # ============================================================

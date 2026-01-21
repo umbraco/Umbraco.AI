@@ -57,131 +57,131 @@ jobs:
   # ============================================================
   # Detect which products changed (for packaging)
   # ============================================================
-  detect-changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      products: ${{ steps.detect.outputs.products }}
-      has-changes: ${{ steps.detect.outputs.has-changes }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  # detect-changes:
+  #   name: Detect Changes
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     products: ${{ steps.detect.outputs.products }}
+  #     has-changes: ${{ steps.detect.outputs.has-changes }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Detect changed products
-        id: detect
-        run: |
-          products="[]"
+  #     - name: Detect changed products
+  #       id: detect
+  #       run: |
+  #         products="[]"
 
-          # Get changed files
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            base="${{ github.event.pull_request.base.sha }}"
-          else
-            base="${{ github.event.before }}"
-          fi
+  #         # Get changed files
+  #         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+  #           base="${{ github.event.pull_request.base.sha }}"
+  #         else
+  #           base="${{ github.event.before }}"
+  #         fi
 
-          # Fallback for new branches or force pushes
-          if ! git cat-file -e "$base" 2>/dev/null; then
-            base="HEAD~1"
-          fi
+  #         # Fallback for new branches or force pushes
+  #         if ! git cat-file -e "$base" 2>/dev/null; then
+  #           base="HEAD~1"
+  #         fi
 
-          changed_files=$(git diff --name-only "$base" HEAD 2>/dev/null || echo "")
+  #         changed_files=$(git diff --name-only "$base" HEAD 2>/dev/null || echo "")
 
-          # Check for global changes that affect all products
-          pack_all=false
-          if echo "$changed_files" | grep -qE '^(Directory\.Packages\.props|Directory\.Build\.props|global\.json)$'; then
-            echo "Global file changed - will pack all products"
-            pack_all=true
-          fi
+  #         # Check for global changes that affect all products
+  #         pack_all=false
+  #         if echo "$changed_files" | grep -qE '^(Directory\.Packages\.props|Directory\.Build\.props|global\.json)$'; then
+  #           echo "Global file changed - will pack all products"
+  #           pack_all=true
+  #         fi
 
-          # Detect products
-          for dir in Umbraco.Ai*/; do
-            [ ! -d "$dir" ] && continue
-            name=$(basename "$dir")
+  #         # Detect products
+  #         for dir in Umbraco.Ai*/; do
+  #           [ ! -d "$dir" ] && continue
+  #           name=$(basename "$dir")
 
-            # Product folders use dots, not hyphens
-            [[ "$name" == *-* ]] && continue
+  #           # Product folders use dots, not hyphens
+  #           [[ "$name" == *-* ]] && continue
 
-            # Solution must exist
-            [ ! -f "$dir/$name.sln" ] && continue
+  #           # Solution must exist
+  #           [ ! -f "$dir/$name.sln" ] && continue
 
-            # Check if this product changed (or global change)
-            should_pack=false
-            if [[ "$pack_all" == "true" ]]; then
-              should_pack=true
-            elif echo "$changed_files" | grep -q "^$name/"; then
-              should_pack=true
-            fi
+  #           # Check if this product changed (or global change)
+  #           should_pack=false
+  #           if [[ "$pack_all" == "true" ]]; then
+  #             should_pack=true
+  #           elif echo "$changed_files" | grep -q "^$name/"; then
+  #             should_pack=true
+  #           fi
 
-            if [[ "$should_pack" == "true" ]]; then
-              has_frontend="false"
-              [ -d "$dir/src/$name.Web.StaticAssets/Client" ] && has_frontend="true"
+  #           if [[ "$should_pack" == "true" ]]; then
+  #             has_frontend="false"
+  #             [ -d "$dir/src/$name.Web.StaticAssets/Client" ] && has_frontend="true"
 
-              products=$(echo "$products" | jq -c \
-                --arg name "$name" \
-                --arg frontend "$has_frontend" \
-                '. + [{name: $name, hasFrontend: $frontend}]')
+  #             products=$(echo "$products" | jq -c \
+  #               --arg name "$name" \
+  #               --arg frontend "$has_frontend" \
+  #               '. + [{name: $name, hasFrontend: $frontend}]')
 
-              echo "Will pack: $name"
-            fi
-          done
+  #             echo "Will pack: $name"
+  #           fi
+  #         done
 
-          has_changes="false"
-          if [[ $(echo "$products" | jq length) -gt 0 ]]; then
-            has_changes="true"
-          fi
+  #         has_changes="false"
+  #         if [[ $(echo "$products" | jq length) -gt 0 ]]; then
+  #           has_changes="true"
+  #         fi
 
-          echo "products=$products" >> $GITHUB_OUTPUT
-          echo "has-changes=$has_changes" >> $GITHUB_OUTPUT
+  #         echo "products=$products" >> $GITHUB_OUTPUT
+  #         echo "has-changes=$has_changes" >> $GITHUB_OUTPUT
 
   # ============================================================
   # Pack only changed products
   # ============================================================
-  pack:
-    name: Pack ${{ matrix.product.name }}
-    runs-on: ubuntu-latest
-    needs: [build, detect-changes]
-    if: needs.detect-changes.outputs.has-changes == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        product: ${{ fromJson(needs.detect-changes.outputs.products) }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  # pack:
+  #   name: Pack ${{ matrix.product.name }}
+  #   runs-on: ubuntu-latest
+  #   needs: [build, detect-changes]
+  #   if: needs.detect-changes.outputs.has-changes == 'true'
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       product: ${{ fromJson(needs.detect-changes.outputs.products) }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
+  #     - uses: actions/setup-dotnet@v4
+  #       with:
+  #         global-json-file: global.json
 
-      - uses: actions/setup-node@v4
-        if: matrix.product.hasFrontend == 'true'
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+  #     - uses: actions/setup-node@v4
+  #       if: matrix.product.hasFrontend == 'true'
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
 
-      - name: Build frontend
-        if: matrix.product.hasFrontend == 'true'
-        working-directory: ${{ matrix.product.name }}/src/${{ matrix.product.name }}.Web.StaticAssets/Client
-        run: |
-          npm ci
-          npm run build
+  #     - name: Build frontend
+  #       if: matrix.product.hasFrontend == 'true'
+  #       working-directory: ${{ matrix.product.name }}/src/${{ matrix.product.name }}.Web.StaticAssets/Client
+  #       run: |
+  #         npm ci
+  #         npm run build
 
-      - name: Install NBGV
-        run: dotnet tool install --global nbgv
+  #     - name: Install NBGV
+  #       run: dotnet tool install --global nbgv
 
-      - name: Set version
-        working-directory: ${{ matrix.product.name }}
-        run: nbgv cloud
+  #     - name: Set version
+  #       working-directory: ${{ matrix.product.name }}
+  #       run: nbgv cloud
 
-      - name: Pack
-        run: |
-          dotnet pack ${{ matrix.product.name }}/${{ matrix.product.name }}.sln \
-            --configuration Release \
-            --output ./artifacts/nupkg
+  #     - name: Pack
+  #       run: |
+  #         dotnet pack ${{ matrix.product.name }}/${{ matrix.product.name }}.sln \
+  #           --configuration Release \
+  #           --output ./artifacts/nupkg
 
-      - name: Upload packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuget-${{ matrix.product.name }}
-          path: ./artifacts/nupkg/*.nupkg
+  #     - name: Upload packages
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: nuget-${{ matrix.product.name }}
+  #         path: ./artifacts/nupkg/*.nupkg

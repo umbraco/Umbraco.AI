@@ -50,7 +50,7 @@ public class GoogleProvider : AiProviderBase<GoogleProviderSettings>
         }
 
         var client = CreateGoogleClient(settings);
-        var modelsPager = await client.Models.ListAsync().ConfigureAwait(false);
+        var modelsPager = await client.Models.ListAsync();
 
         var allModels = new List<string>();
         await foreach (var model in modelsPager.WithCancellation(cancellationToken))

@@ -34,7 +34,7 @@ public class GoogleChatCapability(GoogleProvider provider) : AiChatCapabilityBas
         // Try to get models from API, fall back to known models if API call fails
         try
         {
-            var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken).ConfigureAwait(false);
+            var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
 
             // Filter to only include known chat models that are available from the API
             var availableModels = allModels

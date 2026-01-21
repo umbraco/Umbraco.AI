@@ -24,6 +24,7 @@ using Umbraco.Ai.Core.RuntimeContext.Middleware;
 using Umbraco.Ai.Core.TaskQueue;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Core.Tools.Web;
+using Umbraco.Ai.Prompt.Core.Media;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;
@@ -166,6 +167,9 @@ public static partial class UmbracoBuilderExtensions
             .Append<SerializedEntityContributor>()
             .Append<DefaultSystemMessageContributor>();
 
+        // Register media image resolver
+        builder.Services.AddSingleton<IAiUmbracoMediaResolver, AiUmbracoMediaResolver>();
+        
         // AuditLog infrastructure
         // Note: IAiAuditLogRepository is registered by persistence layer
         services.AddSingleton<IAiAuditLogFactory, AiAuditLogFactory>();

@@ -8,7 +8,7 @@ namespace Umbraco.Ai.Prompt.Core.Media;
 /// <summary>
 /// Resolves images from media references using Umbraco's media service and file storage.
 /// </summary>
-internal sealed class AiMediaImageResolver : IAiMediaImageResolver
+internal sealed class AiUmbracoMediaResolver : IAiUmbracoMediaResolver
 {
     private static readonly Dictionary<string, string> ExtensionToMediaType = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -22,12 +22,12 @@ internal sealed class AiMediaImageResolver : IAiMediaImageResolver
 
     private readonly IMediaService _mediaService;
     private readonly MediaFileManager _mediaFileManager;
-    private readonly ILogger<AiMediaImageResolver> _logger;
+    private readonly ILogger<AiUmbracoMediaResolver> _logger;
 
-    public AiMediaImageResolver(
+    public AiUmbracoMediaResolver(
         IMediaService mediaService,
         MediaFileManager mediaFileManager,
-        ILogger<AiMediaImageResolver> logger)
+        ILogger<AiUmbracoMediaResolver> logger)
     {
         _mediaService = mediaService;
         _mediaFileManager = mediaFileManager;
@@ -35,7 +35,7 @@ internal sealed class AiMediaImageResolver : IAiMediaImageResolver
     }
 
     /// <inheritdoc />
-    public AiImageContent? Resolve(object? value)
+    public async Task<AiMediaContent?> ResolveAsync(object? value, CancellationToken cancellationToken = default)
     {
         if (value is null)
         {
@@ -171,7 +171,7 @@ internal sealed class AiMediaImageResolver : IAiMediaImageResolver
         return (null, null);
     }
 
-    private AiImageContent? ResolveFromMediaKey(Guid mediaKey)
+    private AiMediaContent? ResolveFromMediaKey(Guid mediaKey)
     {
         var media = _mediaService.GetById(mediaKey);
         if (media is null)
@@ -215,7 +215,7 @@ internal sealed class AiMediaImageResolver : IAiMediaImageResolver
         return ResolveFromPath(filePath);
     }
 
-    private AiImageContent? ResolveFromPath(string filePath)
+    private AiMediaContent? ResolveFromPath(string filePath)
     {
         // Normalize the path - remove leading /media/ if present since MediaFileManager works with relative paths
         var relativePath = filePath;
@@ -248,7 +248,7 @@ internal sealed class AiMediaImageResolver : IAiMediaImageResolver
         using var memoryStream = new MemoryStream();
         stream.CopyTo(memoryStream);
 
-        return new AiImageContent
+        return new AiMediaContent
         {
             Data = memoryStream.ToArray(),
             MediaType = mediaType

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Umbraco.Ai.Prompt.Core.Media;
@@ -16,18 +17,18 @@ internal sealed class ImageTemplateVariableProcessor : IAiTemplateVariableProces
 {
     private readonly IMediaService _mediaService;
     private readonly IContentService _contentService;
-    private readonly IAiMediaImageResolver _imageResolver;
+    private readonly IAiUmbracoMediaResolver _mediaResolver;
     private readonly ILogger<ImageTemplateVariableProcessor> _logger;
 
     public ImageTemplateVariableProcessor(
         IMediaService mediaService,
         IContentService contentService,
-        IAiMediaImageResolver imageResolver,
+        IAiUmbracoMediaResolver mediaResolver,
         ILogger<ImageTemplateVariableProcessor> logger)
     {
         _mediaService = mediaService;
         _contentService = contentService;
-        _imageResolver = imageResolver;
+        _mediaResolver = mediaResolver;
         _logger = logger;
     }
 
@@ -35,16 +36,18 @@ internal sealed class ImageTemplateVariableProcessor : IAiTemplateVariableProces
     public string Prefix => "image";
 
     /// <inheritdoc />
-    public IEnumerable<AIContent> Process(string path, IReadOnlyDictionary<string, object?> context)
+    public async Task<IEnumerable<AIContent>>ProcessAsync(string path, IReadOnlyDictionary<string, object?> context, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(context);
 
+        var results = new List<AIContent>();
+        
         // Get the entity ID and type from context
         if (!TryGetEntityInfo(context, out var entityId, out var entityType))
         {
             _logger.LogWarning("Cannot process image variable '{Path}': missing entityId or entityType in context", path);
-            yield break;
+            return results;
         }
 
         // Fetch the entity
@@ -55,7 +58,7 @@ internal sealed class ImageTemplateVariableProcessor : IAiTemplateVariableProces
         if (entity is null)
         {
             _logger.LogWarning("Entity {EntityId} of type {EntityType} not found", entityId, entityType);
-            yield break;
+            return results;
         }
 
         // Get the property value
@@ -63,19 +66,19 @@ internal sealed class ImageTemplateVariableProcessor : IAiTemplateVariableProces
         if (propertyValue is null)
         {
             _logger.LogWarning("Cannot process image variable '{Path}': property not found on entity {EntityId}", path, entityId);
-            yield break;
+            return results;
         }
 
         // Use the media resolver to get the image content
-        var imageContent = _imageResolver.Resolve(propertyValue);
+        var imageContent = await _mediaResolver.ResolveAsync(propertyValue, cancellationToken);
         if (imageContent is null)
         {
             _logger.LogWarning("Cannot process image variable '{Path}': failed to resolve image from property value", path);
-            yield break;
+            return results;
         }
 
         // Return the image as DataContent
-        yield return new DataContent(imageContent.Data, imageContent.MediaType);
+        results.Add(new DataContent(imageContent.Data, imageContent.MediaType));
 
         // Return a reference name that the AI can use to identify this image
         // Use the entity name if available, otherwise use the property alias
@@ -83,7 +86,9 @@ internal sealed class ImageTemplateVariableProcessor : IAiTemplateVariableProces
             ? entity.Name
             : $"image_{path}";
 
-        yield return new TextContent($" [Image: {referenceName}]");
+        results.Add(new TextContent($" [Image: {referenceName}]"));
+
+        return results;
     }
 
     private static bool TryGetEntityInfo(IReadOnlyDictionary<string, object?> context, out Guid entityId, out string entityType)

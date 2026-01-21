@@ -34,9 +34,6 @@ public static class UmbracoBuilderExtensions
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAiPromptRepository, InMemoryAiPromptRepository>();
 
-        // Register media image resolver
-        builder.Services.AddSingleton<IAiMediaImageResolver, AiMediaImageResolver>();
-
         // Register template variable processors
         builder.Services.AddSingleton<TextTemplateVariableProcessor>();
         builder.Services.AddSingleton<ImageTemplateVariableProcessor>();

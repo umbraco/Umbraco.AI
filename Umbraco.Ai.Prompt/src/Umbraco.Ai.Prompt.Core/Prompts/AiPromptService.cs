@@ -155,7 +155,7 @@ internal sealed class AiPromptService : IAiPromptService
             : null;
 
         // 5. Process template variables (returns multimodal content list)
-        var contents = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
+        var contents = await _templateService.ProcessTemplateAsync(prompt.Instructions, templateContext, cancellationToken);
 
         // 6. Build chat messages with multimodal content
         List<ChatMessage> messages = [new(ChatRole.User, contents.ToList())];

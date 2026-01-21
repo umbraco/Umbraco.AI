@@ -19,9 +19,10 @@ public interface IAiTemplateVariableProcessor
     /// </summary>
     /// <param name="path">The variable path after the prefix (e.g., "umbracoFile" from {{image:umbracoFile}}).</param>
     /// <param name="context">The template context containing available values.</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>
     /// The content items to include in the message. May return multiple items (e.g., image + reference name).
     /// Return an empty enumerable if the variable cannot be resolved.
     /// </returns>
-    IEnumerable<AIContent> Process(string path, IReadOnlyDictionary<string, object?> context);
+    Task<IEnumerable<AIContent>> ProcessAsync(string path, IReadOnlyDictionary<string, object?> context, CancellationToken cancellationToken = default);
 }

@@ -62,6 +62,8 @@ jobs:
             **/bin/Release/**
             **/obj/**
             **/wwwroot/**
+            **/Client/**
+            !**/Client/node_modules/**
           retention-days: 1
 
   # ============================================================

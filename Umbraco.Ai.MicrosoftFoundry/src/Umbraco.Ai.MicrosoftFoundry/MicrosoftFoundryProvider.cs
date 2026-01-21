@@ -63,7 +63,7 @@ public class MicrosoftFoundryProvider : AiProviderBase<MicrosoftFoundryProviderS
             return cachedModels;
         }
 
-        var models = await FetchModelsFromApiAsync(settings, cancellationToken).ConfigureAwait(false);
+        var models = await FetchModelsFromApiAsync(settings, cancellationToken);
 
         _cache.Set(cacheKey, models, CacheDuration);
 
@@ -156,7 +156,7 @@ public class MicrosoftFoundryProvider : AiProviderBase<MicrosoftFoundryProviderS
 
         try
         {
-            using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            using var response = await client.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -166,7 +166,7 @@ public class MicrosoftFoundryProvider : AiProviderBase<MicrosoftFoundryProviderS
 
             var modelsResponse = await response.Content
                 .ReadFromJsonAsync<MicrosoftFoundryModelsResponse>(cancellationToken)
-                .ConfigureAwait(false);
+                ;
 
             if (modelsResponse?.Data is null)
             {

@@ -22,7 +22,7 @@ public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provid
         MicrosoftFoundryProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var allModels = await Provider.GetAvailableModelsAsync(settings, cancellationToken).ConfigureAwait(false);
+        var allModels = await Provider.GetAvailableModelsAsync(settings, cancellationToken);
 
         return allModels
             .Where(IsEmbeddingModel)
@@ -36,8 +36,11 @@ public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provid
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(MicrosoftFoundryProviderSettings settings, string? modelId)
     {
         var model = modelId ?? DefaultEmbeddingModel;
-        return MicrosoftFoundryProvider.CreateEmbeddingsClient(settings, model)
+        var generator = MicrosoftFoundryProvider.CreateEmbeddingsClient(settings, model)
             .AsIEmbeddingGenerator(model);
+
+        // Wrap with metadata filter to remove Umbraco.Ai keys that Foundry doesn't accept
+        return new MicrosoftFoundryMetadataFilteringEmbeddingGenerator(generator);
     }
 
     private static bool IsEmbeddingModel(MicrosoftFoundryModelInfo model)

@@ -22,7 +22,7 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) :
         MicrosoftFoundryProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var allModels = await Provider.GetAvailableModelsAsync(settings, cancellationToken).ConfigureAwait(false);
+        var allModels = await Provider.GetAvailableModelsAsync(settings, cancellationToken);
 
         return allModels
             .Where(IsChatModel)

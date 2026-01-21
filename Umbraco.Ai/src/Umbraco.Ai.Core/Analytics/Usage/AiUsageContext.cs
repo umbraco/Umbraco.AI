@@ -70,14 +70,14 @@ public sealed class AiUsageContext
         return new AiUsageContext
         {
             Capability = capability,
-            ProfileId = runtimeContext.GetValue<Guid>(Constants.MetadataKeys.ProfileId),
-            ProfileAlias = runtimeContext.GetValue<string>(Constants.MetadataKeys.ProfileAlias),
-            ProviderId = runtimeContext.GetValue<string>(Constants.MetadataKeys.ProviderId),
-            ModelId = modelId ?? runtimeContext.GetValue<string>(Constants.MetadataKeys.ModelId),
-            EntityId = runtimeContext.GetValue<string>(Constants.MetadataKeys.EntityId),
-            EntityType = runtimeContext.GetValue<string>(Constants.MetadataKeys.EntityType),
-            FeatureType = runtimeContext.GetValue<string>(Constants.MetadataKeys.FeatureType),
-            FeatureId = runtimeContext.GetValue<Guid>(Constants.MetadataKeys.FeatureId)
+            ProfileId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.ProfileId),
+            ProfileAlias = runtimeContext.GetValue<string>(Constants.ContextKeys.ProfileAlias),
+            ProviderId = runtimeContext.GetValue<string>(Constants.ContextKeys.ProviderId),
+            ModelId = modelId ?? runtimeContext.GetValue<string>(Constants.ContextKeys.ModelId),
+            EntityId = runtimeContext.GetValue<string>(Constants.ContextKeys.EntityId),
+            EntityType = runtimeContext.GetValue<string>(Constants.ContextKeys.EntityType),
+            FeatureType = runtimeContext.GetValue<string>(Constants.ContextKeys.FeatureType),
+            FeatureId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.FeatureId)
         };
     }
 }

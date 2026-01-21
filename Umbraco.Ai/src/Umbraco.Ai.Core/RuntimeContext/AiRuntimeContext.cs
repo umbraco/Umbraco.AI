@@ -81,43 +81,6 @@ public sealed class AiRuntimeContext
     internal void Clean() => IsDirty = false;
 
     /// <summary>
-    /// Gets typed data from the bag.
-    /// </summary>
-    /// <typeparam name="T">The expected type of the data.</typeparam>
-    /// <param name="key">The key to look up.</param>
-    /// <returns>The data if found and of the correct type; otherwise null.</returns>
-    public T? GetData<T>(string key) where T : class
-        => Data.TryGetValue(key, out var value) ? value as T : null;
-    
-    /// <summary>
-    /// Gets typed data from the bag.
-    /// </summary>
-    /// <param name="key">The key to look up.</param>
-    /// <param name="result">The output result.</param>
-    /// <typeparam name="T">The expected type of the data.</typeparam>
-    /// <returns></returns>
-    public bool TryGetData<T>(string key, out T result) where T : class
-    {
-        if (Data.TryGetValue(key, out var value) && value is T typed)
-        {
-            result = typed;
-            return true;
-        }
-
-        result = null!;
-        return false;
-    }
-
-    /// <summary>
-    /// Sets typed data in the bag.
-    /// </summary>
-    /// <typeparam name="T">The type of the data.</typeparam>
-    /// <param name="key">The key to store under.</param>
-    /// <param name="value">The value to store.</param>
-    public void SetData<T>(string key, T value) where T : class
-        => Data[key] = value;
-
-    /// <summary>
     /// Gets a value type from the data bag.
     /// </summary>
     /// <typeparam name="T">The expected value type.</typeparam>

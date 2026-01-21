@@ -46,7 +46,7 @@ internal sealed class AiAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
 
             // Extract metadata from options if present
             Dictionary<string, string>? metadata = null;
-            if (options?.AdditionalProperties?.TryGetValue(Constants.MetadataKeys.LogKeys, out var logKeys) == true
+            if (options?.AdditionalProperties?.TryGetValue(Constants.ContextKeys.LogKeys, out var logKeys) == true
                 && logKeys is IEnumerable<string> keys)
             {
                 metadata = keys.ToDictionary(

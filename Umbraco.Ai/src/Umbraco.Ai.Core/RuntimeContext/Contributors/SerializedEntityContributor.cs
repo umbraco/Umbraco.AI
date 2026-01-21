@@ -65,22 +65,22 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
             }
 
             // Store in data bag
-            context.SetData(AiRuntimeContextKeys.SerializedEntity, entity);
+            context.SetValue(Constants.ContextKeys.SerializedEntity, entity);
 
             // Extract entity ID as Guid if possible
             if (Guid.TryParse(entity.Unique, out var entityId))
             {
-                context.SetValue(AiRuntimeContextKeys.EntityId, entityId);
+                context.SetValue(Constants.ContextKeys.EntityId, entityId);
             }
 
             // Extract parent entity ID as Guid if available (for new entities)
             if (!string.IsNullOrEmpty(entity.ParentUnique) && Guid.TryParse(entity.ParentUnique, out var parentEntityId))
             {
-                context.SetValue(AiRuntimeContextKeys.ParentEntityId, parentEntityId);
+                context.SetValue(Constants.ContextKeys.ParentEntityId, parentEntityId);
             }
 
             // Store entity type
-            context.Data[AiRuntimeContextKeys.EntityType] = entity.EntityType;
+            context.Data[Constants.ContextKeys.EntityType] = entity.EntityType;
 
             // Build template variables from entity
             var variables = _contextHelper.BuildContextDictionary(entity);

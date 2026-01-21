@@ -140,7 +140,7 @@ internal sealed class AiAgentService : IAiAgentService
         {
             { Constants.MetadataKeys.RunId, request.RunId },
             { Constants.MetadataKeys.ThreadId, request.ThreadId },
-            { CoreConstants.MetadataKeys.LogKeys, new[]
+            { CoreConstants.ContextKeys.LogKeys, new[]
             {
                 Constants.MetadataKeys.RunId,
                 Constants.MetadataKeys.ThreadId

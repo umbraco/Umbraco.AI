@@ -132,17 +132,17 @@ internal sealed class AiPromptService : IAiPromptService
         _contextContributors.Populate(runtimeContext);
 
         // If no EntityId was set by contributors, use request.EntityId as fallback
-        if (!runtimeContext.Data.ContainsKey(AiRuntimeContextKeys.EntityId) && request.EntityId != Guid.Empty)
+        if (!runtimeContext.Data.ContainsKey(CoreConstants.ContextKeys.EntityId) && request.EntityId != Guid.Empty)
         {
-            runtimeContext.SetValue(AiRuntimeContextKeys.EntityId, request.EntityId);
+            runtimeContext.SetValue(CoreConstants.ContextKeys.EntityId, request.EntityId);
         }
 
         // Set prompt metadata in runtime context for auditing and telemetry
         runtimeContext.SetValue(Constants.MetadataKeys.PromptId, prompt.Id);
         runtimeContext.SetValue(Constants.MetadataKeys.PromptAlias, prompt.Alias);
-        runtimeContext.SetValue(CoreConstants.MetadataKeys.FeatureType, "prompt");
-        runtimeContext.SetValue(CoreConstants.MetadataKeys.FeatureId, prompt.Id);
-        runtimeContext.SetValue(CoreConstants.MetadataKeys.FeatureAlias, prompt.Alias);
+        runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureType, "prompt");
+        runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureId, prompt.Id);
+        runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureAlias, prompt.Alias);
 
         // 4. Build template context from basic request info + processor results
         var templateContext = BuildExecutionContext(request);

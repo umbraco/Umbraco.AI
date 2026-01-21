@@ -7,7 +7,7 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// Resolves context from profile-level context assignments.
 /// </summary>
 /// <remarks>
-/// This resolver reads the profile ID from <see cref="Constants.MetadataKeys.ProfileId"/> in the request properties,
+/// This resolver reads the profile ID from <see cref="Constants.ContextKeys.ProfileId"/> in the request properties,
 /// then resolves any context IDs configured on the profile's chat settings.
 /// </remarks>
 internal sealed class ProfileContextResolver : IAiContextResolver
@@ -35,7 +35,7 @@ internal sealed class ProfileContextResolver : IAiContextResolver
     /// <inheritdoc />
     public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        var profileId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.MetadataKeys.ProfileId);
+        var profileId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ProfileId);
         if (!profileId.HasValue)
         {
             return AiContextResolverResult.Empty;

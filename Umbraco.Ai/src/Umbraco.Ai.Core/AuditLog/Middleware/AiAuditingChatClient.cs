@@ -49,7 +49,7 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
             // Extract metadata from RuntimeContext if present
             Dictionary<string, string>? metadata = null;
             var context = _runtimeContextAccessor.Context;
-            if (context?.TryGetValue<string[]>(Constants.MetadataKeys.LogKeys, out var logKeys) == true)
+            if (context?.TryGetValue<string[]>(Constants.ContextKeys.LogKeys, out var logKeys) == true)
             {
                 metadata = logKeys.ToDictionary(
                     key => key,
@@ -132,7 +132,7 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
             // Extract metadata from RuntimeContext if present
             Dictionary<string, string>? metadata = null;
             var context = _runtimeContextAccessor.Context;
-            if (context?.TryGetValue<string[]>(Constants.MetadataKeys.LogKeys, out var logKeys) == true)
+            if (context?.TryGetValue<string[]>(Constants.ContextKeys.LogKeys, out var logKeys) == true)
             {
                 metadata = logKeys.ToDictionary(
                     key => key,

@@ -36,10 +36,10 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         // Set runtime context metadata
         if (_runtimeContextAccessor.Context != null)
         {
-            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ProfileId, profile.Id);
-            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ProfileAlias, profile.Alias);
-            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ProviderId, profile.Model.ProviderId);
-            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ModelId, profile.Model.ModelId);
+            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileId, profile.Id);
+            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileAlias, profile.Alias);
+            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProviderId, profile.Model.ProviderId);
+            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ModelId, profile.Model.ModelId);
         }
 
         return chatClient;

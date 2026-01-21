@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Chat;
 
@@ -9,13 +10,16 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
 {
     private readonly IAiConnectionService _connectionService;
     private readonly AiChatMiddlewareCollection _middleware;
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
 
     public AiChatClientFactory(
         IAiConnectionService connectionService,
-        AiChatMiddlewareCollection middleware)
+        AiChatMiddlewareCollection middleware,
+        IAiRuntimeContextAccessor runtimeContextAccessor)
     {
         _connectionService = connectionService;
         _middleware = middleware;
+        _runtimeContextAccessor = runtimeContextAccessor;
     }
 
     public async Task<IChatClient> CreateClientAsync(AiProfile profile, CancellationToken cancellationToken = default)
@@ -29,8 +33,14 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         // Apply middleware in order
         chatClient = ApplyMiddleware(chatClient);
 
-        // Wrap with profile-bound client to ensure profile metadata is always available for context resolution and telemetry
-        chatClient = new AiProfileAiBoundChatClient(chatClient, profile);
+        // Set runtime context metadata
+        if (_runtimeContextAccessor.Context != null)
+        {
+            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ProfileId, profile.Id);
+            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ProfileAlias, profile.Alias);
+            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ProviderId, profile.Model.ProviderId);
+            _runtimeContextAccessor.Context.SetValue(Constants.MetadataKeys.ModelId, profile.Model.ModelId);
+        }
 
         return chatClient;
     }

@@ -1,0 +1,34 @@
+name: 'Pack Umbraco.Ai Product'
+description: 'Packs a product using pre-built outputs with package references'
+
+inputs:
+  product:
+    description: 'Product name (e.g., Umbraco.Ai.OpenAi)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install NBGV
+      shell: bash
+      run: dotnet tool install --global nbgv || true
+
+    - name: Set version
+      shell: bash
+      working-directory: ${{ inputs.product }}
+      run: nbgv cloud
+
+    - name: Pack ${{ inputs.product }}
+      shell: bash
+      run: |
+        dotnet pack ${{ inputs.product }}/${{ inputs.product }}.sln \
+          --configuration Release \
+          --no-build \
+          --output ./artifacts/nupkg \
+          -p:UseProjectReferences=false
+
+    - name: Upload packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.product }}-packages
+        path: ./artifacts/nupkg/${{ inputs.product }}*.nupkg

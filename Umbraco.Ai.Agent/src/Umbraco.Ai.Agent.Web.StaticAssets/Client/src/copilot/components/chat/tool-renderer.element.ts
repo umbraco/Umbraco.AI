@@ -168,7 +168,7 @@ export class UaiToolRendererElement extends UmbLitElement {
 
     return html`
       <uai-agent-tool-status
-        .name=${this.#manifest?.meta.label ?? this.toolCall?.name ?? "Tool"}
+        .name=${this.toolCall?.name ?? "Tool"}
         .status=${this._status}
         .icon=${this.#manifest?.meta.icon ?? "icon-wand"}
         .args=${args}

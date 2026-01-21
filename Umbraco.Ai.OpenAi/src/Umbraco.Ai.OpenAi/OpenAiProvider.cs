@@ -51,7 +51,7 @@ public class OpenAiProvider : AiProviderBase<OpenAiProviderSettings>
         }
 
         var client = CreateOpenAiClient(settings).GetOpenAIModelClient();
-        var result = await client.GetModelsAsync(cancellationToken).ConfigureAwait(false);
+        var result = await client.GetModelsAsync(cancellationToken);
 
         var modelIds = result.Value
             .Select(m => m.Id)

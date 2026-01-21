@@ -68,7 +68,7 @@ public class AmazonProvider : AiProviderBase<AmazonProviderSettings>
         do
         {
             request.NextToken = nextToken;
-            var response = await client.ListInferenceProfilesAsync(request, cancellationToken).ConfigureAwait(false);
+            var response = await client.ListInferenceProfilesAsync(request, cancellationToken);
 
             allProfiles.AddRange(response.InferenceProfileSummaries.Select(p => p.InferenceProfileId));
             nextToken = response.NextToken;

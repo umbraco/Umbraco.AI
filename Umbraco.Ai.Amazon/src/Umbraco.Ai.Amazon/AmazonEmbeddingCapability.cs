@@ -33,7 +33,7 @@ public class AmazonEmbeddingCapability(AmazonProvider provider) : AiEmbeddingCap
         AmazonProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken).ConfigureAwait(false);
+        var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
 
         return allModels
             .Where(IsEmbeddingModel)

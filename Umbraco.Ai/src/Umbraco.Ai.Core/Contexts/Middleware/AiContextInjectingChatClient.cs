@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Contexts.Middleware;
 
@@ -46,7 +47,7 @@ internal sealed class AiContextInjectingChatClient : DelegatingChatClient
         CancellationToken cancellationToken = default)
     {
         var messagesList = chatMessages.ToList();
-        var (modifiedMessages, contextScope) = await PrepareContextAsync(messagesList, options, cancellationToken);
+        var (modifiedMessages, contextScope) = await PrepareContextAsync(messagesList, cancellationToken);
 
         try
         {
@@ -65,7 +66,7 @@ internal sealed class AiContextInjectingChatClient : DelegatingChatClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var messagesList = chatMessages.ToList();
-        var (modifiedMessages, contextScope) = await PrepareContextAsync(messagesList, options, cancellationToken);
+        var (modifiedMessages, contextScope) = await PrepareContextAsync(messagesList, cancellationToken);
 
         try
         {
@@ -84,13 +85,10 @@ internal sealed class AiContextInjectingChatClient : DelegatingChatClient
 
     private async Task<(IList<ChatMessage> ModifiedMessages, IDisposable? ContextScope)> PrepareContextAsync(
         IList<ChatMessage> messages,
-        ChatOptions? options,
         CancellationToken cancellationToken)
     {
-        // Resolve context from all registered resolvers using ChatOptions properties
-        var resolvedContext = await _contextResolutionService.ResolveContextAsync(
-            options?.AdditionalProperties,
-            cancellationToken);
+        // Resolve context from all registered resolvers (resolvers read from RuntimeContext)
+        var resolvedContext = await _contextResolutionService.ResolveContextAsync(cancellationToken);
 
         // If no context resources, nothing to inject
         if (resolvedContext.AllResources.Count == 0)

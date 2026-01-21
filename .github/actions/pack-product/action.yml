@@ -18,6 +18,10 @@ runs:
       working-directory: ${{ inputs.product }}
       run: nbgv cloud
 
+    - name: Restore packages
+      shell: bash
+      run: dotnet restore ${{ inputs.product }}/${{ inputs.product }}.sln
+
     - name: Pack ${{ inputs.product }}
       shell: bash
       run: |

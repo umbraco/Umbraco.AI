@@ -11,7 +11,7 @@ public interface IAiRuntimeContextContributor
     /// </summary>
     /// <param name="item">The context item to check.</param>
     /// <returns>True if this contributor can handle the item; otherwise false.</returns>
-    bool CanHandle(AiRuntimeContextItem item);
+    bool CanHandle(AiRequestContextItem item);
 
     /// <summary>
     /// Contributes data from a single context item to the runtime context.
@@ -19,5 +19,5 @@ public interface IAiRuntimeContextContributor
     /// </summary>
     /// <param name="item">The context item to process.</param>
     /// <param name="context">The runtime context to populate with extracted data.</param>
-    void Contribute(AiRuntimeContextItem item, AiRuntimeContext context);
+    void Contribute(AiRequestContextItem item, AiRuntimeContext context);
 }

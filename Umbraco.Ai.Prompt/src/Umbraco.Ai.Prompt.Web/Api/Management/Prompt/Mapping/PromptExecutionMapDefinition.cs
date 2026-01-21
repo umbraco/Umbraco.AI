@@ -39,7 +39,7 @@ public class PromptExecutionMapDefinition : IMapDefinition
             PropertyAlias = source.PropertyAlias,
             Culture = source.Culture,
             Segment = source.Segment,
-            Context = source.Context?.Select(item => new AiRuntimeContextItem
+            Context = source.Context?.Select(item => new AiRequestContextItem
             {
                 Description = item.Description,
                 Value = item.Value

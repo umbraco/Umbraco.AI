@@ -13,5 +13,5 @@ public interface IAguiContextConverter
     /// </summary>
     /// <param name="context">The AG-UI context items to convert.</param>
     /// <returns>A list of core runtime context items.</returns>
-    IReadOnlyList<AiRuntimeContextItem> ConvertToRuntimeContextItems(IEnumerable<AguiContextItem>? context);
+    IReadOnlyList<AiRequestContextItem> ConvertToRuntimeContextItems(IEnumerable<AguiContextItem>? context);
 }

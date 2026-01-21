@@ -32,7 +32,7 @@ internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
         => CreateScope([]);
 
     /// <inheritdoc />
-    public IAiRuntimeContextScope CreateScope(IEnumerable<AiRuntimeContextItem> items)
+    public IAiRuntimeContextScope CreateScope(IEnumerable<AiRequestContextItem> items)
     {
         // If scope already exists, return no-op wrapper (one scope per request)
         if (_httpContextAccessor.HttpContext?.Items[ContextKey] is AiRuntimeContext existing)

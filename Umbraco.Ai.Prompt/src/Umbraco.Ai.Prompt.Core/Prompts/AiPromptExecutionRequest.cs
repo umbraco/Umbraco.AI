@@ -40,5 +40,5 @@ public class AiPromptExecutionRequest
     /// These items are processed by <see cref="AiRuntimeContextContributorCollection"/>
     /// to extract entity data, template variables, and system messages.
     /// </summary>
-    public IReadOnlyList<AiRuntimeContextItem>? Context { get; init; }
+    public IReadOnlyList<AiRequestContextItem>? Context { get; init; }
 }

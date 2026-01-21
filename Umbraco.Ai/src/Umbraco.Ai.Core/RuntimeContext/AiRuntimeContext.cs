@@ -11,7 +11,7 @@ public sealed class AiRuntimeContext
     /// <summary>
     /// The raw context items from the request.
     /// </summary>
-    public IReadOnlyList<AiRuntimeContextItem> Items { get; }
+    public IReadOnlyList<AiRequestContextItem> RequestContextItems { get; }
 
     /// <summary>
     /// System message parts to inject (aggregated from contributors).
@@ -25,7 +25,6 @@ public sealed class AiRuntimeContext
 
     /// <summary>
     /// Typed data bag - contributors store extracted data by key.
-    /// Use <see cref="AiRuntimeContextKeys"/> constants for well-known keys.
     /// </summary>
     public Dictionary<string, object?> Data { get; } = [];
 
@@ -43,10 +42,10 @@ public sealed class AiRuntimeContext
     /// Creates a new runtime context from a collection of context items.
     /// </summary>
     /// <param name="items">The raw context items from the request.</param>
-    public AiRuntimeContext(IEnumerable<AiRuntimeContextItem> items)
+    public AiRuntimeContext(IEnumerable<AiRequestContextItem> requestContextItems)
     {
-        ArgumentNullException.ThrowIfNull(items);
-        Items = items.ToList();
+        ArgumentNullException.ThrowIfNull(requestContextItems);
+        RequestContextItems = requestContextItems.ToList();
     }
 
     /// <summary>

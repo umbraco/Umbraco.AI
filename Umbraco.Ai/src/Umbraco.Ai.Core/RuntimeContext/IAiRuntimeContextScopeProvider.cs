@@ -29,5 +29,5 @@ public interface IAiRuntimeContextScopeProvider
     /// </summary>
     /// <param name="items">Initial context items to populate the context with.</param>
     /// <returns>A disposable scope that owns the runtime context.</returns>
-    IAiRuntimeContextScope CreateScope(IEnumerable<AiRuntimeContextItem> items);
+    IAiRuntimeContextScope CreateScope(IEnumerable<AiRequestContextItem> items);
 }

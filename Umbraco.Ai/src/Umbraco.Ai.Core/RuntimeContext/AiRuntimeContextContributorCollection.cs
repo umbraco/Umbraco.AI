@@ -22,7 +22,7 @@ public sealed class AiRuntimeContextContributorCollection : BuilderCollectionBas
     public void Populate(AiRuntimeContext context)
     {
         // For each item, find contributors that can handle it
-        foreach (var item in context.Items)
+        foreach (var item in context.RequestContextItems)
         {
             foreach (var contributor in this)
             {

@@ -9,14 +9,14 @@ namespace Umbraco.Ai.Agent.Core.Agui;
 public sealed class AguiContextConverter : IAguiContextConverter
 {
     /// <inheritdoc />
-    public IReadOnlyList<AiRuntimeContextItem> ConvertToRuntimeContextItems(IEnumerable<AguiContextItem>? context)
+    public IReadOnlyList<AiRequestContextItem> ConvertToRuntimeContextItems(IEnumerable<AguiContextItem>? context)
     {
         if (context is null)
         {
             return [];
         }
 
-        return context.Select(item => new AiRuntimeContextItem
+        return context.Select(item => new AiRequestContextItem
         {
             Description = item.Description,
             Value = item.Value

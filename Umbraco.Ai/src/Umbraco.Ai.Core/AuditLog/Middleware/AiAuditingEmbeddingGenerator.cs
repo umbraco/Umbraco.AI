@@ -2,22 +2,26 @@
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.AuditLog.Middleware;
 
 internal sealed class AiAuditingEmbeddingGenerator : DelegatingEmbeddingGenerator<string, Embedding<float>>
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiAuditLogService _auditLogService;
     private readonly IAiAuditLogFactory _auditLogFactory;
     private readonly IOptionsMonitor<AiAuditLogOptions> _auditLogOptions;
 
     public AiAuditingEmbeddingGenerator(
         IEmbeddingGenerator<string, Embedding<float>> innerGenerator,
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiAuditLogService auditLogService,
         IAiAuditLogFactory auditLogFactory,
         IOptionsMonitor<AiAuditLogOptions> auditLogOptions)
         : base(innerGenerator)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _auditLogService = auditLogService;
         _auditLogFactory = auditLogFactory;
         _auditLogOptions = auditLogOptions;
@@ -32,12 +36,12 @@ internal sealed class AiAuditingEmbeddingGenerator : DelegatingEmbeddingGenerato
         AiAuditScope? auditScope = null;
         AiAuditLog? auditLog = null;
 
-        if (_auditLogOptions.CurrentValue.Enabled)
+        if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
         {
             // Extract audit context from options and values
-            var auditLogContext = AiAuditContext.ExtractFromOptions(
+            var auditLogContext = AiAuditContext.ExtractFromRuntimeContext(
                 AiCapability.Embedding,
-                options,
+                _runtimeContextAccessor.Context,
                 values.ToList());
 
             // Extract metadata from options if present

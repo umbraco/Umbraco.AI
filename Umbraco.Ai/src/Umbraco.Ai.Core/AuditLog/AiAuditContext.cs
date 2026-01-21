@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.AuditLog;
 
@@ -69,73 +70,28 @@ public sealed class AiAuditContext
     /// Extracts audit-log context from ChatOptions and current user.
     /// </summary>
     /// <param name="capability">The AI capability being used.</param>
-    /// <param name="options">The ChatOptions containing additional properties.</param>
+    /// <param name="runtimeContext">The runtime context containing additional properties.</param>
     /// <param name="prompt">The prompt or input data.</param>
+    /// <param name="modelId">Optional model ID to override runtime context value.</param>
     /// <returns>An AiAuditLogContext populated with available metadata.</returns>
-    public static AiAuditContext ExtractFromOptions(
+    public static AiAuditContext ExtractFromRuntimeContext(
         AiCapability capability,
-        ChatOptions? options,
-        object? prompt)
-        => ExtractFromAdditionalProperties(
-            capability,
-            options?.ModelId,
-            options?.AdditionalProperties,
-            prompt);
-
-    /// <summary>
-    /// Extracts audit-log context from EmbeddingGenerationOptions.
-    /// </summary>
-    /// <param name="capability">The AI capability being used.</param>
-    /// <param name="options">The EmbeddingGenerationOptions containing additional properties.</param>
-    /// <param name="prompt">The prompt or input data.</param>
-    /// <returns>An AiAuditLogContext populated with available metadata.</returns>
-    public static AiAuditContext ExtractFromOptions(
-        AiCapability capability,
-        EmbeddingGenerationOptions? options,
-        object? prompt)
-        => ExtractFromAdditionalProperties(
-            capability,
-            options?.ModelId,
-            options?.AdditionalProperties,
-            prompt);
-    
-    private static AiAuditContext ExtractFromAdditionalProperties(
-        AiCapability capability,
-        string? modelId,
-        AdditionalPropertiesDictionary? additionalProperties,
-        object? prompt)
+        AiRuntimeContext runtimeContext,
+        object? prompt,
+        string? modelId = null)
     {
         return new AiAuditContext
         {
             Capability = capability,
-            ProfileId = GetGuid(additionalProperties, Constants.MetadataKeys.ProfileId),
-            ProfileAlias = GetString(additionalProperties, Constants.MetadataKeys.ProfileAlias),
-            ProviderId = GetString(additionalProperties, Constants.MetadataKeys.ProviderId),
-            ModelId = modelId ?? GetString(additionalProperties, Constants.MetadataKeys.ModelId),
-            EntityId = GetString(additionalProperties, Constants.MetadataKeys.EntityId),
-            EntityType = GetString(additionalProperties, Constants.MetadataKeys.EntityType),
-            FeatureType = GetString(additionalProperties, Constants.MetadataKeys.FeatureType),
-            FeatureId = GetNullableGuid(additionalProperties, Constants.MetadataKeys.FeatureId),
+            ProfileId = runtimeContext.GetValue<Guid>(Constants.MetadataKeys.ProfileId),
+            ProfileAlias = runtimeContext.GetValue<string>(Constants.MetadataKeys.ProfileAlias),
+            ProviderId = runtimeContext.GetValue<string>(Constants.MetadataKeys.ProviderId),
+            ModelId = modelId ?? runtimeContext.GetValue<string>(Constants.MetadataKeys.ModelId),
+            EntityId = runtimeContext.GetValue<string>(Constants.MetadataKeys.EntityId),
+            EntityType = runtimeContext.GetValue<string>(Constants.MetadataKeys.EntityType),
+            FeatureType = runtimeContext.GetValue<string>(Constants.MetadataKeys.FeatureType),
+            FeatureId = runtimeContext.GetValue<Guid>(Constants.MetadataKeys.FeatureId),
             Prompt = prompt
         };
     }
-
-    private static Guid GetGuid(AdditionalPropertiesDictionary? props, string key)
-    {
-        if (props?.TryGetValue(key, out var value) == true)
-        {
-            if (value is Guid guid) return guid;
-            if (value is string str && Guid.TryParse(str, out guid)) return guid;
-        }
-        return Guid.Empty;
-    }
-
-    private static Guid? GetNullableGuid(AdditionalPropertiesDictionary? props, string key)
-    {
-        var guid = GetGuid(props, key);
-        return guid == Guid.Empty ? null : guid;
-    }
-
-    private static string? GetString(AdditionalPropertiesDictionary? props, string key)
-        => props?.TryGetValue(key, out var value) == true ? value?.ToString() : null;
 }

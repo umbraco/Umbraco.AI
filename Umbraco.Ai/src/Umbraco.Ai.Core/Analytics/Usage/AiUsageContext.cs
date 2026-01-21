@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Analytics.Usage;
 
@@ -55,65 +56,28 @@ public sealed class AiUsageContext
     public Guid? FeatureId { get; init; }
 
     /// <summary>
-    /// Extracts usage context from ChatOptions.
+    /// Extracts usage context from runtime context.
     /// </summary>
     /// <param name="capability">The AI capability being used.</param>
-    /// <param name="options">The ChatOptions containing additional properties.</param>
+    /// <param name="runtimeContext">The runtime context containing additional properties.</param>
+    /// <param name="modelId">Optional model ID to override runtime context value.</param>
     /// <returns>An AiUsageContext populated with available metadata.</returns>
-    public static AiUsageContext ExtractFromOptions(
+    public static AiUsageContext ExtractFromRuntimeContext(
         AiCapability capability,
-        ChatOptions? options)
-        => ExtractFromAdditionalProperties(
-            capability,
-            options?.ModelId,
-            options?.AdditionalProperties);
-
-    /// <summary>
-    /// Extracts usage context from EmbeddingGenerationOptions.
-    /// </summary>
-    /// <param name="capability">The AI capability being used.</param>
-    /// <param name="options">The EmbeddingGenerationOptions containing additional properties.</param>
-    /// <returns>An AiUsageContext populated with available metadata.</returns>
-    public static AiUsageContext ExtractFromOptions(
-        AiCapability capability,
-        EmbeddingGenerationOptions? options)
-        => ExtractFromAdditionalProperties(
-            capability,
-            options?.ModelId,
-            options?.AdditionalProperties);
-
-    private static AiUsageContext ExtractFromAdditionalProperties(
-        AiCapability capability,
-        string? modelId,
-        AdditionalPropertiesDictionary? additionalProperties)
+        AiRuntimeContext runtimeContext,
+        string? modelId = null)
     {
         return new AiUsageContext
         {
             Capability = capability,
-            ProfileId = GetGuid(additionalProperties, Constants.MetadataKeys.ProfileId),
-            ProfileAlias = GetString(additionalProperties, Constants.MetadataKeys.ProfileAlias),
-            ProviderId = GetString(additionalProperties, Constants.MetadataKeys.ProviderId),
-            ModelId = modelId ?? GetString(additionalProperties, Constants.MetadataKeys.ModelId),
-            EntityId = GetString(additionalProperties, Constants.MetadataKeys.EntityId),
-            EntityType = GetString(additionalProperties, Constants.MetadataKeys.EntityType),
-            FeatureType = GetString(additionalProperties, Constants.MetadataKeys.FeatureType),
-            FeatureId = GetNullableGuid(additionalProperties, Constants.MetadataKeys.FeatureId)
+            ProfileId = runtimeContext.GetValue<Guid>(Constants.MetadataKeys.ProfileId),
+            ProfileAlias = runtimeContext.GetValue<string>(Constants.MetadataKeys.ProfileAlias),
+            ProviderId = runtimeContext.GetValue<string>(Constants.MetadataKeys.ProviderId),
+            ModelId = modelId ?? runtimeContext.GetValue<string>(Constants.MetadataKeys.ModelId),
+            EntityId = runtimeContext.GetValue<string>(Constants.MetadataKeys.EntityId),
+            EntityType = runtimeContext.GetValue<string>(Constants.MetadataKeys.EntityType),
+            FeatureType = runtimeContext.GetValue<string>(Constants.MetadataKeys.FeatureType),
+            FeatureId = runtimeContext.GetValue<Guid>(Constants.MetadataKeys.FeatureId)
         };
     }
-
-    private static Guid? GetGuid(AdditionalPropertiesDictionary? props, string key)
-    {
-        if (props?.TryGetValue(key, out var value) == true)
-        {
-            if (value is Guid guid) return guid;
-            if (value is string str && Guid.TryParse(str, out guid)) return guid;
-        }
-        return null;
-    }
-
-    private static Guid? GetNullableGuid(AdditionalPropertiesDictionary? props, string key)
-        => GetGuid(props, key);
-
-    private static string? GetString(AdditionalPropertiesDictionary? props, string key)
-        => props?.TryGetValue(key, out var value) == true ? value?.ToString() : null;
 }

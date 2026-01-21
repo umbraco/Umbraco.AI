@@ -91,6 +91,11 @@ export class UaiCopilotContext extends UmbControllerBase {
     return this.#hitlContext.interrupt$;
   }
 
+  /** Observable for pending approval with target message ID for inline rendering. */
+  get pendingApproval$() {
+    return this.#hitlContext.pendingApproval$;
+  }
+
   // ─── Entity Context ─────────────────────────────────────────────────────────
 
   /** Observable of all detected entities with adapters. */

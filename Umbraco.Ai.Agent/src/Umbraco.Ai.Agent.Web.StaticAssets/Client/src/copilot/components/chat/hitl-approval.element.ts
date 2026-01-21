@@ -52,8 +52,8 @@ export class UaiCopilotHitlApprovalElement extends UmbLitElement {
 
     // Check if interrupt payload has a toolName - if so, look up tool manifest
     const toolName = this.interrupt.payload?.toolName as string | undefined;
-
     if (toolName) {
+      
       // Try to find a UaiAgentTool manifest for this tool
       const toolManifests = umbExtensionsRegistry.getByTypeAndFilter<
         "uaiAgentTool",
@@ -69,49 +69,26 @@ export class UaiCopilotHitlApprovalElement extends UmbLitElement {
           : (approvalObj?.elementAlias ?? "Uai.AgentApprovalElement.Default");
         config = isSimple ? {} : (approvalObj?.config ?? {});
       }
+      
     } else {
-      // Map interrupt type to default approval element
-      switch (this.interrupt.type) {
-        case "input":
-          elementAlias = "Uai.AgentApprovalElement.Input";
-          config = {
-            prompt: this.interrupt.title,
-            placeholder: this.interrupt.inputConfig?.placeholder,
-            multiline: this.interrupt.inputConfig?.multiline,
-          };
-          break;
-        case "choice":
-          elementAlias = "Uai.AgentApprovalElement.Choice";
-          config = {
-            title: this.interrupt.title,
-            message: this.interrupt.message,
-            options: this.interrupt.options?.map((opt) => ({
-              value: opt.value,
-              label: opt.label,
-              variant: opt.variant,
-            })),
-          };
-          break;
-        case "approval":
-        default:
-          elementAlias = "Uai.AgentApprovalElement.Default";
-          config = {
-            title: this.interrupt.title,
-            message: this.interrupt.message,
-          };
-          // Map options to approve/deny labels if provided
-          if (this.interrupt.options?.length) {
-            const approveOpt = this.interrupt.options.find(
-              (o) => o.variant === "positive" || o.value === "yes"
-            );
-            const denyOpt = this.interrupt.options.find(
-              (o) => o.variant === "danger" || o.value === "no"
-            );
-            if (approveOpt) config.approveLabel = approveOpt.label;
-            if (denyOpt) config.denyLabel = denyOpt.label;
-          }
-          break;
+      
+      elementAlias = "Uai.AgentApprovalElement.Default";
+      config = {
+        title: this.interrupt.title,
+        message: this.interrupt.message,
+      };
+      // Map options to approve/deny labels if provided
+      if (this.interrupt.options?.length) {
+        const approveOpt = this.interrupt.options.find(
+            (o) => o.variant === "positive" || o.value === "yes"
+        );
+        const denyOpt = this.interrupt.options.find(
+            (o) => o.variant === "danger" || o.value === "no"
+        );
+        if (approveOpt) config.approveLabel = approveOpt.label;
+        if (denyOpt) config.denyLabel = denyOpt.label;
       }
+      
     }
 
     this._baseConfig = {
@@ -166,13 +143,14 @@ export class UaiCopilotHitlApprovalElement extends UmbLitElement {
   static override styles = css`
     :host {
       display: block;
+      margin-top: var(--uui-size-space-2);
     }
 
     .interrupt-card {
-      margin: var(--uui-size-space-3);
-      padding: var(--uui-size-space-4);
+      display: inline-block;
+      margin: 0 var(--uui-size-space-3);
+      padding: var(--uui-size-space-3);
       background: var(--uui-color-surface-alt);
-      border: 1px solid var(--uui-color-warning);
       border-radius: var(--uui-border-radius);
     }
 

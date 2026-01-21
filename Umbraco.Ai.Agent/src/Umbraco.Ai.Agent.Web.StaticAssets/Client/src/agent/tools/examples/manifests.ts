@@ -121,56 +121,9 @@ const confirmActionManifest: ManifestUaiAgentTool = {
   },
 };
 
-/**
- * Example HITL tool: getUserFeedback
- * Demonstrates human-in-the-loop input collection.
- * Uses the input approval element (text field with submit).
- */
-const getUserFeedbackManifest: ManifestUaiAgentTool = {
-  type: "uaiAgentTool",
-  kind: "default",
-  alias: "Uai.AgentTool.GetUserFeedback",
-  name: "Get User Feedback Tool",
-  api: () => import("./get-user-feedback.api.js"),
-  meta: {
-    toolName: "getUserFeedback",
-    label: "Get User Feedback",
-    description:
-      "Prompt the user for text input or feedback. Use this when you need to collect specific information from the user.",
-    icon: "icon-message",
-    // Enable HITL with input element
-    approval: {
-      elementAlias: "Uai.AgentApprovalElement.Input",
-      config: {
-        // Prompt will come from LLM args
-        multiline: false,
-      },
-    },
-    parameters: {
-      type: "object",
-      properties: {
-        topic: {
-          type: "string",
-          description: "The topic or context for the feedback request",
-        },
-        prompt: {
-          type: "string",
-          description: "The question to ask the user",
-        },
-        placeholder: {
-          type: "string",
-          description: "Optional placeholder text for the input field",
-        },
-      },
-      required: ["topic", "prompt"],
-    },
-  },
-};
-
 export const manifests = [
   getCurrentTimeManifest,
   getPageInfoManifest,
   showWeatherManifest,
   confirmActionManifest,
-  getUserFeedbackManifest,
 ];

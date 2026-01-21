@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.AuditLog.Middleware;
 
@@ -9,6 +10,7 @@ namespace Umbraco.Ai.Core.AuditLog.Middleware;
 /// </summary>
 public sealed class AiAuditingChatMiddleware : IAiChatMiddleware
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiAuditLogService _auditLogService;
     private readonly IAiAuditLogFactory _auditLogFactory;
     private readonly IOptionsMonitor<AiAuditLogOptions> _auditLogOptions;
@@ -17,10 +19,12 @@ public sealed class AiAuditingChatMiddleware : IAiChatMiddleware
     /// Initializes a new instance of the <see cref="AiAuditingChatMiddleware"/> class.
     /// </summary>
     public AiAuditingChatMiddleware(
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiAuditLogService auditLogService,
         IAiAuditLogFactory auditLogFactory,
         IOptionsMonitor<AiAuditLogOptions> auditLogOptions)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _auditLogService = auditLogService;
         _auditLogFactory = auditLogFactory;
         _auditLogOptions = auditLogOptions;
@@ -29,6 +33,10 @@ public sealed class AiAuditingChatMiddleware : IAiChatMiddleware
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new AiAuditingChatClient(client, _auditLogService, _auditLogFactory, _auditLogOptions);
+        return new AiAuditingChatClient(client, 
+            _runtimeContextAccessor, 
+            _auditLogService, 
+            _auditLogFactory, 
+            _auditLogOptions);
     }
 }

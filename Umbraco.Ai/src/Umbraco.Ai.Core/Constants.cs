@@ -41,7 +41,7 @@ public static class Constants
     /// <summary>
     /// Keys for metadata in metadata collections.
     /// </summary>
-    public static class MetadataKeys
+    public static class ContextKeys
     {
         /// <summary>
         /// Key for profile ID in metadata collections.
@@ -92,5 +92,16 @@ public static class Constants
         /// Key for log keys in metadata collections.
         /// </summary>
         public const string LogKeys = "Umbraco.Ai.LogKeys";
+        
+        /// <summary>
+        /// Key for <see cref="EntityAdapter.AiSerializedEntity"/> data.
+        /// </summary>
+        public const string SerializedEntity = "Umbraco.Ai.SerializedEntity";
+
+        /// <summary>
+        /// Key for the parent entity unique identifier (as Guid).
+        /// Set when creating a new entity under a parent.
+        /// </summary>
+        public const string ParentEntityId = "Umbraco.Ai.ParentEntityId";
     }
 }

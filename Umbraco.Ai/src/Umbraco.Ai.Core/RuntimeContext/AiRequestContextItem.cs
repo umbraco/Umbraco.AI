@@ -1,6 +1,4 @@
-using System.Text.Json;
-
-namespace Umbraco.Ai.Core.RequestContext;
+namespace Umbraco.Ai.Core.RuntimeContext;
 
 /// <summary>
 /// A flexible context item that can contain any data.

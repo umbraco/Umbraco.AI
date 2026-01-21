@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Contexts.Resolvers;
 
@@ -6,33 +7,35 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// Resolves context from profile-level context assignments.
 /// </summary>
 /// <remarks>
-/// This resolver reads the profile ID from <see cref="Constants.MetadataKeys.ProfileId"/> in the request properties,
+/// This resolver reads the profile ID from <see cref="Constants.ContextKeys.ProfileId"/> in the request properties,
 /// then resolves any context IDs configured on the profile's chat settings.
 /// </remarks>
 internal sealed class ProfileContextResolver : IAiContextResolver
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiContextService _contextService;
     private readonly IAiProfileService _profileService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfileContextResolver"/> class.
     /// </summary>
+    /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
     /// <param name="contextService">The context service.</param>
     /// <param name="profileService">The profile service.</param>
     public ProfileContextResolver(
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiContextService contextService,
         IAiProfileService profileService)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
         _profileService = profileService;
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(
-        AiContextResolverRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        var profileId = request.GetGuidProperty(Constants.MetadataKeys.ProfileId);
+        var profileId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ProfileId);
         if (!profileId.HasValue)
         {
             return AiContextResolverResult.Empty;

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
 
@@ -15,6 +16,7 @@ namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
 internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : AiBoundEmbeddingGeneratorBase<TInput, TEmbedding>
     where TEmbedding : Embedding
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiUsageRecordingService _usageRecordingService;
     private readonly IAiUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
@@ -22,12 +24,14 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
 
     public AiUsageRecordingEmbeddingGenerator(
         IEmbeddingGenerator<TInput, TEmbedding> innerGenerator,
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiUsageRecordingService usageRecordingService,
         IAiUsageRecordFactory factory,
         IOptionsMonitor<AiAnalyticsOptions> options,
         ILogger<AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> logger)
         : base(innerGenerator)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _usageRecordingService = usageRecordingService;
         _factory = factory;
         _options = options;
@@ -85,8 +89,14 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
     {
         try
         {
+            if (_runtimeContextAccessor.Context == null)
+            {
+                _logger.LogDebug("No runtime context available, skipping usage recording");
+                return;
+            }
+            
             // Extract context from options
-            var usageContext = AiUsageContext.ExtractFromOptions(AiCapability.Embedding, options);
+            var usageContext = AiUsageContext.ExtractFromRuntimeContext(AiCapability.Embedding, _runtimeContextAccessor.Context);
 
             // Try to get tracking data from inner generator
             var trackingGenerator = InnerGenerator.GetService<AiTrackingEmbeddingGenerator<TInput, TEmbedding>>();

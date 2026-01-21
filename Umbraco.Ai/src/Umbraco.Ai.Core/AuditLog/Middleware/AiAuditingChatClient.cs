@@ -1,26 +1,29 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.AuditLog.Middleware;
 
 internal sealed class AiAuditingChatClient : DelegatingChatClient
 {
-    private readonly IChatClient _innerClient;
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiAuditLogService _auditLogService;
     private readonly IAiAuditLogFactory _auditLogFactory;
     private readonly IOptionsMonitor<AiAuditLogOptions> _auditLogOptions;
 
     public AiAuditingChatClient(
         IChatClient innerClient,
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiAuditLogService auditLogService,
         IAiAuditLogFactory auditLogFactory,
         IOptionsMonitor<AiAuditLogOptions> auditLogOptions)
         : base(innerClient)
     {
-        _innerClient = innerClient;
+        _runtimeContextAccessor = runtimeContextAccessor;
         _auditLogService = auditLogService;
         _auditLogFactory = auditLogFactory;
         _auditLogOptions = auditLogOptions;
@@ -35,22 +38,22 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         AiAuditScope? auditScope = null;
         AiAuditLog? auditLog = null;
 
-        if (_auditLogOptions.CurrentValue.Enabled)
+        if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
         {
             // Extract audit context from options and messages
-            var auditLogContext = AiAuditContext.ExtractFromOptions(
+            var auditLogContext = AiAuditContext.ExtractFromRuntimeContext(
                 AiCapability.Chat,
-                options,
+                _runtimeContextAccessor.Context,
                 chatMessages.ToList());
 
-            // Extract metadata from options if present
+            // Extract metadata from RuntimeContext if present
             Dictionary<string, string>? metadata = null;
-            if (options?.AdditionalProperties?.TryGetValue(Constants.MetadataKeys.LogKeys, out var logKeys) == true
-                && logKeys is IEnumerable<string> keys)
+            var context = _runtimeContextAccessor.Context;
+            if (context?.TryGetValue<string[]>(Constants.ContextKeys.LogKeys, out var logKeys) == true)
             {
-                metadata = keys.ToDictionary(
+                metadata = logKeys.ToDictionary(
                     key => key,
-                    key => options?.AdditionalProperties?[key]?.ToString() ?? string.Empty);
+                    key => context.GetValue<object?>(key)?.ToString() ?? string.Empty);
             }
 
             // Create audit-log entry using factory
@@ -68,12 +71,12 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
 
         try
         {
-            var response = await _innerClient.GetResponseAsync(chatMessages, options, cancellationToken);
+            var response = await InnerClient.GetResponseAsync(chatMessages, options, cancellationToken);
 
             // Complete audit-log (if exists)
             if (auditLog is not null)
             {
-                var trackingChatClient = _innerClient.GetService<AiTrackingChatClient>();
+                var trackingChatClient = InnerClient.GetService<AiTrackingChatClient>();
 
                 // Queue completion in background (fire-and-forget)
                 await _auditLogService.QueueCompleteAuditLogAsync(
@@ -118,22 +121,22 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         AiAuditScope? auditScope = null;
         AiAuditLog? auditLog = null;
 
-        if (_auditLogOptions.CurrentValue.Enabled)
+        if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
         {
             // Extract audit context from options and messages
-            var auditLogContext = AiAuditContext.ExtractFromOptions(
+            var auditLogContext = AiAuditContext.ExtractFromRuntimeContext(
                 AiCapability.Chat,
-                options,
+                _runtimeContextAccessor.Context,
                 chatMessages.ToList());
 
-            // Extract metadata from options if present
+            // Extract metadata from RuntimeContext if present
             Dictionary<string, string>? metadata = null;
-            if (options?.AdditionalProperties?.TryGetValue(Constants.MetadataKeys.LogKeys, out var logKeys) == true
-                && logKeys is IEnumerable<string> keys)
+            var context = _runtimeContextAccessor.Context;
+            if (context?.TryGetValue<string[]>(Constants.ContextKeys.LogKeys, out var logKeys) == true)
             {
-                metadata = keys.ToDictionary(
+                metadata = logKeys.ToDictionary(
                     key => key,
-                    key => options?.AdditionalProperties?[key]?.ToString() ?? string.Empty);
+                    key => context.GetValue<object?>(key)?.ToString() ?? string.Empty);
             }
 
             // Create audit-log entry using factory
@@ -153,7 +156,7 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
 
         try
         {
-            stream = _innerClient.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
+            stream = InnerClient.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -180,7 +183,7 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         // Mark audit-log as completed (no response capture for streaming)
         if (auditLog is not null)
         {
-            var trackingChatClient = _innerClient.GetService<AiTrackingChatClient>();
+            var trackingChatClient = InnerClient.GetService<AiTrackingChatClient>();
 
             // Queue completion in background (fire-and-forget)
             await _auditLogService.QueueCompleteAuditLogAsync(

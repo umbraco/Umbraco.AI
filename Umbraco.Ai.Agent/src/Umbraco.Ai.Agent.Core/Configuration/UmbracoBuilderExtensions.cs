@@ -39,13 +39,13 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiAgentService, AiAgentService>();
 
         // Register agent factory (scoped - depends on scoped IAiChatService)
-        builder.Services.AddScoped<IAiAgentFactory, AiAgentFactory>();
+        builder.Services.AddSingleton<IAiAgentFactory, AiAgentFactory>();
 
         // Register AG-UI services
         builder.Services.AddSingleton<IAguiMessageConverter, AguiMessageConverter>();
         builder.Services.AddSingleton<IAguiToolConverter, AguiToolConverter>();
         builder.Services.AddSingleton<IAguiContextConverter, AguiContextConverter>();
-        builder.Services.AddScoped<IAguiStreamingService, AguiStreamingService>();
+        builder.Services.AddTransient<IAguiStreamingService, AguiStreamingService>();
 
         // Register agent context resolver
         builder.AiContextResolvers().Append<AgentContextResolver>();

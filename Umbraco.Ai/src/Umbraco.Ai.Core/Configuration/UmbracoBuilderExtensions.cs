@@ -18,8 +18,9 @@ using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.RequestContext;
-using Umbraco.Ai.Core.RequestContext.Processors;
+using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.Ai.Core.RuntimeContext.Contributors;
+using Umbraco.Ai.Core.RuntimeContext.Middleware;
 using Umbraco.Ai.Core.TaskQueue;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Core.Tools.Web;
@@ -63,7 +64,8 @@ public static partial class UmbracoBuilderExtensions
         // Use AiChatMiddleware() and AiEmbeddingMiddleware() extension methods to add/remove middleware in Composers
         // Middleware is applied in order: first = innermost (closest to provider), last = outermost
         builder.AiChatMiddleware()
-            .Append<AiFunctionInvokingChatMiddleware>()  // Function/tool invocation (innermost - wraps provider)
+            .Append<AiRuntimeContextInjectingChatMiddleware>()  // Multimodal injection (innermost - before function invoking)
+            .Append<AiFunctionInvokingChatMiddleware>()  // Function/tool invocation
             .Append<AiTrackingChatMiddleware>()          // Tracks usage details (tokens, duration)
             .Append<AiUsageRecordingChatMiddleware>()    // Records usage to database for analytics
             .Append<AiAuditingChatMiddleware>()          // Audit logging (optional, can be disabled)
@@ -153,10 +155,16 @@ public static partial class UmbracoBuilderExtensions
         // Entity adapter infrastructure
         services.AddSingleton<IAiEntityContextHelper, AiEntityContextHelper>();
 
-        // Request context processing - processes context items from frontend
-        builder.AiRequestContextProcessors()
-            .Append<SerializedEntityProcessor>()
-            .Append<DefaultSystemMessageProcessor>();
+        // Runtime context infrastructure
+        // Single instance implements both accessor (for reading) and scope provider (for creating)
+        services.AddSingleton<AiRuntimeContextScopeProvider>();
+        services.AddSingleton<IAiRuntimeContextAccessor>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
+        services.AddSingleton<IAiRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
+
+        // Runtime context contributors - processes context items from frontend
+        builder.AiRuntimeContextContributors()
+            .Append<SerializedEntityContributor>()
+            .Append<DefaultSystemMessageContributor>();
 
         // AuditLog infrastructure
         // Note: IAiAuditLogRepository is registered by persistence layer

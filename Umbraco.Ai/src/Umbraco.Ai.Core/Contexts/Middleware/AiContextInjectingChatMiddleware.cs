@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Contexts.Middleware;
 

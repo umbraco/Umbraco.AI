@@ -2,13 +2,13 @@ using System.Text.Json;
 using Umbraco.Ai.Core.EntityAdapter;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.RequestContext.Processors;
+namespace Umbraco.Ai.Core.RuntimeContext.Contributors;
 
 /// <summary>
-/// Processes context items that contain serialized entity data.
+/// Contributes data from context items that contain serialized entity data.
 /// Extracts <see cref="AiSerializedEntity"/> and populates template variables.
 /// </summary>
-internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
+internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
 {
     private readonly JsonSerializerOptions _jsonOptions = new(Constants.DefaultJsonSerializerOptions)
     {
@@ -17,16 +17,16 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
     private readonly IAiEntityContextHelper _contextHelper;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SerializedEntityProcessor"/> class.
+    /// Initializes a new instance of the <see cref="SerializedEntityContributor"/> class.
     /// </summary>
     /// <param name="contextHelper">The entity context helper for formatting.</param>
-    public SerializedEntityProcessor(IAiEntityContextHelper contextHelper)
+    public SerializedEntityContributor(IAiEntityContextHelper contextHelper)
     {
         _contextHelper = contextHelper;
     }
 
     /// <inheritdoc />
-    public bool CanHandle(AiRequestContextItem item)
+    public bool CanHandle(AiRuntimeContextItem item)
     {
         // Check if the value contains entity structure by looking for entityType and properties
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
@@ -48,7 +48,7 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
     }
 
     /// <inheritdoc />
-    public void Process(AiRequestContextItem item, AiRequestContext context)
+    public void Contribute(AiRuntimeContextItem item, AiRuntimeContext context)
     {
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
@@ -65,22 +65,22 @@ internal sealed class SerializedEntityProcessor : IAiRequestContextProcessor
             }
 
             // Store in data bag
-            context.SetData(AiRequestContextKeys.SerializedEntity, entity);
+            context.SetData(AiRuntimeContextKeys.SerializedEntity, entity);
 
             // Extract entity ID as Guid if possible
             if (Guid.TryParse(entity.Unique, out var entityId))
             {
-                context.SetValue(AiRequestContextKeys.EntityId, entityId);
+                context.SetValue(AiRuntimeContextKeys.EntityId, entityId);
             }
 
             // Extract parent entity ID as Guid if available (for new entities)
             if (!string.IsNullOrEmpty(entity.ParentUnique) && Guid.TryParse(entity.ParentUnique, out var parentEntityId))
             {
-                context.SetValue(AiRequestContextKeys.ParentEntityId, parentEntityId);
+                context.SetValue(AiRuntimeContextKeys.ParentEntityId, parentEntityId);
             }
 
             // Store entity type
-            context.Data[AiRequestContextKeys.EntityType] = entity.EntityType;
+            context.Data[AiRuntimeContextKeys.EntityType] = entity.EntityType;
 
             // Build template variables from entity
             var variables = _contextHelper.BuildContextDictionary(entity);

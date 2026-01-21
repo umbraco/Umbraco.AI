@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.RequestContext;
+namespace Umbraco.Ai.Core.RuntimeContext;
 
 /// <summary>
-/// Well-known keys for the request context data bag.
+/// Well-known keys for the runtime context data bag.
 /// </summary>
-public static class AiRequestContextKeys
+public static class AiRuntimeContextKeys
 {
     /// <summary>
     /// Key for <see cref="EntityAdapter.AiSerializedEntity"/> data.
@@ -32,8 +32,12 @@ public static class AiRequestContextKeys
     public const string EntityType = "Umbraco.Ai.EntityType";
 
     /// <summary>
-    /// Key for content ID in ChatOptions.AdditionalProperties.
-    /// Used by <c>ContentContextResolver</c> to resolve content contexts.
+    /// Key for content ID used by <c>ContentContextResolver</c> to resolve content contexts.
     /// </summary>
     public const string ContentId = "Umbraco.Ai.ContentId";
+
+    /// <summary>
+    /// Key for the agent unique identifier (as Guid).
+    /// </summary>
+    public const string AgentId = "Umbraco.Ai.AgentId";
 }

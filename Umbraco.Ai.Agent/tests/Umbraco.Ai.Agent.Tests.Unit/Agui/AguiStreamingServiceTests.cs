@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ using Umbraco.Ai.Agui.Events.Lifecycle;
 using Umbraco.Ai.Agui.Events.Messages;
 using Umbraco.Ai.Agui.Events.Tools;
 using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 using Xunit;
 
 namespace Umbraco.Ai.Agent.Tests.Unit.Agui;
@@ -21,7 +22,8 @@ public class AguiStreamingServiceTests
 {
     private readonly Mock<IAguiMessageConverter> _mockConverter;
     private readonly Mock<IAguiContextConverter> _mockContextConverter;
-    private readonly AiRequestContextProcessorCollection _processorCollection;
+    private readonly Mock<IAiRuntimeContextScopeProvider> _mockScopeProvider;
+    private readonly AiRuntimeContextContributorCollection _contributorCollection;
     private readonly ILogger<AguiStreamingService> _logger;
     private readonly AguiStreamingService _service;
 
@@ -29,12 +31,14 @@ public class AguiStreamingServiceTests
     {
         _mockConverter = new Mock<IAguiMessageConverter>();
         _mockContextConverter = new Mock<IAguiContextConverter>();
-        _processorCollection = new AiRequestContextProcessorCollection(() => []);
+        _mockScopeProvider = new Mock<IAiRuntimeContextScopeProvider>();
+        _contributorCollection = new AiRuntimeContextContributorCollection(() => []);
         _logger = NullLogger<AguiStreamingService>.Instance;
         _service = new AguiStreamingService(
             _mockConverter.Object,
             _mockContextConverter.Object,
-            _processorCollection,
+            _mockScopeProvider.Object,
+            _contributorCollection,
             _logger);
 
         // Default converter setup
@@ -44,8 +48,15 @@ public class AguiStreamingServiceTests
 
         // Default context converter setup
         _mockContextConverter
-            .Setup(x => x.ConvertToRequestContextItems(It.IsAny<IEnumerable<AguiContextItem>?>()))
-            .Returns(new List<AiRequestContextItem>());
+            .Setup(x => x.ConvertToRuntimeContextItems(It.IsAny<IEnumerable<AguiContextItem>?>()))
+            .Returns(new List<AiRuntimeContextItem>());
+
+        // Default scope provider setup
+        var mockScope = new Mock<IAiRuntimeContextScope>();
+        mockScope.Setup(x => x.Context).Returns(new AiRuntimeContext([]));
+        _mockScopeProvider
+            .Setup(x => x.CreateScope(It.IsAny<IEnumerable<AiRuntimeContextItem>>()))
+            .Returns(mockScope.Object);
     }
 
     #region Basic Event Flow Tests

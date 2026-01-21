@@ -7,7 +7,7 @@ using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Events.Lifecycle;
 using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Agent.Core.Agui;
 
@@ -25,7 +25,8 @@ internal sealed class AguiStreamingService : IAguiStreamingService
 {
     private readonly IAguiMessageConverter _messageConverter;
     private readonly IAguiContextConverter _contextConverter;
-    private readonly AiRequestContextProcessorCollection _contextProcessors;
+    private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
+    private readonly AiRuntimeContextContributorCollection _contextContributors;
     private readonly ILogger<AguiStreamingService> _logger;
 
     /// <summary>
@@ -34,12 +35,14 @@ internal sealed class AguiStreamingService : IAguiStreamingService
     public AguiStreamingService(
         IAguiMessageConverter messageConverter,
         IAguiContextConverter contextConverter,
-        AiRequestContextProcessorCollection contextProcessors,
+        IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
+        AiRuntimeContextContributorCollection contextContributors,
         ILogger<AguiStreamingService> logger)
     {
         _messageConverter = messageConverter;
         _contextConverter = contextConverter;
-        _contextProcessors = contextProcessors;
+        _runtimeContextScopeProvider = runtimeContextScopeProvider;
+        _contextContributors = contextContributors;
         _logger = logger;
     }
 
@@ -118,14 +121,21 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         HashSet<string> frontendToolNames,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        // Process context first - this is used by multiple downstream operations
-        var requestContext = ProcessContext(request.Context);
+        // Convert AG-UI context items to runtime context items
+        var contextItems = _contextConverter.ConvertToRuntimeContextItems(request.Context);
+
+        // Create runtime context scope - context is available via accessor until scope is disposed
+        using var scope = _runtimeContextScopeProvider.CreateScope(contextItems);
+        var runtimeContext = scope.Context;
+
+        // Populate context with contributors
+        _contextContributors.Populate(runtimeContext);
 
         // Build messages (may inject system message from context)
-        var chatMessages = BuildChatMessages(request, requestContext);
+        var chatMessages = BuildChatMessages(request, runtimeContext);
 
         // Build agent options (sets ContentId for context resolution)
-        var agentOptions = BuildAgentOptions(requestContext);
+        var agentOptions = BuildAgentOptions(runtimeContext);
 
         _logger.LogDebug(
             "Starting agent streaming with {MessageCount} messages, {ToolCount} frontend tools",
@@ -170,31 +180,17 @@ internal sealed class AguiStreamingService : IAguiStreamingService
     }
 
     /// <summary>
-    /// Processes AG-UI context items through registered processors.
-    /// </summary>
-    private AiRequestContext? ProcessContext(IEnumerable<AguiContextItem>? context)
-    {
-        if (context?.Any() != true)
-        {
-            return null;
-        }
-
-        var coreItems = _contextConverter.ConvertToRequestContextItems(context);
-        return _contextProcessors.Process(coreItems);
-    }
-
-    /// <summary>
     /// Builds chat messages from the request, injecting system message from context if present.
     /// </summary>
-    private List<ChatMessage> BuildChatMessages(AguiRunRequest request, AiRequestContext? requestContext)
+    private List<ChatMessage> BuildChatMessages(AguiRunRequest request, AiRuntimeContext runtimeContext)
     {
         // Convert AG-UI messages
         var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages);
 
-        // Inject system message from context processors
-        if (requestContext?.SystemMessageParts.Count > 0)
+        // Inject system message from context contributors
+        if (runtimeContext.SystemMessageParts.Count > 0)
         {
-            var contextContent = string.Join("\n\n", requestContext.SystemMessageParts);
+            var contextContent = string.Join("\n\n", runtimeContext.SystemMessageParts);
 
             // Check if there's already a system message to combine with
             var existingSystemIndex = chatMessages.FindIndex(m => m.Role == ChatRole.System);
@@ -232,15 +228,10 @@ internal sealed class AguiStreamingService : IAguiStreamingService
     /// <summary>
     /// Builds agent run options with ChatOptions for context resolution.
     /// </summary>
-    private static AgentRunOptions? BuildAgentOptions(AiRequestContext? requestContext)
+    private static AgentRunOptions? BuildAgentOptions(AiRuntimeContext runtimeContext)
     {
-        if (requestContext is null)
-        {
-            return null;
-        }
-
         // Extract EntityId for ContentContextResolver
-        var entityId = requestContext.GetValue<Guid>(AiRequestContextKeys.EntityId);
+        var entityId = runtimeContext.GetValue<Guid>(AiRuntimeContextKeys.EntityId);
         if (!entityId.HasValue)
         {
             return null;
@@ -248,14 +239,14 @@ internal sealed class AguiStreamingService : IAguiStreamingService
 
         var additionalProperties = new AdditionalPropertiesDictionary
         {
-            [AiRequestContextKeys.ContentId] = entityId.Value
+            [AiRuntimeContextKeys.ContentId] = entityId.Value
         };
 
         // Include ParentEntityId if available (for new entities)
-        var parentEntityId = requestContext.GetValue<Guid>(AiRequestContextKeys.ParentEntityId);
+        var parentEntityId = runtimeContext.GetValue<Guid>(AiRuntimeContextKeys.ParentEntityId);
         if (parentEntityId.HasValue)
         {
-            additionalProperties[AiRequestContextKeys.ParentEntityId] = parentEntityId.Value;
+            additionalProperties[AiRuntimeContextKeys.ParentEntityId] = parentEntityId.Value;
         }
 
         return new ChatClientAgentRunOptions(new ChatOptions

@@ -125,7 +125,7 @@ internal sealed class AiAgentService : IAiAgentService
         }
 
         // 2. Convert AG-UI context and frontend tools
-        var contextItems = _contextConverter.ConvertToRuntimeContextItems(request.Context);
+        var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
         var frontendTools = _toolConverter.ConvertToFrontendTools(frontendToolDefinitions);
 
         // 3. Create runtime context scope

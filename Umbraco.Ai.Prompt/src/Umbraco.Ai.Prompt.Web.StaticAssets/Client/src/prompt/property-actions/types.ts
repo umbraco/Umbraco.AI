@@ -85,6 +85,8 @@ export interface UaiPromptPreviewModalData {
     segment?: string;
     /** Serialized entity context for AI operations */
     context?: UaiPromptContextItem[];
+    /** Maximum characters from property editor config (for character indicator) */
+    maxChars?: number;
 }
 
 /**

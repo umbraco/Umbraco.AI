@@ -72,6 +72,11 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
         // Serialize document context for AI operations
         const context = await this.#serializeEntityContext();
 
+        // Get maxChars from property editor config (if available)
+        const config = this.#propertyContext.getConfig();
+        const maxCharsConfig = config?.find((c) => c.alias === 'maxChars');
+        const maxChars = typeof maxCharsConfig?.value === 'number' ? maxCharsConfig.value : undefined;
+
         // Build modal data
         const data: UaiPromptPreviewModalData = {
             promptUnique: meta.promptUnique,
@@ -83,6 +88,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             culture: this.#propertyContext.getVariantId?.()?.culture ?? undefined,
             segment: this.#propertyContext.getVariantId?.()?.segment ?? undefined,
             context,
+            maxChars,
         };
 
         // Select modal token based on UI mode

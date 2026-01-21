@@ -128,23 +128,25 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     #renderCharacterIndicator() {
         if (!this._response || this._characterCount === 0) return nothing;
 
-        // SEO meta description optimal range is 150-160 characters
-        const isTooShort = this._characterCount < 150;
-        const isTooLong = this._characterCount > 160;
+        const maxChars = this.data?.maxChars;
 
-        let statusClass = 'optimal';
-        let statusText = 'Optimal length';
-        if (isTooShort) {
-            statusClass = 'short';
-            statusText = 'Could be longer';
-        } else if (isTooLong) {
-            statusClass = 'long';
-            statusText = 'May be truncated';
+        // If no max limit configured, just show the count
+        if (!maxChars) {
+            return html`
+                <div class="character-indicator neutral">
+                    <span class="char-count">${this._characterCount} characters</span>
+                </div>
+            `;
         }
+
+        // Show count vs max with status
+        const isOverLimit = this._characterCount > maxChars;
+        const statusClass = isOverLimit ? 'over' : 'ok';
+        const statusText = isOverLimit ? 'Exceeds limit' : 'Within limit';
 
         return html`
             <div class="character-indicator ${statusClass}">
-                <span class="char-count">${this._characterCount} characters</span>
+                <span class="char-count">${this._characterCount} / ${maxChars} characters</span>
                 <span class="char-status">${statusText}</span>
             </div>
         `;
@@ -321,19 +323,19 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 font-size: var(--uui-type-small-size);
             }
 
-            .character-indicator.optimal {
+            .character-indicator.neutral {
+                background: color-mix(in srgb, var(--uui-color-text) 10%, transparent);
+                color: var(--uui-color-text-alt);
+            }
+
+            .character-indicator.ok {
                 background: color-mix(in srgb, var(--uui-color-positive) 15%, transparent);
                 color: var(--uui-color-positive-standalone);
             }
 
-            .character-indicator.short {
-                background: color-mix(in srgb, var(--uui-color-warning) 15%, transparent);
-                color: var(--uui-color-warning-standalone);
-            }
-
-            .character-indicator.long {
-                background: color-mix(in srgb, var(--uui-color-warning) 15%, transparent);
-                color: var(--uui-color-warning-standalone);
+            .character-indicator.over {
+                background: color-mix(in srgb, var(--uui-color-danger) 15%, transparent);
+                color: var(--uui-color-danger-standalone);
             }
 
             .char-count {

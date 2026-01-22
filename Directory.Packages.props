@@ -46,6 +46,9 @@
   <!-- Provider packages -->
   <ItemGroup>
     <PackageVersion Include="Anthropic" Version="12.2.0" />
+    <PackageVersion Include="AWSSDK.Bedrock" Version="4.0.1" />
+    <PackageVersion Include="AWSSDK.BedrockRuntime" Version="4.0.1" />
+    <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="4.0.2" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
   </ItemGroup>
 

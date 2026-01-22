@@ -134,6 +134,10 @@ Add-ProductProjects -ProductFolder "Umbraco.Ai.Agent" -SolutionFolder "Agent"
 Write-Host "Adding Umbraco.Ai.Anthropic projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.Ai.Anthropic" -SolutionFolder "Anthropic"
 
+# Step 9.1: Add Amazon provider projects
+Write-Host "Adding Umbraco.Ai.Amazon projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.Ai.Amazon" -SolutionFolder "Amazon"
+
 # Step 10: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
 dotnet sln "Umbraco.Ai.local.sln" add "demo\Umbraco.Ai.DemoSite\Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
@@ -154,6 +158,11 @@ if (Test-Path "Umbraco.Ai.OpenAi\src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj"
 # Anthropic provider
 if (Test-Path "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj") {
     dotnet add $demoProject reference "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj"
+}
+
+# Amazon provider
+if (Test-Path "Umbraco.Ai.Amazon\src\Umbraco.Ai.Amazon\Umbraco.Ai.Amazon.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Amazon\src\Umbraco.Ai.Amazon\Umbraco.Ai.Amazon.csproj"
 }
 
 # Prompt add-on (meta-package + SQLite persistence)

@@ -5,9 +5,9 @@
     <Authors>Umbraco</Authors>
     <Copyright>Copyright © Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
     <Product>Umbraco Ai</Product>
-    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Ai</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Ai/tree/main/Umbraco.Ai</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
-    <PackageTags>umbraco ai</PackageTags>
+    <PackageTags>umbraco ai umbraco-marketplace</PackageTags>
     <NeutralLanguage>en-US</NeutralLanguage>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <ImplicitUsings>enable</ImplicitUsings>

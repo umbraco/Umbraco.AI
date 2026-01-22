@@ -96,7 +96,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 ## Dependencies
 
 - Umbraco CMS 17.x
-- Umbraco.Ai 17.x
+- Umbraco.Ai 1.x
 - Google.GenAI
 
 ## Target Framework

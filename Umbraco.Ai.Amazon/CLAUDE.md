@@ -112,7 +112,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$AWS:Access
 ## Dependencies
 
 - Umbraco CMS 17.x
-- Umbraco.Ai 17.x
+- Umbraco.Ai 1.x
 - AWSSDK.Bedrock
 - AWSSDK.BedrockRuntime
 - AWSSDK.Extensions.Bedrock.MEAI

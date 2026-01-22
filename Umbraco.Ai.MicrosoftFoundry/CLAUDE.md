@@ -108,7 +108,7 @@ One endpoint + one API key provides access to all deployed models. Users specify
 ## Dependencies
 
 - Umbraco CMS 17.x
-- Umbraco.Ai 17.x
+- Umbraco.Ai 1.x
 - Azure.AI.Inference
 - Microsoft.Extensions.AI.AzureAIInference
 

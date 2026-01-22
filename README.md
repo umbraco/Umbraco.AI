@@ -8,9 +8,9 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 
 | Product | Description | Version | Location |
 |---------|-------------|---------|----------|
-| **Umbraco.Ai** | Core AI integration layer | 17.x | `Umbraco.Ai/` |
-| **Umbraco.Ai.Agent** | AI agent management | 17.x | `Umbraco.Ai.Agent/` |
-| **Umbraco.Ai.Prompt** | Prompt template management | 17.x | `Umbraco.Ai.Prompt/` |
+| **Umbraco.Ai** | Core AI integration layer | 1.x | `Umbraco.Ai/` |
+| **Umbraco.Ai.Agent** | AI agent management | 1.x | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.Prompt** | Prompt template management | 1.x | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider | 1.x | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider | 1.x | `Umbraco.Ai.Anthropic/` |
 | **Umbraco.Ai.Amazon** | Amazon Bedrock provider | 1.x | `Umbraco.Ai.Amazon/` |
@@ -91,21 +91,20 @@ Umbraco.Ai (Core)
 
 This monorepo supports independent versioning per product:
 
-- **Core/Agent/Prompt**: Version 17.x (matches Umbraco CMS)
-- **Providers (OpenAI/Anthropic)**: Version 1.x (independent versioning)
+- **All packages**: Version 1.x (independent versioning from Umbraco CMS)
 
 ### Branch Naming Convention
 
 - `main` - Main development branch
 - `feature/<product>-<name>` - Feature branches (e.g., `feature/core-add-caching`)
-- `release/<product>-<version>` - Release branches (e.g., `release/core-17.0.1`)
+- `release/<product>-<version>` - Release branches (e.g., `release/core-1.0.1`)
 - `hotfix/<product>-<version>` - Hotfix branches (e.g., `hotfix/openai-1.0.1`)
 
 ### Release Tags
 
-- `release-core-17.0.1` - Core release
-- `release-agent-17.0.1` - Agent release
-- `release-prompt-17.0.1` - Prompt release
+- `release-core-1.0.1` - Core release
+- `release-agent-1.0.1` - Agent release
+- `release-prompt-1.0.1` - Prompt release
 - `release-openai-1.0.1` - OpenAI provider release
 - `release-anthropic-1.0.1` - Anthropic provider release
 - `release-amazon-1.0.1` - Amazon Bedrock provider release

@@ -79,6 +79,11 @@ public sealed class AiAuditLog
     public string ProfileAlias { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the version of the profile at time of execution.
+    /// </summary>
+    public int? ProfileVersion { get; init; }
+
+    /// <summary>
     /// Gets the provider ID (e.g., "openai", "azure") used for this operation.
     /// </summary>
     public string ProviderId { get; init; } = string.Empty;
@@ -99,6 +104,12 @@ public sealed class AiAuditLog
     /// Null for direct API calls or when not applicable.
     /// </summary>
     public Guid? FeatureId { get; init; }
+
+    /// <summary>
+    /// Gets the version of the feature (prompt/agent) at time of execution.
+    /// Null for direct API calls or when not applicable.
+    /// </summary>
+    public int? FeatureVersion { get; init; }
 
     /// <summary>
     /// Gets or sets the number of input tokens consumed.

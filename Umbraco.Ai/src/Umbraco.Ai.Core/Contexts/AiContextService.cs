@@ -1,3 +1,6 @@
+using Umbraco.Ai.Core.Models;
+using Umbraco.Cms.Core.Security;
+
 namespace Umbraco.Ai.Core.Contexts;
 
 /// <summary>
@@ -6,14 +9,19 @@ namespace Umbraco.Ai.Core.Contexts;
 internal sealed class AiContextService : IAiContextService
 {
     private readonly IAiContextRepository _repository;
+    private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiContextService"/> class.
     /// </summary>
     /// <param name="repository">The context repository.</param>
-    public AiContextService(IAiContextRepository repository)
+    /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user tracking.</param>
+    public AiContextService(
+        IAiContextRepository repository,
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
+        _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
     /// <inheritdoc />
@@ -61,10 +69,25 @@ internal sealed class AiContextService : IAiContextService
         // Update modified timestamp
         context.DateModified = DateTime.UtcNow;
 
-        return await _repository.SaveAsync(context, cancellationToken);
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(context, userId, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task<bool> DeleteContextAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.DeleteAsync(id, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiEntityVersion>> GetContextVersionHistoryAsync(
+        Guid contextId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionHistoryAsync(contextId, limit, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AiContext?> GetContextVersionSnapshotAsync(
+        Guid contextId,
+        int version,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionSnapshotAsync(contextId, version, cancellationToken);
 }

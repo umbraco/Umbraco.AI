@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
@@ -71,10 +72,10 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<AiAgent> SaveAsync(AiAgent aiAgent, CancellationToken cancellationToken = default)
+    public Task<AiAgent> SaveAsync(AiAgent agent, int? userId = null, CancellationToken cancellationToken = default)
     {
-        _agents[aiAgent.Id] = aiAgent;
-        return Task.FromResult(aiAgent);
+        _agents[agent.Id] = agent;
+        return Task.FromResult(agent);
     }
 
     /// <inheritdoc />
@@ -92,5 +93,25 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
             p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase) &&
             (!excludeId.HasValue || p.Id != excludeId.Value));
         return Task.FromResult(exists);
+    }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+        Guid agentId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        // In-memory repository doesn't track version history
+        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
+    }
+
+    /// <inheritdoc />
+    public Task<AiAgent?> GetVersionSnapshotAsync(
+        Guid agentId,
+        int version,
+        CancellationToken cancellationToken = default)
+    {
+        // In-memory repository doesn't track version history
+        return Task.FromResult<AiAgent?>(null);
     }
 }

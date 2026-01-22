@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
@@ -16,7 +18,9 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
     /// Initializes a new instance of <see cref="EfCoreAiProfileRepository"/>.
     /// </summary>
     public EfCoreAiProfileRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
-        => _scopeProvider = scopeProvider;
+    {
+        _scopeProvider = scopeProvider;
+    }
 
     /// <inheritdoc />
     public async Task<AiProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -117,30 +121,54 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiProfile> SaveAsync(AiProfile profile, CancellationToken cancellationToken = default)
+    public async Task<AiProfile> SaveAsync(AiProfile profile, int? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        await scope.ExecuteWithContextAsync<object?>(async db =>
+        var savedProfile = await scope.ExecuteWithContextAsync(async db =>
         {
             AiProfileEntity? existing = await db.Profiles.FindAsync([profile.Id], cancellationToken);
 
             if (existing is null)
             {
+                // New profile - set version and user IDs on domain model before mapping
+                profile.Version = 1;
+                profile.DateModified = DateTime.UtcNow;
+                profile.CreatedByUserId = userId;
+                profile.ModifiedByUserId = userId;
+
                 AiProfileEntity newEntity = AiProfileFactory.BuildEntity(profile);
                 db.Profiles.Add(newEntity);
             }
             else
             {
+                // Existing profile - create version snapshot of current state before updating
+                var existingDomain = AiProfileFactory.BuildDomain(existing);
+                var versionEntity = new AiProfileVersionEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ProfileId = existing.Id,
+                    Version = existing.Version,
+                    Snapshot = JsonSerializer.Serialize(existingDomain, Constants.DefaultJsonSerializerOptions),
+                    DateCreated = DateTime.UtcNow,
+                    CreatedByUserId = userId
+                };
+                db.ProfileVersions.Add(versionEntity);
+
+                // Increment version, update timestamps, and set ModifiedByUserId on domain model
+                profile.Version = existing.Version + 1;
+                profile.DateModified = DateTime.UtcNow;
+                profile.ModifiedByUserId = userId;
+
                 AiProfileFactory.UpdateEntity(existing, profile);
             }
 
             await db.SaveChangesAsync(cancellationToken);
-            return null;
+            return profile;
         });
 
         scope.Complete();
-        return profile;
+        return savedProfile;
     }
 
     /// <inheritdoc />
@@ -163,5 +191,70 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
 
         scope.Complete();
         return deleted;
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+        Guid profileId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var entities = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AiProfileVersionEntity> query = db.ProfileVersions
+                .Where(v => v.ProfileId == profileId)
+                .OrderByDescending(v => v.Version);
+
+            if (limit.HasValue)
+            {
+                query = query.Take(limit.Value);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        });
+
+        scope.Complete();
+
+        return entities.Select(e => new AiEntityVersion
+        {
+            Id = e.Id,
+            EntityId = e.ProfileId,
+            Version = e.Version,
+            Snapshot = e.Snapshot,
+            DateCreated = e.DateCreated,
+            CreatedByUserId = e.CreatedByUserId,
+            ChangeDescription = e.ChangeDescription
+        });
+    }
+
+    /// <inheritdoc />
+    public async Task<AiProfile?> GetVersionSnapshotAsync(
+        Guid profileId,
+        int version,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var entity = await scope.ExecuteWithContextAsync(async db =>
+            await db.ProfileVersions
+                .FirstOrDefaultAsync(v => v.ProfileId == profileId && v.Version == version, cancellationToken));
+
+        scope.Complete();
+
+        if (entity is null || string.IsNullOrEmpty(entity.Snapshot))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<AiProfile>(entity.Snapshot, Constants.DefaultJsonSerializerOptions);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

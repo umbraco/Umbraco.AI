@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -71,10 +72,10 @@ internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt> SaveAsync(AiPrompt aiPrompt, CancellationToken cancellationToken = default)
+    public Task<AiPrompt> SaveAsync(AiPrompt prompt, int? userId = null, CancellationToken cancellationToken = default)
     {
-        _prompts[aiPrompt.Id] = aiPrompt;
-        return Task.FromResult(aiPrompt);
+        _prompts[prompt.Id] = prompt;
+        return Task.FromResult(prompt);
     }
 
     /// <inheritdoc />
@@ -92,5 +93,25 @@ internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
             p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase) &&
             (!excludeId.HasValue || p.Id != excludeId.Value));
         return Task.FromResult(exists);
+    }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+        Guid promptId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        // In-memory repository doesn't track version history
+        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
+    }
+
+    /// <inheritdoc />
+    public Task<AiPrompt?> GetVersionSnapshotAsync(
+        Guid promptId,
+        int version,
+        CancellationToken cancellationToken = default)
+    {
+        // In-memory repository doesn't track version history
+        return Task.FromResult<AiPrompt?>(null);
     }
 }

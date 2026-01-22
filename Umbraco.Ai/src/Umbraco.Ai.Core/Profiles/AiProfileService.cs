@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Profiles;
 
@@ -7,12 +8,16 @@ internal sealed class AiProfileService : IAiProfileService
 {
     private readonly IAiProfileRepository _repository;
     private readonly AiOptions _options;
+    private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
-    public AiProfileService(IAiProfileRepository repository,
-        IOptions<AiOptions> options)
+    public AiProfileService(
+        IAiProfileRepository repository,
+        IOptions<AiOptions> options,
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _options = options.Value;
+        _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
     public async Task<AiProfile?> GetProfileAsync(
@@ -83,12 +88,25 @@ internal sealed class AiProfileService : IAiProfileService
         {
             throw new InvalidOperationException($"A profile with alias '{profile.Alias}' already exists.");
         }
-        
-        return await _repository.SaveAsync(profile, cancellationToken);
+
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(profile, userId, cancellationToken);
     }
 
     public async Task<bool> DeleteProfileAsync(
         Guid id,
         CancellationToken cancellationToken = default)
         => await _repository.DeleteAsync(id, cancellationToken);
+
+    public Task<IEnumerable<AiEntityVersion>> GetProfileVersionHistoryAsync(
+        Guid profileId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionHistoryAsync(profileId, limit, cancellationToken);
+
+    public Task<AiProfile?> GetProfileVersionSnapshotAsync(
+        Guid profileId,
+        int version,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionSnapshotAsync(profileId, version, cancellationToken);
 }

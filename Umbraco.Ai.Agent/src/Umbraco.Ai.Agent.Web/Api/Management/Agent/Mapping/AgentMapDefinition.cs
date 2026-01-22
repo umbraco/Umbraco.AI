@@ -43,7 +43,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         };
     }
 
-    // Umbraco.Code.MapAll -Id
+    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromCreateRequest(CreateAgentRequestModel source, AiAgent target, MapperContext context)
     {
         target.Alias = source.Alias;
@@ -55,7 +55,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.IsActive = true;
     }
 
-    // Umbraco.Code.MapAll -Id
+    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateAgentRequestModel source, AiAgent target, MapperContext context)
     {
         target.Alias = source.Alias;
@@ -67,7 +67,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.IsActive = source.IsActive;
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapToResponse(AiAgent source, AgentResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -80,7 +80,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.IsActive = source.IsActive;
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapToItemResponse(AiAgent source, AgentItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;

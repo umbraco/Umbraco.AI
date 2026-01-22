@@ -1,4 +1,4 @@
-﻿using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Profiles;
 
@@ -78,4 +78,28 @@ public interface IAiProfileService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted, false if not found.</returns>
     Task<bool> DeleteProfileAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the version history for a profile.
+    /// </summary>
+    /// <param name="profileId">The profile ID.</param>
+    /// <param name="limit">Optional limit on number of versions to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The version history, ordered by version descending.</returns>
+    Task<IEnumerable<AiEntityVersion>> GetProfileVersionHistoryAsync(
+        Guid profileId,
+        int? limit = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a specific version snapshot of a profile.
+    /// </summary>
+    /// <param name="profileId">The profile ID.</param>
+    /// <param name="version">The version to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The profile at that version, or null if not found.</returns>
+    Task<AiProfile?> GetProfileVersionSnapshotAsync(
+        Guid profileId,
+        int version,
+        CancellationToken cancellationToken = default);
 }

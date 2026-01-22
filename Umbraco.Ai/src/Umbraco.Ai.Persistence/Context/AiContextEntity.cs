@@ -31,6 +31,21 @@ internal class AiContextEntity
     public DateTime DateModified { get; set; }
 
     /// <summary>
+    /// The ID of the user who created this context.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified this context.
+    /// </summary>
+    public int? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// Current version of the context.
+    /// </summary>
+    public int Version { get; set; } = 1;
+
+    /// <summary>
     /// Navigation property to the context's resources.
     /// </summary>
     public ICollection<AiContextResourceEntity> Resources { get; set; } = [];

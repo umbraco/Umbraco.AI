@@ -70,7 +70,7 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public Task<AiConnection> SaveAsync(AiConnection connection, CancellationToken cancellationToken = default)
+    public Task<AiConnection> SaveAsync(AiConnection connection, int? userId = null, CancellationToken cancellationToken = default)
     {
         var isUpdate = _connections.ContainsKey(connection.Id);
 

@@ -28,6 +28,11 @@ internal static class AiAgentEntityFactory
             ContextIds = DeserializeContextIds(entity.ContextIds),
             Instructions = entity.Instructions,
             IsActive = entity.IsActive,
+            DateCreated = entity.DateCreated,
+            DateModified = entity.DateModified,
+            CreatedByUserId = entity.CreatedByUserId,
+            ModifiedByUserId = entity.ModifiedByUserId,
+            Version = entity.Version
         };
     }
 
@@ -45,7 +50,12 @@ internal static class AiAgentEntityFactory
             ProfileId = aiAgent.ProfileId,
             ContextIds = SerializeContextIds(aiAgent.ContextIds),
             Instructions = aiAgent.Instructions,
-            IsActive = aiAgent.IsActive
+            IsActive = aiAgent.IsActive,
+            DateCreated = aiAgent.DateCreated,
+            DateModified = aiAgent.DateModified,
+            CreatedByUserId = aiAgent.CreatedByUserId,
+            ModifiedByUserId = aiAgent.ModifiedByUserId,
+            Version = aiAgent.Version
         };
     }
 
@@ -61,6 +71,10 @@ internal static class AiAgentEntityFactory
         entity.ContextIds = SerializeContextIds(aiAgent.ContextIds);
         entity.Instructions = aiAgent.Instructions;
         entity.IsActive = aiAgent.IsActive;
+        entity.DateModified = aiAgent.DateModified;
+        entity.ModifiedByUserId = aiAgent.ModifiedByUserId;
+        entity.Version = aiAgent.Version;
+        // DateCreated and CreatedByUserId are intentionally not updated
     }
 
     private static string? SerializeContextIds(IReadOnlyList<Guid> contextIds)

@@ -59,11 +59,13 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
             EntityType = context.EntityType,
             FeatureType = context.FeatureType,
             FeatureId = context.FeatureId,
+            ProfileVersion = context.ProfileVersion,
+            FeatureVersion = context.FeatureVersion,
             Metadata = metadata != null
                 ? new Dictionary<string, string>(metadata)
                 : null,
             DetailLevel = detailLevel,
-
+            
             // Set initial run state
             Status = AiAuditLogStatus.Running,
             StartTime = DateTime.UtcNow,
@@ -75,7 +77,7 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
             var prompt = FormatPromptSnapshot(context.Prompt, context.Capability);
             prompt = ApplyRedaction(prompt);
             auditLog.PromptSnapshot = prompt;
-
+            
             _logger.LogDebug("Captured prompt snapshot for audit-log {AuditLogId}: {Length} characters",
                 auditLog.Id, prompt?.Length ?? 0);
         }
@@ -95,7 +97,7 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
             return capability switch
             {
                 AiCapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
-                    AiChatMessageFormatter.FormatChatMessages(messages),
+                    string.Join("\n", messages.Select(m => $"[{m.Role}] {m.Text}")),
 
                 AiCapability.Embedding when promptObj is IEnumerable<string> values =>
                     string.Join("\n", values.Select((v, i) => $"[{i}] {v}")),

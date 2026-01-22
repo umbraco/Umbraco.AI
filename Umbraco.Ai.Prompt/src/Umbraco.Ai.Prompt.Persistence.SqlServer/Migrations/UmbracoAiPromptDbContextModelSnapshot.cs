@@ -37,6 +37,9 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -61,6 +64,9 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -77,6 +83,11 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Alias")
@@ -85,6 +96,51 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
                     b.HasIndex("ProfileId");
 
                     b.ToTable("umbracoAiPrompt", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChangeDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PromptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PromptId");
+
+                    b.HasIndex("PromptId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAiPromptVersion", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptVersionEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptEntity", null)
+                        .WithMany()
+                        .HasForeignKey("PromptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

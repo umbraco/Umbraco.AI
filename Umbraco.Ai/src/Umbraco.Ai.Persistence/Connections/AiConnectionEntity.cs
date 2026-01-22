@@ -44,4 +44,14 @@ internal class AiConnectionEntity
     /// When the connection was last modified.
     /// </summary>
     public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The ID of the user who created this connection.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified this connection.
+    /// </summary>
+    public int? ModifiedByUserId { get; set; }
 }

@@ -9,7 +9,10 @@ namespace Umbraco.Ai.Core;
 /// </summary>
 public static class Constants
 {
-    internal static JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    /// <summary>
+    /// Default JSON serializer options for Umbraco.Ai.
+    /// </summary>
+    public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
         DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -77,7 +80,17 @@ public static class Constants
         /// Key for feature type in metadata collections.
         /// </summary>
         public const string FeatureType = "Umbraco.Ai.FeatureType";
-    
+
+        /// <summary>
+        /// Key for profile version in metadata collections.
+        /// </summary>
+        public const string ProfileVersion = "Umbraco.Ai.ProfileVersion";
+
+        /// <summary>
+        /// Key for feature version in metadata collections.
+        /// </summary>
+        public const string FeatureVersion = "Umbraco.Ai.FeatureVersion";
+
         /// <summary>
         /// Key for entity ID in metadata collections.
         /// </summary>

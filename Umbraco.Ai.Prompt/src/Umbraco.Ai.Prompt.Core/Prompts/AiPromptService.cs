@@ -3,10 +3,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Security;
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -24,6 +26,7 @@ internal sealed class AiPromptService : IAiPromptService
     private readonly IAiFunctionFactory _functionFactory;
     private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AiRuntimeContextContributorCollection _contextContributors;
+    private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AiPromptService(
         IAiPromptRepository repository,
@@ -33,7 +36,8 @@ internal sealed class AiPromptService : IAiPromptService
         AiToolCollection tools,
         IAiFunctionFactory functionFactory,
         IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
-        AiRuntimeContextContributorCollection contextContributors)
+        AiRuntimeContextContributorCollection contextContributors,
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _chatService = chatService;
@@ -43,6 +47,7 @@ internal sealed class AiPromptService : IAiPromptService
         _functionFactory = functionFactory;
         _runtimeContextScopeProvider = runtimeContextScopeProvider;
         _contextContributors = contextContributors;
+        _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
     /// <inheritdoc />
@@ -90,7 +95,8 @@ internal sealed class AiPromptService : IAiPromptService
         // Update timestamp
         prompt.DateModified = DateTime.UtcNow;
 
-        return await _repository.SaveAsync(prompt, cancellationToken);
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(prompt, userId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -143,6 +149,7 @@ internal sealed class AiPromptService : IAiPromptService
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureType, "prompt");
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureId, prompt.Id);
         runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureAlias, prompt.Alias);
+        runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureVersion, prompt.Version);
 
         // 4. Build template context from basic request info + processor results
         var templateContext = BuildExecutionContext(request);
@@ -222,4 +229,18 @@ internal sealed class AiPromptService : IAiPromptService
 
         return context;
     }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiEntityVersion>> GetPromptVersionHistoryAsync(
+        Guid promptId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionHistoryAsync(promptId, limit, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AiPrompt?> GetPromptVersionSnapshotAsync(
+        Guid promptId,
+        int version,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionSnapshotAsync(promptId, version, cancellationToken);
 }

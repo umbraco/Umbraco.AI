@@ -45,7 +45,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         };
     }
 
-    // Umbraco.Code.MapAll -Id -DateCreated
+    // Umbraco.Code.MapAll -Id -DateCreated -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromCreateRequest(CreatePromptRequestModel source, AiPrompt target, MapperContext context)
     {
         target.Alias = source.Alias;
@@ -61,7 +61,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.DateModified = DateTime.UtcNow;
     }
 
-    // Umbraco.Code.MapAll -Id -DateCreated -DateModified
+    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdatePromptRequestModel source, AiPrompt target, MapperContext context)
     {
         // Note: Id, DateCreated, and DateModified are preserved from the existing entity
@@ -78,7 +78,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Scope = MapScopeModelToDomain(source.Scope);
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -Version -CreatedByUserId -ModifiedByUserId
     private static void MapToResponse(AiPrompt source, PromptResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -96,7 +96,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.DateModified = source.DateModified;
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -Version -CreatedByUserId -ModifiedByUserId
     private static void MapToItemResponse(AiPrompt source, PromptItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;

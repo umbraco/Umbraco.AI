@@ -33,7 +33,12 @@ internal static class AiProfileFactory
             Model = new AiModelRef(entity.ProviderId, entity.ModelId),
             ConnectionId = entity.ConnectionId,
             Settings = AiProfileSettingsSerializer.Deserialize(capability, entity.Settings),
-            Tags = tags
+            Tags = tags,
+            Version = entity.Version,
+            DateCreated = entity.DateCreated,
+            DateModified = entity.DateModified,
+            CreatedByUserId = entity.CreatedByUserId,
+            ModifiedByUserId = entity.ModifiedByUserId
         };
     }
 
@@ -54,7 +59,12 @@ internal static class AiProfileFactory
             ModelId = profile.Model.ModelId,
             ConnectionId = profile.ConnectionId,
             Settings = AiProfileSettingsSerializer.Serialize(profile.Settings),
-            Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null
+            Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null,
+            Version = profile.Version,
+            DateCreated = profile.DateCreated,
+            DateModified = profile.DateModified,
+            CreatedByUserId = profile.CreatedByUserId,
+            ModifiedByUserId = profile.ModifiedByUserId
         };
     }
 
@@ -73,5 +83,9 @@ internal static class AiProfileFactory
         entity.ConnectionId = profile.ConnectionId;
         entity.Settings = AiProfileSettingsSerializer.Serialize(profile.Settings);
         entity.Tags = profile.Tags.Count > 0 ? string.Join(',', profile.Tags) : null;
+        entity.Version = profile.Version;
+        entity.DateModified = profile.DateModified;
+        entity.ModifiedByUserId = profile.ModifiedByUserId;
+        // DateCreated and CreatedByUserId are intentionally not updated
     }
 }

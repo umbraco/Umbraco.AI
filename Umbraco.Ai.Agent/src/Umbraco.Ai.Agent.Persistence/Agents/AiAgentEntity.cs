@@ -44,4 +44,29 @@ internal class AiAgentEntity
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Creation timestamp.
+    /// </summary>
+    public DateTime DateCreated { get; set; }
+
+    /// <summary>
+    /// Last modification timestamp.
+    /// </summary>
+    public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The ID of the user who created this agent.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified this agent.
+    /// </summary>
+    public int? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// Current version of the agent.
+    /// </summary>
+    public int Version { get; set; } = 1;
 }

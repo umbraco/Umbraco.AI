@@ -38,6 +38,7 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         {
             _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileId, profile.Id);
             _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileAlias, profile.Alias);
+            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileVersion, profile.Version);
             _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProviderId, profile.Model.ProviderId);
             _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ModelId, profile.Model.ModelId);
         }

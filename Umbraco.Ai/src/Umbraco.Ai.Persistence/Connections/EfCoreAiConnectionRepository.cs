@@ -113,7 +113,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiConnection> SaveAsync(AiConnection connection, CancellationToken cancellationToken = default)
+    public async Task<AiConnection> SaveAsync(AiConnection connection, int? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
@@ -123,11 +123,18 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
 
             if (existing is null)
             {
+                // New connection - set user IDs on domain model before mapping
+                connection.CreatedByUserId = userId;
+                connection.ModifiedByUserId = userId;
+
                 AiConnectionEntity newEntity = AiConnectionFactory.BuildEntity(connection);
                 db.Connections.Add(newEntity);
             }
             else
             {
+                // Existing connection - set ModifiedByUserId on domain model
+                connection.ModifiedByUserId = userId;
+
                 AiConnectionFactory.UpdateEntity(existing, connection);
             }
 

@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.Models;
+
 namespace Umbraco.Ai.Core.Contexts;
 
 /// <summary>
@@ -47,9 +49,10 @@ internal interface IAiContextRepository
     /// Saves (creates or updates) an AI context.
     /// </summary>
     /// <param name="context">The context to save.</param>
+    /// <param name="userId">Optional user ID for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved context.</returns>
-    Task<AiContext> SaveAsync(AiContext context, CancellationToken cancellationToken = default);
+    Task<AiContext> SaveAsync(AiContext context, int? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes an AI context by its unique identifier.
@@ -58,4 +61,28 @@ internal interface IAiContextRepository
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted, false if not found.</returns>
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the version history for a context.
+    /// </summary>
+    /// <param name="contextId">The context ID.</param>
+    /// <param name="limit">Optional limit on number of versions to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The version history, ordered by version descending.</returns>
+    Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+        Guid contextId,
+        int? limit = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a specific version snapshot of a context.
+    /// </summary>
+    /// <param name="contextId">The context ID.</param>
+    /// <param name="version">The version to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The context at that version, or null if not found.</returns>
+    Task<AiContext?> GetVersionSnapshotAsync(
+        Guid contextId,
+        int version,
+        CancellationToken cancellationToken = default);
 }

@@ -5,8 +5,10 @@ using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
+using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Security;
 
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
@@ -24,6 +26,7 @@ internal sealed class AiAgentService : IAiAgentService
     private readonly IAguiContextConverter _contextConverter;
     private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AiRuntimeContextContributorCollection _contextContributors;
+    private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AiAgentService(
         IAiAgentRepository repository,
@@ -32,7 +35,8 @@ internal sealed class AiAgentService : IAiAgentService
         IAguiToolConverter toolConverter,
         IAguiContextConverter contextConverter,
         IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
-        AiRuntimeContextContributorCollection contextContributors)
+        AiRuntimeContextContributorCollection contextContributors,
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _agentFactory = agentFactory;
@@ -41,6 +45,7 @@ internal sealed class AiAgentService : IAiAgentService
         _contextConverter = contextConverter;
         _runtimeContextScopeProvider = runtimeContextScopeProvider;
         _contextContributors = contextContributors;
+        _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
     /// <inheritdoc />
@@ -84,7 +89,8 @@ internal sealed class AiAgentService : IAiAgentService
             throw new InvalidOperationException($"A agent with alias '{agent.Alias}' already exists.");
         }
 
-        return await _repository.SaveAsync(agent, cancellationToken);
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(agent, userId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -166,4 +172,18 @@ internal sealed class AiAgentService : IAiAgentService
             yield return evt;
         }
     }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiEntityVersion>> GetAgentVersionHistoryAsync(
+        Guid agentId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionHistoryAsync(agentId, limit, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AiAgent?> GetAgentVersionSnapshotAsync(
+        Guid agentId,
+        int version,
+        CancellationToken cancellationToken = default)
+        => _repository.GetVersionSnapshotAsync(agentId, version, cancellationToken);
 }

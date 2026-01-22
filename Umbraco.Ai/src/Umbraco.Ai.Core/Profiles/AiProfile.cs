@@ -5,7 +5,7 @@ namespace Umbraco.Ai.Core.Profiles;
 /// <summary>
 /// Defines a profile for AI model usage, including model reference, capabilities, and configuration settings.
 /// </summary>
-public sealed class AiProfile
+public sealed class AiProfile : IAiVersionable
 {
     /// <summary>
     /// The unique identifier of the AI profile.
@@ -48,4 +48,30 @@ public sealed class AiProfile
     /// A list of tags associated with the AI profile for categorization and filtering.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// The current version of the profile.
+    /// Starts at 1 and increments with each save operation.
+    /// </summary>
+    public int Version { get; internal set; } = 1;
+
+    /// <summary>
+    /// The date and time when the profile was created.
+    /// </summary>
+    public DateTime DateCreated { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The date and time when the profile was last modified.
+    /// </summary>
+    public DateTime DateModified { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The ID of the user who created this profile.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified this profile.
+    /// </summary>
+    public int? ModifiedByUserId { get; set; }
 }

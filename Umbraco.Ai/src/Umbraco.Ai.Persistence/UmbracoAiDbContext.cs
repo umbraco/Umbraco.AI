@@ -54,6 +54,16 @@ public class UmbracoAiDbContext : DbContext
     internal DbSet<AiUsageStatisticsDailyEntity> UsageStatisticsDaily { get; set; } = null!;
 
     /// <summary>
+    /// AI profile version history.
+    /// </summary>
+    internal DbSet<AiProfileVersionEntity> ProfileVersions { get; set; } = null!;
+
+    /// <summary>
+    /// AI context version history.
+    /// </summary>
+    internal DbSet<AiContextVersionEntity> ContextVersions { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
     /// </summary>
     public UmbracoAiDbContext(DbContextOptions<UmbracoAiDbContext> options)
@@ -132,6 +142,16 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateModified)
+                .IsRequired();
+
             entity.HasIndex(e => e.Alias)
                 .IsUnique();
 
@@ -161,6 +181,10 @@ public class UmbracoAiDbContext : DbContext
 
             entity.Property(e => e.DateModified)
                 .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
 
             entity.HasIndex(e => e.Alias)
                 .IsUnique();
@@ -255,6 +279,10 @@ public class UmbracoAiDbContext : DbContext
                 .HasMaxLength(50);
 
             entity.Property(e => e.FeatureId);
+
+            entity.Property(e => e.ProfileVersion);
+
+            entity.Property(e => e.FeatureVersion);
 
             entity.Property(e => e.InputTokens);
             entity.Property(e => e.OutputTokens);
@@ -482,6 +510,72 @@ public class UmbracoAiDbContext : DbContext
             // Composite unique index for idempotent upserts
             entity.HasIndex(e => new { e.Period, e.ProviderId, e.ModelId, e.ProfileId, e.Capability, e.UserId, e.EntityType, e.FeatureType })
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<AiProfileVersionEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiProfileVersion");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired();
+
+            entity.Property(e => e.Snapshot)
+                .IsRequired();
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.ChangeDescription)
+                .HasMaxLength(500);
+
+            // Foreign key with cascade delete (when profile is deleted, delete its versions)
+            entity.HasOne<AiProfileEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Composite unique index to ensure one version per profile
+            entity.HasIndex(e => new { e.ProfileId, e.Version })
+                .IsUnique();
+
+            entity.HasIndex(e => e.ProfileId);
+        });
+
+        modelBuilder.Entity<AiContextVersionEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiContextVersion");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ContextId)
+                .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired();
+
+            entity.Property(e => e.Snapshot)
+                .IsRequired();
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.ChangeDescription)
+                .HasMaxLength(500);
+
+            // Foreign key with cascade delete (when context is deleted, delete its versions)
+            entity.HasOne<AiContextEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ContextId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Composite unique index to ensure one version per context
+            entity.HasIndex(e => new { e.ContextId, e.Version })
+                .IsUnique();
+
+            entity.HasIndex(e => e.ContextId);
         });
     }
 }

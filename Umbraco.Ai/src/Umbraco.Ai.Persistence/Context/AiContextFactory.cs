@@ -23,6 +23,9 @@ internal static class AiContextFactory
             Name = entity.Name,
             DateCreated = entity.DateCreated,
             DateModified = entity.DateModified,
+            CreatedByUserId = entity.CreatedByUserId,
+            ModifiedByUserId = entity.ModifiedByUserId,
+            Version = entity.Version,
             Resources = entity.Resources
                 .OrderBy(r => r.SortOrder)
                 .Select(BuildResourceDomain)
@@ -71,6 +74,9 @@ internal static class AiContextFactory
             Name = context.Name,
             DateCreated = context.DateCreated,
             DateModified = context.DateModified,
+            CreatedByUserId = context.CreatedByUserId,
+            ModifiedByUserId = context.ModifiedByUserId,
+            Version = context.Version,
             Resources = context.Resources
                 .Select(r => BuildResourceEntity(r, context.Id))
                 .ToList()
@@ -108,7 +114,10 @@ internal static class AiContextFactory
         entity.Alias = context.Alias;
         entity.Name = context.Name;
         entity.DateModified = context.DateModified;
+        entity.ModifiedByUserId = context.ModifiedByUserId;
+        entity.Version = context.Version;
         // Resources are handled separately in the repository
+        // DateCreated and CreatedByUserId are intentionally not updated
     }
 
     /// <summary>

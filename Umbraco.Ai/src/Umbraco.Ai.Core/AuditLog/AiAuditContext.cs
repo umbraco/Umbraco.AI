@@ -57,6 +57,16 @@ public sealed class AiAuditContext
     public Guid? FeatureId { get; init; }
 
     /// <summary>
+    /// Gets the profile version at time of execution.
+    /// </summary>
+    public int? ProfileVersion { get; init; }
+
+    /// <summary>
+    /// Gets the feature version at time of execution.
+    /// </summary>
+    public int? FeatureVersion { get; init; }
+
+    /// <summary>
     /// Gets the prompt or input data for this operation.
     /// </summary>
     public object? Prompt { get; init; }
@@ -91,6 +101,8 @@ public sealed class AiAuditContext
             EntityType = runtimeContext.GetValue<string>(Constants.ContextKeys.EntityType),
             FeatureType = runtimeContext.GetValue<string>(Constants.ContextKeys.FeatureType),
             FeatureId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.FeatureId),
+            ProfileVersion = runtimeContext.GetValue<int>(Constants.ContextKeys.ProfileVersion),
+            FeatureVersion = runtimeContext.GetValue<int>(Constants.ContextKeys.FeatureVersion),
             Prompt = prompt
         };
     }

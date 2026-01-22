@@ -76,6 +76,7 @@ internal sealed class AiAgentFactory : IAiAgentFactory
             _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureType, "agent");
             _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureId, agent.Id);
             _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureAlias, agent.Alias);
+            _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureVersion, agent.Version);
 
             if (additionalProperties != null)
             {

@@ -37,6 +37,15 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -49,6 +58,9 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -56,6 +68,11 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
 
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.HasKey("Id");
 
@@ -65,6 +82,51 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
                     b.HasIndex("ProfileId");
 
                     b.ToTable("UmbracoAiAgent", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AgentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChangeDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentId");
+
+                    b.HasIndex("AgentId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAiAgentVersion", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Agent.Persistence.Agents.AiAgentEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

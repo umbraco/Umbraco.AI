@@ -200,7 +200,7 @@ public class AiContextServiceTests
             .Build();
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(context, It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAsync(context, It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(context);
 
         // Act
@@ -209,7 +209,7 @@ public class AiContextServiceTests
         // Assert
         result.ShouldNotBeNull();
         result.Alias.ShouldBe("new-context");
-        _repositoryMock.Verify(x => x.SaveAsync(context, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(context, It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -228,7 +228,7 @@ public class AiContextServiceTests
             .Build();
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiContext>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAsync(It.IsAny<AiContext>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(context);
 
         // Act

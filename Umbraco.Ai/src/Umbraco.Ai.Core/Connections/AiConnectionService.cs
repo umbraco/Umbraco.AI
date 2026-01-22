@@ -1,6 +1,7 @@
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Connections;
 
@@ -12,15 +13,18 @@ internal sealed class AiConnectionService : IAiConnectionService
     private readonly IAiConnectionRepository _repository;
     private readonly AiProviderCollection _providers;
     private readonly IAiEditableModelResolver _modelResolver;
+    private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AiConnectionService(
         IAiConnectionRepository repository,
         AiProviderCollection providers,
-        IAiEditableModelResolver modelResolver)
+        IAiEditableModelResolver modelResolver,
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _providers = providers;
         _modelResolver = modelResolver;
+        _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
     /// <inheritdoc />
@@ -97,7 +101,8 @@ internal sealed class AiConnectionService : IAiConnectionService
         connection.DateModified = DateTime.UtcNow;
 
         // Save to repository
-        return await _repository.SaveAsync(connection, cancellationToken);
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(connection, userId, cancellationToken);
     }
 
     /// <inheritdoc />

@@ -46,7 +46,7 @@ public class ProfileMapDefinition : IMapDefinition
         };
     }
 
-    // Umbraco.Code.MapAll -Id -Capability
+    // Umbraco.Code.MapAll -Id -Capability -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromCreateRequest(CreateProfileRequestModel source, AiProfile target, MapperContext context)
     {
         target.Alias = source.Alias;
@@ -57,7 +57,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Tags = source.Tags;
     }
 
-    // Umbraco.Code.MapAll -Id -Capability
+    // Umbraco.Code.MapAll -Id -Capability -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateProfileRequestModel source, AiProfile target, MapperContext context)
     {
         // Note: Id, Capability are preserved from the existing entity
@@ -69,7 +69,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Tags = source.Tags;
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -DateCreated -DateModified -Version
     private static void MapToResponse(AiProfile source, ProfileResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -82,7 +82,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Tags = source.Tags;
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -DateCreated -DateModified -Version
     private static void MapToItemResponse(AiProfile source, ProfileItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;

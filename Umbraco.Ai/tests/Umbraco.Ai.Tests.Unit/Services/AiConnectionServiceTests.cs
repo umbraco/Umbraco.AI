@@ -204,8 +204,8 @@ public class AiConnectionServiceTests
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiConnection c, int? _, CancellationToken _) => c);
 
         // Act
         var result = await service.SaveConnectionAsync(connection);
@@ -214,7 +214,7 @@ public class AiConnectionServiceTests
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(Guid.Empty);
         result.Name.ShouldBe("New Connection");
-        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id != Guid.Empty), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id != Guid.Empty), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -237,15 +237,15 @@ public class AiConnectionServiceTests
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiConnection c, int? _, CancellationToken _) => c);
 
         // Act
         var result = await service.SaveConnectionAsync(connection);
 
         // Assert
         result.Id.ShouldBe(existingId);
-        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id == existingId), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id == existingId), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -285,8 +285,8 @@ public class AiConnectionServiceTests
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiConnection c, int? _, CancellationToken _) => c);
 
         // Act
         await service.SaveConnectionAsync(connection);
@@ -310,8 +310,8 @@ public class AiConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiConnection c, int? _, CancellationToken _) => c);
 
         var beforeSave = DateTime.UtcNow;
 

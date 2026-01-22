@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.Models;
+
 namespace Umbraco.Ai.Core.Contexts;
 
 /// <summary>
@@ -57,4 +59,28 @@ public interface IAiContextService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted, false if not found.</returns>
     Task<bool> DeleteContextAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the version history for a context.
+    /// </summary>
+    /// <param name="contextId">The context ID.</param>
+    /// <param name="limit">Optional limit on number of versions to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The version history, ordered by version descending.</returns>
+    Task<IEnumerable<AiEntityVersion>> GetContextVersionHistoryAsync(
+        Guid contextId,
+        int? limit = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a specific version snapshot of a context.
+    /// </summary>
+    /// <param name="contextId">The context ID.</param>
+    /// <param name="version">The version to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The context at that version, or null if not found.</returns>
+    Task<AiContext?> GetContextVersionSnapshotAsync(
+        Guid contextId,
+        int version,
+        CancellationToken cancellationToken = default);
 }

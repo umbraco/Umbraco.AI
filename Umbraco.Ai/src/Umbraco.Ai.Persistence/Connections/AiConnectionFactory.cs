@@ -33,7 +33,9 @@ internal static class AiConnectionFactory
             Settings = settings,
             IsActive = entity.IsActive,
             DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified
+            DateModified = entity.DateModified,
+            CreatedByUserId = entity.CreatedByUserId,
+            ModifiedByUserId = entity.ModifiedByUserId
         };
     }
 
@@ -53,7 +55,9 @@ internal static class AiConnectionFactory
             Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings, Constants.DefaultJsonSerializerOptions),
             IsActive = connection.IsActive,
             DateCreated = connection.DateCreated,
-            DateModified = connection.DateModified
+            DateModified = connection.DateModified,
+            CreatedByUserId = connection.CreatedByUserId,
+            ModifiedByUserId = connection.ModifiedByUserId
         };
     }
 
@@ -70,5 +74,7 @@ internal static class AiConnectionFactory
         entity.Settings = connection.Settings is null ? null : JsonSerializer.Serialize(connection.Settings, Constants.DefaultJsonSerializerOptions);
         entity.IsActive = connection.IsActive;
         entity.DateModified = connection.DateModified;
+        entity.ModifiedByUserId = connection.ModifiedByUserId;
+        // CreatedByUserId is intentionally not updated
     }
 }

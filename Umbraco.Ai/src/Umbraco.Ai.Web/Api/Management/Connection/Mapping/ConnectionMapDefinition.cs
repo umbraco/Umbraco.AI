@@ -41,7 +41,7 @@ public class ConnectionMapDefinition : IMapDefinition
         };
     }
 
-    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated
+    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -CreatedByUserId -ModifiedByUserId
     private static void MapFromCreateRequest(CreateConnectionRequestModel source, AiConnection target, MapperContext context)
     {
         target.Name = source.Name;
@@ -50,7 +50,7 @@ public class ConnectionMapDefinition : IMapDefinition
         target.DateModified = DateTime.UtcNow;
     }
 
-    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -DateModified
+    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -DateModified -CreatedByUserId -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateConnectionRequestModel source, AiConnection target, MapperContext context)
     {
         // Note: Id, Alias, ProviderId, DateCreated are preserved from the existing entity

@@ -65,6 +65,12 @@ public class AuditLogItemResponseModel
     public string ProfileAlias { get; set; } = string.Empty;
 
     /// <summary>
+    /// The profile version at time of execution.
+    /// </summary>
+    [Required]
+    public int? ProfileVersion { get; set; } 
+
+    /// <summary>
     /// The provider ID (e.g., "openai", "azure-openai").
     /// </summary>
     [Required]
@@ -85,6 +91,11 @@ public class AuditLogItemResponseModel
     /// The feature ID (prompt or agent ID) that initiated this operation.
     /// </summary>
     public Guid? FeatureId { get; set; }
+
+    /// <summary>
+    /// The feature version at time of execution.
+    /// </summary>
+    public int? FeatureVersion { get; set; }
 
     /// <summary>
     /// The parent audit-log ID if this is a child audit-log (e.g., agent-to-agent calls).

@@ -36,7 +36,10 @@ internal static class AiPromptEntityFactory
             IncludeEntityContext = entity.IncludeEntityContext,
             Scope = scope,
             DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified
+            DateModified = entity.DateModified,
+            CreatedByUserId = entity.CreatedByUserId,
+            ModifiedByUserId = entity.ModifiedByUserId,
+            Version = entity.Version
         };
     }
 
@@ -59,7 +62,10 @@ internal static class AiPromptEntityFactory
             IncludeEntityContext = aiPrompt.IncludeEntityContext,
             Scope = SerializeScope(aiPrompt.Scope),
             DateCreated = aiPrompt.DateCreated,
-            DateModified = aiPrompt.DateModified
+            DateModified = aiPrompt.DateModified,
+            CreatedByUserId = aiPrompt.CreatedByUserId,
+            ModifiedByUserId = aiPrompt.ModifiedByUserId,
+            Version = aiPrompt.Version
         };
     }
 
@@ -79,6 +85,9 @@ internal static class AiPromptEntityFactory
         entity.IncludeEntityContext = aiPrompt.IncludeEntityContext;
         entity.Scope = SerializeScope(aiPrompt.Scope);
         entity.DateModified = aiPrompt.DateModified;
+        entity.ModifiedByUserId = aiPrompt.ModifiedByUserId;
+        entity.Version = aiPrompt.Version;
+        // DateCreated and CreatedByUserId are intentionally not updated
     }
 
     private static string? SerializeTags(IReadOnlyList<string> tags)

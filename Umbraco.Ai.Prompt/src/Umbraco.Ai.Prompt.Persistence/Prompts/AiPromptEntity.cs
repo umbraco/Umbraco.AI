@@ -69,4 +69,19 @@ internal class AiPromptEntity
     /// Last modification timestamp.
     /// </summary>
     public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The ID of the user who created this prompt.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified this prompt.
+    /// </summary>
+    public int? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// Current version of the prompt.
+    /// </summary>
+    public int Version { get; set; } = 1;
 }

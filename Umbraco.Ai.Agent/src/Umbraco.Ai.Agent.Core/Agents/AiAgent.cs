@@ -1,9 +1,11 @@
+using Umbraco.Ai.Core.Models;
+
 namespace Umbraco.Ai.Agent.Core.Agents;
 
 /// <summary>
 /// Represents a stored agent definition that can be linked to AI profiles.
 /// </summary>
-public sealed class AiAgent
+public sealed class AiAgent : IAiVersionable
 {
     /// <summary>
     /// Unique identifier for the agent.
@@ -44,4 +46,30 @@ public sealed class AiAgent
     /// Whether this agent is active and available for use.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// When the agent was created.
+    /// </summary>
+    public DateTime DateCreated { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// When the agent was last modified.
+    /// </summary>
+    public DateTime DateModified { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The ID of the user who created this agent.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified this agent.
+    /// </summary>
+    public int? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// The current version of the agent.
+    /// Starts at 1 and increments with each save operation.
+    /// </summary>
+    public int Version { get; internal set; } = 1;
 }

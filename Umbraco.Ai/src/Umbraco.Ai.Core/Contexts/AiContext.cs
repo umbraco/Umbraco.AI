@@ -1,3 +1,5 @@
+using Umbraco.Ai.Core.Models;
+
 namespace Umbraco.Ai.Core.Contexts;
 
 /// <summary>
@@ -8,7 +10,7 @@ namespace Umbraco.Ai.Core.Contexts;
 /// Contexts are standalone, reusable entities that can be assigned to content nodes (via property editor),
 /// profiles, prompts, and agents. They are not owned by these entities but referenced by them.
 /// </remarks>
-public sealed class AiContext
+public sealed class AiContext : IAiVersionable
 {
     /// <summary>
     /// The unique identifier of the AI context.
@@ -35,6 +37,22 @@ public sealed class AiContext
     /// The date and time when the context was last modified.
     /// </summary>
     public DateTime DateModified { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// The ID of the user who created this context.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified this context.
+    /// </summary>
+    public int? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// The current version of the context.
+    /// Starts at 1 and increments with each save operation.
+    /// </summary>
+    public int Version { get; internal set; } = 1;
 
     /// <summary>
     /// The resources belonging to this context.

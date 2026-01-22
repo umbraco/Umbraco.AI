@@ -71,6 +71,11 @@ internal class AiAuditLogEntity
     public string ProfileAlias { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the profile version at time of execution.
+    /// </summary>
+    public int? ProfileVersion { get; set; }
+
+    /// <summary>
     /// Gets or sets the provider ID.
     /// </summary>
     public string ProviderId { get; set; } = string.Empty;
@@ -89,6 +94,11 @@ internal class AiAuditLogEntity
     /// Gets or sets the feature ID (prompt or agent ID) that initiated this operation.
     /// </summary>
     public Guid? FeatureId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the feature version at time of execution.
+    /// </summary>
+    public int? FeatureVersion { get; set; }
 
     /// <summary>
     /// Gets or sets the number of input tokens.

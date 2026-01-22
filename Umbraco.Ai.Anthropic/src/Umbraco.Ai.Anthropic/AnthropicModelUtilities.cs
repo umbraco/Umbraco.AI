@@ -32,7 +32,7 @@ internal static class AnthropicModelUtilities
                 continue;
             }
 
-            // Handle version numbers: combine "3" and "5" into "3.5" when appropriate
+            // Handle versions: combine "3" and "5" into "3.5" when appropriate
             if (part.All(char.IsDigit) && i + 1 < parts.Length && parts[i + 1].All(char.IsDigit) && parts[i + 1].Length == 1)
             {
                 formatted.Add($"{part}.{parts[i + 1]}");
@@ -40,7 +40,7 @@ internal static class AnthropicModelUtilities
                 continue;
             }
 
-            // Handle standalone version numbers
+            // Handle standalone versions
             if (part.All(char.IsDigit))
             {
                 formatted.Add(part);

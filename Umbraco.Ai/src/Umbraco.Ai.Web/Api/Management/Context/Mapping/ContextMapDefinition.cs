@@ -47,14 +47,14 @@ public class ContextMapDefinition : IMapDefinition
         };
     }
 
-    // Umbraco.Code.MapAll -Id -Alias -DateCreated -DateModified
+    // Umbraco.Code.MapAll -Id -Alias -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromCreateRequest(CreateContextRequestModel source, AiContext target, MapperContext context)
     {
         target.Name = source.Name;
         target.Resources = source.Resources.Select(r => context.Map<AiContextResource>(r)!).ToList();
     }
 
-    // Umbraco.Code.MapAll -Id -DateCreated -DateModified
+    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateContextRequestModel source, AiContext target, MapperContext context)
     {
         target.Alias = source.Alias;
@@ -76,7 +76,7 @@ public class ContextMapDefinition : IMapDefinition
             : AiContextResourceInjectionMode.Always;
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -Version
     private static void MapToResponse(AiContext source, ContextResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -87,7 +87,7 @@ public class ContextMapDefinition : IMapDefinition
         target.Resources = source.Resources.Select(r => context.Map<ContextResourceModel>(r)!).ToList();
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -Version
     private static void MapToItemResponse(AiContext source, ContextItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;

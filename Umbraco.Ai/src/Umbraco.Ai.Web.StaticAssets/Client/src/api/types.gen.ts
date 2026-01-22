@@ -14,10 +14,12 @@ export type AuditLogDetailResponseModel = {
     entityId?: string | null;
     capability: string;
     profileId: string;
+    profileVersion: number;
     providerId: string;
     modelId: string;
     featureType?: string | null;
     featureId?: string | null;
+    featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
     outputTokens?: number | null;
@@ -44,10 +46,12 @@ export type AuditLogItemResponseModel = {
     capability: string;
     profileId: string;
     profileAlias: string;
+    profileVersion: number;
     providerId: string;
     modelId: string;
     featureType?: string | null;
     featureId?: string | null;
+    featureVersion?: number | null;
     parentAuditLogId?: string | null;
     inputTokens?: number | null;
     outputTokens?: number | null;

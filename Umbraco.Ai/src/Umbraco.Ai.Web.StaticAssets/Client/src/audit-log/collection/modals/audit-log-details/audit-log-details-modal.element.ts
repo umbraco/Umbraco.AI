@@ -141,15 +141,23 @@ export class UaiAuditLogDetailsModalElement extends UmbModalBaseElement<
                                 <tr>
                                     <th>Feature</th>
                                     <td>
-                                        <div>${this._auditLog?.featureType}</div>
-                                        <small>${this._auditLog?.featureId}</small>
+                                        <div>
+                                            ${this._auditLog?.featureType}
+                                        </div>
+                                        <small>
+                                            ${this._auditLog?.featureId}${this._auditLog?.featureVersion ? html`/v${this._auditLog?.featureVersion}` : ''}
+                                        </small>
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Profile</th>
                                     <td>
-                                        <div>${this._auditLog?.profileAlias}</div>
-                                        <small>${this._auditLog?.profileId}</small>
+                                        <div>
+                                            ${this._auditLog?.profileAlias}
+                                        </div>
+                                        <small>
+                                            ${this._auditLog?.profileId}${this._auditLog?.profileVersion ? html`/v${this._auditLog?.profileVersion}` : ''}
+                                        </small>
                                     </td>
                                 </tr>
                                 <tr>

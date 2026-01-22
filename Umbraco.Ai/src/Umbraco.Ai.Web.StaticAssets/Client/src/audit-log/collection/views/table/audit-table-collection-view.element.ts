@@ -96,8 +96,12 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                     columnAlias: "feature",
                     value: item.featureType
                         ? html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                            <div style="text-transform: capitalize;">${item.featureType}</div>
-                            ${item.featureId ? html`<div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;">${item.featureId}</div>` : ""}
+                            <div style="text-transform: capitalize;">
+                                ${item.featureType}
+                            </div>
+                            ${item.featureId ? html`<div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;">
+                                ${item.featureId}${item?.featureVersion ? html`/v${item?.featureVersion}` : ''}
+                            </div>` : ""}
                           </div>`
                         : "—",
                 },
@@ -105,8 +109,12 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                     columnAlias: "profile",
                     value: item.profileAlias
                         ? html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                            <div style="text-transform: capitalize;">${item.profileAlias}</div>
-                            ${item.profileId ? html`<div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;">${item.profileId}</div>` : ""}
+                            <div style="text-transform: capitalize;">
+                                ${item.profileAlias}
+                            </div>
+                            ${item.profileId ? html`<div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;">
+                                ${item.profileId}${item?.profileVersion ? html`/v${item?.profileVersion}` : ''}
+                            </div>` : ""}
                           </div>`
                         : "—",
                 },

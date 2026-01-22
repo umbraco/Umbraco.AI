@@ -39,6 +39,7 @@ internal sealed class AiEntityContextHelper : IAiEntityContextHelper
         sb.AppendLine($"## Current Entity Context");
         sb.AppendLine();
         sb.AppendLine($"You are working with a {entity.EntityType} named \"{entity.Name}\".");
+        sb.AppendLine($"**IMPORTANT** When the user says 'this page', 'this document', 'this entity', 'this media item' or similar, you should use this context entry as the reference.");
 
         if (!string.IsNullOrEmpty(entity.ContentType))
         {
@@ -54,11 +55,6 @@ internal sealed class AiEntityContextHelper : IAiEntityContextHelper
             foreach (var property in entity.Properties)
             {
                 var valueDisplay = property.Value?.ToString() ?? "(empty)";
-                if (valueDisplay.Length > 200)
-                {
-                    valueDisplay = valueDisplay[..197] + "...";
-                }
-
                 sb.AppendLine($"- **{property.Label}** (`{property.Alias}`): {valueDisplay}");
             }
         }

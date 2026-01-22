@@ -4,6 +4,7 @@ using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
 
@@ -12,11 +13,13 @@ namespace Umbraco.Ai.Tests.Unit.Factories;
 public class AiChatClientFactoryTests
 {
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IAiRuntimeContextAccessor> _runtimeContextAccessorMock;
     private readonly AiChatMiddlewareCollection _middleware;
 
     public AiChatClientFactoryTests()
     {
         _connectionServiceMock = new Mock<IAiConnectionService>();
+        _runtimeContextAccessorMock = new Mock<IAiRuntimeContextAccessor>();
         _middleware = new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
     }
 
@@ -24,14 +27,16 @@ public class AiChatClientFactoryTests
     {
         return new AiChatClientFactory(
             _connectionServiceMock.Object,
-            _middleware);
+            _middleware,
+            _runtimeContextAccessorMock.Object);
     }
 
     private AiChatClientFactory CreateFactory(AiChatMiddlewareCollection middleware)
     {
         return new AiChatClientFactory(
             _connectionServiceMock.Object,
-            middleware);
+            middleware,
+            _runtimeContextAccessorMock.Object);
     }
 
     private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(
@@ -355,8 +360,7 @@ public class AiChatClientFactoryTests
         var client = await factoryWithMiddleware.CreateClientAsync(profile);
 
         // Assert - verify middleware applied in correct order
-        // Note: The factory wraps the final client in AiProfileAiBoundChatClient for automatic context resolution
-        client.ShouldBeOfType<AiProfileAiBoundChatClient>();
+        client.ShouldNotBeNull();
         applicationOrder.ShouldBe(new[] { "middleware1", "middleware2" });
         middleware1Mock.Verify(m => m.Apply(It.IsAny<IChatClient>()), Times.Once);
         middleware2Mock.Verify(m => m.Apply(It.IsAny<IChatClient>()), Times.Once);

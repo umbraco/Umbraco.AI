@@ -6,10 +6,17 @@
 public static class Constants
 {
     /// <summary>
-    /// Keys for metadata in metadata collections.
+    /// Keys for RuntimeContext.
     /// </summary>
-    public static class MetadataKeys
+    public static class ContextKeys
     {
+        /// <summary>
+        /// Key for frontend tool names in RuntimeContext.
+        /// Used by <see cref="Chat.AiToolReorderingChatClient"/> to identify which tools
+        /// are frontend tools that should be processed last.
+        /// </summary>
+        public const string FrontendToolNames = "Umbraco.Ai.Agent.FrontendToolNames";
+        
         /// <summary>
         /// Key for agent ID in metadata collections.
         /// </summary>

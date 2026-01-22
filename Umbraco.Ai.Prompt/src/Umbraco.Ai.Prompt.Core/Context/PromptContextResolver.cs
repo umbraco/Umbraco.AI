@@ -1,5 +1,6 @@
 using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.Contexts.Resolvers;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Prompt.Core.Prompts;
 
 namespace Umbraco.Ai.Prompt.Core.Context;
@@ -13,29 +14,30 @@ namespace Umbraco.Ai.Prompt.Core.Context;
 /// </remarks>
 internal sealed class PromptContextResolver : IAiContextResolver
 {
-
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiContextService _contextService;
     private readonly IAiPromptService _promptService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptContextResolver"/> class.
     /// </summary>
+    /// <param name="runtimeContextAccessor"></param>
     /// <param name="contextService">The context service.</param>
     /// <param name="promptService">The prompt service.</param>
     public PromptContextResolver(
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiContextService contextService,
         IAiPromptService promptService)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
         _promptService = promptService;
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(
-        AiContextResolverRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        var promptId = request.GetGuidProperty(Constants.MetadataKeys.PromptId);
+        var promptId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.MetadataKeys.PromptId);
         if (!promptId.HasValue)
         {
             return AiContextResolverResult.Empty;

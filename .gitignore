@@ -75,6 +75,7 @@ demo/
 .claude/
 nul
 tmpclaude*
+.auto-claude/
 
 # References
 refs/

@@ -1,4 +1,4 @@
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
@@ -10,9 +10,9 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This resolver reads the content ID from request properties, preferring
-/// <see cref="AiRequestContextKeys.ParentEntityId"/> (for new entities) over
-/// <see cref="AiRequestContextKeys.ContentId"/>, then walks up the content tree
+/// This resolver reads the content ID from <see cref="IAiRuntimeContextAccessor"/>, preferring
+/// <see cref="AiRuntimeContextKeys.ParentEntityId"/> (for new entities) over
+/// <see cref="AiRuntimeContextKeys.EntityId"/>. It then walks up the content tree
 /// (current node + ancestors) to find the nearest property using the AI Context
 /// Picker editor (<c>Uai.ContextPicker</c>).
 /// </para>
@@ -23,31 +23,32 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// </remarks>
 internal sealed class ContentContextResolver : IAiContextResolver
 {
-
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiContextService _contextService;
     private readonly IUmbracoContextAccessor _umbracoContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ContentContextResolver"/> class.
     /// </summary>
+    /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
     /// <param name="contextService">The context service.</param>
     /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
     public ContentContextResolver(
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiContextService contextService,
         IUmbracoContextAccessor umbracoContextAccessor)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
         _umbracoContextAccessor = umbracoContextAccessor;
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(
-        AiContextResolverRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        // Prefer ParentEntityId (for new entities) over ContentId for ancestor lookup
-        var contentId = request.GetGuidProperty(AiRequestContextKeys.ParentEntityId)
-            ?? request.GetGuidProperty(AiRequestContextKeys.ContentId);
+        // Get content ID from RuntimeContext (set by orchestrators like AguiStreamingService)
+        var contentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ParentEntityId)
+            ?? _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.EntityId);
         if (!contentId.HasValue)
         {
             return AiContextResolverResult.Empty;

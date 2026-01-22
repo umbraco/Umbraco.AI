@@ -9,12 +9,12 @@
     "generate-client": "node scripts/generate-openapi.js https://localhost:44355/umbraco/swagger/ai-prompt-management/swagger.json"
   },
   "peerDependencies": {
-    "@umbraco-cms/backoffice": "^17.0.0",
+    "@umbraco-cms/backoffice": "^17.1.0",
     "@umbraco-ai/core": "^17.0.0"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.85.0",
-    "@umbraco-cms/backoffice": "^17.0.0",
+    "@umbraco-cms/backoffice": "^17.1.0",
     "@umbraco-ai/core": "*",
     "chalk": "^5.6.0",
     "cross-env": "^10.0.0",

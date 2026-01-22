@@ -12,6 +12,6 @@
 export interface UaiRequestContextItem {
 	/** Human-readable description */
 	description: string;
-	/** The context data (any JSON-serializable value) */
-	value?: unknown;
+	/** The context data */
+	value?: string;
 }

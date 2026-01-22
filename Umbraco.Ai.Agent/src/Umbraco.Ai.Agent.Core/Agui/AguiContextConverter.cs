@@ -1,12 +1,12 @@
 using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Agent.Core.Agui;
 
 /// <summary>
 /// Default implementation of <see cref="IAguiContextConverter"/>.
 /// </summary>
-public sealed class AguiContextConverter : IAguiContextConverter
+internal sealed class AguiContextConverter : IAguiContextConverter
 {
     /// <inheritdoc />
     public IReadOnlyList<AiRequestContextItem> ConvertToRequestContextItems(IEnumerable<AguiContextItem>? context)

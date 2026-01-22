@@ -3,7 +3,7 @@ namespace Umbraco.Ai.Persistence.Context;
 /// <summary>
 /// EF Core entity representing an AI context.
 /// </summary>
-public class AiContextEntity
+internal class AiContextEntity
 {
     /// <summary>
     /// Unique identifier for the context.

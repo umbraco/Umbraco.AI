@@ -33,6 +33,7 @@ internal static class AiPromptEntityFactory
             ContextIds = contextIds,
             Tags = tags,
             IsActive = entity.IsActive,
+            IncludeEntityContext = entity.IncludeEntityContext,
             Scope = scope,
             DateCreated = entity.DateCreated,
             DateModified = entity.DateModified
@@ -55,6 +56,7 @@ internal static class AiPromptEntityFactory
             ContextIds = SerializeContextIds(aiPrompt.ContextIds),
             Tags = SerializeTags(aiPrompt.Tags),
             IsActive = aiPrompt.IsActive,
+            IncludeEntityContext = aiPrompt.IncludeEntityContext,
             Scope = SerializeScope(aiPrompt.Scope),
             DateCreated = aiPrompt.DateCreated,
             DateModified = aiPrompt.DateModified
@@ -74,6 +76,7 @@ internal static class AiPromptEntityFactory
         entity.ContextIds = SerializeContextIds(aiPrompt.ContextIds);
         entity.Tags = SerializeTags(aiPrompt.Tags);
         entity.IsActive = aiPrompt.IsActive;
+        entity.IncludeEntityContext = aiPrompt.IncludeEntityContext;
         entity.Scope = SerializeScope(aiPrompt.Scope);
         entity.DateModified = aiPrompt.DateModified;
     }

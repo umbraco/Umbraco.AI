@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
 
@@ -15,6 +16,7 @@ namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
 /// </summary>
 internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiUsageRecordingService _usageRecordingService;
     private readonly IAiUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
@@ -22,12 +24,14 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
 
     public AiUsageRecordingChatClient(
         IChatClient innerClient,
+        IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiUsageRecordingService usageRecordingService,
         IAiUsageRecordFactory factory,
         IOptionsMonitor<AiAnalyticsOptions> options,
         ILogger<AiUsageRecordingChatClient> logger)
         : base(innerClient)
     {
+        _runtimeContextAccessor = runtimeContextAccessor;
         _usageRecordingService = usageRecordingService;
         _factory = factory;
         _options = options;
@@ -68,7 +72,6 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
 
             // Record usage asynchronously (fire and forget - don't block the response)
             _ = RecordUsageAsync(
-                options,
                 stopwatch.ElapsedMilliseconds,
                 succeeded,
                 errorMessage,
@@ -95,56 +98,54 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
         var stopwatch = Stopwatch.StartNew();
         var succeeded = false;
         string? errorMessage = null;
+        Exception? capturedException = null;
 
-        // Collect updates in a list (can't yield inside try-catch)
+        // We still collect updates for metrics, but yield immediately for true streaming.
+        // The try-catch surrounds only MoveNextAsync() since yield is not allowed inside try-catch.
         var updates = new List<ChatResponseUpdate>();
 
         await using var enumerator = base.GetStreamingResponseAsync(chatMessages, options, cancellationToken).GetAsyncEnumerator(cancellationToken);
 
-        try
+        while (true)
         {
-            while (await enumerator.MoveNextAsync())
+            ChatResponseUpdate? current;
+            try
             {
-                updates.Add(enumerator.Current);
+                if (!await enumerator.MoveNextAsync())
+                {
+                    succeeded = true;
+                    break;
+                }
+                current = enumerator.Current;
+            }
+            catch (Exception ex)
+            {
+                capturedException = ex;
+                errorMessage = ex.Message;
+                break;
             }
 
-            succeeded = true;
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-            errorMessage = ex.Message;
-
-            // Record usage even on error (fire and forget)
-            _ = RecordUsageAsync(
-                options,
-                stopwatch.ElapsedMilliseconds,
-                succeeded,
-                errorMessage,
-                cancellationToken);
-
-            throw;
+            updates.Add(current);
+            yield return current;  // Yield immediately for true streaming!
         }
 
         stopwatch.Stop();
 
         // Record usage asynchronously (fire and forget)
         _ = RecordUsageAsync(
-            options,
             stopwatch.ElapsedMilliseconds,
             succeeded,
             errorMessage,
             cancellationToken);
 
-        // Yield collected updates
-        foreach (var update in updates)
+        // Re-throw any captured exception after recording metrics
+        if (capturedException is not null)
         {
-            yield return update;
+            throw capturedException;
         }
     }
 
     private async Task RecordUsageAsync(
-        ChatOptions? options,
         long durationMs,
         bool succeeded,
         string? errorMessage,
@@ -152,8 +153,15 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
     {
         try
         {
+            
+            if (_runtimeContextAccessor.Context == null)
+            {
+                _logger.LogDebug("No runtime context available, skipping usage recording");
+                return;
+            }
+            
             // Extract context from options
-            var usageContext = AiUsageContext.ExtractFromOptions(AiCapability.Chat, options);
+            var usageContext = AiUsageContext.ExtractFromRuntimeContext(AiCapability.Chat, _runtimeContextAccessor.Context);
 
             // Try to get tracking data from inner client
             var trackingClient = InnerClient.GetService<AiTrackingChatClient>();

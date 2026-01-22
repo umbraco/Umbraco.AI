@@ -175,10 +175,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         if (requested.HasValue)
             return requested.Value;
 
-        var daysAgo = (DateTime.UtcNow - from).TotalDays;
+        var daySpan = (to - from).TotalDays;
 
-        // Use hourly for last 30 days, daily for older data
-        return daysAgo <= 30 ? AiUsagePeriod.Hourly : AiUsagePeriod.Daily;
+        // Use hourly for up to 7 days, daily for longer periods
+        return daySpan <= 7 ? AiUsagePeriod.Hourly : AiUsagePeriod.Daily;
     }
 
     /// <summary>

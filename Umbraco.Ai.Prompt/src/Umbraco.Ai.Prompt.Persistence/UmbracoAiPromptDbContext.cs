@@ -11,7 +11,7 @@ public class UmbracoAiPromptDbContext : DbContext
     /// <summary>
     /// Prompts table.
     /// </summary>
-    public DbSet<AiPromptEntity> Prompts { get; set; } = null!;
+    internal DbSet<AiPromptEntity> Prompts { get; set; } = null!;
 
     /// <summary>
     /// Creates a new instance of the DbContext.
@@ -54,6 +54,10 @@ public class UmbracoAiPromptDbContext : DbContext
                 .HasMaxLength(2000);
 
             entity.Property(e => e.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.IncludeEntityContext)
                 .IsRequired()
                 .HasDefaultValue(true);
 

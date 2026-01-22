@@ -14,13 +14,13 @@
 
   <!-- Umbraco CMS -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.0.0, 17.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[17.1.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.1.0, 17.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft.Extensions.AI -->
@@ -34,6 +34,7 @@
   <ItemGroup>
     <PackageVersion Include="Umbraco.Ai.Core" Version="[17.0.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Agui" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Ai.Startup" Version="[17.0.0, 17.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->
@@ -45,6 +46,9 @@
   <!-- Provider packages -->
   <ItemGroup>
     <PackageVersion Include="Anthropic" Version="12.2.0" />
+    <PackageVersion Include="AWSSDK.Bedrock" Version="4.0.1" />
+    <PackageVersion Include="AWSSDK.BedrockRuntime" Version="4.0.1" />
+    <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="4.0.2" />
     <PackageVersion Include="Google.GenAI" Version="0.12.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
   </ItemGroup>
@@ -53,6 +57,7 @@
   <ItemGroup>
     <PackageVersion Include="Humanizer.Core" Version="2.14.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="[10.0.0, 10.999.999)" />
+    <PackageVersion Include="SmartReader" Version="0.9.6" />
   </ItemGroup>
 
   <!-- Test dependencies -->

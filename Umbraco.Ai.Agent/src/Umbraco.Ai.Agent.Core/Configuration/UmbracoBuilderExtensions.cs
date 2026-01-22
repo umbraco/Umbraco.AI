@@ -4,6 +4,7 @@ using Umbraco.Ai.Agent.Core.Agui;
 using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agent.Core.Context;
 using Umbraco.Ai.Agent.Core.Models;
+using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -38,16 +39,20 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiAgentService, AiAgentService>();
 
         // Register agent factory (scoped - depends on scoped IAiChatService)
-        builder.Services.AddScoped<IAiAgentFactory, AiAgentFactory>();
+        builder.Services.AddSingleton<IAiAgentFactory, AiAgentFactory>();
 
         // Register AG-UI services
         builder.Services.AddSingleton<IAguiMessageConverter, AguiMessageConverter>();
         builder.Services.AddSingleton<IAguiToolConverter, AguiToolConverter>();
         builder.Services.AddSingleton<IAguiContextConverter, AguiContextConverter>();
-        builder.Services.AddScoped<IAguiStreamingService, AguiStreamingService>();
+        builder.Services.AddTransient<IAguiStreamingService, AguiStreamingService>();
 
         // Register agent context resolver
         builder.AiContextResolvers().Append<AgentContextResolver>();
+
+        // Register tool reordering middleware before function invocation
+        // This ensures server-side tools execute before frontend tools trigger termination
+        builder.AiChatMiddleware().InsertBefore<AiFunctionInvokingChatMiddleware, AiToolReorderingChatMiddleware>();
 
         return builder;
     }

@@ -16,42 +16,42 @@ public class UmbracoAiDbContext : DbContext
     /// <summary>
     /// AI provider connections.
     /// </summary>
-    public DbSet<AiConnectionEntity> Connections { get; set; } = null!;
+    internal DbSet<AiConnectionEntity> Connections { get; set; } = null!;
 
     /// <summary>
     /// AI profile configurations.
     /// </summary>
-    public DbSet<AiProfileEntity> Profiles { get; set; } = null!;
+    internal DbSet<AiProfileEntity> Profiles { get; set; } = null!;
 
     /// <summary>
     /// AI contexts containing resources.
     /// </summary>
-    public DbSet<AiContextEntity> Contexts { get; set; } = null!;
+    internal DbSet<AiContextEntity> Contexts { get; set; } = null!;
 
     /// <summary>
     /// AI context resources.
     /// </summary>
-    public DbSet<AiContextResourceEntity> ContextResources { get; set; } = null!;
+    internal DbSet<AiContextResourceEntity> ContextResources { get; set; } = null!;
 
     /// <summary>
     /// AI audit-log records.
     /// </summary>
-    public DbSet<AiAuditLogEntity> AuditLogs { get; set; } = null!;
+    internal DbSet<AiAuditLogEntity> AuditLogs { get; set; } = null!;
 
     /// <summary>
     /// AI usage records (raw, ephemeral).
     /// </summary>
-    public DbSet<AiUsageRecordEntity> UsageRecords { get; set; } = null!;
+    internal DbSet<AiUsageRecordEntity> UsageRecords { get; set; } = null!;
 
     /// <summary>
     /// AI usage statistics (hourly aggregation).
     /// </summary>
-    public DbSet<AiUsageStatisticsHourlyEntity> UsageStatisticsHourly { get; set; } = null!;
+    internal DbSet<AiUsageStatisticsHourlyEntity> UsageStatisticsHourly { get; set; } = null!;
 
     /// <summary>
     /// AI usage statistics (daily aggregation).
     /// </summary>
-    public DbSet<AiUsageStatisticsDailyEntity> UsageStatisticsDaily { get; set; } = null!;
+    internal DbSet<AiUsageStatisticsDailyEntity> UsageStatisticsDaily { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.

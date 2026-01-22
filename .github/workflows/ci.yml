@@ -1,0 +1,188 @@
+name: ⚙️ CI
+
+on:
+  push:
+    branches: [main, dev, 'release/**', 'hotfix/**']
+    tags: ['release-*']
+  pull_request:
+    branches: [main, dev]
+
+env:
+  NODE_VERSION: '20.x'
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  # ============================================================
+  # Build & Test everything
+  # ============================================================
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Restore
+        run: dotnet restore Umbraco.Ai.sln
+
+      - name: Build
+        run: dotnet build Umbraco.Ai.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Umbraco.Ai.sln --configuration Release --no-build --verbosity normal
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/**'
+          if-no-files-found: ignore
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs
+          path: |
+            **/bin/Release/**
+            **/obj/**
+            **/wwwroot/**
+            **/Client/**
+            !**/Client/node_modules/**
+          retention-days: 1
+
+  # ============================================================
+  # Pack Tier 1 (Core - no internal dependencies)
+  # ============================================================
+  pack-tier1:
+    name: Pack Tier 1 (Core)
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Download build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
+
+      - uses: ./.github/actions/pack-product
+        with:
+          product: Umbraco.Ai
+
+  # ============================================================
+  # Pack Tier 2 (Providers - depend on Core)
+  # ============================================================
+  pack-tier2:
+    name: Pack Tier 2 (${{ matrix.product }})
+    needs: [build, pack-tier1]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    strategy:
+      fail-fast: false
+      matrix:
+        product: [Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Download build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
+
+      - name: Download Tier 1 packages (local feed)
+        uses: actions/download-artifact@v4
+        with:
+          name: Umbraco.Ai-packages
+          path: ./artifacts/nupkg
+
+      - uses: ./.github/actions/pack-product
+        with:
+          product: ${{ matrix.product }}
+
+  # ============================================================
+  # Pack Tier 3 (Add-ons - depend on Core + Startup)
+  # ============================================================
+  pack-tier3:
+    name: Pack Tier 3 (${{ matrix.product }})
+    needs: [build, pack-tier1]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    strategy:
+      fail-fast: false
+      matrix:
+        product: [Umbraco.Ai.Prompt, Umbraco.Ai.Agent]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Download build outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
+
+      - name: Download Tier 1 packages (local feed)
+        uses: actions/download-artifact@v4
+        with:
+          name: Umbraco.Ai-packages
+          path: ./artifacts/nupkg
+
+      - uses: ./.github/actions/pack-product
+        with:
+          product: ${{ matrix.product }}
+
+  # ============================================================
+  # Collect all packages into single artifact
+  # ============================================================
+  collect-packages:
+    name: Collect All Packages
+    needs: [pack-tier1, pack-tier2, pack-tier3]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    steps:
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-packages
+          pattern: '*-packages'
+          merge-multiple: true
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-nuget-packages
+          path: ./all-packages/*.nupkg
+          retention-days: 30

@@ -2,8 +2,9 @@ namespace Umbraco.Ai.Core.Connections;
 
 /// <summary>
 /// Repository for managing AI provider connections.
+/// Internal implementation detail - use <see cref="IAiConnectionService"/> for external access.
 /// </summary>
-public interface IAiConnectionRepository
+internal interface IAiConnectionRepository
 {
     /// <summary>
     /// Get a connection by its ID.

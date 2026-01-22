@@ -1,3 +1,5 @@
+using Umbraco.Ai.Agui.Events;
+using Umbraco.Ai.Agui.Models;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
@@ -71,4 +73,30 @@ public interface IAiAgentService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if alias exists.</returns>
     Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Streams an agent execution with AG-UI events.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method orchestrates the complete agent lifecycle:
+    /// <list type="bullet">
+    ///   <item>Resolves the agent by ID or alias</item>
+    ///   <item>Creates a runtime context scope</item>
+    ///   <item>Populates context with contributors</item>
+    ///   <item>Creates the MAF agent (inside the scope so context is available)</item>
+    ///   <item>Streams AG-UI events from the agent execution</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
+    /// <param name="frontendToolDefinitions">Frontend tool definitions from the request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Async enumerable of AG-UI events.</returns>
+    IAsyncEnumerable<IAguiEvent> StreamAgentAsync(
+        Guid agentId,
+        AguiRunRequest request,
+        IEnumerable<AguiTool>? frontendToolDefinitions,
+        CancellationToken cancellationToken = default);
 }

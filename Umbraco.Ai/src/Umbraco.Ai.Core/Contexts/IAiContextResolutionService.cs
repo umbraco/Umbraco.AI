@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Contexts.Resolvers;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Contexts;
 
@@ -22,16 +23,13 @@ namespace Umbraco.Ai.Core.Contexts;
 public interface IAiContextResolutionService
 {
     /// <summary>
-    /// Resolves context from ChatOptions additional properties.
+    /// Resolves context from all registered resolvers.
     /// </summary>
     /// <remarks>
     /// This is the primary method used by middleware. Each registered resolver
-    /// reads its own keys from the properties dictionary.
+    /// reads from <see cref="IAiRuntimeContextAccessor"/> to access request-scoped data.
     /// </remarks>
-    /// <param name="properties">The additional properties from ChatOptions.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The merged resolved context.</returns>
-    Task<AiResolvedContext> ResolveContextAsync(
-        IReadOnlyDictionary<string, object?>? properties,
-        CancellationToken cancellationToken = default);
+    Task<AiResolvedContext> ResolveContextAsync(CancellationToken cancellationToken = default);
 }

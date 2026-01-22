@@ -158,6 +158,18 @@ export class UaiCopilotMessageElement extends UmbLitElement {
       border-radius: 3px;
     }
 
+    .markdown-content ul, .markdown-content ol {
+        padding-left: var(--uui-size-space-6);
+        margin-top: var(--uui-size-space-2);
+        margin-bottom: var(--uui-size-space-2);
+    }
+
+    .markdown-content h2, .markdown-content h3, .markdown-content h4 {
+        margin-top: var(--uui-size-space-4);
+        margin-bottom: var(--uui-size-space-2);
+        font-size: 1.2em;
+    }
+
     .tool-calls {
       margin-top: var(--uui-size-space-2);
       display: flex;

@@ -91,6 +91,11 @@ export class UaiCopilotContext extends UmbControllerBase {
     return this.#hitlContext.interrupt$;
   }
 
+  /** Observable for pending approval with target message ID for inline rendering. */
+  get pendingApproval$() {
+    return this.#hitlContext.pendingApproval$;
+  }
+
   // ─── Entity Context ─────────────────────────────────────────────────────────
 
   /** Observable of all detected entities with adapters. */
@@ -198,14 +203,22 @@ export class UaiCopilotContext extends UmbControllerBase {
     this.#isOpen.setValue(true);
   }
 
-  /** Close the copilot panel. */
+  /** Close the copilot panel and reset the conversation. */
   close(): void {
     this.#isOpen.setValue(false);
+    this.#runController.abortRun();
+    this.#runController.resetConversation();
   }
 
-  /** Toggle the copilot panel visibility. */
+  /** Toggle the copilot panel visibility. Resets conversation when closing. */
   toggle(): void {
-    this.#isOpen.setValue(!this.#isOpen.getValue());
+    const wasOpen = this.#isOpen.getValue();
+    this.#isOpen.setValue(!wasOpen);
+    if (wasOpen) {
+      // Closing - clear the conversation
+      this.#runController.abortRun();
+      this.#runController.resetConversation();
+    }
   }
 
   // ─── HITL Actions ──────────────────────────────────────────────────────────

@@ -54,4 +54,10 @@ public class CreatePromptRequestModel
     /// Null means the prompt is not allowed anywhere.
     /// </summary>
     public ScopeModel? Scope { get; init; }
+
+    /// <summary>
+    /// Whether to include the full entity context as a system message during prompt execution.
+    /// Defaults to true for backward compatibility.
+    /// </summary>
+    public bool IncludeEntityContext { get; init; } = true;
 }

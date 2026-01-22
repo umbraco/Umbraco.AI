@@ -1,5 +1,4 @@
-using Umbraco.Ai.Core.EntityAdapter;
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Ai.Web.Api.Common.Models;
@@ -10,7 +9,7 @@ namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Mapping;
 /// <summary>
 /// UmbracoMapper definitions for prompt execution models.
 /// </summary>
-public class PromptExecutionMapDefinition : IMapDefinition
+internal class PromptExecutionMapDefinition : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)

@@ -163,7 +163,11 @@ add_product_projects "Umbraco.Ai.Anthropic" "Anthropic"
 echo "Adding Umbraco.Ai.Google projects..."
 add_product_projects "Umbraco.Ai.Google" "Google"
 
-# Step 12: Add demo site to solution
+# Step 10.1: Add Amazon provider projects
+echo "Adding Umbraco.Ai.Amazon projects..."
+add_product_projects "Umbraco.Ai.Amazon" "Amazon"
+
+# Step 11: Add demo site to solution
 echo "Adding demo site to solution..."
 dotnet sln "Umbraco.Ai.local.sln" add "demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
 
@@ -188,6 +192,11 @@ fi
 # Google provider
 if [ -f "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj"
+fi
+
+# Amazon provider
+if [ -f "Umbraco.Ai.Amazon/src/Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Amazon/src/Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.csproj"
 fi
 
 # Prompt add-on (meta-package + SQLite persistence)

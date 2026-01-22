@@ -8,7 +8,7 @@ namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Mapping;
 /// <summary>
 /// UmbracoMapper definitions for prompt models.
 /// </summary>
-public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
+internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)
@@ -56,6 +56,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = true;
+        target.IncludeEntityContext = source.IncludeEntityContext;
         target.Scope = MapScopeModelToDomain(source.Scope);
         target.DateModified = DateTime.UtcNow;
     }
@@ -73,6 +74,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
         target.IsActive = source.IsActive;
+        target.IncludeEntityContext = source.IncludeEntityContext;
         target.Scope = MapScopeModelToDomain(source.Scope);
     }
 
@@ -88,6 +90,7 @@ public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDef
         target.ContextIds = source.ContextIds;
         target.Tags = source.Tags;
         target.IsActive = source.IsActive;
+        target.IncludeEntityContext = source.IncludeEntityContext;
         target.Scope = MapScopeDomainToModel(source.Scope);
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;

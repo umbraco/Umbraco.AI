@@ -37,16 +37,16 @@ export class UaiAgentApprovalDefaultElement
 
   override render() {
     // Priority: config (manifest) → args (LLM) → localized default
-    const title = this.#localize.string(
-      (this.config.title as string) ??
-        (this.args.title as string) ??
-        "#uAiAgent_approval_defaultTitle"
-    );
-    const message = this.#localize.string(
-      (this.config.message as string) ??
-        (this.args.message as string) ??
-        "#uAiAgent_approval_defaultMessage"
-    );
+    // const title = this.#localize.string(
+    //   (this.config.title as string) ??
+    //     (this.args.title as string) ??
+    //     "#uAiAgent_approval_defaultTitle"
+    // );
+    // const message = this.#localize.string(
+    //   (this.config.message as string) ??
+    //     (this.args.message as string) ??
+    //     "#uAiAgent_approval_defaultMessage"
+    // );
     const approveLabel = this.#localize.string(
       (this.config.approveLabel as string) ??
         (this.args.approveLabel as string) ??
@@ -59,32 +59,24 @@ export class UaiAgentApprovalDefaultElement
     );
 
     return html`
-      <uui-box .headline=${title}>
-        <p class="message">${message}</p>
-        <div class="actions">
-          <uui-button
-            look="primary"
-            color="positive"
-            @click=${this.#handleApprove}
-          >
-            ${approveLabel}
-          </uui-button>
-          <uui-button look="secondary" @click=${this.#handleDeny}>
-            ${denyLabel}
-          </uui-button>
-        </div>
-      </uui-box>
+      <div class="actions">
+        <uui-button
+          look="primary"
+          color="positive"
+          @click=${this.#handleApprove}
+        >
+          ${approveLabel}
+        </uui-button>
+        <uui-button look="primary" @click=${this.#handleDeny}>
+          ${denyLabel}
+        </uui-button>
+      </div>
     `;
   }
 
   static override styles = css`
     :host {
       display: block;
-    }
-
-    .message {
-      margin: 0 0 var(--uui-size-space-4) 0;
-      line-height: 1.5;
     }
 
     .actions {

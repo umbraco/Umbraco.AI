@@ -51,6 +51,11 @@ public class AiPromptEntity
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Whether to include the full entity context as a system message during prompt execution.
+    /// </summary>
+    public bool IncludeEntityContext { get; set; } = true;
+
+    /// <summary>
     /// JSON-serialized scope configuration.
     /// </summary>
     public string? Scope { get; set; }

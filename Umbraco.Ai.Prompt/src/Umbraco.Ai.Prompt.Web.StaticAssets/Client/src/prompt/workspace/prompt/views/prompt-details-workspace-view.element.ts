@@ -94,6 +94,14 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onIncludeEntityContextChange(event: Event) {
+        event.stopPropagation();
+        const checked = (event.target as HTMLInputElement).checked;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ includeEntityContext: checked }, "includeEntityContext")
+        );
+    }
+
     #updateScope(scope: UaiPromptScope) {
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiPromptDetailModel>({ scope }, "scope")
@@ -160,6 +168,14 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this._model.contextIds}
                         @change=${this.#onContextIdsChange}
                     ></uai-context-picker>
+                </umb-property-layout>
+
+                <umb-property-layout label="Include Entity Context" description="When enabled, all entity properties are formatted as markdown and injected as a system message. Variable replacement ({{property}}) works regardless of this setting.">
+                    <uui-toggle
+                        slot="editor"
+                        ?checked=${this._model.includeEntityContext}
+                        @change=${this.#onIncludeEntityContextChange}
+                    ></uui-toggle>
                 </umb-property-layout>
 
                 <umb-property-layout label="Instructions" description="The prompt instructions template">

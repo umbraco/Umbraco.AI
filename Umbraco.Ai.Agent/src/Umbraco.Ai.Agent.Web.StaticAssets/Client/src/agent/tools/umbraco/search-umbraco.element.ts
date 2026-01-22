@@ -1,4 +1,4 @@
-import { customElement, property, css, html, state } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UaiAgentToolStatus, UaiAgentToolElementProps } from "../uai-agent-tool.extension.js";
 import type { SearchUmbracoResult, UmbracoSearchResultItem } from "./search-umbraco.types.js";
@@ -72,10 +72,8 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 			<div class="result-item">
 				<uui-card-media
 					name=${item.name}
-					href=${item.url || "#"}
-					@click=${(e: Event) => {
-						if (!item.url) e.preventDefault();
-					}}>
+					disabled
+					style="--uui-color-contrast-disabled: var(--uui-color-text);">
 					${item.thumbnailUrl
 						? html`<img src="${item.thumbnailUrl}" alt="${item.name}" />`
 						: html`<uui-icon name="${this.#getIcon(item)}"></uui-icon>`}
@@ -90,23 +88,15 @@ export class UaiToolSearchUmbracoElement extends UmbLitElement implements UaiAge
 	#renderContentCard(item: UmbracoSearchResultItem) {
 		return html`
 			<div class="result-item">
-				<uui-card
-					href=${item.url || "#"}
-					@click=${(e: Event) => {
-						if (!item.url) e.preventDefault();
-					}}>
-					<div class="content-card-body">
-						<div class="content-icon">
-							<uui-icon name="${this.#getIcon(item)}"></uui-icon>
-						</div>
-						<div class="content-info">
-							<div class="content-name">${item.name}</div>
-							<div class="content-type">
-								<uui-tag color="default" look="secondary">${item.contentType}</uui-tag>
-							</div>
-						</div>
-					</div>
-				</uui-card>
+				<uui-card-content-node 
+					name=${item.name}
+					disabled
+					.selectable=${false}
+					style="--uui-color-contrast-disabled: var(--uui-color-text);">
+					<ul style="list-style: none; padding-inline-start: 0px; margin: 0;">
+						<li><span style="font-weight: 700">Content Type:</span> ${item.contentType}</li>
+					</ul>
+				</uui-card-content-node>
 			</div>
 		`;
 	}

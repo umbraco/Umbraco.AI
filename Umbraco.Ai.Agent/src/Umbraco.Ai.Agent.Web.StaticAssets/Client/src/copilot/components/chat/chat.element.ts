@@ -1,7 +1,8 @@
 import { customElement, state, css, html, repeat, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaiChatMessage, UaiAgentState, UaiInterruptInfo } from "../../types.js";
+import type { UaiChatMessage, UaiAgentState } from "../../types.js";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
+import type { PendingApproval } from "../../hitl.context.js";
 
 /**
  * Main chat component.
@@ -19,7 +20,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
   private _agentState?: UaiAgentState;
 
   @state()
-  private _hitlInterrupt?: UaiInterruptInfo;
+  private _pendingApproval?: PendingApproval;
 
   @state()
   private _isRunning = false;
@@ -48,10 +49,10 @@ export class UaiCopilotChatElement extends UmbLitElement {
         this._isRunning = isRunning;
       });
 
-      // HITL interrupts
-      this.observe(context.hitlInterrupt$, (interrupt) => {
-        this._hitlInterrupt = interrupt;
-        if (interrupt) {
+      // HITL interrupts (with target message for inline rendering)
+      this.observe(context.pendingApproval$, (approval) => {
+        this._pendingApproval = approval;
+        if (approval) {
           this._isRunning = false;
         }
       });
@@ -108,8 +109,30 @@ export class UaiCopilotChatElement extends UmbLitElement {
             ?is-running=${this._isRunning}
             @regenerate=${this.#handleRegenerate}
           ></uai-copilot-message>
+          ${this.#renderInlineHitl(msg.id)}
         `
       )}
+    `;
+  }
+
+  /**
+   * Render HITL approval inline after the target message.
+   * Falls back to last assistant message if no target specified.
+   */
+  #renderInlineHitl(messageId: string) {
+    // Render HITL after target message, or after last assistant message if no target
+    const shouldRender = this._pendingApproval && (
+      this._pendingApproval.targetMessageId === messageId ||
+      (!this._pendingApproval.targetMessageId && messageId === this.#getLastAssistantMessageId())
+    );
+
+    if (!shouldRender) return html``;
+
+    return html`
+      <uai-copilot-hitl-approval
+        .interrupt=${this._pendingApproval!.interrupt}
+        @respond=${this.#handleInterruptResponse}
+      ></uai-copilot-hitl-approval>
     `;
   }
 
@@ -137,17 +160,8 @@ export class UaiCopilotChatElement extends UmbLitElement {
             ></uai-copilot-agent-status>`
           : ""}
 
-        ${this._hitlInterrupt
-          ? html`
-              <uai-copilot-hitl-approval
-                .interrupt=${this._hitlInterrupt}
-                @respond=${this.#handleInterruptResponse}
-              ></uai-copilot-hitl-approval>
-            `
-          : ""}
-
         <uai-copilot-input
-          ?disabled=${this._isRunning || !!this._hitlInterrupt}
+          ?disabled=${this._isRunning || !!this._pendingApproval}
           @send=${this.#handleSendMessage}
         ></uai-copilot-input>
       </div>

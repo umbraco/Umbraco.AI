@@ -13,6 +13,7 @@ export type CreatePromptRequestModel = {
     contextIds?: Array<string> | null;
     tags?: Array<string> | null;
     scope?: ScopeModel | null;
+    includeEntityContext?: boolean;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -71,6 +72,7 @@ export type PromptResponseModel = {
     contextIds: Array<string>;
     tags: Array<string>;
     isActive: boolean;
+    includeEntityContext: boolean;
     scope?: ScopeModel | null;
     dateCreated: string;
     dateModified: string;
@@ -85,7 +87,7 @@ export type PropertyChangeModel = {
 
 export type RequestContextItemModel = {
     description: string;
-    value?: unknown;
+    value?: string | null;
 };
 
 export type ScopeModel = {
@@ -108,6 +110,7 @@ export type UpdatePromptRequestModel = {
     contextIds?: Array<string> | null;
     tags?: Array<string> | null;
     isActive: boolean;
+    includeEntityContext: boolean;
     scope?: ScopeModel | null;
 };
 

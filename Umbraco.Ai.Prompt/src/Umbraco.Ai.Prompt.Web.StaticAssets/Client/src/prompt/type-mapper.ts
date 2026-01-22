@@ -57,6 +57,7 @@ export const UaiPromptTypeMapper = {
             tags: response.tags ?? [],
             scope: mapScopeFromApi(response.scope),
             isActive: response.isActive,
+            includeEntityContext: response.includeEntityContext,
         };
     },
 
@@ -81,6 +82,7 @@ export const UaiPromptTypeMapper = {
             contextIds: model.contextIds,
             tags: model.tags,
             scope: mapScopeToApi(model.scope),
+            includeEntityContext: model.includeEntityContext,
         };
     },
 
@@ -95,6 +97,7 @@ export const UaiPromptTypeMapper = {
             tags: model.tags,
             scope: mapScopeToApi(model.scope),
             isActive: model.isActive,
+            includeEntityContext: model.includeEntityContext,
         };
     },
 };

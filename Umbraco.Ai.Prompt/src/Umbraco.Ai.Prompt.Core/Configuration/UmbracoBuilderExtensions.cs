@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Prompt.Core.Context;
+using Umbraco.Ai.Prompt.Core.Media;
 using Umbraco.Ai.Prompt.Core.Models;
 using Umbraco.Ai.Prompt.Core.Prompts;
+using Umbraco.Ai.Prompt.Core.Templates.Processors;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Prompt.Core.Configuration;
@@ -31,6 +33,10 @@ public static class UmbracoBuilderExtensions
 
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAiPromptRepository, InMemoryAiPromptRepository>();
+
+        // Register template variable processors
+        builder.Services.AddSingleton<TextTemplateVariableProcessor>();
+        builder.Services.AddSingleton<ImageTemplateVariableProcessor>();
 
         // Register template service
         builder.Services.AddSingleton<IAiPromptTemplateService, AiPromptTemplateService>();

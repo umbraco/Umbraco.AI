@@ -59,4 +59,9 @@ public class UpdatePromptRequestModel
     /// Null means the prompt is not allowed anywhere.
     /// </summary>
     public ScopeModel? Scope { get; init; }
+
+    /// <summary>
+    /// Whether to include the full entity context as a system message during prompt execution.
+    /// </summary>
+    public bool IncludeEntityContext { get; init; } = true;
 }

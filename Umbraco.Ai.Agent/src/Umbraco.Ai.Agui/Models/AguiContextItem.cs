@@ -18,5 +18,5 @@ public sealed class AguiContextItem
     /// Gets or sets the context item value.
     /// </summary>
     [JsonPropertyName("value")]
-    public JsonElement? Value { get; set; }
+    public string? Value { get; set; }
 }

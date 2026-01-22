@@ -281,18 +281,18 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
 		const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
 
 		// Handle specific type conversions if needed
-		let valueToSet: unknown = change.value;
-		
-		// Example: If existing editor is MediaPicker3, we need to wrap the value in the expected object structure
-		if (existingValue && existingValue.editorAlias === "Umbraco.MediaPicker3") {
-			valueToSet = [{
-				"key": this.#uuidv4(),
-				"mediaKey": valueToSet,
-				"mediaTypeAlias": "Image",
-				"crops": [],
-				"focalPoint": null
-			}]
+		let valueToSet: any = change.value;
+
+		try
+		{
+			
+			valueToSet = JSON.parse(valueToSet);
+			if (existingValue && existingValue.editorAlias === "Umbraco.MediaPicker3")
+			{
+				valueToSet[0].key = this.#uuidv4();
+			}
 		}
+		catch (e) { }
 		
 		try {
 			await ctx.setPropertyValue(change.alias, valueToSet, variantId);

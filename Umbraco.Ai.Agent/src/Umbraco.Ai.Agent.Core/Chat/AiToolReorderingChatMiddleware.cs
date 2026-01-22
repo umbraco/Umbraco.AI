@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Agent.Core.Chat;
 
@@ -19,14 +20,14 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// </para>
 /// <para>
 /// Frontend tool names are read from <see cref="ChatOptions.AdditionalProperties"/>
-/// using the key <see cref="Constants.ChatOptionsKeys.FrontendToolNames"/>.
+/// using the key <see cref="Constants.ContextKeys.FrontendToolNames"/>.
 /// </para>
 /// </remarks>
-public sealed class AiToolReorderingChatMiddleware : IAiChatMiddleware
+public sealed class AiToolReorderingChatMiddleware(IAiRuntimeContextAccessor runtimeContextAccessor) : IAiChatMiddleware
 {
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new AiToolReorderingChatClient(client);
+        return new AiToolReorderingChatClient(client, runtimeContextAccessor);
     }
 }

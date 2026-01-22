@@ -9,7 +9,6 @@
     <ItemGroup>
         <!-- Dont include the client folder as part of packaging nuget build -->
         <Content Remove="Client\**" />
-        <Content Include="Client\package-lock.json" />
         <Content Include="Client\package.json" />
         <Content Include="Client\tsconfig.json" />
 

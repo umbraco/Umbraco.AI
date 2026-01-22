@@ -1,4 +1,4 @@
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
 
@@ -36,8 +36,8 @@ public class AiPromptExecutionRequest
     public string? Segment { get; init; }
 
     /// <summary>
-    /// Flexible context items array for passing frontend context to processors.
-    /// These items are processed by <see cref="AiRequestContextProcessorCollection"/>
+    /// Flexible context items array for passing frontend context to contributor.
+    /// These items are processed by <see cref="AiRuntimeContextContributorCollection"/>
     /// to extract entity data, template variables, and system messages.
     /// </summary>
     public IReadOnlyList<AiRequestContextItem>? Context { get; init; }

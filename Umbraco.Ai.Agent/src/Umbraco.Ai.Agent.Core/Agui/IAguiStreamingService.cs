@@ -32,11 +32,13 @@ public interface IAguiStreamingService
     /// <param name="agent">The MAF AIAgent to run.</param>
     /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
     /// <param name="frontendTools">The frontend tools (converted from request.Tools).</param>
+    /// <param name="additionalSystemPrompt">Optional additional system prompt to inject (e.g., from runtime context contributors).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of AG-UI events.</returns>
     IAsyncEnumerable<IAguiEvent> StreamAgentAsync(
         AIAgent agent,
         AguiRunRequest request,
         IEnumerable<AITool>? frontendTools,
-        CancellationToken cancellationToken);
+        string? additionalSystemPrompt = null,
+        CancellationToken cancellationToken = default);
 }

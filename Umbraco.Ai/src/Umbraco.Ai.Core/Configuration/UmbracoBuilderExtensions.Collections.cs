@@ -1,6 +1,6 @@
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Embeddings;
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -62,19 +62,19 @@ public static partial class UmbracoBuilderExtensions
         => builder.WithCollectionBuilder<AiToolCollectionBuilder>();
 
     /// <summary>
-    /// Gets the AI request context processor collection builder.
+    /// Gets the AI runtime context contributor collection builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
-    /// <returns>The AI request context processor collection builder.</returns>
+    /// <returns>The AI runtime context contributor collection builder.</returns>
     /// <remarks>
-    /// Use this to add, remove, or reorder request context processors. Processors are executed
+    /// Use this to add, remove, or reorder runtime context contributors. Contributors are executed
     /// in order for each context item.
     /// <code>
-    /// builder.AiRequestContextProcessors()
-    ///     .Append&lt;SerializedEntityProcessor&gt;()
-    ///     .Append&lt;CustomProcessor&gt;();
+    /// builder.AiRuntimeContextContributors()
+    ///     .Append&lt;SerializedEntityContributor&gt;()
+    ///     .Append&lt;CustomContributor&gt;();
     /// </code>
     /// </remarks>
-    public static AiRequestContextProcessorCollectionBuilder AiRequestContextProcessors(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiRequestContextProcessorCollectionBuilder>();
+    public static AiRuntimeContextContributorCollectionBuilder AiRuntimeContextContributors(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AiRuntimeContextContributorCollectionBuilder>();
 }

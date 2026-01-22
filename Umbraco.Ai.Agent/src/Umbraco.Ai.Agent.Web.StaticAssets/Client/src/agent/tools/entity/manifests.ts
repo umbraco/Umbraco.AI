@@ -13,7 +13,7 @@ const setPropertyValueManifest: ManifestUaiAgentTool = {
 	name: "Set Property Value Tool",
 	api: () => import("./set-property-value.api.js"),
 	meta: {
-		toolName: "setPropertyValue",
+		toolName: "set_property_value",
 		label: "Set Property Value",
 		description:
 			"Update a property value on the currently selected entity (document, media, etc.). " +

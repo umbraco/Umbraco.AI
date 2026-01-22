@@ -13,6 +13,9 @@ This is a monorepo containing Umbraco.Ai and its add-on packages:
 | **Umbraco.Ai.Agent** | AI agent management add-on | `Umbraco.Ai.Agent/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider plugin | `Umbraco.Ai.Anthropic/` |
+| **Umbraco.Ai.Amazon** | Amazon Bedrock provider plugin | `Umbraco.Ai.Amazon/` |
+| **Umbraco.Ai.Google** | Google Gemini provider plugin | `Umbraco.Ai.Google/` |
+| **Umbraco.Ai.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.Ai.MicrosoftFoundry/` |
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
@@ -64,6 +67,9 @@ dotnet build Umbraco.Ai.local.sln
 dotnet build Umbraco.Ai/Umbraco.Ai.sln
 dotnet build Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.sln
 dotnet build Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.sln
+dotnet build Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.sln
+dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
+dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
 dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
 dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
 
@@ -111,6 +117,9 @@ npm run watch:agent
 Umbraco.Ai (Core)
     ├── Umbraco.Ai.OpenAi (Provider - depends on Core)
     ├── Umbraco.Ai.Anthropic (Provider - depends on Core)
+    ├── Umbraco.Ai.Amazon (Provider - depends on Core)
+    ├── Umbraco.Ai.Google (Provider - depends on Core)
+    ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
     └── Umbraco.Ai.Agent (Add-on - depends on Core)
 ```
@@ -139,7 +148,7 @@ ProductName/
 └── CLAUDE.md                       # Product-specific guidance
 ```
 
-**Provider packages** (Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic) use a simplified structure:
+**Provider packages** (Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic, Umbraco.Ai.Amazon, Umbraco.Ai.Google, Umbraco.Ai.MicrosoftFoundry) use a simplified structure:
 
 ```
 ProviderName/

@@ -50,6 +50,9 @@ Umbraco.Ai/                    # Monorepo root
 ├── Umbraco.Ai.Prompt/         # Prompt add-on (17.x)
 ├── Umbraco.Ai.OpenAi/         # OpenAI provider (1.x)
 ├── Umbraco.Ai.Anthropic/      # Anthropic provider (1.x)
+├── Umbraco.Ai.Amazon/         # Amazon Bedrock provider (1.x)
+├── Umbraco.Ai.Google/         # Google Gemini provider (1.x)
+├── Umbraco.Ai.MicrosoftFoundry/ # Microsoft AI Foundry provider (1.x)
 ├── demo/                      # Demo site (generated)
 └── docs/                      # Shared documentation
 ```
@@ -75,6 +78,9 @@ Umbraco.Ai/                    # Monorepo root
 - `prompt` - Umbraco.Ai.Prompt
 - `openai` - Umbraco.Ai.OpenAi
 - `anthropic` - Umbraco.Ai.Anthropic
+- `amazon` - Umbraco.Ai.Amazon
+- `google` - Umbraco.Ai.Google
+- `microsoft-foundry` - Umbraco.Ai.MicrosoftFoundry
 
 ### Examples
 
@@ -83,8 +89,12 @@ Umbraco.Ai/                    # Monorepo root
 feature/core-add-streaming-support
 feature/agent-improve-context-handling
 feature/prompt-add-versioning
+feature/amazon-add-nova-models
+feature/google-multimodal-support
+feature/microsoft-foundry-endpoint-config
 release/core-17.1.0
 release/openai-1.2.0
+release/amazon-1.1.0
 hotfix/agent-17.0.1
 ```
 
@@ -286,6 +296,9 @@ Each product is versioned and released independently using Nerdbank.GitVersionin
 | Umbraco.Ai.Prompt | 17.x (matches Umbraco CMS) | 17.0.0 |
 | Umbraco.Ai.OpenAi | 1.x (independent) | 1.0.0 |
 | Umbraco.Ai.Anthropic | 1.x (independent) | 1.0.0 |
+| Umbraco.Ai.Amazon | 1.x (independent) | 1.0.0 |
+| Umbraco.Ai.Google | 1.x (independent) | 1.0.0 |
+| Umbraco.Ai.MicrosoftFoundry | 1.x (independent) | 1.0.0 |
 
 ### Release Workflow
 

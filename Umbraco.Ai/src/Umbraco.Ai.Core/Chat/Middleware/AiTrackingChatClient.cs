@@ -1,34 +1,36 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 
 namespace Umbraco.Ai.Core.Chat.Middleware;
 
 /// <summary>
-/// A chat client that tracks the last usage details and response text.
+/// A chat client that tracks the last usage details and response message.
 /// </summary>
-/// <param name="innerClient"></param>
+/// <param name="innerClient">The inner chat client to wrap.</param>
 internal sealed class AiTrackingChatClient(IChatClient innerClient) : AiBoundChatClientBase(innerClient)
 {
     /// <summary>
     /// The last usage details received from the chat client.
     /// </summary>
     public UsageDetails? LastUsageDetails { get; private set; }
-    
+
     /// <summary>
-    /// The last response text received from the chat client.
+    /// The response messages received from the chat client.
+    /// This includes all messages after the user's request (assistant messages, tool results, etc.)
+    /// for complete audit logging of tool-use scenarios.
     /// </summary>
-    public string? LastResponse { get; private set; }
+    public IReadOnlyList<ChatMessage>? LastResponseMessages { get; private set; }
 
     /// <inheritdoc />
     public override async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var response =  await base.GetResponseAsync(chatMessages, options, cancellationToken); 
-        
+        var response = await base.GetResponseAsync(chatMessages, options, cancellationToken);
+
         LastUsageDetails = response.Usage;
-        LastResponse = response.Text;
-        
+        // Capture all response messages for complete audit logging (includes tool calls and results in agentic scenarios)
+        LastResponseMessages = response.Messages.ToList();
+
         return response;
     }
 
@@ -37,21 +39,22 @@ internal sealed class AiTrackingChatClient(IChatClient innerClient) : AiBoundCha
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var stream = base.GetStreamingResponseAsync(chatMessages, options, cancellationToken);
-        
-        var lastUpdate = default(ChatResponseUpdate);
-        var lastContents = new StringBuilder();
-            
-        // Stream updates - audit-log completion handled after streaming completes
+
+        // Accumulate updates while yielding immediately
+        var updates = new List<ChatResponseUpdate>();
+
+        // Stream updates - yield immediately, then accumulate for later
         await foreach (var update in stream)
         {
-            lastUpdate = update;
-            lastContents.Append(update.Text);
-            yield return update;
+            yield return update;  // IMMEDIATE yield - no blocking
+            updates.Add(update);  // Accumulate for post-stream aggregation
         }
-        
-        var usage = lastUpdate?.Contents.OfType<UsageContent>().FirstOrDefault();
-        
-        LastUsageDetails = usage?.Details;
-        LastResponse = lastContents.ToString();
+
+        // After streaming completes, aggregate for audit logging using M.E.AI's ToChatResponse()
+        // This handles text content concatenation, function call assembly, and usage accumulation
+        var aggregatedResponse = updates.ToChatResponse();
+        LastUsageDetails = aggregatedResponse.Usage;
+        // Capture all response messages for complete audit logging (includes tool calls and results in agentic scenarios)
+        LastResponseMessages = aggregatedResponse.Messages.ToList();
     }
 }

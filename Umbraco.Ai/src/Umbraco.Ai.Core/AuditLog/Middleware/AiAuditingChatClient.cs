@@ -83,7 +83,7 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
                     auditLog,
                     new AiAuditResponse
                     {
-                        Data = trackingChatClient?.LastResponse,
+                        Data = trackingChatClient?.LastResponseMessages,
                         Usage = trackingChatClient?.LastUsageDetails,
                     },
                     cancellationToken);
@@ -190,7 +190,7 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
                 auditLog,
                 new AiAuditResponse
                 {
-                    Data = trackingChatClient?.LastResponse,
+                    Data = trackingChatClient?.LastResponseMessages,
                     Usage = trackingChatClient?.LastUsageDetails,
                 },
                 cancellationToken);

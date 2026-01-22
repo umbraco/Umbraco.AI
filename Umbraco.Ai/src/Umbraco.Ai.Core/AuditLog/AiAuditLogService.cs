@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -83,9 +84,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
                 : null;
         }
         
-        if (_options.CurrentValue.PersistResponses && response?.Data != null && !string.IsNullOrEmpty(response.Data.ToString()))
+        if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
-            audit.ResponseSnapshot = ApplyRedaction(response.Data.ToString());
+            var formattedResponse = FormatResponseSnapshot(response.Data);
+            if (!string.IsNullOrEmpty(formattedResponse))
+            {
+                audit.ResponseSnapshot = ApplyRedaction(formattedResponse);
+            }
         }
 
         await _auditLogRepository.SaveAsync(audit, ct);
@@ -184,9 +189,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
                 : null;
         }
 
-        if (_options.CurrentValue.PersistResponses && response?.Data != null && !string.IsNullOrEmpty(response.Data.ToString()))
+        if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
-            audit.ResponseSnapshot = ApplyRedaction(response.Data.ToString());
+            var formattedResponse = FormatResponseSnapshot(response.Data);
+            if (!string.IsNullOrEmpty(formattedResponse))
+            {
+                audit.ResponseSnapshot = ApplyRedaction(formattedResponse);
+            }
         }
 
         // Queue just the persistence operation
@@ -336,7 +345,27 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
         return AiAuditLogErrorCategory.Unknown;
     }
-    
+
+    /// <summary>
+    /// Formats response data for storage in the audit log.
+    /// Handles ChatMessage types to include tool calls and other content types.
+    /// </summary>
+    private static string? FormatResponseSnapshot(object? data)
+    {
+        if (data is null)
+        {
+            return null;
+        }
+
+        return data switch
+        {
+            IEnumerable<ChatMessage> messages => AiChatMessageFormatter.FormatChatMessages(messages),
+            ChatMessage message => AiChatMessageFormatter.FormatChatMessage(message),
+            string text => text,
+            _ => data.ToString()
+        };
+    }
+
     private string? ApplyRedaction(string? input)
     {
         if (string.IsNullOrEmpty(input) || _options.CurrentValue.RedactionPatterns.Count == 0)

@@ -36,11 +36,8 @@ public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provid
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(MicrosoftFoundryProviderSettings settings, string? modelId)
     {
         var model = modelId ?? DefaultEmbeddingModel;
-        var generator = MicrosoftFoundryProvider.CreateEmbeddingsClient(settings, model)
+        return MicrosoftFoundryProvider.CreateEmbeddingsClient(settings, model)
             .AsIEmbeddingGenerator(model);
-
-        // Wrap with metadata filter to remove Umbraco.Ai keys that Foundry doesn't accept
-        return new MicrosoftFoundryMetadataFilteringEmbeddingGenerator(generator);
     }
 
     private static bool IsEmbeddingModel(MicrosoftFoundryModelInfo model)

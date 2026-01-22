@@ -36,11 +36,8 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) :
     protected override IChatClient CreateClient(MicrosoftFoundryProviderSettings settings, string? modelId)
     {
         var model = modelId ?? DefaultChatModel;
-        var client = MicrosoftFoundryProvider.CreateChatCompletionsClient(settings, model)
+        return MicrosoftFoundryProvider.CreateChatCompletionsClient(settings, model)
             .AsIChatClient(model);
-
-        // Wrap with metadata filtering to remove Umbraco.Ai.* properties that the API rejects
-        return new MicrosoftFoundryMetadataFilteringChatClient(client);
     }
 
     private static bool IsChatModel(MicrosoftFoundryModelInfo model)

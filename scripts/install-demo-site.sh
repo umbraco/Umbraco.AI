@@ -159,6 +159,10 @@ add_product_projects "Umbraco.Ai.Agent" "Agent"
 echo "Adding Umbraco.Ai.Anthropic projects..."
 add_product_projects "Umbraco.Ai.Anthropic" "Anthropic"
 
+# Step 9.1: Add Microsoft Foundry provider projects
+echo "Adding Umbraco.Ai.MicrosoftFoundry projects..."
+add_product_projects "Umbraco.Ai.MicrosoftFoundry" "MicrosoftFoundry"
+
 # Step 10: Add demo site to solution
 echo "Adding demo site to solution..."
 dotnet sln "Umbraco.Ai.local.sln" add "demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
@@ -179,6 +183,11 @@ fi
 # Anthropic provider
 if [ -f "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj"
+fi
+
+# Microsoft Foundry provider
+if [ -f "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj"
 fi
 
 # Prompt add-on (meta-package + SQLite persistence)

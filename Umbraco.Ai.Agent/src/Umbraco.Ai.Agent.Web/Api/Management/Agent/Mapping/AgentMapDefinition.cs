@@ -8,7 +8,7 @@ namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Mapping;
 /// <summary>
 /// UmbracoMapper definitions for agent models.
 /// </summary>
-public class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
+internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)

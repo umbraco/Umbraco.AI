@@ -8,7 +8,7 @@ namespace Umbraco.Ai.Agent.Core.Agui;
 /// Default implementation of <see cref="IAguiMessageConverter"/>.
 /// Responsible only for converting AG-UI messages to M.E.AI chat messages.
 /// </summary>
-public sealed class AguiMessageConverter : IAguiMessageConverter
+internal sealed class AguiMessageConverter : IAguiMessageConverter
 {
     /// <inheritdoc />
     public List<ChatMessage> ConvertToChatMessages(IEnumerable<AguiMessage>? messages)

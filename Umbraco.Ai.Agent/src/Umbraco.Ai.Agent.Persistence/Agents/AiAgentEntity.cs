@@ -3,7 +3,7 @@ namespace Umbraco.Ai.Agent.Persistence.Agents;
 /// <summary>
 /// EF Core entity for agent storage.
 /// </summary>
-public class AiAgentEntity
+internal class AiAgentEntity
 {
     /// <summary>
     /// Unique identifier.

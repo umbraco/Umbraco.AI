@@ -8,7 +8,7 @@ namespace Umbraco.Ai.Core.AuditLog.Middleware;
 /// <summary>
 /// Chat middleware that handles audit-log tracking for AI chat operations.
 /// </summary>
-public sealed class AiAuditingChatMiddleware : IAiChatMiddleware
+internal sealed class AiAuditingChatMiddleware : IAiChatMiddleware
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiAuditLogService _auditLogService;

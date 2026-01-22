@@ -3,7 +3,7 @@ namespace Umbraco.Ai.Persistence.AuditLog;
 /// <summary>
 /// EF Core entity for AI audit-log records.
 /// </summary>
-public class AiAuditLogEntity
+internal class AiAuditLogEntity
 {
     /// <summary>
     /// Gets or sets the unique identifier for this audit-log.

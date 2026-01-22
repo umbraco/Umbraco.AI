@@ -3,7 +3,7 @@ namespace Umbraco.Ai.Core.Analytics.Usage;
 /// <summary>
 /// Factory for creating AiUsageRecord instances with proper dependency injection.
 /// </summary>
-public interface IAiUsageRecordFactory
+internal interface IAiUsageRecordFactory
 {
     /// <summary>
     /// Creates a new AiUsageRecord instance from the given context and result.

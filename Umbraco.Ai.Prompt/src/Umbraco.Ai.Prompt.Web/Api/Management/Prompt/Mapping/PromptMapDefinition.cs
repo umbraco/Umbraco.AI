@@ -8,7 +8,7 @@ namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Mapping;
 /// <summary>
 /// UmbracoMapper definitions for prompt models.
 /// </summary>
-public class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
+internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)

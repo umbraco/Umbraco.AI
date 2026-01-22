@@ -15,14 +15,14 @@ public class AiPromptTemplateServiceTests
 {
     private readonly Mock<IMediaService> _mockMediaService;
     private readonly Mock<IContentService> _mockContentService;
-    private readonly Mock<IAiMediaImageResolver> _mockImageResolver;
+    private readonly Mock<IAiUmbracoMediaResolver> _mockImageResolver;
     private readonly AiPromptTemplateService _service;
 
     public AiPromptTemplateServiceTests()
     {
         _mockMediaService = new Mock<IMediaService>();
         _mockContentService = new Mock<IContentService>();
-        _mockImageResolver = new Mock<IAiMediaImageResolver>();
+        _mockImageResolver = new Mock<IAiUmbracoMediaResolver>();
 
         var textProcessor = new TextTemplateVariableProcessor();
         var imageProcessor = new ImageTemplateVariableProcessor(
@@ -37,14 +37,14 @@ public class AiPromptTemplateServiceTests
     #region Basic Text Processing
 
     [Fact]
-    public void ProcessTemplate_WithNoVariables_ReturnsSingleTextContent()
+    public async Task ProcessTemplateAsync_WithNoVariables_ReturnsSingleTextContent()
     {
         // Arrange
         var template = "Hello, world!";
         var context = new Dictionary<string, object?>();
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -53,7 +53,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithTextVariable_ReplacesVariable()
+    public async Task ProcessTemplateAsync_WithTextVariable_ReplacesVariable()
     {
         // Arrange
         var template = "Hello, {{name}}!";
@@ -63,7 +63,7 @@ public class AiPromptTemplateServiceTests
         };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -72,7 +72,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithMultipleTextVariables_ReplacesAll()
+    public async Task ProcessTemplateAsync_WithMultipleTextVariables_ReplacesAll()
     {
         // Arrange
         var template = "{{greeting}}, {{name}}! Today is {{day}}.";
@@ -84,7 +84,7 @@ public class AiPromptTemplateServiceTests
         };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -93,14 +93,14 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithMissingVariable_ReplacesWithEmpty()
+    public async Task ProcessTemplateAsync_WithMissingVariable_ReplacesWithEmpty()
     {
         // Arrange
         var template = "Hello, {{name}}!";
         var context = new Dictionary<string, object?>();
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -109,7 +109,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithNestedPath_ResolvesCorrectly()
+    public async Task ProcessTemplateAsync_WithNestedPath_ResolvesCorrectly()
     {
         // Arrange
         var template = "User: {{user.name}}, Email: {{user.email}}";
@@ -123,7 +123,7 @@ public class AiPromptTemplateServiceTests
         };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -135,7 +135,7 @@ public class AiPromptTemplateServiceTests
     #region Image Processing
 
     [Fact]
-    public void ProcessTemplate_WithImageVariable_ReturnsDataContentAndReferenceName()
+    public async Task ProcessTemplateAsync_WithImageVariable_ReturnsDataContentAndReferenceName()
     {
         // Arrange
         var entityId = Guid.NewGuid();
@@ -145,7 +145,7 @@ public class AiPromptTemplateServiceTests
         SetupMediaWithImage(entityId, "umbracoFile", "/media/image.png", "image/png", "Test Image");
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(3);
@@ -158,7 +158,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithImageBetweenText_SplitsCorrectly()
+    public async Task ProcessTemplateAsync_WithImageBetweenText_SplitsCorrectly()
     {
         // Arrange
         var entityId = Guid.NewGuid();
@@ -168,7 +168,7 @@ public class AiPromptTemplateServiceTests
         SetupMediaWithImage(entityId, "photo", "/media/image.jpg", "image/jpeg", "Photo");
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         // Result: "Before ", DataContent, " [Image: Photo] After"
@@ -179,7 +179,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithMultipleImages_ReturnsAllImagesWithReferenceNames()
+    public async Task ProcessTemplateAsync_WithMultipleImages_ReturnsAllImagesWithReferenceNames()
     {
         // Arrange
         var entityId = Guid.NewGuid();
@@ -193,11 +193,11 @@ public class AiPromptTemplateServiceTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia.Object);
 
         _mockImageResolver
-            .Setup(r => r.Resolve(It.IsAny<object?>()))
-            .Returns(new AiImageContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         // Result: DataContent, " [Image: Photo Album]\n", DataContent, " [Image: Photo Album]"
@@ -211,7 +211,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithFailedImageResolution_SkipsImage()
+    public async Task ProcessTemplateAsync_WithFailedImageResolution_SkipsImage()
     {
         // Arrange
         var entityId = Guid.NewGuid();
@@ -224,11 +224,11 @@ public class AiPromptTemplateServiceTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia.Object);
 
         _mockImageResolver
-            .Setup(r => r.Resolve(It.IsAny<object?>()))
-            .Returns((AiImageContent?)null);
+            .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AiMediaContent?)null);
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -240,7 +240,7 @@ public class AiPromptTemplateServiceTests
     #region Mixed Content
 
     [Fact]
-    public void ProcessTemplate_WithMixedContent_ProcessesCorrectly()
+    public async Task ProcessTemplateAsync_WithMixedContent_ProcessesCorrectly()
     {
         // Arrange
         var entityId = Guid.NewGuid();
@@ -251,7 +251,7 @@ public class AiPromptTemplateServiceTests
         SetupMediaWithImage(entityId, "umbracoFile", "/media/image.png", "image/png", "Test Media");
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         // Result: "Generate alt text for:\n", DataContent, " [Image: Test Media]\nMedia name: My Image"
@@ -262,7 +262,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_AdjacentTextVariables_Consolidates()
+    public async Task ProcessTemplateAsync_AdjacentTextVariables_Consolidates()
     {
         // Arrange
         var template = "{{first}}{{second}}{{third}}";
@@ -274,7 +274,7 @@ public class AiPromptTemplateServiceTests
         };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -286,7 +286,7 @@ public class AiPromptTemplateServiceTests
     #region Prefix Parsing
 
     [Fact]
-    public void ProcessTemplate_WithUnknownPrefix_FallsBackToTextProcessor()
+    public async Task ProcessTemplateAsync_WithUnknownPrefix_FallsBackToTextProcessor()
     {
         // Arrange
         // Unknown prefixes fall back to text processor, which receives just the path part (not the full expression)
@@ -297,7 +297,7 @@ public class AiPromptTemplateServiceTests
         };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -305,7 +305,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithColonInPath_DoesNotConfuseAsPrefix()
+    public async Task ProcessTemplateAsync_WithColonInPath_DoesNotConfuseAsPrefix()
     {
         // Test that object["dict"]["key"] pattern with colon doesn't break
         var template = "{{data.value}}";
@@ -318,7 +318,7 @@ public class AiPromptTemplateServiceTests
         };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -326,7 +326,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_ImagePrefix_CaseInsensitive()
+    public async Task ProcessTemplateAsync_ImagePrefix_CaseInsensitive()
     {
         // Arrange
         var entityId = Guid.NewGuid();
@@ -336,7 +336,7 @@ public class AiPromptTemplateServiceTests
         SetupMediaWithImage(entityId, "photo", "/media/image.png", "image/png", "Test Photo");
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         // Result: DataContent, " [Image: Test Photo]"
@@ -351,20 +351,20 @@ public class AiPromptTemplateServiceTests
     #region Edge Cases
 
     [Fact]
-    public void ProcessTemplate_EmptyTemplate_ReturnsEmptyList()
+    public async Task ProcessTemplateAsync_EmptyTemplate_ReturnsEmptyList()
     {
         // Act
-        var result = _service.ProcessTemplate("", new Dictionary<string, object?>());
+        var result = (await _service.ProcessTemplateAsync("", new Dictionary<string, object?>())).ToList();
 
         // Assert
         result.ShouldBeEmpty();
     }
 
     [Fact]
-    public void ProcessTemplate_OnlyWhitespace_ReturnsSingleTextContent()
+    public async Task ProcessTemplateAsync_OnlyWhitespace_ReturnsSingleTextContent()
     {
         // Act
-        var result = _service.ProcessTemplate("   \n\t  ", new Dictionary<string, object?>());
+        var result = (await _service.ProcessTemplateAsync("   \n\t  ", new Dictionary<string, object?>())).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -372,28 +372,28 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_WithNullTemplate_ThrowsArgumentNullException()
+    public async Task ProcessTemplateAsync_WithNullTemplate_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _service.ProcessTemplate(null!, new Dictionary<string, object?>()));
+        await Should.ThrowAsync<ArgumentNullException>(async () => (await _service.ProcessTemplateAsync(null!, new Dictionary<string, object?>())).ToList());
     }
 
     [Fact]
-    public void ProcessTemplate_WithNullContext_ThrowsArgumentNullException()
+    public async Task ProcessTemplateAsync_WithNullContext_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _service.ProcessTemplate("test", null!));
+        await Should.ThrowAsync<ArgumentNullException>(async () => (await _service.ProcessTemplateAsync("test", null!)).ToList());
     }
 
     [Fact]
-    public void ProcessTemplate_VariableAtStart_ProcessesCorrectly()
+    public async Task ProcessTemplateAsync_VariableAtStart_ProcessesCorrectly()
     {
         // Arrange
         var template = "{{name}} says hello";
         var context = new Dictionary<string, object?> { ["name"] = "Alice" };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -401,14 +401,14 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_VariableAtEnd_ProcessesCorrectly()
+    public async Task ProcessTemplateAsync_VariableAtEnd_ProcessesCorrectly()
     {
         // Arrange
         var template = "Hello, {{name}}";
         var context = new Dictionary<string, object?> { ["name"] = "Bob" };
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         result.Count.ShouldBe(1);
@@ -416,7 +416,7 @@ public class AiPromptTemplateServiceTests
     }
 
     [Fact]
-    public void ProcessTemplate_OnlyImageVariable_ReturnsDataContentAndReferenceName()
+    public async Task ProcessTemplateAsync_OnlyImageVariable_ReturnsDataContentAndReferenceName()
     {
         // Arrange
         var entityId = Guid.NewGuid();
@@ -426,7 +426,7 @@ public class AiPromptTemplateServiceTests
         SetupMediaWithImage(entityId, "photo", "/media/image.png", "image/png", "Solo Photo");
 
         // Act
-        var result = _service.ProcessTemplate(template, context);
+        var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
 
         // Assert
         // Result: DataContent, " [Image: Solo Photo]"
@@ -457,8 +457,8 @@ public class AiPromptTemplateServiceTests
         _mockMediaService.Setup(s => s.GetById(entityId)).Returns(mockMedia.Object);
 
         _mockImageResolver
-            .Setup(r => r.Resolve(imagePath))
-            .Returns(new AiImageContent { Data = new byte[] { 1, 2, 3 }, MediaType = mediaType });
+            .Setup(r => r.ResolveAsync(imagePath, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = mediaType });
     }
 
     #endregion

@@ -20,7 +20,7 @@ public class TextTemplateVariableProcessorTests
     }
 
     [Fact]
-    public void Process_WithSimplePath_ReturnsTextContent()
+    public async Task ProcessAsync_WithSimplePath_ReturnsTextContent()
     {
         // Arrange
         var context = new Dictionary<string, object?>
@@ -29,7 +29,7 @@ public class TextTemplateVariableProcessorTests
         };
 
         // Act
-        var result = _processor.Process("name", context).ToList();
+        var result = (await _processor.ProcessAsync("name", context)).ToList();
 
         // Assert
         result.ShouldHaveSingleItem();
@@ -38,7 +38,7 @@ public class TextTemplateVariableProcessorTests
     }
 
     [Fact]
-    public void Process_WithNestedPath_ReturnsTextContent()
+    public async Task ProcessAsync_WithNestedPath_ReturnsTextContent()
     {
         // Arrange
         var context = new Dictionary<string, object?>
@@ -50,7 +50,7 @@ public class TextTemplateVariableProcessorTests
         };
 
         // Act
-        var result = _processor.Process("entity.name", context).ToList();
+        var result = (await _processor.ProcessAsync("entity.name", context)).ToList();
 
         // Assert
         result.ShouldHaveSingleItem();
@@ -59,20 +59,20 @@ public class TextTemplateVariableProcessorTests
     }
 
     [Fact]
-    public void Process_WithMissingPath_ReturnsEmpty()
+    public async Task ProcessAsync_WithMissingPath_ReturnsEmpty()
     {
         // Arrange
         var context = new Dictionary<string, object?>();
 
         // Act
-        var result = _processor.Process("missing", context).ToList();
+        var result = (await _processor.ProcessAsync("missing", context)).ToList();
 
         // Assert
         result.ShouldBeEmpty();
     }
 
     [Fact]
-    public void Process_WithNullValue_ReturnsEmpty()
+    public async Task ProcessAsync_WithNullValue_ReturnsEmpty()
     {
         // Arrange
         var context = new Dictionary<string, object?>
@@ -81,14 +81,14 @@ public class TextTemplateVariableProcessorTests
         };
 
         // Act
-        var result = _processor.Process("nullValue", context).ToList();
+        var result = (await _processor.ProcessAsync("nullValue", context)).ToList();
 
         // Assert
         result.ShouldBeEmpty();
     }
 
     [Fact]
-    public void Process_CaseInsensitive_ReturnsTextContent()
+    public async Task ProcessAsync_CaseInsensitive_ReturnsTextContent()
     {
         // Arrange
         var context = new Dictionary<string, object?>
@@ -97,7 +97,7 @@ public class TextTemplateVariableProcessorTests
         };
 
         // Act
-        var result = _processor.Process("name", context).ToList();
+        var result = (await _processor.ProcessAsync("name", context)).ToList();
 
         // Assert
         result.ShouldHaveSingleItem();
@@ -106,7 +106,7 @@ public class TextTemplateVariableProcessorTests
     }
 
     [Fact]
-    public void Process_WithIntegerValue_ConvertsToString()
+    public async Task ProcessAsync_WithIntegerValue_ConvertsToString()
     {
         // Arrange
         var context = new Dictionary<string, object?>
@@ -115,7 +115,7 @@ public class TextTemplateVariableProcessorTests
         };
 
         // Act
-        var result = _processor.Process("count", context).ToList();
+        var result = (await _processor.ProcessAsync("count", context)).ToList();
 
         // Assert
         result.ShouldHaveSingleItem();
@@ -124,19 +124,19 @@ public class TextTemplateVariableProcessorTests
     }
 
     [Fact]
-    public void Process_WithNullPath_ThrowsArgumentNullException()
+    public async Task ProcessAsync_WithNullPath_ThrowsArgumentNullException()
     {
         // Arrange
         var context = new Dictionary<string, object?>();
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _processor.Process(null!, context).ToList());
+        await Should.ThrowAsync<ArgumentNullException>(async () => (await _processor.ProcessAsync(null!, context)).ToList());
     }
 
     [Fact]
-    public void Process_WithNullContext_ThrowsArgumentNullException()
+    public async Task ProcessAsync_WithNullContext_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => _processor.Process("path", null!).ToList());
+        await Should.ThrowAsync<ArgumentNullException>(async () => (await _processor.ProcessAsync("path", null!)).ToList());
     }
 }

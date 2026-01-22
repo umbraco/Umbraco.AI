@@ -31,6 +31,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     @state()
     private _propertyChanges?: UaiPromptPropertyChange[];
 
+    @state()
+    private _characterCount = 0;
+
     override connectedCallback() {
         super.connectedCallback();
         this.#generateResponse();
@@ -72,6 +75,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             }
         } else if (data) {
             this._response = data.content;
+            this._characterCount = data.content.length;
             this._propertyChanges = data.propertyChanges;
         }
 
@@ -121,6 +125,33 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         this._rejectModal();
     }
 
+    #renderCharacterIndicator() {
+        if (!this._response || this._characterCount === 0) return nothing;
+
+        const maxChars = this.data?.maxChars;
+
+        // If no max limit configured, just show the count
+        if (!maxChars) {
+            return html`
+                <div class="character-indicator neutral">
+                    <span class="char-count">${this._characterCount} characters</span>
+                </div>
+            `;
+        }
+
+        // Show count vs max with status
+        const isOverLimit = this._characterCount > maxChars;
+        const statusClass = isOverLimit ? 'over' : 'ok';
+        const statusText = isOverLimit ? 'Exceeds limit' : 'Within limit';
+
+        return html`
+            <div class="character-indicator ${statusClass}">
+                <span class="char-count">${this._characterCount} / ${maxChars} characters</span>
+                <span class="char-status">${statusText}</span>
+            </div>
+        `;
+    }
+
     #renderResponse() {
         if (this._error) {
             return html`
@@ -150,8 +181,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         if (this._response) {
             return html`
                 <uui-scroll-container class="response-container">
-                    <pre class="response-content">${this._response}</pre>
+                    <div class="response-content">${this._response}</div>
                 </uui-scroll-container>
+                ${this.#renderCharacterIndicator()}
             `;
         }
 
@@ -167,7 +199,24 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                         : nothing}
 
                     <div class="response-section">
-                        <h4>Response</h4>
+                        <div class="response-header">
+                            <h4>
+                                <uui-icon name="icon-wand"></uui-icon>
+                                AI Response
+                            </h4>
+                            ${this._response && !this._loading
+                                ? html`
+                                    <uui-button
+                                        label="Regenerate"
+                                        look="secondary"
+                                        compact
+                                        @click=${this.#onRetry}>
+                                        <uui-icon name="icon-sync"></uui-icon>
+                                        Regenerate
+                                    </uui-button>
+                                `
+                                : nothing}
+                        </div>
                         ${this.#renderResponse()}
                     </div>
                 </div>
@@ -206,7 +255,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 flex-direction: column;
                 gap: var(--uui-size-space-4);
                 height: 100%;
-                width: 500px;
+                width: 650px;
+                max-width: 100%;
+                box-sizing: border-box;
             }
 
             .description {
@@ -222,28 +273,77 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 min-height: 0;
             }
 
-            .response-section h4 {
-                margin: 0 0 var(--uui-size-space-2) 0;
+            .response-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: var(--uui-size-space-3);
+            }
+
+            .response-header h4 {
+                margin: 0;
                 font-size: var(--uui-type-default-size);
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: var(--uui-size-space-2);
+                color: var(--uui-color-text);
+            }
+
+            .response-header h4 uui-icon {
+                color: var(--uui-color-interactive);
             }
 
             .response-container {
                 flex: 1;
-                min-height: 150px;
-                max-height: 300px;
+                min-height: 200px;
                 border: 1px solid var(--uui-color-border);
                 border-radius: var(--uui-border-radius);
-                background: var(--uui-color-surface);
+                background: var(--uui-color-surface-alt);
+                overflow: auto;
             }
 
             .response-content {
                 margin: 0;
-                padding: var(--uui-size-space-4);
+                padding: var(--uui-size-space-5);
                 white-space: pre-wrap;
                 word-break: break-word;
-                font-family: var(--uui-font-family-monospace);
+                font-family: var(--uui-font-family);
+                font-size: var(--uui-type-default-size);
+                line-height: 1.6;
+                color: var(--uui-color-text);
+            }
+
+            .character-indicator {
+                display: flex;
+                justify-content: space-between;
+                padding: var(--uui-size-space-2) var(--uui-size-space-3);
+                margin-top: var(--uui-size-space-2);
+                border-radius: var(--uui-border-radius);
                 font-size: var(--uui-type-small-size);
-                line-height: 1.5;
+            }
+
+            .character-indicator.neutral {
+                background: color-mix(in srgb, var(--uui-color-text) 10%, transparent);
+                color: var(--uui-color-text-alt);
+            }
+
+            .character-indicator.ok {
+                background: color-mix(in srgb, var(--uui-color-positive) 15%, transparent);
+                color: var(--uui-color-positive-standalone);
+            }
+
+            .character-indicator.over {
+                background: color-mix(in srgb, var(--uui-color-danger) 15%, transparent);
+                color: var(--uui-color-danger-standalone);
+            }
+
+            .char-count {
+                font-weight: 500;
+            }
+
+            .char-status {
+                font-style: italic;
             }
 
             .loading-container {
@@ -251,17 +351,18 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                gap: var(--uui-size-space-3);
-                padding: var(--uui-size-space-6);
+                gap: var(--uui-size-space-4);
+                padding: var(--uui-size-space-8);
+                min-height: 200px;
                 border: 1px solid var(--uui-color-border);
                 border-radius: var(--uui-border-radius);
-                background: var(--uui-color-surface);
+                background: var(--uui-color-surface-alt);
                 color: var(--uui-color-text-alt);
             }
 
             .loading-container uui-loader-bar {
                 width: 100%;
-                max-width: 200px;
+                max-width: 250px;
             }
 
             .error-container {

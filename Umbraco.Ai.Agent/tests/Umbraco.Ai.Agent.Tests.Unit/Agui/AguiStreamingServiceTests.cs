@@ -12,7 +12,6 @@ using Umbraco.Ai.Agui.Events.Lifecycle;
 using Umbraco.Ai.Agui.Events.Messages;
 using Umbraco.Ai.Agui.Events.Tools;
 using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Core.RequestContext;
 using Xunit;
 
 namespace Umbraco.Ai.Agent.Tests.Unit.Agui;
@@ -20,32 +19,21 @@ namespace Umbraco.Ai.Agent.Tests.Unit.Agui;
 public class AguiStreamingServiceTests
 {
     private readonly Mock<IAguiMessageConverter> _mockConverter;
-    private readonly Mock<IAguiContextConverter> _mockContextConverter;
-    private readonly AiRequestContextProcessorCollection _processorCollection;
     private readonly ILogger<AguiStreamingService> _logger;
     private readonly AguiStreamingService _service;
 
     public AguiStreamingServiceTests()
     {
         _mockConverter = new Mock<IAguiMessageConverter>();
-        _mockContextConverter = new Mock<IAguiContextConverter>();
-        _processorCollection = new AiRequestContextProcessorCollection(() => []);
         _logger = NullLogger<AguiStreamingService>.Instance;
         _service = new AguiStreamingService(
             _mockConverter.Object,
-            _mockContextConverter.Object,
-            _processorCollection,
             _logger);
 
         // Default converter setup
         _mockConverter
             .Setup(x => x.ConvertToChatMessages(It.IsAny<IEnumerable<AguiMessage>?>()))
             .Returns(new List<ChatMessage>());
-
-        // Default context converter setup
-        _mockContextConverter
-            .Setup(x => x.ConvertToRequestContextItems(It.IsAny<IEnumerable<AguiContextItem>?>()))
-            .Returns(new List<AiRequestContextItem>());
     }
 
     #region Basic Event Flow Tests
@@ -295,7 +283,7 @@ public class AguiStreamingServiceTests
         // Act & Assert - cancellation from agent should propagate
         await Should.ThrowAsync<OperationCanceledException>(async () =>
         {
-            await foreach (var _ in _service.StreamAgentAsync(agent, request, null, CancellationToken.None))
+            await foreach (var _ in _service.StreamAgentAsync(agent, request, null, null, CancellationToken.None))
             {
                 // Consume
             }
@@ -349,10 +337,11 @@ public class AguiStreamingServiceTests
     private async Task<List<IAguiEvent>> CollectEvents(
         AIAgent agent,
         AguiRunRequest request,
-        IEnumerable<AITool>? frontendTools = null)
+        IEnumerable<AITool>? frontendTools = null,
+        string? additionalSystemPrompt = null)
     {
         var events = new List<IAguiEvent>();
-        await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools, CancellationToken.None))
+        await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools, additionalSystemPrompt, CancellationToken.None))
         {
             events.Add(evt);
         }

@@ -14,11 +14,12 @@ public interface IAiPromptTemplateService
     /// </summary>
     /// <param name="template">The template containing variable placeholders.</param>
     /// <param name="context">Dictionary of values to replace in the template.</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>
     /// A list of <see cref="AIContent"/> items representing the processed template.
     /// Text segments are returned as <see cref="TextContent"/>.
     /// Image variables ({{image:path}}) are returned as <see cref="DataContent"/>.
     /// Adjacent text segments are consolidated into single <see cref="TextContent"/> items.
     /// </returns>
-    IReadOnlyList<AIContent> ProcessTemplate(string template, IReadOnlyDictionary<string, object?> context);
+    Task<IEnumerable<AIContent>> ProcessTemplateAsync(string template, IReadOnlyDictionary<string, object?> context, CancellationToken cancellationToken = default);
 }

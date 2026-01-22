@@ -1,5 +1,5 @@
 using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Agent.Core.Agui;
 

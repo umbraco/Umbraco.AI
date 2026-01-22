@@ -29,7 +29,7 @@ internal sealed partial class AiPromptTemplateService : IAiPromptTemplateService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<AIContent> ProcessTemplate(string template, IReadOnlyDictionary<string, object?> context)
+    public async Task<IEnumerable<AIContent>> ProcessTemplateAsync(string template, IReadOnlyDictionary<string, object?> context, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(context);
@@ -54,7 +54,7 @@ internal sealed partial class AiPromptTemplateService : IAiPromptTemplateService
             var (prefix, path) = ParseExpression(expression);
 
             // Route to appropriate processor and get content items
-            var contentItems = ProcessVariable(prefix, path, context);
+            var contentItems = await ProcessVariableAsync(prefix, path, context, cancellationToken);
 
             foreach (var content in contentItems)
             {
@@ -134,7 +134,7 @@ internal sealed partial class AiPromptTemplateService : IAiPromptTemplateService
         return true;
     }
 
-    private IEnumerable<AIContent> ProcessVariable(string? prefix, string path, IReadOnlyDictionary<string, object?> context)
+    private Task<IEnumerable<AIContent>> ProcessVariableAsync(string? prefix, string path, IReadOnlyDictionary<string, object?> context, CancellationToken cancellationToken)
     {
         var targetPrefix = prefix ?? "*";
 
@@ -144,6 +144,6 @@ internal sealed partial class AiPromptTemplateService : IAiPromptTemplateService
             processor = _processors["*"];
         }
 
-        return processor.Process(path, context);
+        return processor.ProcessAsync(path, context, cancellationToken);
     }
 }

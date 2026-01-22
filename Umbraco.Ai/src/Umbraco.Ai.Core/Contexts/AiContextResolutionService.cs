@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Contexts.Resolvers;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Core.Contexts;
 
@@ -20,17 +21,7 @@ internal sealed class AiContextResolutionService : IAiContextResolutionService
     }
 
     /// <inheritdoc />
-    public Task<AiResolvedContext> ResolveContextAsync(
-        IReadOnlyDictionary<string, object?>? additionalProperties,
-        CancellationToken cancellationToken = default)
-    {
-        var request = new AiContextResolverRequest(additionalProperties);
-        return ResolveFromRequestAsync(request, cancellationToken);
-    }
-
-    private async Task<AiResolvedContext> ResolveFromRequestAsync(
-        AiContextResolverRequest request,
-        CancellationToken cancellationToken)
+    public async Task<AiResolvedContext> ResolveContextAsync(CancellationToken cancellationToken = default)
     {
         var allSources = new List<AiContextSource>();
         var allResources = new List<AiResolvedResource>();
@@ -39,7 +30,7 @@ internal sealed class AiContextResolutionService : IAiContextResolutionService
         // Execute each resolver in order
         foreach (var resolver in _resolvers)
         {
-            var result = await resolver.ResolveAsync(request, cancellationToken);
+            var result = await resolver.ResolveAsync(cancellationToken);
             var resolverTypeName = resolver.GetType().Name;
 
             // Add sources

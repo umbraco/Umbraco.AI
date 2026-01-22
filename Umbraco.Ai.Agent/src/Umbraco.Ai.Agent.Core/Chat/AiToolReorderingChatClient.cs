@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Agent.Core.Chat;
 
@@ -23,20 +24,24 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// </list>
 /// </para>
 /// <para>
-/// Frontend tool names are read from <see cref="ChatOptions.AdditionalProperties"/>
-/// using the key <see cref="Constants.ChatOptionsKeys.FrontendToolNames"/>. This allows
+/// Frontend tool names are read from <see cref="AiRuntimeContext"/>
+/// using the key <see cref="Constants.ContextKeys.FrontendToolNames"/>. This allows
 /// the middleware to be stateless and frontend tools to be specified per-request.
 /// </para>
 /// </remarks>
 internal sealed class AiToolReorderingChatClient : DelegatingChatClient
 {
+    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AiToolReorderingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client (typically the provider).</param>
-    public AiToolReorderingChatClient(IChatClient innerClient)
+    /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
+    public AiToolReorderingChatClient(IChatClient innerClient, IAiRuntimeContextAccessor runtimeContextAccessor)
         : base(innerClient)
     {
+        _runtimeContextAccessor = runtimeContextAccessor ?? throw new ArgumentNullException(nameof(runtimeContextAccessor));
     }
 
     /// <inheritdoc />
@@ -45,7 +50,7 @@ internal sealed class AiToolReorderingChatClient : DelegatingChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var frontendToolNames = GetFrontendToolNames(options);
+        var frontendToolNames = GetFrontendToolNames();
         var response = await base.GetResponseAsync(chatMessages, options, cancellationToken);
 
         // Reorder tool calls in the response message if we have frontend tools
@@ -63,7 +68,7 @@ internal sealed class AiToolReorderingChatClient : DelegatingChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var frontendToolNames = GetFrontendToolNames(options);
+        var frontendToolNames = GetFrontendToolNames();
 
         // If no frontend tools, pass through without collecting
         if (frontendToolNames.Count == 0)
@@ -133,18 +138,11 @@ internal sealed class AiToolReorderingChatClient : DelegatingChatClient
         }
     }
 
-    private static HashSet<string> GetFrontendToolNames(ChatOptions? options)
+    private HashSet<string> GetFrontendToolNames()
     {
-        if (options?.AdditionalProperties?.TryGetValue(
-            Constants.ChatOptionsKeys.FrontendToolNames, out var value) == true)
-        {
-            if (value is IEnumerable<string> names)
-            {
-                return new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
-            }
-        }
-
-        return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        return _runtimeContextAccessor.Context?.TryGetValue<string[]>(Constants.ContextKeys.FrontendToolNames, out var names) == true 
+            ? new HashSet<string>(names, StringComparer.OrdinalIgnoreCase) 
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 
     private static ChatResponse ReorderToolCallsInResponse(

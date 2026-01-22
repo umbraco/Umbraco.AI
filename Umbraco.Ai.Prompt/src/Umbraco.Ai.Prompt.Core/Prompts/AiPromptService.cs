@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.EntityAdapter;
-using Umbraco.Ai.Core.RequestContext;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.Models;
@@ -22,7 +22,8 @@ internal sealed class AiPromptService : IAiPromptService
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AiToolCollection _tools;
     private readonly IAiFunctionFactory _functionFactory;
-    private readonly AiRequestContextProcessorCollection _contextProcessors;
+    private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
+    private readonly AiRuntimeContextContributorCollection _contextContributors;
 
     public AiPromptService(
         IAiPromptRepository repository,
@@ -31,7 +32,8 @@ internal sealed class AiPromptService : IAiPromptService
         IServiceScopeFactory serviceScopeFactory,
         AiToolCollection tools,
         IAiFunctionFactory functionFactory,
-        AiRequestContextProcessorCollection contextProcessors)
+        IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
+        AiRuntimeContextContributorCollection contextContributors)
     {
         _repository = repository;
         _chatService = chatService;
@@ -39,7 +41,8 @@ internal sealed class AiPromptService : IAiPromptService
         _serviceScopeFactory = serviceScopeFactory;
         _tools = tools;
         _functionFactory = functionFactory;
-        _contextProcessors = contextProcessors;
+        _runtimeContextScopeProvider = runtimeContextScopeProvider;
+        _contextContributors = contextContributors;
     }
 
     /// <inheritdoc />
@@ -121,12 +124,29 @@ internal sealed class AiPromptService : IAiPromptService
                 $"Prompt execution denied: {scopeValidation.DenialReason}");
         }
 
-        // 3. Process context items through registered processors
-        var requestContext = _contextProcessors.Process(request.Context ?? []);
+        // Create a runtime context scope for this execution
+        using var runtimeContextScope = _runtimeContextScopeProvider.CreateScope(request.Context ?? []);
+        var runtimeContext = runtimeContextScope.Context;
+        
+        // 3. Process context items through registered contributors
+        _contextContributors.Populate(runtimeContext);
+
+        // If no EntityId was set by contributors, use request.EntityId as fallback
+        if (!runtimeContext.Data.ContainsKey(CoreConstants.ContextKeys.EntityId) && request.EntityId != Guid.Empty)
+        {
+            runtimeContext.SetValue(CoreConstants.ContextKeys.EntityId, request.EntityId);
+        }
+
+        // Set prompt metadata in runtime context for auditing and telemetry
+        runtimeContext.SetValue(Constants.MetadataKeys.PromptId, prompt.Id);
+        runtimeContext.SetValue(Constants.MetadataKeys.PromptAlias, prompt.Alias);
+        runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureType, "prompt");
+        runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureId, prompt.Id);
+        runtimeContext.SetValue(CoreConstants.ContextKeys.FeatureAlias, prompt.Alias);
 
         // 4. Build template context from basic request info + processor results
         var templateContext = BuildExecutionContext(request);
-        foreach (var (key, value) in requestContext.Variables)
+        foreach (var (key, value) in runtimeContext.Variables)
         {
             templateContext[key] = value;
         }
@@ -135,15 +155,15 @@ internal sealed class AiPromptService : IAiPromptService
             : null;
 
         // 5. Process template variables (returns multimodal content list)
-        var contents = _templateService.ProcessTemplate(prompt.Instructions, templateContext);
+        var contents = await _templateService.ProcessTemplateAsync(prompt.Instructions, templateContext, cancellationToken);
 
         // 6. Build chat messages with multimodal content
         List<ChatMessage> messages = [new(ChatRole.User, contents.ToList())];
 
         // 7. Inject system message from context processors (only if IncludeEntityContext is enabled)
-        if (prompt.IncludeEntityContext && requestContext?.SystemMessageParts.Count > 0)
+        if (prompt.IncludeEntityContext && runtimeContext?.SystemMessageParts.Count > 0)
         {
-            var contextContent = string.Join("\n\n", requestContext.SystemMessageParts);
+            var contextContent = string.Join("\n\n", runtimeContext.SystemMessageParts);
 
             // Insert new system message at the beginning
             messages.Insert(0, new ChatMessage(ChatRole.System, contextContent));
@@ -152,36 +172,9 @@ internal sealed class AiPromptService : IAiPromptService
         // 8. Create ChatOptions with PromptId for context resolution, feature tracking, and system tools
         var chatOptions = new ChatOptions
         {
-            AdditionalProperties = new AdditionalPropertiesDictionary
-            {
-                [Constants.MetadataKeys.PromptId] = prompt.Id,
-                [Constants.MetadataKeys.PromptAlias] = prompt.Alias,
-                [CoreConstants.MetadataKeys.FeatureType] = "prompt",
-                [CoreConstants.MetadataKeys.FeatureId] = prompt.Id,
-                [CoreConstants.MetadataKeys.FeatureAlias] = prompt.Alias
-            },
             Tools = _tools.ToSystemToolFunctions(_functionFactory).Cast<AITool>().ToList(),
             ToolMode = ChatToolMode.Auto
         };
-
-        // 8. If entity was extracted by processors, set ContentId for ContentContextResolver
-        var entityId = requestContext.GetValue<Guid>(AiRequestContextKeys.EntityId);
-        if (entityId.HasValue)
-        {
-            chatOptions.AdditionalProperties[AiRequestContextKeys.ContentId] = entityId.Value;
-        }
-        else if (request.EntityId != Guid.Empty)
-        {
-            // Fallback to request.EntityId if no entity extracted from context items
-            chatOptions.AdditionalProperties[AiRequestContextKeys.ContentId] = request.EntityId;
-        }
-
-        // 9. Set ParentEntityId if available (for new entities, used by ContentContextResolver)
-        var parentEntityId = requestContext.GetValue<Guid>(AiRequestContextKeys.ParentEntityId);
-        if (parentEntityId.HasValue)
-        {
-            chatOptions.AdditionalProperties[AiRequestContextKeys.ParentEntityId] = parentEntityId.Value;
-        }
 
         // 10. Execute via chat service
         var response = prompt.ProfileId.HasValue

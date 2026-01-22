@@ -7,6 +7,7 @@ using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.EditableModels;
+using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Tests.Common.Fakes;
 
 namespace Umbraco.Ai.Tests.Integration;
@@ -209,6 +210,12 @@ public class ServiceResolutionTests : IDisposable
             _ => new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>()));
         services.AddSingleton<AiEmbeddingMiddlewareCollection>(
             _ => new AiEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAiEmbeddingMiddleware>()));
+
+        // Runtime context infrastructure
+        services.AddHttpContextAccessor();
+        services.AddSingleton<AiRuntimeContextScopeProvider>();
+        services.AddSingleton<IAiRuntimeContextAccessor>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
+        services.AddSingleton<IAiRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
 
         // Settings resolution
         services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();

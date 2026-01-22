@@ -281,15 +281,15 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
             return true; // Both 24h and 7d use hourly buckets
         }
         if (this.dateRangeType === 'last30d') {
-            return true; // 30d also uses hourly (per backend logic: <= 30 days)
+            return false; // 30d uses daily buckets
         }
 
         // Second, calculate from fromDate/toDate if available
         if (this.fromDate && this.toDate) {
             const from = new Date(this.fromDate);
             const to = new Date(this.toDate);
-            const daysAgo = (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24);
-            return daysAgo <= 30; // Match backend logic
+            const daySpan = (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24);
+            return daySpan <= 7; // Match backend logic: <= 7 days = hourly
         }
 
         // Fallback: infer from data points if we have at least 2

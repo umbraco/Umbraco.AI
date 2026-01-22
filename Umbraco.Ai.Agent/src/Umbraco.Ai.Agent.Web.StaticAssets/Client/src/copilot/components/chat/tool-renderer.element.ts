@@ -80,6 +80,7 @@ export class UaiToolRendererElement extends UmbLitElement {
 
   /**
    * Load the custom element if the manifest has one.
+   * Reuses existing element from the template if it matches the expected type.
    */
   async #loadElement() {
     if (!this.#toolManager || !this.toolCall?.name) return;
@@ -88,7 +89,14 @@ export class UaiToolRendererElement extends UmbLitElement {
       const ElementConstructor = await this.#toolManager.getElement(this.toolCall.name);
 
       if (ElementConstructor) {
-        this.#toolElement = new ElementConstructor();
+        // Check if we already rendered an element of this type via the template
+        const existing = this.renderRoot.firstElementChild;
+        if (existing instanceof ElementConstructor) {
+          // Reuse the existing element instead of creating a new one
+          this.#toolElement = existing as UaiAgentToolElement;
+        } else {
+          this.#toolElement = new ElementConstructor();
+        }
         this.#updateElementProps();
         this._hasCustomElement = true;
       }
@@ -130,7 +138,7 @@ export class UaiToolRendererElement extends UmbLitElement {
     // Parse arguments
     const args = safeParseJson(this.toolCall.arguments, { raw: this.toolCall.arguments });
 
-    // Set props on the element
+    // Set standard props on the element
     this.#toolElement.args = args;
     this.#toolElement.status = this._status;
     this.#toolElement.result = this._result;
@@ -160,7 +168,7 @@ export class UaiToolRendererElement extends UmbLitElement {
 
     return html`
       <uai-agent-tool-status
-        .name=${this.#manifest?.meta.label ?? this.toolCall?.name ?? "Tool"}
+        .name=${this.toolCall?.name ?? "Tool"}
         .status=${this._status}
         .icon=${this.#manifest?.meta.icon ?? "icon-wand"}
         .args=${args}

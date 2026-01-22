@@ -16,10 +16,12 @@ internal sealed class TextTemplateVariableProcessor : IAiTemplateVariableProcess
     public string Prefix => "*";
 
     /// <inheritdoc />
-    public IEnumerable<AIContent> Process(string path, IReadOnlyDictionary<string, object?> context)
+    public async Task<IEnumerable<AIContent>> ProcessAsync(string path, IReadOnlyDictionary<string, object?> context, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(context);
+        
+        var results = new List<AIContent>();
 
         var value = PathResolver.Resolve(context, path, new PathResolverOptions
         {
@@ -28,10 +30,11 @@ internal sealed class TextTemplateVariableProcessor : IAiTemplateVariableProcess
 
         if (value is null)
         {
-            yield break;
+            return results;
         }
 
         var text = value.ToString() ?? string.Empty;
-        yield return new TextContent(text);
+        results.Add(new TextContent(text));
+        return results;
     }
 }

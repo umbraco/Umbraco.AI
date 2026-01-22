@@ -2,6 +2,8 @@ import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
+import { UAI_COPILOT_ALLOWED_SECTION_PATHNAMES } from "../header-app/manifests.js";
+import { observeSectionChanges, isSectionAllowed } from "../../section-detector.js";
 
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
@@ -32,11 +34,21 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
         context.loadAgents();
       }
     });
+
+    // Auto-close copilot when navigating to a section that doesn't support it
+    this.#cleanupSectionObserver = observeSectionChanges((pathname) => {
+      if (!isSectionAllowed(pathname, UAI_COPILOT_ALLOWED_SECTION_PATHNAMES)) {
+        this.#copilotContext?.close();
+      }
+    });
   }
+
+  #cleanupSectionObserver: (() => void) | null = null;
 
   override disconnectedCallback() {
     super.disconnectedCallback();
     this.#updateContentOffset(false); // Reset margin when component unmounts
+    this.#cleanupSectionObserver?.();
   }
 
   #handleClose() {

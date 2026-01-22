@@ -103,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        product: [Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic]
+        product: [Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic, Umbraco.Ai.Amazon, Umbraco.Ai.Google, Umbraco.Ai.MicrosoftFoundry]
     steps:
       - uses: actions/checkout@v4
         with:

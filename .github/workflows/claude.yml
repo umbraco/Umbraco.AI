@@ -29,6 +29,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Full history needed for merges
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run Claude Code
         id: claude
@@ -36,19 +42,8 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # Allow git operations for merge conflict resolution
-          allowed_tools: |
-            Bash(git fetch:*)
-            Bash(git pull:*)
-            Bash(git merge:*)
-            Bash(git checkout:*)
-            Bash(git rebase:*)
-            Bash(git push:*)
-            Bash(git branch:*)
-            Bash(git status:*)
-            Bash(git log:*)
-            Bash(git diff:*)
-            Bash(gh pr:*)
+          # Allow git and gh operations for merge conflict resolution
+          allowed_tools: "Bash(git:*),Bash(gh:*)"
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |

@@ -6,7 +6,7 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings } from "../../../types.js";
 import { isChatSettings } from "../../../types.js";
-import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
@@ -350,8 +350,18 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
             <umb-property-layout label="Id"  orientation="vertical">
                <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
             ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-            : this._model.unique}</div> 
+            : this._model.unique}</div>
             </umb-property-layout>
+            ${this._model.dateCreated ? html`
+                <umb-property-layout label="Date Created" orientation="vertical">
+                    <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
+                </umb-property-layout>
+            ` : ''}
+            ${this._model.dateModified ? html`
+                <umb-property-layout label="Date Modified" orientation="vertical">
+                    <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
+                </umb-property-layout>
+            ` : ''}
             <umb-property-layout label="Capability"  orientation="vertical">
                 <div slot="editor">
                     <uui-tag color="default" look="outline">${this.#getCapabilityLabel(this._model.capability)}</uui-tag>

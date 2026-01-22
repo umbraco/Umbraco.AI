@@ -4,6 +4,7 @@ import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEven
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { formatDateTime } from "../../../../core/index.js";
 import type { UaiContextItemModel } from "../../../types.js";
 import { UAI_CONTEXT_ICON } from "../../../constants.js";
 import { UAI_EDIT_CONTEXT_WORKSPACE_PATH_PATTERN } from "../../../workspace/context/paths.js";
@@ -30,6 +31,7 @@ export class UaiContextTableCollectionViewElement extends UmbLitElement {
         { name: "Name", alias: "name" },
         { name: "Alias", alias: "alias" },
         { name: "Resources", alias: "resourceCount" },
+        { name: "Modified", alias: "dateModified" },
     ];
 
     constructor() {
@@ -78,6 +80,10 @@ export class UaiContextTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "resourceCount",
                     value: item.resourceCount.toString(),
+                },
+                {
+                    columnAlias: "dateModified",
+                    value: item.dateModified ? formatDateTime(item.dateModified) : "-",
                 },
             ],
         }));

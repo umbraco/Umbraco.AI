@@ -2,8 +2,7 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
-import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
-import "@umbraco-ai/core";
+import { UaiPartialUpdateCommand, UAI_EMPTY_GUID, formatDateTime } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
@@ -139,6 +138,16 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
                         : this._model.unique}</div>
                 </umb-property-layout>
+                ${this._model.dateCreated ? html`
+                    <umb-property-layout label="Date Created" orientation="vertical">
+                        <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
+                    </umb-property-layout>
+                ` : ''}
+                ${this._model.dateModified ? html`
+                    <umb-property-layout label="Date Modified" orientation="vertical">
+                        <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
+                    </umb-property-layout>
+                ` : ''}
                 <umb-property-layout label="Active" orientation="vertical">
                     <uui-toggle
                         slot="editor"

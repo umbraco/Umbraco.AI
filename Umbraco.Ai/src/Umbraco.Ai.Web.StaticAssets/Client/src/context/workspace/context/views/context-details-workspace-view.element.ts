@@ -2,7 +2,7 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiContextDetailModel } from "../../../types.js";
-import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../../../core/index.js";
 import { UAI_CONTEXT_WORKSPACE_CONTEXT } from "../context-workspace.context-token.js";
 import type { UaiResourceListElement } from "../../../components/resource-list/resource-list.element.js";
 
@@ -77,6 +77,16 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
                 ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
                 : this._model.unique}</div>
             </umb-property-layout>
+            ${this._model.dateCreated ? html`
+                <umb-property-layout label="Date Created" orientation="vertical">
+                    <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
+                </umb-property-layout>
+            ` : ''}
+            ${this._model.dateModified ? html`
+                <umb-property-layout label="Date Modified" orientation="vertical">
+                    <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
+                </umb-property-layout>
+            ` : ''}
         </uui-box>`;
     }
 
@@ -93,6 +103,10 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
             }
             uui-box:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
+            }
+
+            umb-property-layout[orientation="vertical"]:not(:last-child) {
+                padding-bottom: 0;
             }
         `,
     ];

@@ -9,6 +9,8 @@ export interface UaiConnectionDetailModel extends UmbEntityModel {
     providerId: string;
     settings: Record<string, unknown> | null;
     isActive: boolean;
+    dateCreated: string | null;
+    dateModified: string | null;
 }
 
 // Collection item model
@@ -19,6 +21,7 @@ export interface UaiConnectionItemModel extends UmbEntityModel {
     name: string;
     providerId: string;
     isActive: boolean;
+    dateModified: string | null;
 }
 
 /**

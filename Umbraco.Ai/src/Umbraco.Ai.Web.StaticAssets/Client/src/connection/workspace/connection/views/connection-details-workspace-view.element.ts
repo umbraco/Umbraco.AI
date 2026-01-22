@@ -5,7 +5,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import type { UaiConnectionDetailModel } from "../../../types.js";
-import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
 import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
@@ -151,6 +151,16 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                         ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
                         : this._model.unique}</div>
                 </umb-property-layout>
+                ${this._model.dateCreated ? html`
+                    <umb-property-layout label="Date Created" orientation="vertical">
+                        <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
+                    </umb-property-layout>
+                ` : ''}
+                ${this._model.dateModified ? html`
+                    <umb-property-layout label="Date Modified" orientation="vertical">
+                        <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
+                    </umb-property-layout>
+                ` : ''}
 
                 <umb-property-layout label="Provider" orientation="vertical">
                     <div slot="editor">${this._provider?.name ?? this._model.providerId}</div>

@@ -10,6 +10,8 @@ export const UaiContextTypeMapper = {
             alias: response.alias,
             name: response.name,
             resources: (response.resources ?? []).map(this.toResourceModel),
+            dateCreated: response.dateCreated,
+            dateModified: response.dateModified,
         };
     },
 
@@ -20,6 +22,7 @@ export const UaiContextTypeMapper = {
             alias: response.alias,
             name: response.name,
             resourceCount: response.resourceCount ?? 0,
+            dateModified: response.dateModified,
         };
     },
 

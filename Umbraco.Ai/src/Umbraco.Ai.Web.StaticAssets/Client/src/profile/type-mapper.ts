@@ -15,6 +15,8 @@ export const UaiProfileTypeMapper = {
             connectionId: response.connectionId,
             settings: this.mapResponseSettings(response),
             tags: response.tags ?? [],
+            dateCreated: response.dateCreated,
+            dateModified: response.dateModified,
         };
     },
 
@@ -26,6 +28,7 @@ export const UaiProfileTypeMapper = {
             name: response.name,
             capability: response.capability,
             model: response.model ? { providerId: response.model.providerId, modelId: response.model.modelId } : null,
+            dateModified: response.dateModified,
         };
     },
 

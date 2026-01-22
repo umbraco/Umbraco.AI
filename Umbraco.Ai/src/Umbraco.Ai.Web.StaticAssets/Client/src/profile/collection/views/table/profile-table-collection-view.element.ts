@@ -5,6 +5,7 @@ import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEven
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { formatDateTime } from "../../../../core/index.js";
 import type { UaiProfileItemModel } from "../../../types.js";
 import { UAI_PROFILE_ICON } from "../../../constants.js";
 import { UAI_EDIT_PROFILE_WORKSPACE_PATH_PATTERN } from "../../../workspace/profile/paths.js";
@@ -33,6 +34,7 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
         { name: "Alias", alias: "alias" },
         { name: "Capability", alias: "capability" },
         { name: "Model", alias: "model" },
+        { name: "Modified", alias: "dateModified" },
     ];
 
     constructor() {
@@ -89,6 +91,10 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "model",
                     value: item.model ? `${item.model.providerId} / ${item.model.modelId}` : "-",
+                },
+                {
+                    columnAlias: "dateModified",
+                    value: item.dateModified ? formatDateTime(item.dateModified) : "-",
                 },
             ],
         }));

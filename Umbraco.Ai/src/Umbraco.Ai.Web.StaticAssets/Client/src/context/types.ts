@@ -27,6 +27,8 @@ export interface UaiContextDetailModel {
     alias: string;
     name: string;
     resources: UaiContextResourceModel[];
+    dateCreated: string | null;
+    dateModified: string | null;
 }
 
 /**
@@ -38,4 +40,5 @@ export interface UaiContextItemModel {
     alias: string;
     name: string;
     resourceCount: number;
+    dateModified: string | null;
 }

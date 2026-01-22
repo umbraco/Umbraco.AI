@@ -3,7 +3,7 @@ namespace Umbraco.Ai.Prompt.Persistence.Prompts;
 /// <summary>
 /// EF Core entity for prompt storage.
 /// </summary>
-public class AiPromptEntity
+internal class AiPromptEntity
 {
     /// <summary>
     /// Unique identifier.

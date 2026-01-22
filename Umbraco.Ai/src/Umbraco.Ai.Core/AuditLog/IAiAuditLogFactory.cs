@@ -3,7 +3,7 @@ namespace Umbraco.Ai.Core.AuditLog;
 /// <summary>
 /// Factory for creating AiAuditLog instances with proper dependency injection.
 /// </summary>
-public interface IAiAuditLogFactory
+internal interface IAiAuditLogFactory
 {
     /// <summary>
     /// Creates a new AiAuditLog instance from the given AiAuditContext.

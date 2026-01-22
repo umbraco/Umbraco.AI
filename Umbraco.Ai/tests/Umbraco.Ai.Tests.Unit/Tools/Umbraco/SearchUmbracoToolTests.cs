@@ -24,7 +24,7 @@ public class SearchUmbracoToolTests
     public async Task ExecuteAsync_WithEmptyQuery_ReturnsError()
     {
         // Arrange
-        var args = new SearchUmbracoArgs("", "all", 10);
+        var args = new SearchUmbracoArgs("", "all", null, 10);
 
         // Act
         var result = await _tool.ExecuteAsync(args, CancellationToken.None);
@@ -41,7 +41,7 @@ public class SearchUmbracoToolTests
     public async Task ExecuteAsync_WithNullQuery_ReturnsError()
     {
         // Arrange
-        var args = new SearchUmbracoArgs(null!, "all", 10);
+        var args = new SearchUmbracoArgs(null!, "all", null, 10);
 
         // Act
         var result = await _tool.ExecuteAsync(args, CancellationToken.None);
@@ -60,7 +60,7 @@ public class SearchUmbracoToolTests
     public async Task ExecuteAsync_WithValidTypeFilter_Succeeds(string typeFilter)
     {
         // Arrange
-        var args = new SearchUmbracoArgs("test", typeFilter, 10);
+        var args = new SearchUmbracoArgs("test", typeFilter, null, 10);
         _examineManagerMock.Setup(x => x.TryGetIndex("ExternalIndex", out It.Ref<IIndex?>.IsAny))
             .Returns(false); // Index not available, but that's ok - should return error gracefully
 
@@ -78,7 +78,7 @@ public class SearchUmbracoToolTests
     public async Task ExecuteAsync_WithInvalidTypeFilter_ReturnsError()
     {
         // Arrange
-        var args = new SearchUmbracoArgs("test", "invalid-type", 10);
+        var args = new SearchUmbracoArgs("test", "invalid-type", null, 10);
 
         // Act
         var result = await _tool.ExecuteAsync(args, CancellationToken.None);
@@ -99,7 +99,7 @@ public class SearchUmbracoToolTests
     public async Task ExecuteAsync_WithMaxResults_EnforcesLimit(int? input, int expected)
     {
         // Arrange
-        var args = new SearchUmbracoArgs("test", "all", input);
+        var args = new SearchUmbracoArgs("test", "all", null, input);
         _examineManagerMock.Setup(x => x.TryGetIndex("ExternalIndex", out It.Ref<IIndex?>.IsAny))
             .Returns(false); // Index not available
 
@@ -116,7 +116,7 @@ public class SearchUmbracoToolTests
     public async Task ExecuteAsync_WithMissingExamineIndex_ReturnsError()
     {
         // Arrange
-        var args = new SearchUmbracoArgs("test", "all", 10);
+        var args = new SearchUmbracoArgs("test", "all", null, 10);
         _examineManagerMock.Setup(x => x.TryGetIndex("ExternalIndex", out It.Ref<IIndex?>.IsAny))
             .Returns(false);
 

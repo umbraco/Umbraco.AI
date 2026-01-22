@@ -11,7 +11,7 @@ public class UmbracoAiPromptDbContext : DbContext
     /// <summary>
     /// Prompts table.
     /// </summary>
-    public DbSet<AiPromptEntity> Prompts { get; set; } = null!;
+    internal DbSet<AiPromptEntity> Prompts { get; set; } = null!;
 
     /// <summary>
     /// Creates a new instance of the DbContext.

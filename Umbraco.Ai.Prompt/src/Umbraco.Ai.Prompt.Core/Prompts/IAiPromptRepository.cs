@@ -4,8 +4,9 @@ namespace Umbraco.Ai.Prompt.Core.Prompts;
 
 /// <summary>
 /// Repository interface for prompt persistence operations.
+/// Internal implementation detail - use <see cref="IAiPromptService"/> for external access.
 /// </summary>
-public interface IAiPromptRepository
+internal interface IAiPromptRepository
 {
     /// <summary>
     /// Gets a prompt by its unique identifier.

@@ -138,11 +138,19 @@ Add-ProductProjects -ProductFolder "Umbraco.Ai.Anthropic" -SolutionFolder "Anthr
 Write-Host "Adding Umbraco.Ai.MicrosoftFoundry projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.Ai.MicrosoftFoundry" -SolutionFolder "MicrosoftFoundry"
 
-# Step 10: Add demo site to solution
+# Step 10: Add Google provider projects
+Write-Host "Adding Umbraco.Ai.Google projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.Ai.Google" -SolutionFolder "Google"
+
+# Step 10.1: Add Amazon provider projects
+Write-Host "Adding Umbraco.Ai.Amazon projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.Ai.Amazon" -SolutionFolder "Amazon"
+
+# Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
 dotnet sln "Umbraco.Ai.local.sln" add "demo\Umbraco.Ai.DemoSite\Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
 
-# Step 11: Add project references to demo site
+# Step 13: Add project references to demo site
 Write-Host "Adding project references to demo site..." -ForegroundColor Green
 $demoProject = "demo\Umbraco.Ai.DemoSite\Umbraco.Ai.DemoSite.csproj"
 
@@ -163,6 +171,16 @@ if (Test-Path "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropi
 # Microsoft Foundry provider
 if (Test-Path "Umbraco.Ai.MicrosoftFoundry\src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj") {
     dotnet add $demoProject reference "Umbraco.Ai.MicrosoftFoundry\src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj"
+}
+
+# Google provider
+if (Test-Path "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj"
+}
+
+# Amazon provider
+if (Test-Path "Umbraco.Ai.Amazon\src\Umbraco.Ai.Amazon\Umbraco.Ai.Amazon.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Amazon\src\Umbraco.Ai.Amazon\Umbraco.Ai.Amazon.csproj"
 }
 
 # Prompt add-on (meta-package + SQLite persistence)

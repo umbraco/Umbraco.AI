@@ -53,5 +53,15 @@ export default {
         brandVoiceStyleGuidelinesDescription: "Style guidelines to follow (e.g., \"Use active voice, be concise\")",
         brandVoiceAvoidPatternsLabel: "Patterns to Avoid",
         brandVoiceAvoidPatternsDescription: "Patterns and phrases to avoid (e.g., \"Jargon, exclamation marks\")",
+
+        // Amazon Bedrock fields
+        amazonRegionLabel: "AWS Region",
+        amazonRegionDescription: "The AWS region for Bedrock services (e.g., \"us-east-1\")",
+        amazonAccessKeyIdLabel: "Access Key ID",
+        amazonAccessKeyIdDescription: "The AWS Access Key ID for authenticating with Bedrock services",
+        amazonSecretAccessKeyLabel: "Secret Access Key",
+        amazonSecretAccessKeyDescription: "The AWS Secret Access Key for authenticating with Bedrock services",
+        amazonEndpointLabel: "Custom Endpoint",
+        amazonEndpointDescription: "Custom endpoint URL for Bedrock services (optional)",
     },
 } as UmbLocalizationDictionary;

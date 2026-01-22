@@ -80,61 +80,34 @@ internal sealed class AiToolReorderingChatClient : DelegatingChatClient
             yield break;
         }
 
-        // For streaming with frontend tools, we need to collect all content first,
-        // then reorder and re-yield. This is because tool calls may come in any order.
-        var collectedUpdates = new List<ChatResponseUpdate>();
-        var hasToolCalls = false;
+        // Stream text content immediately for responsive UX.
+        // Only buffer tool call updates for reordering at the end.
+        var toolCallUpdates = new List<ChatResponseUpdate>();
 
         await foreach (var update in base.GetStreamingResponseAsync(chatMessages, options, cancellationToken))
         {
-            collectedUpdates.Add(update);
-
             if (update.Contents?.OfType<FunctionCallContent>().Any() == true)
             {
-                hasToolCalls = true;
-            }
-        }
-
-        // If no tool calls, just yield everything as-is
-        if (!hasToolCalls)
-        {
-            foreach (var update in collectedUpdates)
-            {
-                yield return update;
-            }
-            yield break;
-        }
-
-        // Reorder: yield non-tool-call updates first, then reordered tool calls
-        var toolCallUpdates = new List<ChatResponseUpdate>();
-        var otherUpdates = new List<ChatResponseUpdate>();
-
-        foreach (var update in collectedUpdates)
-        {
-            if (update.Contents?.OfType<FunctionCallContent>().Any() == true)
-            {
+                // Buffer tool calls for reordering
                 toolCallUpdates.Add(update);
             }
             else
             {
-                otherUpdates.Add(update);
+                // Text content streams immediately!
+                yield return update;
             }
         }
 
-        // Yield non-tool updates first (text content, etc.)
-        foreach (var update in otherUpdates)
+        // Reorder and yield tool calls at the end (server-side first, frontend last)
+        if (toolCallUpdates.Count > 0)
         {
-            yield return update;
-        }
+            var reorderedToolUpdates = toolCallUpdates
+                .OrderBy(u => IsFrontendToolCall(u, frontendToolNames) ? 1 : 0);
 
-        // Reorder tool call updates: server-side first, frontend last
-        var reorderedToolUpdates = toolCallUpdates
-            .OrderBy(u => IsFrontendToolCall(u, frontendToolNames) ? 1 : 0)
-            .ToList();
-
-        foreach (var update in reorderedToolUpdates)
-        {
-            yield return update;
+            foreach (var update in reorderedToolUpdates)
+            {
+                yield return update;
+            }
         }
     }
 

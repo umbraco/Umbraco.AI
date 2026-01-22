@@ -98,34 +98,35 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
         var stopwatch = Stopwatch.StartNew();
         var succeeded = false;
         string? errorMessage = null;
+        Exception? capturedException = null;
 
-        // Collect updates in a list (can't yield inside try-catch)
+        // We still collect updates for metrics, but yield immediately for true streaming.
+        // The try-catch surrounds only MoveNextAsync() since yield is not allowed inside try-catch.
         var updates = new List<ChatResponseUpdate>();
 
         await using var enumerator = base.GetStreamingResponseAsync(chatMessages, options, cancellationToken).GetAsyncEnumerator(cancellationToken);
 
-        try
+        while (true)
         {
-            while (await enumerator.MoveNextAsync())
+            ChatResponseUpdate? current;
+            try
             {
-                updates.Add(enumerator.Current);
+                if (!await enumerator.MoveNextAsync())
+                {
+                    succeeded = true;
+                    break;
+                }
+                current = enumerator.Current;
+            }
+            catch (Exception ex)
+            {
+                capturedException = ex;
+                errorMessage = ex.Message;
+                break;
             }
 
-            succeeded = true;
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-            errorMessage = ex.Message;
-
-            // Record usage even on error (fire and forget)
-            _ = RecordUsageAsync(
-                stopwatch.ElapsedMilliseconds,
-                succeeded,
-                errorMessage,
-                cancellationToken);
-
-            throw;
+            updates.Add(current);
+            yield return current;  // Yield immediately for true streaming!
         }
 
         stopwatch.Stop();
@@ -137,10 +138,10 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
             errorMessage,
             cancellationToken);
 
-        // Yield collected updates
-        foreach (var update in updates)
+        // Re-throw any captured exception after recording metrics
+        if (capturedException is not null)
         {
-            yield return update;
+            throw capturedException;
         }
     }
 

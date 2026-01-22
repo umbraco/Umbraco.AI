@@ -11,7 +11,7 @@ public class UmbracoAiAgentDbContext : DbContext
     /// <summary>
     /// Agents table.
     /// </summary>
-    public DbSet<AiAgentEntity> Agents { get; set; } = null!;
+    internal DbSet<AiAgentEntity> Agents { get; set; } = null!;
 
     /// <summary>
     /// Creates a new instance of the DbContext.

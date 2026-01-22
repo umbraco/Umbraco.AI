@@ -12,6 +12,7 @@ namespace Umbraco.Ai.Core.Tools.Umbraco;
 /// </summary>
 /// <param name="Query">The search query.</param>
 /// <param name="Type">Filter by type: 'content', 'media', or 'all'.</param>
+/// <param name="Tags">Filter by tags (exact match). Results must have at least one of the specified tags.</param>
 /// <param name="MaxResults">Maximum number of results to return.</param>
 public record SearchUmbracoArgs(
     [property: Description("Search query to find content and media")]
@@ -19,6 +20,9 @@ public record SearchUmbracoArgs(
 
     [property: Description("Filter by type: 'content', 'media', or 'all' (default)")]
     string? Type = "all",
+
+    [property: Description("Filter by tags (exact match). Results must have at least one of the specified tags.")]
+    string[]? Tags = null,
 
     [property: Description("Maximum number of results to return (default 10, max 50)")]
     int? MaxResults = 10);
@@ -50,8 +54,10 @@ public class SearchUmbracoTool : AiToolBase<SearchUmbracoArgs>
     /// <inheritdoc />
     public override string Description =>
         "Searches Umbraco content and media by text query. " +
+        "Searches across content fields and tags. " +
         "Returns matching items with metadata including name, type, URL, and thumbnail for media. " +
-        "Use type parameter to filter results: 'content' for content only, 'media' for media only, or 'all' for both. "  +
+        "Use type parameter to filter results: 'content' for content only, 'media' for media only, or 'all' for both. " +
+        "Use tags parameter to filter by exact tag values (results must have at least one matching tag). " +
         "**IMPORTANT** Use the ID or Key from results to reference content or media items in other tools.";
 
     /// <inheritdoc />
@@ -91,7 +97,7 @@ public class SearchUmbracoTool : AiToolBase<SearchUmbracoArgs>
         try
         {
             // Execute search
-            var searchResults = PerformSearch(index, args.Query, typeFilter, maxResults);
+            var searchResults = PerformSearch(index, args.Query, typeFilter, args.Tags, maxResults);
 
             // Enrich results with published content data
             var enrichedResults = EnrichResults(searchResults);
@@ -110,7 +116,7 @@ public class SearchUmbracoTool : AiToolBase<SearchUmbracoArgs>
         }
     }
 
-    private ISearchResults PerformSearch(IIndex index, string query, string typeFilter, int maxResults)
+    private ISearchResults PerformSearch(IIndex index, string query, string typeFilter, string[]? tags, int maxResults)
     {
         var searcher = index.Searcher;
         var queryExecutor = searcher.CreateQuery();
@@ -127,14 +133,23 @@ public class SearchUmbracoTool : AiToolBase<SearchUmbracoArgs>
             booleanQuery = queryExecutor.Field("__IndexType", "media");
         }
 
-        // Add the search term
+        // Split query into individual terms for tag matching
+        var queryTerms = query.Split([' ', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Add the search term - search content fields OR tags field (with individual terms)
         if (booleanQuery != null)
         {
-            booleanQuery = booleanQuery.And().ManagedQuery(query);
+            booleanQuery = booleanQuery.And(q => q.ManagedQuery(query).Or().GroupedOr(["tags"], queryTerms), BooleanOperation.Or);
         }
         else
         {
-            booleanQuery = queryExecutor.ManagedQuery(query);
+            booleanQuery = queryExecutor.ManagedQuery(query).Or().GroupedOr(["tags"], queryTerms);
+        }
+
+        // Add explicit tag filter if specified (exact match, OR logic - must have at least one tag)
+        if (tags is { Length: > 0 })
+        {
+            booleanQuery = booleanQuery.And().GroupedOr(["tags"], tags);
         }
 
         // Execute with options

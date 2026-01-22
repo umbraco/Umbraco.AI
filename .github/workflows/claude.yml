@@ -42,6 +42,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
+          # Restrict who can trigger Claude
+          allowed_users: "mattbrailsford,hifi-phil,nul800sebastiaan"
+
           # Allow git and gh operations for merge conflict resolution
           allowed_tools: "Bash(git:*),Bash(gh:*)"
 

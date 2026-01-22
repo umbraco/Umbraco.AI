@@ -159,15 +159,19 @@ add_product_projects "Umbraco.Ai.Agent" "Agent"
 echo "Adding Umbraco.Ai.Anthropic projects..."
 add_product_projects "Umbraco.Ai.Anthropic" "Anthropic"
 
-# Step 9.1: Add Amazon provider projects
+# Step 10: Add Google provider projects
+echo "Adding Umbraco.Ai.Google projects..."
+add_product_projects "Umbraco.Ai.Google" "Google"
+
+# Step 10.1: Add Amazon provider projects
 echo "Adding Umbraco.Ai.Amazon projects..."
 add_product_projects "Umbraco.Ai.Amazon" "Amazon"
 
-# Step 10: Add demo site to solution
+# Step 11: Add demo site to solution
 echo "Adding demo site to solution..."
 dotnet sln "Umbraco.Ai.local.sln" add "demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
 
-# Step 11: Add project references to demo site
+# Step 13: Add project references to demo site
 echo "Adding project references to demo site..."
 DEMO_PROJECT="demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj"
 
@@ -183,6 +187,11 @@ fi
 # Anthropic provider
 if [ -f "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj"
+fi
+
+# Google provider
+if [ -f "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj"
 fi
 
 # Amazon provider

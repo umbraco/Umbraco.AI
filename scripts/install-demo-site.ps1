@@ -134,6 +134,10 @@ Add-ProductProjects -ProductFolder "Umbraco.Ai.Agent" -SolutionFolder "Agent"
 Write-Host "Adding Umbraco.Ai.Anthropic projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.Ai.Anthropic" -SolutionFolder "Anthropic"
 
+# Step 9.1: Add Microsoft Foundry provider projects
+Write-Host "Adding Umbraco.Ai.MicrosoftFoundry projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.Ai.MicrosoftFoundry" -SolutionFolder "MicrosoftFoundry"
+
 # Step 10: Add Google provider projects
 Write-Host "Adding Umbraco.Ai.Google projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.Ai.Google" -SolutionFolder "Google"
@@ -162,6 +166,11 @@ if (Test-Path "Umbraco.Ai.OpenAi\src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj"
 # Anthropic provider
 if (Test-Path "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj") {
     dotnet add $demoProject reference "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj"
+}
+
+# Microsoft Foundry provider
+if (Test-Path "Umbraco.Ai.MicrosoftFoundry\src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.MicrosoftFoundry\src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj"
 }
 
 # Google provider

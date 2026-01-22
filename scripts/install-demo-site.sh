@@ -159,6 +159,10 @@ add_product_projects "Umbraco.Ai.Agent" "Agent"
 echo "Adding Umbraco.Ai.Anthropic projects..."
 add_product_projects "Umbraco.Ai.Anthropic" "Anthropic"
 
+# Step 9.1: Add Microsoft Foundry provider projects
+echo "Adding Umbraco.Ai.MicrosoftFoundry projects..."
+add_product_projects "Umbraco.Ai.MicrosoftFoundry" "MicrosoftFoundry"
+
 # Step 10: Add Google provider projects
 echo "Adding Umbraco.Ai.Google projects..."
 add_product_projects "Umbraco.Ai.Google" "Google"
@@ -187,6 +191,11 @@ fi
 # Anthropic provider
 if [ -f "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj"
+fi
+
+# Microsoft Foundry provider
+if [ -f "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj"
 fi
 
 # Google provider

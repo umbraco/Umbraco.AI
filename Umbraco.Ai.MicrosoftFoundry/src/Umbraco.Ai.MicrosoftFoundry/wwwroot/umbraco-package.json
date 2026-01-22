@@ -1,0 +1,17 @@
+{
+    "name": "Umbraco Ai Microsoft Foundry Provider",
+    "$schema": "../umbraco-package-schema.json",
+    "extensions": [
+        {
+            "type": "localization",
+            "alias": "Uai.MicrosoftFoundry.Localization.En",
+            "weight": -100,
+            "name": "English",
+            "meta": {
+                "culture": "en"
+            },
+            "js": "/App_Plugins/UmbracoAiMicrosoftFoundry/lang/en.js"
+        }
+    ],
+    "version": ""
+}

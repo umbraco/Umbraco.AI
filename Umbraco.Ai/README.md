@@ -30,6 +30,9 @@ Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified 
 This package is part of the [Umbraco.Ai monorepo](../README.md). Provider packages are also included in the monorepo:
 - **Umbraco.Ai.OpenAi** - Located in `../Umbraco.Ai.OpenAi/`
 - **Umbraco.Ai.Anthropic** - Located in `../Umbraco.Ai.Anthropic/`
+- **Umbraco.Ai.Amazon** - Located in `../Umbraco.Ai.Amazon/`
+- **Umbraco.Ai.Google** - Located in `../Umbraco.Ai.Google/`
+- **Umbraco.Ai.MicrosoftFoundry** - Located in `../Umbraco.Ai.MicrosoftFoundry/`
 
 ## Getting Started
 

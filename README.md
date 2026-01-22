@@ -13,6 +13,9 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 | **Umbraco.Ai.Prompt** | Prompt template management | 17.x | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider | 1.x | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider | 1.x | `Umbraco.Ai.Anthropic/` |
+| **Umbraco.Ai.Amazon** | Amazon Bedrock provider | 1.x | `Umbraco.Ai.Amazon/` |
+| **Umbraco.Ai.Google** | Google Gemini provider | 1.x | `Umbraco.Ai.Google/` |
+| **Umbraco.Ai.MicrosoftFoundry** | Microsoft AI Foundry provider | 1.x | `Umbraco.Ai.MicrosoftFoundry/` |
 
 ## Quick Start
 
@@ -32,6 +35,9 @@ dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
 dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
 dotnet build Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.sln
 dotnet build Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.sln
+dotnet build Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.sln
+dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
+dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
 ```
 
 ### Frontend Development (npm Workspaces)
@@ -66,6 +72,9 @@ npm run watch:agent
 Umbraco.Ai (Core)
     ├── Umbraco.Ai.OpenAi (Provider - depends on Core)
     ├── Umbraco.Ai.Anthropic (Provider - depends on Core)
+    ├── Umbraco.Ai.Amazon (Provider - depends on Core)
+    ├── Umbraco.Ai.Google (Provider - depends on Core)
+    ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
     └── Umbraco.Ai.Agent (Add-on - depends on Core)
 ```
@@ -99,6 +108,9 @@ This monorepo supports independent versioning per product:
 - `release-prompt-17.0.1` - Prompt release
 - `release-openai-1.0.1` - OpenAI provider release
 - `release-anthropic-1.0.1` - Anthropic provider release
+- `release-amazon-1.0.1` - Amazon Bedrock provider release
+- `release-google-1.0.1` - Google Gemini provider release
+- `release-microsoft-foundry-1.0.1` - Microsoft AI Foundry provider release
 
 ## Target Framework
 

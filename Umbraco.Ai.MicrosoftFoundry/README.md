@@ -1,6 +1,8 @@
 # Umbraco.Ai.MicrosoftFoundry
 
-Microsoft AI Foundry provider for Umbraco.Ai - enables integration with models hosted through Microsoft AI Foundry (Azure AI Inference).
+[![NuGet](https://img.shields.io/nuget/v/Umbraco.Ai.MicrosoftFoundry.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.Ai.MicrosoftFoundry/)
+
+Microsoft AI Foundry provider plugin for Umbraco.Ai, enabling integration with models hosted through Microsoft AI Foundry (Azure AI Inference).
 
 ## Features
 
@@ -8,6 +10,10 @@ Microsoft AI Foundry provider for Umbraco.Ai - enables integration with models h
 - **Embeddings**: Support for text-embedding-3-small, text-embedding-3-large, and other embedding models
 - **Multi-Model Access**: One endpoint and API key provides access to all deployed models
 - **API Key Authentication**: Simple authentication using Microsoft AI Foundry API keys
+
+## Monorepo Context
+
+This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
 
 ## Prerequisites
 
@@ -173,6 +179,18 @@ Then in your connection settings, use:
 - Go to [ai.azure.com](https://ai.azure.com), open your project, and deploy the model you want to use
 - Once deployed, the model will work through your connection
 
+## Requirements
+
+- Umbraco CMS 17.0.0+
+- Umbraco.Ai 17.0.0+
+- .NET 10.0
+
+## Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** - Development guide and technical details
+- **[Root CLAUDE.md](../CLAUDE.md)** - Shared coding standards and conventions
+- **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to the monorepo
+
 ## License
 
-MIT License - see [LICENSE](../LICENSE.md) for details.
+This project is licensed under the MIT License. See [LICENSE.md](../LICENSE.md) for details.

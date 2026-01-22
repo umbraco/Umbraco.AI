@@ -64,10 +64,7 @@ public class AmazonChatCapability(AmazonProvider provider) : AiChatCapabilityBas
         }
 
         var client = AmazonProvider.CreateBedrockRuntimeClient(settings);
-        var chatClient = client.AsIChatClient(modelId);
-
-        // Wrap with metadata filter to remove Umbraco.Ai keys that Bedrock doesn't accept
-        return new AmazonMetadataFilteringChatClient(chatClient);
+        return client.AsIChatClient(modelId);
     }
 
     private static bool IsChatModel(string modelId)

@@ -54,10 +54,7 @@ public class AmazonEmbeddingCapability(AmazonProvider provider) : AiEmbeddingCap
         }
 
         var client = AmazonProvider.CreateBedrockRuntimeClient(settings);
-        var embeddingGenerator = client.AsIEmbeddingGenerator(modelId);
-
-        // Wrap with metadata filter to remove Umbraco.Ai keys that Bedrock doesn't accept
-        return new AmazonMetadataFilteringEmbeddingGenerator(embeddingGenerator);
+        return client.AsIEmbeddingGenerator(modelId);
     }
 
     private static bool IsEmbeddingModel(string modelId)

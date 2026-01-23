@@ -1,6 +1,7 @@
 using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
@@ -124,4 +125,13 @@ public interface IAiAgentService
         Guid agentId,
         int version,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back an agent to a specific version.
+    /// </summary>
+    /// <param name="agentId">The agent ID.</param>
+    /// <param name="version">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task RollbackAgentAsync(Guid agentId, int version, CancellationToken cancellationToken = default);
 }

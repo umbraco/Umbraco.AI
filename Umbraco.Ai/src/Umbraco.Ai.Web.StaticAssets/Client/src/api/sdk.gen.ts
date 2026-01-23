@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompareConnectionVersionsData, CompareConnectionVersionsErrors, CompareConnectionVersionsResponses, CompareContextVersionsData, CompareContextVersionsErrors, CompareContextVersionsResponses, CompareProfileVersionsData, CompareProfileVersionsErrors, CompareProfileVersionsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetConnectionVersionHistoryData, GetConnectionVersionHistoryErrors, GetConnectionVersionHistoryResponses, GetConnectionVersionSnapshotData, GetConnectionVersionSnapshotErrors, GetConnectionVersionSnapshotResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetContextVersionHistoryData, GetContextVersionHistoryErrors, GetContextVersionHistoryResponses, GetContextVersionSnapshotData, GetContextVersionSnapshotErrors, GetContextVersionSnapshotResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProfileVersionHistoryData, GetProfileVersionHistoryErrors, GetProfileVersionHistoryResponses, GetProfileVersionSnapshotData, GetProfileVersionSnapshotErrors, GetProfileVersionSnapshotResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, RollbackConnectionToVersionData, RollbackConnectionToVersionErrors, RollbackConnectionToVersionResponses, RollbackContextToVersionData, RollbackContextToVersionErrors, RollbackContextToVersionResponses, RollbackProfileToVersionData, RollbackProfileToVersionErrors, RollbackProfileToVersionResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
+import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompareVersionsData, CompareVersionsErrors, CompareVersionsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetSupportedEntityTypesData, GetSupportedEntityTypesErrors, GetSupportedEntityTypesResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, GetVersionData, GetVersionErrors, GetVersionHistoryData, GetVersionHistoryErrors, GetVersionHistoryResponses, GetVersionResponses, RollbackToVersionData, RollbackToVersionErrors, RollbackToVersionResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -284,58 +284,6 @@ export class ConnectionsService {
         });
     }
     
-    public static getConnectionVersionHistory<ThrowOnError extends boolean = false>(options: Options<GetConnectionVersionHistoryData, ThrowOnError>) {
-        return (options.client ?? client).get<GetConnectionVersionHistoryResponses, GetConnectionVersionHistoryErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions',
-            ...options
-        });
-    }
-    
-    public static compareConnectionVersions<ThrowOnError extends boolean = false>(options: Options<CompareConnectionVersionsData, ThrowOnError>) {
-        return (options.client ?? client).get<CompareConnectionVersionsResponses, CompareConnectionVersionsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions/{snapshotFromVersion}/compare/{snapshotToVersion}',
-            ...options
-        });
-    }
-    
-    public static getConnectionVersionSnapshot<ThrowOnError extends boolean = false>(options: Options<GetConnectionVersionSnapshotData, ThrowOnError>) {
-        return (options.client ?? client).get<GetConnectionVersionSnapshotResponses, GetConnectionVersionSnapshotErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions/{snapshotVersion}',
-            ...options
-        });
-    }
-    
-    public static rollbackConnectionToVersion<ThrowOnError extends boolean = false>(options: Options<RollbackConnectionToVersionData, ThrowOnError>) {
-        return (options.client ?? client).post<RollbackConnectionToVersionResponses, RollbackConnectionToVersionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions/{snapshotVersion}/rollback',
-            ...options
-        });
-    }
-    
     public static getAllCapabilities<ThrowOnError extends boolean = false>(options?: Options<GetAllCapabilitiesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllCapabilitiesResponses, GetAllCapabilitiesErrors, ThrowOnError>({
             security: [
@@ -451,58 +399,6 @@ export class ContextsService {
             }
         });
     }
-    
-    public static getContextVersionHistory<ThrowOnError extends boolean = false>(options: Options<GetContextVersionHistoryData, ThrowOnError>) {
-        return (options.client ?? client).get<GetContextVersionHistoryResponses, GetContextVersionHistoryErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions',
-            ...options
-        });
-    }
-    
-    public static compareContextVersions<ThrowOnError extends boolean = false>(options: Options<CompareContextVersionsData, ThrowOnError>) {
-        return (options.client ?? client).get<CompareContextVersionsResponses, CompareContextVersionsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions/{snapshotFromVersion}/compare/{snapshotToVersion}',
-            ...options
-        });
-    }
-    
-    public static getContextVersionSnapshot<ThrowOnError extends boolean = false>(options: Options<GetContextVersionSnapshotData, ThrowOnError>) {
-        return (options.client ?? client).get<GetContextVersionSnapshotResponses, GetContextVersionSnapshotErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions/{snapshotVersion}',
-            ...options
-        });
-    }
-    
-    public static rollbackContextToVersion<ThrowOnError extends boolean = false>(options: Options<RollbackContextToVersionData, ThrowOnError>) {
-        return (options.client ?? client).post<RollbackContextToVersionResponses, RollbackContextToVersionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions/{snapshotVersion}/rollback',
-            ...options
-        });
-    }
 }
 
 export class EmbeddingsService {
@@ -597,58 +493,6 @@ export class ProfilesService {
             }
         });
     }
-    
-    public static getProfileVersionHistory<ThrowOnError extends boolean = false>(options: Options<GetProfileVersionHistoryData, ThrowOnError>) {
-        return (options.client ?? client).get<GetProfileVersionHistoryResponses, GetProfileVersionHistoryErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions',
-            ...options
-        });
-    }
-    
-    public static compareProfileVersions<ThrowOnError extends boolean = false>(options: Options<CompareProfileVersionsData, ThrowOnError>) {
-        return (options.client ?? client).get<CompareProfileVersionsResponses, CompareProfileVersionsErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions/{snapshotFromVersion}/compare/{snapshotToVersion}',
-            ...options
-        });
-    }
-    
-    public static getProfileVersionSnapshot<ThrowOnError extends boolean = false>(options: Options<GetProfileVersionSnapshotData, ThrowOnError>) {
-        return (options.client ?? client).get<GetProfileVersionSnapshotResponses, GetProfileVersionSnapshotErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions/{snapshotVersion}',
-            ...options
-        });
-    }
-    
-    public static rollbackProfileToVersion<ThrowOnError extends boolean = false>(options: Options<RollbackProfileToVersionData, ThrowOnError>) {
-        return (options.client ?? client).post<RollbackProfileToVersionResponses, RollbackProfileToVersionErrors, ThrowOnError>({
-            security: [
-                {
-                    scheme: 'bearer',
-                    type: 'http'
-                }
-            ],
-            url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions/{snapshotVersion}/rollback',
-            ...options
-        });
-    }
 }
 
 export class ProvidersService {
@@ -674,6 +518,73 @@ export class ProvidersService {
                 }
             ],
             url: '/umbraco/ai/management/api/v1/providers/{id}',
+            ...options
+        });
+    }
+}
+
+export class VersionsService {
+    public static getVersionHistory<ThrowOnError extends boolean = false>(options: Options<GetVersionHistoryData, ThrowOnError>) {
+        return (options.client ?? client).get<GetVersionHistoryResponses, GetVersionHistoryErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}',
+            ...options
+        });
+    }
+    
+    public static getVersion<ThrowOnError extends boolean = false>(options: Options<GetVersionData, ThrowOnError>) {
+        return (options.client ?? client).get<GetVersionResponses, GetVersionErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{entityVersion}',
+            ...options
+        });
+    }
+    
+    public static rollbackToVersion<ThrowOnError extends boolean = false>(options: Options<RollbackToVersionData, ThrowOnError>) {
+        return (options.client ?? client).post<RollbackToVersionResponses, RollbackToVersionErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{entityVersion}/rollback',
+            ...options
+        });
+    }
+    
+    public static compareVersions<ThrowOnError extends boolean = false>(options: Options<CompareVersionsData, ThrowOnError>) {
+        return (options.client ?? client).get<CompareVersionsResponses, CompareVersionsErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{fromEntityVersion}/compare/{toEntityVersion}',
+            ...options
+        });
+    }
+    
+    public static getSupportedEntityTypes<ThrowOnError extends boolean = false>(options?: Options<GetSupportedEntityTypesData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetSupportedEntityTypesResponses, GetSupportedEntityTypesErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/versions/supported-types',
             ...options
         });
     }

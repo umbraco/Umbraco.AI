@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Tests.Common.Builders;
 
 namespace Umbraco.Ai.Tests.Unit.Services;
@@ -9,19 +10,21 @@ public class AiProfileServiceTests
 {
     private readonly Mock<IAiProfileRepository> _repositoryMock;
     private readonly Mock<IOptions<AiOptions>> _optionsMock;
+    private readonly Mock<IAiEntityVersionService> _versionServiceMock;
     private readonly AiProfileService _service;
 
     public AiProfileServiceTests()
     {
         _repositoryMock = new Mock<IAiProfileRepository>();
         _optionsMock = new Mock<IOptions<AiOptions>>();
+        _versionServiceMock = new Mock<IAiEntityVersionService>();
         _optionsMock.Setup(x => x.Value).Returns(new AiOptions
         {
             DefaultChatProfileAlias = "default-chat",
             DefaultEmbeddingProfileAlias = "default-embedding"
         });
 
-        _service = new AiProfileService(_repositoryMock.Object, _optionsMock.Object);
+        _service = new AiProfileService(_repositoryMock.Object, _optionsMock.Object, _versionServiceMock.Object);
     }
 
     #region GetProfileAsync
@@ -173,7 +176,8 @@ public class AiProfileServiceTests
 
         var serviceWithNullOptions = new AiProfileService(
             _repositoryMock.Object,
-            optionsWithNullAlias.Object);
+            optionsWithNullAlias.Object,
+            _versionServiceMock.Object);
 
         // Act
         var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AiCapability.Chat);

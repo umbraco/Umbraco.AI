@@ -66,22 +66,4 @@ internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
     {
         return Task.FromResult(_profiles.TryRemove(id, out _));
     }
-
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid profileId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository doesn't track version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
-    }
-
-    public Task<AiProfile?> GetVersionSnapshotAsync(
-        Guid profileId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository doesn't track version history
-        return Task.FromResult<AiProfile?>(null);
-    }
 }

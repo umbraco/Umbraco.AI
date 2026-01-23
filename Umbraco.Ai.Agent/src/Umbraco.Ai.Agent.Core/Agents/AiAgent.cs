@@ -1,11 +1,12 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
 
 /// <summary>
 /// Represents a stored agent definition that can be linked to AI profiles.
 /// </summary>
-public sealed class AiAgent : IAiVersionable
+public sealed class AiAgent : IAiVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the agent.

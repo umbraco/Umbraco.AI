@@ -126,6 +126,16 @@ export class UaiPromptWorkspaceContext
     }
 
     /**
+     * Reloads the current agent.
+     */
+    async reload() {
+        const unique = this.#unique.getValue();
+        if (unique) {
+            await this.load(unique);
+        }
+    }
+
+    /**
      * Handles a command to update the model.
      * Commands are tracked for replay after model refresh.
      */

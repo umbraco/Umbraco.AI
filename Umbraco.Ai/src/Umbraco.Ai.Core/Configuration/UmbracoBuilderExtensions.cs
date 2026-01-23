@@ -25,6 +25,7 @@ using Umbraco.Ai.Core.Security;
 using Umbraco.Ai.Core.TaskQueue;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Core.Tools.Web;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Prompt.Core.Media;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -130,6 +131,15 @@ public static partial class UmbracoBuilderExtensions
         // Profile resolution
         services.AddSingleton<IAiProfileRepository, InMemoryAiProfileRepository>();
         services.AddSingleton<IAiProfileService, AiProfileService>();
+
+        // Unified versioning service
+        services.AddSingleton<IAiEntityVersionService, AiEntityVersionService>();
+
+        // Versionable entity adapters for core entities
+        builder.AiVersionableEntityAdapters()
+            .Add<AiConnectionVersionableEntityAdapter>()
+            .Add<AiProfileVersionableEntityAdapter>()
+            .Add<AiContextVersionableEntityAdapter>();
 
         // Client factories
         services.AddSingleton<IAiChatClientFactory, AiChatClientFactory>();

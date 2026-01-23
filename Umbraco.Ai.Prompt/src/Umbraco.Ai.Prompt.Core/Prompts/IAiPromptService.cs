@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -108,4 +109,13 @@ public interface IAiPromptService
         Guid promptId,
         int version,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back a prompt to a specific version.
+    /// </summary>
+    /// <param name="promptId">The prompt ID.</param>
+    /// <param name="version">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task RollbackPromptAsync(Guid promptId, int version, CancellationToken cancellationToken = default);
 }

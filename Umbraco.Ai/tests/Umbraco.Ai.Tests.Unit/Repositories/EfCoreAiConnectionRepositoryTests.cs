@@ -73,28 +73,6 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
                 entity.DateModified = conn.DateModified;
                 entity.ModifiedByUserId = conn.ModifiedByUserId;
             });
-
-        // Setup CreateSnapshot for version history support
-        _connectionFactoryMock
-            .Setup(f => f.CreateSnapshot(It.IsAny<AiConnection>()))
-            .Returns<AiConnection>(conn => JsonSerializer.Serialize(conn, Constants.DefaultJsonSerializerOptions));
-
-        // Setup BuildDomainFromSnapshot for version history retrieval
-        _connectionFactoryMock
-            .Setup(f => f.BuildDomainFromSnapshot(It.IsAny<string>()))
-            .Returns<string>(json =>
-            {
-                if (string.IsNullOrEmpty(json))
-                    return null;
-                try
-                {
-                    return JsonSerializer.Deserialize<AiConnection>(json, Constants.DefaultJsonSerializerOptions);
-                }
-                catch
-                {
-                    return null;
-                }
-            });
     }
 
     private EfCoreAiConnectionRepository CreateRepository(UmbracoAiDbContext context)

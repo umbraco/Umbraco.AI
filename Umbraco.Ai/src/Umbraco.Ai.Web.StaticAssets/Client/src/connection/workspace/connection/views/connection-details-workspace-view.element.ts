@@ -127,7 +127,11 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             </uui-box>
             
             ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
-                <uai-version-history-table></uai-version-history-table>
+                <uai-version-history-table
+                    entity-type="connection"
+                    entity-id=${this._model.unique}
+                    @rollback=${() => this.#workspaceContext?.reload()}>
+                </uai-version-history-table>
             ` : nothing}
         `;
     }

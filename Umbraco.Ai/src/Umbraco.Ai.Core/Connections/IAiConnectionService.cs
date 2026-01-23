@@ -1,5 +1,6 @@
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Core.Connections;
 

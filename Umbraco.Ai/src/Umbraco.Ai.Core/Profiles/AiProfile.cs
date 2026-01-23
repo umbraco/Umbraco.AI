@@ -1,11 +1,12 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Core.Profiles;
 
 /// <summary>
 /// Defines a profile for AI model usage, including model reference, capabilities, and configuration settings.
 /// </summary>
-public sealed class AiProfile : IAiVersionable
+public sealed class AiProfile : IAiVersionableEntity
 {
     /// <summary>
     /// The unique identifier of the AI profile.

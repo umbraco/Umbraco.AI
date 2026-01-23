@@ -6,6 +6,7 @@ using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Analytics;
 using Umbraco.Ai.Persistence.Analytics.Usage;
@@ -14,6 +15,7 @@ using Umbraco.Ai.Persistence.Context;
 using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Notifications;
 using Umbraco.Ai.Persistence.Profiles;
+using Umbraco.Ai.Persistence.Versioning;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
@@ -49,6 +51,9 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiAuditLogRepository, EfCoreAiAuditLogRepository>();
         builder.Services.AddSingleton<IAiUsageRecordRepository, EfCoreAiUsageRecordRepository>();
         builder.Services.AddSingleton<IAiUsageStatisticsRepository, EfCoreAiUsageStatisticsRepository>();
+
+        // Unified versioning repository
+        builder.Services.AddSingleton<IAiEntityVersionRepository, EfCoreAiEntityVersionRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAiMigrationNotificationHandler>();

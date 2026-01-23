@@ -1,6 +1,6 @@
 import {
     EntityVersionHistoryResponseModel,
-    VersionComparisonResponseModel
+    EntityVersionComparisonResponseModel
 } from "../../api";
 import type {
     UaiVersionComparisonResponse,
@@ -27,7 +27,7 @@ export const UaiVersionHistoryTypeMapper = {
         };
     },
 
-    mapToComparisonResponse(data: VersionComparisonResponseModel): UaiVersionComparisonResponse {
+    mapToComparisonResponse(data: EntityVersionComparisonResponseModel): UaiVersionComparisonResponse {
         return {
             fromVersion: data.fromVersion,
             toVersion: data.toVersion,

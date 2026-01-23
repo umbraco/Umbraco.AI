@@ -1,11 +1,12 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
 
 /// <summary>
 /// Represents a stored prompt template that can be linked to AI profiles.
 /// </summary>
-public sealed class AiPrompt : IAiVersionable
+public sealed class AiPrompt : IAiVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the prompt.

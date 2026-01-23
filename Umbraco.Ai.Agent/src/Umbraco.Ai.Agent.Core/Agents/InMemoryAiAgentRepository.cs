@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;

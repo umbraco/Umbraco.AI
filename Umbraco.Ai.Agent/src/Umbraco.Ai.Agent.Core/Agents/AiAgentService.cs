@@ -7,6 +7,7 @@ using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
 
@@ -186,4 +187,15 @@ internal sealed class AiAgentService : IAiAgentService
         int version,
         CancellationToken cancellationToken = default)
         => _repository.GetVersionSnapshotAsync(agentId, version, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task RollbackAgentAsync(Guid agentId, int version, CancellationToken cancellationToken = default)
+    {
+        var snapshot = await _repository.GetVersionSnapshotAsync(agentId, version, cancellationToken)
+            ?? throw new InvalidOperationException($"Agent version {version} not found for agent {agentId}");
+
+        // Save the snapshot as the current version (this will create a new version)
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        await _repository.SaveAsync(snapshot, userId, cancellationToken);
+    }
 }

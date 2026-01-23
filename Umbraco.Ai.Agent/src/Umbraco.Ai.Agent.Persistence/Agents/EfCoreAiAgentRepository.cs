@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 

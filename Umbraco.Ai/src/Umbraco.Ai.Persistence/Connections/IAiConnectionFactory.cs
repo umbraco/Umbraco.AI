@@ -1,5 +1,4 @@
 using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.EditableModels;
 
 namespace Umbraco.Ai.Persistence.Connections;
 
@@ -32,20 +31,4 @@ internal interface IAiConnectionFactory
     /// <param name="entity">The entity to update.</param>
     /// <param name="connection">The domain model with updated values.</param>
     void UpdateEntity(AiConnectionEntity entity, AiConnection connection);
-
-    /// <summary>
-    /// Creates a JSON snapshot of a connection with sensitive settings encrypted.
-    /// Used for version history storage.
-    /// </summary>
-    /// <param name="connection">The connection to snapshot.</param>
-    /// <returns>JSON string with encrypted sensitive settings.</returns>
-    string CreateSnapshot(AiConnection connection);
-
-    /// <summary>
-    /// Creates a domain model from a JSON snapshot, decrypting sensitive settings.
-    /// Used for restoring version history.
-    /// </summary>
-    /// <param name="json">The JSON snapshot.</param>
-    /// <returns>The connection domain model with decrypted settings, or null if parsing fails.</returns>
-    AiConnection? BuildDomainFromSnapshot(string json);
 }

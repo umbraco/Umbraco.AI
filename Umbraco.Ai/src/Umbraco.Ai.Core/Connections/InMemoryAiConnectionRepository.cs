@@ -98,24 +98,4 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
         var exists = _connections.ContainsKey(id);
         return Task.FromResult(exists);
     }
-
-    /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid connectionId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory implementation doesn't support version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
-    }
-
-    /// <inheritdoc />
-    public Task<AiConnection?> GetVersionSnapshotAsync(
-        Guid connectionId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory implementation doesn't support version history
-        return Task.FromResult<AiConnection?>(null);
-    }
 }

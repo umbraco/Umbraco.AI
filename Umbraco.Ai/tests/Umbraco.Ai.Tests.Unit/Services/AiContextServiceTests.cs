@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Contexts;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Tests.Common.Builders;
 
 namespace Umbraco.Ai.Tests.Unit.Services;
@@ -6,12 +7,14 @@ namespace Umbraco.Ai.Tests.Unit.Services;
 public class AiContextServiceTests
 {
     private readonly Mock<IAiContextRepository> _repositoryMock;
+    private readonly Mock<IAiEntityVersionService> _versionServiceMock;
     private readonly AiContextService _service;
 
     public AiContextServiceTests()
     {
         _repositoryMock = new Mock<IAiContextRepository>();
-        _service = new AiContextService(_repositoryMock.Object);
+        _versionServiceMock = new Mock<IAiEntityVersionService>();
+        _service = new AiContextService(_repositoryMock.Object, _versionServiceMock.Object);
     }
 
     #region GetContextAsync

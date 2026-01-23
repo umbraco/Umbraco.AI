@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;

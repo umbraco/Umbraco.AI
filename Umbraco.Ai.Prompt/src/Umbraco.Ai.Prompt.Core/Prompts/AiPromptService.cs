@@ -2,13 +2,14 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.EntityAdapter;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
+using AiPropertyChange = Umbraco.Ai.Core.EntityAdapter.AiPropertyChange;
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -243,4 +244,15 @@ internal sealed class AiPromptService : IAiPromptService
         int version,
         CancellationToken cancellationToken = default)
         => _repository.GetVersionSnapshotAsync(promptId, version, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task RollbackPromptAsync(Guid promptId, int version, CancellationToken cancellationToken = default)
+    {
+        var snapshot = await _repository.GetVersionSnapshotAsync(promptId, version, cancellationToken)
+            ?? throw new InvalidOperationException($"Prompt version {version} not found for prompt {promptId}");
+
+        // Save the snapshot as the current version (this will create a new version)
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        await _repository.SaveAsync(snapshot, userId, cancellationToken);
+    }
 }

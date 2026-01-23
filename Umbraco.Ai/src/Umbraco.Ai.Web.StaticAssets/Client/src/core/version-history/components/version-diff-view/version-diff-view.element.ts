@@ -75,7 +75,7 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
         `;
     }
 
-    #renderValue(value?: string) {
+    #renderValue(value?: string | null) {
         if (!value) return html`<span class="empty-value">-</span>`;
 
         // Check if it looks like JSON

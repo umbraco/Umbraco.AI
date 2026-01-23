@@ -1,5 +1,6 @@
 using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Tests.Common.Fakes;
 

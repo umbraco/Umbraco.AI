@@ -3,6 +3,7 @@ import {
     customElement,
     html,
     nothing,
+    property,
     repeat,
     state,
     when,
@@ -10,25 +11,35 @@ import {
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UMB_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/workspace";
-import { isVersionableEntityWorkspaceContext } from "../../context/index.js";
-import type { UaiVersionableEntityWorkspaceContext } from "../../context/index.js";
 import type { UaiVersionHistoryItem } from "../../types.js";
 import { UAI_ROLLBACK_MODAL } from "../../modals/rollback-modal/rollback-modal.token.js";
+import { UaiUnifiedVersionHistoryRepository } from "../../repository/unified-version-history.repository.js";
 
 const PAGE_SIZE = 10;
 
 /**
  * A reusable version history table component that displays version history
- * for versionable entities. It consumes the workspace context and checks
- * if it supports versioning via the UaiVersionableEntityWorkspaceContext interface.
+ * for versionable entities. Pass the entity type and ID as attributes.
  *
  * @element uai-version-history-table
+ * @fires rollback - Fired after a successful rollback so parent can reload entity data
  */
 @customElement("uai-version-history-table")
 export class UaiVersionHistoryTableElement extends UmbLitElement {
-    #workspaceContext?: UaiVersionableEntityWorkspaceContext;
+    #versionRepository = new UaiUnifiedVersionHistoryRepository(this);
     #modalManager?: typeof UMB_MODAL_MANAGER_CONTEXT.TYPE;
+
+    /**
+     * The entity type for version history operations.
+     */
+    @property({ type: String, attribute: "entity-type" })
+    entityType?: string;
+
+    /**
+     * The unique identifier of the entity.
+     */
+    @property({ type: String, attribute: "entity-id" })
+    entityId?: string;
 
     @state()
     private _currentVersion?: number;
@@ -45,37 +56,51 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
     @state()
     private _currentPage = 1;
 
-    @state()
-    private _hasVersionSupport = false;
-
     constructor() {
         super();
-
-        this.consumeContext(UMB_WORKSPACE_CONTEXT, (context) => {
-            if (isVersionableEntityWorkspaceContext(context)) {
-                this.#workspaceContext = context;
-                this._hasVersionSupport = true;
-                this.observe(context.version, (v) => {
-                    this._currentVersion = v;
-                    if (v !== undefined) {
-                        this.#loadVersionHistory();
-                    }
-                });
-            }
-        });
 
         this.consumeContext(UMB_MODAL_MANAGER_CONTEXT, (context) => {
             this.#modalManager = context;
         });
     }
 
+    override connectedCallback() {
+        super.connectedCallback();
+        if (this.entityType && this.entityId) {
+            this.#loadVersionHistory();
+        }
+    }
+
+    override updated(changedProperties: Map<string, unknown>) {
+        super.updated(changedProperties);
+        if (changedProperties.has("entityType") || changedProperties.has("entityId")) {
+            if (this.entityType && this.entityId) {
+                this._currentPage = 1;
+                this.#loadVersionHistory();
+            }
+        }
+    }
+
+    /**
+     * Refreshes the version history data.
+     * Call this after entity data has been modified.
+     */
+    public refresh(): void {
+        this.#loadVersionHistory();
+    }
+
     async #loadVersionHistory() {
-        if (!this.#workspaceContext) return;
+        if (!this.entityType || !this.entityId) return;
 
         this._loading = true;
         try {
             const skip = (this._currentPage - 1) * PAGE_SIZE;
-            const response = await this.#workspaceContext.getVersionHistory(skip, PAGE_SIZE);
+            const response = await this.#versionRepository.getVersionHistory(
+                this.entityType,
+                this.entityId,
+                skip,
+                PAGE_SIZE
+            );
             if (response) {
                 this._versions = response.versions;
                 this._totalVersions = response.totalVersions;
@@ -102,10 +127,15 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
     }
 
     async #onCompareClick(version: number) {
-        if (!this.#workspaceContext || !this.#modalManager || this._currentVersion === undefined) return;
+        if (!this.entityType || !this.entityId || !this.#modalManager || this._currentVersion === undefined) return;
 
         // Get comparison data
-        const comparison = await this.#workspaceContext.compareVersions(version, this._currentVersion);
+        const comparison = await this.#versionRepository.compareVersions(
+            this.entityType,
+            this.entityId,
+            version,
+            this._currentVersion
+        );
         if (!comparison) return;
 
         // Open rollback modal
@@ -119,8 +149,16 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
 
         const result = await modalContext.onSubmit().catch(() => undefined);
         if (result?.rollback) {
-            await this.#workspaceContext.rollbackToVersion(version);
-            await this.#loadVersionHistory();
+            const success = await this.#versionRepository.rollback(
+                this.entityType,
+                this.entityId,
+                version
+            );
+            if (success) {
+                // Dispatch event so parent can reload entity data
+                this.dispatchEvent(new CustomEvent("rollback", { bubbles: true, composed: true }));
+                await this.#loadVersionHistory();
+            }
         }
     }
 
@@ -139,8 +177,8 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
     }
 
     override render() {
-        // Don't render if the workspace doesn't support versioning
-        if (!this._hasVersionSupport) {
+        // Don't render if entity type or ID is not set
+        if (!this.entityType || !this.entityId) {
             return nothing;
         }
 

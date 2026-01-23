@@ -1,6 +1,7 @@
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Connections;
@@ -13,17 +14,20 @@ internal sealed class AiConnectionService : IAiConnectionService
     private readonly IAiConnectionRepository _repository;
     private readonly AiProviderCollection _providers;
     private readonly IAiEditableModelResolver _modelResolver;
+    private readonly IAiEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AiConnectionService(
         IAiConnectionRepository repository,
         AiProviderCollection providers,
         IAiEditableModelResolver modelResolver,
+        IAiEntityVersionService versionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _providers = providers;
         _modelResolver = modelResolver;
+        _versionService = versionService;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -100,8 +104,16 @@ internal sealed class AiConnectionService : IAiConnectionService
         // Update timestamp
         connection.DateModified = DateTime.UtcNow;
 
-        // Save to repository
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+
+        // Check if this is an update - if so, create a version snapshot of the current state
+        var existing = await _repository.GetAsync(connection.Id, cancellationToken);
+        if (existing is not null)
+        {
+            await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
+        }
+
+        // Save to repository
         return await _repository.SaveAsync(connection, userId, cancellationToken);
     }
 
@@ -116,6 +128,9 @@ internal sealed class AiConnectionService : IAiConnectionService
 
         // TODO: Check if connection is in use by profiles before deletion
         // This will require IAiProfileService when implemented
+
+        // Delete version history for this entity
+        await _versionService.DeleteVersionsAsync(id, "Connection", cancellationToken);
 
         await _repository.DeleteAsync(id, cancellationToken);
     }
@@ -237,14 +252,14 @@ internal sealed class AiConnectionService : IAiConnectionService
         Guid connectionId,
         int? limit = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetVersionHistoryAsync(connectionId, limit, cancellationToken);
+        => _versionService.GetVersionHistoryAsync(connectionId, "Connection", limit, cancellationToken);
 
     /// <inheritdoc />
     public Task<AiConnection?> GetConnectionVersionSnapshotAsync(
         Guid connectionId,
         int version,
         CancellationToken cancellationToken = default)
-        => _repository.GetVersionSnapshotAsync(connectionId, version, cancellationToken);
+        => _versionService.GetVersionSnapshotAsync<AiConnection>(connectionId, version, cancellationToken);
 
     /// <inheritdoc />
     public async Task<AiConnection> RollbackConnectionAsync(
@@ -260,7 +275,7 @@ internal sealed class AiConnectionService : IAiConnectionService
         }
 
         // Get the snapshot at the target version
-        var snapshot = await _repository.GetVersionSnapshotAsync(connectionId, targetVersion, cancellationToken);
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AiConnection>(connectionId, targetVersion, cancellationToken);
         if (snapshot is null)
         {
             throw new InvalidOperationException($"Version {targetVersion} not found for connection '{connectionId}'.");

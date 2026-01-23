@@ -98,7 +98,7 @@ internal class EfCoreAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiContext> SaveAsync(AiContext context, int? userId = null, CancellationToken cancellationToken = default)
+    public async Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 

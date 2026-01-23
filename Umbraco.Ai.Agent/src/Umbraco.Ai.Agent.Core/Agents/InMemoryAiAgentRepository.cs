@@ -73,7 +73,7 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<AiAgent> SaveAsync(AiAgent agent, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiAgent> SaveAsync(AiAgent agent, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _agents[agent.Id] = agent;
         return Task.FromResult(agent);

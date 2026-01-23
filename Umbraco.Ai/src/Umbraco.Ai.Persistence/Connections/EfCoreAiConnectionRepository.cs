@@ -122,7 +122,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiConnection> SaveAsync(AiConnection connection, int? userId = null, CancellationToken cancellationToken = default)
+    public async Task<AiConnection> SaveAsync(AiConnection connection, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 

@@ -119,7 +119,7 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiProfile> SaveAsync(AiProfile profile, int? userId = null, CancellationToken cancellationToken = default)
+    public async Task<AiProfile> SaveAsync(AiProfile profile, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 

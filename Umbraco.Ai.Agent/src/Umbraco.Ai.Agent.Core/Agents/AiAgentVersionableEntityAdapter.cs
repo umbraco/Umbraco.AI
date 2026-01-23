@@ -11,14 +11,17 @@ namespace Umbraco.Ai.Agent.Core.Agents;
 internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapterBase<AiAgent>
 {
     private readonly IAiAgentService _agentService;
+    private readonly IAiEntityVersionService _versionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiAgentVersionableEntityAdapter"/> class.
     /// </summary>
-    /// <param name="agentService">The agent service for rollback operations.</param>
-    public AiAgentVersionableEntityAdapter(IAiAgentService agentService)
+    /// <param name="agentService">The agent service for save operations.</param>
+    /// <param name="versionService">The entity version service for retrieving snapshots.</param>
+    public AiAgentVersionableEntityAdapter(IAiAgentService agentService, IAiEntityVersionService versionService)
     {
         _agentService = agentService;
+        _versionService = versionService;
     }
 
     /// <inheritdoc />
@@ -48,7 +51,7 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    protected override AiAgent? RestoreFromSnapshotCore(string json)
+    protected override AiAgent? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -89,10 +92,11 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
                 Version = root.GetProperty("version").GetInt32(),
                 DateCreated = root.GetProperty("dateCreated").GetDateTime(),
                 DateModified = root.GetProperty("dateModified").GetDateTime(),
-                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null
-                    ? cbu.GetInt32() : null,
-                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null
-                    ? mbu.GetInt32() : null
+                // Try Guid first (new format), ignore old int values (no conversion path)
+                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null && cbu.TryGetGuid(out var cbuGuid)
+                    ? cbuGuid : null,
+                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null && mbu.TryGetGuid(out var mbuGuid)
+                    ? mbuGuid : null
             };
         }
         catch
@@ -148,6 +152,12 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    public override Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
-        => _agentService.RollbackAgentAsync(entityId, version, cancellationToken);
+    public override async Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
+    {
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AiAgent>(entityId, version, cancellationToken)
+            ?? throw new InvalidOperationException($"Agent version {version} not found for agent {entityId}");
+
+        // Save the snapshot as the current version (this will create a new version)
+        await _agentService.SaveAgentAsync(snapshot, cancellationToken);
+    }
 }

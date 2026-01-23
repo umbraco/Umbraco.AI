@@ -55,7 +55,7 @@ internal sealed class InMemoryAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public Task<AiContext> SaveAsync(AiContext context, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _contexts[context.Id] = context;
         return Task.FromResult(context);

@@ -48,7 +48,7 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
     }
 
     /// <inheritdoc />
-    protected override AiContext? RestoreFromSnapshotCore(string json)
+    protected override AiContext? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -99,10 +99,11 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
                 Name = root.GetProperty("name").GetString()!,
                 DateCreated = root.GetProperty("dateCreated").GetDateTime(),
                 DateModified = root.GetProperty("dateModified").GetDateTime(),
-                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null
-                    ? cbu.GetInt32() : null,
-                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null
-                    ? mbu.GetInt32() : null,
+                // Try Guid first (new format), ignore old int values (no conversion path)
+                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null && cbu.TryGetGuid(out var cbuGuid)
+                    ? cbuGuid : null,
+                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null && mbu.TryGetGuid(out var mbuGuid)
+                    ? mbuGuid : null,
                 Version = root.GetProperty("version").GetInt32(),
                 Resources = resources
             };

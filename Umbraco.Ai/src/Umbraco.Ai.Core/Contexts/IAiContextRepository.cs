@@ -49,10 +49,10 @@ internal interface IAiContextRepository
     /// Saves (creates or updates) an AI context.
     /// </summary>
     /// <param name="context">The context to save.</param>
-    /// <param name="userId">Optional user ID for version tracking.</param>
+    /// <param name="userId">Optional user key (GUID) for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved context.</returns>
-    Task<AiContext> SaveAsync(AiContext context, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes an AI context by its unique identifier.

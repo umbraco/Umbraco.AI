@@ -51,7 +51,7 @@ internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionReposi
         string entityType,
         int version,
         string snapshot,
-        int? userId,
+        Guid? userId,
         string? changeDescription,
         CancellationToken cancellationToken = default)
     {

@@ -1,5 +1,3 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -85,37 +83,4 @@ public interface IAiPromptService
         Guid promptId,
         AiPromptExecutionRequest request,
         CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the version history for a prompt.
-    /// </summary>
-    /// <param name="promptId">The prompt ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetPromptVersionHistoryAsync(
-        Guid promptId,
-        int? limit = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a specific version snapshot of a prompt.
-    /// </summary>
-    /// <param name="promptId">The prompt ID.</param>
-    /// <param name="version">The version to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt at that version, or null if not found.</returns>
-    Task<AiPrompt?> GetPromptVersionSnapshotAsync(
-        Guid promptId,
-        int version,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Rolls back a prompt to a specific version.
-    /// </summary>
-    /// <param name="promptId">The prompt ID.</param>
-    /// <param name="version">The version to rollback to.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task RollbackPromptAsync(Guid promptId, int version, CancellationToken cancellationToken = default);
 }

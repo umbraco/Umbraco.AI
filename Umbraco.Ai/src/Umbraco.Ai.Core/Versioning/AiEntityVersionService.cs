@@ -66,7 +66,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     /// <inheritdoc />
     public async Task SaveVersionAsync<TEntity>(
         TEntity entity,
-        int? userId,
+        Guid? userId,
         string? changeDescription = null,
         CancellationToken cancellationToken = default)
         where TEntity : class, IAiVersionableEntity
@@ -96,7 +96,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
         string entityType,
         int version,
         string snapshot,
-        int? userId,
+        Guid? userId,
         string? changeDescription = null,
         CancellationToken cancellationToken = default)
     {

@@ -14,20 +14,26 @@ import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import type { UaiVersionHistoryItem } from "../../types.js";
 import { UAI_ROLLBACK_MODAL } from "../../modals/rollback-modal/rollback-modal.token.js";
 import { UaiUnifiedVersionHistoryRepository } from "../../repository/unified-version-history.repository.js";
+import { UmbUserItemModel, UmbUserItemRepository } from "@umbraco-cms/backoffice/user";
 
 const PAGE_SIZE = 10;
 
 /**
- * A reusable version history table component that displays version history
+ * A reusable version history component that displays version history
  * for versionable entities. Pass the entity type and ID as attributes.
  *
- * @element uai-version-history-table
+ * @element uai-version-history
  * @fires rollback - Fired after a successful rollback so parent can reload entity data
  */
-@customElement("uai-version-history-table")
-export class UaiVersionHistoryTableElement extends UmbLitElement {
+@customElement("uai-version-history")
+export class UaiVersionHistoryElement extends UmbLitElement {
+    
     #versionRepository = new UaiUnifiedVersionHistoryRepository(this);
+    #userItemRepository = new UmbUserItemRepository(this);
+    
     #modalManager?: typeof UMB_MODAL_MANAGER_CONTEXT.TYPE;
+
+    #userMap = new Map<string, UmbUserItemModel>();
 
     /**
      * The entity type for version history operations.
@@ -105,9 +111,30 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
                 this._versions = response.versions;
                 this._totalVersions = response.totalVersions;
                 this._currentVersion = response.currentVersion;
+                this.#requestAndCacheUserItems();
             }
         } finally {
             this._loading = false;
+        }
+    }
+
+    async #requestAndCacheUserItems() 
+    {
+        const allUsers = this._versions?.map((item) => item.createdByUserId?.toString()).filter(Boolean) as string[];
+        const uniqueUsers = [...new Set(allUsers)];
+        const uncachedUsers = uniqueUsers.filter((unique) => !this.#userMap.has(unique));
+
+        // If there are no uncached user items, we don't need to make a request
+        if (uncachedUsers.length === 0) return;
+
+        const { data: items } = await this.#userItemRepository.requestItems(uncachedUsers);
+
+        if (items) {
+            items.forEach((item) => {
+                // cache the user item
+                this.#userMap.set(item.unique, item);
+                this.requestUpdate('_versions');
+            });
         }
     }
 
@@ -207,58 +234,49 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
         }
 
         return html`
-            <uui-table>
-                <uui-table-head>
-                    <uui-table-head-cell>
-                        ${this.localize.term("uaiVersionHistory_version")}
-                    </uui-table-head-cell>
-                    <uui-table-head-cell>
-                        ${this.localize.term("uaiVersionHistory_date")}
-                    </uui-table-head-cell>
-                    <uui-table-head-cell>
-                        ${this.localize.term("uaiVersionHistory_user")}
-                    </uui-table-head-cell>
-                    <uui-table-head-cell></uui-table-head-cell>
-                </uui-table-head>
+            <div class="versions-list">
                 ${repeat(
                     this._versions,
                     (v) => v.id,
-                    (v) => this.#renderRow(v)
+                    (v) => this.#renderItem(v)
                 )}
-            </uui-table>
+            </div>
             ${this.#totalPages > 1 ? this.#renderPagination() : nothing}
         `;
     }
 
-    #renderRow(version: UaiVersionHistoryItem) {
+    #renderItem(version: UaiVersionHistoryItem) {
         const isCurrent = version.version === this._currentVersion;
+        const user = this.#userMap.get(version.createdByUserId?.toString() || "");
         return html`
-            <uui-table-row>
-                <uui-table-cell>
-                    <span class="version-label ${isCurrent ? "current" : ""}">
-                        v${version.version}
-                        ${isCurrent ? html`<span class="current-badge">(${this.localize.term("uaiVersionHistory_current")})</span>` : nothing}
-                    </span>
-                </uui-table-cell>
-                <uui-table-cell>
-                    ${this.#formatDate(version.dateCreated)}
-                </uui-table-cell>
-                <uui-table-cell>
-                    ${version.createdByUserName ?? version.createdByUserId ?? "-"}
-                </uui-table-cell>
-                <uui-table-cell class="actions-cell">
-                    ${!isCurrent
-                        ? html`
-                            <uui-button
+            <div class="version-item">
+                <div class="user-info">
+                    <umb-user-avatar
+                            .name=${user?.name}
+                            .kind=${user?.kind}
+                            .imgUrls=${user?.avatarUrls ?? []}>
+                    </umb-user-avatar>
+                    <div>
+                        <span class="name">${user?.name}</span>
+                        <span class="detail">${this.#formatDate(version.dateCreated)}</span>
+                    </div>
+                </div>
+                <div>
+                    <uui-tag look="secondary">
+                            v${version.version}
+                    </uui-tag>
+                </div>
+                ${!isCurrent ? html`
+                    <div class="actions">
+                        <uui-button
                                 look="secondary"
                                 label=${this.localize.term("uaiVersionHistory_compare")}
                                 @click=${() => this.#onCompareClick(version.version)}>
-                                ${this.localize.term("uaiVersionHistory_compare")}
-                            </uui-button>
-                        `
-                        : nothing}
-                </uui-table-cell>
-            </uui-table-row>
+                            ${this.localize.term("uaiVersionHistory_compare")}
+                        </uui-button>
+                    </div>
+                `: nothing}
+            </umb-history-item>
         `;
     }
 
@@ -309,9 +327,22 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
                 margin: 0;
             }
 
-            uui-table {
-                width: 100%;
-                margin-top: calc(var(--uui-size-space-3) * -1);
+            .versions-list {
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-space-3);
+            }
+
+            .version-item {
+                display: flex;
+                gap: var(--uui-size-space-4);
+                align-items: center;
+            }
+            
+            .actions {
+                flex: 1;
+                display: flex;
+                justify-content: flex-end;
             }
 
             .version-label {
@@ -328,8 +359,23 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
                 margin-left: var(--uui-size-space-2);
             }
 
-            .actions-cell {
-                text-align: right;
+            .user-info {
+                position: relative;
+                display: flex;
+                align-items: flex-end;
+                gap: var(--uui-size-space-5);
+            }
+
+            .user-info div {
+                display: flex;
+                flex-direction: column;
+                min-width: var(--uui-size-60);
+            }
+
+            .detail {
+                font-size: var(--uui-size-4);
+                color: var(--uui-color-text-alt);
+                line-height: 1;
             }
 
             .pagination {
@@ -350,10 +396,10 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
     ];
 }
 
-export default UaiVersionHistoryTableElement;
+export default UaiVersionHistoryElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-version-history-table": UaiVersionHistoryTableElement;
+        "uai-version-history": UaiVersionHistoryElement;
     }
 }

@@ -44,9 +44,9 @@ public sealed class AiEntityVersion
     public DateTime DateCreated { get; init; }
 
     /// <summary>
-    /// The user ID of the user who created this version, if available.
+    /// The key (GUID) of the user who created this version, if available.
     /// </summary>
-    public int? CreatedByUserId { get; init; }
+    public Guid? CreatedByUserId { get; init; }
 
     /// <summary>
     /// Optional description of what changed in this version.

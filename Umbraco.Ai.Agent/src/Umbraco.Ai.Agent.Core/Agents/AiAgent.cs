@@ -59,14 +59,14 @@ public sealed class AiAgent : IAiVersionableEntity
     public DateTime DateModified { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// The ID of the user who created this agent.
+    /// The key (GUID) of the user who created this agent.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// The ID of the user who last modified this agent.
+    /// The key (GUID) of the user who last modified this agent.
     /// </summary>
-    public int? ModifiedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
 
     /// <summary>
     /// The current version of the agent.

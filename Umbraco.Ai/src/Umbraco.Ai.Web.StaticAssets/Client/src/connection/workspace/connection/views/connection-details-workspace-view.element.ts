@@ -127,11 +127,11 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             </uui-box>
             
             ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
-                <uai-version-history-table
+                <uai-version-history
                     entity-type="connection"
                     entity-id=${this._model.unique}
                     @rollback=${() => this.#workspaceContext?.reload()}>
-                </uai-version-history-table>
+                </uai-version-history>
             ` : nothing}
         `;
     }
@@ -211,7 +211,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
             uui-box:not(:first-child),
-            uai-version-history-table {
+            uai-version-history {
                 margin-top: var(--uui-size-layout-1);
             }
 

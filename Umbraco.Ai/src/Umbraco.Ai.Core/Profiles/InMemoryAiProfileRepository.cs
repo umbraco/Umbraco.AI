@@ -56,7 +56,7 @@ internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
         return Task.FromResult<(IEnumerable<AiProfile> Items, int Total)>((pagedItems, total));
     }
 
-    public Task<AiProfile> SaveAsync(AiProfile profile, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiProfile> SaveAsync(AiProfile profile, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _profiles[profile.Id] = profile;
         return Task.FromResult(profile);

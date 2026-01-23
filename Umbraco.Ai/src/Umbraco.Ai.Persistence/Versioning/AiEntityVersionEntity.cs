@@ -48,9 +48,9 @@ internal class AiEntityVersionEntity
     public DateTime DateCreated { get; set; }
 
     /// <summary>
-    /// The user ID of the user who created this version.
+    /// The user key (GUID) of the user who created this version.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
     /// Optional description of what changed in this version.

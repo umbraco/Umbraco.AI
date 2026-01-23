@@ -406,8 +406,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -418,8 +418,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -460,8 +460,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -469,8 +469,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<DateTime>("DateModified")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -549,8 +549,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<Guid>("ConnectionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
@@ -563,8 +563,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -610,8 +610,8 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");

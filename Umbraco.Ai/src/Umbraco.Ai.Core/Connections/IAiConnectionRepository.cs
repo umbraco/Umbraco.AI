@@ -48,9 +48,9 @@ internal interface IAiConnectionRepository
     /// Save a connection (insert if new, update if exists).
     /// </summary>
     /// <param name="connection">The connection to save.</param>
-    /// <param name="userId">The ID of the user performing the operation.</param>
+    /// <param name="userId">The key (GUID) of the user performing the operation.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task<AiConnection> SaveAsync(AiConnection connection, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiConnection> SaveAsync(AiConnection connection, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Delete a connection by ID.

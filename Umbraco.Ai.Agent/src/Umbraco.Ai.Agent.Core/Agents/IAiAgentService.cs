@@ -1,7 +1,5 @@
 using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
@@ -101,37 +99,4 @@ public interface IAiAgentService
         AguiRunRequest request,
         IEnumerable<AguiTool>? frontendToolDefinitions,
         CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the version history for an agent.
-    /// </summary>
-    /// <param name="agentId">The agent ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetAgentVersionHistoryAsync(
-        Guid agentId,
-        int? limit = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a specific version snapshot of an agent.
-    /// </summary>
-    /// <param name="agentId">The agent ID.</param>
-    /// <param name="version">The version to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The agent at that version, or null if not found.</returns>
-    Task<AiAgent?> GetAgentVersionSnapshotAsync(
-        Guid agentId,
-        int version,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Rolls back an agent to a specific version.
-    /// </summary>
-    /// <param name="agentId">The agent ID.</param>
-    /// <param name="version">The version to rollback to.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task RollbackAgentAsync(Guid agentId, int version, CancellationToken cancellationToken = default);
 }

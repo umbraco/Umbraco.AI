@@ -70,7 +70,7 @@ public interface IAiEntityVersionService
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <param name="entity">The entity to snapshot.</param>
-    /// <param name="userId">The user ID of who created this version.</param>
+    /// <param name="userId">The user key (GUID) of who created this version.</param>
     /// <param name="changeDescription">Optional description of what changed.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <remarks>
@@ -78,7 +78,7 @@ public interface IAiEntityVersionService
     /// </remarks>
     Task SaveVersionAsync<TEntity>(
         TEntity entity,
-        int? userId,
+        Guid? userId,
         string? changeDescription = null,
         CancellationToken cancellationToken = default)
         where TEntity : class, IAiVersionableEntity;
@@ -90,7 +90,7 @@ public interface IAiEntityVersionService
     /// <param name="entityType">The entity type name (e.g., "Connection", "Profile").</param>
     /// <param name="version">The version number.</param>
     /// <param name="snapshot">The JSON snapshot.</param>
-    /// <param name="userId">The user ID of who created this version.</param>
+    /// <param name="userId">The user key (GUID) of who created this version.</param>
     /// <param name="changeDescription">Optional description of what changed.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     Task SaveVersionAsync(
@@ -98,7 +98,7 @@ public interface IAiEntityVersionService
         string entityType,
         int version,
         string snapshot,
-        int? userId,
+        Guid? userId,
         string? changeDescription = null,
         CancellationToken cancellationToken = default);
 

@@ -59,7 +59,7 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
     }
 
     /// <inheritdoc />
-    protected override AiConnection? RestoreFromSnapshotCore(string json)
+    protected override AiConnection? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -95,10 +95,11 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
                 Version = root.GetProperty("version").GetInt32(),
                 DateCreated = root.GetProperty("dateCreated").GetDateTime(),
                 DateModified = root.GetProperty("dateModified").GetDateTime(),
-                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null
-                    ? cbu.GetInt32() : null,
-                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null
-                    ? mbu.GetInt32() : null
+                // Try Guid first (new format), ignore old int values (no conversion path)
+                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null && cbu.TryGetGuid(out var cbuGuid)
+                    ? cbuGuid : null,
+                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null && mbu.TryGetGuid(out var mbuGuid)
+                    ? mbuGuid : null
             };
         }
         catch

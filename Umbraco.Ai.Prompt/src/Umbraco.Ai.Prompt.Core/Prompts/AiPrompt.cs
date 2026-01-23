@@ -80,14 +80,14 @@ public sealed class AiPrompt : IAiVersionableEntity
     public DateTime DateModified { get; set; }
 
     /// <summary>
-    /// The ID of the user who created this prompt.
+    /// The key (GUID) of the user who created this prompt.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// The ID of the user who last modified this prompt.
+    /// The key (GUID) of the user who last modified this prompt.
     /// </summary>
-    public int? ModifiedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
 
     /// <summary>
     /// The current version of the prompt.

@@ -73,7 +73,7 @@ internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt> SaveAsync(AiPrompt prompt, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiPrompt> SaveAsync(AiPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _prompts[prompt.Id] = prompt;
         return Task.FromResult(prompt);

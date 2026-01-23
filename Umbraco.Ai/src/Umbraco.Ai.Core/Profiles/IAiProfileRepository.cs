@@ -59,10 +59,10 @@ internal interface IAiProfileRepository
     /// Saves an AI profile.
     /// </summary>
     /// <param name="profile">The profile to save.</param>
-    /// <param name="userId">Optional user ID for version tracking.</param>
+    /// <param name="userId">Optional user key (GUID) for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved profile.</returns>
-    Task<AiProfile> SaveAsync(AiProfile profile, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiProfile> SaveAsync(AiProfile profile, Guid? userId = null, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Deletes an AI profile by its unique identifier.

@@ -74,7 +74,7 @@ internal sealed class AiContextService : IAiContextService
         // Update modified timestamp
         context.DateModified = DateTime.UtcNow;
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
         // Check if this is an update - if so, create a version snapshot of the current state
         var existing = await _repository.GetByIdAsync(context.Id, cancellationToken);
@@ -146,7 +146,7 @@ internal sealed class AiContextService : IAiContextService
             }).ToList(),
         };
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
         return await _repository.SaveAsync(rolledBackContext, userId, cancellationToken);
     }
 }

@@ -1,11 +1,8 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
-using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
@@ -96,7 +93,7 @@ internal sealed class AiPromptService : IAiPromptService
         // Update timestamp
         prompt.DateModified = DateTime.UtcNow;
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
         return await _repository.SaveAsync(prompt, userId, cancellationToken);
     }
 
@@ -229,30 +226,5 @@ internal sealed class AiPromptService : IAiPromptService
         }
 
         return context;
-    }
-
-    /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetPromptVersionHistoryAsync(
-        Guid promptId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-        => _repository.GetVersionHistoryAsync(promptId, limit, cancellationToken);
-
-    /// <inheritdoc />
-    public Task<AiPrompt?> GetPromptVersionSnapshotAsync(
-        Guid promptId,
-        int version,
-        CancellationToken cancellationToken = default)
-        => _repository.GetVersionSnapshotAsync(promptId, version, cancellationToken);
-
-    /// <inheritdoc />
-    public async Task RollbackPromptAsync(Guid promptId, int version, CancellationToken cancellationToken = default)
-    {
-        var snapshot = await _repository.GetVersionSnapshotAsync(promptId, version, cancellationToken)
-            ?? throw new InvalidOperationException($"Prompt version {version} not found for prompt {promptId}");
-
-        // Save the snapshot as the current version (this will create a new version)
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
-        await _repository.SaveAsync(snapshot, userId, cancellationToken);
     }
 }

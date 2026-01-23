@@ -314,7 +314,7 @@ public class AiProfileServiceTests
             .Build();
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(profile, It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         // Act
@@ -323,7 +323,7 @@ public class AiProfileServiceTests
         // Assert
         result.ShouldNotBeNull();
         result.Alias.ShouldBe("new-profile");
-        _repositoryMock.Verify(x => x.SaveAsync(profile, It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

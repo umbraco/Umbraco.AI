@@ -11,14 +11,17 @@ namespace Umbraco.Ai.Prompt.Core.Prompts;
 internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdapterBase<AiPrompt>
 {
     private readonly IAiPromptService _promptService;
+    private readonly IAiEntityVersionService _versionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiPromptVersionableEntityAdapter"/> class.
     /// </summary>
-    /// <param name="promptService">The prompt service for rollback operations.</param>
-    public AiPromptVersionableEntityAdapter(IAiPromptService promptService)
+    /// <param name="promptService">The prompt service for save operations.</param>
+    /// <param name="versionService">The entity version service for retrieving snapshots.</param>
+    public AiPromptVersionableEntityAdapter(IAiPromptService promptService, IAiEntityVersionService versionService)
     {
         _promptService = promptService;
+        _versionService = versionService;
     }
 
     /// <inheritdoc />
@@ -51,7 +54,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    protected override AiPrompt? RestoreFromSnapshotCore(string json)
+    protected override AiPrompt? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -118,10 +121,11 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
                 Version = root.GetProperty("version").GetInt32(),
                 DateCreated = root.GetProperty("dateCreated").GetDateTime(),
                 DateModified = root.GetProperty("dateModified").GetDateTime(),
-                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null
-                    ? cbu.GetInt32() : null,
-                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null
-                    ? mbu.GetInt32() : null
+                // Try Guid first (new format), ignore old int values (no conversion path)
+                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null && cbu.TryGetGuid(out var cbuGuid)
+                    ? cbuGuid : null,
+                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null && mbu.TryGetGuid(out var mbuGuid)
+                    ? mbuGuid : null
             };
         }
         catch
@@ -198,8 +202,14 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    public override Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
-        => _promptService.RollbackPromptAsync(entityId, version, cancellationToken);
+    public override async Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
+    {
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AiPrompt>(entityId, version, cancellationToken)
+            ?? throw new InvalidOperationException($"Prompt version {version} not found for prompt {entityId}");
+
+        // Save the snapshot as the current version (this will create a new version)
+        await _promptService.SavePromptAsync(snapshot, cancellationToken);
+    }
 
     private static string SerializeScope(AiPromptScope scope)
     {

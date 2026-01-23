@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Versioning;
+using Umbraco.Cms.Persistence.EFCore.Scoping;
 
 namespace Umbraco.Ai.Persistence.Versioning;
 
@@ -9,15 +10,15 @@ namespace Umbraco.Ai.Persistence.Versioning;
 /// </summary>
 internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionRepository
 {
-    private readonly IDbContextFactory<UmbracoAiDbContext> _contextFactory;
+    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EfCoreAiEntityVersionRepository"/> class.
     /// </summary>
-    /// <param name="contextFactory">The database context factory.</param>
-    public EfCoreAiEntityVersionRepository(IDbContextFactory<UmbracoAiDbContext> contextFactory)
+    /// <param name="scopeProvider">The EF Core scope provider.</param>
+    public EfCoreAiEntityVersionRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
     {
-        _contextFactory = contextFactory;
+        _scopeProvider = scopeProvider;
     }
 
     /// <inheritdoc />
@@ -27,16 +28,20 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         int? limit = null,
         CancellationToken cancellationToken = default)
     {
-        await using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        var query = db.EntityVersions
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType)
-            .OrderByDescending(v => v.Version);
+        var entities = await scope.ExecuteWithContextAsync(async db =>
+        {
+            var query = db.EntityVersions
+                .Where(v => v.EntityId == entityId && v.EntityType == entityType)
+                .OrderByDescending(v => v.Version);
 
-        var limitedQuery = limit.HasValue ? query.Take(limit.Value) : query;
+            var limitedQuery = limit.HasValue ? query.Take(limit.Value) : query;
 
-        var entities = await limitedQuery.ToListAsync(cancellationToken);
+            return await limitedQuery.ToListAsync(cancellationToken);
+        });
 
+        scope.Complete();
         return entities.Select(MapToDomain);
     }
 
@@ -47,13 +52,15 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         int version,
         CancellationToken cancellationToken = default)
     {
-        await using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        var entity = await db.EntityVersions
-            .FirstOrDefaultAsync(
-                v => v.EntityId == entityId && v.EntityType == entityType && v.Version == version,
-                cancellationToken);
+        var entity = await scope.ExecuteWithContextAsync(async db =>
+            await db.EntityVersions
+                .FirstOrDefaultAsync(
+                    v => v.EntityId == entityId && v.EntityType == entityType && v.Version == version,
+                    cancellationToken));
 
+        scope.Complete();
         return entity is null ? null : MapToDomain(entity);
     }
 
@@ -63,26 +70,32 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         string entityType,
         int version,
         string snapshot,
-        int? userId,
+        Guid? userId,
         string? changeDescription,
         CancellationToken cancellationToken = default)
     {
-        await using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        var entity = new AiEntityVersionEntity
+        await scope.ExecuteWithContextAsync(async db =>
         {
-            Id = Guid.NewGuid(),
-            EntityId = entityId,
-            EntityType = entityType,
-            Version = version,
-            Snapshot = snapshot,
-            DateCreated = DateTime.UtcNow,
-            CreatedByUserId = userId,
-            ChangeDescription = changeDescription
-        };
+            var entity = new AiEntityVersionEntity
+            {
+                Id = Guid.NewGuid(),
+                EntityId = entityId,
+                EntityType = entityType,
+                Version = version,
+                Snapshot = snapshot,
+                DateCreated = DateTime.UtcNow,
+                CreatedByUserId = userId,
+                ChangeDescription = changeDescription
+            };
 
-        db.EntityVersions.Add(entity);
-        await db.SaveChangesAsync(cancellationToken);
+            db.EntityVersions.Add(entity);
+            await db.SaveChangesAsync(cancellationToken);
+            return entity;
+        });
+
+        scope.Complete();
     }
 
     /// <inheritdoc />
@@ -91,11 +104,14 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         string entityType,
         CancellationToken cancellationToken = default)
     {
-        await using var db = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        await db.EntityVersions
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType)
-            .ExecuteDeleteAsync(cancellationToken);
+        await scope.ExecuteWithContextAsync(async db =>
+            await db.EntityVersions
+                .Where(v => v.EntityId == entityId && v.EntityType == entityType)
+                .ExecuteDeleteAsync(cancellationToken));
+
+        scope.Complete();
     }
 
     private static AiEntityVersion MapToDomain(AiEntityVersionEntity entity)

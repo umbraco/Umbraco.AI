@@ -11,7 +11,7 @@ export interface UaiVersionHistoryItem {
     /** The date and time when this version was created. */
     dateCreated: string;
     /** The user ID who created this version, if available. */
-    createdByUserId?: number | null;
+    createdByUserId?: string | null;
     /** The user name who created this version, if available. */
     createdByUserName?: string | null;
     /** Optional description of what changed in this version. */

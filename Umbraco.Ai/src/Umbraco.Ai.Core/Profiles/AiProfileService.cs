@@ -93,7 +93,7 @@ internal sealed class AiProfileService : IAiProfileService
             throw new InvalidOperationException($"A profile with alias '{profile.Alias}' already exists.");
         }
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
         // Check if this is an update - if so, create a version snapshot of the current state
         var existing = await _repository.GetByIdAsync(profile.Id, cancellationToken);
@@ -161,7 +161,7 @@ internal sealed class AiProfileService : IAiProfileService
             // The repository will handle version increment and dates
         };
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
         return await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
     }
 }

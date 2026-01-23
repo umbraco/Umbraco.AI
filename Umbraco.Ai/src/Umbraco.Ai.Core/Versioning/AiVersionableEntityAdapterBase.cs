@@ -37,7 +37,7 @@ public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     public Type EntityType => typeof(TEntity);
 
     /// <inheritdoc />
-    public string CreateSnapshot(object entity)
+    string IAiVersionableEntityAdapter.CreateSnapshot(object entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         if (entity is not TEntity typed)
@@ -49,8 +49,8 @@ public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     }
 
     /// <inheritdoc />
-    public object? RestoreFromSnapshot(string json)
-        => RestoreFromSnapshotCore(json);
+    object? IAiVersionableEntityAdapter.RestoreFromSnapshot(string json)
+        => RestoreFromSnapshot(json);
 
     /// <inheritdoc />
     public IReadOnlyList<AiPropertyChange> CompareVersions(object from, object to)
@@ -83,7 +83,7 @@ public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     /// </summary>
     /// <param name="json">The JSON snapshot.</param>
     /// <returns>The restored entity, or null if restoration fails.</returns>
-    protected abstract TEntity? RestoreFromSnapshotCore(string json);
+    protected abstract TEntity? RestoreFromSnapshot(string json);
 
     /// <summary>
     /// Compares two entity versions and returns the list of property changes.

@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
@@ -149,7 +147,7 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
                     Id = Guid.NewGuid(),
                     ProfileId = existing.Id,
                     Version = existing.Version,
-                    Snapshot = JsonSerializer.Serialize(existingDomain, Constants.DefaultJsonSerializerOptions),
+                    Snapshot = AiProfileFactory.CreateSnapshot(existingDomain),
                     DateCreated = DateTime.UtcNow,
                     CreatedByUserId = userId
                 };
@@ -248,13 +246,6 @@ internal class EfCoreAiProfileRepository : IAiProfileRepository
             return null;
         }
 
-        try
-        {
-            return JsonSerializer.Deserialize<AiProfile>(entity.Snapshot, Constants.DefaultJsonSerializerOptions);
-        }
-        catch
-        {
-            return null;
-        }
+        return AiProfileFactory.BuildDomainFromSnapshot(entity.Snapshot);
     }
 }

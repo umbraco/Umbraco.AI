@@ -427,6 +427,11 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<string>("Settings")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Alias")
@@ -435,6 +440,42 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.HasIndex("ProviderId");
 
                     b.ToTable("umbracoAiConnection", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChangeDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ConnectionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConnectionId");
+
+                    b.HasIndex("ConnectionId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAiConnectionVersion", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
@@ -694,6 +735,15 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.HasOne("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", null)
                         .WithMany()
                         .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionVersionEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

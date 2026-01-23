@@ -231,4 +231,22 @@ internal sealed class AiConnectionService : IAiConnectionService
             return provider?.GetCapabilities().Any(c => c.Kind == capability) ?? false;
         });
     }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiEntityVersion>> GetConnectionVersionHistoryAsync(
+        Guid connectionId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        return _repository.GetVersionHistoryAsync(connectionId, limit, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<AiConnection?> GetConnectionVersionSnapshotAsync(
+        Guid connectionId,
+        int version,
+        CancellationToken cancellationToken = default)
+    {
+        return _repository.GetVersionSnapshotAsync(connectionId, version, cancellationToken);
+    }
 }

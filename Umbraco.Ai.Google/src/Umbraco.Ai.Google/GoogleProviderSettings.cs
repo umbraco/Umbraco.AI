@@ -11,7 +11,7 @@ public class GoogleProviderSettings
     /// <summary>
     /// The API key for authenticating with Google AI services.
     /// </summary>
-    [AiField]
+    [AiField(IsSensitive = true)]
     [Required]
     public string? ApiKey { get; set; }
 }

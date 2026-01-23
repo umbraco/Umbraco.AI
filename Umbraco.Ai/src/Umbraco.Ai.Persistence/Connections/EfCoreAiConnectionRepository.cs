@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Core.Connections;
+using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
 namespace Umbraco.Ai.Persistence.Connections;
@@ -10,12 +11,18 @@ namespace Umbraco.Ai.Persistence.Connections;
 internal class EfCoreAiConnectionRepository : IAiConnectionRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IAiConnectionFactory _connectionFactory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="EfCoreAiConnectionRepository"/>.
     /// </summary>
-    public EfCoreAiConnectionRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
-        => _scopeProvider = scopeProvider;
+    public EfCoreAiConnectionRepository(
+        IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider,
+        IAiConnectionFactory connectionFactory)
+    {
+        _scopeProvider = scopeProvider;
+        _connectionFactory = connectionFactory;
+    }
 
     /// <inheritdoc />
     public async Task<AiConnection?> GetAsync(Guid id, CancellationToken cancellationToken = default)
@@ -26,7 +33,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             await db.Connections.FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiConnectionFactory.BuildDomain(entity);
+        return entity is null ? null : _connectionFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -40,7 +47,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiConnectionFactory.BuildDomain(entity);
+        return entity is null ? null : _connectionFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -52,7 +59,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             await db.Connections.ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AiConnectionFactory.BuildDomain);
+        return entities.Select(_connectionFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -66,7 +73,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AiConnectionFactory.BuildDomain);
+        return entities.Select(_connectionFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -109,7 +116,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AiConnectionFactory.BuildDomain), result.total);
+        return (result.items.Select(_connectionFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
@@ -117,33 +124,48 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
-        await scope.ExecuteWithContextAsync<object?>(async db =>
+        var savedConnection = await scope.ExecuteWithContextAsync(async db =>
         {
             AiConnectionEntity? existing = await db.Connections.FindAsync([connection.Id], cancellationToken);
 
             if (existing is null)
             {
-                // New connection - set user IDs on domain model before mapping
+                // New connection - set version and user IDs on domain model before mapping
+                connection.Version = 1;
                 connection.CreatedByUserId = userId;
                 connection.ModifiedByUserId = userId;
 
-                AiConnectionEntity newEntity = AiConnectionFactory.BuildEntity(connection);
+                AiConnectionEntity newEntity = _connectionFactory.BuildEntity(connection);
                 db.Connections.Add(newEntity);
             }
             else
             {
-                // Existing connection - set ModifiedByUserId on domain model
+                // Existing connection - create version snapshot of current state before updating
+                var existingDomain = _connectionFactory.BuildDomain(existing);
+                var versionEntity = new AiConnectionVersionEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ConnectionId = existing.Id,
+                    Version = existing.Version,
+                    Snapshot = _connectionFactory.CreateSnapshot(existingDomain),
+                    DateCreated = DateTime.UtcNow,
+                    CreatedByUserId = userId
+                };
+                db.ConnectionVersions.Add(versionEntity);
+
+                // Increment version and set ModifiedByUserId on domain model
+                connection.Version = existing.Version + 1;
                 connection.ModifiedByUserId = userId;
 
-                AiConnectionFactory.UpdateEntity(existing, connection);
+                _connectionFactory.UpdateEntity(existing, connection);
             }
 
             await db.SaveChangesAsync(cancellationToken);
-            return null;
+            return connection;
         });
 
         scope.Complete();
-        return connection;
+        return savedConnection;
     }
 
     /// <inheritdoc />
@@ -178,5 +200,63 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
 
         scope.Complete();
         return exists;
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+        Guid connectionId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var entities = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AiConnectionVersionEntity> query = db.ConnectionVersions
+                .Where(v => v.ConnectionId == connectionId)
+                .OrderByDescending(v => v.Version);
+
+            if (limit.HasValue)
+            {
+                query = query.Take(limit.Value);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        });
+
+        scope.Complete();
+
+        return entities.Select(e => new AiEntityVersion
+        {
+            Id = e.Id,
+            EntityId = e.ConnectionId,
+            Version = e.Version,
+            Snapshot = e.Snapshot,
+            DateCreated = e.DateCreated,
+            CreatedByUserId = e.CreatedByUserId,
+            ChangeDescription = e.ChangeDescription
+        });
+    }
+
+    /// <inheritdoc />
+    public async Task<AiConnection?> GetVersionSnapshotAsync(
+        Guid connectionId,
+        int version,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var entity = await scope.ExecuteWithContextAsync(async db =>
+            await db.ConnectionVersions
+                .FirstOrDefaultAsync(v => v.ConnectionId == connectionId && v.Version == version, cancellationToken));
+
+        scope.Complete();
+
+        if (entity is null || string.IsNullOrEmpty(entity.Snapshot))
+        {
+            return null;
+        }
+
+        return _connectionFactory.BuildDomainFromSnapshot(entity.Snapshot);
     }
 }

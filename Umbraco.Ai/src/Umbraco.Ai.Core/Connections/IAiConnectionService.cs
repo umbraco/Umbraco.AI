@@ -1,3 +1,4 @@
+using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
 
 namespace Umbraco.Ai.Core.Connections;
@@ -87,4 +88,28 @@ public interface IAiConnectionService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured provider with resolved settings, or null if connection/provider not found.</returns>
     Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the version history for a connection.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="limit">Optional limit on number of versions to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The version history, ordered by version descending.</returns>
+    Task<IEnumerable<AiEntityVersion>> GetConnectionVersionHistoryAsync(
+        Guid connectionId,
+        int? limit = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a specific version snapshot of a connection.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="version">The version to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The connection at that version, or null if not found.</returns>
+    Task<AiConnection?> GetConnectionVersionSnapshotAsync(
+        Guid connectionId,
+        int version,
+        CancellationToken cancellationToken = default);
 }

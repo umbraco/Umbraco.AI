@@ -21,7 +21,7 @@ public class MicrosoftFoundryProviderSettings
     /// <summary>
     /// The API key for authenticating with Microsoft AI Foundry services.
     /// </summary>
-    [AiField]
+    [AiField(IsSensitive = true)]
     [Required]
     public string? ApiKey { get; set; }
 }

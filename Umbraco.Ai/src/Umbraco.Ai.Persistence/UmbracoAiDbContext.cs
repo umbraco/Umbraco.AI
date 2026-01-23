@@ -64,6 +64,11 @@ public class UmbracoAiDbContext : DbContext
     internal DbSet<AiContextVersionEntity> ContextVersions { get; set; } = null!;
 
     /// <summary>
+    /// AI connection version history.
+    /// </summary>
+    internal DbSet<AiConnectionVersionEntity> ConnectionVersions { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
     /// </summary>
     public UmbracoAiDbContext(DbContextOptions<UmbracoAiDbContext> options)
@@ -103,6 +108,10 @@ public class UmbracoAiDbContext : DbContext
 
             entity.Property(e => e.DateModified)
                 .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
 
             entity.HasIndex(e => e.Alias)
                 .IsUnique();
@@ -576,6 +585,39 @@ public class UmbracoAiDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(e => e.ContextId);
+        });
+
+        modelBuilder.Entity<AiConnectionVersionEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiConnectionVersion");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ConnectionId)
+                .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired();
+
+            entity.Property(e => e.Snapshot)
+                .IsRequired();
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.ChangeDescription)
+                .HasMaxLength(500);
+
+            // Foreign key with cascade delete (when connection is deleted, delete its versions)
+            entity.HasOne<AiConnectionEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ConnectionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Composite unique index to ensure one version per connection
+            entity.HasIndex(e => new { e.ConnectionId, e.Version })
+                .IsUnique();
+
+            entity.HasIndex(e => e.ConnectionId);
         });
     }
 }

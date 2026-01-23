@@ -154,4 +154,94 @@ internal static class AiPromptEntityFactory
             return [];
         }
     }
+
+    /// <summary>
+    /// Creates a JSON snapshot of a prompt for version history storage.
+    /// </summary>
+    /// <param name="aiPrompt">The prompt to snapshot.</param>
+    /// <returns>JSON string representing the prompt state.</returns>
+    public static string CreateSnapshot(Core.Prompts.AiPrompt aiPrompt)
+    {
+        var snapshot = new
+        {
+            aiPrompt.Id,
+            aiPrompt.Alias,
+            aiPrompt.Name,
+            aiPrompt.Description,
+            aiPrompt.Instructions,
+            aiPrompt.ProfileId,
+            ContextIds = SerializeContextIds(aiPrompt.ContextIds),
+            Tags = SerializeTags(aiPrompt.Tags),
+            aiPrompt.IsActive,
+            aiPrompt.IncludeEntityContext,
+            Scope = SerializeScope(aiPrompt.Scope),
+            aiPrompt.DateCreated,
+            aiPrompt.DateModified,
+            aiPrompt.CreatedByUserId,
+            aiPrompt.ModifiedByUserId,
+            aiPrompt.Version
+        };
+
+        return JsonSerializer.Serialize(snapshot, JsonOptions);
+    }
+
+    /// <summary>
+    /// Creates a domain model from a JSON snapshot.
+    /// </summary>
+    /// <param name="json">The JSON snapshot.</param>
+    /// <returns>The prompt domain model, or null if parsing fails.</returns>
+    public static Core.Prompts.AiPrompt? BuildDomainFromSnapshot(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var tags = root.TryGetProperty("tags", out var tagsEl) && tagsEl.ValueKind == JsonValueKind.String
+                ? DeserializeTags(tagsEl.GetString())
+                : Array.Empty<string>();
+
+            var contextIds = root.TryGetProperty("contextIds", out var ctxEl) && ctxEl.ValueKind == JsonValueKind.String
+                ? DeserializeContextIds(ctxEl.GetString())
+                : Array.Empty<Guid>();
+
+            var scope = root.TryGetProperty("scope", out var scopeEl) && scopeEl.ValueKind == JsonValueKind.String
+                ? DeserializeScope(scopeEl.GetString())
+                : null;
+
+            return new Core.Prompts.AiPrompt
+            {
+                Id = root.GetProperty("id").GetGuid(),
+                Alias = root.GetProperty("alias").GetString()!,
+                Name = root.GetProperty("name").GetString()!,
+                Description = root.TryGetProperty("description", out var descEl) && descEl.ValueKind == JsonValueKind.String
+                    ? descEl.GetString() : null,
+                Instructions = root.TryGetProperty("instructions", out var instrEl) && instrEl.ValueKind == JsonValueKind.String
+                    ? instrEl.GetString() : null,
+                ProfileId = root.TryGetProperty("profileId", out var profEl) && profEl.ValueKind != JsonValueKind.Null
+                    ? profEl.GetGuid() : null,
+                ContextIds = contextIds,
+                Tags = tags,
+                IsActive = root.GetProperty("isActive").GetBoolean(),
+                IncludeEntityContext = root.GetProperty("includeEntityContext").GetBoolean(),
+                Scope = scope,
+                DateCreated = root.GetProperty("dateCreated").GetDateTime(),
+                DateModified = root.GetProperty("dateModified").GetDateTime(),
+                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null
+                    ? cbu.GetInt32() : null,
+                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null
+                    ? mbu.GetInt32() : null,
+                Version = root.GetProperty("version").GetInt32()
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

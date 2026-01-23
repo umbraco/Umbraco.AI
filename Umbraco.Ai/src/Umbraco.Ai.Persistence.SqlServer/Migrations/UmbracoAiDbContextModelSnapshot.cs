@@ -434,6 +434,11 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.Property<string>("Settings")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Alias")
@@ -442,6 +447,42 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.HasIndex("ProviderId");
 
                     b.ToTable("umbracoAiConnection", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionVersionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ChangeDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ConnectionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConnectionId");
+
+                    b.HasIndex("ConnectionId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAiConnectionVersion", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
@@ -701,6 +742,15 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                     b.HasOne("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", null)
                         .WithMany()
                         .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionVersionEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", null)
+                        .WithMany()
+                        .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

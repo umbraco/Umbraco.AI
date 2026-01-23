@@ -36,6 +36,12 @@ public class AiEditableModelFieldAttribute : Attribute
     /// Sort order for displaying fields in UI.
     /// </summary>
     public int SortOrder { get; set; }
+
+    /// <summary>
+    /// Indicates whether the field contains sensitive data that should be encrypted at rest.
+    /// When true, the field value will be encrypted during persistence and the UI may mask the value.
+    /// </summary>
+    public bool IsSensitive { get; set; }
 }
 
 /// <summary>

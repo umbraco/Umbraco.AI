@@ -1,5 +1,5 @@
-# Umbraco.Ai Monorepo CI/CD Pipeline
-# Supports independent versioning and building per product
+# Azure DevOps CI Pipeline for Umbraco.Ai
+# Converted from GitHub Actions (.github/workflows/ci.yml)
 
 trigger:
   branches:
@@ -18,291 +18,279 @@ pr:
       - main
       - dev
 
-# Pipeline variables
 variables:
-  - name: configuration
-    value: 'Release'
-  - name: vmImage
-    value: 'ubuntu-latest'
+  NODE_VERSION: '20.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
 
 stages:
-  # Stage 1: Detect Changes
-  - stage: DetectChanges
-    displayName: 'Detect Changed Products'
+  # ============================================================
+  # Build & Test everything
+  # ============================================================
+  - stage: Build
+    displayName: Build & Test
     jobs:
-      - job: DetectChanges
-        displayName: 'Analyze changes and set variables'
-        pool:
-          vmImage: $(vmImage)
-
-        steps:
-          - checkout: self
-            fetchDepth: 2  # Need last 2 commits for diff
-
-          - task: PowerShell@2
-            name: detectChanges
-            displayName: 'Run change detection'
-            inputs:
-              filePath: '$(Build.SourcesDirectory)/build/scripts/detect-changes.ps1'
-              arguments: '-SourceBranch "$(Build.SourceBranch)" -SourceVersion "$(Build.SourceVersion)"'
-
-  # Debug stage to verify variables
-  - stage: DebugVariables
-    displayName: 'Debug Output Variables'
-    dependsOn: DetectChanges
-    jobs:
-      - job: ShowVariables
-        displayName: 'Show detected variables'
-        pool:
-          vmImage: $(vmImage)
-        variables:
-          Level0Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'] ]
-          Level1Changed: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Changed'] ]
-          Level0Matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
-          Level1Matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
-        steps:
-          - task: PowerShell@2
-            displayName: 'Display variables'
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "=== Output Variables from DetectChanges ==="
-                Write-Host "Level0Changed: '$(Level0Changed)'"
-                Write-Host "Level0Changed type: $('$(Level0Changed)'.GetType().Name)"
-                Write-Host "Level0Changed length: $('$(Level0Changed)'.Length)"
-                Write-Host ""
-                Write-Host "Level1Changed: '$(Level1Changed)'"
-                Write-Host ""
-                Write-Host "Testing condition expression:"
-                $level0 = '$(Level0Changed)'
-                Write-Host "  Variable value: '$level0'"
-                Write-Host "  eq(level0, 'true'): $($level0 -eq 'true')"
-                Write-Host "  eq(level0, 'True'): $($level0 -eq 'True')"
-                Write-Host "  Trimmed: '$($level0.Trim())'"
-                Write-Host ""
-                Write-Host "Level0Matrix:"
-                Write-Host "$(Level0Matrix)"
-                Write-Host ""
-                Write-Host "Level1Matrix:"
-                Write-Host "$(Level1Matrix)"
-
-  # Stage 2-6: Build Products by Dependency Level (DYNAMIC)
-  # Products are automatically discovered and built based on detect-changes.ps1 output
-  # Products at each level are built in parallel using matrix strategy
-  # Level 0 = no dependencies, Level 1 = depends on Level 0, etc.
-
-  - stage: BuildLevel0
-    displayName: 'Build Level 0 (No Dependencies)'
-    dependsOn: DetectChanges
-    variables:
-      Level0Matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Matrix'] ]
-    jobs:
-      - job: SetupMatrix
-        displayName: 'Setup Build Matrix'
-        pool:
-          vmImage: $(vmImage)
-        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level0Changed'], 'true')
-        steps:
-          - bash: |
-              # Read the matrix JSON from stage variable
-              MATRIX_JSON='$(Level0Matrix)'
-              echo "Matrix JSON from stage variable:"
-              echo "$MATRIX_JSON"
-              echo ""
-
-              # Output it directly - NO PowerShell, NO manipulation
-              echo "##vso[task.setvariable variable=buildMatrix;isOutput=true]$MATRIX_JSON"
-            name: matrix_output
-            displayName: 'Output matrix for build jobs'
-
-      - job: Build_Level_0
-        displayName: 'Build Level 0 Products'
-        dependsOn: SetupMatrix
+      - job: BuildAndTest
+        displayName: Build & Test
         pool:
           vmImage: 'ubuntu-latest'
-        strategy:
-          matrix: $[ dependencies.SetupMatrix.outputs['matrix_output.buildMatrix'] ]
         steps:
           - checkout: self
             fetchDepth: 0
 
+          - task: UseDotNet@2
+            displayName: Setup .NET
+            inputs:
+              useGlobalJson: true
+
+          - task: NodeTool@0
+            displayName: Setup Node.js
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
           - script: |
-              echo "Matrix variable values:"
-              echo "name=$(name)"
-              echo "path=$(path)"
-              echo "hasFrontend=$(hasFrontend)"
-            displayName: 'Debug: Show matrix variables'
+              npm ci
+              npm run build
+            displayName: Build frontend
 
-          - template: build/templates/build-steps.yml
-            parameters:
-              configuration: $(configuration)
+          - script: dotnet restore Umbraco.Ai.sln
+            displayName: Restore
 
-  - stage: BuildLevel1
-    displayName: 'Build Level 1'
-    dependsOn:
-      - DetectChanges
-      - BuildLevel0
-    jobs:
-      - job: Build_Level_1
-        displayName: 'Build Level 1 Products'
-        pool:
-          vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level1Matrix'] ]
-        steps:
-          - template: build/templates/build-steps.yml
-            parameters:
-              configuration: $(configuration)
+          - script: dotnet build Umbraco.Ai.sln --configuration Release --no-restore
+            displayName: Build
 
-  - stage: BuildLevel2
-    displayName: 'Build Level 2'
-    dependsOn:
-      - DetectChanges
-      - BuildLevel1
-    jobs:
-      - job: Build_Level_2
-        displayName: 'Build Level 2 Products'
-        pool:
-          vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level2Matrix'] ]
-        steps:
-          - template: build/templates/build-steps.yml
-            parameters:
-              configuration: $(configuration)
+          - script: dotnet test Umbraco.Ai.sln --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
+            displayName: Test
 
-  - stage: BuildLevel3
-    displayName: 'Build Level 3'
-    dependsOn:
-      - DetectChanges
-      - BuildLevel2
-    jobs:
-      - job: Build_Level_3
-        displayName: 'Build Level 3 Products'
-        pool:
-          vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level3Matrix'] ]
-        steps:
-          - template: build/templates/build-steps.yml
-            parameters:
-              configuration: $(configuration)
-
-  - stage: BuildLevel4
-    displayName: 'Build Level 4'
-    dependsOn:
-      - DetectChanges
-      - BuildLevel3
-    jobs:
-      - job: Build_Level_4
-        displayName: 'Build Level 4 Products'
-        pool:
-          vmImage: $(vmImage)
-        strategy:
-          matrix: $[ stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.Level4Matrix'] ]
-        steps:
-          - template: build/templates/build-steps.yml
-            parameters:
-              configuration: $(configuration)
-
-  # Stage 7: Run Tests (Parallel)
-  - stage: Test
-    displayName: 'Run Tests'
-    dependsOn:
-      - BuildLevel0
-      - BuildLevel1
-      - BuildLevel2
-      - BuildLevel3
-      - BuildLevel4
-    jobs:
-      - job: TestCore
-        displayName: 'Test Umbraco.Ai (Core)'
-        pool:
-          vmImage: $(vmImage)
-        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.CoreChanged'], 'true')
-        steps:
-          - task: DotNetCoreCLI@2
-            displayName: 'Run Core tests'
+          - task: PublishTestResults@2
+            displayName: Publish test results
+            condition: always()
             inputs:
-              command: 'test'
-              projects: 'Umbraco.Ai/Umbraco.Ai.sln'
-              arguments: '--configuration $(configuration) --collect:"XPlat Code Coverage"'
+              testResultsFormat: VSTest
+              testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+              mergeTestResults: true
 
-          - task: PublishCodeCoverageResults@2
-            displayName: 'Publish code coverage'
+          - task: PublishPipelineArtifact@1
+            displayName: Upload build outputs
             inputs:
-              summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+              targetPath: $(Build.SourcesDirectory)
+              artifact: build-outputs
+              publishLocation: pipeline
 
-      - job: TestAgent
-        displayName: 'Test Umbraco.Ai.Agent'
+  # ============================================================
+  # Pack Stage - Only runs on push to main/dev or release tags
+  # ============================================================
+  - stage: Pack
+    displayName: Pack NuGet Packages
+    dependsOn: Build
+    # Only pack on push (not PR) to main/dev branches or release tags
+    condition: |
+      and(
+        succeeded(),
+        ne(variables['Build.Reason'], 'PullRequest'),
+        or(
+          startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'),
+          eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+          eq(variables['Build.SourceBranch'], 'refs/heads/dev')
+        )
+      )
+    jobs:
+      # ============================================================
+      # Pack Tier 1 (Core - no internal dependencies)
+      # ============================================================
+      - job: PackTier1
+        displayName: Pack Tier 1 (Core)
         pool:
-          vmImage: $(vmImage)
-        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.AgentChanged'], 'true')
+          vmImage: 'ubuntu-latest'
         steps:
-          - task: DotNetCoreCLI@2
-            displayName: 'Run Agent tests'
-            inputs:
-              command: 'test'
-              projects: 'Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln'
-              arguments: '--configuration $(configuration)'
+          - checkout: self
+            fetchDepth: 0
 
-      - job: TestPrompt
-        displayName: 'Test Umbraco.Ai.Prompt'
+          - task: UseDotNet@2
+            displayName: Setup .NET
+            inputs:
+              useGlobalJson: true
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download build outputs
+            inputs:
+              artifact: build-outputs
+              path: $(Build.SourcesDirectory)
+
+          - template: build/templates/pack-product.yml
+            parameters:
+              product: Umbraco.Ai
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload Umbraco.Ai packages
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
+              artifact: Umbraco.Ai-packages
+              publishLocation: pipeline
+
+      # ============================================================
+      # Pack Tier 2 (Providers - depend on Core)
+      # ============================================================
+      - job: PackTier2
+        displayName: Pack Tier 2
+        dependsOn: PackTier1
         pool:
-          vmImage: $(vmImage)
-        condition: eq(stageDependencies.DetectChanges.DetectChanges.outputs['detectChanges.PromptChanged'], 'true')
+          vmImage: 'ubuntu-latest'
+        strategy:
+          matrix:
+            OpenAi:
+              product: Umbraco.Ai.OpenAi
+            Anthropic:
+              product: Umbraco.Ai.Anthropic
+            Amazon:
+              product: Umbraco.Ai.Amazon
+            Google:
+              product: Umbraco.Ai.Google
+            MicrosoftFoundry:
+              product: Umbraco.Ai.MicrosoftFoundry
+          maxParallel: 5
         steps:
-          - task: DotNetCoreCLI@2
-            displayName: 'Run Prompt tests'
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: Setup .NET
             inputs:
-              command: 'test'
-              projects: 'Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln'
-              arguments: '--configuration $(configuration)'
+              useGlobalJson: true
 
-  # Stage 4: Deploy to MyGet (optional, requires variable group)
-  # - stage: DeployMyGet
-  #   displayName: 'Deploy to MyGet'
-  #   dependsOn: Test
-  #   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-  #   jobs:
-  #     - job: Deploy
-  #       displayName: 'Push packages to MyGet'
-  #       pool:
-  #         vmImage: $(vmImage)
-  #       steps:
-  #         - task: DownloadPipelineArtifact@2
-  #           displayName: 'Download all artifacts'
-  #           inputs:
-  #             downloadPath: '$(Pipeline.Workspace)/artifacts'
-  #
-  #         - task: NuGetCommand@2
-  #           displayName: 'Push to MyGet'
-  #           inputs:
-  #             command: 'push'
-  #             packagesToPush: '$(Pipeline.Workspace)/artifacts/**/*.nupkg'
-  #             nuGetFeedType: 'external'
-  #             publishFeedCredentials: 'MyGet-Umbraco-Ai'
+          - task: DownloadPipelineArtifact@2
+            displayName: Download build outputs
+            inputs:
+              artifact: build-outputs
+              path: $(Build.SourcesDirectory)
 
-  # Stage 5: Deploy to NuGet (release tags only)
-  # - stage: DeployNuGet
-  #   displayName: 'Deploy to NuGet'
-  #   dependsOn: Test
-  #   condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'))
-  #   jobs:
-  #     - job: Deploy
-  #       displayName: 'Push packages to NuGet'
-  #       pool:
-  #         vmImage: $(vmImage)
-  #       steps:
-  #         - task: DownloadPipelineArtifact@2
-  #           displayName: 'Download all artifacts'
-  #           inputs:
-  #             downloadPath: '$(Pipeline.Workspace)/artifacts'
-  #
-  #         - task: NuGetCommand@2
-  #           displayName: 'Push to NuGet'
-  #           inputs:
-  #             command: 'push'
-  #             packagesToPush: '$(Pipeline.Workspace)/artifacts/**/*.nupkg'
-  #             nuGetFeedType: 'external'
-  #             publishFeedCredentials: 'NuGet-Umbraco-Ai'
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Tier 1 packages (local feed)
+            inputs:
+              artifact: Umbraco.Ai-packages
+              path: $(Build.SourcesDirectory)/artifacts/nupkg
+
+          - template: build/templates/pack-product.yml
+            parameters:
+              product: $(product)
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload $(product) packages
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
+              artifact: $(product)-packages
+              publishLocation: pipeline
+
+      # ============================================================
+      # Pack Tier 3 (Add-ons - depend on Core + Startup)
+      # ============================================================
+      - job: PackTier3
+        displayName: Pack Tier 3
+        dependsOn: PackTier1
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          matrix:
+            Prompt:
+              product: Umbraco.Ai.Prompt
+            Agent:
+              product: Umbraco.Ai.Agent
+          maxParallel: 2
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: Setup .NET
+            inputs:
+              useGlobalJson: true
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download build outputs
+            inputs:
+              artifact: build-outputs
+              path: $(Build.SourcesDirectory)
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Tier 1 packages (local feed)
+            inputs:
+              artifact: Umbraco.Ai-packages
+              path: $(Build.SourcesDirectory)/artifacts/nupkg
+
+          - template: build/templates/pack-product.yml
+            parameters:
+              product: $(product)
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload $(product) packages
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
+              artifact: $(product)-packages
+              publishLocation: pipeline
+
+      # ============================================================
+      # Collect all packages into single artifact
+      # ============================================================
+      - job: CollectPackages
+        displayName: Collect All Packages
+        dependsOn:
+          - PackTier1
+          - PackTier2
+          - PackTier3
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai packages
+            inputs:
+              artifact: Umbraco.Ai-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.OpenAi packages
+            inputs:
+              artifact: Umbraco.Ai.OpenAi-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.Anthropic packages
+            inputs:
+              artifact: Umbraco.Ai.Anthropic-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.Amazon packages
+            inputs:
+              artifact: Umbraco.Ai.Amazon-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.Google packages
+            inputs:
+              artifact: Umbraco.Ai.Google-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.MicrosoftFoundry packages
+            inputs:
+              artifact: Umbraco.Ai.MicrosoftFoundry-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.Prompt packages
+            inputs:
+              artifact: Umbraco.Ai.Prompt-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.Agent packages
+            inputs:
+              artifact: Umbraco.Ai.Agent-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload combined artifact
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/all-packages
+              artifact: all-nuget-packages
+              publishLocation: pipeline

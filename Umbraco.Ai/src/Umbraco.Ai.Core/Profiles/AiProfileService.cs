@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Settings;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.Ai.Core.Profiles;
@@ -7,15 +8,18 @@ namespace Umbraco.Ai.Core.Profiles;
 internal sealed class AiProfileService : IAiProfileService
 {
     private readonly IAiProfileRepository _repository;
+    private readonly IAiSettingsService _settingsService;
     private readonly AiOptions _options;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AiProfileService(
         IAiProfileRepository repository,
+        IAiSettingsService settingsService,
         IOptions<AiOptions> options,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
+        _settingsService = settingsService;
         _options = options.Value;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
@@ -51,25 +55,44 @@ internal sealed class AiProfileService : IAiProfileService
         AiCapability capability,
         CancellationToken cancellationToken = default)
     {
+        // 1. Try database settings first
+        var settings = await _settingsService.GetSettingsAsync(cancellationToken);
+        var profileId = capability switch
+        {
+            AiCapability.Chat => settings.DefaultChatProfileId,
+            AiCapability.Embedding => settings.DefaultEmbeddingProfileId,
+            _ => throw new NotSupportedException($"AI capability '{capability}' is not supported.")
+        };
+
+        if (profileId.HasValue)
+        {
+            var profile = await _repository.GetByIdAsync(profileId.Value, cancellationToken);
+            if (profile is not null)
+            {
+                return profile;
+            }
+        }
+
+        // 2. Fall back to config-based alias
         var defaultProfileAlias = capability switch
         {
             AiCapability.Chat => _options.DefaultChatProfileAlias,
             AiCapability.Embedding => _options.DefaultEmbeddingProfileAlias,
-            _ => throw new NotSupportedException($"AI capability '{capability}' is not supported.")
+            _ => null
         };
 
         if (defaultProfileAlias is null)
         {
-            throw new InvalidOperationException($"Default {capability} profile alias is not configured.");
+            throw new InvalidOperationException($"Default {capability} profile is not configured.");
         }
 
-        var profile = await _repository.GetByAliasAsync(defaultProfileAlias, cancellationToken);
-        if (profile is null)
+        var profileByAlias = await _repository.GetByAliasAsync(defaultProfileAlias, cancellationToken);
+        if (profileByAlias is null)
         {
             throw new InvalidOperationException($"Default {capability} profile with alias '{defaultProfileAlias}' not found.");
         }
 
-        return profile;
+        return profileByAlias;
     }
 
     public async Task<AiProfile> SaveProfileAsync(

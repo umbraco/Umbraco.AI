@@ -27,8 +27,9 @@ internal class AiAgentEntity
 
     /// <summary>
     /// Optional linked profile ID (soft FK).
+    /// When null, the default chat profile from Settings will be used.
     /// </summary>
-    public Guid ProfileId { get; set; }
+    public Guid? ProfileId { get; set; }
 
     /// <summary>
     /// JSON-serialized array of context IDs.

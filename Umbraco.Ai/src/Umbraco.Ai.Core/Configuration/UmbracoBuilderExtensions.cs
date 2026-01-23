@@ -18,6 +18,7 @@ using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.RuntimeContext.Contributors;
 using Umbraco.Ai.Core.RuntimeContext.Middleware;
@@ -125,6 +126,10 @@ public static partial class UmbracoBuilderExtensions
         // Profile resolution
         services.AddSingleton<IAiProfileRepository, InMemoryAiProfileRepository>();
         services.AddSingleton<IAiProfileService, AiProfileService>();
+
+        // Settings
+        services.AddSingleton<IAiSettingsRepository, InMemoryAiSettingsRepository>();
+        services.AddSingleton<IAiSettingsService, AiSettingsService>();
 
         // Client factories
         services.AddSingleton<IAiChatClientFactory, AiChatClientFactory>();

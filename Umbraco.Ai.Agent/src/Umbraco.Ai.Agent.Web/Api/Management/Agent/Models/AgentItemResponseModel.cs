@@ -27,8 +27,9 @@ public class AgentItemResponseModel
 
     /// <summary>
     /// The linked profile ID.
+    /// When null, the default chat profile from Settings will be used.
     /// </summary>
-    public Guid ProfileId { get; set; }
+    public Guid? ProfileId { get; set; }
 
     /// <summary>
     /// Context IDs for AI context injection.

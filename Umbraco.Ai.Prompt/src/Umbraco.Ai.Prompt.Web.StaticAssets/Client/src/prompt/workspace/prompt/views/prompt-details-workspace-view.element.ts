@@ -144,7 +144,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="AI Profile" description="Optional AI profile this prompt is designed for">
+                <umb-property-layout label="AI Profile" description="Select a profile or leave empty to use the default Chat profile from Settings">
                     <uai-profile-picker
                         slot="editor"
                         .value=${this._model.profileId ?? undefined}

@@ -2,6 +2,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Agent.Core.Agents;
 using Umbraco.Ai.Core.Chat;
+using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
@@ -60,10 +61,18 @@ internal sealed class AiAgentFactory : IAiAgentFactory
             tools.AddRange(additionalTools);
         }
 
-        // Get profile and create chat client using standard factory
+        // Get profile - use default Chat profile if not specified
         // The factory applies all middleware including AiToolReorderingChatMiddleware
-        var profile = await _profileService.GetProfileAsync(agent.ProfileId, cancellationToken)
-            ?? throw new InvalidOperationException($"Profile with ID '{agent.ProfileId}' not found.");
+        AiProfile profile;
+        if (agent.ProfileId.HasValue)
+        {
+            profile = await _profileService.GetProfileAsync(agent.ProfileId.Value, cancellationToken)
+                ?? throw new InvalidOperationException($"Profile with ID '{agent.ProfileId}' not found.");
+        }
+        else
+        {
+            profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+        }
 
         var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 

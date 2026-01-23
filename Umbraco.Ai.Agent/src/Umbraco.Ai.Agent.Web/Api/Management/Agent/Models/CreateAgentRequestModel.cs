@@ -30,9 +30,9 @@ public class CreateAgentRequestModel
 
     /// <summary>
     /// The linked profile ID.
+    /// When null, the default chat profile from Settings will be used.
     /// </summary>
-    [Required]
-    public required Guid ProfileId { get; init; }
+    public Guid? ProfileId { get; init; }
 
     /// <summary>
     /// Optional context IDs for AI context injection.

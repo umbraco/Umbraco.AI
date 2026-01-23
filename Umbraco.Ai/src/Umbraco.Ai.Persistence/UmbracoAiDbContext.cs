@@ -5,6 +5,7 @@ using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Ai.Persistence.Analytics;
 using Umbraco.Ai.Persistence.Analytics.Usage;
+using Umbraco.Ai.Persistence.Settings;
 
 namespace Umbraco.Ai.Persistence;
 
@@ -62,6 +63,11 @@ public class UmbracoAiDbContext : DbContext
     /// AI context version history.
     /// </summary>
     internal DbSet<AiContextVersionEntity> ContextVersions { get; set; } = null!;
+
+    /// <summary>
+    /// AI settings (key-value store).
+    /// </summary>
+    internal DbSet<AiSettingsEntity> Settings { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -576,6 +582,29 @@ public class UmbracoAiDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(e => e.ContextId);
+        });
+
+        modelBuilder.Entity<AiSettingsEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiSettings");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Key)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Value)
+                .HasMaxLength(500);
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateModified)
+                .IsRequired();
+
+            // Unique constraint on Key to ensure only one value per setting
+            entity.HasIndex(e => e.Key)
+                .IsUnique();
         });
     }
 }

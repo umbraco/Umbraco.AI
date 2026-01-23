@@ -25,8 +25,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         {
             Id = Guid.Empty,
             Alias = string.Empty,
-            Name = string.Empty,
-            ProfileId = Guid.Empty
+            Name = string.Empty
         }, MapFromUpdateRequest);
     }
 

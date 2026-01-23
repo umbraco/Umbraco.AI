@@ -59,7 +59,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     #onProfileChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string | undefined };
-        const profileId = picker.value ?? "";
+        const profileId = picker.value ?? null;
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ profileId }, "profileId")
         );
@@ -92,7 +92,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="AI Profile" description="The AI profile this agent uses for model configuration">
+                <umb-property-layout label="AI Profile" description="Select a profile or leave empty to use the default Chat profile from Settings">
                     <uai-profile-picker
                         slot="editor"
                         .value=${this._model.profileId || undefined}

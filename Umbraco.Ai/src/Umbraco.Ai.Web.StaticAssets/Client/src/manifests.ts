@@ -25,6 +25,7 @@ import { auditLogManifests } from "./audit-log/manifests.js";
 import { manifests as langManifests } from "./lang/manifests.js";
 import { manifests as coreManifests } from "./core/manifests.js";
 import { workspaceRegistryManifests } from "./workspace-registry/manifests.js";
+import { settingsManifests } from "./settings/manifests.js";
 
 // Aggregate all manifests into a single bundle
 // IMPORTANT: This should only include manifest arrays and nothing else
@@ -42,4 +43,5 @@ export const manifests: Array<UmbExtensionManifest> = [
   ...langManifests,
   ...coreManifests,
   ...workspaceRegistryManifests,
+  ...settingsManifests,
 ];

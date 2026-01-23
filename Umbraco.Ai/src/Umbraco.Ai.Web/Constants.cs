@@ -184,6 +184,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Analytics";
             }
+
+            /// <summary>
+            /// Defines constants for Settings features.
+            /// </summary>
+            public static class Settings
+            {
+                /// <summary>
+                /// The route segment for Settings features.
+                /// </summary>
+                public const string RouteSegment = "settings";
+
+                /// <summary>
+                /// The Swagger group name for Settings features.
+                /// </summary>
+                public const string GroupName = "Settings";
+            }
         }
     }
 }

@@ -522,3 +522,79 @@ export class ProvidersService {
         });
     }
 }
+
+// NOTE: SettingsService was manually added - regenerate client to update
+// Settings types (manually added - regenerate client to update)
+export type SettingsResponseModel = {
+    defaultChatProfileId?: string | null;
+    defaultEmbeddingProfileId?: string | null;
+};
+
+export type UpdateSettingsRequestModel = {
+    defaultChatProfileId?: string;
+    defaultEmbeddingProfileId?: string;
+};
+
+export type GetSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/settings';
+};
+
+export type GetSettingsResponses = {
+    /**
+     * OK
+     */
+    200: SettingsResponseModel;
+};
+
+export type GetSettingsResponse = GetSettingsResponses[keyof GetSettingsResponses];
+
+export type UpdateSettingsData = {
+    body?: UpdateSettingsRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/settings';
+};
+
+export type UpdateSettingsResponses = {
+    /**
+     * OK
+     */
+    200: SettingsResponseModel;
+};
+
+export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
+
+export class SettingsService {
+    public static getSettings<ThrowOnError extends boolean = false>(options?: Options<GetSettingsData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetSettingsResponses, unknown, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/settings',
+            ...options
+        });
+    }
+
+    public static updateSettings<ThrowOnError extends boolean = false>(options?: Options<UpdateSettingsData, ThrowOnError>) {
+        return (options?.client ?? client).put<UpdateSettingsResponses, unknown, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/settings',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers
+            }
+        });
+    }
+}

@@ -9,7 +9,7 @@ export type AgentItemResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
-    profileId: string;
+    profileId?: string | null;
     contextIds: Array<string>;
     isActive: boolean;
 };
@@ -19,7 +19,7 @@ export type AgentResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
-    profileId: string;
+    profileId?: string | null;
     contextIds: Array<string>;
     instructions?: string | null;
     isActive: boolean;
@@ -84,7 +84,7 @@ export type CreateAgentRequestModel = {
     alias: string;
     name: string;
     description?: string | null;
-    profileId: string;
+    profileId?: string | null;
     contextIds?: Array<string> | null;
     instructions?: string | null;
 };
@@ -115,7 +115,7 @@ export type UpdateAgentRequestModel = {
     alias: string;
     name: string;
     description?: string | null;
-    profileId: string;
+    profileId?: string | null;
     contextIds?: Array<string> | null;
     instructions?: string | null;
     isActive: boolean;

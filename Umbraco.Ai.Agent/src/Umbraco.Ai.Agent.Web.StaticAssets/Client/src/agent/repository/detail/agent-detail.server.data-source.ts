@@ -27,7 +27,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
             alias: "",
             name: "",
             description: null,
-            profileId: "",
+            profileId: null,
             contextIds: [],
             instructions: null,
             isActive: true,

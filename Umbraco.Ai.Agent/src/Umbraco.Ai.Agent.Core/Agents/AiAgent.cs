@@ -29,8 +29,9 @@ public sealed class AiAgent : IAiVersionable
 
     /// <summary>
     /// Profile to use for AI model configuration.
+    /// When null, the default chat profile from Settings will be used.
     /// </summary>
-    public required Guid ProfileId { get; set; }
+    public Guid? ProfileId { get; set; }
 
     /// <summary>
     /// Context IDs assigned to this agent for AI context injection.

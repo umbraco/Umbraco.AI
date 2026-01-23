@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Tests.Common.Builders;
 
 namespace Umbraco.Ai.Tests.Unit.Services;
@@ -8,12 +9,14 @@ namespace Umbraco.Ai.Tests.Unit.Services;
 public class AiProfileServiceTests
 {
     private readonly Mock<IAiProfileRepository> _repositoryMock;
+    private readonly Mock<IAiSettingsService> _settingsServiceMock;
     private readonly Mock<IOptions<AiOptions>> _optionsMock;
     private readonly AiProfileService _service;
 
     public AiProfileServiceTests()
     {
         _repositoryMock = new Mock<IAiProfileRepository>();
+        _settingsServiceMock = new Mock<IAiSettingsService>();
         _optionsMock = new Mock<IOptions<AiOptions>>();
         _optionsMock.Setup(x => x.Value).Returns(new AiOptions
         {
@@ -21,7 +24,11 @@ public class AiProfileServiceTests
             DefaultEmbeddingProfileAlias = "default-embedding"
         });
 
-        _service = new AiProfileService(_repositoryMock.Object, _optionsMock.Object);
+        // Default settings service returns empty settings (falls back to config)
+        _settingsServiceMock.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiSettings());
+
+        _service = new AiProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object);
     }
 
     #region GetProfileAsync
@@ -171,8 +178,13 @@ public class AiProfileServiceTests
             DefaultEmbeddingProfileAlias = null
         });
 
+        var emptySettingsService = new Mock<IAiSettingsService>();
+        emptySettingsService.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AiSettings());
+
         var serviceWithNullOptions = new AiProfileService(
             _repositoryMock.Object,
+            emptySettingsService.Object,
             optionsWithNullAlias.Object);
 
         // Act
@@ -180,7 +192,7 @@ public class AiProfileServiceTests
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
-        exception.Message.ShouldContain("Default Chat profile alias is not configured");
+        exception.Message.ShouldContain("Default Chat profile is not configured");
     }
 
     [Fact]

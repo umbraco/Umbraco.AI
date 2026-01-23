@@ -62,4 +62,9 @@ public class ProfileResponseModel
     /// The date and time (in UTC) when the connection was created.
     /// </summary>
     public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The current version number of the entity.
+    /// </summary>
+    public int Version { get; set; }
 }

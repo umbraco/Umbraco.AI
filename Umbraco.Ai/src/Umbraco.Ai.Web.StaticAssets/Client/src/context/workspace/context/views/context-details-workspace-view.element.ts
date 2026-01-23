@@ -1,10 +1,11 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiContextDetailModel } from "../../../types.js";
 import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../../../core/index.js";
 import { UAI_CONTEXT_WORKSPACE_CONTEXT } from "../context-workspace.context-token.js";
 import type { UaiResourceListElement } from "../../../components/resource-list/resource-list.element.js";
+import "../../../../core/version-history/components/version-history-table/version-history-table.element.js";
 
 /**
  * Workspace view for Context details.
@@ -65,6 +66,10 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
                     </div>
                 </umb-property-layout>
             </uui-box>
+
+            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
+                <uai-version-history-table></uai-version-history-table>
+            ` : nothing}
         `;
     }
 

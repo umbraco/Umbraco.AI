@@ -48,6 +48,7 @@ export interface UaiProfileDetailModel extends UmbEntityModel {
     tags: string[];
     dateCreated: string | null;
     dateModified: string | null;
+    version: number;
 }
 
 /**

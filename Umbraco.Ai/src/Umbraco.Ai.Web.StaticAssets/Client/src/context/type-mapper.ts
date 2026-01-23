@@ -4,6 +4,9 @@ import type { UaiContextDetailModel, UaiContextItemModel, UaiContextResourceMode
 
 export const UaiContextTypeMapper = {
     toDetailModel(response: ContextResponseModel): UaiContextDetailModel {
+        // Note: Cast to access version until API client is regenerated
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const version = (response as any).version as number | undefined;
         return {
             unique: response.id,
             entityType: UAI_CONTEXT_ENTITY_TYPE,
@@ -12,6 +15,7 @@ export const UaiContextTypeMapper = {
             resources: (response.resources ?? []).map(this.toResourceModel),
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
+            version: version ?? 1,
         };
     },
 

@@ -7,14 +7,21 @@ import {
 } from "@umbraco-cms/backoffice/workspace";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
+import { map } from "@umbraco-cms/backoffice/external/rxjs";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
 import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
 import { UaiContextDetailRepository } from "../../repository/detail/context-detail.repository.js";
+import { UaiContextVersionHistoryRepository } from "../../repository/version-history/context-version-history.repository.js";
 import { UAI_CONTEXT_WORKSPACE_ALIAS, UAI_CONTEXT_ENTITY_TYPE } from "../../constants.js";
 import type { UaiContextDetailModel } from "../../types.js";
 import type { UaiCommand } from "../../../core/command/command.base.js";
 import { UaiCommandStore } from "../../../core/command/command.store.js";
 import { UAI_EMPTY_GUID } from "../../../core/index.js";
+import type {
+    UaiVersionableEntityWorkspaceContext,
+    UaiVersionHistoryResponse,
+    UaiVersionComparisonResponse,
+} from "../../../core/version-history/exports.js";
 import { UaiContextWorkspaceEditorElement } from "./context-workspace-editor.element.js";
 import { UaiEntityDeletedRedirectController } from "../../../core/workspace/entity-deleted-redirect.controller.js";
 import { UAI_CONTEXT_ROOT_WORKSPACE_PATH } from "../context-root/paths.js";
@@ -22,10 +29,11 @@ import { UAI_CONTEXT_ROOT_WORKSPACE_PATH } from "../context-root/paths.js";
 /**
  * Workspace context for editing Context entities.
  * Handles CRUD operations, state management, and command tracking.
+ * Implements UaiVersionableEntityWorkspaceContext for version history support.
  */
 export class UaiContextWorkspaceContext
     extends UmbSubmittableWorkspaceContextBase<UaiContextDetailModel>
-    implements UmbRoutableWorkspaceContext
+    implements UmbRoutableWorkspaceContext, UaiVersionableEntityWorkspaceContext
 {
     readonly routes = new UmbWorkspaceRouteManager(this);
 
@@ -35,7 +43,16 @@ export class UaiContextWorkspaceContext
     #model = new UmbObjectState<UaiContextDetailModel | undefined>(undefined);
     readonly model = this.#model.asObservable();
 
+    /**
+     * Observable for the current version number.
+     * Returns undefined for new entities.
+     */
+    readonly version = this.#model.asObservable().pipe(
+        map((m) => m?.version)
+    );
+
     #repository: UaiContextDetailRepository;
+    #versionHistoryRepository: UaiContextVersionHistoryRepository;
     #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
 
@@ -43,6 +60,7 @@ export class UaiContextWorkspaceContext
         super(host, UAI_CONTEXT_WORKSPACE_ALIAS);
 
         this.#repository = new UaiContextDetailRepository(this);
+        this.#versionHistoryRepository = new UaiContextVersionHistoryRepository(this);
         this.addValidationContext(new UmbValidationContext(this));
 
         this.#entityContext.setEntityType(UAI_CONTEXT_ENTITY_TYPE);
@@ -188,6 +206,50 @@ export class UaiContextWorkspaceContext
             this.#commandStore.unmute();
         }
     }
+
+    // #region UaiVersionableEntityWorkspaceContext implementation
+
+    /**
+     * Gets the version history for this context.
+     * @param skip - Number of versions to skip (for pagination).
+     * @param take - Number of versions to return.
+     * @returns The version history response.
+     */
+    async getVersionHistory(skip: number, take: number): Promise<UaiVersionHistoryResponse | undefined> {
+        const unique = this.getUnique();
+        if (!unique || unique === UAI_EMPTY_GUID) return undefined;
+        return this.#versionHistoryRepository.getVersionHistory(unique, skip, take);
+    }
+
+    /**
+     * Compares two versions of this context.
+     * @param fromVersion - The source version number.
+     * @param toVersion - The target version number.
+     * @returns The comparison response with property changes.
+     */
+    async compareVersions(fromVersion: number, toVersion: number): Promise<UaiVersionComparisonResponse | undefined> {
+        const unique = this.getUnique();
+        if (!unique || unique === UAI_EMPTY_GUID) return undefined;
+        return this.#versionHistoryRepository.compareVersions(unique, fromVersion, toVersion);
+    }
+
+    /**
+     * Rolls back this context to a previous version.
+     * Reloads the context data after rollback.
+     * @param version - The version number to rollback to.
+     */
+    async rollbackToVersion(version: number): Promise<void> {
+        const unique = this.getUnique();
+        if (!unique || unique === UAI_EMPTY_GUID) return;
+
+        const success = await this.#versionHistoryRepository.rollback(unique, version);
+        if (success) {
+            // Reload the context to get the updated data
+            await this.load(unique);
+        }
+    }
+
+    // #endregion
 }
 
 export { UaiContextWorkspaceContext as api };

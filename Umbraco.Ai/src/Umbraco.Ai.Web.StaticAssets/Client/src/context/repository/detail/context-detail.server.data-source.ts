@@ -29,6 +29,7 @@ export class UaiContextDetailServerDataSource implements UmbDetailDataSource<Uai
             resources: [],
             dateCreated: null,
             dateModified: null,
+            version: 0,
             ...preset,
         };
 

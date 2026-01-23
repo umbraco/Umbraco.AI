@@ -10,6 +10,7 @@ import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../.
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
+import "../../../../core/version-history/components/version-history-table/version-history-table.element.js";
 
 /**
  * Workspace view for Profile details.
@@ -339,6 +340,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
                     </div>
                 </uui-box>
+            ` : nothing}
+
+            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
+                <uai-version-history-table></uai-version-history-table>
             ` : nothing}
         `;
     }

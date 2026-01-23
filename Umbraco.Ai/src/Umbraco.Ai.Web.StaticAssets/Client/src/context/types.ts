@@ -29,6 +29,7 @@ export interface UaiContextDetailModel {
     resources: UaiContextResourceModel[];
     dateCreated: string | null;
     dateModified: string | null;
+    version: number;
 }
 
 /**

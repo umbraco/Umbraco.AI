@@ -3,80 +3,80 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Profiles;
+using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Extensions;
 using Umbraco.Ai.Web.Api.Common.Models;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
+namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
 
 /// <summary>
-/// Controller to compare two versions of a profile.
+/// Controller to compare two versions of a connection.
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
-public class CompareVersionsProfileController : ProfileControllerBase
+public class CompareVersionsConnectionController : ConnectionControllerBase
 {
-    private readonly IAiProfileService _profileService;
+    private readonly IAiConnectionService _connectionService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CompareVersionsProfileController"/> class.
+    /// Initializes a new instance of the <see cref="CompareVersionsConnectionController"/> class.
     /// </summary>
-    public CompareVersionsProfileController(IAiProfileService profileService)
+    public CompareVersionsConnectionController(IAiConnectionService connectionService)
     {
-        _profileService = profileService;
+        _connectionService = connectionService;
     }
 
     /// <summary>
-    /// Compare two versions of a profile.
+    /// Compare two versions of a connection.
     /// </summary>
-    /// <param name="profileIdOrAlias">The unique identifier (GUID) or alias of the profile.</param>
+    /// <param name="connectionIdOrAlias">The unique identifier (GUID) or alias of the connection.</param>
     /// <param name="snapshotFromVersion">The source version to compare from.</param>
     /// <param name="snapshotToVersion">The target version to compare to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The differences between the two versions.</returns>
-    [HttpGet($"{{{nameof(profileIdOrAlias)}}}/versions/{{{nameof(snapshotFromVersion)}}}/compare/{{{nameof(snapshotToVersion)}}}")]
+    [HttpGet($"{{{nameof(connectionIdOrAlias)}}}/versions/{{{nameof(snapshotFromVersion)}}}/compare/{{{nameof(snapshotToVersion)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(VersionComparisonResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CompareProfileVersions(
-        [FromRoute] IdOrAlias profileIdOrAlias,
+    public async Task<IActionResult> CompareConnectionVersions(
+        [FromRoute] IdOrAlias connectionIdOrAlias,
         [FromRoute] int snapshotFromVersion,
         [FromRoute] int snapshotToVersion,
         CancellationToken cancellationToken = default)
     {
-        var profile = await _profileService.GetProfileAsync(profileIdOrAlias, cancellationToken);
-        if (profile is null)
+        var connection = await _connectionService.GetConnectionAsync(connectionIdOrAlias, cancellationToken);
+        if (connection is null)
         {
-            return ProfileNotFound();
+            return ConnectionNotFound();
         }
 
         // Get the "from" version - this could be a historical snapshot or the current version
-        var fromSnapshot = snapshotFromVersion == profile.Version
-            ? profile
-            : await _profileService.GetProfileVersionSnapshotAsync(profile.Id, snapshotFromVersion, cancellationToken);
+        var fromSnapshot = snapshotFromVersion == connection.Version
+            ? connection
+            : await _connectionService.GetConnectionVersionSnapshotAsync(connection.Id, snapshotFromVersion, cancellationToken);
 
         if (fromSnapshot is null)
         {
             return NotFound(CreateProblemDetails(
                 "Version not found",
-                $"Version {snapshotFromVersion} was not found for this profile."));
+                $"Version {snapshotFromVersion} was not found for this connection."));
         }
 
         // Get the "to" version - this could be a historical snapshot or the current version
-        var toSnapshot = snapshotToVersion == profile.Version
-            ? profile
-            : await _profileService.GetProfileVersionSnapshotAsync(profile.Id, snapshotToVersion, cancellationToken);
+        var toSnapshot = snapshotToVersion == connection.Version
+            ? connection
+            : await _connectionService.GetConnectionVersionSnapshotAsync(connection.Id, snapshotToVersion, cancellationToken);
 
         if (toSnapshot is null)
         {
             return NotFound(CreateProblemDetails(
                 "Version not found",
-                $"Version {snapshotToVersion} was not found for this profile."));
+                $"Version {snapshotToVersion} was not found for this connection."));
         }
 
-        var changes = CompareProfiles(fromSnapshot, toSnapshot);
+        var changes = CompareConnections(fromSnapshot, toSnapshot);
 
         return Ok(new VersionComparisonResponseModel
         {
@@ -86,7 +86,7 @@ public class CompareVersionsProfileController : ProfileControllerBase
         });
     }
 
-    private static List<PropertyChangeModel> CompareProfiles(AiProfile from, AiProfile to)
+    private static List<PropertyChangeModel> CompareConnections(AiConnection from, AiConnection to)
     {
         var changes = new List<PropertyChangeModel>();
 
@@ -112,40 +112,25 @@ public class CompareVersionsProfileController : ProfileControllerBase
             });
         }
 
-        // Compare ConnectionId
-        if (from.ConnectionId != to.ConnectionId)
+        // Compare ProviderId
+        if (from.ProviderId != to.ProviderId)
         {
             changes.Add(new PropertyChangeModel
             {
-                PropertyName = "ConnectionId",
-                OldValue = from.ConnectionId.ToString(),
-                NewValue = to.ConnectionId.ToString()
+                PropertyName = "ProviderId",
+                OldValue = from.ProviderId,
+                NewValue = to.ProviderId
             });
         }
 
-        // Compare Model
-        var fromModel = from.Model.ToString();
-        var toModel = to.Model.ToString();
-        if (fromModel != toModel)
+        // Compare IsActive
+        if (from.IsActive != to.IsActive)
         {
             changes.Add(new PropertyChangeModel
             {
-                PropertyName = "Model",
-                OldValue = fromModel,
-                NewValue = toModel
-            });
-        }
-
-        // Compare Tags
-        var fromTags = string.Join(", ", from.Tags ?? []);
-        var toTags = string.Join(", ", to.Tags ?? []);
-        if (fromTags != toTags)
-        {
-            changes.Add(new PropertyChangeModel
-            {
-                PropertyName = "Tags",
-                OldValue = fromTags,
-                NewValue = toTags
+                PropertyName = "IsActive",
+                OldValue = from.IsActive.ToString(),
+                NewValue = to.IsActive.ToString()
             });
         }
 

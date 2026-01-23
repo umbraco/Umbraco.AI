@@ -1,42 +1,11 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { client } from "../../../api/client.gen.js";
-import type {
+import {
     UaiVersionHistoryResponse,
     UaiVersionComparisonResponse,
-    UaiVersionHistoryItem,
-    UaiVersionPropertyChange,
+    UaiVersionHistoryTypeMapper,
 } from "../../../core/version-history/exports.js";
-
-/**
- * API response type for version history (matches backend EntityVersionHistoryResponseModel).
- */
-interface VersionHistoryApiResponse {
-    currentVersion: number;
-    totalVersions: number;
-    versions: Array<{
-        id: string;
-        entityId: string;
-        version: number;
-        dateCreated: string;
-        createdByUserId?: number;
-        createdByUserName?: string;
-        changeDescription?: string;
-    }>;
-}
-
-/**
- * API response type for version comparison (matches backend VersionComparisonResponseModel).
- */
-interface VersionComparisonApiResponse {
-    fromVersion: number;
-    toVersion: number;
-    changes: Array<{
-        propertyName: string;
-        oldValue?: string;
-        newValue?: string;
-    }>;
-}
+import { ContextsService } from "../../../api";
 
 /**
  * Repository for Context version history operations.
@@ -63,10 +32,14 @@ export class UaiContextVersionHistoryRepository {
     ): Promise<UaiVersionHistoryResponse | undefined> {
         const { data, error } = await tryExecute(
             this.#host,
-            client.get<VersionHistoryApiResponse>({
-                url: `/umbraco/ai/management/api/v1/contexts/${contextId}/versions`,
-                query: { skip, take },
-                security: [{ scheme: "bearer", type: "http" }],
+            ContextsService.getContextVersionHistory({
+                path: {
+                    contextIdOrAlias: contextId,
+                },
+                query: {
+                    skip,
+                    take,
+                },
             })
         );
 
@@ -75,7 +48,7 @@ export class UaiContextVersionHistoryRepository {
             return undefined;
         }
 
-        return this.#mapToVersionHistoryResponse(data);
+        return UaiVersionHistoryTypeMapper.mapToVersionHistoryResponse(data);
     }
 
     /**
@@ -92,10 +65,12 @@ export class UaiContextVersionHistoryRepository {
     ): Promise<UaiVersionComparisonResponse | undefined> {
         const { data, error } = await tryExecute(
             this.#host,
-            client.get<VersionComparisonApiResponse>({
-                url: `/umbraco/ai/management/api/v1/contexts/${contextId}/versions/compare`,
-                query: { from: fromVersion, to: toVersion },
-                security: [{ scheme: "bearer", type: "http" }],
+            ContextsService.compareContextVersions({
+                path: {
+                    contextIdOrAlias: contextId,
+                    snapshotFromVersion: fromVersion,
+                    snapshotToVersion: toVersion,
+                },
             })
         );
 
@@ -104,7 +79,7 @@ export class UaiContextVersionHistoryRepository {
             return undefined;
         }
 
-        return this.#mapToComparisonResponse(data);
+        return UaiVersionHistoryTypeMapper.mapToComparisonResponse(data);
     }
 
     /**
@@ -116,9 +91,11 @@ export class UaiContextVersionHistoryRepository {
     async rollback(contextId: string, version: number): Promise<boolean> {
         const { error } = await tryExecute(
             this.#host,
-            client.post({
-                url: `/umbraco/ai/management/api/v1/contexts/${contextId}/rollback/${version}`,
-                security: [{ scheme: "bearer", type: "http" }],
+            ContextsService.rollbackContextToVersion({
+                path: {
+                    contextIdOrAlias: contextId,
+                    snapshotVersion: version,
+                },
             })
         );
 
@@ -128,33 +105,5 @@ export class UaiContextVersionHistoryRepository {
         }
 
         return true;
-    }
-
-    #mapToVersionHistoryResponse(data: VersionHistoryApiResponse): UaiVersionHistoryResponse {
-        return {
-            currentVersion: data.currentVersion,
-            totalVersions: data.totalVersions,
-            versions: data.versions.map((v): UaiVersionHistoryItem => ({
-                id: v.id,
-                entityId: v.entityId,
-                version: v.version,
-                dateCreated: v.dateCreated,
-                createdByUserId: v.createdByUserId,
-                createdByUserName: v.createdByUserName,
-                changeDescription: v.changeDescription,
-            })),
-        };
-    }
-
-    #mapToComparisonResponse(data: VersionComparisonApiResponse): UaiVersionComparisonResponse {
-        return {
-            fromVersion: data.fromVersion,
-            toVersion: data.toVersion,
-            changes: data.changes.map((c): UaiVersionPropertyChange => ({
-                propertyName: c.propertyName,
-                oldValue: c.oldValue,
-                newValue: c.newValue,
-            })),
-        };
     }
 }

@@ -22,11 +22,10 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
 
     override render() {
         if (!this.data) return html``;
-
-        const headline = this.localize.term("uaiVersionHistory_compareVersions", [
+        
+        const headline = this.localize.term("uaiVersionHistory_compareVersions", 
             this.data.fromVersion,
-            this.data.toVersion,
-        ]);
+            this.data.toVersion);
 
         return html`
             <umb-body-layout headline=${headline}>
@@ -51,15 +50,16 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
                     id="close"
                     label=${this.localize.term("general_close")}
                     @click=${this._rejectModal}>
+                    ${this.localize.term("general_close")}
                 </uui-button>
                 <uui-button
                     slot="actions"
                     id="rollback"
                     color="positive"
                     look="primary"
-                    label=${this.localize.term("uaiVersionHistory_rollbackTo", [this.data.fromVersion])}
+                    label=${this.localize.term("uaiVersionHistory_rollback", [this.data.fromVersion])}
                     @click=${this.#onRollback}>
-                    ${this.localize.term("uaiVersionHistory_rollbackTo", [this.data.fromVersion])}
+                    ${this.localize.term("uaiVersionHistory_rollback", [this.data.fromVersion])}
                 </uui-button>
             </umb-body-layout>
         `;
@@ -70,6 +70,7 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
         css`
             :host {
                 display: block;
+                height: 100%;
             }
 
             #main {

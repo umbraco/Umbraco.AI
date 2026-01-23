@@ -44,7 +44,7 @@ public class VersionHistoryContextController : ContextControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(EntityVersionHistoryResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetVersionHistory(
+    public async Task<IActionResult> GetContextVersionHistory(
         [FromRoute] IdOrAlias contextIdOrAlias,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 10,

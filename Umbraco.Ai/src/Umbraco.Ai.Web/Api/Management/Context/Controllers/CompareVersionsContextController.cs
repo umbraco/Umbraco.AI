@@ -32,18 +32,18 @@ public class CompareVersionsContextController : ContextControllerBase
     /// Compare two versions of a context.
     /// </summary>
     /// <param name="contextIdOrAlias">The unique identifier (GUID) or alias of the context.</param>
-    /// <param name="fromVersion">The source version to compare from.</param>
-    /// <param name="toVersion">The target version to compare to.</param>
+    /// <param name="snapshotFromVersion">The source version to compare from.</param>
+    /// <param name="snapshotToVersion">The target version to compare to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The differences between the two versions.</returns>
-    [HttpGet($"{{{nameof(contextIdOrAlias)}}}/versions/compare")]
+    [HttpGet($"{{{nameof(contextIdOrAlias)}}}/versions/{{{nameof(snapshotFromVersion)}}}/compare/{{{nameof(snapshotToVersion)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(VersionComparisonResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CompareVersions(
+    public async Task<IActionResult> CompareContextVersions(
         [FromRoute] IdOrAlias contextIdOrAlias,
-        [FromQuery] int fromVersion,
-        [FromQuery] int toVersion,
+        [FromRoute] int snapshotFromVersion,
+        [FromRoute] int snapshotToVersion,
         CancellationToken cancellationToken = default)
     {
         var context = await _contextService.GetContextAsync(contextIdOrAlias, cancellationToken);
@@ -53,35 +53,35 @@ public class CompareVersionsContextController : ContextControllerBase
         }
 
         // Get the "from" version - this could be a historical snapshot or the current version
-        var fromSnapshot = fromVersion == context.Version
+        var fromSnapshot = snapshotFromVersion == context.Version
             ? context
-            : await _contextService.GetContextVersionSnapshotAsync(context.Id, fromVersion, cancellationToken);
+            : await _contextService.GetContextVersionSnapshotAsync(context.Id, snapshotFromVersion, cancellationToken);
 
         if (fromSnapshot is null)
         {
             return NotFound(CreateProblemDetails(
                 "Version not found",
-                $"Version {fromVersion} was not found for this context."));
+                $"Version {snapshotFromVersion} was not found for this context."));
         }
 
         // Get the "to" version - this could be a historical snapshot or the current version
-        var toSnapshot = toVersion == context.Version
+        var toSnapshot = snapshotToVersion == context.Version
             ? context
-            : await _contextService.GetContextVersionSnapshotAsync(context.Id, toVersion, cancellationToken);
+            : await _contextService.GetContextVersionSnapshotAsync(context.Id, snapshotToVersion, cancellationToken);
 
         if (toSnapshot is null)
         {
             return NotFound(CreateProblemDetails(
                 "Version not found",
-                $"Version {toVersion} was not found for this context."));
+                $"Version {snapshotToVersion} was not found for this context."));
         }
 
         var changes = CompareContexts(fromSnapshot, toSnapshot);
 
         return Ok(new VersionComparisonResponseModel
         {
-            FromVersion = fromVersion,
-            ToVersion = toVersion,
+            FromVersion = snapshotFromVersion,
+            ToVersion = snapshotToVersion,
             Changes = changes
         });
     }

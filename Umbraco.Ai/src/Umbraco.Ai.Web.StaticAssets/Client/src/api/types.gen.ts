@@ -98,6 +98,7 @@ export type ConnectionResponseModel = {
     providerId: string;
     settings?: unknown;
     isActive: boolean;
+    version: number;
     dateCreated: string;
     dateModified: string;
 };
@@ -141,6 +142,7 @@ export type ContextResponseModel = {
     dateCreated: string;
     dateModified: string;
     resources: Array<ContextResourceModel>;
+    version: number;
 };
 
 export type CreateConnectionRequestModel = {
@@ -194,6 +196,22 @@ export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
 
 export type EmbeddingResponseModel = {
     embeddings: Array<EmbeddingItemModel>;
+};
+
+export type EntityVersionHistoryResponseModel = {
+    currentVersion: number;
+    totalVersions: number;
+    versions: Array<EntityVersionResponseModel>;
+};
+
+export type EntityVersionResponseModel = {
+    id: string;
+    entityId: string;
+    version: number;
+    dateCreated: string;
+    createdByUserId?: number | null;
+    createdByUserName?: string | null;
+    changeDescription?: string | null;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -277,10 +295,17 @@ export type ProfileResponseModel = {
     tags: Array<string>;
     dateCreated: string;
     dateModified: string;
+    version: number;
 };
 
 export type ProfileSettingsModel = {
     [key: string]: never;
+};
+
+export type PropertyChangeModel = {
+    propertyName: string;
+    oldValue?: string | null;
+    newValue?: string | null;
 };
 
 export type ProviderItemResponseModel = {
@@ -351,6 +376,12 @@ export type UsageTimeSeriesPointModel = {
     outputTokens: number;
     successCount: number;
     failureCount: number;
+};
+
+export type VersionComparisonResponseModel = {
+    fromVersion: number;
+    toVersion: number;
+    changes: Array<PropertyChangeModel>;
 };
 
 export type GetUsageBreakdownByModelData = {
@@ -946,6 +977,137 @@ export type TestConnectionResponses = {
 
 export type TestConnectionResponse = TestConnectionResponses[keyof TestConnectionResponses];
 
+export type GetConnectionVersionHistoryData = {
+    body?: never;
+    path: {
+        connectionIdOrAlias: string;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions';
+};
+
+export type GetConnectionVersionHistoryErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetConnectionVersionHistoryError = GetConnectionVersionHistoryErrors[keyof GetConnectionVersionHistoryErrors];
+
+export type GetConnectionVersionHistoryResponses = {
+    /**
+     * OK
+     */
+    200: EntityVersionHistoryResponseModel;
+};
+
+export type GetConnectionVersionHistoryResponse = GetConnectionVersionHistoryResponses[keyof GetConnectionVersionHistoryResponses];
+
+export type CompareConnectionVersionsData = {
+    body?: never;
+    path: {
+        connectionIdOrAlias: string;
+        snapshotFromVersion: number;
+        snapshotToVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions/{snapshotFromVersion}/compare/{snapshotToVersion}';
+};
+
+export type CompareConnectionVersionsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CompareConnectionVersionsError = CompareConnectionVersionsErrors[keyof CompareConnectionVersionsErrors];
+
+export type CompareConnectionVersionsResponses = {
+    /**
+     * OK
+     */
+    200: VersionComparisonResponseModel;
+};
+
+export type CompareConnectionVersionsResponse = CompareConnectionVersionsResponses[keyof CompareConnectionVersionsResponses];
+
+export type GetConnectionVersionSnapshotData = {
+    body?: never;
+    path: {
+        connectionIdOrAlias: string;
+        snapshotVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions/{snapshotVersion}';
+};
+
+export type GetConnectionVersionSnapshotErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetConnectionVersionSnapshotError = GetConnectionVersionSnapshotErrors[keyof GetConnectionVersionSnapshotErrors];
+
+export type GetConnectionVersionSnapshotResponses = {
+    /**
+     * OK
+     */
+    200: ConnectionResponseModel;
+};
+
+export type GetConnectionVersionSnapshotResponse = GetConnectionVersionSnapshotResponses[keyof GetConnectionVersionSnapshotResponses];
+
+export type RollbackConnectionToVersionData = {
+    body?: never;
+    path: {
+        connectionIdOrAlias: string;
+        snapshotVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/connections/{connectionIdOrAlias}/versions/{snapshotVersion}/rollback';
+};
+
+export type RollbackConnectionToVersionErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RollbackConnectionToVersionError = RollbackConnectionToVersionErrors[keyof RollbackConnectionToVersionErrors];
+
+export type RollbackConnectionToVersionResponses = {
+    /**
+     * OK
+     */
+    200: ConnectionResponseModel;
+};
+
+export type RollbackConnectionToVersionResponse = RollbackConnectionToVersionResponses[keyof RollbackConnectionToVersionResponses];
+
 export type GetAllCapabilitiesData = {
     body?: never;
     path?: never;
@@ -1170,6 +1332,137 @@ export type UpdateContextResponses = {
     200: unknown;
 };
 
+export type GetContextVersionHistoryData = {
+    body?: never;
+    path: {
+        contextIdOrAlias: string;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions';
+};
+
+export type GetContextVersionHistoryErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetContextVersionHistoryError = GetContextVersionHistoryErrors[keyof GetContextVersionHistoryErrors];
+
+export type GetContextVersionHistoryResponses = {
+    /**
+     * OK
+     */
+    200: EntityVersionHistoryResponseModel;
+};
+
+export type GetContextVersionHistoryResponse = GetContextVersionHistoryResponses[keyof GetContextVersionHistoryResponses];
+
+export type CompareContextVersionsData = {
+    body?: never;
+    path: {
+        contextIdOrAlias: string;
+        snapshotFromVersion: number;
+        snapshotToVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions/{snapshotFromVersion}/compare/{snapshotToVersion}';
+};
+
+export type CompareContextVersionsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CompareContextVersionsError = CompareContextVersionsErrors[keyof CompareContextVersionsErrors];
+
+export type CompareContextVersionsResponses = {
+    /**
+     * OK
+     */
+    200: VersionComparisonResponseModel;
+};
+
+export type CompareContextVersionsResponse = CompareContextVersionsResponses[keyof CompareContextVersionsResponses];
+
+export type GetContextVersionSnapshotData = {
+    body?: never;
+    path: {
+        contextIdOrAlias: string;
+        snapshotVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions/{snapshotVersion}';
+};
+
+export type GetContextVersionSnapshotErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetContextVersionSnapshotError = GetContextVersionSnapshotErrors[keyof GetContextVersionSnapshotErrors];
+
+export type GetContextVersionSnapshotResponses = {
+    /**
+     * OK
+     */
+    200: ContextResponseModel;
+};
+
+export type GetContextVersionSnapshotResponse = GetContextVersionSnapshotResponses[keyof GetContextVersionSnapshotResponses];
+
+export type RollbackContextToVersionData = {
+    body?: never;
+    path: {
+        contextIdOrAlias: string;
+        snapshotVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/contexts/{contextIdOrAlias}/versions/{snapshotVersion}/rollback';
+};
+
+export type RollbackContextToVersionErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RollbackContextToVersionError = RollbackContextToVersionErrors[keyof RollbackContextToVersionErrors];
+
+export type RollbackContextToVersionResponses = {
+    /**
+     * OK
+     */
+    200: ContextResponseModel;
+};
+
+export type RollbackContextToVersionResponse = RollbackContextToVersionResponses[keyof RollbackContextToVersionResponses];
+
 export type GenerateEmbeddingsData = {
     body?: GenerateEmbeddingRequestModel;
     path?: never;
@@ -1354,6 +1647,137 @@ export type UpdateProfileResponses = {
      */
     200: unknown;
 };
+
+export type GetProfileVersionHistoryData = {
+    body?: never;
+    path: {
+        profileIdOrAlias: string;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions';
+};
+
+export type GetProfileVersionHistoryErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetProfileVersionHistoryError = GetProfileVersionHistoryErrors[keyof GetProfileVersionHistoryErrors];
+
+export type GetProfileVersionHistoryResponses = {
+    /**
+     * OK
+     */
+    200: EntityVersionHistoryResponseModel;
+};
+
+export type GetProfileVersionHistoryResponse = GetProfileVersionHistoryResponses[keyof GetProfileVersionHistoryResponses];
+
+export type CompareProfileVersionsData = {
+    body?: never;
+    path: {
+        profileIdOrAlias: string;
+        snapshotFromVersion: number;
+        snapshotToVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions/{snapshotFromVersion}/compare/{snapshotToVersion}';
+};
+
+export type CompareProfileVersionsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CompareProfileVersionsError = CompareProfileVersionsErrors[keyof CompareProfileVersionsErrors];
+
+export type CompareProfileVersionsResponses = {
+    /**
+     * OK
+     */
+    200: VersionComparisonResponseModel;
+};
+
+export type CompareProfileVersionsResponse = CompareProfileVersionsResponses[keyof CompareProfileVersionsResponses];
+
+export type GetProfileVersionSnapshotData = {
+    body?: never;
+    path: {
+        profileIdOrAlias: string;
+        snapshotVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions/{snapshotVersion}';
+};
+
+export type GetProfileVersionSnapshotErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetProfileVersionSnapshotError = GetProfileVersionSnapshotErrors[keyof GetProfileVersionSnapshotErrors];
+
+export type GetProfileVersionSnapshotResponses = {
+    /**
+     * OK
+     */
+    200: ProfileResponseModel;
+};
+
+export type GetProfileVersionSnapshotResponse = GetProfileVersionSnapshotResponses[keyof GetProfileVersionSnapshotResponses];
+
+export type RollbackProfileToVersionData = {
+    body?: never;
+    path: {
+        profileIdOrAlias: string;
+        snapshotVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/profiles/{profileIdOrAlias}/versions/{snapshotVersion}/rollback';
+};
+
+export type RollbackProfileToVersionErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RollbackProfileToVersionError = RollbackProfileToVersionErrors[keyof RollbackProfileToVersionErrors];
+
+export type RollbackProfileToVersionResponses = {
+    /**
+     * OK
+     */
+    200: ProfileResponseModel;
+};
+
+export type RollbackProfileToVersionResponse = RollbackProfileToVersionResponses[keyof RollbackProfileToVersionResponses];
 
 export type GetAllProvidersData = {
     body?: never;

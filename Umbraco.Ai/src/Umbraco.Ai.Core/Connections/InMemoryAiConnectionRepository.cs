@@ -105,7 +105,7 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
         int? limit = null,
         CancellationToken cancellationToken = default)
     {
-        // In-memory repository does not track version history
+        // In-memory implementation doesn't support version history
         return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
     }
 
@@ -115,7 +115,7 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
         int version,
         CancellationToken cancellationToken = default)
     {
-        // In-memory repository does not track version history
+        // In-memory implementation doesn't support version history
         return Task.FromResult<AiConnection?>(null);
     }
 }

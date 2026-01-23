@@ -106,7 +106,8 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child) {
+            uui-box:not(:first-child),
+            uai-version-history-table {
                 margin-top: var(--uui-size-layout-1);
             }
 

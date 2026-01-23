@@ -11,11 +11,11 @@ export interface UaiVersionHistoryItem {
     /** The date and time when this version was created. */
     dateCreated: string;
     /** The user ID who created this version, if available. */
-    createdByUserId?: number;
+    createdByUserId?: number | null;
     /** The user name who created this version, if available. */
-    createdByUserName?: string;
+    createdByUserName?: string | null;
     /** Optional description of what changed in this version. */
-    changeDescription?: string;
+    changeDescription?: string | null;
 }
 
 /**
@@ -37,9 +37,9 @@ export interface UaiVersionPropertyChange {
     /** The name of the property that changed. */
     propertyName: string;
     /** The old value (from the source version). */
-    oldValue?: string;
+    oldValue?: string | null;
     /** The new value (from the target version). */
-    newValue?: string;
+    newValue?: string | null;
 }
 
 /**

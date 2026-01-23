@@ -5,13 +5,13 @@ import {
     UaiVersionComparisonResponse,
     UaiVersionHistoryTypeMapper,
 } from "../../../core/version-history/exports.js";
-import { ProfilesService } from "../../../api";
+import { ConnectionsService } from "../../../api";
 
 /**
- * Repository for Profile version history operations.
+ * Repository for Connection version history operations.
  * Handles fetching version history, comparing versions, and rolling back.
  */
-export class UaiProfileVersionHistoryRepository {
+export class UaiConnectionVersionHistoryRepository {
     #host: UmbControllerHost;
 
     constructor(host: UmbControllerHost) {
@@ -19,22 +19,22 @@ export class UaiProfileVersionHistoryRepository {
     }
 
     /**
-     * Gets the version history for a profile.
-     * @param profileId - The profile ID.
+     * Gets the version history for a connection.
+     * @param connectionId - The connection ID.
      * @param skip - Number of versions to skip (for pagination).
      * @param take - Number of versions to return.
      * @returns The version history response.
      */
     async getVersionHistory(
-        profileId: string,
+        connectionId: string,
         skip: number,
         take: number
     ): Promise<UaiVersionHistoryResponse | undefined> {
         const { data, error } = await tryExecute(
             this.#host,
-            ProfilesService.getProfileVersionHistory({
+            ConnectionsService.getConnectionVersionHistory({
                 path: {
-                    profileIdOrAlias: profileId,
+                    connectionIdOrAlias: connectionId,
                 },
                 query: {
                     skip,
@@ -44,7 +44,7 @@ export class UaiProfileVersionHistoryRepository {
         );
 
         if (error || !data) {
-            console.error("Failed to load profile version history:", error);
+            console.error("Failed to load connection version history:", error);
             return undefined;
         }
 
@@ -52,22 +52,22 @@ export class UaiProfileVersionHistoryRepository {
     }
 
     /**
-     * Compares two versions of a profile.
-     * @param profileId - The profile ID.
+     * Compares two versions of a connection.
+     * @param connectionId - The connection ID.
      * @param fromVersion - The source version number.
      * @param toVersion - The target version number.
      * @returns The comparison response with property changes.
      */
     async compareVersions(
-        profileId: string,
+        connectionId: string,
         fromVersion: number,
         toVersion: number
     ): Promise<UaiVersionComparisonResponse | undefined> {
         const { data, error } = await tryExecute(
             this.#host,
-            ProfilesService.compareProfileVersions({
+            ConnectionsService.compareConnectionVersions({
                 path: {
-                    profileIdOrAlias: profileId,
+                    connectionIdOrAlias: connectionId,
                     snapshotFromVersion: fromVersion,
                     snapshotToVersion: toVersion,
                 },
@@ -75,7 +75,7 @@ export class UaiProfileVersionHistoryRepository {
         );
 
         if (error || !data) {
-            console.error("Failed to compare profile versions:", error);
+            console.error("Failed to compare connection versions:", error);
             return undefined;
         }
 
@@ -83,24 +83,24 @@ export class UaiProfileVersionHistoryRepository {
     }
 
     /**
-     * Rolls back a profile to a previous version.
-     * @param profileId - The profile ID.
+     * Rolls back a connection to a previous version.
+     * @param connectionId - The connection ID.
      * @param version - The version number to rollback to.
      * @returns True if rollback was successful.
      */
-    async rollback(profileId: string, version: number): Promise<boolean> {
+    async rollback(connectionId: string, version: number): Promise<boolean> {
         const { error } = await tryExecute(
             this.#host,
-            ProfilesService.rollbackProfileToVersion({
+            ConnectionsService.rollbackConnectionToVersion({
                 path: {
-                    profileIdOrAlias: profileId,
+                    connectionIdOrAlias: connectionId,
                     snapshotVersion: version,
                 },
             })
         );
 
         if (error) {
-            console.error("Failed to rollback profile:", error);
+            console.error("Failed to rollback connection:", error);
             return false;
         }
 

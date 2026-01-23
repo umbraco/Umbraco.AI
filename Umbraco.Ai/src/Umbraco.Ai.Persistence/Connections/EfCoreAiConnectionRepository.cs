@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
@@ -132,6 +134,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             {
                 // New connection - set version and user IDs on domain model before mapping
                 connection.Version = 1;
+                connection.DateModified = DateTime.UtcNow;
                 connection.CreatedByUserId = userId;
                 connection.ModifiedByUserId = userId;
 
@@ -152,9 +155,10 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                     CreatedByUserId = userId
                 };
                 db.ConnectionVersions.Add(versionEntity);
-
-                // Increment version and set ModifiedByUserId on domain model
+                
+                // Increment version, update timestamps, and set ModifiedByUserId on domain model
                 connection.Version = existing.Version + 1;
+                connection.DateModified = DateTime.UtcNow;
                 connection.ModifiedByUserId = userId;
 
                 _connectionFactory.UpdateEntity(existing, connection);

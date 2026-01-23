@@ -3,6 +3,7 @@ import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localiza
 export default {
     uaiGeneral: {
         select: "Select",
+        close: "Close"
     },
     uaiComponents: {
         pollingButtonTogglePolling: "Toggle Polling",
@@ -51,6 +52,7 @@ export default {
         compareVersions: (from: number, to: number) => `Compare v${from} to Current (v${to})`,
         rollbackDescription: (version: number) => `Rolling back will create a new version with the content from v${version}. This action cannot be undone.`,
         rollbackTo: (version: number) => `Rollback to v${version}`,
+        rollback: "Rollback",
         changes: "Changes",
         noChanges: "No changes detected",
         oldValue: "Old",

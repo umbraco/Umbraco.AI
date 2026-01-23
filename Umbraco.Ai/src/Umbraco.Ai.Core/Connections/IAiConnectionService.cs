@@ -112,4 +112,17 @@ public interface IAiConnectionService
         Guid connectionId,
         int version,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back a connection to a previous version.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="targetVersion">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated connection at the new version.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the connection or target version is not found.</exception>
+    Task<AiConnection> RollbackConnectionAsync(
+        Guid connectionId,
+        int targetVersion,
+        CancellationToken cancellationToken = default);
 }

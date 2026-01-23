@@ -33,7 +33,7 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
             settings = _serializer.Deserialize(entity.Settings);
         }
 
-        return new AiConnection
+        var connection = new AiConnection
         {
             Id = entity.Id,
             Alias = entity.Alias,
@@ -47,6 +47,12 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
             CreatedByUserId = entity.CreatedByUserId,
             ModifiedByUserId = entity.ModifiedByUserId
         };
+
+        // Set version using internal setter
+        typeof(AiConnection).GetProperty(nameof(AiConnection.Version))!
+            .SetValue(connection, entity.Version);
+
+        return connection;
     }
 
     /// <inheritdoc />

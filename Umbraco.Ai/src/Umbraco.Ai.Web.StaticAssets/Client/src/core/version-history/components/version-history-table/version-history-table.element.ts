@@ -273,6 +273,7 @@ export class UaiVersionHistoryTableElement extends UmbLitElement {
 
             uui-table {
                 width: 100%;
+                margin-top: calc(var(--uui-size-space-3) * -1);
             }
 
             .version-label {

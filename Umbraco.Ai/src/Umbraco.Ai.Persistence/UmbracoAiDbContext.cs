@@ -103,6 +103,10 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.IsActive)
                 .IsRequired();
 
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
+
             entity.Property(e => e.DateCreated)
                 .IsRequired();
 

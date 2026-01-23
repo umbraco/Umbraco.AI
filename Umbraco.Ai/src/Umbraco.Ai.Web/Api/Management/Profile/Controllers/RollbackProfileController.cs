@@ -36,16 +36,16 @@ public class RollbackProfileController : ProfileControllerBase
     /// Rollback a profile to a previous version.
     /// </summary>
     /// <param name="profileIdOrAlias">The unique identifier (GUID) or alias of the profile.</param>
-    /// <param name="version">The version number to rollback to.</param>
+    /// <param name="snapshotVersion">The version number to rollback to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile at the new version (after rollback).</returns>
-    [HttpPost($"{{{nameof(profileIdOrAlias)}}}/rollback/{{{nameof(version)}:int}}")]
+    [HttpPost($"{{{nameof(profileIdOrAlias)}}}/versions/{{{nameof(snapshotVersion)}:int}}/rollback")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(ProfileResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RollbackToVersion(
+    public async Task<IActionResult> RollbackProfileToVersion(
         [FromRoute] IdOrAlias profileIdOrAlias,
-        [FromRoute] int version,
+        [FromRoute] int snapshotVersion,
         CancellationToken cancellationToken = default)
     {
         var profile = await _profileService.GetProfileAsync(profileIdOrAlias, cancellationToken);
@@ -56,14 +56,14 @@ public class RollbackProfileController : ProfileControllerBase
 
         try
         {
-            var rolledBackProfile = await _profileService.RollbackProfileAsync(profile.Id, version, cancellationToken);
+            var rolledBackProfile = await _profileService.RollbackProfileAsync(profile.Id, snapshotVersion, cancellationToken);
             return Ok(_umbracoMapper.Map<ProfileResponseModel>(rolledBackProfile));
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("Version"))
         {
             return NotFound(CreateProblemDetails(
                 "Version not found",
-                $"Version {version} was not found for this profile."));
+                $"Version {snapshotVersion} was not found for this profile."));
         }
     }
 }

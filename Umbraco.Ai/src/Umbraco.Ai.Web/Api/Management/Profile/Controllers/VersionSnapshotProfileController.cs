@@ -36,16 +36,16 @@ public class VersionSnapshotProfileController : ProfileControllerBase
     /// Get a specific version snapshot of a profile.
     /// </summary>
     /// <param name="profileIdOrAlias">The unique identifier (GUID) or alias of the profile.</param>
-    /// <param name="version">The version number to retrieve.</param>
+    /// <param name="snapshotVersion">The version number to retrieve.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile at the specified version.</returns>
-    [HttpGet($"{{{nameof(profileIdOrAlias)}}}/versions/{{{nameof(version)}:int}}")]
+    [HttpGet($"{{{nameof(profileIdOrAlias)}}}/versions/{{{nameof(snapshotVersion)}:int}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(ProfileResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetVersionSnapshot(
+    public async Task<IActionResult> GetProfileVersionSnapshot(
         [FromRoute] IdOrAlias profileIdOrAlias,
-        [FromRoute] int version,
+        [FromRoute] int snapshotVersion,
         CancellationToken cancellationToken = default)
     {
         var profile = await _profileService.GetProfileAsync(profileIdOrAlias, cancellationToken);
@@ -54,12 +54,12 @@ public class VersionSnapshotProfileController : ProfileControllerBase
             return ProfileNotFound();
         }
 
-        var snapshot = await _profileService.GetProfileVersionSnapshotAsync(profile.Id, version, cancellationToken);
+        var snapshot = await _profileService.GetProfileVersionSnapshotAsync(profile.Id, snapshotVersion, cancellationToken);
         if (snapshot is null)
         {
             return NotFound(CreateProblemDetails(
                 "Version not found",
-                $"Version {version} was not found for this profile."));
+                $"Version {snapshotVersion} was not found for this profile."));
         }
 
         return Ok(_umbracoMapper.Map<ProfileResponseModel>(snapshot));

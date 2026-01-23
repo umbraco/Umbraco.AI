@@ -36,16 +36,16 @@ public class RollbackContextController : ContextControllerBase
     /// Rollback a context to a previous version.
     /// </summary>
     /// <param name="contextIdOrAlias">The unique identifier (GUID) or alias of the context.</param>
-    /// <param name="version">The version number to rollback to.</param>
+    /// <param name="snapshotVersion">The version number to rollback to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context at the new version (after rollback).</returns>
-    [HttpPost($"{{{nameof(contextIdOrAlias)}}}/rollback/{{{nameof(version)}:int}}")]
+    [HttpPost($"{{{nameof(contextIdOrAlias)}}}/versions/{{{nameof(snapshotVersion)}:int}}/rollback")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(ContextResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RollbackToVersion(
+    public async Task<IActionResult> RollbackContextToVersion(
         [FromRoute] IdOrAlias contextIdOrAlias,
-        [FromRoute] int version,
+        [FromRoute] int snapshotVersion,
         CancellationToken cancellationToken = default)
     {
         var context = await _contextService.GetContextAsync(contextIdOrAlias, cancellationToken);
@@ -56,14 +56,14 @@ public class RollbackContextController : ContextControllerBase
 
         try
         {
-            var rolledBackContext = await _contextService.RollbackContextAsync(context.Id, version, cancellationToken);
+            var rolledBackContext = await _contextService.RollbackContextAsync(context.Id, snapshotVersion, cancellationToken);
             return Ok(_umbracoMapper.Map<ContextResponseModel>(rolledBackContext));
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("Version"))
         {
             return NotFound(CreateProblemDetails(
                 "Version not found",
-                $"Version {version} was not found for this context."));
+                $"Version {snapshotVersion} was not found for this context."));
         }
     }
 }

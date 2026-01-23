@@ -1,4 +1,4 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -123,8 +123,13 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return null;
 
         return html`<uui-box headline="General">
-            ${this.#renderProviderSettings()}
-        </uui-box>`;
+                ${this.#renderProviderSettings()}
+            </uui-box>
+            
+            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
+                <uai-version-history-table></uai-version-history-table>
+            ` : nothing}
+        `;
     }
 
     #renderRightColumn() {
@@ -201,7 +206,8 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child) {
+            uui-box:not(:first-child),
+            uai-version-history-table {
                 margin-top: var(--uui-size-layout-1);
             }
 

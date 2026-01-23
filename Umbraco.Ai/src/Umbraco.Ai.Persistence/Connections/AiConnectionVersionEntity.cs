@@ -22,7 +22,6 @@ internal class AiConnectionVersionEntity
 
     /// <summary>
     /// JSON serialization of the connection state at this version.
-    /// Sensitive settings fields are encrypted within the JSON.
     /// </summary>
     public string Snapshot { get; set; } = string.Empty;
 

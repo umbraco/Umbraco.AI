@@ -237,16 +237,49 @@ internal sealed class AiConnectionService : IAiConnectionService
         Guid connectionId,
         int? limit = null,
         CancellationToken cancellationToken = default)
-    {
-        return _repository.GetVersionHistoryAsync(connectionId, limit, cancellationToken);
-    }
+        => _repository.GetVersionHistoryAsync(connectionId, limit, cancellationToken);
 
     /// <inheritdoc />
     public Task<AiConnection?> GetConnectionVersionSnapshotAsync(
         Guid connectionId,
         int version,
         CancellationToken cancellationToken = default)
+        => _repository.GetVersionSnapshotAsync(connectionId, version, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AiConnection> RollbackConnectionAsync(
+        Guid connectionId,
+        int targetVersion,
+        CancellationToken cancellationToken = default)
     {
-        return _repository.GetVersionSnapshotAsync(connectionId, version, cancellationToken);
+        // Get the current connection to ensure it exists
+        var currentConnection = await _repository.GetAsync(connectionId, cancellationToken);
+        if (currentConnection is null)
+        {
+            throw new InvalidOperationException($"Connection with ID '{connectionId}' not found.");
+        }
+
+        // Get the snapshot at the target version
+        var snapshot = await _repository.GetVersionSnapshotAsync(connectionId, targetVersion, cancellationToken);
+        if (snapshot is null)
+        {
+            throw new InvalidOperationException($"Version {targetVersion} not found for connection '{connectionId}'.");
+        }
+
+        // Create a new version by saving the snapshot data
+        // We need to preserve the ID and update the dates appropriately
+        var rolledBackConnection = new AiConnection
+        {
+            Id = connectionId,
+            Alias = snapshot.Alias,
+            Name = snapshot.Name,
+            ProviderId = snapshot.ProviderId,
+            Settings = snapshot.Settings,
+            IsActive = snapshot.IsActive,
+            // The repository will handle version increment and dates
+        };
+
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(rolledBackConnection, userId, cancellationToken);
     }
 }

@@ -21,6 +21,7 @@ using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.RuntimeContext.Contributors;
 using Umbraco.Ai.Core.RuntimeContext.Middleware;
+using Umbraco.Ai.Core.Security;
 using Umbraco.Ai.Core.TaskQueue;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Core.Tools.Web;
@@ -52,9 +53,13 @@ public static partial class UmbracoBuilderExtensions
         // Bind AiAnalyticsOptions from "Umbraco:Ai:Analytics" section
         services.Configure<AiAnalyticsOptions>(config.GetSection("Umbraco:Ai:Analytics"));
 
+        // Security infrastructure
+        services.AddSingleton<IAiSensitiveFieldProtector, AiSensitiveFieldProtector>();
+
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
         services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
+        services.AddSingleton<IAiEditableModelSerializer, AiEditableModelSerializer>();
         services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
 
         // Auto-discover providers using TypeLoader (uses Umbraco's cached, efficient type discovery)

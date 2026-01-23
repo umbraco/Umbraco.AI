@@ -18,14 +18,14 @@ public class AmazonProviderSettings
     /// <summary>
     /// The AWS Access Key ID for authenticating with Bedrock services.
     /// </summary>
-    [AiField]
+    [AiField(IsSensitive = true)]
     [Required]
     public string? AccessKeyId { get; set; }
 
     /// <summary>
     /// The AWS Secret Access Key for authenticating with Bedrock services.
     /// </summary>
-    [AiField]
+    [AiField(IsSensitive = true)]
     [Required]
     public string? SecretAccessKey { get; set; }
 

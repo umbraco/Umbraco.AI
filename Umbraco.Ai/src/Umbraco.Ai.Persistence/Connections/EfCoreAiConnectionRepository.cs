@@ -10,12 +10,18 @@ namespace Umbraco.Ai.Persistence.Connections;
 internal class EfCoreAiConnectionRepository : IAiConnectionRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IAiConnectionFactory _connectionFactory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="EfCoreAiConnectionRepository"/>.
     /// </summary>
-    public EfCoreAiConnectionRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
-        => _scopeProvider = scopeProvider;
+    public EfCoreAiConnectionRepository(
+        IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider,
+        IAiConnectionFactory connectionFactory)
+    {
+        _scopeProvider = scopeProvider;
+        _connectionFactory = connectionFactory;
+    }
 
     /// <inheritdoc />
     public async Task<AiConnection?> GetAsync(Guid id, CancellationToken cancellationToken = default)
@@ -26,7 +32,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             await db.Connections.FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiConnectionFactory.BuildDomain(entity);
+        return entity is null ? null : _connectionFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -40,7 +46,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiConnectionFactory.BuildDomain(entity);
+        return entity is null ? null : _connectionFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
@@ -52,7 +58,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             await db.Connections.ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AiConnectionFactory.BuildDomain);
+        return entities.Select(_connectionFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -66,7 +72,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AiConnectionFactory.BuildDomain);
+        return entities.Select(_connectionFactory.BuildDomain);
     }
 
     /// <inheritdoc />
@@ -109,7 +115,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AiConnectionFactory.BuildDomain), result.total);
+        return (result.items.Select(_connectionFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
@@ -127,7 +133,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 connection.CreatedByUserId = userId;
                 connection.ModifiedByUserId = userId;
 
-                AiConnectionEntity newEntity = AiConnectionFactory.BuildEntity(connection);
+                AiConnectionEntity newEntity = _connectionFactory.BuildEntity(connection);
                 db.Connections.Add(newEntity);
             }
             else
@@ -135,7 +141,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 // Existing connection - set ModifiedByUserId on domain model
                 connection.ModifiedByUserId = userId;
 
-                AiConnectionFactory.UpdateEntity(existing, connection);
+                _connectionFactory.UpdateEntity(existing, connection);
             }
 
             await db.SaveChangesAsync(cancellationToken);

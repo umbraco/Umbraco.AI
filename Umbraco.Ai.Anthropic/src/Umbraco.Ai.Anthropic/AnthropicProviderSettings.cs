@@ -11,7 +11,7 @@ public class AnthropicProviderSettings
     /// <summary>
     /// The API key for authenticating with Anthropic services.
     /// </summary>
-    [AiField]
+    [AiField(IsSensitive = true)]
     [Required]
     public string? ApiKey { get; set; }
 

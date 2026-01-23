@@ -345,20 +345,6 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 justify-content: flex-end;
             }
 
-            .version-label {
-                font-weight: 500;
-            }
-
-            .version-label.current {
-                color: var(--uui-color-positive);
-            }
-
-            .current-badge {
-                font-weight: normal;
-                font-size: 0.85em;
-                margin-left: var(--uui-size-space-2);
-            }
-
             .user-info {
                 position: relative;
                 display: flex;

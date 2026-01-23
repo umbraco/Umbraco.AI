@@ -6,6 +6,7 @@ export * from './events/index.js';
 export * from './modals/index.js';
 export * from './types.js';
 export * from './utils/index.js';
+export * from './version-history/index.js';
 
 /**
  * A constant representing an empty GUID.

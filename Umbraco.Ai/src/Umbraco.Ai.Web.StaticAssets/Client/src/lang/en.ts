@@ -39,6 +39,23 @@ export default {
     uaiAuditLog: {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,
     },
+    uaiVersionHistory: {
+        history: "History",
+        version: "Version",
+        date: "Date",
+        user: "User",
+        compare: "Compare",
+        current: "current",
+        noVersionsYet: "No versions yet",
+        pageInfo: (current: number, total: number) => `Page ${current} of ${total}`,
+        compareVersions: (from: number, to: number) => `Compare v${from} to Current (v${to})`,
+        rollbackDescription: (version: number) => `Rolling back will create a new version with the content from v${version}. This action cannot be undone.`,
+        rollbackTo: (version: number) => `Rollback to v${version}`,
+        changes: "Changes",
+        noChanges: "No changes detected",
+        oldValue: "Old",
+        newValue: "New",
+    },
     uaiFields: {
         // Text resource fields
         textContentLabel: "Content",

@@ -29,6 +29,8 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
             providerId: preset?.providerId ?? "",
             settings: null,
             isActive: true,
+            dateCreated: null,
+            dateModified: null,
             ...preset,
         };
 

@@ -31,7 +31,12 @@ public class ContextItemResponseModel
     public int ResourceCount { get; set; }
 
     /// <summary>
-    /// Date and time when the context was last modified.
+    /// The date and time (in UTC) when the context was created.
+    /// </summary>
+    public DateTime DateCreated { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the context was created.
     /// </summary>
     public DateTime DateModified { get; set; }
 }

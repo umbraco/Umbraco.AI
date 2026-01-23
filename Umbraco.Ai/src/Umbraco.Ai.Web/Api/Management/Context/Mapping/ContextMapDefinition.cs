@@ -94,6 +94,7 @@ public class ContextMapDefinition : IMapDefinition
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.ResourceCount = source.Resources.Count;
+        target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
     }
 

@@ -105,6 +105,8 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.IsActive = source.IsActive;
+        target.DateCreated = source.DateCreated;
+        target.DateModified = source.DateModified;
     }
 
     private static AiPromptScope? MapScopeModelToDomain(ScopeModel? model)

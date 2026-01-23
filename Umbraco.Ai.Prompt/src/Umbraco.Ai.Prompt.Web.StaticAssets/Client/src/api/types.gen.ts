@@ -60,6 +60,8 @@ export type PromptItemResponseModel = {
     description?: string | null;
     profileId?: string | null;
     isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
 };
 
 export type PromptResponseModel = {

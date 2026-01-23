@@ -50,7 +50,7 @@ public sealed class AiAgent : IAiVersionable
     /// <summary>
     /// When the agent was created.
     /// </summary>
-    public DateTime DateCreated { get; init; } = DateTime.UtcNow;
+    public DateTime DateCreated { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// When the agent was last modified.

@@ -52,4 +52,14 @@ public class ProfileResponseModel
     /// Tags associated with the profile.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = [];
+
+    /// <summary>
+    /// The date and time (in UTC) when the connection was created.
+    /// </summary>
+    public DateTime DateCreated { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the connection was created.
+    /// </summary>
+    public DateTime DateModified { get; set; }
 }

@@ -78,6 +78,8 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ContextIds = source.ContextIds;
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
+        target.DateCreated = source.DateCreated;
+        target.DateModified = source.DateModified;
     }
 
     // Umbraco.Code.MapAll -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
@@ -90,5 +92,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
         target.IsActive = source.IsActive;
+        target.DateCreated = source.DateCreated;
+        target.DateModified = source.DateModified;
     }
 }

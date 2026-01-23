@@ -36,4 +36,14 @@ public class ProfileItemResponseModel
     /// The model reference for this profile.
     /// </summary>
     public ModelRefModel? Model { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the connection was created.
+    /// </summary>
+    public DateTime DateCreated { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the connection was created.
+    /// </summary>
+    public DateTime DateModified { get; set; }
 }

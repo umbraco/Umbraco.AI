@@ -15,6 +15,8 @@ export const UaiAgentTypeMapper = {
             contextIds: response.contextIds ?? [],
             instructions: response.instructions ?? null,
             isActive: response.isActive,
+            dateCreated: response.dateCreated,
+            dateModified: response.dateModified,
         };
     },
 
@@ -28,6 +30,8 @@ export const UaiAgentTypeMapper = {
             profileId: response.profileId,
             contextIds: response.contextIds ?? [],
             isActive: response.isActive,
+            dateCreated: response.dateCreated,
+            dateModified: response.dateModified,
         };
     },
 

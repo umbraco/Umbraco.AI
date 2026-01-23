@@ -87,6 +87,8 @@ export type ConnectionItemResponseModel = {
     name: string;
     providerId: string;
     isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
 };
 
 export type ConnectionResponseModel = {
@@ -110,6 +112,7 @@ export type ContextItemResponseModel = {
     alias: string;
     name: string;
     resourceCount: number;
+    dateCreated: string;
     dateModified: string;
 };
 
@@ -259,6 +262,8 @@ export type ProfileItemResponseModel = {
     name: string;
     capability: string;
     model?: ModelRefModel | null;
+    dateCreated: string;
+    dateModified: string;
 };
 
 export type ProfileResponseModel = {
@@ -270,6 +275,8 @@ export type ProfileResponseModel = {
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
+    dateCreated: string;
+    dateModified: string;
 };
 
 export type ProfileSettingsModel = {

@@ -80,6 +80,8 @@ public class ProfileMapDefinition : IMapDefinition
         target.Model = context.Map<ModelRefModel>(source.Model);
         target.Settings = MapSettingsToResponse(source);
         target.Tags = source.Tags;
+        target.DateCreated = source.DateCreated;
+        target.DateModified = source.DateModified;
     }
 
     // Umbraco.Code.MapAll -DateCreated -DateModified -Version
@@ -90,6 +92,8 @@ public class ProfileMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Capability = source.Capability.ToString();
         target.Model = context.Map<ModelRefModel>(source.Model);
+        target.DateCreated = source.DateCreated;
+        target.DateModified = source.DateModified;
     }
 
     private static ProfileSettingsModel? MapSettingsToResponse(AiProfile source)

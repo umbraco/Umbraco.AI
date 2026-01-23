@@ -19,7 +19,7 @@
     "watch:prompt": "npm run watch -w @umbraco-ai/prompt",
     "watch:agent": "npm run watch -w @umbraco-ai/agent",
 
-    "generate-client": "npm run generate-client:core && npm run generate-client:prompt && npm run generate-client:agent",
+    "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
     "generate-client:core": "npm run generate-client -w @umbraco-ai/core",
     "generate-client:prompt": "npm run generate-client -w @umbraco-ai/prompt",
     "generate-client:agent": "npm run generate-client -w @umbraco-ai/agent"

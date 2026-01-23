@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Cms.Core.Models;
@@ -132,7 +130,7 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
                     Id = Guid.NewGuid(),
                     PromptId = existing.Id,
                     Version = existing.Version,
-                    Snapshot = JsonSerializer.Serialize(existingDomain, Constants.DefaultJsonSerializerOptions),
+                    Snapshot = AiPromptEntityFactory.CreateSnapshot(existingDomain),
                     DateCreated = DateTime.UtcNow,
                     CreatedByUserId = userId
                 };
@@ -269,13 +267,6 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
             return null;
         }
 
-        try
-        {
-            return JsonSerializer.Deserialize<Core.Prompts.AiPrompt>(entity.Snapshot, Constants.DefaultJsonSerializerOptions);
-        }
-        catch
-        {
-            return null;
-        }
+        return AiPromptEntityFactory.BuildDomainFromSnapshot(entity.Snapshot);
     }
 }

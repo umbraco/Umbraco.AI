@@ -1,7 +1,5 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
@@ -132,7 +130,7 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
                     Id = Guid.NewGuid(),
                     AgentId = existing.Id,
                     Version = existing.Version,
-                    Snapshot = JsonSerializer.Serialize(existingDomain, Constants.DefaultJsonSerializerOptions),
+                    Snapshot = AiAgentEntityFactory.CreateSnapshot(existingDomain),
                     DateCreated = DateTime.UtcNow,
                     CreatedByUserId = userId
                 };
@@ -269,13 +267,6 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
             return null;
         }
 
-        try
-        {
-            return JsonSerializer.Deserialize<Core.Agents.AiAgent>(entity.Snapshot, Constants.DefaultJsonSerializerOptions);
-        }
-        catch
-        {
-            return null;
-        }
+        return AiAgentEntityFactory.BuildDomainFromSnapshot(entity.Snapshot);
     }
 }

@@ -85,6 +85,9 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
         return auditLog;
     }
 
+    private const int MaxArgumentLength = 500;
+    private const int MaxResultLength = 1000;
+
     private static string? FormatPromptSnapshot(object? promptObj, AiCapability capability)
     {
         if (promptObj is null)
@@ -97,7 +100,7 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
             return capability switch
             {
                 AiCapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
-                    string.Join("\n", messages.Select(m => $"[{m.Role}] {m.Text}")),
+                    string.Join("\n", messages.Select(FormatChatMessage)),
 
                 AiCapability.Embedding when promptObj is IEnumerable<string> values =>
                     string.Join("\n", values.Select((v, i) => $"[{i}] {v}")),
@@ -110,6 +113,113 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
             // If formatting fails, return a fallback representation
             return $"[Unable to format {capability} prompt]";
         }
+    }
+
+    private static string FormatChatMessage(ChatMessage message)
+    {
+        var parts = new List<string>();
+
+        foreach (var content in message.Contents)
+        {
+            var formatted = FormatContent(content, message.Role);
+            if (!string.IsNullOrEmpty(formatted))
+            {
+                parts.Add(formatted);
+            }
+        }
+
+        // If no content was formatted, just return the role
+        if (parts.Count == 0)
+        {
+            return $"[{message.Role}]";
+        }
+
+        return string.Join("\n", parts);
+    }
+
+    private static string? FormatContent(AIContent content, ChatRole role)
+    {
+        return content switch
+        {
+            TextContent textContent =>
+                $"[{role}] {textContent.Text}",
+
+            FunctionCallContent functionCall =>
+                FormatFunctionCall(functionCall),
+
+            FunctionResultContent functionResult =>
+                FormatFunctionResult(functionResult),
+
+            DataContent dataContent =>
+                FormatDataContent(dataContent),
+
+            _ => null
+        };
+    }
+
+    private static string FormatFunctionCall(FunctionCallContent functionCall)
+    {
+        var args = FormatArguments(functionCall.Arguments);
+        if (args.Length > MaxArgumentLength)
+        {
+            args = $"{args[..MaxArgumentLength]}... (truncated, {args.Length} chars)";
+        }
+        return $"[tool_call:{functionCall.CallId}] {functionCall.Name}({args})";
+    }
+
+    private static string FormatArguments(IDictionary<string, object?>? arguments)
+    {
+        if (arguments is null || arguments.Count == 0)
+        {
+            return "{}";
+        }
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Serialize(arguments);
+        }
+        catch
+        {
+            return "{}";
+        }
+    }
+
+    private static string FormatFunctionResult(FunctionResultContent functionResult)
+    {
+        var result = FormatResult(functionResult.Result);
+        if (result.Length > MaxResultLength)
+        {
+            result = $"{result[..MaxResultLength]}... (truncated, {result.Length} chars)";
+        }
+        return $"[tool:{functionResult.CallId}] -> {result}";
+    }
+
+    private static string FormatResult(object? result)
+    {
+        if (result is null)
+        {
+            return "(null)";
+        }
+
+        if (result is string strResult)
+        {
+            return strResult;
+        }
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Serialize(result);
+        }
+        catch
+        {
+            return result.ToString() ?? "(null)";
+        }
+    }
+
+    private static string FormatDataContent(DataContent dataContent)
+    {
+        var size = dataContent.Data.Length;
+        return $"[data:{dataContent.MediaType}] ({size} bytes)";
     }
 
     private string? ApplyRedaction(string? input)

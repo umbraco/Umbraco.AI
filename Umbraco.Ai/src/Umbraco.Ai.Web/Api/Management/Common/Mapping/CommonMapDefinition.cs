@@ -25,6 +25,9 @@ public class CommonMapDefinition : IMapDefinition
         // Editable model mappings
         mapper.Define<AiEditableModelSchema, EditableModelSchemaModel>((_, _) => new EditableModelSchemaModel(), Map);
         mapper.Define<AiEditableModelField, EditableModelFieldModel>((_, _) => new EditableModelFieldModel(), Map);
+
+        // Version history mappings
+        mapper.Define<AiEntityVersion, EntityVersionResponseModel>((_, _) => new EntityVersionResponseModel(), Map);
     }
 
     // Umbraco.Code.MapAll
@@ -62,5 +65,17 @@ public class CommonMapDefinition : IMapDefinition
         target.DefaultValue = source.DefaultValue;
         target.SortOrder = source.SortOrder;
         target.IsRequired = source.ValidationRules.OfType<RequiredAttribute>().Any();
+    }
+
+    // Umbraco.Code.MapAll -CreatedByUserName
+    private static void Map(AiEntityVersion source, EntityVersionResponseModel target, MapperContext context)
+    {
+        target.Id = source.Id;
+        target.EntityId = source.EntityId;
+        target.Version = source.Version;
+        target.DateCreated = source.DateCreated;
+        target.CreatedByUserId = source.CreatedByUserId;
+        target.ChangeDescription = source.ChangeDescription;
+        // Note: CreatedByUserName is resolved separately in the controller
     }
 }

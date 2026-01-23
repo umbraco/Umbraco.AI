@@ -109,4 +109,42 @@ internal sealed class AiProfileService : IAiProfileService
         int version,
         CancellationToken cancellationToken = default)
         => _repository.GetVersionSnapshotAsync(profileId, version, cancellationToken);
+
+    public async Task<AiProfile> RollbackProfileAsync(
+        Guid profileId,
+        int targetVersion,
+        CancellationToken cancellationToken = default)
+    {
+        // Get the current profile to ensure it exists
+        var currentProfile = await _repository.GetByIdAsync(profileId, cancellationToken);
+        if (currentProfile is null)
+        {
+            throw new InvalidOperationException($"Profile with ID '{profileId}' not found.");
+        }
+
+        // Get the snapshot at the target version
+        var snapshot = await _repository.GetVersionSnapshotAsync(profileId, targetVersion, cancellationToken);
+        if (snapshot is null)
+        {
+            throw new InvalidOperationException($"Version {targetVersion} not found for profile '{profileId}'.");
+        }
+
+        // Create a new version by saving the snapshot data
+        // We need to preserve the ID and update the dates appropriately
+        var rolledBackProfile = new AiProfile
+        {
+            Id = profileId,
+            Alias = snapshot.Alias,
+            Name = snapshot.Name,
+            Capability = snapshot.Capability,
+            ConnectionId = snapshot.ConnectionId,
+            Model = snapshot.Model,
+            Settings = snapshot.Settings,
+            Tags = snapshot.Tags,
+            // The repository will handle version increment and dates
+        };
+
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
+    }
 }

@@ -90,4 +90,45 @@ internal sealed class AiContextService : IAiContextService
         int version,
         CancellationToken cancellationToken = default)
         => _repository.GetVersionSnapshotAsync(contextId, version, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AiContext> RollbackContextAsync(
+        Guid contextId,
+        int targetVersion,
+        CancellationToken cancellationToken = default)
+    {
+        // Get the current context to ensure it exists
+        var currentContext = await _repository.GetByIdAsync(contextId, cancellationToken);
+        if (currentContext is null)
+        {
+            throw new InvalidOperationException($"Context with ID '{contextId}' not found.");
+        }
+
+        // Get the snapshot at the target version
+        var snapshot = await _repository.GetVersionSnapshotAsync(contextId, targetVersion, cancellationToken);
+        if (snapshot is null)
+        {
+            throw new InvalidOperationException($"Version {targetVersion} not found for context '{contextId}'.");
+        }
+
+        // Create a new version by saving the snapshot data
+        var rolledBackContext = new AiContext
+        {
+            Id = contextId,
+            Alias = snapshot.Alias,
+            Name = snapshot.Name,
+            Resources = snapshot.Resources.Select(r => new AiContextResource
+            {
+                ResourceTypeId = r.ResourceTypeId,
+                Name = r.Name,
+                Description = r.Description,
+                SortOrder = r.SortOrder,
+                Data = r.Data,
+                InjectionMode = r.InjectionMode
+            }).ToList(),
+        };
+
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        return await _repository.SaveAsync(rolledBackContext, userId, cancellationToken);
+    }
 }

@@ -83,4 +83,17 @@ public interface IAiContextService
         Guid contextId,
         int version,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back a context to a previous version.
+    /// </summary>
+    /// <param name="contextId">The context ID.</param>
+    /// <param name="targetVersion">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated context at the new version.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the context or target version is not found.</exception>
+    Task<AiContext> RollbackContextAsync(
+        Guid contextId,
+        int targetVersion,
+        CancellationToken cancellationToken = default);
 }

@@ -118,14 +118,14 @@ public class CompareVersionsProfileController : ProfileControllerBase
             changes.Add(new PropertyChangeModel
             {
                 PropertyName = "ConnectionId",
-                OldValue = from.ConnectionId?.ToString(),
-                NewValue = to.ConnectionId?.ToString()
+                OldValue = from.ConnectionId.ToString(),
+                NewValue = to.ConnectionId.ToString()
             });
         }
 
         // Compare Model
-        var fromModel = from.Model?.ToString() ?? "";
-        var toModel = to.Model?.ToString() ?? "";
+        var fromModel = from.Model.ToString();
+        var toModel = to.Model.ToString();
         if (fromModel != toModel)
         {
             changes.Add(new PropertyChangeModel

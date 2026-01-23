@@ -54,4 +54,10 @@ internal class AiConnectionEntity
     /// The ID of the user who last modified this connection.
     /// </summary>
     public int? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// The current version of the connection.
+    /// Starts at 1 and increments with each save operation.
+    /// </summary>
+    public int Version { get; set; } = 1;
 }

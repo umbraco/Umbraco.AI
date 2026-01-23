@@ -1,9 +1,11 @@
+using Umbraco.Ai.Core.Models;
+
 namespace Umbraco.Ai.Core.Connections;
 
 /// <summary>
 /// Represents a connection to an AI provider with credentials and settings.
 /// </summary>
-public class AiConnection
+public class AiConnection : IAiVersionable
 {
     /// <summary>
     /// Unique identifier for the connection.
@@ -56,4 +58,10 @@ public class AiConnection
     /// The ID of the user who last modified this connection.
     /// </summary>
     public int? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// The current version of the connection.
+    /// Starts at 1 and increments with each save operation.
+    /// </summary>
+    public int Version { get; internal set; } = 1;
 }

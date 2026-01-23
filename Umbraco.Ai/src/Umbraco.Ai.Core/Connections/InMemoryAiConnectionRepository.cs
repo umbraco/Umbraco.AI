@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Connections;
 
@@ -96,5 +97,25 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
     {
         var exists = _connections.ContainsKey(id);
         return Task.FromResult(exists);
+    }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+        Guid connectionId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        // In-memory repository does not track version history
+        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
+    }
+
+    /// <inheritdoc />
+    public Task<AiConnection?> GetVersionSnapshotAsync(
+        Guid connectionId,
+        int version,
+        CancellationToken cancellationToken = default)
+    {
+        // In-memory repository does not track version history
+        return Task.FromResult<AiConnection?>(null);
     }
 }

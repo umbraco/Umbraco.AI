@@ -248,11 +248,12 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetConnectionVersionHistoryAsync(
+    public Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
         Guid connectionId,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
-        => _versionService.GetVersionHistoryAsync(connectionId, "Connection", limit, cancellationToken);
+        => _versionService.GetVersionHistoryAsync(connectionId, "Connection", skip, take, cancellationToken);
 
     /// <inheritdoc />
     public Task<AiConnection?> GetConnectionVersionSnapshotAsync(

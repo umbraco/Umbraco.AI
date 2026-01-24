@@ -198,11 +198,12 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
             changes.Add(new AiPropertyChange($"{prefix}.InjectionMode", from.InjectionMode.ToString(), to.InjectionMode.ToString()));
         }
 
-        // Compare data - just indicate if changed
-        var fromDataHash = from.Data?.GetHashCode().ToString() ?? "null";
-        var toDataHash = to.Data?.GetHashCode().ToString() ?? "null";
-        if (fromDataHash != toDataHash)
+        // Compare data with deep inspection using shared utility
+        var success = AiJsonComparer.CompareObjects(from.Data, to.Data, $"{prefix}.Data", changes);
+
+        if (!success && !Equals(from.Data, to.Data))
         {
+            // Fallback if comparison failed
             changes.Add(new AiPropertyChange($"{prefix}.Data", "(modified)", "(modified)"));
         }
 

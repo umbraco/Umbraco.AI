@@ -25,9 +25,6 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    public override string EntityTypeName => "Prompt";
-
-    /// <inheritdoc />
     protected override string CreateSnapshot(AiPrompt entity)
     {
         var snapshot = new

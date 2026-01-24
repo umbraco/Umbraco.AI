@@ -253,7 +253,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 </div>
                 <div>
                     <uui-tag look="secondary">
-                            v${version.version}
+                        v${version.version}
                     </uui-tag>
                 </div>
                 ${!isCurrent ? html`
@@ -265,7 +265,13 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                             ${this.localize.term("uaiVersionHistory_compare")}
                         </uui-button>
                     </div>
-                `: nothing}
+                `: html`
+                    <div>
+                        <uui-tag look="primary">
+                            Current
+                        </uui-tag>
+                    </div>
+                `}
             </umb-history-item>
         `;
     }

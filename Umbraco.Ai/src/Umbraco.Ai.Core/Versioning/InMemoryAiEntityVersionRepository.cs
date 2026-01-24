@@ -17,20 +17,30 @@ internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionReposi
     public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
     {
         var versions = _versions.Values
             .Where(v => v.EntityId == entityId && v.EntityType == entityType)
             .OrderByDescending(v => v.Version)
+            .Skip(skip)
+            .Take(take)
             .ToList();
 
-        if (limit.HasValue)
-        {
-            versions = versions.Take(limit.Value).ToList();
-        }
-
         return Task.FromResult<IEnumerable<AiEntityVersion>>(versions);
+    }
+
+    /// <inheritdoc />
+    public Task<int> GetVersionCountByEntityAsync(
+        Guid entityId,
+        string entityType,
+        CancellationToken cancellationToken = default)
+    {
+        var count = _versions.Values
+            .Count(v => v.EntityId == entityId && v.EntityType == entityType);
+
+        return Task.FromResult(count);
     }
 
     /// <inheritdoc />

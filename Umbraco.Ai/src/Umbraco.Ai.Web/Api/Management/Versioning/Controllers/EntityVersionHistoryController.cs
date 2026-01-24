@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Web.Api.Management.Common.Models;
 using Umbraco.Cms.Core.Mapping;
@@ -58,31 +59,66 @@ public class EntityVersionHistoryController : VersioningControllerBase
         [FromQuery] int take = 10,
         CancellationToken cancellationToken = default)
     {
-        // Normalize entity type (case-insensitive)
-        var normalizedType = NormalizeEntityType(entityType);
-        if (normalizedType is null)
+        // Get the entity type handler (case-insensitive)
+        var handler = _entityTypes.GetByTypeName(entityType);
+        if (handler is null)
         {
             return UnknownEntityType(entityType);
         }
 
-        var versions = await _versionService.GetVersionHistoryAsync(entityId, normalizedType, cancellationToken: cancellationToken);
-        var versionList = versions.ToList();
+        // Get the current entity to include as the current version
+        var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
+        if (currentEntity is not IAiAuditableEntity auditable)
+        {
+            // Entity not found or doesn't implement IAiAuditableEntity
+            return NotFound(CreateProblemDetails(
+                "Entity not found",
+                $"The {entityType} with ID {entityId} was not found."));
+        }
 
-        // Map to response models
-        var responseVersions = versionList
-            .Skip(skip)
-            .Take(take)
-            .Select(v => _umbracoMapper.Map<EntityVersionResponseModel>(v)!)
-            .ToList();
+        // Create the current version entry from the live entity
+        var currentVersionModel = new EntityVersionResponseModel
+        {
+            Id = auditable.Id,
+            EntityId = entityId,
+            Version = auditable is IAiVersionableEntity versionable ? versionable.Version : 1,
+            DateCreated = auditable.DateModified,
+            CreatedByUserId = auditable.ModifiedByUserId
+        };
 
-        // Get current version from the latest version record or return 1 if no history
-        var currentVersion = versionList.FirstOrDefault()?.Version + 1 ?? 1;
+        // Calculate pagination parameters for historical versions
+        // The current version occupies position 0, so we need to adjust skip/take for historical query
+        var includeCurrentVersion = skip == 0;
+        var historicalSkip = skip > 0 ? skip - 1 : 0;
+        var historicalTake = includeCurrentVersion ? Math.Max(0, take - 1) : take;
+
+        // Get historical versions with pagination from the service
+        var (historicalVersions, historicalTotal) = await _versionService.GetVersionHistoryAsync(
+            entityId,
+            handler.EntityTypeName,
+            historicalSkip,
+            historicalTake,
+            cancellationToken);
+
+        var pagedVersions = new List<EntityVersionResponseModel>();
+
+        // Add current version first if it's in the requested page
+        if (includeCurrentVersion)
+        {
+            pagedVersions.Add(currentVersionModel);
+        }
+
+        // Add historical versions
+        pagedVersions.AddRange(historicalVersions.Select(v => _umbracoMapper.Map<EntityVersionResponseModel>(v)!));
+
+        // Total includes current version + all historical versions
+        var totalVersions = historicalTotal + 1;
 
         return Ok(new EntityVersionHistoryResponseModel
         {
-            CurrentVersion = currentVersion,
-            TotalVersions = versionList.Count,
-            Versions = responseVersions
+            CurrentVersion = currentVersionModel.Version,
+            TotalVersions = totalVersions,
+            Versions = pagedVersions
         });
     }
 

@@ -25,24 +25,40 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
     public async Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
-            var query = db.EntityVersions
+            return await db.EntityVersions
                 .Where(v => v.EntityId == entityId && v.EntityType == entityType)
-                .OrderByDescending(v => v.Version);
-
-            var limitedQuery = limit.HasValue ? query.Take(limit.Value) : query;
-
-            return await limitedQuery.ToListAsync(cancellationToken);
+                .OrderByDescending(v => v.Version)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
         });
 
         scope.Complete();
         return entities.Select(MapToDomain);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> GetVersionCountByEntityAsync(
+        Guid entityId,
+        string entityType,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var count = await scope.ExecuteWithContextAsync(async db =>
+            await db.EntityVersions
+                .CountAsync(v => v.EntityId == entityId && v.EntityType == entityType, cancellationToken));
+
+        scope.Complete();
+        return count;
     }
 
     /// <inheritdoc />

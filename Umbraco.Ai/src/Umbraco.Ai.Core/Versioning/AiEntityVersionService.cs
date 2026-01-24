@@ -29,14 +29,19 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    public async Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
     {
         ValidateEntityType(entityType);
-        return _repository.GetVersionHistoryAsync(entityId, entityType, limit, cancellationToken);
+
+        var items = await _repository.GetVersionHistoryAsync(entityId, entityType, skip, take, cancellationToken);
+        var total = await _repository.GetVersionCountByEntityAsync(entityId, entityType, cancellationToken);
+
+        return (items, total);
     }
 
     /// <inheritdoc />

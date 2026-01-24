@@ -25,9 +25,6 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    public override string EntityTypeName => "Agent";
-
-    /// <inheritdoc />
     protected override string CreateSnapshot(AiAgent entity)
     {
         var snapshot = new

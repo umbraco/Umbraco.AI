@@ -22,18 +22,20 @@ namespace Umbraco.Ai.Core.Versioning;
 public interface IAiEntityVersionService
 {
     /// <summary>
-    /// Gets the version history for an entity.
+    /// Gets the version history for an entity with pagination support.
     /// </summary>
     /// <param name="entityId">The entity ID.</param>
     /// <param name="entityType">The entity type name (e.g., "Connection", "Profile").</param>
-    /// <param name="limit">Optional maximum number of versions to return.</param>
+    /// <param name="skip">Number of versions to skip.</param>
+    /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>The version history ordered by version descending (newest first).</returns>
+    /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
     /// <exception cref="ArgumentException">Thrown if the entity type is not registered.</exception>
-    Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default);
 
     /// <summary>

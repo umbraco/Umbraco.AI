@@ -227,8 +227,8 @@ internal sealed class AiProfileVersionableEntityAdapter : AiVersionableEntityAda
             // Truncate long prompts for readability
             changes.Add(new AiPropertyChange(
                 "Settings.SystemPromptTemplate",
-                TruncateValue(from.SystemPromptTemplate),
-                TruncateValue(to.SystemPromptTemplate)));
+                AiJsonComparer.TruncateValue(from.SystemPromptTemplate),
+                AiJsonComparer.TruncateValue(to.SystemPromptTemplate)));
         }
 
         // Compare ContextIds collection
@@ -288,24 +288,6 @@ internal sealed class AiProfileVersionableEntityAdapter : AiVersionableEntityAda
     {
         // AiEmbeddingProfileSettings is currently empty
         // Add comparisons here when properties are added
-    }
-
-    /// <summary>
-    /// Truncates a value for display in change logs.
-    /// </summary>
-    private static string? TruncateValue(string? value, int maxLength = 100)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        if (value.Length <= maxLength)
-        {
-            return value;
-        }
-
-        return value.Substring(0, maxLength) + "...";
     }
 
     /// <inheritdoc />

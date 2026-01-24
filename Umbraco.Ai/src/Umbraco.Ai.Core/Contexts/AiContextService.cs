@@ -96,11 +96,12 @@ internal sealed class AiContextService : IAiContextService
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetContextVersionHistoryAsync(
+    public Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetContextVersionHistoryAsync(
         Guid contextId,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
-        => _versionService.GetVersionHistoryAsync(contextId, "Context", limit, cancellationToken);
+        => _versionService.GetVersionHistoryAsync(contextId, "Context", skip, take, cancellationToken);
 
     /// <inheritdoc />
     public Task<AiContext?> GetContextVersionSnapshotAsync(

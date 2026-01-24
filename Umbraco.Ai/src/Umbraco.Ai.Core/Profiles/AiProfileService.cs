@@ -115,11 +115,12 @@ internal sealed class AiProfileService : IAiProfileService
         return await _repository.DeleteAsync(id, cancellationToken);
     }
 
-    public Task<IEnumerable<AiEntityVersion>> GetProfileVersionHistoryAsync(
+    public Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetProfileVersionHistoryAsync(
         Guid profileId,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
-        => _versionService.GetVersionHistoryAsync(profileId, "Profile", limit, cancellationToken);
+        => _versionService.GetVersionHistoryAsync(profileId, "Profile", skip, take, cancellationToken);
 
     public Task<AiProfile?> GetProfileVersionSnapshotAsync(
         Guid profileId,

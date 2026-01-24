@@ -94,12 +94,14 @@ public interface IAiConnectionService
     /// Gets the version history for a connection.
     /// </summary>
     /// <param name="connectionId">The connection ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
+    /// <param name="skip">Number of versions to skip.</param>
+    /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetConnectionVersionHistoryAsync(
+    /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
+    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
         Guid connectionId,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default);
 
     /// <summary>

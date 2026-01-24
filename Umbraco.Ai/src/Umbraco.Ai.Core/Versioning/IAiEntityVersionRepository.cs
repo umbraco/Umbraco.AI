@@ -12,17 +12,31 @@ namespace Umbraco.Ai.Core.Versioning;
 internal interface IAiEntityVersionRepository
 {
     /// <summary>
-    /// Gets the version history for an entity.
+    /// Gets the version history for an entity with pagination support.
     /// </summary>
     /// <param name="entityId">The entity ID.</param>
     /// <param name="entityType">The entity type discriminator.</param>
-    /// <param name="limit">Optional maximum number of versions to return.</param>
+    /// <param name="skip">Number of versions to skip.</param>
+    /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The version history ordered by version descending (newest first).</returns>
     Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
-        int? limit = null,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the count of version records for a specific entity.
+    /// </summary>
+    /// <param name="entityId">The entity ID.</param>
+    /// <param name="entityType">The entity type discriminator.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The number of version records for the entity.</returns>
+    Task<int> GetVersionCountByEntityAsync(
+        Guid entityId,
+        string entityType,
         CancellationToken cancellationToken = default);
 
     /// <summary>

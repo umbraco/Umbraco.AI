@@ -153,7 +153,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
 
         if (from.Instructions != to.Instructions)
         {
-            changes.Add(new AiPropertyChange("Instructions", "(modified)", "(modified)"));
+            changes.Add(new AiPropertyChange("Instructions", from.Instructions, to.Instructions));
         }
 
         if (from.ProfileId != to.ProfileId)
@@ -187,12 +187,12 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
             changes.Add(new AiPropertyChange("IncludeEntityContext", from.IncludeEntityContext.ToString(), to.IncludeEntityContext.ToString()));
         }
 
-        // Compare scope - indicate if changed
-        var fromScopeHash = from.Scope?.GetHashCode().ToString() ?? "null";
-        var toScopeHash = to.Scope?.GetHashCode().ToString() ?? "null";
-        if (fromScopeHash != toScopeHash)
+        // Compare scope
+        var fromScopeJson = from.Scope is not null ? SerializeScope(from.Scope) : null;
+        var toScopeJson = to.Scope is not null ? SerializeScope(to.Scope) : null;
+        if (fromScopeJson != toScopeJson)
         {
-            changes.Add(new AiPropertyChange("Scope", "(modified)", "(modified)"));
+            changes.Add(new AiPropertyChange("Scope", fromScopeJson, toScopeJson));
         }
 
         return changes;

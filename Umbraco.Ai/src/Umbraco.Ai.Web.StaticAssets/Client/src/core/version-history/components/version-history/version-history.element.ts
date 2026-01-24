@@ -330,7 +330,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
             .versions-list {
                 display: flex;
                 flex-direction: column;
-                gap: var(--uui-size-space-3);
+                gap: var(--uui-size-space-4);
             }
 
             .version-item {

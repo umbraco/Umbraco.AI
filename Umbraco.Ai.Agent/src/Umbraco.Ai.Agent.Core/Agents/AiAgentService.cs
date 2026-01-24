@@ -6,6 +6,7 @@ using Umbraco.Ai.Agui.Events;
 using Umbraco.Ai.Agui.Models;
 using Umbraco.Ai.Agui.Streaming;
 using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
 
@@ -19,6 +20,7 @@ namespace Umbraco.Ai.Agent.Core.Agents;
 internal sealed class AiAgentService : IAiAgentService
 {
     private readonly IAiAgentRepository _repository;
+    private readonly IAiEntityVersionService _versionService;
     private readonly IAiAgentFactory _agentFactory;
     private readonly IAguiStreamingService _streamingService;
     private readonly IAguiToolConverter _toolConverter;
@@ -29,6 +31,7 @@ internal sealed class AiAgentService : IAiAgentService
 
     public AiAgentService(
         IAiAgentRepository repository,
+        IAiEntityVersionService versionService,
         IAiAgentFactory agentFactory,
         IAguiStreamingService streamingService,
         IAguiToolConverter toolConverter,
@@ -38,6 +41,7 @@ internal sealed class AiAgentService : IAiAgentService
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
+        _versionService = versionService;
         _agentFactory = agentFactory;
         _streamingService = streamingService;
         _toolConverter = toolConverter;
@@ -89,6 +93,14 @@ internal sealed class AiAgentService : IAiAgentService
         }
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
+
+        // Save version snapshot of existing entity before update
+        var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
+        if (existing is not null)
+        {
+            await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
+        }
+
         return await _repository.SaveAsync(agent, userId, cancellationToken);
     }
 

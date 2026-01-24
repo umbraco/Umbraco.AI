@@ -20,9 +20,27 @@ export const manifests: Array<UmbExtensionManifest> = [
         js: () => import("./views/context-details-workspace-view.element.js"),
         weight: 100,
         meta: {
-            label: "Resources",
-            pathname: "resources",
-            icon: "icon-library",
+            label: "Settings",
+            pathname: "settings",
+            icon: "icon-settings",
+        },
+        conditions: [
+            {
+                alias: UMB_WORKSPACE_CONDITION_ALIAS,
+                match: UAI_CONTEXT_WORKSPACE_ALIAS,
+            },
+        ],
+    },
+    {
+        type: "workspaceView",
+        alias: "UmbracoAi.Workspace.Context.View.Info",
+        name: "Context Info Workspace View",
+        js: () => import("./views/context-info-workspace-view.element.js"),
+        weight: 100,
+        meta: {
+            label: "Info",
+            pathname: "info",
+            icon: "icon-info",
         },
         conditions: [
             {

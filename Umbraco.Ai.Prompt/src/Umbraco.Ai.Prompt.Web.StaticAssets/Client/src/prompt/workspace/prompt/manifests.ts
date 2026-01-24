@@ -20,9 +20,27 @@ export const manifests: Array<UmbExtensionManifest> = [
         js: () => import("./views/prompt-details-workspace-view.element.js"),
         weight: 100,
         meta: {
-            label: "Details",
-            pathname: "details",
+            label: "Settings",
+            pathname: "settings",
             icon: "icon-settings",
+        },
+        conditions: [
+            {
+                alias: UMB_WORKSPACE_CONDITION_ALIAS,
+                match: UAI_PROMPT_WORKSPACE_ALIAS,
+            },
+        ],
+    },
+    {
+        type: "workspaceView",
+        alias: "UmbracoAiPrompt.Workspace.Prompt.View.Info",
+        name: "Prompt Info Workspace View",
+        js: () => import("./views/prompt-info-workspace-view.element.js"),
+        weight: 100,
+        meta: {
+            label: "Info",
+            pathname: "info",
+            icon: "icon-info",
         },
         conditions: [
             {

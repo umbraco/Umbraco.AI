@@ -1,8 +1,8 @@
-import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiConnectionDetailModel } from "../../../types.js";
-import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../../../core/index.js";
+import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
 import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
@@ -63,68 +63,12 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
-        return html`
-            <uai-workspace-editor-layout>
-                <div>${this.#renderLeftColumn()}</div>
-                <div slot="aside">${this.#renderRightColumn()}</div>
-            </uai-workspace-editor-layout>
-        `;
-    }
-
-    #renderLeftColumn() {
-        if (!this._model) return null;
-
         return html`<uui-box headline="General">
-                ${this.#renderProviderSettings()}
-            </uui-box>
-            
-            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
-                <uai-version-history
-                    entity-type="connection"
-                    entity-id=${this._model.unique}
-                    .currentVersion=${this._model.version}
-                    @rollback=${() => this.#workspaceContext?.reload()}>
-                </uai-version-history>
-            ` : nothing}
-        `;
-    }
-
-    #renderRightColumn() {
-        if (!this._model) return null;
-
-        return html`
-            <uui-box headline="Info">
-                <umb-property-layout label="Id" orientation="vertical">
-                    <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-                        ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-                        : this._model.unique}</div>
-                </umb-property-layout>
-                ${this._model.dateCreated ? html`
-                    <umb-property-layout label="Date Created" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
-                    </umb-property-layout>
-                ` : ''}
-                ${this._model.dateModified ? html`
-                    <umb-property-layout label="Date Modified" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
-                    </umb-property-layout>
-                ` : ''}
-
-                <umb-property-layout label="Provider" orientation="vertical">
-                    <div slot="editor">${this._provider?.name ?? this._model.providerId}</div>
-                </umb-property-layout>
-
-                <umb-property-layout label="Capabilities" orientation="vertical">
-                    <div slot="editor">
-                        ${this._provider?.capabilities.map(cap => html`<uui-tag color="default" look="outline">${cap}</uui-tag> `)}
-                    </div>
-                </umb-property-layout>
-
-                <umb-property-layout label="Active" orientation="vertical">
-                    <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
-                </umb-property-layout>
-            </uui-box>
-        `;
+            ${this.#renderProviderSettings()}
+            <umb-property-layout label="Active" description="Enable or disable this connection.">
+                <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
+            </umb-property-layout>
+        </uui-box>`;
     }
 
     #renderProviderSettings() {
@@ -149,8 +93,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child),
-            uai-version-history {
+            uui-box:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
             }
 

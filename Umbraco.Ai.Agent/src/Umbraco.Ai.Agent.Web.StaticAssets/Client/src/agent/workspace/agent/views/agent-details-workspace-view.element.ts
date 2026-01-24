@@ -1,8 +1,8 @@
-import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
-import { UaiPartialUpdateCommand, UAI_EMPTY_GUID, formatDateTime } from "@umbraco-ai/core";
+import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
@@ -79,17 +79,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <div class="layout">
-                <div class="main-column">${this.#renderLeftColumn()}</div>
-                <div class="aside-column">${this.#renderRightColumn()}</div>
-            </div>
-        `;
-    }
-
-    #renderLeftColumn() {
-        if (!this._model) return html`<uui-loader></uui-loader>`;
-
-        return html`
             <uui-box headline="General">
                 <umb-property-layout label="AI Profile" description="The AI profile this agent uses for model configuration">
                     <uai-profile-picker
@@ -124,40 +113,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         @change=${this.#onInstructionsChange}
                     ></umb-input-markdown>
                 </umb-property-layout>
-            </uui-box>
 
-            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
-                <uai-version-history
-                    entity-type="agent"
-                    entity-id=${this._model.unique}
-                    .currentVersion=${this._model.version}
-                    @rollback=${() => this.#workspaceContext?.reload()}>
-                </uai-version-history>
-            ` : nothing}
-        `;
-    }
-
-    #renderRightColumn() {
-        if (!this._model) return null;
-
-        return html`
-            <uui-box headline="Info">
-                <umb-property-layout label="Id" orientation="vertical">
-                    <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-                        ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-                        : this._model.unique}</div>
-                </umb-property-layout>
-                ${this._model.dateCreated ? html`
-                    <umb-property-layout label="Date Created" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
-                    </umb-property-layout>
-                ` : ''}
-                ${this._model.dateModified ? html`
-                    <umb-property-layout label="Date Modified" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
-                    </umb-property-layout>
-                ` : ''}
-                <umb-property-layout label="Active" orientation="vertical">
+                <umb-property-layout label="Active" description="Enable or disable this agent">
                     <uui-toggle
                         slot="editor"
                         ?checked=${this._model.isActive}
@@ -176,31 +133,10 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 padding: var(--uui-size-layout-1);
             }
 
-            .layout {
-                display: grid;
-                grid-template-columns: 1fr 350px;
-                gap: var(--uui-size-layout-1);
-            }
-
-            .main-column {
-                min-width: 0;
-            }
-
-            .aside-column {
-                min-width: 0;
-            }
-
-            @media (max-width: 1024px) {
-                .layout {
-                    grid-template-columns: 1fr;
-                }
-            }
-
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child),
-            uai-version-history {
+            uui-box:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
             }
 
@@ -211,10 +147,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             umb-input-markdown {
                 width: 100%;
                 --umb-code-editor-height: 400px;
-            }
-
-            umb-property-layout[orientation="vertical"]:not(:last-child) {
-                padding-bottom: 0;
             }
 
             uui-loader {

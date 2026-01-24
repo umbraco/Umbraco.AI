@@ -1,8 +1,8 @@
-import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiContextDetailModel } from "../../../types.js";
-import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../../../core/index.js";
+import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONTEXT_WORKSPACE_CONTEXT } from "../context-workspace.context-token.js";
 import type { UaiResourceListElement } from "../../../components/resource-list/resource-list.element.js";
 
@@ -44,17 +44,6 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <uai-workspace-editor-layout>
-                <div>${this.#renderLeftColumn()}</div>
-                <div slot="aside">${this.#renderRightColumn()}</div>
-            </uai-workspace-editor-layout>
-        `;
-    }
-
-    #renderLeftColumn() {
-        if (!this._model) return html`<uui-loader></uui-loader>`;
-
-        return html`
             <uui-box headline="General">
                 <umb-property-layout label="Resources" description="Define resources to provide additional context to AI operations.">
                     <div slot="editor">
@@ -65,38 +54,7 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
                     </div>
                 </umb-property-layout>
             </uui-box>
-
-            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
-                <uai-version-history
-                    entity-type="context"
-                    entity-id=${this._model.unique}
-                    .currentVersion=${this._model.version}
-                    @rollback=${() => this.#workspaceContext?.reload()}>
-                </uai-version-history>
-            ` : nothing}
         `;
-    }
-
-    #renderRightColumn() {
-        if (!this._model) return null;
-
-        return html`<uui-box headline="Info">
-            <umb-property-layout label="Id"  orientation="vertical">
-               <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-                ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-                : this._model.unique}</div>
-            </umb-property-layout>
-            ${this._model.dateCreated ? html`
-                <umb-property-layout label="Date Created" orientation="vertical">
-                    <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
-                </umb-property-layout>
-            ` : ''}
-            ${this._model.dateModified ? html`
-                <umb-property-layout label="Date Modified" orientation="vertical">
-                    <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
-                </umb-property-layout>
-            ` : ''}
-        </uui-box>`;
     }
 
     static styles = [
@@ -110,13 +68,8 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child),
-            uai-version-history {
+            uui-box:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
-            }
-
-            umb-property-layout[orientation="vertical"]:not(:last-child) {
-                padding-bottom: 0;
             }
         `,
     ];

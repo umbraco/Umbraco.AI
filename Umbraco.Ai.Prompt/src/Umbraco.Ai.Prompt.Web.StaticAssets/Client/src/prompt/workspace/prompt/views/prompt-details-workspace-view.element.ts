@@ -2,7 +2,7 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
-import { UaiPartialUpdateCommand, UAI_EMPTY_GUID, formatDateTime } from "@umbraco-ai/core";
+import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
 import type { UaiPromptDetailModel } from "../../../types.js";
 import type { UaiPromptScope, UaiScopeRule } from "../../../property-actions/types.js";
@@ -129,17 +129,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
-        return html`
-            <div class="layout">
-                <div class="main-column">${this.#renderLeftColumn()}</div>
-                <div class="aside-column">${this.#renderRightColumn()}</div>
-            </div>
-        `;
-    }
-
-    #renderLeftColumn() {
-        if (!this._model) return html`<uui-loader></uui-loader>`;
-
         const scope = this.#getScope();
 
         return html`
@@ -187,6 +176,14 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         rows="12"
                     ></uui-textarea>
                 </umb-property-layout>
+
+                <umb-property-layout label="Active" description="Enable or disable this prompt">
+                    <uui-toggle
+                        slot="editor"
+                        ?checked=${this._model.isActive}
+                        @change=${this.#onIsActiveChange}
+                    ></uui-toggle>
+                </umb-property-layout>
             </uui-box>
 
             <uui-box headline="Scope">
@@ -222,46 +219,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     </div>
                 </uui-box>
             ` : nothing}
-
-            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
-                <uai-version-history
-                    entity-type="prompt"
-                    entity-id=${this._model.unique}
-                    .currentVersion=${this._model.version}
-                    @rollback=${() => this.#workspaceContext?.reload()}>
-                </uai-version-history>
-            ` : nothing}
-        `;
-    }
-
-    #renderRightColumn() {
-        if (!this._model) return null;
-
-        return html`
-            <uui-box headline="Info">
-                <umb-property-layout label="Id" orientation="vertical">
-                    <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-                        ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-                        : this._model.unique}</div>
-                </umb-property-layout>
-                ${this._model.dateCreated ? html`
-                    <umb-property-layout label="Date Created" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
-                    </umb-property-layout>
-                ` : ''}
-                ${this._model.dateModified ? html`
-                    <umb-property-layout label="Date Modified" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
-                    </umb-property-layout>
-                ` : ''}
-                <umb-property-layout label="Active" orientation="vertical">
-                    <uui-toggle
-                        slot="editor"
-                        ?checked=${this._model.isActive}
-                        @change=${this.#onIsActiveChange}
-                    ></uui-toggle>
-                </umb-property-layout>
-            </uui-box>
         `;
     }
 
@@ -273,36 +230,11 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                 padding: var(--uui-size-layout-1);
             }
 
-            .layout {
-                display: grid;
-                grid-template-columns: 1fr 350px;
-                gap: var(--uui-size-layout-1);
-            }
-
-            .main-column {
-                min-width: 0;
-            }
-
-            .aside-column {
-                min-width: 0;
-            }
-
-            @media (max-width: 1024px) {
-                .layout {
-                    grid-template-columns: 1fr;
-                }
-            }
-
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child),
-            uai-version-history {
+            uui-box:not(:first-child) {
                 margin-top: var(--uui-size-layout-1);
-            }
-
-            .deny-box {
-                --uui-box-header-color: var(--uui-color-danger);
             }
 
             uui-input,
@@ -315,10 +247,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                 flex-wrap: wrap;
                 gap: var(--uui-size-space-2);
                 padding: var(--uui-size-space-3) 0;
-            }
-
-            umb-property-layout[orientation="vertical"]:not(:last-child) {
-                padding-bottom: 0;
             }
 
             uui-loader {

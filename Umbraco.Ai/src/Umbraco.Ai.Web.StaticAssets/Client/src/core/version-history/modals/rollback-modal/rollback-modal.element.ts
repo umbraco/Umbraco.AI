@@ -31,13 +31,6 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
             <umb-body-layout headline=${headline}>
                 <div id="main">
                     <uui-box headline=${this.localize.term("uaiVersionHistory_changes")}>
-                        <div class="description">
-                            <p>
-                                ${this.localize.term("uaiVersionHistory_rollbackDescription", [
-                                    this.data.fromVersion,
-                                ])}
-                            </p>
-                        </div>
                         <uai-version-diff-view
                             .changes=${this.data.changes}>
                         </uai-version-diff-view>
@@ -76,10 +69,6 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-space-5);
-            }
-
-            .description {
-                color: var(--uui-color-text);
             }
 
             .description p {

@@ -150,7 +150,7 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
                 color: var(--uui-color-text-alt);
                 padding: var(--uui-size-space-6) var(--uui-size-space-5);
                 border-radius: var(--uui-border-radius);
-                margin: var(--uui-size-space-5) 0 0;
+                margin: 0;
             }
 
             .no-changes uui-icon {
@@ -161,7 +161,6 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
 
             uui-table {
                 --uui-table-cell-padding: var(--uui-size-space-1) var(--uui-size-space-4);
-                margin-top: var(--uui-size-space-5);
             }
             uui-table-head-cell:first-child {
                 border-top-left-radius: var(--uui-border-radius);

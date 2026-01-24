@@ -61,11 +61,13 @@ export class UaiStatusSelectorElement extends UmbLitElement {
             }
 
             #container {
+                height: 100%;
+                box-sizing: border-box;
                 display: flex;
                 border-radius: var(--uui-border-radius);
                 border: 1px solid var(--uui-color-border);
                 background: var(--uui-color-surface-alt);
-                padding: 3px;
+                padding: 2px;
                 gap: 2px;
             }
 

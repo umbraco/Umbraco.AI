@@ -30,15 +30,14 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
         return html`
             <umb-body-layout headline=${headline}>
                 <div id="main">
-                    <div class="description">
-                        <p>
-                            ${this.localize.term("uaiVersionHistory_rollbackDescription", [
-                                this.data.fromVersion,
-                            ])}
-                        </p>
-                    </div>
-
                     <uui-box headline=${this.localize.term("uaiVersionHistory_changes")}>
+                        <div class="description">
+                            <p>
+                                ${this.localize.term("uaiVersionHistory_rollbackDescription", [
+                                    this.data.fromVersion,
+                                ])}
+                            </p>
+                        </div>
                         <uai-version-diff-view
                             .changes=${this.data.changes}>
                         </uai-version-diff-view>

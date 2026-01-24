@@ -1,4 +1,4 @@
-import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
+import { UMB_WORKSPACE_CONDITION_ALIAS, UmbSubmitWorkspaceAction } from "@umbraco-cms/backoffice/workspace";
 import { UAI_SETTINGS_ROOT_WORKSPACE_ALIAS, UAI_SETTINGS_ICON } from "../../constants.js";
 import { UAI_SETTINGS_ROOT_ENTITY_TYPE } from "../../entity.js";
 
@@ -8,6 +8,7 @@ export const manifests: Array<UmbExtensionManifest> = [
         kind: "default",
         alias: UAI_SETTINGS_ROOT_WORKSPACE_ALIAS,
         name: "Settings Root Workspace",
+        api: () => import("./settings-workspace.context.js"),
         meta: {
             entityType: UAI_SETTINGS_ROOT_ENTITY_TYPE,
             headline: "Settings",
@@ -23,6 +24,24 @@ export const manifests: Array<UmbExtensionManifest> = [
             label: "Settings",
             pathname: "settings",
             icon: UAI_SETTINGS_ICON,
+        },
+        conditions: [
+            {
+                alias: UMB_WORKSPACE_CONDITION_ALIAS,
+                match: UAI_SETTINGS_ROOT_WORKSPACE_ALIAS,
+            },
+        ],
+    },
+    {
+        type: "workspaceAction",
+        kind: "default",
+        alias: "UmbracoAi.WorkspaceAction.Settings.Save",
+        name: "Save Settings",
+        api: UmbSubmitWorkspaceAction,
+        meta: {
+            label: "Save",
+            look: "primary",
+            color: "positive",
         },
         conditions: [
             {

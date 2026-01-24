@@ -328,6 +328,11 @@ export type ProviderResponseModel = {
     settingsSchema?: EditableModelSchemaModel | null;
 };
 
+export type SettingsResponseModel = {
+    defaultChatProfileId?: string | null;
+    defaultEmbeddingProfileId?: string | null;
+};
+
 export type UpdateConnectionRequestModel = {
     alias: string;
     name: string;
@@ -348,6 +353,11 @@ export type UpdateProfileRequestModel = {
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
+};
+
+export type UpdateSettingsRequestModel = {
+    defaultChatProfileId?: string | null;
+    defaultEmbeddingProfileId?: string | null;
 };
 
 export type UsageBreakdownItemModel = {
@@ -1440,6 +1450,52 @@ export type GetProviderByIdResponses = {
 };
 
 export type GetProviderByIdResponse = GetProviderByIdResponses[keyof GetProviderByIdResponses];
+
+export type GetSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/settings';
+};
+
+export type GetSettingsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetSettingsResponses = {
+    /**
+     * OK
+     */
+    200: SettingsResponseModel;
+};
+
+export type GetSettingsResponse = GetSettingsResponses[keyof GetSettingsResponses];
+
+export type UpdateSettingsData = {
+    body?: UpdateSettingsRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/settings';
+};
+
+export type UpdateSettingsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type UpdateSettingsResponses = {
+    /**
+     * OK
+     */
+    200: SettingsResponseModel;
+};
+
+export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
 
 export type GetVersionHistoryData = {
     body?: never;

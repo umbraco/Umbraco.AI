@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompareVersionsData, CompareVersionsErrors, CompareVersionsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetSupportedEntityTypesData, GetSupportedEntityTypesErrors, GetSupportedEntityTypesResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, GetVersionData, GetVersionErrors, GetVersionHistoryData, GetVersionHistoryErrors, GetVersionHistoryResponses, GetVersionResponses, RollbackToVersionData, RollbackToVersionErrors, RollbackToVersionResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses } from './types.gen';
+import type { CleanupAuditLogsData, CleanupAuditLogsErrors, CleanupAuditLogsResponses, CompareVersionsData, CompareVersionsErrors, CompareVersionsResponses, CompleteChatData, CompleteChatErrors, CompleteChatResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateContextData, CreateContextErrors, CreateContextResponses, CreateProfileData, CreateProfileErrors, CreateProfileResponses, DeleteAuditLogData, DeleteAuditLogErrors, DeleteAuditLogResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteContextData, DeleteContextErrors, DeleteContextResponses, DeleteProfileData, DeleteProfileErrors, DeleteProfileResponses, GenerateEmbeddingsData, GenerateEmbeddingsErrors, GenerateEmbeddingsResponses, GetAllCapabilitiesData, GetAllCapabilitiesErrors, GetAllCapabilitiesResponses, GetAllConnectionsData, GetAllConnectionsErrors, GetAllConnectionsResponses, GetAllContextResourceTypesData, GetAllContextResourceTypesErrors, GetAllContextResourceTypesResponses, GetAllContextsData, GetAllContextsErrors, GetAllContextsResponses, GetAllProfilesData, GetAllProfilesErrors, GetAllProfilesResponses, GetAllProvidersData, GetAllProvidersErrors, GetAllProvidersResponses, GetAuditLogByIdentifierData, GetAuditLogByIdentifierErrors, GetAuditLogByIdentifierResponses, GetAuditLogsData, GetAuditLogsErrors, GetAuditLogsResponses, GetCapabilitiesData, GetCapabilitiesErrors, GetCapabilitiesResponses, GetConnectionByIdOrAliasData, GetConnectionByIdOrAliasErrors, GetConnectionByIdOrAliasResponses, GetContextByIdOrAliasData, GetContextByIdOrAliasErrors, GetContextByIdOrAliasResponses, GetContextResourceTypeByIdData, GetContextResourceTypeByIdErrors, GetContextResourceTypeByIdResponses, GetModelsData, GetModelsErrors, GetModelsResponses, GetProfileByIdOrAliasData, GetProfileByIdOrAliasErrors, GetProfileByIdOrAliasResponses, GetProviderByIdData, GetProviderByIdErrors, GetProviderByIdResponses, GetSettingsData, GetSettingsErrors, GetSettingsResponses, GetSupportedEntityTypesData, GetSupportedEntityTypesErrors, GetSupportedEntityTypesResponses, GetUsageBreakdownByModelData, GetUsageBreakdownByModelErrors, GetUsageBreakdownByModelResponses, GetUsageBreakdownByProfileData, GetUsageBreakdownByProfileErrors, GetUsageBreakdownByProfileResponses, GetUsageBreakdownByProviderData, GetUsageBreakdownByProviderErrors, GetUsageBreakdownByProviderResponses, GetUsageBreakdownByUserData, GetUsageBreakdownByUserErrors, GetUsageBreakdownByUserResponses, GetUsageSummaryData, GetUsageSummaryErrors, GetUsageSummaryResponses, GetUsageTimeSeriesData, GetUsageTimeSeriesErrors, GetUsageTimeSeriesResponses, GetVersionData, GetVersionErrors, GetVersionHistoryData, GetVersionHistoryErrors, GetVersionHistoryResponses, GetVersionResponses, RollbackToVersionData, RollbackToVersionErrors, RollbackToVersionResponses, TestConnectionData, TestConnectionErrors, TestConnectionResponses, UpdateConnectionData, UpdateConnectionErrors, UpdateConnectionResponses, UpdateContextData, UpdateContextErrors, UpdateContextResponses, UpdateProfileData, UpdateProfileErrors, UpdateProfileResponses, UpdateSettingsData, UpdateSettingsErrors, UpdateSettingsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -523,53 +523,9 @@ export class ProvidersService {
     }
 }
 
-// NOTE: SettingsService was manually added - regenerate client to update
-// Settings types (manually added - regenerate client to update)
-export type SettingsResponseModel = {
-    defaultChatProfileId?: string | null;
-    defaultEmbeddingProfileId?: string | null;
-};
-
-export type UpdateSettingsRequestModel = {
-    defaultChatProfileId?: string;
-    defaultEmbeddingProfileId?: string;
-};
-
-export type GetSettingsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/settings';
-};
-
-export type GetSettingsResponses = {
-    /**
-     * OK
-     */
-    200: SettingsResponseModel;
-};
-
-export type GetSettingsResponse = GetSettingsResponses[keyof GetSettingsResponses];
-
-export type UpdateSettingsData = {
-    body?: UpdateSettingsRequestModel;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/settings';
-};
-
-export type UpdateSettingsResponses = {
-    /**
-     * OK
-     */
-    200: SettingsResponseModel;
-};
-
-export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
-
 export class SettingsService {
     public static getSettings<ThrowOnError extends boolean = false>(options?: Options<GetSettingsData, ThrowOnError>) {
-        return (options?.client ?? client).get<GetSettingsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<GetSettingsResponses, GetSettingsErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -580,9 +536,9 @@ export class SettingsService {
             ...options
         });
     }
-
+    
     public static updateSettings<ThrowOnError extends boolean = false>(options?: Options<UpdateSettingsData, ThrowOnError>) {
-        return (options?.client ?? client).put<UpdateSettingsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).put<UpdateSettingsResponses, UpdateSettingsErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
@@ -612,7 +568,7 @@ export class VersionsService {
             ...options
         });
     }
-
+    
     public static getVersion<ThrowOnError extends boolean = false>(options: Options<GetVersionData, ThrowOnError>) {
         return (options.client ?? client).get<GetVersionResponses, GetVersionErrors, ThrowOnError>({
             security: [
@@ -625,7 +581,7 @@ export class VersionsService {
             ...options
         });
     }
-
+    
     public static rollbackToVersion<ThrowOnError extends boolean = false>(options: Options<RollbackToVersionData, ThrowOnError>) {
         return (options.client ?? client).post<RollbackToVersionResponses, RollbackToVersionErrors, ThrowOnError>({
             security: [
@@ -638,7 +594,7 @@ export class VersionsService {
             ...options
         });
     }
-
+    
     public static compareVersions<ThrowOnError extends boolean = false>(options: Options<CompareVersionsData, ThrowOnError>) {
         return (options.client ?? client).get<CompareVersionsResponses, CompareVersionsErrors, ThrowOnError>({
             security: [
@@ -651,7 +607,7 @@ export class VersionsService {
             ...options
         });
     }
-
+    
     public static getSupportedEntityTypes<ThrowOnError extends boolean = false>(options?: Options<GetSupportedEntityTypesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetSupportedEntityTypesResponses, GetSupportedEntityTypesErrors, ThrowOnError>({
             security: [

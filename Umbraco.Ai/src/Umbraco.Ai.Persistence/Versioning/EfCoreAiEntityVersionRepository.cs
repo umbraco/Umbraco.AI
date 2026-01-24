@@ -114,6 +114,68 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         scope.Complete();
     }
 
+    /// <inheritdoc />
+    public async Task<int> DeleteVersionsOlderThanAsync(
+        DateTime threshold,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var deleted = await scope.ExecuteWithContextAsync(async db =>
+            await db.EntityVersions
+                .Where(v => v.DateCreated < threshold)
+                .ExecuteDeleteAsync(cancellationToken));
+
+        scope.Complete();
+        return deleted;
+    }
+
+    /// <inheritdoc />
+    public async Task<int> DeleteExcessVersionsAsync(
+        int maxVersionsPerEntity,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var deleted = await scope.ExecuteWithContextAsync(async db =>
+        {
+            // Get IDs of versions to delete using a subquery approach:
+            // For each (EntityId, EntityType) group, find versions that are beyond the max count
+            var versionsToDelete = await db.EntityVersions
+                .GroupBy(v => new { v.EntityId, v.EntityType })
+                .SelectMany(g => g
+                    .OrderByDescending(v => v.Version)
+                    .Skip(maxVersionsPerEntity)
+                    .Select(v => v.Id))
+                .ToListAsync(cancellationToken);
+
+            if (versionsToDelete.Count == 0)
+            {
+                return 0;
+            }
+
+            // Delete the identified versions
+            return await db.EntityVersions
+                .Where(v => versionsToDelete.Contains(v.Id))
+                .ExecuteDeleteAsync(cancellationToken);
+        });
+
+        scope.Complete();
+        return deleted;
+    }
+
+    /// <inheritdoc />
+    public async Task<int> GetVersionCountAsync(CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+
+        var count = await scope.ExecuteWithContextAsync(async db =>
+            await db.EntityVersions.CountAsync(cancellationToken));
+
+        scope.Complete();
+        return count;
+    }
+
     private static AiEntityVersion MapToDomain(AiEntityVersionEntity entity)
     {
         return new AiEntityVersion

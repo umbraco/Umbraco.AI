@@ -97,9 +97,9 @@ public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     public abstract Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default);
 
     /// <inheritdoc />
-    public async Task<object?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken = default)
+    async Task<object?> IAiVersionableEntityAdapter.GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
     {
-        return await GetEntityCoreAsync(entityId, cancellationToken);
+        return await GetEntityAsync(entityId, cancellationToken);
     }
 
     /// <summary>
@@ -108,5 +108,5 @@ public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     /// <param name="entityId">The unique identifier of the entity.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The entity if found; otherwise, null.</returns>
-    protected abstract Task<TEntity?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken);
+    protected abstract Task<TEntity?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken);
 }

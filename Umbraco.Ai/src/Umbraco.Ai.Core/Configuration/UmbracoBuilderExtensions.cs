@@ -133,7 +133,9 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAiProfileService, AiProfileService>();
 
         // Unified versioning service
+        services.Configure<AiVersionCleanupPolicy>(config.GetSection("Umbraco:Ai:VersionCleanupPolicy"));
         services.AddSingleton<IAiEntityVersionService, AiEntityVersionService>();
+        services.AddHostedService<AiVersionCleanupBackgroundJob>();
 
         // Versionable entity adapters for core entities
         builder.AiVersionableEntityAdapters()

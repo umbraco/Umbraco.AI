@@ -212,7 +212,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    protected override Task<AiPrompt?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AiPrompt?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _promptService.GetPromptAsync(entityId, cancellationToken);
 
     private static string SerializeScope(AiPromptScope scope)

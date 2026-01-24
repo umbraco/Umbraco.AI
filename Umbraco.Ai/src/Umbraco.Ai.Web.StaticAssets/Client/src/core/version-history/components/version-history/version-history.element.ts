@@ -15,6 +15,7 @@ import type { UaiVersionHistoryItem } from "../../types.js";
 import { UAI_ROLLBACK_MODAL } from "../../modals/rollback-modal/rollback-modal.token.js";
 import { UaiUnifiedVersionHistoryRepository } from "../../repository/unified-version-history.repository.js";
 import { UmbUserItemModel, UmbUserItemRepository } from "@umbraco-cms/backoffice/user";
+import { formatDateTime } from "../../../utils";
 
 const PAGE_SIZE = 10;
 
@@ -142,17 +143,6 @@ export class UaiVersionHistoryElement extends UmbLitElement {
         return Math.ceil(this._totalVersions / PAGE_SIZE);
     }
 
-    #formatDate(dateString: string): string {
-        const date = new Date(dateString);
-        return date.toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    }
-
     async #onCompareClick(version: number) {
         if (!this.entityType || !this.entityId || !this.#modalManager || this._currentVersion === undefined) return;
 
@@ -258,7 +248,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                     </umb-user-avatar>
                     <div>
                         <span class="name">${user?.name}</span>
-                        <span class="detail">${this.#formatDate(version.dateCreated)}</span>
+                        <span class="detail">${formatDateTime(version.dateCreated)}</span>
                     </div>
                 </div>
                 <div>
@@ -335,7 +325,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
 
             .version-item {
                 display: flex;
-                gap: var(--uui-size-space-4);
+                gap: var(--uui-size-space-5);
                 align-items: center;
             }
             
@@ -349,7 +339,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 position: relative;
                 display: flex;
                 align-items: flex-end;
-                gap: var(--uui-size-space-5);
+                gap: var(--uui-size-space-4);
             }
 
             .user-info div {

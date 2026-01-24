@@ -162,6 +162,6 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    protected override Task<AiAgent?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AiAgent?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _agentService.GetAgentAsync(entityId, cancellationToken);
 }

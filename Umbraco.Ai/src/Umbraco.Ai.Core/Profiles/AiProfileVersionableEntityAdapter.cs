@@ -152,25 +152,160 @@ internal sealed class AiProfileVersionableEntityAdapter : AiVersionableEntityAda
             changes.Add(new AiPropertyChange("Tags", fromTags, toTags));
         }
 
-        // Compare settings - indicate if they changed
-        var fromSettingsType = from.Settings?.GetType().Name ?? "null";
-        var toSettingsType = to.Settings?.GetType().Name ?? "null";
-        if (fromSettingsType != toSettingsType)
-        {
-            changes.Add(new AiPropertyChange("Settings", fromSettingsType, toSettingsType));
-        }
-        else if (from.Settings != null && to.Settings != null)
-        {
-            // Same type, compare hash
-            var fromHash = from.Settings.GetHashCode();
-            var toHash = to.Settings.GetHashCode();
-            if (fromHash != toHash)
-            {
-                changes.Add(new AiPropertyChange("Settings", "(modified)", "(modified)"));
-            }
-        }
+        // Compare settings with deep inspection for known types
+        CompareSettings(from.Settings, to.Settings, changes);
 
         return changes;
+    }
+
+    /// <summary>
+    /// Compares profile settings with deep inspection for known types.
+    /// </summary>
+    private static void CompareSettings(IAiProfileSettings? from, IAiProfileSettings? to, List<AiPropertyChange> changes)
+    {
+        // Handle null cases
+        if (from == null && to == null)
+        {
+            return;
+        }
+
+        if (from == null)
+        {
+            changes.Add(new AiPropertyChange("Settings", null, to!.GetType().Name));
+            return;
+        }
+
+        if (to == null)
+        {
+            changes.Add(new AiPropertyChange("Settings", from.GetType().Name, null));
+            return;
+        }
+
+        // Handle type mismatch
+        if (from.GetType() != to.GetType())
+        {
+            changes.Add(new AiPropertyChange("Settings.Type", from.GetType().Name, to.GetType().Name));
+            return;
+        }
+
+        // Deep compare based on settings type
+        switch (from)
+        {
+            case AiChatProfileSettings chatFrom when to is AiChatProfileSettings chatTo:
+                CompareChatSettings(chatFrom, chatTo, changes);
+                break;
+
+            case AiEmbeddingProfileSettings embeddingFrom when to is AiEmbeddingProfileSettings embeddingTo:
+                CompareEmbeddingSettings(embeddingFrom, embeddingTo, changes);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Compares chat profile settings properties.
+    /// </summary>
+    private static void CompareChatSettings(AiChatProfileSettings from, AiChatProfileSettings to, List<AiPropertyChange> changes)
+    {
+        if (from.Temperature != to.Temperature)
+        {
+            changes.Add(new AiPropertyChange(
+                "Settings.Temperature",
+                from.Temperature?.ToString() ?? "null",
+                to.Temperature?.ToString() ?? "null"));
+        }
+
+        if (from.MaxTokens != to.MaxTokens)
+        {
+            changes.Add(new AiPropertyChange(
+                "Settings.MaxTokens",
+                from.MaxTokens?.ToString() ?? "null",
+                to.MaxTokens?.ToString() ?? "null"));
+        }
+
+        if (from.SystemPromptTemplate != to.SystemPromptTemplate)
+        {
+            // Truncate long prompts for readability
+            changes.Add(new AiPropertyChange(
+                "Settings.SystemPromptTemplate",
+                TruncateValue(from.SystemPromptTemplate),
+                TruncateValue(to.SystemPromptTemplate)));
+        }
+
+        // Compare ContextIds collection
+        CompareContextIds(from.ContextIds, to.ContextIds, changes);
+    }
+
+    /// <summary>
+    /// Compares context ID collections and reports specific changes.
+    /// </summary>
+    private static void CompareContextIds(IReadOnlyList<Guid> from, IReadOnlyList<Guid> to, List<AiPropertyChange> changes)
+    {
+        var fromSet = new HashSet<Guid>(from);
+        var toSet = new HashSet<Guid>(to);
+
+        // Check if collections are equal
+        if (fromSet.SetEquals(toSet) && from.Count == to.Count)
+        {
+            // Collections are identical (same items, same count)
+            // Check if order changed
+            var orderChanged = !from.SequenceEqual(to);
+            if (orderChanged)
+            {
+                changes.Add(new AiPropertyChange(
+                    "Settings.ContextIds",
+                    string.Join(", ", from),
+                    string.Join(", ", to)));
+            }
+
+            return;
+        }
+
+        // Report added and removed items
+        var added = toSet.Except(fromSet).ToList();
+        var removed = fromSet.Except(toSet).ToList();
+
+        if (removed.Count > 0)
+        {
+            changes.Add(new AiPropertyChange(
+                "Settings.ContextIds.Removed",
+                string.Join(", ", removed),
+                null));
+        }
+
+        if (added.Count > 0)
+        {
+            changes.Add(new AiPropertyChange(
+                "Settings.ContextIds.Added",
+                null,
+                string.Join(", ", added)));
+        }
+    }
+
+    /// <summary>
+    /// Compares embedding profile settings properties.
+    /// </summary>
+    private static void CompareEmbeddingSettings(AiEmbeddingProfileSettings from, AiEmbeddingProfileSettings to, List<AiPropertyChange> changes)
+    {
+        // AiEmbeddingProfileSettings is currently empty
+        // Add comparisons here when properties are added
+    }
+
+    /// <summary>
+    /// Truncates a value for display in change logs.
+    /// </summary>
+    private static string? TruncateValue(string? value, int maxLength = 100)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        if (value.Length <= maxLength)
+        {
+            return value;
+        }
+
+        return value.Substring(0, maxLength) + "...";
     }
 
     /// <inheritdoc />
@@ -178,6 +313,6 @@ internal sealed class AiProfileVersionableEntityAdapter : AiVersionableEntityAda
         => _profileService.RollbackProfileAsync(entityId, version, cancellationToken);
 
     /// <inheritdoc />
-    protected override Task<AiProfile?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AiProfile?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _profileService.GetProfileAsync(entityId, cancellationToken);
 }

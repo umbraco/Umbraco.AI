@@ -71,4 +71,31 @@ internal interface IAiEntityVersionRepository
         Guid entityId,
         string entityType,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes all versions older than the specified threshold.
+    /// </summary>
+    /// <param name="threshold">The cutoff date. Versions with DateCreated before this will be deleted.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The number of versions deleted.</returns>
+    Task<int> DeleteVersionsOlderThanAsync(
+        DateTime threshold,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes excess versions per entity, keeping only the most recent N versions.
+    /// </summary>
+    /// <param name="maxVersionsPerEntity">The maximum number of versions to keep per entity.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The number of versions deleted.</returns>
+    Task<int> DeleteExcessVersionsAsync(
+        int maxVersionsPerEntity,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the total count of version records.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The total number of version records.</returns>
+    Task<int> GetVersionCountAsync(CancellationToken cancellationToken = default);
 }

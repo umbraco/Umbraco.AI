@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Models;
 
 namespace Umbraco.Ai.Core.Versioning;
@@ -9,18 +10,22 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
 {
     private readonly IAiEntityVersionRepository _repository;
     private readonly AiVersionableEntityAdapterCollection _entityTypes;
+    private readonly IOptionsMonitor<AiVersionCleanupPolicy> _cleanupPolicy;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AiEntityVersionService"/> class.
     /// </summary>
     /// <param name="repository">The version repository.</param>
     /// <param name="entityTypes">The collection of versionable entity type handlers.</param>
+    /// <param name="cleanupPolicy">The version cleanup policy options.</param>
     public AiEntityVersionService(
         IAiEntityVersionRepository repository,
-        AiVersionableEntityAdapterCollection entityTypes)
+        AiVersionableEntityAdapterCollection entityTypes,
+        IOptionsMonitor<AiVersionCleanupPolicy> cleanupPolicy)
     {
         _repository = repository;
         _entityTypes = entityTypes;
+        _cleanupPolicy = cleanupPolicy;
     }
 
     /// <inheritdoc />
@@ -229,6 +234,59 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     {
         var handler = GetHandler<TEntity>();
         return handler.RestoreFromSnapshot(snapshot) as TEntity;
+    }
+
+    /// <inheritdoc />
+    public async Task<AiVersionCleanupResult> CleanupVersionsAsync(CancellationToken cancellationToken = default)
+    {
+        var policy = _cleanupPolicy.CurrentValue;
+
+        // Check if cleanup is enabled
+        if (!policy.Enabled)
+        {
+            return new AiVersionCleanupResult
+            {
+                WasSkipped = true,
+                SkipReason = "Version cleanup is disabled",
+                RemainingVersions = await _repository.GetVersionCountAsync(cancellationToken)
+            };
+        }
+
+        // Check if any cleanup is configured
+        if (policy is { RetentionDays: <= 0, MaxVersionsPerEntity: <= 0 })
+        {
+            return new AiVersionCleanupResult
+            {
+                WasSkipped = true,
+                SkipReason = "No cleanup policy configured (both RetentionDays and MaxVersionsPerEntity are 0 or less)",
+                RemainingVersions = await _repository.GetVersionCountAsync(cancellationToken)
+            };
+        }
+
+        var deletedByAge = 0;
+        var deletedByCount = 0;
+
+        // Run age-based cleanup first (if configured)
+        if (policy.RetentionDays > 0)
+        {
+            var threshold = DateTime.UtcNow.AddDays(-policy.RetentionDays);
+            deletedByAge = await _repository.DeleteVersionsOlderThanAsync(threshold, cancellationToken);
+        }
+
+        // Run count-based cleanup second (if configured)
+        if (policy.MaxVersionsPerEntity > 0)
+        {
+            deletedByCount = await _repository.DeleteExcessVersionsAsync(policy.MaxVersionsPerEntity, cancellationToken);
+        }
+
+        var remainingCount = await _repository.GetVersionCountAsync(cancellationToken);
+
+        return new AiVersionCleanupResult
+        {
+            DeletedByAge = deletedByAge,
+            DeletedByCount = deletedByCount,
+            RemainingVersions = remainingCount
+        };
     }
 
     private IAiVersionableEntityAdapter GetHandler<TEntity>()

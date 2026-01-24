@@ -133,15 +133,262 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
             changes.Add(new AiPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
-        // Compare settings - just indicate if they changed, don't show actual values (could be sensitive)
-        var fromSettingsHash = from.Settings?.GetHashCode().ToString() ?? "null";
-        var toSettingsHash = to.Settings?.GetHashCode().ToString() ?? "null";
-        if (fromSettingsHash != toSettingsHash)
-        {
-            changes.Add(new AiPropertyChange("Settings", "(modified)", "(modified)"));
-        }
+        // Compare settings with deep inspection
+        CompareSettings(from.Settings, to.Settings, from.ProviderId, changes);
 
         return changes;
+    }
+
+    /// <summary>
+    /// Compares connection settings using JSON serialization for accurate deep comparison.
+    /// </summary>
+    /// <remarks>
+    /// Since connection settings are untyped (object?), we use JSON serialization to compare
+    /// the actual property values. Sensitive values are masked in the change output.
+    /// </remarks>
+    private void CompareSettings(object? from, object? to, string providerId, List<AiPropertyChange> changes)
+    {
+        // Handle null cases
+        if (from == null && to == null)
+        {
+            return;
+        }
+
+        if (from == null)
+        {
+            changes.Add(new AiPropertyChange("Settings", null, "(configured)"));
+            return;
+        }
+
+        if (to == null)
+        {
+            changes.Add(new AiPropertyChange("Settings", "(configured)", null));
+            return;
+        }
+
+        // Get provider schema to identify sensitive fields
+        var schema = GetSchemaForProvider(providerId);
+
+        // Serialize both settings to JSON for comparison
+        // Use non-encrypted serialization for comparison (we don't want to compare encrypted values)
+        string fromJson, toJson;
+        try
+        {
+            fromJson = JsonSerializer.Serialize(from, from.GetType(), Constants.DefaultJsonSerializerOptions);
+            toJson = JsonSerializer.Serialize(to, to.GetType(), Constants.DefaultJsonSerializerOptions);
+        }
+        catch
+        {
+            // Fallback to simple check if serialization fails
+            if (!Equals(from, to))
+            {
+                changes.Add(new AiPropertyChange("Settings", "(modified)", "(modified)"));
+            }
+
+            return;
+        }
+
+        // If JSON is identical, no changes
+        if (fromJson == toJson)
+        {
+            return;
+        }
+
+        // Parse JSON to find specific property changes
+        try
+        {
+            using var fromDoc = JsonDocument.Parse(fromJson);
+            using var toDoc = JsonDocument.Parse(toJson);
+
+            CompareJsonElements(
+                fromDoc.RootElement,
+                toDoc.RootElement,
+                "Settings",
+                schema,
+                changes);
+        }
+        catch
+        {
+            // Fallback: just indicate settings changed
+            changes.Add(new AiPropertyChange("Settings", "(modified)", "(modified)"));
+        }
+    }
+
+    /// <summary>
+    /// Compares two JSON elements and reports property-level changes.
+    /// </summary>
+    private static void CompareJsonElements(
+        JsonElement from,
+        JsonElement to,
+        string path,
+        AiEditableModelSchema? schema,
+        List<AiPropertyChange> changes)
+    {
+        // Handle different value kinds
+        if (from.ValueKind != to.ValueKind)
+        {
+            AddChange(path, from, to, schema, changes);
+            return;
+        }
+
+        switch (from.ValueKind)
+        {
+            case JsonValueKind.Object:
+                CompareJsonObjects(from, to, path, schema, changes);
+                break;
+
+            case JsonValueKind.Array:
+                CompareJsonArrays(from, to, path, schema, changes);
+                break;
+
+            default:
+                // Primitive value comparison
+                if (from.GetRawText() != to.GetRawText())
+                {
+                    AddChange(path, from, to, schema, changes);
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Compares two JSON objects and reports property changes.
+    /// </summary>
+    private static void CompareJsonObjects(
+        JsonElement from,
+        JsonElement to,
+        string path,
+        AiEditableModelSchema? schema,
+        List<AiPropertyChange> changes)
+    {
+        var fromProps = from.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+        var toProps = to.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+
+        // Check for added and modified properties
+        foreach (var (name, toValue) in toProps)
+        {
+            var propPath = $"{path}.{name}";
+
+            if (!fromProps.TryGetValue(name, out var fromValue))
+            {
+                // Property added
+                AddChange(propPath, default, toValue, schema, changes);
+            }
+            else
+            {
+                // Property exists in both - compare recursively
+                CompareJsonElements(fromValue, toValue, propPath, schema, changes);
+            }
+        }
+
+        // Check for removed properties
+        foreach (var (name, fromValue) in fromProps)
+        {
+            if (!toProps.ContainsKey(name))
+            {
+                var propPath = $"{path}.{name}";
+                AddChange(propPath, fromValue, default, schema, changes);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Compares two JSON arrays.
+    /// </summary>
+    private static void CompareJsonArrays(
+        JsonElement from,
+        JsonElement to,
+        string path,
+        AiEditableModelSchema? schema,
+        List<AiPropertyChange> changes)
+    {
+        var fromArray = from.EnumerateArray().ToList();
+        var toArray = to.EnumerateArray().ToList();
+
+        // Simple comparison: report if arrays differ
+        if (fromArray.Count != toArray.Count ||
+            from.GetRawText() != to.GetRawText())
+        {
+            changes.Add(new AiPropertyChange(
+                path,
+                $"[{fromArray.Count} items]",
+                $"[{toArray.Count} items]"));
+        }
+    }
+
+    /// <summary>
+    /// Adds a property change, masking sensitive values.
+    /// </summary>
+    private static void AddChange(
+        string path,
+        JsonElement from,
+        JsonElement to,
+        AiEditableModelSchema? schema,
+        List<AiPropertyChange> changes)
+    {
+        // Extract property name from path for schema lookup
+        var propertyName = path.Split('.').LastOrDefault() ?? path;
+        var isSensitive = schema?.Fields.Any(f =>
+            string.Equals(f.Alias, propertyName, StringComparison.OrdinalIgnoreCase) &&
+            f.IsSensitive) ?? false;
+
+        string? fromValue, toValue;
+
+        if (isSensitive)
+        {
+            // Mask sensitive values but indicate if they changed
+            fromValue = from.ValueKind != JsonValueKind.Undefined && from.ValueKind != JsonValueKind.Null
+                ? "********"
+                : null;
+            toValue = to.ValueKind != JsonValueKind.Undefined && to.ValueKind != JsonValueKind.Null
+                ? "********"
+                : null;
+        }
+        else
+        {
+            fromValue = FormatJsonValue(from);
+            toValue = FormatJsonValue(to);
+        }
+
+        changes.Add(new AiPropertyChange(path, fromValue, toValue));
+    }
+
+    /// <summary>
+    /// Formats a JSON element value for display.
+    /// </summary>
+    private static string? FormatJsonValue(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.Undefined => null,
+            JsonValueKind.Null => null,
+            JsonValueKind.String => TruncateValue(element.GetString()),
+            JsonValueKind.Number => element.GetRawText(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            JsonValueKind.Array => $"[{element.GetArrayLength()} items]",
+            JsonValueKind.Object => "(object)",
+            _ => element.GetRawText()
+        };
+    }
+
+    /// <summary>
+    /// Truncates a value for display in change logs.
+    /// </summary>
+    private static string? TruncateValue(string? value, int maxLength = 100)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        if (value.Length <= maxLength)
+        {
+            return value;
+        }
+
+        return value.Substring(0, maxLength) + "...";
     }
 
     /// <inheritdoc />
@@ -149,7 +396,7 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
         => _connectionService.RollbackConnectionAsync(entityId, version, cancellationToken);
 
     /// <inheritdoc />
-    protected override Task<AiConnection?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AiConnection?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _connectionService.GetConnectionAsync(entityId, cancellationToken);
 
     private AiEditableModelSchema? GetSchemaForProvider(string providerId)

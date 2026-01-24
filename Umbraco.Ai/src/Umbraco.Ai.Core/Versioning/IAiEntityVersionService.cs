@@ -153,4 +153,21 @@ public interface IAiEntityVersionService
     /// <returns>The restored entity, or null if restoration fails.</returns>
     TEntity? RestoreFromSnapshot<TEntity>(string snapshot)
         where TEntity : class, IAiVersionableEntity;
+
+    /// <summary>
+    /// Cleans up old version records based on the configured policy.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The result of the cleanup operation.</returns>
+    /// <remarks>
+    /// <para>
+    /// The cleanup policy is configured via <see cref="AiVersionCleanupPolicy"/>.
+    /// </para>
+    /// <para>
+    /// When both max versions and retention days are set, versions must satisfy
+    /// BOTH conditions to be retained (AND logic). Age-based cleanup runs first,
+    /// followed by count-based cleanup.
+    /// </para>
+    /// </remarks>
+    Task<AiVersionCleanupResult> CleanupVersionsAsync(CancellationToken cancellationToken = default);
 }

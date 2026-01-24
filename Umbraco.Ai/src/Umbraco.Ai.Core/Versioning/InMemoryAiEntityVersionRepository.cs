@@ -89,4 +89,61 @@ internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionReposi
 
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc />
+    public Task<int> DeleteVersionsOlderThanAsync(
+        DateTime threshold,
+        CancellationToken cancellationToken = default)
+    {
+        var keysToRemove = _versions
+            .Where(kvp => kvp.Value.DateCreated < threshold)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in keysToRemove)
+        {
+            _versions.TryRemove(key, out _);
+        }
+
+        return Task.FromResult(keysToRemove.Count);
+    }
+
+    /// <inheritdoc />
+    public Task<int> DeleteExcessVersionsAsync(
+        int maxVersionsPerEntity,
+        CancellationToken cancellationToken = default)
+    {
+        var deletedCount = 0;
+
+        // Group versions by (EntityId, EntityType)
+        var groupedVersions = _versions.Values
+            .GroupBy(v => new { v.EntityId, v.EntityType })
+            .ToList();
+
+        foreach (var group in groupedVersions)
+        {
+            // Get versions to delete (all except the most recent N)
+            var versionsToDelete = group
+                .OrderByDescending(v => v.Version)
+                .Skip(maxVersionsPerEntity)
+                .ToList();
+
+            foreach (var version in versionsToDelete)
+            {
+                var key = GetKey(version.EntityId, version.EntityType, version.Version);
+                if (_versions.TryRemove(key, out _))
+                {
+                    deletedCount++;
+                }
+            }
+        }
+
+        return Task.FromResult(deletedCount);
+    }
+
+    /// <inheritdoc />
+    public Task<int> GetVersionCountAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_versions.Count);
+    }
 }

@@ -1,15 +1,11 @@
 import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
-import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
-import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import type { UaiConnectionDetailModel } from "../../../types.js";
 import { UAI_EMPTY_GUID, UaiPartialUpdateCommand, formatDateTime } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
 import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
-import { ConnectionsService } from "../../../../api/sdk.gen.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
 
 /**
@@ -20,19 +16,12 @@ import type { UaiModelEditorChangeEventDetail } from "../../../../core/component
 export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
     #providerDetailRepository = new UaiProviderDetailRepository(this);
-    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
     @state()
     private _model?: UaiConnectionDetailModel;
 
     @state()
     private _provider?: UaiProviderDetailModel;
-
-    @state()
-    private _testButtonState?: UUIButtonState;
-
-    @state()
-    private _testButtonColor?: "default" | "positive" | "warning" | "danger" = "default"
 
     constructor() {
         super();
@@ -49,9 +38,6 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                     }
                 });
             }
-        });
-        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
-            this.#notificationContext = context;
         });
     }
 
@@ -72,43 +58,6 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ settings: e.detail.model }, "settings")
         );
-    }
-
-    async #onTestConnection() {
-        const unique = this._model?.unique;
-        if (!unique || unique === UAI_EMPTY_GUID) return;
-
-        this._testButtonState = "waiting";
-        this._testButtonColor = "default";
-
-        const { data, error } = await tryExecute(
-            this,
-            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } })
-        );
-
-        if (error || !data?.success) {
-            this._testButtonState = "failed";
-            this._testButtonColor = "danger";
-            this.#notificationContext?.peek("danger", {
-                data: { message: data?.errorMessage ?? this.localize.string("#uaiConnection_testConnectionFailed") },
-            });
-            this.#resetButtonState();
-            return;
-        }
-
-        this._testButtonState = "success";
-        this._testButtonColor = "positive";
-        this.#notificationContext?.peek("positive", {
-            data: { message: this.localize.string("#uaiConnection_testConnectionSuccess") },
-        });
-        this.#resetButtonState();
-    }
-
-    #resetButtonState() {
-        setTimeout(() => {
-            this._testButtonState = undefined;
-            this._testButtonColor = "default";
-        }, 2000);
     }
 
     render() {
@@ -144,20 +93,6 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return null;
 
         return html`
-            <uui-box headline=${this.localize.string("#uaiConnection_actions")}>
-                <div class="action-buttons">
-                    <uui-button
-                        label=${this.localize.string("#uaiConnection_testConnection")}
-                        look="primary"
-                        .color=${this._testButtonColor}
-                        .state=${this._testButtonState}
-                        .disabled=${this._model.unique === UAI_EMPTY_GUID}
-                        @click=${this.#onTestConnection}>
-                        ${this.localize.string("#uaiConnection_testConnection")}
-                    </uui-button>
-                </div>
-            </uui-box>
-
             <uui-box headline="Info">
                 <umb-property-layout label="Id" orientation="vertical">
                     <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
@@ -230,17 +165,6 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-            }
-
-            .action-buttons {
-                display: flex;
-                gap: var(--uui-size-space-5);
-                flex-wrap: wrap;
-                padding: var(--uui-size-space-5) 0;
-            }
-
-            .action-buttons uui-button {
-                flex-grow: 1;
             }
         `,
     ];

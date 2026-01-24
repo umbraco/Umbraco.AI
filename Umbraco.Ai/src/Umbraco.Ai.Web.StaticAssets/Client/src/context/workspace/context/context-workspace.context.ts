@@ -185,10 +185,14 @@ export class UaiContextWorkspaceContext
                     this.#model.setValue(data);
                 }
             } else {
-                const { error } = await this.#repository.save(model);
+                const { data, error } = await this.#repository.save(model);
 
                 if (error) {
                     throw error;
+                }
+
+                if (data) {
+                    this.#model.setValue(data);
                 }
             }
 

@@ -15,6 +15,7 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     isActive: boolean;
     dateCreated: string | null;
     dateModified: string | null;
+    version: number;
 }
 
 /**

@@ -345,6 +345,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 <uai-version-history
                     entity-type="profile"
                     entity-id=${this._model.unique}
+                    .currentVersion=${this._model.version}
                     @rollback=${() => this.#workspaceContext?.reload()}>
                 </uai-version-history>
             ` : nothing}

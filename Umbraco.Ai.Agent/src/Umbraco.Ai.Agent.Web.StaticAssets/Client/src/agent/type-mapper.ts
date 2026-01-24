@@ -17,6 +17,7 @@ export const UaiAgentTypeMapper = {
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
+            version: response.version,
         };
     },
 

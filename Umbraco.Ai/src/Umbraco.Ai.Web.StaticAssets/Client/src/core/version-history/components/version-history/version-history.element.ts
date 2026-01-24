@@ -48,6 +48,13 @@ export class UaiVersionHistoryElement extends UmbLitElement {
     @property({ type: String, attribute: "entity-id" })
     entityId?: string;
 
+    /**
+     * The current version of the entity.
+     * When this changes, the version history is refreshed.
+     */
+    @property({ attribute: false })
+    currentVersion?: number;
+
     @state()
     private _currentVersion?: number;
 
@@ -85,6 +92,10 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 this._currentPage = 1;
                 this.#loadVersionHistory();
             }
+        }
+        // Refresh when currentVersion changes (but not on initial undefined->value)
+        if (changedProperties.has("currentVersion") && changedProperties.get("currentVersion") !== undefined) {
+            this.#loadVersionHistory();
         }
     }
 
@@ -252,9 +263,17 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                     </div>
                 </div>
                 <div>
-                    <uui-tag look="secondary">
-                        v${version.version}
-                    </uui-tag>
+                    ${isCurrent ? html`
+                        <div>
+                            <uui-tag look="primary">
+                                Current
+                            </uui-tag>
+                        </div>
+                    `: html`
+                        <uui-tag look="secondary">
+                                v${version.version}
+                        </uui-tag>
+                    `}
                 </div>
                 ${!isCurrent ? html`
                     <div class="actions">
@@ -265,13 +284,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                             ${this.localize.term("uaiVersionHistory_compare")}
                         </uui-button>
                     </div>
-                `: html`
-                    <div>
-                        <uui-tag look="primary">
-                            Current
-                        </uui-tag>
-                    </div>
-                `}
+                `: nothing }
             </umb-history-item>
         `;
     }

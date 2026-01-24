@@ -60,6 +60,7 @@ export const UaiPromptTypeMapper = {
             includeEntityContext: response.includeEntityContext,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
+            version: response.version,
         };
     },
 

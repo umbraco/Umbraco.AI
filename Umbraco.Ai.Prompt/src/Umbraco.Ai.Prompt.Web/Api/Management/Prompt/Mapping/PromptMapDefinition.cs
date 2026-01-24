@@ -78,7 +78,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Scope = MapScopeModelToDomain(source.Scope);
     }
 
-    // Umbraco.Code.MapAll -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -CreatedByUserId -ModifiedByUserId
     private static void MapToResponse(AiPrompt source, PromptResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -94,6 +94,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Scope = MapScopeDomainToModel(source.Scope);
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
+        target.Version = source.Version;
     }
 
     // Umbraco.Code.MapAll -Version -CreatedByUserId -ModifiedByUserId

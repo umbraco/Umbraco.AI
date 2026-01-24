@@ -27,6 +27,7 @@ export type AgentResponseModel = {
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
+    version: number;
 };
 
 export type AguiContextItemModel = {

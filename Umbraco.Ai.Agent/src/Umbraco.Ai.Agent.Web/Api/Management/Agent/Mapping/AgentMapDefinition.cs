@@ -67,7 +67,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.IsActive = source.IsActive;
     }
 
-    // Umbraco.Code.MapAll -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -CreatedByUserId -ModifiedByUserId
     private static void MapToResponse(AiAgent source, AgentResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -80,6 +80,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
+        target.Version = source.Version;
     }
 
     // Umbraco.Code.MapAll -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId

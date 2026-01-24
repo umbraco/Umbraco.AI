@@ -70,4 +70,9 @@ public class PromptResponseModel
     /// Last modification timestamp.
     /// </summary>
     public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The current version number of the entity.
+    /// </summary>
+    public int Version { get; set; }
 }

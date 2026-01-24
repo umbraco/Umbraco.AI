@@ -70,6 +70,7 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
                 <uai-version-history
                     entity-type="context"
                     entity-id=${this._model.unique}
+                    .currentVersion=${this._model.version}
                     @rollback=${() => this.#workspaceContext?.reload()}>
                 </uai-version-history>
             ` : nothing}

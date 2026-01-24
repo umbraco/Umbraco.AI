@@ -33,6 +33,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
             isActive: true,
             dateCreated: null,
             dateModified: null,
+            version: 0,
             ...preset,
         };
 
@@ -100,7 +101,8 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
             return { error };
         }
 
-        return { data: model };
+        // Re-fetch to get updated version and timestamps
+        return this.read(model.unique);
     }
 
     /**

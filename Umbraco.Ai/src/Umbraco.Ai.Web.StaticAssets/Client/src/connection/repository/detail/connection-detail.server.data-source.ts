@@ -99,7 +99,8 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
             return { error };
         }
 
-        return { data: model };
+        // Re-fetch to get updated version and timestamps
+        return this.read(model.unique);
     }
 
     /**

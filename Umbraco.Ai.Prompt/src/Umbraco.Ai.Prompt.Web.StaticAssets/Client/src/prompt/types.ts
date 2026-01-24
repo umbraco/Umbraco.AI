@@ -19,6 +19,7 @@ export interface UaiPromptDetailModel extends UmbEntityModel {
     includeEntityContext: boolean;
     dateCreated: string | null;
     dateModified: string | null;
+    version: number;
 }
 
 /**

@@ -196,14 +196,6 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
                 padding: var(--uui-size-space-2) var(--uui-size-space-1);
             }
 
-            .diff-container.addition {
-                background: rgba(0, 196, 62, 0.08);
-            }
-
-            .diff-container.deletion {
-                background: rgba(255, 53, 53, 0.08);
-            }
-
             /* Diff value display */
             .diff-value {
                 font-family: var(--uui-font-family);
@@ -229,7 +221,7 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
                 background-color: rgba(0, 196, 62, 0.25);
                 color: var(--uui-color-positive-emphasis);
                 border-radius: 2px;
-                padding: 0 1px;
+                padding: 0 1px; 
             }
 
             .diff-removed {

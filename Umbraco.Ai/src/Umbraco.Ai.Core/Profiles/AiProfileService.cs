@@ -147,6 +147,11 @@ internal sealed class AiProfileService : IAiProfileService
             throw new InvalidOperationException($"Version {targetVersion} not found for profile '{profileId}'.");
         }
 
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
+
+        // Save the current state to version history before rolling back
+        await _versionService.SaveVersionAsync(currentProfile, userId, null, cancellationToken);
+
         // Create a new version by saving the snapshot data
         // We need to preserve the ID and update the dates appropriately
         var rolledBackProfile = new AiProfile
@@ -162,7 +167,6 @@ internal sealed class AiProfileService : IAiProfileService
             // The repository will handle version increment and dates
         };
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
         return await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
     }
 }

@@ -130,6 +130,11 @@ internal sealed class AiContextService : IAiContextService
             throw new InvalidOperationException($"Version {targetVersion} not found for context '{contextId}'.");
         }
 
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
+
+        // Save the current state to version history before rolling back
+        await _versionService.SaveVersionAsync(currentContext, userId, null, cancellationToken);
+
         // Create a new version by saving the snapshot data
         var rolledBackContext = new AiContext
         {
@@ -147,7 +152,6 @@ internal sealed class AiContextService : IAiContextService
             }).ToList(),
         };
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
         return await _repository.SaveAsync(rolledBackContext, userId, cancellationToken);
     }
 }

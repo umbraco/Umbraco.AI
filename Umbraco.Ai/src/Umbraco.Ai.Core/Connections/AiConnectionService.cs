@@ -282,6 +282,11 @@ internal sealed class AiConnectionService : IAiConnectionService
             throw new InvalidOperationException($"Version {targetVersion} not found for connection '{connectionId}'.");
         }
 
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
+
+        // Save the current state to version history before rolling back
+        await _versionService.SaveVersionAsync(currentConnection, userId, null, cancellationToken);
+
         // Create a new version by saving the snapshot data
         // We need to preserve the ID and update the dates appropriately
         var rolledBackConnection = new AiConnection
@@ -295,7 +300,6 @@ internal sealed class AiConnectionService : IAiConnectionService
             // The repository will handle version increment and dates
         };
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
         return await _repository.SaveAsync(rolledBackConnection, userId, cancellationToken);
     }
 }

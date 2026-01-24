@@ -10,7 +10,7 @@ import type { UaiModelEditorChangeEventDetail } from "../../../../core/component
 
 /**
  * Workspace view for Connection details.
- * Displays provider (read-only), settings, and active toggle.
+ * Displays provider settings.
  */
 @customElement("uai-connection-details-workspace-view")
 export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
@@ -46,14 +46,6 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         this._provider = data;
     }
 
-    #onActiveChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: target.checked }, "isActive")
-        );
-    }
-
     #onSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ settings: e.detail.model }, "settings")
@@ -65,9 +57,6 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`<uui-box headline="General">
             ${this.#renderProviderSettings()}
-            <umb-property-layout label="Active" description="Enable or disable this connection.">
-                <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
-            </umb-property-layout>
         </uui-box>`;
     }
 

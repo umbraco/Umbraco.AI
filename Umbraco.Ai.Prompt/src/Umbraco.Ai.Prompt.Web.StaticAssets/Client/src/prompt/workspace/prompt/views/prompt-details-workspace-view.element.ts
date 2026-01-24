@@ -25,7 +25,7 @@ function createDefaultScope(): UaiPromptScope {
 
 /**
  * Workspace view for Prompt details.
- * Displays instructions, description, scope configuration, tags, and status.
+ * Displays instructions, description, scope configuration, and tags.
  */
 @customElement("uai-prompt-details-workspace-view")
 export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
@@ -63,14 +63,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         const value = (event.target as HTMLTextAreaElement).value;
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiPromptDetailModel>({ instructions: value }, "instructions")
-        );
-    }
-
-    #onIsActiveChange(event: Event) {
-        event.stopPropagation();
-        const checked = (event.target as HTMLInputElement).checked;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ isActive: checked }, "isActive")
         );
     }
 
@@ -168,21 +160,11 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
 
                 <umb-property-layout label="Instructions" description="The prompt instructions template">
-                    <uui-textarea
+                    <umb-input-markdown
                         slot="editor"
-                        .value=${this._model.instructions}
-                        @input=${this.#onInstructionsChange}
-                        placeholder="Enter prompt instructions..."
-                        rows="12"
-                    ></uui-textarea>
-                </umb-property-layout>
-
-                <umb-property-layout label="Active" description="Enable or disable this prompt">
-                    <uui-toggle
-                        slot="editor"
-                        ?checked=${this._model.isActive}
-                        @change=${this.#onIsActiveChange}
-                    ></uui-toggle>
+                        .value=${this._model.instructions ?? ""}
+                        @change=${this.#onInstructionsChange}
+                    ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
 

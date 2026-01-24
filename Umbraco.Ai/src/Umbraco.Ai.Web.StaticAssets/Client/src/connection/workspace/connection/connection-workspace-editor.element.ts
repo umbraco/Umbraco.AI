@@ -12,6 +12,7 @@ import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial
 import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../connection-root/paths.js";
 import { UAI_EMPTY_GUID } from "../../../core/index.js";
 import { ConnectionsService } from "../../../api/sdk.gen.js";
+import "../../../core/components/status-selector/status-selector.element.js";
 
 @customElement("uai-connection-workspace-editor")
 export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
@@ -94,6 +95,12 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
             .replace(/^-|-$/g, "");
     }
 
+    #onActiveChange(e: CustomEvent<{ value: boolean }>) {
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: e.detail.value }, "isActive")
+        );
+    }
+
     async #onTestConnection() {
         const unique = this._model?.unique;
         if (!unique || unique === UAI_EMPTY_GUID) return;
@@ -165,6 +172,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                             @lock-change=${this.#onToggleAliasLock}
                         ></uui-input-lock>
                     </uui-input>
+
+                    <uai-status-selector
+                        .value=${this._model.isActive}
+                        @change=${this.#onActiveChange}
+                    ></uai-status-selector>
                 </div>
 
                 ${when(
@@ -207,7 +219,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
             #header {
                 display: flex;
                 flex: 1 1 auto;
-                gap: var(--uui-size-space-2);
+                gap: var(--uui-size-space-3);
             }
 
             #name {

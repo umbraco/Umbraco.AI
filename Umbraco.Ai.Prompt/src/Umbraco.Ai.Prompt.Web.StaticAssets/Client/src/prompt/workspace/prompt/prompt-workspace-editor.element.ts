@@ -78,6 +78,12 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
             .replace(/^-|-$/g, "");
     }
 
+    #onActiveChange(e: CustomEvent<{ value: boolean }>) {
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ isActive: e.detail.value }, "isActive")
+        );
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -111,6 +117,11 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
                             @lock-change=${this.#onToggleAliasLock}
                         ></uui-input-lock>
                     </uui-input>
+
+                    <uai-status-selector
+                        .value=${this._model.isActive}
+                        @change=${this.#onActiveChange}
+                    ></uai-status-selector>
                 </div>
 
                 ${when(
@@ -138,7 +149,7 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
             #header {
                 display: flex;
                 flex: 1 1 auto;
-                gap: var(--uui-size-space-2);
+                gap: var(--uui-size-space-3);
             }
 
             #name {

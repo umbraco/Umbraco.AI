@@ -10,7 +10,7 @@ import "@umbraco-cms/backoffice/markdown-editor";
 
 /**
  * Workspace view for Agent details.
- * Displays system prompt, description, profile, and status.
+ * Displays system prompt, description, profile, and contexts.
  */
 @customElement("uai-agent-details-workspace-view")
 export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
@@ -44,14 +44,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const value = (event.target as HTMLInputElement).value;
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ instructions: value || null }, "instructions")
-        );
-    }
-
-    #onIsActiveChange(event: Event) {
-        event.stopPropagation();
-        const checked = (event.target as HTMLInputElement).checked;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ isActive: checked }, "isActive")
         );
     }
 
@@ -112,14 +104,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this._model.instructions ?? ""}
                         @change=${this.#onInstructionsChange}
                     ></umb-input-markdown>
-                </umb-property-layout>
-
-                <umb-property-layout label="Active" description="Enable or disable this agent">
-                    <uui-toggle
-                        slot="editor"
-                        ?checked=${this._model.isActive}
-                        @change=${this.#onIsActiveChange}
-                    ></uui-toggle>
                 </umb-property-layout>
             </uui-box>
         `;

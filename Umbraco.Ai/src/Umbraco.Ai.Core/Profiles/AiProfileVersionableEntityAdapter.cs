@@ -176,4 +176,8 @@ internal sealed class AiProfileVersionableEntityAdapter : AiVersionableEntityAda
     /// <inheritdoc />
     public override Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
         => _profileService.RollbackProfileAsync(entityId, version, cancellationToken);
+
+    /// <inheritdoc />
+    protected override Task<AiProfile?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+        => _profileService.GetProfileAsync(entityId, cancellationToken);
 }

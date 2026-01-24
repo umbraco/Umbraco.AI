@@ -148,6 +148,10 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
     public override Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
         => _connectionService.RollbackConnectionAsync(entityId, version, cancellationToken);
 
+    /// <inheritdoc />
+    protected override Task<AiConnection?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+        => _connectionService.GetConnectionAsync(entityId, cancellationToken);
+
     private AiEditableModelSchema? GetSchemaForProvider(string providerId)
     {
         var provider = _providers.GetById(providerId);

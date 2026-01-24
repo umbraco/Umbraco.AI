@@ -211,6 +211,10 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
         await _promptService.SavePromptAsync(snapshot, cancellationToken);
     }
 
+    /// <inheritdoc />
+    protected override Task<AiPrompt?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+        => _promptService.GetPromptAsync(entityId, cancellationToken);
+
     private static string SerializeScope(AiPromptScope scope)
     {
         return JsonSerializer.Serialize(scope, CoreConstants.DefaultJsonSerializerOptions);

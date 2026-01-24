@@ -35,14 +35,55 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     }
 
     /// <inheritdoc />
-    public Task<AiEntityVersion?> GetVersionAsync(
+    public async Task<AiEntityVersion?> GetVersionAsync(
         Guid entityId,
         string entityType,
         int version,
         CancellationToken cancellationToken = default)
     {
-        ValidateEntityType(entityType);
-        return _repository.GetVersionAsync(entityId, entityType, version, cancellationToken);
+        var handler = _entityTypes.GetByTypeName(entityType);
+        if (handler is null)
+        {
+            throw new ArgumentException($"Unknown entity type: {entityType}", nameof(entityType));
+        }
+
+        // First try to get from repository (historical versions)
+        var versionRecord = await _repository.GetVersionAsync(entityId, entityType, version, cancellationToken);
+        if (versionRecord is not null)
+        {
+            return versionRecord;
+        }
+
+        // If not found in repository, check if it's the current version
+        var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
+        if (currentEntity is IAiVersionableEntity versionable && versionable.Version == version)
+        {
+            // Return a synthetic version record for the current state
+            return new AiEntityVersion
+            {
+                Id = Guid.Empty, // Synthetic - no DB record exists
+                EntityId = entityId,
+                EntityType = entityType,
+                Version = version,
+                Snapshot = handler.CreateSnapshot(currentEntity),
+                DateCreated = GetDateModified(currentEntity) ?? DateTime.UtcNow,
+                CreatedByUserId = GetModifiedByUserId(currentEntity)
+            };
+        }
+
+        return null;
+    }
+
+    private static DateTime? GetDateModified(object entity)
+    {
+        var property = entity.GetType().GetProperty("DateModified");
+        return property?.GetValue(entity) as DateTime?;
+    }
+
+    private static Guid? GetModifiedByUserId(object entity)
+    {
+        var property = entity.GetType().GetProperty("ModifiedByUserId");
+        return property?.GetValue(entity) as Guid?;
     }
 
     /// <inheritdoc />
@@ -53,14 +94,22 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
         where TEntity : class, IAiVersionableEntity
     {
         var handler = GetHandler<TEntity>();
-        var versionRecord = await _repository.GetVersionAsync(entityId, handler.EntityTypeName, version, cancellationToken);
 
-        if (versionRecord is null)
+        // First try to get from repository (historical versions)
+        var versionRecord = await _repository.GetVersionAsync(entityId, handler.EntityTypeName, version, cancellationToken);
+        if (versionRecord is not null)
         {
-            return null;
+            return handler.RestoreFromSnapshot(versionRecord.Snapshot) as TEntity;
         }
 
-        return handler.RestoreFromSnapshot(versionRecord.Snapshot) as TEntity;
+        // If not found in repository, check if it's the current version
+        var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
+        if (currentEntity is TEntity typedEntity && typedEntity.Version == version)
+        {
+            return typedEntity;
+        }
+
+        return null;
     }
 
     /// <inheritdoc />
@@ -128,16 +177,33 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
             throw new ArgumentException($"Unknown entity type: {entityType}", nameof(entityType));
         }
 
-        var fromVersionRecord = await _repository.GetVersionAsync(entityId, entityType, fromVersion, cancellationToken);
-        var toVersionRecord = await _repository.GetVersionAsync(entityId, entityType, toVersion, cancellationToken);
+        // Get the current entity to check its version
+        var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
+        var currentVersion = (currentEntity as IAiVersionableEntity)?.Version ?? 0;
 
-        if (fromVersionRecord is null || toVersionRecord is null)
+        // Resolve "from" version - use current entity if it matches the requested version
+        object? fromEntity;
+        if (fromVersion == currentVersion && currentEntity is not null)
         {
-            return null;
+            fromEntity = currentEntity;
+        }
+        else
+        {
+            var fromVersionRecord = await _repository.GetVersionAsync(entityId, entityType, fromVersion, cancellationToken);
+            fromEntity = fromVersionRecord is null ? null : handler.RestoreFromSnapshot(fromVersionRecord.Snapshot);
         }
 
-        var fromEntity = handler.RestoreFromSnapshot(fromVersionRecord.Snapshot);
-        var toEntity = handler.RestoreFromSnapshot(toVersionRecord.Snapshot);
+        // Resolve "to" version - use current entity if it matches the requested version
+        object? toEntity;
+        if (toVersion == currentVersion && currentEntity is not null)
+        {
+            toEntity = currentEntity;
+        }
+        else
+        {
+            var toVersionRecord = await _repository.GetVersionAsync(entityId, entityType, toVersion, cancellationToken);
+            toEntity = toVersionRecord is null ? null : handler.RestoreFromSnapshot(toVersionRecord.Snapshot);
+        }
 
         if (fromEntity is null || toEntity is null)
         {

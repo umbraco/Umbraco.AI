@@ -212,4 +212,8 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
     /// <inheritdoc />
     public override Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
         => _contextService.RollbackContextAsync(entityId, version, cancellationToken);
+
+    /// <inheritdoc />
+    protected override Task<AiContext?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+        => _contextService.GetContextAsync(entityId, cancellationToken);
 }

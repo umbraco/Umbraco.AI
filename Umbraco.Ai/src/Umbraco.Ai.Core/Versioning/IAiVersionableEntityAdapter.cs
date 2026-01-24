@@ -72,4 +72,16 @@ public interface IAiVersionableEntityAdapter
     /// The implementation should delegate to the entity's service for proper save logic.
     /// </remarks>
     Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the current state of an entity from the main entity table.
+    /// </summary>
+    /// <param name="entityId">The unique identifier of the entity.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The entity if found; otherwise, null.</returns>
+    /// <remarks>
+    /// This method retrieves the live entity state, which represents the current version
+    /// that may not yet have a snapshot in the version history table.
+    /// </remarks>
+    Task<object?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken = default);
 }

@@ -160,4 +160,8 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
         // Save the snapshot as the current version (this will create a new version)
         await _agentService.SaveAgentAsync(snapshot, cancellationToken);
     }
+
+    /// <inheritdoc />
+    protected override Task<AiAgent?> GetEntityCoreAsync(Guid entityId, CancellationToken cancellationToken)
+        => _agentService.GetAgentAsync(entityId, cancellationToken);
 }

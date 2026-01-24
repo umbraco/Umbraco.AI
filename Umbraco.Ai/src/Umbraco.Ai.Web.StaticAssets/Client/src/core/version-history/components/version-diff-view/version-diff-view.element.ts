@@ -4,11 +4,12 @@ import {
     html,
     property,
     repeat,
-    when,
+    type TemplateResult,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiVersionPropertyChange } from "../../types.js";
+import { diffWords, type Change } from "diff";
 
 /**
  * A component that displays property changes between two versions
@@ -28,19 +29,28 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
         if (this.changes.length === 0) {
             return html`
                 <p class="no-changes">
+                    <uui-icon name="info"></uui-icon>
                     ${this.localize.term("uaiVersionHistory_noChanges")}
                 </p>
             `;
         }
 
         return html`
-            <div class="diff-container">
+            <uui-table>
+                <uui-table-column style="width: 0"></uui-table-column>
+                <uui-table-column></uui-table-column>
+                
+                <uui-table-head>
+                    <uui-table-head-cell>${this.localize.term('general_alias')}</uui-table-head-cell>
+                    <uui-table-head-cell>${this.localize.term('general_value')}</uui-table-head-cell>
+                </uui-table-head>
+                
                 ${repeat(
-                    this.changes,
-                    (change) => change.propertyName,
-                    (change) => this.#renderChange(change)
+                        this.changes,
+                        (change) => change.propertyName,
+                        (change) => this.#renderChange(change)
                 )}
-            </div>
+            </uui-table>
         `;
     }
 
@@ -49,51 +59,79 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
         const isDeletion = change.oldValue && !change.newValue;
 
         return html`
-            <div class="change-item">
-                <div class="property-name">${change.propertyName}</div>
-                <div class="values">
-                    ${when(
-                        change.oldValue,
-                        () => html`
-                            <div class="value old-value ${isDeletion ? 'deletion' : ''}">
-                                <span class="value-label">${this.localize.term("uaiVersionHistory_oldValue")}:</span>
-                                ${this.#renderValue(change.oldValue)}
-                            </div>
-                        `
-                    )}
-                    ${when(
-                        change.newValue,
-                        () => html`
-                            <div class="value new-value ${isAddition ? 'addition' : ''}">
-                                <span class="value-label">${this.localize.term("uaiVersionHistory_newValue")}:</span>
-                                ${this.#renderValue(change.newValue)}
-                            </div>
-                        `
-                    )}
-                </div>
-            </div>
+            <uui-table-row>
+                <uui-table-cell>${change.propertyName}</uui-table-cell>
+                <uui-table-cell>
+                    <div class="diff-container ${isAddition ? 'addition' : ''} ${isDeletion ? 'deletion' : ''}">
+                        ${this.#renderInlineDiff(change.oldValue, change.newValue)}
+                    </div>
+                </uui-table-cell>
+            </uui-table-row>
         `;
     }
 
-    #renderValue(value?: string | null) {
-        if (!value) return html`<span class="empty-value">-</span>`;
+    #renderInlineDiff(oldValue?: string | null, newValue?: string | null): TemplateResult {
+        // Handle pure addition (no old value)
+        if (!oldValue && newValue) {
+            return this.#renderFormattedValue(newValue, "added");
+        }
 
-        // Check if it looks like JSON
+        // Handle pure deletion (no new value)
+        if (oldValue && !newValue) {
+            return this.#renderFormattedValue(oldValue, "removed");
+        }
+
+        // Both values exist - compute diff
+        if (oldValue && newValue) {
+            // Format JSON for better diffing
+            const formattedOld = this.#formatForDiff(oldValue);
+            const formattedNew = this.#formatForDiff(newValue);
+
+            const changes = diffWords(formattedOld, formattedNew);
+            const isMultiline = formattedOld.includes("\n") || formattedNew.includes("\n");
+
+            return html`
+                <pre class="diff-value ${isMultiline ? 'multiline' : ''}">${changes.map(
+                    (part) => this.#renderDiffPart(part)
+                )}</pre>
+            `;
+        }
+
+        return html`<span class="empty-value">-</span>`;
+    }
+
+    #formatForDiff(value: string): string {
+        // Try to format JSON for cleaner diffs
         if (value.startsWith("{") || value.startsWith("[")) {
             try {
-                const formatted = JSON.stringify(JSON.parse(value), null, 2);
-                return html`<pre class="json-value">${formatted}</pre>`;
+                return JSON.stringify(JSON.parse(value), null, 2);
             } catch {
-                // Not valid JSON, render as-is
+                // Not valid JSON, return as-is
             }
         }
+        return value;
+    }
 
-        // For long text, use pre to preserve formatting
-        if (value.length > 100 || value.includes("\n")) {
-            return html`<pre class="text-value">${value}</pre>`;
+    #renderDiffPart(part: Change): TemplateResult {
+        if (part.added) {
+            return html`<span class="diff-added">${part.value}</span>`;
+        }
+        if (part.removed) {
+            return html`<span class="diff-removed">${part.value}</span>`;
+        }
+        return html`<span class="diff-unchanged">${part.value}</span>`;
+    }
+
+    #renderFormattedValue(value: string, type: "added" | "removed"): TemplateResult {
+        const cssClass = type === "added" ? "diff-added" : "diff-removed";
+        const formatted = this.#formatForDiff(value);
+        const isMultiline = formatted.includes("\n") || formatted.length > 100;
+
+        if (isMultiline) {
+            return html`<pre class="diff-value multiline"><span class="${cssClass}">${formatted}</span></pre>`;
         }
 
-        return html`<span class="text-value">${value}</span>`;
+        return html`<span class="diff-value ${cssClass}">${formatted}</span>`;
     }
 
     static override styles = [
@@ -104,96 +142,106 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
             }
 
             .no-changes {
-                text-align: center;
-                color: var(--uui-color-text-alt);
-                padding: var(--uui-size-space-5);
-                margin: 0;
-            }
-
-            .diff-container {
                 display: flex;
                 flex-direction: column;
-                gap: var(--uui-size-space-4);
-            }
-
-            .change-item {
+                align-items: center;
+                text-align: center;
                 border: 1px solid var(--uui-color-border);
+                color: var(--uui-color-text-alt);
+                padding: var(--uui-size-space-6) var(--uui-size-space-5);
                 border-radius: var(--uui-border-radius);
-                overflow: hidden;
+                margin: var(--uui-size-space-5) 0 0;
             }
 
-            .property-name {
-                background: var(--uui-color-surface-alt);
-                padding: var(--uui-size-space-3) var(--uui-size-space-4);
-                font-weight: 600;
+            .no-changes uui-icon {
+                color: var(--uui-color-text-alt);
+                font-size: var(--uui-size-10);
+                margin-bottom: var(--uui-size-space-3);
+            }
+
+            uui-table {
+                --uui-table-cell-padding: var(--uui-size-space-1) var(--uui-size-space-4);
+                margin-top: var(--uui-size-space-5);
+            }
+            uui-table-head-cell:first-child {
+                border-top-left-radius: var(--uui-border-radius);
+            }
+            uui-table-head-cell:last-child {
+                border-top-right-radius: var(--uui-border-radius);
+            }
+            uui-table-head-cell {
+                background-color: var(--uui-color-surface-alt);
+            }
+            uui-table-head-cell:last-child,
+            uui-table-cell:last-child {
+                border-right: 1px solid var(--uui-color-border);
+            }
+            uui-table-head-cell,
+            uui-table-cell {
+                border-top: 1px solid var(--uui-color-border);
+                border-left: 1px solid var(--uui-color-border);
+            }
+            uui-table-row:last-child uui-table-cell {
                 border-bottom: 1px solid var(--uui-color-border);
             }
-
-            .values {
-                display: flex;
-                flex-direction: column;
+            uui-table-row:last-child uui-table-cell:last-child {
+                border-bottom-right-radius: var(--uui-border-radius);
+            }
+            uui-table-row:last-child uui-table-cell:first-child {
+                border-bottom-left-radius: var(--uui-border-radius);
             }
 
-            .value {
-                padding: var(--uui-size-space-3) var(--uui-size-space-4);
+            /* Diff container */
+            .diff-container {
+                padding: var(--uui-size-space-2) var(--uui-size-space-1);
             }
 
-            .value + .value {
-                border-top: 1px solid var(--uui-color-border);
+            .diff-container.addition {
+                background: rgba(0, 196, 62, 0.08);
             }
 
-            .value-label {
-                font-size: 0.85em;
-                color: var(--uui-color-text-alt);
-                display: block;
-                margin-bottom: var(--uui-size-space-2);
+            .diff-container.deletion {
+                background: rgba(255, 53, 53, 0.08);
             }
 
-            .old-value {
-                background: rgba(255, 53, 53, 0.1);
-            }
-
-            .old-value.deletion {
-                background: rgba(255, 53, 53, 0.2);
-            }
-
-            .old-value .text-value,
-            .old-value .json-value {
-                text-decoration: line-through;
-                color: var(--uui-color-danger);
-            }
-
-            .new-value {
-                background: rgba(0, 196, 62, 0.1);
-            }
-
-            .new-value.addition {
-                background: rgba(0, 196, 62, 0.2);
-            }
-
-            .new-value .text-value,
-            .new-value .json-value {
-                color: var(--uui-color-positive);
-            }
-
-            .text-value {
+            /* Diff value display */
+            .diff-value {
+                font-family: var(--uui-font-family);
+                font-size: var(--uui-type-default-size);
+                line-height: 1.5;
                 word-break: break-word;
+                white-space: pre-wrap;
+                margin: 0;
             }
 
-            .json-value {
-                margin: 0;
+            .diff-value.multiline {
                 font-family: monospace;
                 font-size: 0.9em;
-                white-space: pre-wrap;
-                word-break: break-word;
-            }
-
-            pre {
                 background: var(--uui-color-surface-alt);
                 padding: var(--uui-size-space-2);
                 border-radius: var(--uui-border-radius);
-                max-height: 200px;
+                max-height: 300px;
                 overflow: auto;
+            }
+
+            /* Inline diff highlighting */
+            .diff-added {
+                background-color: rgba(0, 196, 62, 0.25);
+                color: var(--uui-color-positive-emphasis);
+                border-radius: 2px;
+                padding: 0 1px;
+            }
+
+            .diff-removed {
+                background-color: rgba(255, 53, 53, 0.25);
+                color: var(--uui-color-danger-emphasis);
+                text-decoration: line-through;
+                border-radius: 2px;
+                padding: 0 1px;
+            }
+
+            .diff-unchanged {
+                color: var(--uui-color-text);
             }
 
             .empty-value {

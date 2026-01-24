@@ -45,7 +45,7 @@ internal static class AiSettingsFactory
     public static IEnumerable<AiSettingsEntity> BuildEntities(
         AiSettings settings,
         IEnumerable<AiSettingsEntity> existingEntities,
-        int? userId)
+        Guid? userId)
     {
         var existing = existingEntities.ToDictionary(e => e.Key, e => e);
         var now = DateTime.UtcNow;
@@ -70,7 +70,7 @@ internal static class AiSettingsFactory
         string? value,
         Dictionary<string, AiSettingsEntity> existing,
         DateTime now,
-        int? userId)
+        Guid? userId)
     {
         if (existing.TryGetValue(key, out var entity))
         {

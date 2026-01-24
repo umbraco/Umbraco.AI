@@ -31,12 +31,12 @@ internal class AiSettingsEntity
     public DateTime DateModified { get; set; }
 
     /// <summary>
-    /// The user who created this setting.
+    /// The key (GUID) of the user who created this setting.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// The user who last modified this setting.
+    /// The key (GUID) of the user who last modified this setting.
     /// </summary>
-    public int? ModifiedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
 }

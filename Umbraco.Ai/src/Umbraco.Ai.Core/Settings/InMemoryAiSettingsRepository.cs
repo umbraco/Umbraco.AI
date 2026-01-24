@@ -14,7 +14,7 @@ internal sealed class InMemoryAiSettingsRepository : IAiSettingsRepository
     /// <inheritdoc />
     public Task<AiSettings> SaveAsync(
         AiSettings settings,
-        int? userId = null,
+        Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
         _settings = settings;

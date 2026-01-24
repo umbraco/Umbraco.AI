@@ -640,6 +640,9 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
 
@@ -649,6 +652,9 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ModifiedByUserId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")

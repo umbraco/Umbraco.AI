@@ -27,7 +27,7 @@ internal sealed class AiSettingsService : IAiSettingsService
         AiSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
         return await _repository.SaveAsync(settings, userId, cancellationToken);
     }
 }

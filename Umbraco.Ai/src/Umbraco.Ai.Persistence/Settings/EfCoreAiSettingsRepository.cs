@@ -31,7 +31,7 @@ internal sealed class EfCoreAiSettingsRepository : IAiSettingsRepository
     /// <inheritdoc />
     public async Task<AiSettings> SaveAsync(
         AiSettings settings,
-        int? userId = null,
+        Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();

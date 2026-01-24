@@ -13,5 +13,5 @@ internal interface IAiSettingsRepository
     /// <summary>
     /// Saves the AI settings.
     /// </summary>
-    Task<AiSettings> SaveAsync(AiSettings settings, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiSettings> SaveAsync(AiSettings settings, Guid? userId = null, CancellationToken cancellationToken = default);
 }

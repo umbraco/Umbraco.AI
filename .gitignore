@@ -75,7 +75,7 @@ demo/
 .worktrees
 
 # Claude Code
-.claude/
+.claude/settings.local.json
 nul
 tmpclaude*
 .auto-claude/

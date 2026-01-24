@@ -399,8 +399,8 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
@@ -411,8 +411,8 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -426,6 +426,11 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 
                     b.Property<string>("Settings")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
 
                     b.HasKey("Id");
 
@@ -448,8 +453,8 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
@@ -457,8 +462,8 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<DateTime>("DateModified")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -520,42 +525,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiContextResource", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextVersionEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ChangeDescription")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("ContextId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Snapshot")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContextId");
-
-                    b.HasIndex("ContextId", "Version")
-                        .IsUnique();
-
-                    b.ToTable("umbracoAiContextVersion", (string)null);
-                });
-
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -573,8 +542,8 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<Guid>("ConnectionId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
@@ -587,8 +556,8 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -624,7 +593,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiProfile", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileVersionEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Versioning.AiEntityVersionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -634,13 +603,18 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ProfileId")
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Snapshot")
@@ -652,12 +626,12 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProfileId");
+                    b.HasIndex("EntityType", "EntityId");
 
-                    b.HasIndex("ProfileId", "Version")
+                    b.HasIndex("EntityId", "EntityType", "Version")
                         .IsUnique();
 
-                    b.ToTable("umbracoAiProfileVersion", (string)null);
+                    b.ToTable("umbracoAiEntityVersion", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Settings.AiSettingsEntity", b =>
@@ -665,9 +639,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
@@ -679,9 +650,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Value")
                         .HasMaxLength(500)
@@ -706,30 +674,12 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Navigation("Context");
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextVersionEntity", b =>
-                {
-                    b.HasOne("Umbraco.Ai.Persistence.Context.AiContextEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ContextId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
                 {
                     b.HasOne("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", null)
                         .WithMany()
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileVersionEntity", b =>
-                {
-                    b.HasOne("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", null)
-                        .WithMany()
-                        .HasForeignKey("ProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

@@ -20,9 +20,27 @@ export const manifests: Array<UmbExtensionManifest> = [
         js: () => import("./views/profile-details-workspace-view.element.js"),
         weight: 100,
         meta: {
-            label: "Details",
-            pathname: "details",
+            label: "Settings",
+            pathname: "settings",
             icon: "icon-settings",
+        },
+        conditions: [
+            {
+                alias: UMB_WORKSPACE_CONDITION_ALIAS,
+                match: UAI_PROFILE_WORKSPACE_ALIAS,
+            },
+        ],
+    },
+    {
+        type: "workspaceView",
+        alias: "UmbracoAi.Workspace.Profile.View.Info",
+        name: "Profile Info Workspace View",
+        js: () => import("./views/profile-info-workspace-view.element.js"),
+        weight: 100,
+        meta: {
+            label: "Info",
+            pathname: "info",
+            icon: "icon-info",
         },
         conditions: [
             {

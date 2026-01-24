@@ -1,7 +1,4 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
@@ -104,7 +101,7 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<Core.Prompts.AiPrompt> SaveAsync(Core.Prompts.AiPrompt prompt, int? userId = null, CancellationToken cancellationToken = default)
+    public async Task<Core.Prompts.AiPrompt> SaveAsync(Core.Prompts.AiPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
 
@@ -125,19 +122,6 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
             }
             else
             {
-                // Existing prompt - create version snapshot of current state before updating
-                var existingDomain = AiPromptEntityFactory.BuildDomain(existing);
-                var versionEntity = new AiPromptVersionEntity
-                {
-                    Id = Guid.NewGuid(),
-                    PromptId = existing.Id,
-                    Version = existing.Version,
-                    Snapshot = JsonSerializer.Serialize(existingDomain, Constants.DefaultJsonSerializerOptions),
-                    DateCreated = DateTime.UtcNow,
-                    CreatedByUserId = userId
-                };
-                db.PromptVersions.Add(versionEntity);
-
                 // Increment version, update timestamps, and set ModifiedByUserId on domain model
                 prompt.Version = existing.Version + 1;
                 prompt.DateModified = DateTime.UtcNow;
@@ -212,70 +196,5 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
         scope.Complete();
 
         return exists;
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid promptId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
-
-        var entities = await scope.ExecuteWithContextAsync(async db =>
-        {
-            IQueryable<AiPromptVersionEntity> query = db.PromptVersions
-                .Where(v => v.PromptId == promptId)
-                .OrderByDescending(v => v.Version);
-
-            if (limit.HasValue)
-            {
-                query = query.Take(limit.Value);
-            }
-
-            return await query.ToListAsync(cancellationToken);
-        });
-
-        scope.Complete();
-
-        return entities.Select(e => new AiEntityVersion
-        {
-            Id = e.Id,
-            EntityId = e.PromptId,
-            Version = e.Version,
-            Snapshot = e.Snapshot,
-            DateCreated = e.DateCreated,
-            CreatedByUserId = e.CreatedByUserId,
-            ChangeDescription = e.ChangeDescription
-        });
-    }
-
-    /// <inheritdoc />
-    public async Task<Core.Prompts.AiPrompt?> GetVersionSnapshotAsync(
-        Guid promptId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
-
-        var entity = await scope.ExecuteWithContextAsync(async db =>
-            await db.PromptVersions
-                .FirstOrDefaultAsync(v => v.PromptId == promptId && v.Version == version, cancellationToken));
-
-        scope.Complete();
-
-        if (entity is null || string.IsNullOrEmpty(entity.Snapshot))
-        {
-            return null;
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<Core.Prompts.AiPrompt>(entity.Snapshot, Constants.DefaultJsonSerializerOptions);
-        }
-        catch
-        {
-            return null;
-        }
     }
 }

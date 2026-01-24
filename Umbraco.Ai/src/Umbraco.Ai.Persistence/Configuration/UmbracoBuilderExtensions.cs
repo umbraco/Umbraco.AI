@@ -7,6 +7,7 @@ using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Analytics;
 using Umbraco.Ai.Persistence.Analytics.Usage;
@@ -16,6 +17,7 @@ using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Notifications;
 using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Ai.Persistence.Settings;
+using Umbraco.Ai.Persistence.Versioning;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
@@ -41,6 +43,9 @@ public static class UmbracoBuilderExtensions
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });
 
+        // Connection factory for entity/domain mapping with encryption support
+        builder.Services.AddSingleton<IAiConnectionFactory, AiConnectionFactory>();
+
         // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
         builder.Services.AddSingleton<IAiConnectionRepository, EfCoreAiConnectionRepository>();
         builder.Services.AddSingleton<IAiProfileRepository, EfCoreAiProfileRepository>();
@@ -49,6 +54,9 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiUsageRecordRepository, EfCoreAiUsageRecordRepository>();
         builder.Services.AddSingleton<IAiUsageStatisticsRepository, EfCoreAiUsageStatisticsRepository>();
         builder.Services.AddSingleton<IAiSettingsRepository, EfCoreAiSettingsRepository>();
+
+        // Unified versioning repository
+        builder.Services.AddSingleton<IAiEntityVersionRepository, EfCoreAiEntityVersionRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAiMigrationNotificationHandler>();

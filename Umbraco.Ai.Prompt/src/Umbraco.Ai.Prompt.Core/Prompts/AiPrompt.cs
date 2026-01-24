@@ -1,11 +1,12 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
 
 /// <summary>
 /// Represents a stored prompt template that can be linked to AI profiles.
 /// </summary>
-public sealed class AiPrompt : IAiVersionable
+public sealed class AiPrompt : IAiVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the prompt.
@@ -79,14 +80,14 @@ public sealed class AiPrompt : IAiVersionable
     public DateTime DateModified { get; set; }
 
     /// <summary>
-    /// The ID of the user who created this prompt.
+    /// The key (GUID) of the user who created this prompt.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// The ID of the user who last modified this prompt.
+    /// The key (GUID) of the user who last modified this prompt.
     /// </summary>
-    public int? ModifiedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
 
     /// <summary>
     /// The current version of the prompt.

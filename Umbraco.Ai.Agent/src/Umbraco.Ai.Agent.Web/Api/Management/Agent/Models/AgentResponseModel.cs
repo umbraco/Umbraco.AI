@@ -45,4 +45,19 @@ public class AgentResponseModel
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the context was created.
+    /// </summary>
+    public DateTime DateCreated { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the context was created.
+    /// </summary>
+    public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The current version number of the entity.
+    /// </summary>
+    public int Version { get; set; }
 }

@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Core.Profiles;
 
@@ -83,12 +84,14 @@ public interface IAiProfileService
     /// Gets the version history for a profile.
     /// </summary>
     /// <param name="profileId">The profile ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
+    /// <param name="skip">Number of versions to skip.</param>
+    /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetProfileVersionHistoryAsync(
+    /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
+    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetProfileVersionHistoryAsync(
         Guid profileId,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -101,5 +104,18 @@ public interface IAiProfileService
     Task<AiProfile?> GetProfileVersionSnapshotAsync(
         Guid profileId,
         int version,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back a profile to a previous version.
+    /// </summary>
+    /// <param name="profileId">The profile ID.</param>
+    /// <param name="targetVersion">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated profile at the new version.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the profile or target version is not found.</exception>
+    Task<AiProfile> RollbackProfileAsync(
+        Guid profileId,
+        int targetVersion,
         CancellationToken cancellationToken = default);
 }

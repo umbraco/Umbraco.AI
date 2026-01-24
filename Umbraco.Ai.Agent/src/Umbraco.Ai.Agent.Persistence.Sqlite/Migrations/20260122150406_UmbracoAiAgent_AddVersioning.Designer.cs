@@ -75,51 +75,6 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
 
                     b.ToTable("UmbracoAiAgent", (string)null);
                 });
-
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("AgentId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ChangeDescription")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Snapshot")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId");
-
-                    b.HasIndex("AgentId", "Version")
-                        .IsUnique();
-
-                    b.ToTable("umbracoAiAgentVersion", (string)null);
-                });
-
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>
-                {
-                    b.HasOne("Umbraco.Ai.Agent.Persistence.Agents.AiAgentEntity", null)
-                        .WithMany()
-                        .HasForeignKey("AgentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
 #pragma warning restore 612, 618
         }
     }

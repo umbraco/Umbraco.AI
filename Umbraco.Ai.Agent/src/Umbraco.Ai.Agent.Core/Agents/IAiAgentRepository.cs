@@ -1,4 +1,3 @@
-using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
@@ -52,10 +51,10 @@ internal interface IAiAgentRepository
     /// Saves an agent (creates or updates).
     /// </summary>
     /// <param name="agent">The agent to save.</param>
-    /// <param name="userId">Optional user ID for version tracking.</param>
+    /// <param name="userId">Optional user key (GUID) for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved agent.</returns>
-    Task<AiAgent> SaveAsync(AiAgent agent, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiAgent> SaveAsync(AiAgent agent, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a agent by its ID.
@@ -81,28 +80,4 @@ internal interface IAiAgentRepository
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if alias exists.</returns>
     Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the version history for an agent.
-    /// </summary>
-    /// <param name="agentId">The agent ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid agentId,
-        int? limit = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a specific version snapshot of an agent.
-    /// </summary>
-    /// <param name="agentId">The agent ID.</param>
-    /// <param name="version">The version to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The agent at that version, or null if not found.</returns>
-    Task<AiAgent?> GetVersionSnapshotAsync(
-        Guid agentId,
-        int version,
-        CancellationToken cancellationToken = default);
 }

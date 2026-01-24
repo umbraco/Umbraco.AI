@@ -12,6 +12,9 @@ export const UaiConnectionTypeMapper = {
             providerId: response.providerId,
             settings: (response.settings as Record<string, unknown>) ?? null,
             isActive: response.isActive,
+            version: response.version,
+            dateCreated: response.dateCreated,
+            dateModified: response.dateModified,
         };
     },
 
@@ -23,6 +26,7 @@ export const UaiConnectionTypeMapper = {
             name: response.name,
             providerId: response.providerId,
             isActive: response.isActive,
+            dateModified: response.dateModified,
         };
     },
 

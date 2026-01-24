@@ -41,7 +41,7 @@ public class ConnectionMapDefinition : IMapDefinition
         };
     }
 
-    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -CreatedByUserId -ModifiedByUserId -Version
     private static void MapFromCreateRequest(CreateConnectionRequestModel source, AiConnection target, MapperContext context)
     {
         target.Name = source.Name;
@@ -50,11 +50,11 @@ public class ConnectionMapDefinition : IMapDefinition
         target.DateModified = DateTime.UtcNow;
     }
 
-    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -DateModified -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Id -Alias -ProviderId -DateCreated -DateModified -CreatedByUserId -ModifiedByUserId -Version
     private static void MapFromUpdateRequest(UpdateConnectionRequestModel source, AiConnection target, MapperContext context)
     {
         // Note: Id, Alias, ProviderId, DateCreated are preserved from the existing entity
-        // DateModified will be set by the service
+        // DateModified and Version will be set by the service/repository
         target.Name = source.Name;
         target.Settings = source.Settings;
         target.IsActive = source.IsActive;
@@ -69,8 +69,10 @@ public class ConnectionMapDefinition : IMapDefinition
         target.ProviderId = source.ProviderId;
         target.Settings = source.Settings;
         target.IsActive = source.IsActive;
+        target.Version = source.Version;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
+        target.Version = source.Version;
     }
 
     // Umbraco.Code.MapAll
@@ -81,5 +83,8 @@ public class ConnectionMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.ProviderId = source.ProviderId;
         target.IsActive = source.IsActive;
+        target.DateCreated = source.DateCreated;
+        target.DateModified = source.DateModified;
+        target.Version = source.Version;
     }
 }

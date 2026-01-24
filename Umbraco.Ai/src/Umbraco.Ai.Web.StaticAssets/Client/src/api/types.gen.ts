@@ -87,6 +87,9 @@ export type ConnectionItemResponseModel = {
     name: string;
     providerId: string;
     isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
+    version: number;
 };
 
 export type ConnectionResponseModel = {
@@ -98,6 +101,7 @@ export type ConnectionResponseModel = {
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
+    version: number;
 };
 
 export type ConnectionTestResultModel = {
@@ -110,6 +114,7 @@ export type ContextItemResponseModel = {
     alias: string;
     name: string;
     resourceCount: number;
+    dateCreated: string;
     dateModified: string;
 };
 
@@ -138,6 +143,7 @@ export type ContextResponseModel = {
     dateCreated: string;
     dateModified: string;
     resources: Array<ContextResourceModel>;
+    version: number;
 };
 
 export type CreateConnectionRequestModel = {
@@ -191,6 +197,28 @@ export type EmbeddingProfileSettingsModel = ProfileSettingsModel & {
 
 export type EmbeddingResponseModel = {
     embeddings: Array<EmbeddingItemModel>;
+};
+
+export type EntityVersionComparisonResponseModel = {
+    fromVersion: number;
+    toVersion: number;
+    changes: Array<PropertyChangeModel>;
+};
+
+export type EntityVersionHistoryResponseModel = {
+    currentVersion: number;
+    totalVersions: number;
+    versions: Array<EntityVersionResponseModel>;
+};
+
+export type EntityVersionResponseModel = {
+    id: string;
+    entityId: string;
+    version: number;
+    dateCreated: string;
+    createdByUserId?: string | null;
+    createdByUserName?: string | null;
+    changeDescription?: string | null;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -259,6 +287,8 @@ export type ProfileItemResponseModel = {
     name: string;
     capability: string;
     model?: ModelRefModel | null;
+    dateCreated: string;
+    dateModified: string;
 };
 
 export type ProfileResponseModel = {
@@ -270,10 +300,19 @@ export type ProfileResponseModel = {
     connectionId: string;
     settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null;
     tags: Array<string>;
+    dateCreated: string;
+    dateModified: string;
+    version: number;
 };
 
 export type ProfileSettingsModel = {
     [key: string]: never;
+};
+
+export type PropertyChangeModel = {
+    propertyName: string;
+    oldValue?: string | null;
+    newValue?: string | null;
 };
 
 export type ProviderItemResponseModel = {
@@ -1401,3 +1440,177 @@ export type GetProviderByIdResponses = {
 };
 
 export type GetProviderByIdResponse = GetProviderByIdResponses[keyof GetProviderByIdResponses];
+
+export type GetVersionHistoryData = {
+    body?: never;
+    path: {
+        entityType: string;
+        entityId: string;
+    };
+    query?: {
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}';
+};
+
+export type GetVersionHistoryErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetVersionHistoryError = GetVersionHistoryErrors[keyof GetVersionHistoryErrors];
+
+export type GetVersionHistoryResponses = {
+    /**
+     * OK
+     */
+    200: EntityVersionHistoryResponseModel;
+};
+
+export type GetVersionHistoryResponse = GetVersionHistoryResponses[keyof GetVersionHistoryResponses];
+
+export type GetVersionData = {
+    body?: never;
+    path: {
+        entityType: string;
+        entityId: string;
+        entityVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{entityVersion}';
+};
+
+export type GetVersionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetVersionError = GetVersionErrors[keyof GetVersionErrors];
+
+export type GetVersionResponses = {
+    /**
+     * OK
+     */
+    200: EntityVersionResponseModel;
+};
+
+export type GetVersionResponse = GetVersionResponses[keyof GetVersionResponses];
+
+export type RollbackToVersionData = {
+    body?: never;
+    path: {
+        entityType: string;
+        entityId: string;
+        entityVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{entityVersion}/rollback';
+};
+
+export type RollbackToVersionErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RollbackToVersionError = RollbackToVersionErrors[keyof RollbackToVersionErrors];
+
+export type RollbackToVersionResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RollbackToVersionResponse = RollbackToVersionResponses[keyof RollbackToVersionResponses];
+
+export type CompareVersionsData = {
+    body?: never;
+    path: {
+        entityType: string;
+        entityId: string;
+        fromEntityVersion: number;
+        toEntityVersion: number;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{fromEntityVersion}/compare/{toEntityVersion}';
+};
+
+export type CompareVersionsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CompareVersionsError = CompareVersionsErrors[keyof CompareVersionsErrors];
+
+export type CompareVersionsResponses = {
+    /**
+     * OK
+     */
+    200: EntityVersionComparisonResponseModel;
+};
+
+export type CompareVersionsResponse = CompareVersionsResponses[keyof CompareVersionsResponses];
+
+export type GetSupportedEntityTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/versions/supported-types';
+};
+
+export type GetSupportedEntityTypesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetSupportedEntityTypesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetSupportedEntityTypesResponse = GetSupportedEntityTypesResponses[keyof GetSupportedEntityTypesResponses];

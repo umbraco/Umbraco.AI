@@ -32,4 +32,16 @@ public abstract class UmbracoAiManagementControllerBase : ControllerBase
         Func<ProblemDetailsBuilder, IActionResult> builder)
         where TEnum : Enum
         => builder(new ProblemDetailsBuilder().WithOperationStatus(status));
+
+    /// <summary>
+    /// Creates a problem details object with the given title and detail.
+    /// </summary>
+    /// <param name="title">The title of the problem.</param>
+    /// <param name="detail">The detail message of the problem.</param>
+    /// <returns>A ProblemDetails object.</returns>
+    protected static ProblemDetails CreateProblemDetails(string title, string detail)
+        => new ProblemDetailsBuilder()
+            .WithTitle(title)
+            .WithDetail(detail)
+            .Build();
 }

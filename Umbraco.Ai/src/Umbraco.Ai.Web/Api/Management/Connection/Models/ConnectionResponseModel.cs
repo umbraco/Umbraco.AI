@@ -50,4 +50,9 @@ public class ConnectionResponseModel
     /// When the connection was last modified.
     /// </summary>
     public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The current version of the connection.
+    /// </summary>
+    public int Version { get; set; }
 }

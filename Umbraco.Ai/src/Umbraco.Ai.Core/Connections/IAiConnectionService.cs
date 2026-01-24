@@ -1,4 +1,6 @@
+using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Core.Connections;
 
@@ -87,4 +89,43 @@ public interface IAiConnectionService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured provider with resolved settings, or null if connection/provider not found.</returns>
     Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the version history for a connection.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="skip">Number of versions to skip.</param>
+    /// <param name="take">Maximum number of versions to return.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
+    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
+        Guid connectionId,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a specific version snapshot of a connection.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="version">The version to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The connection at that version, or null if not found.</returns>
+    Task<AiConnection?> GetConnectionVersionSnapshotAsync(
+        Guid connectionId,
+        int version,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back a connection to a previous version.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="targetVersion">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated connection at the new version.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the connection or target version is not found.</exception>
+    Task<AiConnection> RollbackConnectionAsync(
+        Guid connectionId,
+        int targetVersion,
+        CancellationToken cancellationToken = default);
 }

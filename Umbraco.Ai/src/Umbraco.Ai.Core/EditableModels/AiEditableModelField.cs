@@ -59,4 +59,10 @@ public class AiEditableModelField
     /// The validation rules applied to the field.
     /// </summary>
     public IEnumerable<ValidationAttribute> ValidationRules { get; set; } = Array.Empty<ValidationAttribute>();
+
+    /// <summary>
+    /// Indicates whether the field contains sensitive data that should be encrypted at rest.
+    /// When true, the field value will be encrypted during persistence and the UI may mask the value.
+    /// </summary>
+    public bool IsSensitive { get; set; }
 }

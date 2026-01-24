@@ -60,6 +60,8 @@ export type PromptItemResponseModel = {
     description?: string | null;
     profileId?: string | null;
     isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
 };
 
 export type PromptResponseModel = {
@@ -76,6 +78,7 @@ export type PromptResponseModel = {
     includeEntityContext: boolean;
     dateCreated: string;
     dateModified: string;
+    version: number;
 };
 
 export type PropertyChangeModel = {

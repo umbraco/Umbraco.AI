@@ -1,26 +1,21 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
-import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
-import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import type { UaiConnectionDetailModel } from "../../../types.js";
-import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "../connection-workspace.context-token.js";
 import { UaiProviderDetailRepository } from "../../../../provider/repository/detail/provider-detail.repository.js";
 import type { UaiProviderDetailModel } from "../../../../provider/types.js";
-import { ConnectionsService } from "../../../../api/sdk.gen.js";
 import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
 
 /**
  * Workspace view for Connection details.
- * Displays provider (read-only), settings, and active toggle.
+ * Displays provider settings.
  */
 @customElement("uai-connection-details-workspace-view")
 export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
     #providerDetailRepository = new UaiProviderDetailRepository(this);
-    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
     @state()
     private _model?: UaiConnectionDetailModel;
@@ -28,27 +23,21 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _provider?: UaiProviderDetailModel;
 
-    @state()
-    private _testButtonState?: UUIButtonState;
-
-    @state()
-    private _testButtonColor?: "default" | "positive" | "warning" | "danger" = "default"
-
     constructor() {
         super();
         this.consumeContext(UAI_CONNECTION_WORKSPACE_CONTEXT, (context) => {
             if (context) {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
+                    // Only load provider details when providerId changes, not on every model update.
+                    // This prevents unnecessary re-renders that cause cursor jumping in form inputs.
+                    const providerChanged = model?.providerId && model.providerId !== this._model?.providerId;
                     this._model = model;
-                    if (model?.providerId) {
-                        this.#loadProviderDetails(model.providerId);
+                    if (providerChanged) {
+                        this.#loadProviderDetails(model!.providerId);
                     }
                 });
             }
-        });
-        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
-            this.#notificationContext = context;
         });
     }
 
@@ -57,116 +46,18 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         this._provider = data;
     }
 
-    #onActiveChange(event: Event) {
-        event.stopPropagation();
-        const target = event.target as HTMLInputElement;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: target.checked }, "isActive")
-        );
-    }
-
     #onSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ settings: e.detail.model }, "settings")
         );
     }
 
-    async #onTestConnection() {
-        const unique = this._model?.unique;
-        if (!unique || unique === UAI_EMPTY_GUID) return;
-
-        this._testButtonState = "waiting";
-        this._testButtonColor = "default";
-
-        const { data, error } = await tryExecute(
-            this,
-            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } })
-        );
-
-        if (error || !data?.success) {
-            this._testButtonState = "failed";
-            this._testButtonColor = "danger";
-            this.#notificationContext?.peek("danger", {
-                data: { message: data?.errorMessage ?? this.localize.string("#uaiConnection_testConnectionFailed") },
-            });
-            this.#resetButtonState();
-            return;
-        }
-
-        this._testButtonState = "success";
-        this._testButtonColor = "positive";
-        this.#notificationContext?.peek("positive", {
-            data: { message: this.localize.string("#uaiConnection_testConnectionSuccess") },
-        });
-        this.#resetButtonState();
-    }
-
-    #resetButtonState() {
-        setTimeout(() => {
-            this._testButtonState = undefined;
-            this._testButtonColor = "default";
-        }, 2000);
-    }
-
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
-
-        return html`
-            <uai-workspace-editor-layout>
-                <div>${this.#renderLeftColumn()}</div>
-                <div slot="aside">${this.#renderRightColumn()}</div>
-            </uai-workspace-editor-layout>
-        `;
-    }
-
-    #renderLeftColumn() {
-        if (!this._model) return null;
 
         return html`<uui-box headline="General">
             ${this.#renderProviderSettings()}
         </uui-box>`;
-    }
-
-    #renderRightColumn() {
-        if (!this._model) return null;
-
-        return html`
-            <uui-box headline=${this.localize.string("#uaiConnection_actions")}>
-                <div class="action-buttons">
-                    <uui-button
-                        label=${this.localize.string("#uaiConnection_testConnection")}
-                        look="primary"
-                        .color=${this._testButtonColor}
-                        .state=${this._testButtonState}
-                        .disabled=${this._model.unique === UAI_EMPTY_GUID}
-                        @click=${this.#onTestConnection}>
-                        ${this.localize.string("#uaiConnection_testConnection")}
-                    </uui-button>
-                </div>
-            </uui-box>
-
-            <uui-box headline="Info">
-                <umb-property-layout label="Id" orientation="vertical">
-                    <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-                        ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-                        : this._model.unique}</div>
-                </umb-property-layout>
-
-                <umb-property-layout label="Provider" orientation="vertical">
-                    <div slot="editor">${this._provider?.name ?? this._model.providerId}</div>
-                </umb-property-layout>
-
-                <umb-property-layout label="Capabilities" orientation="vertical">
-                    <div slot="editor">
-                        ${this._provider?.capabilities.map(cap => html`<uui-tag color="default" look="outline">${cap}</uui-tag> `)}
-                    </div>
-                </umb-property-layout>
-
-                <umb-property-layout label="Active" orientation="vertical">
-                    <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
-                </umb-property-layout>
-            </uui-box>
-        `;
     }
 
     #renderProviderSettings() {
@@ -206,17 +97,6 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-            }
-
-            .action-buttons {
-                display: flex;
-                gap: var(--uui-size-space-5);
-                flex-wrap: wrap;
-                padding: var(--uui-size-space-5) 0;
-            }
-
-            .action-buttons uui-button {
-                flex-grow: 1;
             }
         `,
     ];

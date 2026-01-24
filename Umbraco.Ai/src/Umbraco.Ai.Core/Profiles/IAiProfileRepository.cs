@@ -59,10 +59,10 @@ internal interface IAiProfileRepository
     /// Saves an AI profile.
     /// </summary>
     /// <param name="profile">The profile to save.</param>
-    /// <param name="userId">Optional user ID for version tracking.</param>
+    /// <param name="userId">Optional user key (GUID) for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved profile.</returns>
-    Task<AiProfile> SaveAsync(AiProfile profile, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiProfile> SaveAsync(AiProfile profile, Guid? userId = null, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Deletes an AI profile by its unique identifier.
@@ -71,28 +71,4 @@ internal interface IAiProfileRepository
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the version history for a profile.
-    /// </summary>
-    /// <param name="profileId">The profile ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid profileId,
-        int? limit = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a specific version snapshot of a profile.
-    /// </summary>
-    /// <param name="profileId">The profile ID.</param>
-    /// <param name="version">The version to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The profile at that version, or null if not found.</returns>
-    Task<AiProfile?> GetVersionSnapshotAsync(
-        Guid profileId,
-        int version,
-        CancellationToken cancellationToken = default);
 }

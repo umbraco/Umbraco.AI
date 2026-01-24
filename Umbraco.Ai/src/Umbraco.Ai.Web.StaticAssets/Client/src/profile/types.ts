@@ -46,6 +46,9 @@ export interface UaiProfileDetailModel extends UmbEntityModel {
     connectionId: string;
     settings: UaiProfileSettings | null;
     tags: string[];
+    dateCreated: string | null;
+    dateModified: string | null;
+    version: number;
 }
 
 /**
@@ -58,6 +61,7 @@ export interface UaiProfileItemModel extends UmbEntityModel {
     name: string;
     capability: string;
     model: UaiModelRef | null;
+    dateModified: string | null;
 }
 
 /**

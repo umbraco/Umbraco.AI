@@ -17,6 +17,9 @@ export interface UaiPromptDetailModel extends UmbEntityModel {
     scope: UaiPromptScope | null;
     isActive: boolean;
     includeEntityContext: boolean;
+    dateCreated: string | null;
+    dateModified: string | null;
+    version: number;
 }
 
 /**
@@ -29,4 +32,5 @@ export interface UaiPromptItemModel extends UmbEntityModel {
     name: string;
     description: string | null;
     isActive: boolean;
+    dateModified: string | null;
 }

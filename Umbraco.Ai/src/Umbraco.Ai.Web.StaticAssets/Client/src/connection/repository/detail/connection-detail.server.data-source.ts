@@ -29,6 +29,9 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
             providerId: preset?.providerId ?? "",
             settings: null,
             isActive: true,
+            dateCreated: null,
+            dateModified: null,
+            version: 0,
             ...preset,
         };
 
@@ -96,7 +99,8 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
             return { error };
         }
 
-        return { data: model };
+        // Re-fetch to get updated version and timestamps
+        return this.read(model.unique);
     }
 
     /**

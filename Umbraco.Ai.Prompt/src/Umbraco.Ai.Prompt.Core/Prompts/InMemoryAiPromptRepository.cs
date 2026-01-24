@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -72,7 +73,7 @@ internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt> SaveAsync(AiPrompt prompt, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiPrompt> SaveAsync(AiPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _prompts[prompt.Id] = prompt;
         return Task.FromResult(prompt);

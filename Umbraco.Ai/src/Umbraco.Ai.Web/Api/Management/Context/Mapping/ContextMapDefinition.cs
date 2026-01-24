@@ -76,7 +76,7 @@ public class ContextMapDefinition : IMapDefinition
             : AiContextResourceInjectionMode.Always;
     }
 
-    // Umbraco.Code.MapAll -Version
+    // Umbraco.Code.MapAll
     private static void MapToResponse(AiContext source, ContextResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -85,6 +85,7 @@ public class ContextMapDefinition : IMapDefinition
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
         target.Resources = source.Resources.Select(r => context.Map<ContextResourceModel>(r)!).ToList();
+        target.Version = source.Version;
     }
 
     // Umbraco.Code.MapAll -Version
@@ -94,6 +95,7 @@ public class ContextMapDefinition : IMapDefinition
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.ResourceCount = source.Resources.Count;
+        target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
     }
 

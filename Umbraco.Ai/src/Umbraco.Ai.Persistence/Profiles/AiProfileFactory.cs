@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 

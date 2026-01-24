@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Tests.Common.Builders;
 
 namespace Umbraco.Ai.Tests.Unit.Services;
@@ -11,6 +12,7 @@ public class AiProfileServiceTests
     private readonly Mock<IAiProfileRepository> _repositoryMock;
     private readonly Mock<IAiSettingsService> _settingsServiceMock;
     private readonly Mock<IOptions<AiOptions>> _optionsMock;
+    private readonly Mock<IAiEntityVersionService> _versionServiceMock;
     private readonly AiProfileService _service;
 
     public AiProfileServiceTests()
@@ -18,6 +20,7 @@ public class AiProfileServiceTests
         _repositoryMock = new Mock<IAiProfileRepository>();
         _settingsServiceMock = new Mock<IAiSettingsService>();
         _optionsMock = new Mock<IOptions<AiOptions>>();
+        _versionServiceMock = new Mock<IAiEntityVersionService>();
         _optionsMock.Setup(x => x.Value).Returns(new AiOptions
         {
             DefaultChatProfileAlias = "default-chat",
@@ -28,7 +31,7 @@ public class AiProfileServiceTests
         _settingsServiceMock.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AiSettings());
 
-        _service = new AiProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object);
+        _service = new AiProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object);
     }
 
     #region GetProfileAsync
@@ -185,7 +188,8 @@ public class AiProfileServiceTests
         var serviceWithNullOptions = new AiProfileService(
             _repositoryMock.Object,
             emptySettingsService.Object,
-            optionsWithNullAlias.Object);
+            optionsWithNullAlias.Object,
+            _versionServiceMock.Object);
 
         // Act
         var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AiCapability.Chat);
@@ -322,7 +326,7 @@ public class AiProfileServiceTests
             .Build();
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(profile, It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         // Act
@@ -331,7 +335,7 @@ public class AiProfileServiceTests
         // Assert
         result.ShouldNotBeNull();
         result.Alias.ShouldBe("new-profile");
-        _repositoryMock.Verify(x => x.SaveAsync(profile, It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(profile, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

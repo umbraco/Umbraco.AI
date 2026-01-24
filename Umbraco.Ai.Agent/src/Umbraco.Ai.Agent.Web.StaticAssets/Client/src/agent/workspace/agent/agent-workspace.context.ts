@@ -124,6 +124,16 @@ export class UaiAgentWorkspaceContext
 
         return data;
     }
+    
+    /**
+     * Reloads the current agent.
+     */
+    async reload() {
+        const unique = this.#unique.getValue();
+        if (unique) {
+            await this.load(unique);
+        }
+    }
 
     /**
      * Handles a command to update the model.
@@ -174,10 +184,14 @@ export class UaiAgentWorkspaceContext
                     this.#model.setValue(data);
                 }
             } else {
-                const { error } = await this.#repository.save(model);
+                const { data, error } = await this.#repository.save(model);
 
                 if (error) {
                     throw error;
+                }
+
+                if (data) {
+                    this.#model.setValue(data);
                 }
             }
 

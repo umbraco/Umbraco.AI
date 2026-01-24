@@ -100,51 +100,6 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
 
                     b.ToTable("umbracoAiPrompt", (string)null);
                 });
-
-            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptVersionEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ChangeDescription")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("PromptId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Snapshot")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PromptId");
-
-                    b.HasIndex("PromptId", "Version")
-                        .IsUnique();
-
-                    b.ToTable("umbracoAiPromptVersion", (string)null);
-                });
-
-            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptVersionEntity", b =>
-                {
-                    b.HasOne("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptEntity", null)
-                        .WithMany()
-                        .HasForeignKey("PromptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
 #pragma warning restore 612, 618
         }
     }

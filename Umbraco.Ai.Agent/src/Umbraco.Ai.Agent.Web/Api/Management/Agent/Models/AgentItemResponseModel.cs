@@ -40,4 +40,14 @@ public class AgentItemResponseModel
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the context was created.
+    /// </summary>
+    public DateTime DateCreated { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the context was created.
+    /// </summary>
+    public DateTime DateModified { get; set; }
 }

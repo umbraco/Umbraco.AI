@@ -1,8 +1,5 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
@@ -104,7 +101,7 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
     }
 
     /// <inheritdoc />
-    public async Task<Core.Agents.AiAgent> SaveAsync(Core.Agents.AiAgent agent, int? userId = null, CancellationToken cancellationToken = default)
+    public async Task<Core.Agents.AiAgent> SaveAsync(Core.Agents.AiAgent agent, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiAgentDbContext> scope = _scopeProvider.CreateScope();
 
@@ -125,19 +122,6 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
             }
             else
             {
-                // Existing agent - create version snapshot of current state before updating
-                var existingDomain = AiAgentEntityFactory.BuildDomain(existing);
-                var versionEntity = new AiAgentVersionEntity
-                {
-                    Id = Guid.NewGuid(),
-                    AgentId = existing.Id,
-                    Version = existing.Version,
-                    Snapshot = JsonSerializer.Serialize(existingDomain, Constants.DefaultJsonSerializerOptions),
-                    DateCreated = DateTime.UtcNow,
-                    CreatedByUserId = userId
-                };
-                db.AgentVersions.Add(versionEntity);
-
                 // Increment version, update timestamps, and set ModifiedByUserId on domain model
                 agent.Version = existing.Version + 1;
                 agent.DateModified = DateTime.UtcNow;
@@ -212,70 +196,5 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
         scope.Complete();
 
         return exists;
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid agentId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAiAgentDbContext> scope = _scopeProvider.CreateScope();
-
-        var entities = await scope.ExecuteWithContextAsync(async db =>
-        {
-            IQueryable<AiAgentVersionEntity> query = db.AgentVersions
-                .Where(v => v.AgentId == agentId)
-                .OrderByDescending(v => v.Version);
-
-            if (limit.HasValue)
-            {
-                query = query.Take(limit.Value);
-            }
-
-            return await query.ToListAsync(cancellationToken);
-        });
-
-        scope.Complete();
-
-        return entities.Select(e => new AiEntityVersion
-        {
-            Id = e.Id,
-            EntityId = e.AgentId,
-            Version = e.Version,
-            Snapshot = e.Snapshot,
-            DateCreated = e.DateCreated,
-            CreatedByUserId = e.CreatedByUserId,
-            ChangeDescription = e.ChangeDescription
-        });
-    }
-
-    /// <inheritdoc />
-    public async Task<Core.Agents.AiAgent?> GetVersionSnapshotAsync(
-        Guid agentId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAiAgentDbContext> scope = _scopeProvider.CreateScope();
-
-        var entity = await scope.ExecuteWithContextAsync(async db =>
-            await db.AgentVersions
-                .FirstOrDefaultAsync(v => v.AgentId == agentId && v.Version == version, cancellationToken));
-
-        scope.Complete();
-
-        if (entity is null || string.IsNullOrEmpty(entity.Snapshot))
-        {
-            return null;
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<Core.Agents.AiAgent>(entity.Snapshot, Constants.DefaultJsonSerializerOptions);
-        }
-        catch
-        {
-            return null;
-        }
     }
 }

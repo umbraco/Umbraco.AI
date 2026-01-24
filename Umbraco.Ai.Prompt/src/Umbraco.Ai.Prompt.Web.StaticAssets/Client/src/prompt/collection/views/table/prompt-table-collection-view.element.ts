@@ -11,6 +11,7 @@ import type {
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { formatDateTime } from "@umbraco-ai/core";
 import type { UaiPromptItemModel } from "../../../types.js";
 import { UAI_PROMPT_ICON } from "../../../constants.js";
 import { UAI_EDIT_PROMPT_WORKSPACE_PATH_PATTERN } from "../../../workspace/prompt/paths.js";
@@ -38,6 +39,7 @@ export class UaiPromptTableCollectionViewElement extends UmbLitElement {
         { name: "Alias", alias: "alias" },
         { name: "Description", alias: "description" },
         { name: "Active", alias: "isActive" },
+        { name: "Modified", alias: "dateModified" },
     ];
 
     constructor() {
@@ -92,6 +94,10 @@ export class UaiPromptTableCollectionViewElement extends UmbLitElement {
                     value: html`<uui-tag color=${item.isActive ? "positive" : "danger"}>
                         ${item.isActive ? "Active" : "Inactive"}
                     </uui-tag>`,
+                },
+                {
+                    columnAlias: "dateModified",
+                    value: item.dateModified ? formatDateTime(item.dateModified) : "-",
                 },
             ],
         }));

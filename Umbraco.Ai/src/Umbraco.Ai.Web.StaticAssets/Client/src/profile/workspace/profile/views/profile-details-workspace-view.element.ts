@@ -1,12 +1,11 @@
 import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings } from "../../../types.js";
 import { isChatSettings } from "../../../types.js";
-import { UAI_EMPTY_GUID, UaiPartialUpdateCommand } from "../../../../core/index.js";
+import { UaiPartialUpdateCommand } from "../../../../core/index.js";
 import { UAI_PROFILE_WORKSPACE_CONTEXT } from "../profile-workspace.context-token.js";
 import type { UaiConnectionItemModel, UaiModelDescriptorModel } from "../../../../connection/types.js";
 import { UaiConnectionCapabilityRepository, UaiConnectionModelsRepository } from "../../../../connection/repository";
@@ -20,7 +19,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
     #workspaceContext?: typeof UAI_PROFILE_WORKSPACE_CONTEXT.TYPE;
     #connectionRepository = new UaiConnectionCapabilityRepository(this);
     #connectionModelsRepository = new UaiConnectionModelsRepository(this);
-    #localize = new UmbLocalizationController(this);
 
     @state()
     private _model?: UaiProfileDetailModel;
@@ -175,10 +173,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         return isChatSettings(this._model?.settings ?? null) ? this._model!.settings as UaiChatProfileSettings : null;
     }
 
-    #getCapabilityLabel(capability: string): string {
-        return this.#localize.term(`uaiCapabilities_${capability.toLowerCase()}`);
-    }
-
     /**
      * Renders capability-specific settings based on the profile's capability.
      */
@@ -292,19 +286,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
         return html`
-            <uai-workspace-editor-layout>
-                <div>${this.#renderLeftColumn()}</div>
-                <div slot="aside">${this.#renderRightColumn()}</div>
-            </uai-workspace-editor-layout>
-        `;
-    }
-
-    #renderLeftColumn() {
-        if (!this._model) return html`<uui-loader></uui-loader>`;
-
-        return html`
             <uui-box headline="General">
-
                 <umb-property-layout label="Connection" description="Select the AI connection to use">
                     <uui-select
                         slot="editor"
@@ -343,23 +325,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         `;
     }
 
-    #renderRightColumn() {
-        if (!this._model) return null;
-
-        return html`<uui-box headline="Info">
-            <umb-property-layout label="Id"  orientation="vertical">
-               <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-            ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-            : this._model.unique}</div> 
-            </umb-property-layout>
-            <umb-property-layout label="Capability"  orientation="vertical">
-                <div slot="editor">
-                    <uui-tag color="default" look="outline">${this.#getCapabilityLabel(this._model.capability)}</uui-tag>
-                </div>
-            </umb-property-layout>
-        </uui-box>`; 
-    }
-
     static styles = [
         UmbTextStyles,
         css`
@@ -393,10 +358,6 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 flex-wrap: wrap;
                 gap: var(--uui-size-space-2);
                 padding: var(--uui-size-space-3) 0;
-            }
-
-            umb-property-layout[orientation="vertical"]:not(:last-child) {
-                padding-bottom: 0;
             }
 
             uui-loader {

@@ -22,9 +22,11 @@ using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.RuntimeContext.Contributors;
 using Umbraco.Ai.Core.RuntimeContext.Middleware;
+using Umbraco.Ai.Core.Security;
 using Umbraco.Ai.Core.TaskQueue;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Core.Tools.Web;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Prompt.Core.Media;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -53,9 +55,13 @@ public static partial class UmbracoBuilderExtensions
         // Bind AiAnalyticsOptions from "Umbraco:Ai:Analytics" section
         services.Configure<AiAnalyticsOptions>(config.GetSection("Umbraco:Ai:Analytics"));
 
+        // Security infrastructure
+        services.AddSingleton<IAiSensitiveFieldProtector, AiSensitiveFieldProtector>();
+
         // Provider infrastructure
         services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
         services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
+        services.AddSingleton<IAiEditableModelSerializer, AiEditableModelSerializer>();
         services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
 
         // Auto-discover providers using TypeLoader (uses Umbraco's cached, efficient type discovery)
@@ -130,6 +136,17 @@ public static partial class UmbracoBuilderExtensions
         // Settings
         services.AddSingleton<IAiSettingsRepository, InMemoryAiSettingsRepository>();
         services.AddSingleton<IAiSettingsService, AiSettingsService>();
+
+        // Unified versioning service
+        services.Configure<AiVersionCleanupPolicy>(config.GetSection("Umbraco:Ai:VersionCleanupPolicy"));
+        services.AddSingleton<IAiEntityVersionService, AiEntityVersionService>();
+        services.AddHostedService<AiVersionCleanupBackgroundJob>();
+
+        // Versionable entity adapters for core entities
+        builder.AiVersionableEntityAdapters()
+            .Add<AiConnectionVersionableEntityAdapter>()
+            .Add<AiProfileVersionableEntityAdapter>()
+            .Add<AiContextVersionableEntityAdapter>();
 
         // Client factories
         services.AddSingleton<IAiChatClientFactory, AiChatClientFactory>();

@@ -4,7 +4,8 @@ namespace Umbraco.Ai.Extensions;
 
 internal static class PropertyInfoExtensions
 {
-    private static readonly NullabilityInfoContext NullabilityContext = new();
+    // NullabilityInfoContext is not thread-safe - use ThreadLocal to give each thread its own instance
+    private static readonly ThreadLocal<NullabilityInfoContext> NullabilityContext = new(() => new NullabilityInfoContext());
 
     public static bool IsNullable(this PropertyInfo property)
     {
@@ -15,7 +16,7 @@ internal static class PropertyInfoExtensions
         }
 
         // For reference types, use NullabilityInfoContext to check NRT annotations
-        var nullabilityInfo = NullabilityContext.Create(property);
+        var nullabilityInfo = NullabilityContext.Value!.Create(property);
         return nullabilityInfo.WriteState == NullabilityState.Nullable;
     }
 }

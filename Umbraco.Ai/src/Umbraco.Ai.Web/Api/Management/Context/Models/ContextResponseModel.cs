@@ -39,4 +39,9 @@ public class ContextResponseModel
     /// The resources belonging to this context.
     /// </summary>
     public IReadOnlyList<ContextResourceModel> Resources { get; set; } = [];
+
+    /// <summary>
+    /// The current version number of the entity.
+    /// </summary>
+    public int Version { get; set; }
 }

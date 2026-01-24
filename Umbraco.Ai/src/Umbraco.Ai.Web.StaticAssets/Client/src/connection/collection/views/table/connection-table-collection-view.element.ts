@@ -4,6 +4,7 @@ import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEven
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { formatDateTime } from "../../../../core/index.js";
 import type { UaiConnectionItemModel } from "../../../types.js";
 import { UAI_CONNECTION_ICON } from "../../../constants.js";
 import { UAI_EDIT_CONNECTION_WORKSPACE_PATH_PATTERN } from "../../../workspace/connection/paths.js";
@@ -32,6 +33,7 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
         { name: "Name", alias: "name" },
         { name: "Provider", alias: "provider" },
         { name: "Status", alias: "status" },
+        { name: "Modified", alias: "dateModified" },
     ];
 
     constructor() {
@@ -84,6 +86,10 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
                     value: html`<uui-tag color=${item.isActive ? "positive" : "danger"}>
                         ${item.isActive ? "Active" : "Inactive"}
                     </uui-tag>`,
+                },
+                {
+                    columnAlias: "dateModified",
+                    value: item.dateModified ? formatDateTime(item.dateModified) : "-",
                 },
             ],
         }));

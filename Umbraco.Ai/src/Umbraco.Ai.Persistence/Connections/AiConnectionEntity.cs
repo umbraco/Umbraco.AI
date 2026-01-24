@@ -46,12 +46,18 @@ internal class AiConnectionEntity
     public DateTime DateModified { get; set; }
 
     /// <summary>
-    /// The ID of the user who created this connection.
+    /// The key (GUID) of the user who created this connection.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// The ID of the user who last modified this connection.
+    /// The key (GUID) of the user who last modified this connection.
     /// </summary>
-    public int? ModifiedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// The current version of the connection.
+    /// Starts at 1 and increments with each save operation.
+    /// </summary>
+    public int Version { get; set; } = 1;
 }

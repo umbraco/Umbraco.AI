@@ -35,6 +35,9 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             scope: null,
             isActive: true,
             includeEntityContext: true,
+            dateCreated: null,
+            dateModified: null,
+            version: 0,
             ...preset,
         };
 
@@ -102,7 +105,8 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             return { error };
         }
 
-        return { data: model };
+        // Re-fetch to get updated version and timestamps
+        return this.read(model.unique);
     }
 
     /**

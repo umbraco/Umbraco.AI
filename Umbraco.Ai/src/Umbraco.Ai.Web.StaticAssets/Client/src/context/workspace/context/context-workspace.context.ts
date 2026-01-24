@@ -127,6 +127,16 @@ export class UaiContextWorkspaceContext
     }
 
     /**
+     * Reloads the current connection.
+     */
+    async reload() {
+        const unique = this.getUnique();
+        if (unique) {
+            await this.load(unique);
+        }
+    }
+
+    /**
      * Handles a command to update the model.
      * Commands are tracked for replay after model refresh.
      */
@@ -175,10 +185,14 @@ export class UaiContextWorkspaceContext
                     this.#model.setValue(data);
                 }
             } else {
-                const { error } = await this.#repository.save(model);
+                const { data, error } = await this.#repository.save(model);
 
                 if (error) {
                     throw error;
+                }
+
+                if (data) {
+                    this.#model.setValue(data);
                 }
             }
 
@@ -188,6 +202,7 @@ export class UaiContextWorkspaceContext
             this.#commandStore.unmute();
         }
     }
+
 }
 
 export { UaiContextWorkspaceContext as api };

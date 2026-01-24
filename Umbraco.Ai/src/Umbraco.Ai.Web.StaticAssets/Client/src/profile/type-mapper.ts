@@ -5,6 +5,9 @@ import { isChatSettings } from "./types.js";
 
 export const UaiProfileTypeMapper = {
     toDetailModel(response: ProfileResponseModel): UaiProfileDetailModel {
+        // Note: Cast to access version until API client is regenerated
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const version = (response as any).version as number | undefined;
         return {
             unique: response.id,
             entityType: UAI_PROFILE_ENTITY_TYPE,
@@ -15,6 +18,9 @@ export const UaiProfileTypeMapper = {
             connectionId: response.connectionId,
             settings: this.mapResponseSettings(response),
             tags: response.tags ?? [],
+            dateCreated: response.dateCreated,
+            dateModified: response.dateModified,
+            version: version ?? 1,
         };
     },
 
@@ -26,6 +32,7 @@ export const UaiProfileTypeMapper = {
             name: response.name,
             capability: response.capability,
             model: response.model ? { providerId: response.model.providerId, modelId: response.model.modelId } : null,
+            dateModified: response.dateModified,
         };
     },
 

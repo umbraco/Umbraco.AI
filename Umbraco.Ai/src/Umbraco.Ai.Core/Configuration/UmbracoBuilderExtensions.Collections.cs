@@ -2,6 +2,7 @@ using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Extensions;
@@ -77,4 +78,20 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AiRuntimeContextContributorCollectionBuilder AiRuntimeContextContributors(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AiRuntimeContextContributorCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI versionable entity adapter collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI versionable entity adapter collection builder.</returns>
+    /// <remarks>
+    /// Use this to register versionable entity adapters. Core adapters (Connection, Profile, Context)
+    /// are registered automatically. Add-on packages can register their own adapters:
+    /// <code>
+    /// builder.AiVersionableEntityAdapters()
+    ///     .Add&lt;PromptVersionableEntityAdapter&gt;();
+    /// </code>
+    /// </remarks>
+    public static AiVersionableEntityAdapterCollectionBuilder AiVersionableEntityAdapters(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AiVersionableEntityAdapterCollectionBuilder>();
 }

@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Models;
+namespace Umbraco.Ai.Core.Versioning;
 
 /// <summary>
 /// Represents a historical version of a versionable entity.
@@ -20,6 +20,15 @@ public sealed class AiEntityVersion
     public Guid EntityId { get; init; }
 
     /// <summary>
+    /// The type of entity this version belongs to (e.g., "Connection", "Profile", "Context").
+    /// </summary>
+    /// <remarks>
+    /// This acts as a discriminator in the unified version table, allowing different entity types
+    /// to share the same storage while maintaining distinct version histories.
+    /// </remarks>
+    public string EntityType { get; init; } = string.Empty;
+
+    /// <summary>
     /// The version (1, 2, 3, etc.). Unique per entity.
     /// </summary>
     public int Version { get; init; }
@@ -35,9 +44,9 @@ public sealed class AiEntityVersion
     public DateTime DateCreated { get; init; }
 
     /// <summary>
-    /// The user ID of the user who created this version, if available.
+    /// The key (GUID) of the user who created this version, if available.
     /// </summary>
-    public int? CreatedByUserId { get; init; }
+    public Guid? CreatedByUserId { get; init; }
 
     /// <summary>
     /// Optional description of what changed in this version.

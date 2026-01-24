@@ -35,4 +35,19 @@ public class ConnectionItemResponseModel
     /// Whether this connection is currently active/enabled.
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the connection was created.
+    /// </summary>
+    public DateTime DateCreated { get; set; }
+
+    /// <summary>
+    /// The date and time (in UTC) when the connection was created.
+    /// </summary>
+    public DateTime DateModified { get; set; }
+
+    /// <summary>
+    /// The current version of the connection.
+    /// </summary>
+    public int Version { get; set; }
 }

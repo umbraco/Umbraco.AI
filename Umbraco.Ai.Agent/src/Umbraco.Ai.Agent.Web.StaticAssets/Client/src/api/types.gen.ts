@@ -12,6 +12,8 @@ export type AgentItemResponseModel = {
     profileId?: string | null;
     contextIds: Array<string>;
     isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
 };
 
 export type AgentResponseModel = {
@@ -23,6 +25,9 @@ export type AgentResponseModel = {
     contextIds: Array<string>;
     instructions?: string | null;
     isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
+    version: number;
 };
 
 export type AguiContextItemModel = {

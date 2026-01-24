@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Connections;
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Persistence;
@@ -10,16 +12,73 @@ namespace Umbraco.Ai.Tests.Unit.Repositories;
 public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
+    private readonly Mock<IAiConnectionFactory> _connectionFactoryMock;
 
     public EfCoreAiConnectionRepositoryTests(EfCoreTestFixture fixture)
     {
         _fixture = fixture;
+        _connectionFactoryMock = new Mock<IAiConnectionFactory>();
+
+        // Setup mock to pass through values without encryption for testing
+        _connectionFactoryMock
+            .Setup(f => f.BuildDomain(It.IsAny<AiConnectionEntity>()))
+            .Returns<AiConnectionEntity>(entity => new AiConnection
+            {
+                Id = entity.Id,
+                Alias = entity.Alias,
+                Name = entity.Name,
+                ProviderId = entity.ProviderId,
+                Settings = string.IsNullOrEmpty(entity.Settings)
+                    ? null
+                    : JsonSerializer.Deserialize<JsonElement>(entity.Settings, Constants.DefaultJsonSerializerOptions),
+                IsActive = entity.IsActive,
+                Version = entity.Version,
+                DateCreated = entity.DateCreated,
+                DateModified = entity.DateModified,
+                CreatedByUserId = entity.CreatedByUserId,
+                ModifiedByUserId = entity.ModifiedByUserId
+            });
+
+        _connectionFactoryMock
+            .Setup(f => f.BuildEntity(It.IsAny<AiConnection>()))
+            .Returns<AiConnection>(conn => new AiConnectionEntity
+            {
+                Id = conn.Id,
+                Alias = conn.Alias,
+                Name = conn.Name,
+                ProviderId = conn.ProviderId,
+                Settings = conn.Settings == null
+                    ? null
+                    : JsonSerializer.Serialize(conn.Settings, Constants.DefaultJsonSerializerOptions),
+                IsActive = conn.IsActive,
+                Version = conn.Version,
+                DateCreated = conn.DateCreated,
+                DateModified = conn.DateModified,
+                CreatedByUserId = conn.CreatedByUserId,
+                ModifiedByUserId = conn.ModifiedByUserId
+            });
+
+        _connectionFactoryMock
+            .Setup(f => f.UpdateEntity(It.IsAny<AiConnectionEntity>(), It.IsAny<AiConnection>()))
+            .Callback<AiConnectionEntity, AiConnection>((entity, conn) =>
+            {
+                entity.Alias = conn.Alias;
+                entity.Name = conn.Name;
+                entity.ProviderId = conn.ProviderId;
+                entity.Settings = conn.Settings == null
+                    ? null
+                    : JsonSerializer.Serialize(conn.Settings, Constants.DefaultJsonSerializerOptions);
+                entity.IsActive = conn.IsActive;
+                entity.Version = conn.Version;
+                entity.DateModified = conn.DateModified;
+                entity.ModifiedByUserId = conn.ModifiedByUserId;
+            });
     }
 
     private EfCoreAiConnectionRepository CreateRepository(UmbracoAiDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
-        return new EfCoreAiConnectionRepository(scopeProvider);
+        return new EfCoreAiConnectionRepository(scopeProvider, _connectionFactoryMock.Object);
     }
 
     #region GetAsync

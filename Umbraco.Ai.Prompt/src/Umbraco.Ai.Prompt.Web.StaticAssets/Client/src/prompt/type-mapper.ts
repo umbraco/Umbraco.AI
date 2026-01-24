@@ -58,6 +58,9 @@ export const UaiPromptTypeMapper = {
             scope: mapScopeFromApi(response.scope),
             isActive: response.isActive,
             includeEntityContext: response.includeEntityContext,
+            dateCreated: response.dateCreated,
+            dateModified: response.dateModified,
+            version: response.version,
         };
     },
 
@@ -69,6 +72,7 @@ export const UaiPromptTypeMapper = {
             name: response.name,
             description: response.description ?? null,
             isActive: response.isActive,
+            dateModified: response.dateModified,
         };
     },
 

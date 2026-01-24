@@ -1,4 +1,5 @@
 using Umbraco.Ai.Core.Contexts;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Tests.Common.Builders;
 
 namespace Umbraco.Ai.Tests.Unit.Services;
@@ -6,12 +7,14 @@ namespace Umbraco.Ai.Tests.Unit.Services;
 public class AiContextServiceTests
 {
     private readonly Mock<IAiContextRepository> _repositoryMock;
+    private readonly Mock<IAiEntityVersionService> _versionServiceMock;
     private readonly AiContextService _service;
 
     public AiContextServiceTests()
     {
         _repositoryMock = new Mock<IAiContextRepository>();
-        _service = new AiContextService(_repositoryMock.Object);
+        _versionServiceMock = new Mock<IAiEntityVersionService>();
+        _service = new AiContextService(_repositoryMock.Object, _versionServiceMock.Object);
     }
 
     #region GetContextAsync
@@ -200,7 +203,7 @@ public class AiContextServiceTests
             .Build();
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(context, It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAsync(context, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(context);
 
         // Act
@@ -209,7 +212,7 @@ public class AiContextServiceTests
         // Assert
         result.ShouldNotBeNull();
         result.Alias.ShouldBe("new-context");
-        _repositoryMock.Verify(x => x.SaveAsync(context, It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(context, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -228,7 +231,7 @@ public class AiContextServiceTests
             .Build();
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiContext>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAsync(It.IsAny<AiContext>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(context);
 
         // Act

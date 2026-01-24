@@ -16,6 +16,7 @@ import { UAI_ROLLBACK_MODAL } from "../../modals/rollback-modal/rollback-modal.t
 import { UaiUnifiedVersionHistoryRepository } from "../../repository/unified-version-history.repository.js";
 import { UmbUserItemModel, UmbUserItemRepository } from "@umbraco-cms/backoffice/user";
 import { formatDateTime } from "../../../utils";
+import { UAI_EMPTY_GUID } from "../../../index.js";
 
 const PAGE_SIZE = 10;
 
@@ -65,7 +66,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
     private _totalVersions = 0;
 
     @state()
-    private _loading = true;
+    private _loading = false;
 
     @state()
     private _currentPage = 1;
@@ -108,7 +109,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
     }
 
     async #loadVersionHistory() {
-        if (!this.entityType || !this.entityId) return;
+        if (!this.entityType || !this.entityId || this.entityId === UAI_EMPTY_GUID) return;
 
         this._loading = true;
         try {

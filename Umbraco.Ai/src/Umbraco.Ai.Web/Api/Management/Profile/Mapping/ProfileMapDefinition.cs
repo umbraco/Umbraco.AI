@@ -69,7 +69,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Tags = source.Tags;
     }
 
-    // Umbraco.Code.MapAll -DateCreated -DateModified -Version
+    // Umbraco.Code.MapAll
     private static void MapToResponse(AiProfile source, ProfileResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
@@ -82,6 +82,7 @@ public class ProfileMapDefinition : IMapDefinition
         target.Tags = source.Tags;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
+        target.Version = source.Version;
     }
 
     // Umbraco.Code.MapAll -DateCreated -DateModified -Version

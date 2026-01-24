@@ -126,6 +126,16 @@ export class UaiProfileWorkspaceContext
 
         return data;
     }
+    
+    /**
+     * Reloads the current connection.
+     */
+    async reload() {
+        const unique = this.getUnique();
+        if (unique) {
+            await this.load(unique);
+        }
+    }
 
     /**
      * Handles a command to update the model.
@@ -189,6 +199,7 @@ export class UaiProfileWorkspaceContext
             this.#commandStore.unmute();
         }
     }
+
 }
 
 export { UaiProfileWorkspaceContext as api };

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Agent.Core.Agents;
@@ -72,7 +73,7 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<AiAgent> SaveAsync(AiAgent agent, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiAgent> SaveAsync(AiAgent agent, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _agents[agent.Id] = agent;
         return Task.FromResult(agent);

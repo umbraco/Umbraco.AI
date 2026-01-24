@@ -25,8 +25,7 @@ import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../connection-root/paths.js"
  */
 export class UaiConnectionWorkspaceContext
     extends UmbSubmittableWorkspaceContextBase<UaiConnectionDetailModel>
-    implements UmbRoutableWorkspaceContext
-{
+    implements UmbRoutableWorkspaceContext {
     readonly routes = new UmbWorkspaceRouteManager(this);
 
     #unique = new UmbBasicState<string | undefined>(undefined);
@@ -126,6 +125,16 @@ export class UaiConnectionWorkspaceContext
 
         return data;
     }
+    
+    /**
+     * Reloads the current connection.
+     */
+    async reload() {
+        const unique = this.getUnique();
+        if (unique) {
+            await this.load(unique);
+        }
+    }
 
     /**
      * Handles a command to update the model.
@@ -189,6 +198,7 @@ export class UaiConnectionWorkspaceContext
             this.#commandStore.unmute();
         }
     }
+
 }
 
 export { UaiConnectionWorkspaceContext as api };

@@ -1,4 +1,3 @@
-using Umbraco.Ai.Core.Models;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -52,10 +51,10 @@ internal interface IAiPromptRepository
     /// Saves a prompt (creates or updates).
     /// </summary>
     /// <param name="prompt">The prompt to save.</param>
-    /// <param name="userId">Optional user ID for version tracking.</param>
+    /// <param name="userId">Optional user key (GUID) for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved prompt.</returns>
-    Task<AiPrompt> SaveAsync(AiPrompt prompt, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiPrompt> SaveAsync(AiPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a prompt by its ID.
@@ -81,28 +80,4 @@ internal interface IAiPromptRepository
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if alias exists.</returns>
     Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the version history for a prompt.
-    /// </summary>
-    /// <param name="promptId">The prompt ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid promptId,
-        int? limit = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a specific version snapshot of a prompt.
-    /// </summary>
-    /// <param name="promptId">The prompt ID.</param>
-    /// <param name="version">The version to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt at that version, or null if not found.</returns>
-    Task<AiPrompt?> GetVersionSnapshotAsync(
-        Guid promptId,
-        int version,
-        CancellationToken cancellationToken = default);
 }

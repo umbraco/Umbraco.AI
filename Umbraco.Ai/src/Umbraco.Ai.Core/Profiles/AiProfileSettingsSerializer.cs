@@ -1,9 +1,7 @@
 using System.Text.Json;
-using Umbraco.Ai.Core;
 using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
 
-namespace Umbraco.Ai.Persistence.Profiles;
+namespace Umbraco.Ai.Core.Profiles;
 
 /// <summary>
 /// Serializer for capability-specific profile settings.

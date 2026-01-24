@@ -1,4 +1,4 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
@@ -121,10 +121,18 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     <umb-input-markdown
                         slot="editor"
                         .value=${this._model.instructions ?? ""}
-                        @change=${this.#onInstructionsChange} 
+                        @change=${this.#onInstructionsChange}
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
+
+            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
+                <uai-version-history
+                    entity-type="agent"
+                    entity-id=${this._model.unique}
+                    @rollback=${() => this.#workspaceContext?.reload()}>
+                </uai-version-history>
+            ` : nothing}
         `;
     }
 
@@ -190,7 +198,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child) {
+            uui-box:not(:first-child),
+            uai-version-history {
                 margin-top: var(--uui-size-layout-1);
             }
 

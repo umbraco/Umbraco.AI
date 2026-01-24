@@ -1,14 +1,13 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.EntityAdapter;
-using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.RuntimeContext;
 using Umbraco.Ai.Core.Tools;
+using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
+using AiPropertyChange = Umbraco.Ai.Core.EntityAdapter.AiPropertyChange;
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
 namespace Umbraco.Ai.Prompt.Core.Prompts;
@@ -19,6 +18,7 @@ namespace Umbraco.Ai.Prompt.Core.Prompts;
 internal sealed class AiPromptService : IAiPromptService
 {
     private readonly IAiPromptRepository _repository;
+    private readonly IAiEntityVersionService _versionService;
     private readonly IAiChatService _chatService;
     private readonly IAiPromptTemplateService _templateService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -30,6 +30,7 @@ internal sealed class AiPromptService : IAiPromptService
 
     public AiPromptService(
         IAiPromptRepository repository,
+        IAiEntityVersionService versionService,
         IAiChatService chatService,
         IAiPromptTemplateService templateService,
         IServiceScopeFactory serviceScopeFactory,
@@ -40,6 +41,7 @@ internal sealed class AiPromptService : IAiPromptService
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
+        _versionService = versionService;
         _chatService = chatService;
         _templateService = templateService;
         _serviceScopeFactory = serviceScopeFactory;
@@ -95,7 +97,15 @@ internal sealed class AiPromptService : IAiPromptService
         // Update timestamp
         prompt.DateModified = DateTime.UtcNow;
 
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Id;
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
+
+        // Save version snapshot of existing entity before update
+        var existing = await _repository.GetByIdAsync(prompt.Id, cancellationToken);
+        if (existing is not null)
+        {
+            await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
+        }
+
         return await _repository.SaveAsync(prompt, userId, cancellationToken);
     }
 
@@ -229,18 +239,4 @@ internal sealed class AiPromptService : IAiPromptService
 
         return context;
     }
-
-    /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetPromptVersionHistoryAsync(
-        Guid promptId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-        => _repository.GetVersionHistoryAsync(promptId, limit, cancellationToken);
-
-    /// <inheritdoc />
-    public Task<AiPrompt?> GetPromptVersionSnapshotAsync(
-        Guid promptId,
-        int version,
-        CancellationToken cancellationToken = default)
-        => _repository.GetVersionSnapshotAsync(promptId, version, cancellationToken);
 }

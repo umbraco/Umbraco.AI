@@ -50,6 +50,9 @@ public static class UmbracoBuilderExtensions
         // Register prompt context resolver
         builder.AiContextResolvers().Append<PromptContextResolver>();
 
+        // Register versionable entity adapter for prompts
+        builder.AiVersionableEntityAdapters().Add<AiPromptVersionableEntityAdapter>();
+
         return builder;
     }
 }

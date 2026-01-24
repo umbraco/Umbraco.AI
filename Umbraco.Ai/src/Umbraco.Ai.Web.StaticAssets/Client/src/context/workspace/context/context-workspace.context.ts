@@ -127,6 +127,16 @@ export class UaiContextWorkspaceContext
     }
 
     /**
+     * Reloads the current connection.
+     */
+    async reload() {
+        const unique = this.getUnique();
+        if (unique) {
+            await this.load(unique);
+        }
+    }
+
+    /**
      * Handles a command to update the model.
      * Commands are tracked for replay after model refresh.
      */
@@ -188,6 +198,7 @@ export class UaiContextWorkspaceContext
             this.#commandStore.unmute();
         }
     }
+
 }
 
 export { UaiContextWorkspaceContext as api };

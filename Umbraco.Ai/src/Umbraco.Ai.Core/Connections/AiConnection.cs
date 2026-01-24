@@ -1,11 +1,12 @@
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Core.Connections;
 
 /// <summary>
 /// Represents a connection to an AI provider with credentials and settings.
 /// </summary>
-public class AiConnection : IAiVersionable
+public class AiConnection : IAiVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the connection.
@@ -50,14 +51,14 @@ public class AiConnection : IAiVersionable
     public DateTime DateModified { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// The ID of the user who created this connection.
+    /// The key (GUID) of the user who created this connection.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// The ID of the user who last modified this connection.
+    /// The key (GUID) of the user who last modified this connection.
     /// </summary>
-    public int? ModifiedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
 
     /// <summary>
     /// The current version of the connection.

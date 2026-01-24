@@ -14,11 +14,6 @@ public class UmbracoAiPromptDbContext : DbContext
     internal DbSet<AiPromptEntity> Prompts { get; set; } = null!;
 
     /// <summary>
-    /// Prompt version history.
-    /// </summary>
-    internal DbSet<AiPromptVersionEntity> PromptVersions { get; set; } = null!;
-
-    /// <summary>
     /// Creates a new instance of the DbContext.
     /// </summary>
     public UmbracoAiPromptDbContext(DbContextOptions<UmbracoAiPromptDbContext> options)
@@ -84,39 +79,6 @@ public class UmbracoAiPromptDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(e => e.ProfileId);
-        });
-
-        modelBuilder.Entity<AiPromptVersionEntity>(entity =>
-        {
-            entity.ToTable("umbracoAiPromptVersion");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.PromptId)
-                .IsRequired();
-
-            entity.Property(e => e.Version)
-                .IsRequired();
-
-            entity.Property(e => e.Snapshot)
-                .IsRequired();
-
-            entity.Property(e => e.DateCreated)
-                .IsRequired();
-
-            entity.Property(e => e.ChangeDescription)
-                .HasMaxLength(500);
-
-            // Foreign key with cascade delete (when prompt is deleted, delete its versions)
-            entity.HasOne<AiPromptEntity>()
-                .WithMany()
-                .HasForeignKey(e => e.PromptId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Composite unique index to ensure one version per prompt
-            entity.HasIndex(e => new { e.PromptId, e.Version })
-                .IsUnique();
-
-            entity.HasIndex(e => e.PromptId);
         });
     }
 }

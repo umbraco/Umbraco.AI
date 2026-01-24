@@ -9,6 +9,7 @@ export interface UaiConnectionDetailModel extends UmbEntityModel {
     providerId: string;
     settings: Record<string, unknown> | null;
     isActive: boolean;
+    version: number;
     dateCreated: string | null;
     dateModified: string | null;
 }

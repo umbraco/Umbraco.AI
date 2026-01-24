@@ -1,4 +1,4 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiContextDetailModel } from "../../../types.js";
@@ -65,6 +65,14 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
                     </div>
                 </umb-property-layout>
             </uui-box>
+
+            ${this._model.unique && this._model.unique !== UAI_EMPTY_GUID ? html`
+                <uai-version-history
+                    entity-type="context"
+                    entity-id=${this._model.unique}
+                    @rollback=${() => this.#workspaceContext?.reload()}>
+                </uai-version-history>
+            ` : nothing}
         `;
     }
 
@@ -101,7 +109,8 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
             }
-            uui-box:not(:first-child) {
+            uui-box:not(:first-child),
+            uai-version-history {
                 margin-top: var(--uui-size-layout-1);
             }
 

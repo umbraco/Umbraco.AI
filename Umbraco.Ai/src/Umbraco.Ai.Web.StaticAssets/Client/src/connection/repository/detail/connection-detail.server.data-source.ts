@@ -31,6 +31,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
             isActive: true,
             dateCreated: null,
             dateModified: null,
+            version: 0,
             ...preset,
         };
 

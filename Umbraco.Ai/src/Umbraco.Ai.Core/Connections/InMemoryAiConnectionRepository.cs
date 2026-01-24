@@ -71,7 +71,7 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public Task<AiConnection> SaveAsync(AiConnection connection, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiConnection> SaveAsync(AiConnection connection, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         var isUpdate = _connections.ContainsKey(connection.Id);
 
@@ -97,25 +97,5 @@ internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
     {
         var exists = _connections.ContainsKey(id);
         return Task.FromResult(exists);
-    }
-
-    /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid connectionId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository does not track version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
-    }
-
-    /// <inheritdoc />
-    public Task<AiConnection?> GetVersionSnapshotAsync(
-        Guid connectionId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository does not track version history
-        return Task.FromResult<AiConnection?>(null);
     }
 }

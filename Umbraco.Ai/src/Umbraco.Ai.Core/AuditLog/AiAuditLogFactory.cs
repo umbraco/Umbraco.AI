@@ -48,7 +48,7 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
         {
             Id = Guid.NewGuid(),
             ParentAuditLogId = parentId,
-            UserId = user?.Id.ToString(),
+            UserId = user?.Key.ToString(),
             UserName = user?.Name,
             Capability = context.Capability,
             ProfileId = context.ProfileId.Value,

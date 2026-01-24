@@ -66,12 +66,12 @@ internal class AiProfileEntity
     public DateTime DateModified { get; set; }
 
     /// <summary>
-    /// The ID of the user who created this profile.
+    /// The key (GUID) of the user who created this profile.
     /// </summary>
-    public int? CreatedByUserId { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// The ID of the user who last modified this profile.
+    /// The key (GUID) of the user who last modified this profile.
     /// </summary>
-    public int? ModifiedByUserId { get; set; }
+    public Guid? ModifiedByUserId { get; set; }
 }

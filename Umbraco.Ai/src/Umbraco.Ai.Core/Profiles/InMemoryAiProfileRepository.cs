@@ -56,7 +56,7 @@ internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
         return Task.FromResult<(IEnumerable<AiProfile> Items, int Total)>((pagedItems, total));
     }
 
-    public Task<AiProfile> SaveAsync(AiProfile profile, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiProfile> SaveAsync(AiProfile profile, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _profiles[profile.Id] = profile;
         return Task.FromResult(profile);
@@ -65,23 +65,5 @@ internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
     public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_profiles.TryRemove(id, out _));
-    }
-
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid profileId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository doesn't track version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
-    }
-
-    public Task<AiProfile?> GetVersionSnapshotAsync(
-        Guid profileId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository doesn't track version history
-        return Task.FromResult<AiProfile?>(null);
     }
 }

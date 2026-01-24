@@ -48,9 +48,9 @@ internal interface IAiConnectionRepository
     /// Save a connection (insert if new, update if exists).
     /// </summary>
     /// <param name="connection">The connection to save.</param>
-    /// <param name="userId">The ID of the user performing the operation.</param>
+    /// <param name="userId">The key (GUID) of the user performing the operation.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task<AiConnection> SaveAsync(AiConnection connection, int? userId = null, CancellationToken cancellationToken = default);
+    Task<AiConnection> SaveAsync(AiConnection connection, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Delete a connection by ID.
@@ -61,28 +61,4 @@ internal interface IAiConnectionRepository
     /// Check if a connection exists.
     /// </summary>
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the version history for a connection.
-    /// </summary>
-    /// <param name="connectionId">The connection ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid connectionId,
-        int? limit = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a specific version snapshot of a connection.
-    /// </summary>
-    /// <param name="connectionId">The connection ID.</param>
-    /// <param name="version">The version to retrieve.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The connection at that version, or null if not found.</returns>
-    Task<AiConnection?> GetVersionSnapshotAsync(
-        Guid connectionId,
-        int version,
-        CancellationToken cancellationToken = default);
 }

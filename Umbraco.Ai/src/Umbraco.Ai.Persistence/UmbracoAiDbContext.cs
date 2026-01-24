@@ -5,6 +5,7 @@ using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Ai.Persistence.Analytics;
 using Umbraco.Ai.Persistence.Analytics.Usage;
+using Umbraco.Ai.Persistence.Versioning;
 
 namespace Umbraco.Ai.Persistence;
 
@@ -54,19 +55,9 @@ public class UmbracoAiDbContext : DbContext
     internal DbSet<AiUsageStatisticsDailyEntity> UsageStatisticsDaily { get; set; } = null!;
 
     /// <summary>
-    /// AI profile version history.
+    /// Unified entity version history.
     /// </summary>
-    internal DbSet<AiProfileVersionEntity> ProfileVersions { get; set; } = null!;
-
-    /// <summary>
-    /// AI context version history.
-    /// </summary>
-    internal DbSet<AiContextVersionEntity> ContextVersions { get; set; } = null!;
-
-    /// <summary>
-    /// AI connection version history.
-    /// </summary>
-    internal DbSet<AiConnectionVersionEntity> ConnectionVersions { get; set; } = null!;
+    internal DbSet<AiEntityVersionEntity> EntityVersions { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -102,6 +93,10 @@ public class UmbracoAiDbContext : DbContext
 
             entity.Property(e => e.IsActive)
                 .IsRequired();
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
 
             entity.Property(e => e.DateCreated)
                 .IsRequired();
@@ -521,12 +516,16 @@ public class UmbracoAiDbContext : DbContext
                 .IsUnique();
         });
 
-        modelBuilder.Entity<AiProfileVersionEntity>(entity =>
+        modelBuilder.Entity<AiEntityVersionEntity>(entity =>
         {
-            entity.ToTable("umbracoAiProfileVersion");
+            entity.ToTable("umbracoAiEntityVersion");
             entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.ProfileId)
+            entity.Property(e => e.EntityId)
+                .IsRequired();
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(50)
                 .IsRequired();
 
             entity.Property(e => e.Version)
@@ -541,83 +540,12 @@ public class UmbracoAiDbContext : DbContext
             entity.Property(e => e.ChangeDescription)
                 .HasMaxLength(500);
 
-            // Foreign key with cascade delete (when profile is deleted, delete its versions)
-            entity.HasOne<AiProfileEntity>()
-                .WithMany()
-                .HasForeignKey(e => e.ProfileId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Composite unique index to ensure one version per profile
-            entity.HasIndex(e => new { e.ProfileId, e.Version })
+            // Composite unique index to ensure one version per entity per type
+            entity.HasIndex(e => new { e.EntityId, e.EntityType, e.Version })
                 .IsUnique();
 
-            entity.HasIndex(e => e.ProfileId);
-        });
-
-        modelBuilder.Entity<AiContextVersionEntity>(entity =>
-        {
-            entity.ToTable("umbracoAiContextVersion");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.ContextId)
-                .IsRequired();
-
-            entity.Property(e => e.Version)
-                .IsRequired();
-
-            entity.Property(e => e.Snapshot)
-                .IsRequired();
-
-            entity.Property(e => e.DateCreated)
-                .IsRequired();
-
-            entity.Property(e => e.ChangeDescription)
-                .HasMaxLength(500);
-
-            // Foreign key with cascade delete (when context is deleted, delete its versions)
-            entity.HasOne<AiContextEntity>()
-                .WithMany()
-                .HasForeignKey(e => e.ContextId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Composite unique index to ensure one version per context
-            entity.HasIndex(e => new { e.ContextId, e.Version })
-                .IsUnique();
-
-            entity.HasIndex(e => e.ContextId);
-        });
-
-        modelBuilder.Entity<AiConnectionVersionEntity>(entity =>
-        {
-            entity.ToTable("umbracoAiConnectionVersion");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.ConnectionId)
-                .IsRequired();
-
-            entity.Property(e => e.Version)
-                .IsRequired();
-
-            entity.Property(e => e.Snapshot)
-                .IsRequired();
-
-            entity.Property(e => e.DateCreated)
-                .IsRequired();
-
-            entity.Property(e => e.ChangeDescription)
-                .HasMaxLength(500);
-
-            // Foreign key with cascade delete (when connection is deleted, delete its versions)
-            entity.HasOne<AiConnectionEntity>()
-                .WithMany()
-                .HasForeignKey(e => e.ConnectionId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Composite unique index to ensure one version per connection
-            entity.HasIndex(e => new { e.ConnectionId, e.Version })
-                .IsUnique();
-
-            entity.HasIndex(e => e.ConnectionId);
+            // Index for fast lookup by entity type and id
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
         });
     }
 }

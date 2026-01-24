@@ -1,5 +1,6 @@
 using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.Models;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Tests.Common.Fakes;
 
@@ -71,7 +72,7 @@ public class FakeAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public Task<AiContext> SaveAsync(AiContext context, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         // For fakes, we expect the context to already have an ID set by the builder
         // DateCreated is init-only and set at construction time

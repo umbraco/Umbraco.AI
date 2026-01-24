@@ -184,6 +184,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Analytics";
             }
+
+            /// <summary>
+            /// Defines constants for Version History features.
+            /// </summary>
+            public static class Versioning
+            {
+                /// <summary>
+                /// The route segment for Version History features.
+                /// </summary>
+                public const string RouteSegment = "versions";
+
+                /// <summary>
+                /// The Swagger group name for Version History features.
+                /// </summary>
+                public const string GroupName = "Versions";
+            }
         }
     }
 }

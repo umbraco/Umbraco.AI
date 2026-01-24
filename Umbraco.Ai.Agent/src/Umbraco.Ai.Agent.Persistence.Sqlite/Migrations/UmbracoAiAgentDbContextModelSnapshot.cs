@@ -32,8 +32,8 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("TEXT");
@@ -53,8 +53,8 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -77,51 +77,6 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
                     b.HasIndex("ProfileId");
 
                     b.ToTable("UmbracoAiAgent", (string)null);
-                });
-
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("AgentId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ChangeDescription")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Snapshot")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId");
-
-                    b.HasIndex("AgentId", "Version")
-                        .IsUnique();
-
-                    b.ToTable("umbracoAiAgentVersion", (string)null);
-                });
-
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>
-                {
-                    b.HasOne("Umbraco.Ai.Agent.Persistence.Agents.AiAgentEntity", null)
-                        .WithMany()
-                        .HasForeignKey("AgentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

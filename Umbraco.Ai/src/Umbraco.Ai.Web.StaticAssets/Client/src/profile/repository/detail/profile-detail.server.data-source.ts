@@ -38,6 +38,7 @@ export class UaiProfileDetailServerDataSource implements UmbDetailDataSource<Uai
             tags: [],
             dateCreated: null,
             dateModified: null,
+            version: 0,
             ...preset,
         };
 

@@ -55,7 +55,7 @@ internal sealed class InMemoryAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public Task<AiContext> SaveAsync(AiContext context, int? userId = null, CancellationToken cancellationToken = default)
+    public Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _contexts[context.Id] = context;
         return Task.FromResult(context);
@@ -65,25 +65,5 @@ internal sealed class InMemoryAiContextRepository : IAiContextRepository
     public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_contexts.TryRemove(id, out _));
-    }
-
-    /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid contextId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository doesn't track version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
-    }
-
-    /// <inheritdoc />
-    public Task<AiContext?> GetVersionSnapshotAsync(
-        Guid contextId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        // In-memory repository doesn't track version history
-        return Task.FromResult<AiContext?>(null);
     }
 }

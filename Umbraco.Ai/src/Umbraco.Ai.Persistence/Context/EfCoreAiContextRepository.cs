@@ -98,7 +98,7 @@ internal class EfCoreAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiContext> SaveAsync(AiContext context, int? userId = null, CancellationToken cancellationToken = default)
+    public async Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
 
@@ -121,20 +121,8 @@ internal class EfCoreAiContextRepository : IAiContextRepository
             }
             else
             {
-                // Existing context - create version snapshot of current state before updating
-                var existingDomain = AiContextFactory.BuildDomain(existing);
-                var versionEntity = new AiContextVersionEntity
-                {
-                    Id = Guid.NewGuid(),
-                    ContextId = existing.Id,
-                    Version = existing.Version,
-                    Snapshot = AiContextFactory.CreateSnapshot(existingDomain),
-                    DateCreated = DateTime.UtcNow,
-                    CreatedByUserId = userId
-                };
-                db.ContextVersions.Add(versionEntity);
-
                 // Increment version, update timestamps, and set ModifiedByUserId on domain model
+                // Note: Version snapshots are handled by the unified versioning service at the service layer
                 context.Version = existing.Version + 1;
                 context.DateModified = DateTime.UtcNow;
                 context.ModifiedByUserId = userId;
@@ -200,63 +188,5 @@ internal class EfCoreAiContextRepository : IAiContextRepository
 
         scope.Complete();
         return deleted;
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
-        Guid contextId,
-        int? limit = null,
-        CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
-
-        var entities = await scope.ExecuteWithContextAsync(async db =>
-        {
-            IQueryable<AiContextVersionEntity> query = db.ContextVersions
-                .Where(v => v.ContextId == contextId)
-                .OrderByDescending(v => v.Version);
-
-            if (limit.HasValue)
-            {
-                query = query.Take(limit.Value);
-            }
-
-            return await query.ToListAsync(cancellationToken);
-        });
-
-        scope.Complete();
-
-        return entities.Select(e => new AiEntityVersion
-        {
-            Id = e.Id,
-            EntityId = e.ContextId,
-            Version = e.Version,
-            Snapshot = e.Snapshot,
-            DateCreated = e.DateCreated,
-            CreatedByUserId = e.CreatedByUserId,
-            ChangeDescription = e.ChangeDescription
-        });
-    }
-
-    /// <inheritdoc />
-    public async Task<AiContext?> GetVersionSnapshotAsync(
-        Guid contextId,
-        int version,
-        CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
-
-        var entity = await scope.ExecuteWithContextAsync(async db =>
-            await db.ContextVersions
-                .FirstOrDefaultAsync(v => v.ContextId == contextId && v.Version == version, cancellationToken));
-
-        scope.Complete();
-
-        if (entity is null || string.IsNullOrEmpty(entity.Snapshot))
-        {
-            return null;
-        }
-
-        return AiContextFactory.BuildDomainFromSnapshot(entity.Snapshot);
     }
 }

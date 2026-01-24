@@ -33,7 +33,7 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
             settings = _serializer.Deserialize(entity.Settings);
         }
 
-        return new AiConnection
+        var connection = new AiConnection
         {
             Id = entity.Id,
             Alias = entity.Alias,
@@ -47,6 +47,12 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
             CreatedByUserId = entity.CreatedByUserId,
             ModifiedByUserId = entity.ModifiedByUserId
         };
+
+        // Set version using internal setter
+        typeof(AiConnection).GetProperty(nameof(AiConnection.Version))!
+            .SetValue(connection, entity.Version);
+
+        return connection;
     }
 
     /// <inheritdoc />
@@ -84,80 +90,6 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
         entity.DateModified = connection.DateModified;
         entity.ModifiedByUserId = connection.ModifiedByUserId;
         // CreatedByUserId and DateCreated are intentionally not updated
-    }
-
-    /// <inheritdoc />
-    public string CreateSnapshot(AiConnection connection)
-    {
-        // Create a snapshot with encrypted settings
-        var schema = GetSchemaForProvider(connection.ProviderId);
-        var encryptedSettings = _serializer.Serialize(connection.Settings, schema);
-
-        var snapshot = new
-        {
-            connection.Id,
-            connection.Alias,
-            connection.Name,
-            connection.ProviderId,
-            Settings = encryptedSettings, // Encrypted JSON string
-            connection.IsActive,
-            connection.Version,
-            connection.DateCreated,
-            connection.DateModified,
-            connection.CreatedByUserId,
-            connection.ModifiedByUserId
-        };
-
-        return JsonSerializer.Serialize(snapshot, Constants.DefaultJsonSerializerOptions);
-    }
-
-    /// <inheritdoc />
-    public AiConnection? BuildDomainFromSnapshot(string json)
-    {
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
-
-        try
-        {
-            // Parse the snapshot JSON
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            // Decrypt settings (the serializer handles ENC: prefixed values)
-            object? settings = null;
-            if (root.TryGetProperty("settings", out var settingsElement) &&
-                settingsElement.ValueKind == JsonValueKind.String)
-            {
-                var settingsJson = settingsElement.GetString();
-                if (!string.IsNullOrEmpty(settingsJson))
-                {
-                    settings = _serializer.Deserialize(settingsJson);
-                }
-            }
-
-            return new AiConnection
-            {
-                Id = root.GetProperty("id").GetGuid(),
-                Alias = root.GetProperty("alias").GetString()!,
-                Name = root.GetProperty("name").GetString()!,
-                ProviderId = root.GetProperty("providerId").GetString()!,
-                Settings = settings,
-                IsActive = root.GetProperty("isActive").GetBoolean(),
-                Version = root.GetProperty("version").GetInt32(),
-                DateCreated = root.GetProperty("dateCreated").GetDateTime(),
-                DateModified = root.GetProperty("dateModified").GetDateTime(),
-                CreatedByUserId = root.TryGetProperty("createdByUserId", out var cbu) && cbu.ValueKind != JsonValueKind.Null
-                    ? cbu.GetInt32() : null,
-                ModifiedByUserId = root.TryGetProperty("modifiedByUserId", out var mbu) && mbu.ValueKind != JsonValueKind.Null
-                    ? mbu.GetInt32() : null
-            };
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     private AiEditableModelSchema? GetSchemaForProvider(string providerId)

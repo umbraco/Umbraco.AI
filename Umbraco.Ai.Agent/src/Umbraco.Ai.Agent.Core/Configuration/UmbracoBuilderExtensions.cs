@@ -54,6 +54,9 @@ public static class UmbracoBuilderExtensions
         // This ensures server-side tools execute before frontend tools trigger termination
         builder.AiChatMiddleware().InsertBefore<AiFunctionInvokingChatMiddleware, AiToolReorderingChatMiddleware>();
 
+        // Register versionable entity adapter for agents
+        builder.AiVersionableEntityAdapters().Add<AiAgentVersionableEntityAdapter>();
+
         return builder;
     }
 }

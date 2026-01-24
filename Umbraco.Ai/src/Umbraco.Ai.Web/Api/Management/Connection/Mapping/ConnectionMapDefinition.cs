@@ -69,6 +69,7 @@ public class ConnectionMapDefinition : IMapDefinition
         target.ProviderId = source.ProviderId;
         target.Settings = source.Settings;
         target.IsActive = source.IsActive;
+        target.Version = source.Version;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
         target.Version = source.Version;

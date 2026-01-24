@@ -1,5 +1,6 @@
 using Umbraco.Ai.Core.Models;
 using Umbraco.Ai.Core.Providers;
+using Umbraco.Ai.Core.Versioning;
 
 namespace Umbraco.Ai.Core.Connections;
 
@@ -93,12 +94,14 @@ public interface IAiConnectionService
     /// Gets the version history for a connection.
     /// </summary>
     /// <param name="connectionId">The connection ID.</param>
-    /// <param name="limit">Optional limit on number of versions to return.</param>
+    /// <param name="skip">Number of versions to skip.</param>
+    /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The version history, ordered by version descending.</returns>
-    Task<IEnumerable<AiEntityVersion>> GetConnectionVersionHistoryAsync(
+    /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
+    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
         Guid connectionId,
-        int? limit = null,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -111,5 +114,18 @@ public interface IAiConnectionService
     Task<AiConnection?> GetConnectionVersionSnapshotAsync(
         Guid connectionId,
         int version,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rolls back a connection to a previous version.
+    /// </summary>
+    /// <param name="connectionId">The connection ID.</param>
+    /// <param name="targetVersion">The version to rollback to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated connection at the new version.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the connection or target version is not found.</exception>
+    Task<AiConnection> RollbackConnectionAsync(
+        Guid connectionId,
+        int targetVersion,
         CancellationToken cancellationToken = default);
 }

@@ -40,9 +40,12 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
             if (context) {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
+                    // Only load provider details when providerId changes, not on every model update.
+                    // This prevents unnecessary re-renders that cause cursor jumping in form inputs.
+                    const providerChanged = model?.providerId && model.providerId !== this._model?.providerId;
                     this._model = model;
-                    if (model?.providerId) {
-                        this.#loadProviderDetails(model.providerId);
+                    if (providerChanged) {
+                        this.#loadProviderDetails(model!.providerId);
                     }
                 });
             }

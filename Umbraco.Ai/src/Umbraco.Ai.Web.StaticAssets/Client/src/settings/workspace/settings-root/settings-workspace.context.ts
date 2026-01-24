@@ -1,15 +1,13 @@
 import { UmbSubmittableWorkspaceContextBase } from "@umbraco-cms/backoffice/workspace";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
-import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UAI_SETTINGS_ROOT_WORKSPACE_ALIAS } from "../../constants.js";
 import { UAI_SETTINGS_ROOT_ENTITY_TYPE } from "../../entity.js";
-import { SettingsService } from "../../../api/sdk.gen.js";
+import { settingsRepository } from "../../repository/settings.repository.js";
+import type { UaiSettingsModel } from "../../types.js";
 
-export interface UaiSettingsModel {
-    defaultChatProfileId: string | null;
-    defaultEmbeddingProfileId: string | null;
-}
+export type { UaiSettingsModel } from "../../types.js";
 
 /**
  * Workspace context for editing AI Settings.
@@ -17,6 +15,8 @@ export interface UaiSettingsModel {
  */
 export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextBase<UaiSettingsModel> {
     public readonly IS_SETTINGS_WORKSPACE_CONTEXT = true;
+
+    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
     // Required by UmbSubmittableWorkspaceContextBase - settings is a singleton
     #unique = new UmbBasicState<string>("settings");
@@ -31,34 +31,29 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
     #loading = new UmbObjectState<boolean>(true);
     readonly loading = this.#loading.asObservable();
 
-    #error = new UmbObjectState<string | null>(null);
-    readonly error = this.#error.asObservable();
-
     constructor(host: UmbControllerHost) {
         super(host, UAI_SETTINGS_ROOT_WORKSPACE_ALIAS);
+
+        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
+            this.#notificationContext = context;
+        });
+
         this.#loadSettings();
     }
 
     async #loadSettings(): Promise<void> {
         this.#loading.setValue(true);
-        this.#error.setValue(null);
 
-        const { data, error } = await tryExecute(this, SettingsService.getSettings());
-
-        if (error) {
-            this.#error.setValue("Failed to load settings");
-            this.#loading.setValue(false);
-            return;
-        }
-
-        if (data) {
-            this.#model.setValue({
-                defaultChatProfileId: data.defaultChatProfileId ?? null,
-                defaultEmbeddingProfileId: data.defaultEmbeddingProfileId ?? null,
+        try {
+            const model = await settingsRepository.get();
+            this.#model.setValue(model);
+        } catch {
+            this.#notificationContext?.peek("danger", {
+                data: { message: "Failed to load settings" },
             });
+        } finally {
+            this.#loading.setValue(false);
         }
-
-        this.#loading.setValue(false);
     }
 
     setDefaultChatProfileId(value: string | null): void {
@@ -91,28 +86,15 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
 
     async submit(): Promise<void> {
         const model = this.#model.getValue();
-        this.#error.setValue(null);
 
-        const { data, error } = await tryExecute(
-            this,
-            SettingsService.updateSettings({
-                body: {
-                    defaultChatProfileId: model.defaultChatProfileId ?? undefined,
-                    defaultEmbeddingProfileId: model.defaultEmbeddingProfileId ?? undefined,
-                },
-            })
-        );
-
-        if (error) {
-            this.#error.setValue("Failed to save settings");
-            throw new Error("Failed to save settings");
-        }
-
-        if (data) {
-            this.#model.setValue({
-                defaultChatProfileId: data.defaultChatProfileId ?? null,
-                defaultEmbeddingProfileId: data.defaultEmbeddingProfileId ?? null,
+        try {
+            const saved = await settingsRepository.save(model);
+            this.#model.setValue(saved);
+        } catch {
+            this.#notificationContext?.peek("danger", {
+                data: { message: "Failed to save settings" },
             });
+            throw new Error("Failed to save settings");
         }
     }
 }

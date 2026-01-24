@@ -4,6 +4,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
+import "@umbraco-cms/backoffice/markdown-editor";
 import type { UaiPromptDetailModel } from "../../../types.js";
 import type { UaiPromptScope, UaiScopeRule } from "../../../property-actions/types.js";
 import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../../property-actions/constants.js";

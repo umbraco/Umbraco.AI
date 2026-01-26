@@ -353,11 +353,16 @@ stages:
           )
         pool:
           vmImage: 'ubuntu-latest'
+        variables:
+          # Map dependency outputs to job variables (dependencies context only works at job level)
+          CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
+          ${{ each product in parameters.level1Products }}:
+            ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
         steps:
           # Download Core NuGet packages (only if Core changed)
           - task: DownloadPipelineArtifact@2
             displayName: Download Umbraco.Ai NuGet packages
-            condition: eq(dependencies.DetectChanges.outputs['detect.CoreChanged'], 'true')
+            condition: eq(variables.CoreChanged, 'true')
             inputs:
               artifact: 'Umbraco.Ai-packages'
               targetPath: '$(Pipeline.Workspace)/nuget'
@@ -365,7 +370,7 @@ stages:
           # Download Core npm packages (only if Core changed)
           - task: DownloadPipelineArtifact@2
             displayName: Download Umbraco.Ai npm packages
-            condition: eq(dependencies.DetectChanges.outputs['detect.CoreChanged'], 'true')
+            condition: eq(variables.CoreChanged, 'true')
             continueOnError: true
             inputs:
               artifact: 'Umbraco.Ai-npm-packages'
@@ -375,7 +380,7 @@ stages:
           - ${{ each product in parameters.level1Products }}:
             - task: DownloadPipelineArtifact@2
               displayName: Download ${{ product.name }} NuGet packages
-              condition: eq(dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'], 'true')
+              condition: eq(variables.${{ product.changeVar }}, 'true')
               inputs:
                 artifact: '${{ product.name }}-packages'
                 targetPath: '$(Pipeline.Workspace)/nuget'
@@ -384,7 +389,7 @@ stages:
           - ${{ each product in parameters.level1Products }}:
             - task: DownloadPipelineArtifact@2
               displayName: Download ${{ product.name }} npm packages
-              condition: eq(dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'], 'true')
+              condition: eq(variables.${{ product.changeVar }}, 'true')
               continueOnError: true
               inputs:
                 artifact: '${{ product.name }}-npm-packages'

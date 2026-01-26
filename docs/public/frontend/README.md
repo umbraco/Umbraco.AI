@@ -78,6 +78,11 @@ class MyElement extends LitElement {
 }
 ```
 
+The controller handles:
+- API communication with the Management API
+- Request lifecycle management
+- Automatic cleanup on element disconnect
+
 ### Profile Selection
 
 Specify which AI profile to use via `profileIdOrAlias`:
@@ -100,21 +105,17 @@ Pass an `AbortSignal` to cancel requests:
 ```typescript
 const abortController = new AbortController();
 
+// Start the request
+const promise = controller.complete(messages, { signal: abortController.signal });
+
 // Later, to cancel:
 abortController.abort();
-
-// Pass signal to chat
-await controller.complete(messages, { signal: abortController.signal });
 ```
 
 ## In This Section
 
 {% content-ref url="chat-controller.md" %}
 [Chat Controller](chat-controller.md)
-{% endcontent-ref %}
-
-{% content-ref url="chat-repository.md" %}
-[Chat Repository](chat-repository.md)
 {% endcontent-ref %}
 
 {% content-ref url="types.md" %}

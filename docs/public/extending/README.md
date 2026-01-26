@@ -63,13 +63,13 @@ Umbraco.Ai is designed to be extensible. You can add support for new AI provider
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     Middleware Pipeline                      │
+│                     Middleware Pipeline                     │
 │    [Your Middleware] → [Logging] → [Caching] → ...          │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                        Provider                              │
+│                        Provider                             │
 │         OpenAI / Azure / [Your Provider]                    │
 └─────────────────────────────────────────────────────────────┘
                               │

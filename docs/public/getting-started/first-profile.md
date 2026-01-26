@@ -45,19 +45,15 @@ Leave settings empty to use the model's default values. Only set values you want
 
 ## Set as Default
 
-To use this profile when no profile is specified in code, update your configuration:
+To use this profile when no profile is specified in code:
 
-{% code title="appsettings.json" %}
-```json
-{
-  "Umbraco": {
-    "Ai": {
-      "DefaultChatProfileAlias": "content-assistant"
-    }
-  }
-}
-```
-{% endcode %}
+1. Navigate to **Settings** > **AI** > **Settings**
+2. Select "Content Assistant" from the **Default Chat Profile** dropdown
+3. Click **Save**
+
+{% hint style="info" %}
+See [Managing Settings](../backoffice/managing-settings.md) for more details on configuring defaults.
+{% endhint %}
 
 ## Use the Profile in Code
 
@@ -85,8 +81,8 @@ public class ContentController : UmbracoApiController
             new(ChatRole.User, $"Summarize this content:\n\n{content}")
         };
 
-        // Uses the default profile configured in appsettings.json
-        var response = await _chatService.GetResponseAsync(messages);
+        // Uses the default profile configured in Settings
+        var response = await _chatService.GetChatResponseAsync(messages);
 
         return Ok(response.Message.Text);
     }
@@ -111,7 +107,7 @@ public async Task<IActionResult> GenerateSummary(
         new(ChatRole.User, $"Summarize this content:\n\n{content}")
     };
 
-    var response = await _chatService.GetResponseAsync(profile!.Id, messages);
+    var response = await _chatService.GetChatResponseAsync(profile!.Id, messages);
 
     return Ok(response.Message.Text);
 }

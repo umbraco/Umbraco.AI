@@ -105,7 +105,7 @@ public class PublicChatController : ControllerBase
             new(ChatRole.User, request.Message)
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
 
         return Ok(new { response = response.Message.Text });
     }

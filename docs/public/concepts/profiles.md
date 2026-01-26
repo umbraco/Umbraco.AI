@@ -56,26 +56,18 @@ Profiles provide these benefits:
 
 ### Default Profile
 
-Configure a default in `appsettings.json`:
+Configure a default profile through the backoffice:
 
-{% code title="appsettings.json" %}
-```json
-{
-  "Umbraco": {
-    "Ai": {
-      "DefaultChatProfileAlias": "content-writer"
-    }
-  }
-}
-```
-{% endcode %}
+1. Navigate to **Settings** > **AI** > **Settings**
+2. Select "content-writer" from the **Default Chat Profile** dropdown
+3. Click **Save**
 
 Then use the service without specifying a profile:
 
 {% code title="Example.cs" %}
 ```csharp
-// Uses "content-writer" profile automatically
-var response = await _chatService.GetResponseAsync(messages);
+// Uses the default profile configured in Settings
+var response = await _chatService.GetChatResponseAsync(messages);
 ```
 {% endcode %}
 
@@ -86,7 +78,7 @@ Look up and use a specific profile:
 {% code title="Example.cs" %}
 ```csharp
 var profile = await _profileService.GetProfileByAliasAsync("code-assistant");
-var response = await _chatService.GetResponseAsync(profile!.Id, messages);
+var response = await _chatService.GetChatResponseAsync(profile!.Id, messages);
 ```
 {% endcode %}
 
@@ -102,7 +94,7 @@ var options = new ChatOptions
     MaxOutputTokens = 500
 };
 
-var response = await _chatService.GetResponseAsync(messages, options);
+var response = await _chatService.GetChatResponseAsync(messages, options);
 ```
 {% endcode %}
 

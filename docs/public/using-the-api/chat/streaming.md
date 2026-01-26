@@ -39,7 +39,7 @@ public class StreamingExample
             new(ChatRole.User, question)
         };
 
-        await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+        await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
         {
             // Each update contains a chunk of text
             Console.Write(update.Text);
@@ -63,7 +63,7 @@ Each streamed chunk is a `ChatResponseUpdate`:
 
 {% code title="UpdateDetails.cs" %}
 ```csharp
-await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
 {
     if (update.Text is not null)
     {
@@ -107,7 +107,7 @@ public class ChatController : UmbracoApiController
             new(ChatRole.User, request.Message)
         };
 
-        await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+        await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
         {
             if (update.Text is not null)
             {
@@ -142,7 +142,7 @@ public async Task StreamChatSSE([FromBody] ChatRequest request)
         new(ChatRole.User, request.Message)
     };
 
-    await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+    await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
     {
         if (update.Text is not null)
         {
@@ -176,7 +176,7 @@ public async Task<(string FullText, ChatFinishReason? Reason)> StreamAndCollect(
     var fullText = new StringBuilder();
     ChatFinishReason? finishReason = null;
 
-    await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+    await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
     {
         if (update.Text is not null)
         {
@@ -212,7 +212,7 @@ public async Task StreamWithCancellation(
 
     try
     {
-        await foreach (var update in _chatService.GetStreamingResponseAsync(
+        await foreach (var update in _chatService.GetStreamingChatResponseAsync(
             messages,
             cancellationToken: cancellationToken))
         {
@@ -232,7 +232,7 @@ public async Task StreamWithCancellation(
 {% code title="StreamWithProfile.cs" %}
 ```csharp
 // With profile ID
-await foreach (var update in _chatService.GetStreamingResponseAsync(
+await foreach (var update in _chatService.GetStreamingChatResponseAsync(
     profileId,
     messages))
 {
@@ -242,7 +242,7 @@ await foreach (var update in _chatService.GetStreamingResponseAsync(
 // With options
 var options = new ChatOptions { Temperature = 0.8f };
 
-await foreach (var update in _chatService.GetStreamingResponseAsync(
+await foreach (var update in _chatService.GetStreamingChatResponseAsync(
     messages,
     options))
 {

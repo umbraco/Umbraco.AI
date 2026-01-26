@@ -75,21 +75,14 @@ Embedding profiles currently use model defaults. Select the appropriate embeddin
 
 To use a profile as the default when no profile is specified in code:
 
-1. Note the profile's **Alias**
-2. Add to `appsettings.json`:
+1. Navigate to **Settings** > **AI** > **Settings**
+2. Select your chat profile from the **Default Chat Profile** dropdown
+3. Select your embedding profile from the **Default Embedding Profile** dropdown
+4. Click **Save**
 
-{% code title="appsettings.json" %}
-```json
-{
-  "Umbraco": {
-    "Ai": {
-      "DefaultChatProfileAlias": "your-chat-profile-alias",
-      "DefaultEmbeddingProfileAlias": "your-embedding-profile-alias"
-    }
-  }
-}
-```
-{% endcode %}
+{% hint style="info" %}
+See [Managing Settings](managing-settings.md) for more details on configuring default profiles.
+{% endhint %}
 
 ## Editing a Profile
 

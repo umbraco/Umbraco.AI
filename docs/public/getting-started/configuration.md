@@ -1,43 +1,36 @@
 ---
 description: >-
-  Configure Umbraco.Ai settings in appsettings.json to set default profiles.
+  Configure default profiles and provider settings for Umbraco.Ai.
 ---
 
 # Configuration
 
-Umbraco.Ai uses the standard Umbraco configuration pattern. Settings are stored in `appsettings.json` under the `Umbraco:Ai` section.
+After creating your first profile, you can configure default profiles and provider-specific settings.
 
-## Configuration Options
+## Setting Default Profiles
 
-{% code title="appsettings.json" %}
-```json
-{
-  "Umbraco": {
-    "Ai": {
-      "DefaultChatProfileAlias": "default-chat",
-      "DefaultEmbeddingProfileAlias": "default-embedding"
-    }
-  }
-}
-```
-{% endcode %}
+Default profiles determine which profile is used when calling AI services without specifying a profile ID. Configure defaults through the backoffice:
 
-| Setting | Description |
-|---------|-------------|
-| `DefaultChatProfileAlias` | The alias of the profile to use when calling chat methods without specifying a profile |
-| `DefaultEmbeddingProfileAlias` | The alias of the profile to use when calling embedding methods without specifying a profile |
+1. Navigate to **Settings** > **AI** > **Settings**
+2. Select your default chat profile from the dropdown
+3. Select your default embedding profile (if applicable)
+4. Click **Save**
+
+{% hint style="info" %}
+See [Managing Settings](../backoffice/managing-settings.md) for detailed instructions.
+{% endhint %}
 
 ## How Default Profiles Work
 
-When you call `IAiChatService.GetResponseAsync()` without specifying a profile ID, the service uses the profile identified by `DefaultChatProfileAlias`.
+When you call `IAiChatService.GetChatResponseAsync()` without specifying a profile ID, the service uses the default profile configured in settings.
 
 {% code title="Example.cs" %}
 ```csharp
-// Uses the profile with alias "default-chat"
-var response = await _chatService.GetResponseAsync(messages);
+// Uses the default chat profile configured in Settings
+var response = await _chatService.GetChatResponseAsync(messages);
 
 // Or explicitly specify a profile
-var response = await _chatService.GetResponseAsync(profileId, messages);
+var response = await _chatService.GetChatResponseAsync(profileId, messages);
 ```
 {% endcode %}
 
@@ -74,8 +67,41 @@ Use standard .NET configuration patterns for environment-specific settings:
 * Environment variables
 * User secrets (for local development)
 
+## Programmatic Settings
+
+You can also configure default profiles programmatically:
+
+{% code title="Example.cs" %}
+```csharp
+public class SettingsExample
+{
+    private readonly IAiSettingsService _settingsService;
+
+    public SettingsExample(IAiSettingsService settingsService)
+    {
+        _settingsService = settingsService;
+    }
+
+    public async Task SetDefaultChatProfile(Guid profileId)
+    {
+        var settings = await _settingsService.GetSettingsAsync();
+        settings.DefaultChatProfileId = profileId;
+        await _settingsService.SaveSettingsAsync(settings);
+    }
+}
+```
+{% endcode %}
+
 ## Next Steps
 
-{% content-ref url="first-connection.md" %}
-[Your First Connection](first-connection.md)
+Learn more about using the chat API:
+
+{% content-ref url="../using-the-api/chat/README.md" %}
+[Chat](../using-the-api/chat/README.md)
+{% endcontent-ref %}
+
+Or explore the core concepts:
+
+{% content-ref url="../concepts/README.md" %}
+[Core Concepts](../concepts/README.md)
 {% endcontent-ref %}

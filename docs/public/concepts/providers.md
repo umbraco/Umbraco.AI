@@ -12,16 +12,16 @@ A provider is a NuGet package that enables Umbraco.Ai to communicate with a spec
 Providers are discovered automatically when you install their NuGet package. They register themselves using the `[AiProvider]` attribute and implement the `IAiProvider` interface.
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  Umbraco.Ai                     │
-│    ┌─────────────────────────────────────────┐  │
-│    │        Provider Registry                │  │
-│    │  ┌──────────┐  ┌──────────┐            │  │
-│    │  │  OpenAI  │  │  Azure   │  ...       │  │
-│    │  │ Provider │  │ Provider │            │  │
-│    │  └──────────┘  └──────────┘            │  │
-│    └─────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                 Umbraco.Ai                                      │
+│    ┌─────────────────────────────────────────────────────────────────────────┐  │
+│    │                          Provider Registry                              │  │
+│    │  ┌──────────┐ ┌───────────┐ ┌──────────┐ ┌─────────┐ ┌───────────────┐  │  │
+│    │  │  OpenAI  │ │ Anthropic │ │ Google   │ │ Amazon  │ │ MS AI Foundry │  │  │
+│    │  │ Provider │ │  Provider │ │ Provider │ │ Bedrock │ │   Provider    │  │  │
+│    │  └──────────┘ └───────────┘ └──────────┘ └─────────┘ └───────────────┘  │  │
+│    └─────────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Available Providers
@@ -29,9 +29,13 @@ Providers are discovered automatically when you install their NuGet package. The
 | Provider | Package | Capabilities |
 |----------|---------|--------------|
 | OpenAI | `Umbraco.Ai.OpenAi` | Chat, Embedding |
+| Anthropic | `Umbraco.Ai.Anthropic` | Chat |
+| Google Gemini | `Umbraco.Ai.Google` | Chat |
+| Amazon Bedrock | `Umbraco.Ai.Amazon` | Chat, Embedding |
+| Microsoft AI Foundry | `Umbraco.Ai.MicrosoftFoundry` | Chat, Embedding |
 
 {% hint style="info" %}
-Additional providers will be available in future releases. You can also create custom providers.
+For detailed configuration instructions for each provider, see the [Providers](../providers/README.md) section. You can also create custom providers.
 {% endhint %}
 
 ## Provider Discovery

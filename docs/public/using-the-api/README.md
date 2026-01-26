@@ -71,7 +71,7 @@ var messages = new List<ChatMessage>
     new(ChatRole.User, "What is Umbraco CMS?")
 };
 
-var response = await _chatService.GetResponseAsync(messages);
+var response = await _chatService.GetChatResponseAsync(messages);
 var answer = response.Message.Text;
 ```
 {% endcode %}
@@ -85,7 +85,7 @@ var messages = new List<ChatMessage>
     new(ChatRole.User, "Write a short poem about coding.")
 };
 
-await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
 {
     Console.Write(update.Text);
 }

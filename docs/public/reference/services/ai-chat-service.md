@@ -20,23 +20,23 @@ using Microsoft.Extensions.AI;
 ```csharp
 public interface IAiChatService
 {
-    Task<ChatResponse> GetResponseAsync(
+    Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
-    Task<ChatResponse> GetResponseAsync(
+    Task<ChatResponse> GetChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
@@ -51,18 +51,18 @@ public interface IAiChatService
 
 ## Methods
 
-### GetResponseAsync
+### GetChatResponseAsync
 
 Performs a chat completion and returns the full response.
 
 {% code title="Signature" %}
 ```csharp
-Task<ChatResponse> GetResponseAsync(
+Task<ChatResponse> GetChatResponseAsync(
     IEnumerable<ChatMessage> messages,
     ChatOptions? options = null,
     CancellationToken cancellationToken = default);
 
-Task<ChatResponse> GetResponseAsync(
+Task<ChatResponse> GetChatResponseAsync(
     Guid profileId,
     IEnumerable<ChatMessage> messages,
     ChatOptions? options = null,
@@ -87,25 +87,25 @@ var messages = new[]
     new ChatMessage(ChatRole.User, "What is Umbraco?")
 };
 
-var response = await _chatService.GetResponseAsync(messages);
+var response = await _chatService.GetChatResponseAsync(messages);
 
 Console.WriteLine(response.Message.Text);
 Console.WriteLine($"Tokens: {response.Usage?.TotalTokenCount}");
 ```
 {% endcode %}
 
-### GetStreamingResponseAsync
+### GetStreamingChatResponseAsync
 
 Performs a streaming chat completion, yielding updates as they arrive.
 
 {% code title="Signature" %}
 ```csharp
-IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
     IEnumerable<ChatMessage> messages,
     ChatOptions? options = null,
     CancellationToken cancellationToken = default);
 
-IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
     Guid profileId,
     IEnumerable<ChatMessage> messages,
     ChatOptions? options = null,
@@ -129,7 +129,7 @@ var messages = new[]
     new ChatMessage(ChatRole.User, "Write a story about a robot.")
 };
 
-await foreach (var update in _chatService.GetStreamingResponseAsync(messages))
+await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
 {
     Console.Write(update.Text);
 }
@@ -161,7 +161,7 @@ Task<IChatClient> GetChatClientAsync(
 var client = await _chatService.GetChatClientAsync();
 
 // Use M.E.AI methods directly
-var response = await client.GetResponseAsync(
+var response = await client.GetChatResponseAsync(
     messages,
     new ChatOptions { Temperature = 0.5f });
 ```
@@ -180,7 +180,7 @@ var options = new ChatOptions
     StopSequences = new[] { "END" }
 };
 
-var response = await _chatService.GetResponseAsync(messages, options);
+var response = await _chatService.GetChatResponseAsync(messages, options);
 ```
 {% endcode %}
 

@@ -16,24 +16,24 @@ The primary interface for chat operations:
 public interface IAiChatService
 {
     // Non-streaming responses
-    Task<ChatResponse> GetResponseAsync(
+    Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
-    Task<ChatResponse> GetResponseAsync(
+    Task<ChatResponse> GetChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
     // Streaming responses
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+    IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
@@ -70,7 +70,7 @@ public class ContentAssistant
             new(ChatRole.User, prompt)
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
 
         return response.Message.Text ?? string.Empty;
     }
@@ -101,7 +101,7 @@ var conversation = new List<ChatMessage>
     new(ChatRole.User, "Make it shorter.")
 };
 
-var response = await _chatService.GetResponseAsync(conversation);
+var response = await _chatService.GetChatResponseAsync(conversation);
 // Response considers the full conversation context
 ```
 {% endcode %}
@@ -110,24 +110,16 @@ var response = await _chatService.GetResponseAsync(conversation);
 
 ### Default Profile
 
-Configure in `appsettings.json`:
+Configure a default profile through the backoffice:
 
-{% code title="appsettings.json" %}
-```json
-{
-  "Umbraco": {
-    "Ai": {
-      "DefaultChatProfileAlias": "my-chat-profile"
-    }
-  }
-}
-```
-{% endcode %}
+1. Navigate to **Settings** > **AI** > **Settings**
+2. Select your chat profile from the **Default Chat Profile** dropdown
+3. Click **Save**
 
 Then call without specifying a profile:
 
 ```csharp
-var response = await _chatService.GetResponseAsync(messages);
+var response = await _chatService.GetChatResponseAsync(messages);
 ```
 
 ### Specific Profile
@@ -135,14 +127,14 @@ var response = await _chatService.GetResponseAsync(messages);
 Pass the profile ID:
 
 ```csharp
-var response = await _chatService.GetResponseAsync(profileId, messages);
+var response = await _chatService.GetChatResponseAsync(profileId, messages);
 ```
 
 Or look up by alias first:
 
 ```csharp
 var profile = await _profileService.GetProfileByAliasAsync("content-assistant");
-var response = await _chatService.GetResponseAsync(profile!.Id, messages);
+var response = await _chatService.GetChatResponseAsync(profile!.Id, messages);
 ```
 
 ## In This Section

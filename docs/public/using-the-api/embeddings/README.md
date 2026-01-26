@@ -85,19 +85,11 @@ public class SearchService
 
 ### Default Profile
 
-Configure in `appsettings.json`:
+Configure a default profile through the backoffice:
 
-{% code title="appsettings.json" %}
-```json
-{
-  "Umbraco": {
-    "Ai": {
-      "DefaultEmbeddingProfileAlias": "search-embeddings"
-    }
-  }
-}
-```
-{% endcode %}
+1. Navigate to **Settings** > **AI** > **Settings**
+2. Select your embedding profile from the **Default Embedding Profile** dropdown
+3. Click **Save**
 
 Then call without specifying a profile:
 

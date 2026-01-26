@@ -54,6 +54,54 @@ The API uses URL-based versioning. The current version is `v1`.
 | PUT | `/profiles/{id}` | Update a profile |
 | DELETE | `/profiles/{id}` | Delete a profile |
 
+### Context Management
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/contexts` | List all contexts |
+| GET | `/contexts/{idOrAlias}` | Get a specific context |
+| POST | `/contexts` | Create a context |
+| PUT | `/contexts/{id}` | Update a context |
+| DELETE | `/contexts/{id}` | Delete a context |
+
+### Settings
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/settings` | Get current settings |
+| PUT | `/settings` | Update settings |
+
+### Version History
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/versions/supported-types` | List entity types that support versioning |
+| GET | `/versions/{entityType}/{entityId}` | Get version history |
+| GET | `/versions/{entityType}/{entityId}/{version}` | Get specific version |
+| GET | `/versions/{entityType}/{entityId}/{from}/compare/{to}` | Compare versions |
+| POST | `/versions/{entityType}/{entityId}/{version}/rollback` | Rollback to version |
+
+### Audit Logs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/audit-logs` | List audit logs |
+| GET | `/audit-logs/{id}` | Get specific audit log |
+| GET | `/audit-logs/entity/{entityType}/{entityId}` | Get entity history |
+| DELETE | `/audit-logs/{id}` | Delete audit log |
+| POST | `/audit-logs/cleanup` | Cleanup old logs |
+
+### Usage Analytics
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/analytics/summary` | Get usage summary |
+| GET | `/analytics/timeseries` | Get time series data |
+| GET | `/analytics/by-provider` | Breakdown by provider |
+| GET | `/analytics/by-model` | Breakdown by model |
+| GET | `/analytics/by-profile` | Breakdown by profile |
+| GET | `/analytics/by-user` | Breakdown by user |
+
 ### Provider Information
 
 | Method | Endpoint | Description |

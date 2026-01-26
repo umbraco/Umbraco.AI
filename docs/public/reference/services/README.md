@@ -39,7 +39,7 @@ public class MyController : Controller
     public async Task<IActionResult> Chat()
     {
         var messages = new[] { new ChatMessage(ChatRole.User, "Hello") };
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
         return Ok(response.Message.Text);
     }
 }

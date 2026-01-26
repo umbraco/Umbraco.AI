@@ -34,7 +34,7 @@ var messages = new List<ChatMessage>
     new(ChatRole.User, "What is Umbraco?")
 };
 
-var response = await _chatService.GetResponseAsync(messages);
+var response = await _chatService.GetChatResponseAsync(messages);
 ```
 {% endcode %}
 

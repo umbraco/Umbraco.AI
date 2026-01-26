@@ -72,7 +72,7 @@ public class ChatController : UmbracoApiController
             new(ChatRole.User, message)
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
 
         return Ok(response.Message.Text);
     }

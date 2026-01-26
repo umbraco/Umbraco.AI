@@ -31,7 +31,7 @@ public class ChatController : UmbracoApiController
             new(ChatRole.User, question)
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
 
         return Ok(new
         {
@@ -56,7 +56,7 @@ The `ChatResponse` object contains:
 
 {% code title="ResponseDetails.cs" %}
 ```csharp
-var response = await _chatService.GetResponseAsync(messages);
+var response = await _chatService.GetChatResponseAsync(messages);
 
 // The response text
 string? text = response.Message.Text;
@@ -88,7 +88,7 @@ var messages = new List<ChatMessage>
     new(ChatRole.User, "Explain what a CMS is.")
 };
 
-var response = await _chatService.GetResponseAsync(messages);
+var response = await _chatService.GetChatResponseAsync(messages);
 ```
 {% endcode %}
 
@@ -120,7 +120,7 @@ public class ConversationService
         _history.Add(new ChatMessage(ChatRole.User, userMessage));
 
         // Send entire conversation
-        var response = await _chatService.GetResponseAsync(_history);
+        var response = await _chatService.GetChatResponseAsync(_history);
 
         // Add assistant response to history
         _history.Add(response.Message);
@@ -144,7 +144,7 @@ public async Task<string> GetResponse(Guid profileId, string question)
         new(ChatRole.User, question)
     };
 
-    var response = await _chatService.GetResponseAsync(profileId, messages);
+    var response = await _chatService.GetChatResponseAsync(profileId, messages);
 
     return response.Message.Text ?? string.Empty;
 }
@@ -181,7 +181,7 @@ public class ProfiledChatService
             new(ChatRole.User, prompt)
         };
 
-        var response = await _chatService.GetResponseAsync(profile.Id, messages);
+        var response = await _chatService.GetChatResponseAsync(profile.Id, messages);
 
         return response.Message.Text ?? string.Empty;
     }
@@ -206,7 +206,7 @@ var options = new ChatOptions
     MaxOutputTokens = 50       // Keep it short
 };
 
-var response = await _chatService.GetResponseAsync(messages, options);
+var response = await _chatService.GetChatResponseAsync(messages, options);
 ```
 {% endcode %}
 
@@ -223,7 +223,7 @@ public async Task<string?> SafeGetResponse(string question)
             new(ChatRole.User, question)
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(messages);
         return response.Message.Text;
     }
     catch (InvalidOperationException ex) when (ex.Message.Contains("profile"))

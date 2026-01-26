@@ -1,11 +1,15 @@
 ---
 description: >-
-  Global configuration options for AI services.
+  Configuration options for AI services (fallback mechanism).
 ---
 
 # AiOptions
 
-Configuration options for Umbraco.Ai services, bound from `appsettings.json`.
+Configuration options for Umbraco.Ai services, bound from `appsettings.json`. These serve as a fallback when database settings are not configured.
+
+{% hint style="info" %}
+The recommended way to configure default profiles is through the backoffice (**Settings** > **AI** > **Settings**). Use `appsettings.json` only for advanced scenarios like CI/CD pipelines or infrastructure-as-code where database settings cannot be used.
+{% endhint %}
 
 ## Namespace
 
@@ -29,8 +33,8 @@ public class AiOptions
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `DefaultChatProfileAlias` | `string?` | Default profile for chat operations |
-| `DefaultEmbeddingProfileAlias` | `string?` | Default profile for embeddings |
+| `DefaultChatProfileAlias` | `string?` | Fallback default profile alias for chat operations |
+| `DefaultEmbeddingProfileAlias` | `string?` | Fallback default profile alias for embeddings |
 
 ## Configuration
 
@@ -47,19 +51,26 @@ public class AiOptions
 ```
 {% endcode %}
 
+## Precedence
+
+Database settings (configured via backoffice) take precedence over configuration file settings:
+
+1. **Database settings** - Configured in backoffice (primary)
+2. **Configuration file** - `appsettings.json` (fallback)
+
 ## Usage
 
 ### Setting Defaults
 
-When you call `IAiChatService.GetResponseAsync()` without specifying a profile ID, it uses the profile with the alias specified in `DefaultChatProfileAlias`.
+When you call `IAiChatService.GetChatResponseAsync()` without specifying a profile ID, it first checks for a default in database settings. If not found, it falls back to the profile with the alias specified in `DefaultChatProfileAlias`.
 
 {% code title="Example" %}
 ```csharp
-// Uses the default chat profile ("content-assistant" in this example)
-var response = await _chatService.GetResponseAsync(messages);
+// Uses the default chat profile (database settings or appsettings.json fallback)
+var response = await _chatService.GetChatResponseAsync(messages);
 
 // Uses a specific profile
-var response = await _chatService.GetResponseAsync(specificProfileId, messages);
+var response = await _chatService.GetChatResponseAsync(specificProfileId, messages);
 ```
 {% endcode %}
 
@@ -92,12 +103,12 @@ public class MyService
 
 ## Behavior When Not Set
 
-If default profile aliases are not configured:
+If default profiles are not configured in either database settings or configuration files:
 
 1. **Chat**: Throws `InvalidOperationException` when calling methods without a profile ID
 2. **Embedding**: Throws `InvalidOperationException` when calling methods without a profile ID
 
-{% hint style="info" %}
+{% hint style="warning" %}
 Always configure default profiles if your application uses the simplified service methods that don't require explicit profile IDs.
 {% endhint %}
 
@@ -111,3 +122,8 @@ export Umbraco__Ai__DefaultEmbeddingProfileAlias=production-embedding
 ```
 
 Note the double underscores (`__`) as section separators.
+
+## Related
+
+* [Settings Concept](../../concepts/settings.md) - Primary way to configure defaults
+* [Managing Settings](../../backoffice/managing-settings.md) - Backoffice configuration

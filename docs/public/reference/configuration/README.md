@@ -5,9 +5,18 @@ description: >-
 
 # Configuration
 
-Umbraco.Ai is configured through the standard `appsettings.json` file under the `Umbraco:Ai` section.
+Umbraco.Ai supports configuration through both the backoffice and `appsettings.json`.
 
-## Configuration Section
+## Default Profiles
+
+The recommended way to configure default profiles is through the backoffice:
+
+1. Navigate to **Settings** > **AI** > **Settings**
+2. Select your default chat profile
+3. Select your default embedding profile
+4. Click **Save**
+
+For advanced scenarios (CI/CD, infrastructure-as-code), you can configure defaults in `appsettings.json` as a fallback:
 
 {% code title="appsettings.json" %}
 ```json
@@ -22,11 +31,15 @@ Umbraco.Ai is configured through the standard `appsettings.json` file under the 
 ```
 {% endcode %}
 
+{% hint style="info" %}
+Database settings (configured via backoffice) take precedence over configuration file settings.
+{% endhint %}
+
 ## Available Options
 
 | Class | Description |
 |-------|-------------|
-| [AiOptions](ai-options.md) | Global AI service configuration |
+| [AiOptions](ai-options.md) | Configuration file settings (fallback) |
 
 ## Provider Credentials
 
@@ -64,6 +77,11 @@ appsettings.Production.json   # Production overrides
 {% hint style="warning" %}
 Never commit API keys to source control. Use environment variables, user secrets, or Azure Key Vault for production.
 {% endhint %}
+
+## Related
+
+* [Settings Concept](../../concepts/settings.md) - Primary way to configure defaults
+* [Managing Settings](../../backoffice/managing-settings.md) - Backoffice configuration
 
 ## In This Section
 

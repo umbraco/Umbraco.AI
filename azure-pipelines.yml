@@ -396,7 +396,7 @@ stages:
 
                   # Download with error handling - artifact may not exist if product was skipped
                   http_code=$(curl -s -L -w "%{http_code}" \
-                    -H "Authorization: Bearer $(System.AccessToken)" \
+                    -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
                     "$artifact_url" \
                     -o "${artifact_name}.zip" 2>&1)
 
@@ -445,6 +445,8 @@ stages:
                   echo "##vso[task.setvariable variable=hasNugetPackages;isOutput=true]false"
                   echo "No NuGet packages collected"
                 fi
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
           - task: Bash@3
             displayName: Download all npm package artifacts
@@ -476,7 +478,7 @@ stages:
                   artifact_url="${base_url}?artifactName=${artifact_name}&api-version=7.0&\$format=zip"
 
                   http_code=$(curl -s -L -w "%{http_code}" \
-                    -H "Authorization: Bearer $(System.AccessToken)" \
+                    -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
                     "$artifact_url" \
                     -o "${artifact_name}.zip" 2>&1)
 
@@ -511,6 +513,8 @@ stages:
                   echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
                   echo "No npm packages collected"
                 fi
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
           - task: PublishPipelineArtifact@1
             displayName: Upload combined NuGet artifact

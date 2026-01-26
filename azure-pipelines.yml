@@ -147,10 +147,34 @@ stages:
               product: $(name)
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload $(name) packages
+            displayName: Upload $(name) NuGet packages
             inputs:
               targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
               artifact: $(name)-packages
+              publishLocation: pipeline
+
+          # Upload npm packages if they were created
+          - task: Bash@3
+            displayName: Check for npm packages
+            name: checkNpm
+            inputs:
+              targetType: inline
+              script: |
+                if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                  echo "npm packages found:"
+                  ls -la artifacts/npm/
+                else
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  echo "No npm packages to upload"
+                fi
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload $(name) npm packages
+            condition: eq(variables['checkNpm.hasNpmPackages'], 'true')
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/npm
+              artifact: $(name)-npm-packages
               publishLocation: pipeline
 
       # ============================================================
@@ -222,10 +246,34 @@ stages:
               product: $(name)
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload $(name) packages
+            displayName: Upload $(name) NuGet packages
             inputs:
               targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
               artifact: $(name)-packages
+              publishLocation: pipeline
+
+          # Upload npm packages if they were created
+          - task: Bash@3
+            displayName: Check for npm packages
+            name: checkNpm
+            inputs:
+              targetType: inline
+              script: |
+                if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                  echo "npm packages found:"
+                  ls -la artifacts/npm/
+                else
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  echo "No npm packages to upload"
+                fi
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload $(name) npm packages
+            condition: eq(variables['checkNpm.hasNpmPackages'], 'true')
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/npm
+              artifact: $(name)-npm-packages
               publishLocation: pipeline
 
       # ============================================================
@@ -314,10 +362,34 @@ stages:
               product: $(name)
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload $(name) packages
+            displayName: Upload $(name) NuGet packages
             inputs:
               targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
               artifact: $(name)-packages
+              publishLocation: pipeline
+
+          # Upload npm packages if they were created
+          - task: Bash@3
+            displayName: Check for npm packages
+            name: checkNpm
+            inputs:
+              targetType: inline
+              script: |
+                if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                  echo "npm packages found:"
+                  ls -la artifacts/npm/
+                else
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  echo "No npm packages to upload"
+                fi
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload $(name) npm packages
+            condition: eq(variables['checkNpm.hasNpmPackages'], 'true')
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/npm
+              artifact: $(name)-npm-packages
               publishLocation: pipeline
 
       # ============================================================
@@ -343,12 +415,12 @@ stages:
           AllChangedProducts: $[ dependencies.DetectChanges.outputs['detect.AllChangedProducts'] ]
         steps:
           - task: Bash@3
-            displayName: Download all changed package artifacts
+            displayName: Download all NuGet package artifacts
             inputs:
               targetType: inline
               script: |
                 set -e
-                mkdir -p all-packages
+                mkdir -p all-nuget-packages
 
                 if [ -z "$(AllChangedProducts)" ]; then
                   echo "No changed products to collect"
@@ -359,7 +431,7 @@ stages:
                 IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
 
                 for product in "${PRODUCTS[@]}"; do
-                  echo "Downloading ${product}-packages..."
+                  echo "Downloading ${product}-packages (NuGet)..."
 
                   # Use Azure DevOps REST API to download artifact
                   artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${product}-packages&api-version=7.0&\$format=zip"
@@ -370,7 +442,7 @@ stages:
                     -o "${product}-packages.zip"
 
                   if [ -f "${product}-packages.zip" ] && [ -s "${product}-packages.zip" ]; then
-                    unzip -o "${product}-packages.zip" -d all-packages/ || echo "Warning: Failed to unzip ${product}-packages.zip"
+                    unzip -o "${product}-packages.zip" -d all-nuget-packages/ || echo "Warning: Failed to unzip ${product}-packages.zip"
                     rm -f "${product}-packages.zip"
                   else
                     echo "Warning: Artifact ${product}-packages not found or empty"
@@ -379,17 +451,79 @@ stages:
                 done
 
                 # Flatten directory structure (artifacts extract to subdirs)
-                find all-packages -name "*.nupkg" -exec mv {} all-packages/ \; 2>/dev/null || true
-                find all-packages -name "*.snupkg" -exec mv {} all-packages/ \; 2>/dev/null || true
-                find all-packages -type d -empty -delete 2>/dev/null || true
+                find all-nuget-packages -name "*.nupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
+                find all-nuget-packages -name "*.snupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
+                find all-nuget-packages -type d -empty -delete 2>/dev/null || true
 
                 echo ""
-                echo "Collected packages:"
-                ls -la all-packages/
+                echo "Collected NuGet packages:"
+                ls -la all-nuget-packages/
+
+          - task: Bash@3
+            displayName: Download all npm package artifacts
+            name: collectNpm
+            inputs:
+              targetType: inline
+              script: |
+                set -e
+                mkdir -p all-npm-packages
+
+                if [ -z "$(AllChangedProducts)" ]; then
+                  echo "No changed products to collect"
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  exit 0
+                fi
+
+                # Parse comma-separated product list
+                IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
+
+                for product in "${PRODUCTS[@]}"; do
+                  echo "Checking for ${product}-npm-packages..."
+
+                  # Use Azure DevOps REST API to download artifact (npm packages are optional)
+                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${product}-npm-packages&api-version=7.0&\$format=zip"
+
+                  curl -s -L \
+                    -H "Authorization: Bearer $(System.AccessToken)" \
+                    "$artifact_url" \
+                    -o "${product}-npm-packages.zip" 2>/dev/null || true
+
+                  if [ -f "${product}-npm-packages.zip" ] && [ -s "${product}-npm-packages.zip" ]; then
+                    echo "  Found npm packages for ${product}"
+                    unzip -o "${product}-npm-packages.zip" -d all-npm-packages/ || echo "Warning: Failed to unzip ${product}-npm-packages.zip"
+                    rm -f "${product}-npm-packages.zip"
+                  else
+                    echo "  No npm packages for ${product} (expected for most products)"
+                    rm -f "${product}-npm-packages.zip" 2>/dev/null || true
+                  fi
+                done
+
+                # Flatten directory structure (artifacts extract to subdirs)
+                find all-npm-packages -name "*.tgz" -exec mv {} all-npm-packages/ \; 2>/dev/null || true
+                find all-npm-packages -type d -empty -delete 2>/dev/null || true
+
+                # Check if any npm packages were collected
+                if [ -d "all-npm-packages" ] && [ "$(ls -A all-npm-packages 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                  echo ""
+                  echo "Collected npm packages:"
+                  ls -la all-npm-packages/
+                else
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  echo "No npm packages collected"
+                fi
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload combined artifact
+            displayName: Upload combined NuGet artifact
             inputs:
-              targetPath: $(Build.SourcesDirectory)/all-packages
+              targetPath: $(Build.SourcesDirectory)/all-nuget-packages
               artifact: all-nuget-packages
+              publishLocation: pipeline
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload combined npm artifact
+            condition: eq(variables['collectNpm.hasNpmPackages'], 'true')
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/all-npm-packages
+              artifact: all-npm-packages
               publishLocation: pipeline

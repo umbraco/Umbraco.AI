@@ -481,12 +481,29 @@ function Write-PipelineVariables {
                     $matrixKey = $product.DisplayName -replace '[.-]', '_'
 
                     # Check if product has frontend
-                    $hasFrontend = Test-Path (Join-Path $RootPath $product.Path "src" "$($product.DisplayName).Web.StaticAssets")
+                    $frontendPath = Join-Path $RootPath $product.Path "src" "$($product.DisplayName).Web.StaticAssets" "Client"
+                    $hasFrontend = Test-Path $frontendPath
+
+                    # Check if frontend package exports types (has "types" field in package.json)
+                    $hasNpmTypes = $false
+                    if ($hasFrontend) {
+                        $packageJsonPath = Join-Path $frontendPath "package.json"
+                        if (Test-Path $packageJsonPath) {
+                            try {
+                                $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
+                                $hasNpmTypes = $null -ne $packageJson.types
+                            }
+                            catch {
+                                Write-Host "    Warning: Failed to parse $packageJsonPath" -ForegroundColor Yellow
+                            }
+                        }
+                    }
 
                     $matrixJson[$matrixKey] = @{
                         name = $product.DisplayName
                         path = $product.Path.TrimEnd('/')
                         hasFrontend = $hasFrontend.ToString().ToLower()
+                        hasNpmTypes = $hasNpmTypes.ToString().ToLower()
                     }
                 }
             }

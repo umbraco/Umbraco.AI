@@ -8,6 +8,10 @@
 #   - Build outputs must be downloaded to $(Build.SourcesDirectory)
 #   - For tier 2/3 products, core packages must be in ./artifacts/nupkg
 #
+# Outputs:
+#   - NuGet packages in ./artifacts/nupkg
+#   - npm packages in ./artifacts/npm (if product has frontend with types export)
+#
 # Converted from GitHub Actions composite action: .github/actions/pack-product/action.yml
 
 parameters:
@@ -31,4 +35,64 @@ steps:
         --no-build \
         --output ./artifacts/nupkg \
         -p:UseProjectReferences=false
-    displayName: Pack ${{ parameters.product }}
+    displayName: Pack ${{ parameters.product }} (NuGet)
+
+  # npm pack for frontend types (auto-detects if package.json exports types)
+  - script: |
+      set -e
+
+      PRODUCT="${{ parameters.product }}"
+      CLIENT_DIR="$PRODUCT/src/$PRODUCT.Web.StaticAssets/Client"
+      PACKAGE_JSON="$CLIENT_DIR/package.json"
+
+      # Check if frontend client folder exists
+      if [ ! -d "$CLIENT_DIR" ]; then
+        echo "No frontend client folder found at $CLIENT_DIR - skipping npm pack"
+        exit 0
+      fi
+
+      # Check if package.json exists
+      if [ ! -f "$PACKAGE_JSON" ]; then
+        echo "No package.json found at $PACKAGE_JSON - skipping npm pack"
+        exit 0
+      fi
+
+      # Check if package.json has "types" field (exports types)
+      HAS_TYPES=$(node -e "
+        const pkg = require('./$PACKAGE_JSON');
+        console.log(pkg.types ? 'true' : 'false');
+      ")
+
+      if [ "$HAS_TYPES" != "true" ]; then
+        echo "package.json does not export types - skipping npm pack"
+        exit 0
+      fi
+
+      echo "Package exports types - running npm pack"
+
+      # Get version from NBGV
+      VERSION=$(nbgv get-version -v NuGetPackageVersion)
+      echo "Using version: $VERSION"
+
+      # Navigate to frontend client folder
+      cd "$CLIENT_DIR"
+
+      # Update package.json version to match NuGet version
+      node -e "
+        const fs = require('fs');
+        const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+        pkg.version = '$VERSION';
+        fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+        console.log('Updated package.json version to: ' + pkg.version);
+      "
+
+      # Create artifacts/npm directory
+      mkdir -p $(Build.SourcesDirectory)/artifacts/npm
+
+      # Run npm pack
+      npm pack --pack-destination $(Build.SourcesDirectory)/artifacts/npm
+
+      echo ""
+      echo "npm packages created:"
+      ls -la $(Build.SourcesDirectory)/artifacts/npm/
+    displayName: Pack ${{ parameters.product }} (npm)

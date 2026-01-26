@@ -20,4 +20,4 @@ public static class Constants
         /// </summary>
         public const string PromptAlias = "Umbraco.Ai.PromptAlias";
     }
-}
+} 

@@ -354,35 +354,37 @@ stages:
         pool:
           vmImage: 'ubuntu-latest'
         steps:
-          # Download Core NuGet packages
+          # Download Core NuGet packages (only if Core changed)
           - task: DownloadPipelineArtifact@2
             displayName: Download Umbraco.Ai NuGet packages
-            continueOnError: true
+            condition: eq(dependencies.DetectChanges.outputs['detect.CoreChanged'], 'true')
             inputs:
               artifact: 'Umbraco.Ai-packages'
               targetPath: '$(Pipeline.Workspace)/nuget'
 
-          # Download Core npm packages
+          # Download Core npm packages (only if Core changed)
           - task: DownloadPipelineArtifact@2
             displayName: Download Umbraco.Ai npm packages
+            condition: eq(dependencies.DetectChanges.outputs['detect.CoreChanged'], 'true')
             continueOnError: true
             inputs:
               artifact: 'Umbraco.Ai-npm-packages'
               targetPath: '$(Pipeline.Workspace)/npm'
 
-          # Download Level 1 NuGet packages (generated from parameters)
+          # Download Level 1 NuGet packages (only if product changed)
           - ${{ each product in parameters.level1Products }}:
             - task: DownloadPipelineArtifact@2
               displayName: Download ${{ product.name }} NuGet packages
-              continueOnError: true
+              condition: eq(dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'], 'true')
               inputs:
                 artifact: '${{ product.name }}-packages'
                 targetPath: '$(Pipeline.Workspace)/nuget'
 
-          # Download Level 1 npm packages (generated from parameters)
+          # Download Level 1 npm packages (only if product changed)
           - ${{ each product in parameters.level1Products }}:
             - task: DownloadPipelineArtifact@2
               displayName: Download ${{ product.name }} npm packages
+              condition: eq(dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'], 'true')
               continueOnError: true
               inputs:
                 artifact: '${{ product.name }}-npm-packages'

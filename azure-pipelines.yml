@@ -349,7 +349,7 @@ stages:
             inputs:
               targetType: inline
               script: |
-                set -e
+                # Don't use set -e - we want to continue even if some artifacts don't exist
                 mkdir -p all-nuget-packages
 
                 if [ -z "$(AllChangedProducts)" ]; then
@@ -366,17 +366,22 @@ stages:
                   # Use Azure DevOps REST API to download artifact
                   artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${product}-packages&api-version=7.0&\$format=zip"
 
-                  curl -s -L \
+                  # Download with error handling - artifact may not exist if product was skipped
+                  if curl -s -L -f \
                     -H "Authorization: Bearer $(System.AccessToken)" \
                     "$artifact_url" \
-                    -o "${product}-packages.zip"
+                    -o "${product}-packages.zip" 2>/dev/null; then
 
-                  if [ -f "${product}-packages.zip" ] && [ -s "${product}-packages.zip" ]; then
-                    unzip -o "${product}-packages.zip" -d all-nuget-packages/ || echo "Warning: Failed to unzip ${product}-packages.zip"
-                    rm -f "${product}-packages.zip"
+                    if [ -f "${product}-packages.zip" ] && [ -s "${product}-packages.zip" ]; then
+                      unzip -o "${product}-packages.zip" -d all-nuget-packages/ || echo "Warning: Failed to unzip ${product}-packages.zip"
+                      rm -f "${product}-packages.zip"
+                      echo "  Downloaded ${product}-packages"
+                    else
+                      echo "  Artifact ${product}-packages is empty, skipping"
+                      rm -f "${product}-packages.zip" 2>/dev/null || true
+                    fi
                   else
-                    echo "Warning: Artifact ${product}-packages not found or empty"
-                    rm -f "${product}-packages.zip"
+                    echo "  Artifact ${product}-packages not found (product may have been skipped)"
                   fi
                 done
 
@@ -387,7 +392,7 @@ stages:
 
                 echo ""
                 echo "Collected NuGet packages:"
-                ls -la all-nuget-packages/
+                ls -la all-nuget-packages/ || echo "(no packages collected)"
 
           - task: Bash@3
             displayName: Download all npm package artifacts

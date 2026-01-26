@@ -1,6 +1,32 @@
 # Azure DevOps CI Pipeline for Umbraco.Ai
 # Converted from GitHub Actions (.github/workflows/ci.yml)
 
+# ============================================================
+# Product Definitions - UPDATE HERE WHEN ADDING NEW PACKAGES
+# ============================================================
+# Level 0: Core package (no internal dependencies)
+# Level 1: All packages that depend on Core
+parameters:
+  - name: level1Products
+    type: object
+    default:
+      # Providers
+      - name: Umbraco.Ai.OpenAi
+        changeVar: OpenaiChanged
+      - name: Umbraco.Ai.Anthropic
+        changeVar: AnthropicChanged
+      - name: Umbraco.Ai.Amazon
+        changeVar: AmazonChanged
+      - name: Umbraco.Ai.Google
+        changeVar: GoogleChanged
+      - name: Umbraco.Ai.MicrosoftFoundry
+        changeVar: MicrosoftfoundryChanged
+      # Add-ons
+      - name: Umbraco.Ai.Prompt
+        changeVar: PromptChanged
+      - name: Umbraco.Ai.Agent
+        changeVar: AgentChanged
+
 trigger:
   branches:
     include:
@@ -176,7 +202,7 @@ stages:
 
       # ============================================================
       # Pack Level 1 (Providers + Add-ons - depend on Core)
-      # Static matrix with per-product change detection via job variables
+      # Matrix generated from parameters.level1Products
       # ============================================================
       - job: PackLevel1
         displayName: Pack Level 1
@@ -193,31 +219,17 @@ stages:
           vmImage: 'ubuntu-latest'
         strategy:
           matrix:
-            OpenAi:
-              product: Umbraco.Ai.OpenAi
-            Anthropic:
-              product: Umbraco.Ai.Anthropic
-            Amazon:
-              product: Umbraco.Ai.Amazon
-            Google:
-              product: Umbraco.Ai.Google
-            MicrosoftFoundry:
-              product: Umbraco.Ai.MicrosoftFoundry
-            Prompt:
-              product: Umbraco.Ai.Prompt
-            Agent:
-              product: Umbraco.Ai.Agent
-          maxParallel: 7
+            # Generated from parameters.level1Products
+            ${{ each product in parameters.level1Products }}:
+              ${{ replace(replace(product.name, 'Umbraco.Ai.', ''), '.', '_') }}:
+                product: ${{ product.name }}
+                changeVar: ${{ product.changeVar }}
+          maxParallel: 10
         variables:
           # Pass all per-product change flags as job variables
           CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
-          OpenaiChanged: $[ dependencies.DetectChanges.outputs['detect.OpenaiChanged'] ]
-          AnthropicChanged: $[ dependencies.DetectChanges.outputs['detect.AnthropicChanged'] ]
-          AmazonChanged: $[ dependencies.DetectChanges.outputs['detect.AmazonChanged'] ]
-          GoogleChanged: $[ dependencies.DetectChanges.outputs['detect.GoogleChanged'] ]
-          MicrosoftfoundryChanged: $[ dependencies.DetectChanges.outputs['detect.MicrosoftfoundryChanged'] ]
-          PromptChanged: $[ dependencies.DetectChanges.outputs['detect.PromptChanged'] ]
-          AgentChanged: $[ dependencies.DetectChanges.outputs['detect.AgentChanged'] ]
+          ${{ each product in parameters.level1Products }}:
+            ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
         steps:
           - checkout: self
             fetchDepth: 0
@@ -229,20 +241,11 @@ stages:
             inputs:
               targetType: inline
               script: |
-                # Map product name to change variable
-                PRODUCT="$(product)"
-                case "$PRODUCT" in
-                  "Umbraco.Ai.OpenAi") CHANGED="$(OpenaiChanged)" ;;
-                  "Umbraco.Ai.Anthropic") CHANGED="$(AnthropicChanged)" ;;
-                  "Umbraco.Ai.Amazon") CHANGED="$(AmazonChanged)" ;;
-                  "Umbraco.Ai.Google") CHANGED="$(GoogleChanged)" ;;
-                  "Umbraco.Ai.MicrosoftFoundry") CHANGED="$(MicrosoftfoundryChanged)" ;;
-                  "Umbraco.Ai.Prompt") CHANGED="$(PromptChanged)" ;;
-                  "Umbraco.Ai.Agent") CHANGED="$(AgentChanged)" ;;
-                  *) CHANGED="false" ;;
-                esac
+                # Use the changeVar passed from the matrix
+                CHANGED="$($(changeVar))"
 
-                echo "Product: $PRODUCT"
+                echo "Product: $(product)"
+                echo "Change variable: $(changeVar)"
                 echo "Changed: $CHANGED"
 
                 if [ "$CHANGED" = "true" ]; then

@@ -6,6 +6,8 @@ import { UAI_SETTINGS_ROOT_WORKSPACE_ALIAS } from "../../constants.js";
 import { UAI_SETTINGS_ROOT_ENTITY_TYPE } from "../../entity.js";
 import { settingsRepository } from "../../repository/settings.repository.js";
 import type { UaiSettingsModel } from "../../types.js";
+import { UaiCommandStore } from "../../../core/command/command.store.js";
+import type { UaiCommand } from "../../../core/command/command.base.js";
 
 export type { UaiSettingsModel } from "../../types.js";
 
@@ -17,6 +19,7 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
     public readonly IS_SETTINGS_WORKSPACE_CONTEXT = true;
 
     #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
+    #commandStore = new UaiCommandStore();
 
     // Required by UmbSubmittableWorkspaceContextBase - settings is a singleton
     #unique = new UmbBasicState<string>("settings");
@@ -56,20 +59,18 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
         }
     }
 
-    setDefaultChatProfileId(value: string | null): void {
-        const current = this.#model.getValue();
-        this.#model.setValue({
-            ...current,
-            defaultChatProfileId: value,
-        });
-    }
-
-    setDefaultEmbeddingProfileId(value: string | null): void {
-        const current = this.#model.getValue();
-        this.#model.setValue({
-            ...current,
-            defaultEmbeddingProfileId: value,
-        });
+    /**
+     * Handles a command to update the model.
+     * Commands are tracked for replay after model refresh.
+     */
+    handleCommand(command: UaiCommand): void {
+        const currentValue = this.#model.getValue();
+        if (currentValue) {
+            const newValue = structuredClone(currentValue);
+            command.execute(newValue);
+            this.#model.setValue(newValue);
+            this.#commandStore.add(command);
+        }
     }
 
     getData(): UaiSettingsModel {
@@ -87,10 +88,15 @@ export class UaiSettingsWorkspaceContext extends UmbSubmittableWorkspaceContextB
     async submit(): Promise<void> {
         const model = this.#model.getValue();
 
+        // Mute command store during submit to prevent commands from being added
+        this.#commandStore.mute();
+
         try {
             const saved = await settingsRepository.save(model);
             this.#model.setValue(saved);
+            this.#commandStore.reset();
         } catch {
+            this.#commandStore.unmute();
             this.#notificationContext?.peek("danger", {
                 data: { message: "Failed to save settings" },
             });

@@ -9,6 +9,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UAI_SETTINGS_WORKSPACE_CONTEXT } from "./settings-workspace.context-token.js";
 import type { UaiSettingsModel } from "../../types.js";
+import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
 
 @customElement("uai-settings-editor")
 export class UaiSettingsEditorElement extends UmbLitElement {
@@ -37,18 +38,15 @@ export class UaiSettingsEditorElement extends UmbLitElement {
         });
     }
 
-    #onChatProfileChange(e: UmbChangeEvent): void {
+    #onPropertyChange(e: UmbChangeEvent): void {
         e.stopPropagation();
-        const target = e.target as HTMLElement & { value?: string | string[] };
-        const value = target.value;
-        this.#workspaceContext?.setDefaultChatProfileId(typeof value === 'string' ? value : null);
-    }
-
-    #onEmbeddingProfileChange(e: UmbChangeEvent): void {
-        e.stopPropagation();
-        const target = e.target as HTMLElement & { value?: string | string[] };
-        const value = target.value;
-        this.#workspaceContext?.setDefaultEmbeddingProfileId(typeof value === 'string' ? value : null);
+        const target = e.target as HTMLElement & { name?: string; value?: string | string[] };
+        const name = target.name as keyof UaiSettingsModel | undefined;
+        if (!name) return;
+        const value = typeof target.value === 'string' ? target.value : null;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiSettingsModel>({ [name]: value }, name)
+        );
     }
 
     override render() {
@@ -63,9 +61,10 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                     description="The default profile to use for chat completions when no profile is specified in API calls.">
                     <div slot="editor">
                         <uai-profile-picker
+                            name="defaultChatProfileId"
                             capability="Chat"
                             .value=${this._model?.defaultChatProfileId ?? undefined}
-                            @change=${this.#onChatProfileChange}>
+                            @change=${this.#onPropertyChange}>
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>
@@ -74,9 +73,10 @@ export class UaiSettingsEditorElement extends UmbLitElement {
                     description="The default profile to use for generating embeddings when no profile is specified in API calls.">
                     <div slot="editor">
                         <uai-profile-picker
+                            name="defaultEmbeddingProfileId"
                             capability="Embedding"
                             .value=${this._model?.defaultEmbeddingProfileId ?? undefined}
-                            @change=${this.#onEmbeddingProfileChange}>
+                            @change=${this.#onPropertyChange}>
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>

@@ -1,4 +1,7 @@
+using System.Reflection;
+using System.Text.Json;
 using Umbraco.Ai.Core.Settings;
+using Umbraco.Extensions;
 
 namespace Umbraco.Ai.Persistence.Settings;
 
@@ -7,15 +10,11 @@ namespace Umbraco.Ai.Persistence.Settings;
 /// </summary>
 internal static class AiSettingsFactory
 {
-    /// <summary>
-    /// Well-known setting keys.
-    /// </summary>
-    public static class Keys
-    {
-        public const string DefaultChatProfileId = "DefaultChatProfileId";
-        public const string DefaultEmbeddingProfileId = "DefaultEmbeddingProfileId";
-    }
-
+    private static readonly PropertyInfo[] SettingProperties = typeof(AiSettings)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(p => p.GetCustomAttribute<AiSettingAttribute>() != null)
+        .ToArray();
+    
     /// <summary>
     /// Builds a domain model from a collection of setting entities.
     /// </summary>
@@ -23,23 +22,20 @@ internal static class AiSettingsFactory
     {
         var settings = new AiSettings();
         
-        var entitiesList = entities.ToList();
+        var entityDict = entities.ToDictionary(e => e.Key);
         
-        foreach (var entity in entitiesList)
+        foreach (var prop in SettingProperties)
         {
-            switch (entity.Key)
+            var key = prop.GetCustomAttribute<AiSettingAttribute>()?.Key ?? prop.Name;
+            if (entityDict.TryGetValue(key, out var entity))
             {
-                case Keys.DefaultChatProfileId:
-                    settings.DefaultChatProfileId = TryParseGuid(entity.Value);
-                    break;
-                case Keys.DefaultEmbeddingProfileId:
-                    settings.DefaultEmbeddingProfileId = TryParseGuid(entity.Value);
-                    break;
+                var value = ConvertFromString(entity.Value, prop.PropertyType);
+                prop.SetValue(settings, value);
             }
         }
         
-        var minEntity = entitiesList.MinBy(e => e.DateCreated);
-        var maxEntity = entitiesList.MaxBy(e => e.DateModified);
+        var minEntity = entityDict.Values.MinBy(e => e.DateCreated);
+        var maxEntity = entityDict.Values.MaxBy(e => e.DateModified);
 
         settings.DateCreated = minEntity?.DateCreated ?? DateTime.UtcNow;
         settings.CreatedByUserId = minEntity?.CreatedByUserId;
@@ -60,19 +56,12 @@ internal static class AiSettingsFactory
         var existing = existingEntities.ToDictionary(e => e.Key, e => e);
         var now = DateTime.UtcNow;
 
-        yield return CreateOrUpdateEntity(
-            Keys.DefaultChatProfileId,
-            settings.DefaultChatProfileId?.ToString(),
-            existing,
-            now,
-            userId);
-
-        yield return CreateOrUpdateEntity(
-            Keys.DefaultEmbeddingProfileId,
-            settings.DefaultEmbeddingProfileId?.ToString(),
-            existing,
-            now,
-            userId);
+        foreach (var prop in SettingProperties)
+        {
+            var key = prop.GetCustomAttribute<AiSettingAttribute>()?.Key ?? prop.Name;
+            var value = ConvertToString(prop.GetValue(settings));
+            yield return CreateOrUpdateEntity(key, value, existing, now, userId);
+        }
     }
 
     private static AiSettingsEntity CreateOrUpdateEntity(
@@ -109,12 +98,40 @@ internal static class AiSettingsFactory
             ModifiedByUserId = userId
         };
     }
-
-    private static Guid? TryParseGuid(string? value)
+    
+    private static object? ConvertFromString(string? value, Type targetType)
     {
         if (string.IsNullOrEmpty(value))
             return null;
 
-        return Guid.TryParse(value, out var guid) ? guid : null;
+        var attempt = value.TryConvertTo(targetType);
+        if (attempt.Success)
+            return attempt.Result;
+
+        return value.DetectIsJson() 
+            ? JsonSerializer.Deserialize(value, targetType, Core.Constants.DefaultJsonSerializerOptions) 
+            : null;
+    }
+
+    private static string? ConvertToString(object? value)
+    {
+        if (value is null)
+            return null;
+
+        var type = value.GetType();
+        var underlying = Nullable.GetUnderlyingType(type) ?? type;
+
+        // Simple types that TryConvertTo can roundtrip
+        if (underlying.IsPrimitive || underlying.IsEnum ||
+            underlying == typeof(string) || underlying == typeof(decimal) ||
+            underlying == typeof(Guid) || underlying == typeof(DateTime) ||
+            underlying == typeof(DateTimeOffset) || underlying == typeof(TimeSpan) ||
+            underlying == typeof(Version))
+        {
+            return value.TryConvertTo<string>().Result;
+        }
+
+        // Complex types need JSON
+        return JsonSerializer.Serialize(value, Core.Constants.DefaultJsonSerializerOptions);
     }
 }

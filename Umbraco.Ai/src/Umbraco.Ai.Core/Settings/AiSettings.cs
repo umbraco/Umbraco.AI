@@ -10,7 +10,7 @@ public sealed class AiSettings : IAiAuditableEntity
     /// <summary>
     /// The fixed ID for the AI settings entity.
     /// </summary>
-    public static Guid SettingsId = new Guid("672BF83C-97E0-4D04-9D33-23FC2E5EBE42");
+    public static Guid SettingsId = new("672BF83C-97E0-4D04-9D33-23FC2E5EBE42");
 
     /// <inheritdoc />
     public Guid Id => SettingsId;
@@ -18,11 +18,13 @@ public sealed class AiSettings : IAiAuditableEntity
     /// <summary>
     /// The ID of the default profile to use for chat operations.
     /// </summary>
+    [AiSetting]
     public Guid? DefaultChatProfileId { get; set; }
 
     /// <summary>
     /// The ID of the default profile to use for embedding operations.
     /// </summary>
+    [AiSetting]
     public Guid? DefaultEmbeddingProfileId { get; set; }
 
     /// <inheritdoc />

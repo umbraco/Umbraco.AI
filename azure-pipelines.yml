@@ -235,26 +235,38 @@ stages:
             fetchDepth: 0
 
           # Determine if this specific product should be packed
-          - task: Bash@3
+          # The changeVar from matrix tells us which variable to check
+          - task: PowerShell@2
             displayName: Check if $(product) changed
             name: check
             inputs:
               targetType: inline
+              pwsh: true
               script: |
-                # Use the changeVar passed from the matrix
-                CHANGED="$($(changeVar))"
+                $product = "$(product)"
+                $changeVarName = "$(changeVar)"
 
-                echo "Product: $(product)"
-                echo "Change variable: $(changeVar)"
-                echo "Changed: $CHANGED"
+                # Azure DevOps variables are available as environment variables
+                # Variable names are converted: dots become underscores, uppercase
+                $envVarName = $changeVarName.ToUpper()
+                $changed = [Environment]::GetEnvironmentVariable($envVarName)
 
-                if [ "$CHANGED" = "true" ]; then
-                  echo "##vso[task.setvariable variable=shouldPack;isOutput=true]true"
-                  echo "$PRODUCT changed - will pack"
-                else
-                  echo "##vso[task.setvariable variable=shouldPack;isOutput=true]false"
-                  echo "$PRODUCT not changed - skipping"
-                fi
+                # Also try the original case
+                if (-not $changed) {
+                  $changed = [Environment]::GetEnvironmentVariable($changeVarName)
+                }
+
+                Write-Host "Product: $product"
+                Write-Host "Change variable: $changeVarName (env: $envVarName)"
+                Write-Host "Changed value: '$changed'"
+
+                if ($changed -eq "true") {
+                  Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]true"
+                  Write-Host "$product changed - will pack"
+                } else {
+                  Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]false"
+                  Write-Host "$product not changed - skipping (value was: $changed)"
+                }
 
           - task: UseDotNet@2
             displayName: Setup .NET

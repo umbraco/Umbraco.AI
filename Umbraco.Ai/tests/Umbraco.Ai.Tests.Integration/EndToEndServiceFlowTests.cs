@@ -9,9 +9,11 @@ using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Providers;
 using Umbraco.Ai.Core.EditableModels;
 using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.Ai.Core.Settings;
 using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Tests.Common.Builders;
 using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.Cms.Core.Cache;
 
 namespace Umbraco.Ai.Tests.Integration;
 
@@ -432,6 +434,11 @@ public class EndToEndServiceFlowTests : IDisposable
 
         // Settings resolution
         services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();
+
+        // Settings service (required by AiProfileService)
+        services.AddSingleton<IAppPolicyCache>(NoAppCache.Instance);
+        services.AddSingleton<IAiSettingsRepository, InMemoryAiSettingsRepository>();
+        services.AddSingleton<IAiSettingsService, AiSettingsService>();
 
         // Unified versioning service (stub implementation for tests)
         services.AddSingleton<AiVersionableEntityAdapterCollection>(_ =>

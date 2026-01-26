@@ -375,27 +375,37 @@ stages:
                 IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
 
                 for product in "${PRODUCTS[@]}"; do
-                  echo "Downloading ${product}-packages (NuGet)..."
+                  artifact_name="${product}-packages"
+                  echo "Downloading ${artifact_name} (NuGet)..."
+
+                  # URL-encode the artifact name (dots and other special chars)
+                  encoded_artifact_name=$(printf '%s' "$artifact_name" | jq -sRr @uri)
 
                   # Use Azure DevOps REST API to download artifact
-                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${product}-packages&api-version=7.0&\$format=zip"
+                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${encoded_artifact_name}&api-version=7.0&%24format=zip"
+
+                  echo "  URL: $artifact_url"
 
                   # Download with error handling - artifact may not exist if product was skipped
-                  if curl -s -L -f \
+                  http_code=$(curl -s -L -w "%{http_code}" \
                     -H "Authorization: Bearer $(System.AccessToken)" \
                     "$artifact_url" \
-                    -o "${product}-packages.zip" 2>/dev/null; then
+                    -o "${artifact_name}.zip")
 
-                    if [ -f "${product}-packages.zip" ] && [ -s "${product}-packages.zip" ]; then
-                      unzip -o "${product}-packages.zip" -d all-nuget-packages/ || echo "Warning: Failed to unzip ${product}-packages.zip"
-                      rm -f "${product}-packages.zip"
-                      echo "  Downloaded ${product}-packages"
+                  if [ "$http_code" = "200" ] && [ -f "${artifact_name}.zip" ] && [ -s "${artifact_name}.zip" ]; then
+                    # Check if it's actually a zip file (not an error response)
+                    if file "${artifact_name}.zip" | grep -q "Zip archive"; then
+                      unzip -o "${artifact_name}.zip" -d all-nuget-packages/ || echo "Warning: Failed to unzip ${artifact_name}.zip"
+                      rm -f "${artifact_name}.zip"
+                      echo "  ✓ Downloaded ${artifact_name}"
                     else
-                      echo "  Artifact ${product}-packages is empty, skipping"
-                      rm -f "${product}-packages.zip" 2>/dev/null || true
+                      echo "  ✗ Response was not a zip file (HTTP $http_code)"
+                      head -c 500 "${artifact_name}.zip" 2>/dev/null || true
+                      rm -f "${artifact_name}.zip"
                     fi
                   else
-                    echo "  Artifact ${product}-packages not found (product may have been skipped)"
+                    echo "  ✗ Artifact ${artifact_name} not found (HTTP $http_code, product may have been skipped)"
+                    rm -f "${artifact_name}.zip" 2>/dev/null || true
                   fi
                 done
 
@@ -422,7 +432,7 @@ stages:
             inputs:
               targetType: inline
               script: |
-                set -e
+                # Don't use set -e - npm packages are optional for most products
                 mkdir -p all-npm-packages
 
                 if [ -z "$(AllChangedProducts)" ]; then
@@ -435,23 +445,33 @@ stages:
                 IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
 
                 for product in "${PRODUCTS[@]}"; do
-                  echo "Checking for ${product}-npm-packages..."
+                  artifact_name="${product}-npm-packages"
+                  echo "Checking for ${artifact_name}..."
+
+                  # URL-encode the artifact name (dots and other special chars)
+                  encoded_artifact_name=$(printf '%s' "$artifact_name" | jq -sRr @uri)
 
                   # Use Azure DevOps REST API to download artifact (npm packages are optional)
-                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${product}-npm-packages&api-version=7.0&\$format=zip"
+                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${encoded_artifact_name}&api-version=7.0&%24format=zip"
 
-                  curl -s -L \
+                  http_code=$(curl -s -L -w "%{http_code}" \
                     -H "Authorization: Bearer $(System.AccessToken)" \
                     "$artifact_url" \
-                    -o "${product}-npm-packages.zip" 2>/dev/null || true
+                    -o "${artifact_name}.zip")
 
-                  if [ -f "${product}-npm-packages.zip" ] && [ -s "${product}-npm-packages.zip" ]; then
-                    echo "  Found npm packages for ${product}"
-                    unzip -o "${product}-npm-packages.zip" -d all-npm-packages/ || echo "Warning: Failed to unzip ${product}-npm-packages.zip"
-                    rm -f "${product}-npm-packages.zip"
+                  if [ "$http_code" = "200" ] && [ -f "${artifact_name}.zip" ] && [ -s "${artifact_name}.zip" ]; then
+                    # Check if it's actually a zip file (not an error response)
+                    if file "${artifact_name}.zip" | grep -q "Zip archive"; then
+                      echo "  ✓ Found npm packages for ${product}"
+                      unzip -o "${artifact_name}.zip" -d all-npm-packages/ || echo "Warning: Failed to unzip ${artifact_name}.zip"
+                      rm -f "${artifact_name}.zip"
+                    else
+                      echo "  No npm packages for ${product} (response was not a zip)"
+                      rm -f "${artifact_name}.zip"
+                    fi
                   else
-                    echo "  No npm packages for ${product} (expected for most products)"
-                    rm -f "${product}-npm-packages.zip" 2>/dev/null || true
+                    echo "  No npm packages for ${product} (HTTP $http_code, expected for most products)"
+                    rm -f "${artifact_name}.zip" 2>/dev/null || true
                   fi
                 done
 

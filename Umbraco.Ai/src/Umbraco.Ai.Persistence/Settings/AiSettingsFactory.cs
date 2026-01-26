@@ -22,8 +22,10 @@ internal static class AiSettingsFactory
     public static AiSettings BuildDomain(IEnumerable<AiSettingsEntity> entities)
     {
         var settings = new AiSettings();
-
-        foreach (var entity in entities)
+        
+        var entitiesList = entities.ToList();
+        
+        foreach (var entity in entitiesList)
         {
             switch (entity.Key)
             {
@@ -35,7 +37,15 @@ internal static class AiSettingsFactory
                     break;
             }
         }
+        
+        var minEntity = entitiesList.MinBy(e => e.DateCreated);
+        var maxEntity = entitiesList.MaxBy(e => e.DateModified);
 
+        settings.DateCreated = minEntity?.DateCreated ?? DateTime.UtcNow;
+        settings.CreatedByUserId = minEntity?.CreatedByUserId;
+        settings.DateModified = maxEntity?.DateModified ?? DateTime.UtcNow;
+        settings.ModifiedByUserId = maxEntity?.ModifiedByUserId;
+        
         return settings;
     }
 
@@ -74,6 +84,12 @@ internal static class AiSettingsFactory
     {
         if (existing.TryGetValue(key, out var entity))
         {
+            if (entity.Value == value)
+            {
+                // No change
+                return entity;
+            }
+            
             // Update existing
             entity.Value = value;
             entity.DateModified = now;

@@ -26,7 +26,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultEmbeddingProfileId = source.DefaultEmbeddingProfileId;
     }
 
-    // Umbraco.Code.MapAll
+    // Umbraco.Code.MapAll -DateCreated -CreatedByUserId -DateModified -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdateSettingsRequestModel source, AiSettings target, MapperContext context)
     {
         target.DefaultChatProfileId = source.DefaultChatProfileId;

@@ -380,13 +380,16 @@ stages:
                 IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
                 echo "Products to download: ${PRODUCTS[*]}"
 
+                # URL-encode the team project name (handles spaces like "Umbraco AI" -> "Umbraco%20AI")
+                team_project_encoded=$(printf '%s' "$(System.TeamProject)" | sed 's/ /%20/g')
+
                 for product in "${PRODUCTS[@]}"; do
                   artifact_name="${product}-packages"
                   echo ""
                   echo "Downloading ${artifact_name} (NuGet)..."
 
-                  # Build URL - artifact names with dots work fine in query params
-                  base_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts"
+                  # Build URL with encoded project name
+                  base_url="$(System.CollectionUri)${team_project_encoded}/_apis/build/builds/$(Build.BuildId)/artifacts"
                   artifact_url="${base_url}?artifactName=${artifact_name}&api-version=7.0&\$format=zip"
 
                   echo "  URL: $artifact_url"
@@ -461,12 +464,15 @@ stages:
                 # Parse comma-separated product list
                 IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
 
+                # URL-encode the team project name (handles spaces like "Umbraco AI" -> "Umbraco%20AI")
+                team_project_encoded=$(printf '%s' "$(System.TeamProject)" | sed 's/ /%20/g')
+
                 for product in "${PRODUCTS[@]}"; do
                   artifact_name="${product}-npm-packages"
                   echo "Checking for ${artifact_name}..."
 
-                  # Build URL - artifact names with dots work fine in query params
-                  base_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts"
+                  # Build URL with encoded project name
+                  base_url="$(System.CollectionUri)${team_project_encoded}/_apis/build/builds/$(Build.BuildId)/artifacts"
                   artifact_url="${base_url}?artifactName=${artifact_name}&api-version=7.0&\$format=zip"
 
                   http_code=$(curl -s -L -w "%{http_code}" \

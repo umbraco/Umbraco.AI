@@ -18,6 +18,6 @@ public static class Constants
         /// <summary>
         /// Key for prompt alias in metadata collections.
         /// </summary>
-        public const string PromptAlias = "Umbraco.Ai.PromptAlias";
+        public const string PromptAlias = "Umbraco.Ai.PromptAlias"; 
     }
 } 

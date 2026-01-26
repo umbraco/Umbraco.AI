@@ -79,6 +79,7 @@ stages:
 
   # ============================================================
   # Pack Stage - Only runs on push to main/dev or release tags
+  # Uses dynamic change detection to only pack products that changed
   # ============================================================
   - stage: Pack
     displayName: Pack NuGet Packages
@@ -96,59 +97,36 @@ stages:
       )
     jobs:
       # ============================================================
-      # Pack Tier 1 (Core - no internal dependencies)
+      # Detect which products changed
       # ============================================================
-      - job: PackTier1
-        displayName: Pack Tier 1 (Core)
+      - job: DetectChanges
+        displayName: Detect Changed Products
         pool:
           vmImage: 'ubuntu-latest'
         steps:
           - checkout: self
             fetchDepth: 0
 
-          - task: UseDotNet@2
-            displayName: Setup .NET
+          - task: PowerShell@2
+            displayName: Run change detection
+            name: detect
             inputs:
-              useGlobalJson: true
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download build outputs
-            inputs:
-              artifact: build-outputs
-              path: $(Build.SourcesDirectory)
-
-          - template: .azure-pipelines/templates/pack-product.yml
-            parameters:
-              product: Umbraco.Ai
-
-          - task: PublishPipelineArtifact@1
-            displayName: Upload Umbraco.Ai packages
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-              artifact: Umbraco.Ai-packages
-              publishLocation: pipeline
+              filePath: .azure-pipelines/scripts/detect-changes.ps1
+              pwsh: true
 
       # ============================================================
-      # Pack Tier 2 (Providers - depend on Core)
+      # Pack Level 0 (Core - no internal dependencies)
+      # Dynamic matrix based on change detection
       # ============================================================
-      - job: PackTier2
-        displayName: Pack Tier 2
-        dependsOn: PackTier1
+      - job: PackLevel0
+        displayName: Pack Level 0
+        dependsOn: DetectChanges
+        condition: eq(dependencies.DetectChanges.outputs['detect.Level0Changed'], 'true')
         pool:
           vmImage: 'ubuntu-latest'
         strategy:
-          matrix:
-            OpenAi:
-              product: Umbraco.Ai.OpenAi
-            Anthropic:
-              product: Umbraco.Ai.Anthropic
-            Amazon:
-              product: Umbraco.Ai.Amazon
-            Google:
-              product: Umbraco.Ai.Google
-            MicrosoftFoundry:
-              product: Umbraco.Ai.MicrosoftFoundry
-          maxParallel: 5
+          matrix: $[ dependencies.DetectChanges.outputs['detect.Level0Matrix'] ]
+          maxParallel: 1
         steps:
           - checkout: self
             fetchDepth: 0
@@ -164,38 +142,39 @@ stages:
               artifact: build-outputs
               path: $(Build.SourcesDirectory)
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Tier 1 packages (local feed)
-            inputs:
-              artifact: Umbraco.Ai-packages
-              path: $(Build.SourcesDirectory)/artifacts/nupkg
-
           - template: .azure-pipelines/templates/pack-product.yml
             parameters:
-              product: $(product)
+              product: $(name)
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload $(product) packages
+            displayName: Upload $(name) packages
             inputs:
               targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-              artifact: $(product)-packages
+              artifact: $(name)-packages
               publishLocation: pipeline
 
       # ============================================================
-      # Pack Tier 3 (Add-ons - depend on Core + Startup)
+      # Pack Level 1 (Providers + Add-ons - depend on Core)
+      # Dynamic matrix based on change detection
       # ============================================================
-      - job: PackTier3
-        displayName: Pack Tier 3
-        dependsOn: PackTier1
+      - job: PackLevel1
+        displayName: Pack Level 1
+        dependsOn:
+          - DetectChanges
+          - PackLevel0
+        condition: |
+          and(
+            not(failed()),
+            not(canceled()),
+            eq(dependencies.DetectChanges.outputs['detect.Level1Changed'], 'true')
+          )
         pool:
           vmImage: 'ubuntu-latest'
         strategy:
-          matrix:
-            Prompt:
-              product: Umbraco.Ai.Prompt
-            Agent:
-              product: Umbraco.Ai.Agent
-          maxParallel: 2
+          matrix: $[ dependencies.DetectChanges.outputs['detect.Level1Matrix'] ]
+          maxParallel: 10
+        variables:
+          Level0Products: $[ dependencies.DetectChanges.outputs['detect.Level0Products'] ]
         steps:
           - checkout: self
             fetchDepth: 0
@@ -211,82 +190,202 @@ stages:
               artifact: build-outputs
               path: $(Build.SourcesDirectory)
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Tier 1 packages (local feed)
+          # Download Level 0 packages as local feed (if any were packed)
+          - task: Bash@3
+            displayName: Download Level 0 packages
+            condition: ne(variables.Level0Products, '')
             inputs:
-              artifact: Umbraco.Ai-packages
-              path: $(Build.SourcesDirectory)/artifacts/nupkg
+              targetType: inline
+              script: |
+                set -e
+                mkdir -p artifacts/nupkg
+
+                IFS=',' read -ra PRODUCTS <<< "$(Level0Products)"
+                for product in "${PRODUCTS[@]}"; do
+                  echo "Downloading $product packages..."
+                  # Use Azure DevOps REST API to download artifact
+                  az pipelines runs artifact download \
+                    --artifact-name "${product}-packages" \
+                    --path "$(Build.SourcesDirectory)/artifacts/nupkg" \
+                    --run-id $(Build.BuildId) \
+                    --organization "$(System.CollectionUri)" \
+                    --project "$(System.TeamProject)" 2>/dev/null || echo "Artifact ${product}-packages not found or already downloaded"
+                done
+
+                echo "Downloaded packages:"
+                ls -la artifacts/nupkg/ 2>/dev/null || echo "(empty)"
+            env:
+              AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
           - template: .azure-pipelines/templates/pack-product.yml
             parameters:
-              product: $(product)
+              product: $(name)
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload $(product) packages
+            displayName: Upload $(name) packages
             inputs:
               targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-              artifact: $(product)-packages
+              artifact: $(name)-packages
+              publishLocation: pipeline
+
+      # ============================================================
+      # Pack Level 2 (Future packages that depend on Level 1)
+      # Dynamic matrix based on change detection
+      # ============================================================
+      - job: PackLevel2
+        displayName: Pack Level 2
+        dependsOn:
+          - DetectChanges
+          - PackLevel0
+          - PackLevel1
+        condition: |
+          and(
+            not(failed()),
+            not(canceled()),
+            eq(dependencies.DetectChanges.outputs['detect.Level2Changed'], 'true')
+          )
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          matrix: $[ dependencies.DetectChanges.outputs['detect.Level2Matrix'] ]
+          maxParallel: 10
+        variables:
+          Level0Products: $[ dependencies.DetectChanges.outputs['detect.Level0Products'] ]
+          Level1Products: $[ dependencies.DetectChanges.outputs['detect.Level1Products'] ]
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: Setup .NET
+            inputs:
+              useGlobalJson: true
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download build outputs
+            inputs:
+              artifact: build-outputs
+              path: $(Build.SourcesDirectory)
+
+          # Download Level 0 and Level 1 packages as local feed
+          - task: Bash@3
+            displayName: Download dependency packages
+            inputs:
+              targetType: inline
+              script: |
+                set -e
+                mkdir -p artifacts/nupkg
+
+                # Download Level 0 packages
+                if [ -n "$(Level0Products)" ]; then
+                  IFS=',' read -ra PRODUCTS <<< "$(Level0Products)"
+                  for product in "${PRODUCTS[@]}"; do
+                    echo "Downloading $product packages (Level 0)..."
+                    az pipelines runs artifact download \
+                      --artifact-name "${product}-packages" \
+                      --path "$(Build.SourcesDirectory)/artifacts/nupkg" \
+                      --run-id $(Build.BuildId) \
+                      --organization "$(System.CollectionUri)" \
+                      --project "$(System.TeamProject)" 2>/dev/null || echo "Artifact ${product}-packages not found"
+                  done
+                fi
+
+                # Download Level 1 packages
+                if [ -n "$(Level1Products)" ]; then
+                  IFS=',' read -ra PRODUCTS <<< "$(Level1Products)"
+                  for product in "${PRODUCTS[@]}"; do
+                    echo "Downloading $product packages (Level 1)..."
+                    az pipelines runs artifact download \
+                      --artifact-name "${product}-packages" \
+                      --path "$(Build.SourcesDirectory)/artifacts/nupkg" \
+                      --run-id $(Build.BuildId) \
+                      --organization "$(System.CollectionUri)" \
+                      --project "$(System.TeamProject)" 2>/dev/null || echo "Artifact ${product}-packages not found"
+                  done
+                fi
+
+                echo "Downloaded packages:"
+                ls -la artifacts/nupkg/ 2>/dev/null || echo "(empty)"
+            env:
+              AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+          - template: .azure-pipelines/templates/pack-product.yml
+            parameters:
+              product: $(name)
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload $(name) packages
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
+              artifact: $(name)-packages
               publishLocation: pipeline
 
       # ============================================================
       # Collect all packages into single artifact
+      # Dynamically downloads only changed product artifacts
       # ============================================================
       - job: CollectPackages
         displayName: Collect All Packages
         dependsOn:
-          - PackTier1
-          - PackTier2
-          - PackTier3
+          - DetectChanges
+          - PackLevel0
+          - PackLevel1
+          - PackLevel2
+        condition: |
+          and(
+            not(failed()),
+            not(canceled()),
+            eq(dependencies.DetectChanges.outputs['detect.AnyChanged'], 'true')
+          )
         pool:
           vmImage: 'ubuntu-latest'
+        variables:
+          AllChangedProducts: $[ dependencies.DetectChanges.outputs['detect.AllChangedProducts'] ]
         steps:
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai packages
+          - task: Bash@3
+            displayName: Download all changed package artifacts
             inputs:
-              artifact: Umbraco.Ai-packages
-              path: $(Build.SourcesDirectory)/all-packages
+              targetType: inline
+              script: |
+                set -e
+                mkdir -p all-packages
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.OpenAi packages
-            inputs:
-              artifact: Umbraco.Ai.OpenAi-packages
-              path: $(Build.SourcesDirectory)/all-packages
+                if [ -z "$(AllChangedProducts)" ]; then
+                  echo "No changed products to collect"
+                  exit 0
+                fi
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Anthropic packages
-            inputs:
-              artifact: Umbraco.Ai.Anthropic-packages
-              path: $(Build.SourcesDirectory)/all-packages
+                # Parse comma-separated product list
+                IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Amazon packages
-            inputs:
-              artifact: Umbraco.Ai.Amazon-packages
-              path: $(Build.SourcesDirectory)/all-packages
+                for product in "${PRODUCTS[@]}"; do
+                  echo "Downloading ${product}-packages..."
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Google packages
-            inputs:
-              artifact: Umbraco.Ai.Google-packages
-              path: $(Build.SourcesDirectory)/all-packages
+                  # Use Azure DevOps REST API to download artifact
+                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${product}-packages&api-version=7.0&\$format=zip"
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.MicrosoftFoundry packages
-            inputs:
-              artifact: Umbraco.Ai.MicrosoftFoundry-packages
-              path: $(Build.SourcesDirectory)/all-packages
+                  curl -s -L \
+                    -H "Authorization: Bearer $(System.AccessToken)" \
+                    "$artifact_url" \
+                    -o "${product}-packages.zip"
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Prompt packages
-            inputs:
-              artifact: Umbraco.Ai.Prompt-packages
-              path: $(Build.SourcesDirectory)/all-packages
+                  if [ -f "${product}-packages.zip" ] && [ -s "${product}-packages.zip" ]; then
+                    unzip -o "${product}-packages.zip" -d all-packages/ || echo "Warning: Failed to unzip ${product}-packages.zip"
+                    rm -f "${product}-packages.zip"
+                  else
+                    echo "Warning: Artifact ${product}-packages not found or empty"
+                    rm -f "${product}-packages.zip"
+                  fi
+                done
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Agent packages
-            inputs:
-              artifact: Umbraco.Ai.Agent-packages
-              path: $(Build.SourcesDirectory)/all-packages
+                # Flatten directory structure (artifacts extract to subdirs)
+                find all-packages -name "*.nupkg" -exec mv {} all-packages/ \; 2>/dev/null || true
+                find all-packages -name "*.snupkg" -exec mv {} all-packages/ \; 2>/dev/null || true
+                find all-packages -type d -empty -delete 2>/dev/null || true
+
+                echo ""
+                echo "Collected packages:"
+                ls -la all-packages/
 
           - task: PublishPipelineArtifact@1
             displayName: Upload combined artifact

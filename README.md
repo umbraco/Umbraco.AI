@@ -81,6 +81,7 @@ Umbraco.Ai (Core)
 
 ## Documentation
 
+- **[User Documentation](docs/public/README.md)** - Getting started, concepts, API reference, and guides
 - [CLAUDE.md](CLAUDE.md) - Development guide, build commands, and coding standards
 - Product-specific guides:
   - [Umbraco.Ai/CLAUDE.md](Umbraco.Ai/CLAUDE.md) - Core package

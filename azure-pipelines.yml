@@ -395,12 +395,14 @@ stages:
                   echo "  URL: $artifact_url"
 
                   # Download with error handling - artifact may not exist if product was skipped
+                  # Use Basic auth with empty username and token as password (standard for Azure DevOps REST API)
                   http_code=$(curl -s -L -w "%{http_code}" \
-                    -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
+                    -u ":$SYSTEM_ACCESSTOKEN" \
                     "$artifact_url" \
                     -o "${artifact_name}.zip" 2>&1)
 
                   echo "  HTTP Code: $http_code"
+                  echo "  Token length: ${#SYSTEM_ACCESSTOKEN}"
 
                   if [ "$http_code" = "200" ] && [ -f "${artifact_name}.zip" ] && [ -s "${artifact_name}.zip" ]; then
                     # Check if it's actually a zip file (not an error response)
@@ -477,8 +479,9 @@ stages:
                   base_url="$(System.CollectionUri)${team_project_encoded}/_apis/build/builds/$(Build.BuildId)/artifacts"
                   artifact_url="${base_url}?artifactName=${artifact_name}&api-version=7.0&\$format=zip"
 
+                  # Use Basic auth with empty username and token as password (standard for Azure DevOps REST API)
                   http_code=$(curl -s -L -w "%{http_code}" \
-                    -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" \
+                    -u ":$SYSTEM_ACCESSTOKEN" \
                     "$artifact_url" \
                     -o "${artifact_name}.zip" 2>&1)
 

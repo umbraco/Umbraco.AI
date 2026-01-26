@@ -365,6 +365,11 @@ stages:
                 # Don't use set -e - we want to continue even if some artifacts don't exist
                 mkdir -p all-nuget-packages
 
+                echo "AllChangedProducts: '$(AllChangedProducts)'"
+                echo "Build.BuildId: '$(Build.BuildId)'"
+                echo "System.CollectionUri: '$(System.CollectionUri)'"
+                echo "System.TeamProject: '$(System.TeamProject)'"
+
                 if [ -z "$(AllChangedProducts)" ]; then
                   echo "No changed products to collect"
                   echo "##vso[task.setvariable variable=hasNugetPackages;isOutput=true]false"
@@ -373,16 +378,16 @@ stages:
 
                 # Parse comma-separated product list
                 IFS=',' read -ra PRODUCTS <<< "$(AllChangedProducts)"
+                echo "Products to download: ${PRODUCTS[*]}"
 
                 for product in "${PRODUCTS[@]}"; do
                   artifact_name="${product}-packages"
+                  echo ""
                   echo "Downloading ${artifact_name} (NuGet)..."
 
-                  # URL-encode the artifact name (dots and other special chars)
-                  encoded_artifact_name=$(printf '%s' "$artifact_name" | jq -sRr @uri)
-
-                  # Use Azure DevOps REST API to download artifact
-                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${encoded_artifact_name}&api-version=7.0&%24format=zip"
+                  # Build URL - artifact names with dots work fine in query params
+                  base_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts"
+                  artifact_url="${base_url}?artifactName=${artifact_name}&api-version=7.0&\$format=zip"
 
                   echo "  URL: $artifact_url"
 
@@ -390,21 +395,33 @@ stages:
                   http_code=$(curl -s -L -w "%{http_code}" \
                     -H "Authorization: Bearer $(System.AccessToken)" \
                     "$artifact_url" \
-                    -o "${artifact_name}.zip")
+                    -o "${artifact_name}.zip" 2>&1)
+
+                  echo "  HTTP Code: $http_code"
 
                   if [ "$http_code" = "200" ] && [ -f "${artifact_name}.zip" ] && [ -s "${artifact_name}.zip" ]; then
                     # Check if it's actually a zip file (not an error response)
-                    if file "${artifact_name}.zip" | grep -q "Zip archive"; then
+                    file_type=$(file "${artifact_name}.zip")
+                    echo "  File type: $file_type"
+
+                    if echo "$file_type" | grep -q "Zip archive"; then
                       unzip -o "${artifact_name}.zip" -d all-nuget-packages/ || echo "Warning: Failed to unzip ${artifact_name}.zip"
                       rm -f "${artifact_name}.zip"
                       echo "  ✓ Downloaded ${artifact_name}"
                     else
-                      echo "  ✗ Response was not a zip file (HTTP $http_code)"
+                      echo "  ✗ Response was not a zip file"
+                      echo "  First 500 bytes:"
                       head -c 500 "${artifact_name}.zip" 2>/dev/null || true
+                      echo ""
                       rm -f "${artifact_name}.zip"
                     fi
                   else
-                    echo "  ✗ Artifact ${artifact_name} not found (HTTP $http_code, product may have been skipped)"
+                    echo "  ✗ Artifact ${artifact_name} not found (HTTP $http_code)"
+                    if [ -f "${artifact_name}.zip" ]; then
+                      echo "  Response content:"
+                      head -c 500 "${artifact_name}.zip" 2>/dev/null || true
+                      echo ""
+                    fi
                     rm -f "${artifact_name}.zip" 2>/dev/null || true
                   fi
                 done
@@ -448,16 +465,14 @@ stages:
                   artifact_name="${product}-npm-packages"
                   echo "Checking for ${artifact_name}..."
 
-                  # URL-encode the artifact name (dots and other special chars)
-                  encoded_artifact_name=$(printf '%s' "$artifact_name" | jq -sRr @uri)
-
-                  # Use Azure DevOps REST API to download artifact (npm packages are optional)
-                  artifact_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?artifactName=${encoded_artifact_name}&api-version=7.0&%24format=zip"
+                  # Build URL - artifact names with dots work fine in query params
+                  base_url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts"
+                  artifact_url="${base_url}?artifactName=${artifact_name}&api-version=7.0&\$format=zip"
 
                   http_code=$(curl -s -L -w "%{http_code}" \
                     -H "Authorization: Bearer $(System.AccessToken)" \
                     "$artifact_url" \
-                    -o "${artifact_name}.zip")
+                    -o "${artifact_name}.zip" 2>&1)
 
                   if [ "$http_code" = "200" ] && [ -f "${artifact_name}.zip" ] && [ -s "${artifact_name}.zip" ]; then
                     # Check if it's actually a zip file (not an error response)

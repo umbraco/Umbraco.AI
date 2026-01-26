@@ -117,7 +117,7 @@ stages:
               artifact: build-outputs
               path: $(Build.SourcesDirectory)
 
-          - template: build/templates/pack-product.yml
+          - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: Umbraco.Ai
 
@@ -170,7 +170,7 @@ stages:
               artifact: Umbraco.Ai-packages
               path: $(Build.SourcesDirectory)/artifacts/nupkg
 
-          - template: build/templates/pack-product.yml
+          - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: $(product)
 
@@ -217,7 +217,7 @@ stages:
               artifact: Umbraco.Ai-packages
               path: $(Build.SourcesDirectory)/artifacts/nupkg
 
-          - template: build/templates/pack-product.yml
+          - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: $(product)
 

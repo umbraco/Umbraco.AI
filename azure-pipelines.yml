@@ -10,22 +10,29 @@ parameters:
   - name: level1Products
     type: object
     default:
-      # Providers
+      # Providers (no frontend)
       - name: Umbraco.Ai.OpenAi
         changeVar: OpenaiChanged
+        hasNpm: false
       - name: Umbraco.Ai.Anthropic
         changeVar: AnthropicChanged
+        hasNpm: false
       - name: Umbraco.Ai.Amazon
         changeVar: AmazonChanged
+        hasNpm: false
       - name: Umbraco.Ai.Google
         changeVar: GoogleChanged
+        hasNpm: false
       - name: Umbraco.Ai.MicrosoftFoundry
         changeVar: MicrosoftfoundryChanged
-      # Add-ons
+        hasNpm: false
+      # Add-ons (have frontend but don't export types)
       - name: Umbraco.Ai.Prompt
         changeVar: PromptChanged
+        hasNpm: false
       - name: Umbraco.Ai.Agent
         changeVar: AgentChanged
+        hasNpm: false
 
 trigger:
   branches:
@@ -367,11 +374,10 @@ stages:
               artifact: 'Umbraco.Ai-packages'
               targetPath: '$(Pipeline.Workspace)/nuget'
 
-          # Download Core npm packages (only if Core changed)
+          # Download Core npm packages (only if Core changed - Core always has npm packages)
           - task: DownloadPipelineArtifact@2
             displayName: Download Umbraco.Ai npm packages
             condition: eq(variables.CoreChanged, 'true')
-            continueOnError: true
             inputs:
               artifact: 'Umbraco.Ai-npm-packages'
               targetPath: '$(Pipeline.Workspace)/npm'
@@ -385,15 +391,15 @@ stages:
                 artifact: '${{ product.name }}-packages'
                 targetPath: '$(Pipeline.Workspace)/nuget'
 
-          # Download Level 1 npm packages (only if product changed)
+          # Download Level 1 npm packages (only for products that have npm packages)
           - ${{ each product in parameters.level1Products }}:
-            - task: DownloadPipelineArtifact@2
-              displayName: Download ${{ product.name }} npm packages
-              condition: eq(variables.${{ product.changeVar }}, 'true')
-              continueOnError: true
-              inputs:
-                artifact: '${{ product.name }}-npm-packages'
-                targetPath: '$(Pipeline.Workspace)/npm'
+            - ${{ if eq(product.hasNpm, true) }}:
+              - task: DownloadPipelineArtifact@2
+                displayName: Download ${{ product.name }} npm packages
+                condition: eq(variables.${{ product.changeVar }}, 'true')
+                inputs:
+                  artifact: '${{ product.name }}-npm-packages'
+                  targetPath: '$(Pipeline.Workspace)/npm'
 
           # Flatten and collect NuGet packages
           - task: Bash@3
@@ -404,9 +410,11 @@ stages:
               script: |
                 mkdir -p all-nuget-packages
 
-                # Find all .nupkg and .snupkg files and move to single directory
-                find "$(Pipeline.Workspace)/nuget" -name "*.nupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
-                find "$(Pipeline.Workspace)/nuget" -name "*.snupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
+                # Find all .nupkg and .snupkg files and move to single directory (only if source dir exists)
+                if [ -d "$(Pipeline.Workspace)/nuget" ]; then
+                  find "$(Pipeline.Workspace)/nuget" -name "*.nupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
+                  find "$(Pipeline.Workspace)/nuget" -name "*.snupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
+                fi
 
                 # Check if any packages were collected
                 if [ -d "all-nuget-packages" ] && [ "$(ls -A all-nuget-packages 2>/dev/null)" ]; then
@@ -427,8 +435,10 @@ stages:
               script: |
                 mkdir -p all-npm-packages
 
-                # Find all .tgz files and move to single directory
-                find "$(Pipeline.Workspace)/npm" -name "*.tgz" -exec mv {} all-npm-packages/ \; 2>/dev/null || true
+                # Find all .tgz files and move to single directory (only if source dir exists)
+                if [ -d "$(Pipeline.Workspace)/npm" ]; then
+                  find "$(Pipeline.Workspace)/npm" -name "*.tgz" -exec mv {} all-npm-packages/ \; 2>/dev/null || true
+                fi
 
                 # Check if any packages were collected
                 if [ -d "all-npm-packages" ] && [ "$(ls -A all-npm-packages 2>/dev/null)" ]; then

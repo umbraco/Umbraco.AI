@@ -292,27 +292,6 @@ function Get-BuildLevels {
     return $levels
 }
 
-function Get-TransitiveDependents {
-    <#
-    .SYNOPSIS
-    Builds reverse dependency map (product -> products that depend on it).
-    #>
-    param([hashtable]$Products)
-
-    $dependents = @{}
-    foreach ($productKey in $Products.Keys) {
-        $dependents[$productKey] = @()
-
-        foreach ($otherKey in $Products.Keys) {
-            if ($Products[$otherKey].DependsOn -contains $productKey) {
-                $dependents[$productKey] += $otherKey
-            }
-        }
-    }
-
-    return $dependents
-}
-
 # ============================================================================
 # CHANGE DETECTION
 # ============================================================================
@@ -429,37 +408,6 @@ function Get-ReleasePackageKeys {
     }
 
     return $keys
-}
-
-function Add-DependentChanges {
-    <#
-    .SYNOPSIS
-    Propagates changes to dependent products (if X changes, rebuild Y).
-    #>
-    param(
-        [hashtable]$ChangedProducts,
-        [hashtable]$Dependents,
-        [hashtable]$Products
-    )
-
-    Write-Host ""
-    Write-Host "Applying dependency propagation..." -ForegroundColor Cyan
-
-    do {
-        $propagated = $false
-
-        foreach ($productKey in @($ChangedProducts.Keys)) {
-            if ($ChangedProducts[$productKey] -and $Dependents.ContainsKey($productKey)) {
-                foreach ($dependent in $Dependents[$productKey]) {
-                    if (-not $ChangedProducts[$dependent]) {
-                        $ChangedProducts[$dependent] = $true
-                        $propagated = $true
-                        Write-Host "  → $dependent rebuild required (depends on $productKey)" -ForegroundColor Yellow
-                    }
-                }
-            }
-        }
-    } while ($propagated)
 }
 
 # ============================================================================
@@ -633,7 +581,6 @@ Get-AllProductDependencies -Products $products -ProductsByName $productsByName -
 
 # 3. Calculate build order
 $buildLevels = Get-BuildLevels -Products $products
-$dependents = Get-TransitiveDependents -Products $products
 
 # 4. Detect changes
 $changedProducts = Get-ChangedProducts -Products $products -SourceBranch $SourceBranch
@@ -683,9 +630,6 @@ elseif ($SourceBranch -match '^refs/heads/hotfix/') {
         Write-Host "Hotfix branch detected - no release-manifest.json found, using change detection" -ForegroundColor Gray
     }
 }
-
-# 6. Dependency propagation (disabled - only pack when product inputs change)
-# Add-DependentChanges -ChangedProducts $changedProducts -Dependents $dependents -Products $products
 
 # 6. Output pipeline variables
 Write-PipelineVariables -Products $products -ChangedProducts $changedProducts -BuildLevels $buildLevels -RootPath $RootPath

@@ -10,16 +10,14 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/openai-",
-    "^refs/heads/hotfix/openai-",
-    "^refs/tags/release-openai-"
+    "^refs/heads/hotfix/",
+    "^refs/heads/release/",
+    "^refs/tags/release-",
+    "^refs/tags/hotfix-"
   ],
   "cloudBuild": {
     "buildNumber": {
       "enabled": true
     }
-  },
-  "release": {
-    "branchName": "release/openai-{version}"
   }
 }

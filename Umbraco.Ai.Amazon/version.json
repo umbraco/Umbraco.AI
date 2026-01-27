@@ -10,16 +10,14 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/amazon-",
-    "^refs/heads/hotfix/amazon-",
-    "^refs/tags/release-amazon-"
+    "^refs/heads/hotfix/",
+    "^refs/heads/release/",
+    "^refs/tags/release-",
+    "^refs/tags/hotfix-"
   ],
   "cloudBuild": {
     "buildNumber": {
       "enabled": true
     }
-  },
-  "release": {
-    "branchName": "release/amazon-{version}"
   }
 }

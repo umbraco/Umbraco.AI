@@ -10,16 +10,14 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/google-",
-    "^refs/heads/hotfix/google-",
-    "^refs/tags/release-google-"
+    "^refs/heads/hotfix/",
+    "^refs/heads/release/",
+    "^refs/tags/release-",
+    "^refs/tags/hotfix-"
   ],
   "cloudBuild": {
     "buildNumber": {
       "enabled": true
     }
-  },
-  "release": {
-    "branchName": "release/google-{version}"
   }
 }

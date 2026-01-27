@@ -10,16 +10,14 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/prompt-",
-    "^refs/heads/hotfix/prompt-",
-    "^refs/tags/release-prompt-"
+    "^refs/heads/hotfix/",
+    "^refs/heads/release/",
+    "^refs/tags/release-",
+    "^refs/tags/hotfix-"
   ],
   "cloudBuild": {
     "buildNumber": {
       "enabled": true
     }
-  },
-  "release": {
-    "branchName": "release/prompt-{version}"
   }
 }

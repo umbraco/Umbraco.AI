@@ -147,6 +147,48 @@ stages:
               filePath: .azure-pipelines/scripts/detect-changes.ps1
               pwsh: true
 
+          - task: Bash@3
+            displayName: Summarize packed products + tag build
+            inputs:
+              targetType: inline
+              script: |
+                PRODUCTS="$(AllChangedProducts)"
+                ANY="$(AnyChanged)"
+                MAX_LEVEL="$(MaxLevel)"
+
+                if [ -z "$PRODUCTS" ]; then
+                  PRODUCTS="(none)"
+                fi
+
+                SUMMARY_FILE="$(Build.ArtifactStagingDirectory)/pack-summary.md"
+                {
+                  echo "## Pack Summary"
+                  echo ""
+                  echo "- AnyChanged: ${ANY:-false}"
+                  echo "- MaxLevel: ${MAX_LEVEL:-0}"
+                  echo "- Products: ${PRODUCTS}"
+                  echo ""
+                  echo "Artifacts (if produced):"
+                  echo "- all-nuget-packages"
+                  echo "- all-npm-packages"
+                } > "$SUMMARY_FILE"
+
+                echo "##vso[task.uploadsummary]$SUMMARY_FILE"
+
+                if [ "$PRODUCTS" = "(none)" ]; then
+                  echo "##vso[build.addbuildtag]pack-none"
+                  exit 0
+                fi
+
+                IFS=',' read -ra ITEMS <<< "$PRODUCTS"
+                for item in "${ITEMS[@]}"; do
+                  trimmed="$(echo "$item" | xargs)"
+                  if [ -n "$trimmed" ]; then
+                    safe="$(echo "$trimmed" | tr ' .' '__' | tr -cd 'A-Za-z0-9_-')"
+                    echo "##vso[build.addbuildtag]pack-$safe"
+                  fi
+                done
+
       # ============================================================
       # Pack Core (Level 0 - no internal dependencies)
       # Conditional based on change detection

@@ -152,9 +152,9 @@ stages:
             inputs:
               targetType: inline
               script: |
-                PRODUCTS="$(AllChangedProducts)"
-                ANY="$(AnyChanged)"
-                MAX_LEVEL="$(MaxLevel)"
+                PRODUCTS="$(detect.AllChangedProducts)"
+                ANY="$(detect.AnyChanged)"
+                MAX_LEVEL="$(detect.MaxLevel)"
 
                 if [ -z "$PRODUCTS" ]; then
                   PRODUCTS="(none)"
@@ -166,6 +166,7 @@ stages:
                   echo ""
                   echo "- AnyChanged: ${ANY:-false}"
                   echo "- MaxLevel: ${MAX_LEVEL:-0}"
+                  echo "- CoreChanged: $(detect.CoreChanged)"
                   echo "- Products: ${PRODUCTS}"
                   echo ""
                   echo "Artifacts (if produced):"
@@ -178,6 +179,10 @@ stages:
                 if [ "$PRODUCTS" = "(none)" ]; then
                   echo "##vso[build.addbuildtag]pack-none"
                   exit 0
+                fi
+
+                if [ "$(detect.CoreChanged)" = "true" ]; then
+                  echo "##vso[build.addbuildtag]pack-core"
                 fi
 
                 IFS=',' read -ra ITEMS <<< "$PRODUCTS"

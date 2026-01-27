@@ -8,7 +8,7 @@ public static class Constants
     /// <summary>
     /// Keys for metadata in metadata collections.
     /// </summary>
-    public static class MetadataKeys
+    public static class MetadataKeys 
     {
         /// <summary>
         /// Key for prompt ID in metadata collections.

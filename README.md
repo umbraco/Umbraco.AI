@@ -103,20 +103,15 @@ On `hotfix/*` branches, the manifest is optional. If present, it is enforced the
 ### Branch Naming Convention
 
 - `main` - Main development branch
-- `feature/<product>-<name>` - Feature branches (e.g., `feature/core-add-caching`)
-- `release/<product>-<version>` - Release branches (e.g., `release/core-1.0.1`)
-- `hotfix/<product>-<version>` - Hotfix branches (e.g., `hotfix/openai-1.0.1`)
+- `dev` - Integration branch
+- `feature/<anything>` - Feature branches (e.g., `feature/add-caching`)
+- `release/<anything>` - Release branches (e.g., `release/2026.01`)
+- `hotfix/<anything>` - Hotfix branches (e.g., `hotfix/2026.01.1`)
 
 ### Release Tags
 
-- `release-core-1.0.1` - Core release
-- `release-agent-1.0.1` - Agent release
-- `release-prompt-1.0.1` - Prompt release
-- `release-openai-1.0.1` - OpenAI provider release
-- `release-anthropic-1.0.1` - Anthropic provider release
-- `release-amazon-1.0.1` - Amazon Bedrock provider release
-- `release-google-1.0.1` - Google Gemini provider release
-- `release-microsoft-foundry-1.0.1` - Microsoft AI Foundry provider release
+- `release-2026.01` - Release tag
+- `hotfix-2026.01.1` - Hotfix tag
 
 ## Target Framework
 

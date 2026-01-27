@@ -59,51 +59,33 @@ Umbraco.Ai/                    # Monorepo root
 
 ## Branch Naming Convention
 
-**All branches MUST follow product-prefixed naming patterns.** This is enforced by git hooks and CI/CD.
+**All branches MUST follow these patterns.** This is enforced by git hooks and CI/CD.
 
 ### Valid Branch Patterns
 
 | Pattern | Description | Example |
 |---------|-------------|---------|
 | `main` | Main development branch | `main` |
-| `develop` | Integration branch (optional) | `develop` |
-| `feature/<product>-<description>` | New feature development | `feature/core-add-embeddings` |
-| `release/<product>-<version>` | Release preparation | `release/agent-17.1.0` |
-| `hotfix/<product>-<version>` | Emergency fixes | `hotfix/openai-1.0.1` |
-
-### Valid Products
-
-- `core` - Umbraco.Ai (Core)
-- `agent` - Umbraco.Ai.Agent
-- `prompt` - Umbraco.Ai.Prompt
-- `openai` - Umbraco.Ai.OpenAi
-- `anthropic` - Umbraco.Ai.Anthropic
-- `amazon` - Umbraco.Ai.Amazon
-- `google` - Umbraco.Ai.Google
-- `microsoft-foundry` - Umbraco.Ai.MicrosoftFoundry
+| `dev` | Integration branch | `dev` |
+| `feature/<anything>` | New feature development | `feature/add-embeddings` |
+| `release/<anything>` | Release preparation | `release/2026.01` |
+| `hotfix/<anything>` | Emergency fixes | `hotfix/2026.01.1` |
 
 ### Examples
 
 **Correct:**
 ```bash
-feature/core-add-streaming-support
-feature/agent-improve-context-handling
-feature/prompt-add-versioning
-feature/amazon-add-nova-models
-feature/google-multimodal-support
-feature/microsoft-foundry-endpoint-config
-release/core-17.1.0
-release/openai-1.2.0
-release/amazon-1.1.0
-hotfix/agent-17.0.1
+feature/add-streaming-support
+feature/improve-context-handling
+feature/add-versioning
+release/2026.01
+hotfix/2026.01.1
 ```
 
 **Incorrect:**
 ```bash
-feature/add-streaming        # Missing product prefix
-core-feature/streaming       # Wrong format
-feature-core-streaming       # Wrong delimiter
-release-17.1.0              # Missing product prefix
+feature-add-streaming        # Wrong delimiter
+release-2026.01              # Wrong delimiter
 ```
 
 ### Enforcement
@@ -126,7 +108,7 @@ git push --no-verify
 # 1. Create feature branch from main
 git checkout main
 git pull origin main
-git checkout -b feature/core-add-embeddings
+git checkout -b feature/add-embeddings
 
 # 2. Make changes in the product directory
 # Edit: Umbraco.Ai/src/Umbraco.Ai.Core/...
@@ -146,7 +128,7 @@ git commit -m "feat(core): add embedding support
 Implements IChatClient.EmbeddAsync using M.E.AI abstractions"
 
 # 6. Push and create PR
-git push -u origin feature/core-add-embeddings
+git push -u origin feature/add-embeddings
 ```
 
 ### Feature Development (Cross-Product)
@@ -155,7 +137,7 @@ When a feature spans multiple products (e.g., Core + Agent):
 
 ```bash
 # 1. Create feature branch
-git checkout -b feature/core-agent-shared-context
+git checkout -b feature/shared-context
 
 # 2. Make changes to both products
 # Edit: Umbraco.Ai/src/Umbraco.Ai.Core/...
@@ -176,10 +158,10 @@ git commit -m "feat(core,agent): add shared context handling
 - Agent: Implement context sharing between agents"
 
 # 6. Push and create PR
-git push -u origin feature/core-agent-shared-context
+git push -u origin feature/shared-context
 ```
 
-**Note:** Cross-product branches use the primary product prefix (usually `core` if Core is involved).
+**Note:** Use a descriptive branch name that reflects the scope of the work.
 
 ### Frontend Development
 
@@ -268,7 +250,7 @@ Closes #123
 
 Before submitting a PR:
 
-- [ ] Branch name follows convention (`feature/<product>-<description>`)
+- [ ] Branch name follows convention (`feature/<anything>`)
 - [ ] Code follows [coding standards](CLAUDE.md#coding-standards)
 - [ ] All tests pass
 - [ ] Frontend builds (if frontend changes)
@@ -305,19 +287,25 @@ Each product is versioned and released independently using Nerdbank.GitVersionin
 #### 1. Create Release Branch
 
 ```bash
-# Determine next version (following SemVer)
-# - Major: Breaking changes (17.0.0 → 18.0.0)
-# - Minor: New features (17.0.0 → 17.1.0)
-# - Patch: Bug fixes (17.0.0 → 17.0.1)
-
 git checkout main
 git pull origin main
-git checkout -b release/core-17.1.0
+git checkout -b release/2026.01
 ```
 
-#### 2. Update Version
+#### 2. Define Release Manifest
 
-Edit the product's `version.json`:
+Create `release-manifest.json` at repo root:
+
+```json
+[
+  "Umbraco.Ai",
+  "Umbraco.Ai.OpenAi"
+]
+```
+
+#### 3. Update Versions
+
+Edit each product's `version.json` in the manifest:
 
 ```json
 {
@@ -327,29 +315,30 @@ Edit the product's `version.json`:
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/core-",
-    "^refs/tags/release-core-"
+    "^refs/heads/release/",
+    "^refs/heads/hotfix/",
+    "^refs/tags/release-",
+    "^refs/tags/hotfix-"
   ]
 }
 ```
 
 ```bash
-git add Umbraco.Ai/version.json
-git commit -m "chore(core): bump version to 17.1.0"
-git push -u origin release/core-17.1.0
+git add release-manifest.json Umbraco.Ai/version.json
+git commit -m "chore(release): prepare 2026.01"
+git push -u origin release/2026.01
 ```
 
-#### 3. CI/CD Builds and Deploys
+#### 4. CI/CD Builds and Deploys
 
-Azure DevOps detects the `release/<product>-*` branch pattern:
-- Builds the product with `UseProjectReferences=false`
-- Runs tests
-- Generates NuGet packages
+Azure DevOps detects the `release/*` branch pattern:
+- Enforces `release-manifest.json`
+- Packs only the listed products
 - Deploys to **MyGet** (pre-release feed)
 
 MyGet URL: `https://www.myget.org/F/umbraco-ai/api/v3/index.json`
 
-#### 4. Test Pre-Release
+#### 5. Test Pre-Release
 
 ```bash
 # Add MyGet feed
@@ -361,36 +350,36 @@ dotnet add package Umbraco.Ai.Core --version 17.1.0-*
 
 Test the package in a real Umbraco site.
 
-#### 5. Create Release Tag
+#### 6. Create Release Tag
 
 Once testing passes:
 
 ```bash
-git checkout release/core-17.1.0
-git pull origin release/core-17.1.0
+git checkout release/2026.01
+git pull origin release/2026.01
 
 # Create and push tag
-git tag release-core-17.1.0
-git push origin release-core-17.1.0
+git tag release-2026.01
+git push origin release-2026.01
 ```
 
-#### 6. Production Deployment
+#### 7. Production Deployment
 
-Azure DevOps detects the `release-<product>-*` tag pattern:
+Azure DevOps detects the `release-*` tag pattern:
 - Rebuilds with release configuration
 - Deploys to **NuGet.org** (production feed)
 
 NuGet URL: `https://www.nuget.org/packages/Umbraco.Ai.Core`
 
-#### 7. Merge to Main
+#### 8. Merge to Main
 
 ```bash
-# Create PR: release/core-17.1.0 → main
+# Create PR: release/2026.01 → main
 # After approval and merge, delete release branch
 git checkout main
 git pull origin main
-git branch -d release/core-17.1.0
-git push origin --delete release/core-17.1.0
+git branch -d release/2026.01
+git push origin --delete release/2026.01
 ```
 
 ### Hotfix Workflow
@@ -399,50 +388,34 @@ For emergency fixes to production:
 
 ```bash
 # 1. Create hotfix branch from the release tag
-git checkout release-core-17.1.0
-git checkout -b hotfix/core-17.1.1
+git checkout release-2026.01
+git checkout -b hotfix/2026.01.1
 
 # 2. Fix the issue
 # Edit: Umbraco.Ai/src/...
 
-# 3. Update version.json
+# 3. Update version.json for affected products
 # Change: "version": "17.1.1"
 
-# 4. Commit and push
+# 4. (Optional) Add release-manifest.json if you want an explicit pack list
+
+# 5. Commit and push
 git commit -am "fix(core): resolve critical security issue"
-git push -u origin hotfix/core-17.1.1
+git push -u origin hotfix/2026.01.1
 
-# 5. CI/CD deploys to MyGet
-# 6. Test hotfix
-# 7. Create tag
-git tag release-core-17.1.1
-git push origin release-core-17.1.1
+# 6. CI/CD deploys to MyGet
+# 7. Test hotfix
+# 8. Create tag
+git tag hotfix-2026.01.1
+git push origin hotfix-2026.01.1
 
-# 8. CI/CD deploys to NuGet.org
-# 9. Merge hotfix to main
+# 9. CI/CD deploys to NuGet.org
+# 10. Merge hotfix to main
 ```
 
 ### Releasing Multiple Products
 
-When releasing dependent products together:
-
-```bash
-# 1. Release Core first
-git checkout -b release/core-17.1.0
-# ... follow release workflow ...
-git tag release-core-17.1.0
-
-# 2. Wait for Core to deploy to NuGet
-
-# 3. Release Agent (depends on Core 17.1.0)
-git checkout main
-git pull origin main
-git checkout -b release/agent-17.1.0
-# Update version.json
-git tag release-agent-17.1.0
-
-# 4. CI/CD builds Agent with Core 17.1.0 from NuGet
-```
+List all products in `release-manifest.json` on a single `release/*` branch and update their `version.json` files together. CI will pack only the manifest list and fail if any changed product is missing.
 
 ## CI/CD Pipeline
 
@@ -460,21 +433,12 @@ if ($file.StartsWith("Umbraco.Ai/")) {
     $changedProducts["core"] = $true
 }
 
-# Apply dependency propagation
-if ($changedProducts["core"]) {
-    # Core change affects all dependents
-    $changedProducts["agent"] = $true
-    $changedProducts["prompt"] = $true
-}
+# No dependency propagation (only products with direct changes pack)
 ```
 
-**Tag Builds:**
-```powershell
-# Parse tag name
-if ($tag -match "release-agent-17.1.0") {
-    $changedProducts["agent"] = $true
-}
-```
+**Release Branches:**
+- `release/*` branches require `release-manifest.json` and pack only the listed products.
+- `hotfix/*` branches honor the manifest if present; otherwise, change detection is used.
 
 ### Pipeline Stages
 

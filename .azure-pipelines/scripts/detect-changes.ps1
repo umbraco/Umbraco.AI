@@ -638,7 +638,8 @@ $dependents = Get-TransitiveDependents -Products $products
 # 4. Detect changes
 $changedProducts = Get-ChangedProducts -Products $products -SourceBranch $SourceBranch
 
-# 5. Release branch manifest enforcement
+# 5. Release/hotfix branch manifest enforcement
+$manifestPath = Join-Path $RootPath "release-manifest.json"
 if ($SourceBranch -match '^refs/heads/release/') {
     Write-Host "Release branch detected - enforcing release-manifest.json" -ForegroundColor Cyan
 
@@ -657,6 +658,30 @@ if ($SourceBranch -match '^refs/heads/release/') {
 
     $releaseDisplay = $releaseKeys | ForEach-Object { $products[$_].DisplayName }
     Write-Host "Release packages: $($releaseDisplay -join ', ')" -ForegroundColor Yellow
+}
+elseif ($SourceBranch -match '^refs/heads/hotfix/') {
+    if (Test-Path $manifestPath) {
+        Write-Host "Hotfix branch detected - applying release-manifest.json" -ForegroundColor Cyan
+
+        $releaseKeys = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName
+
+        $changedKeys = @($changedProducts.Keys | Where-Object { $changedProducts[$_] })
+        $missingKeys = @($changedKeys | Where-Object { $releaseKeys -notcontains $_ })
+        if ($missingKeys.Count -gt 0) {
+            $missingDisplay = $missingKeys | ForEach-Object { $products[$_].DisplayName }
+            throw "release-manifest.json is missing changed products: $($missingDisplay -join ', ')"
+        }
+
+        # Override change list to match manifest (force pack list)
+        $products.Keys | ForEach-Object { $changedProducts[$_] = $false }
+        foreach ($key in $releaseKeys) { $changedProducts[$key] = $true }
+
+        $releaseDisplay = $releaseKeys | ForEach-Object { $products[$_].DisplayName }
+        Write-Host "Release packages: $($releaseDisplay -join ', ')" -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "Hotfix branch detected - no release-manifest.json found, using change detection" -ForegroundColor Gray
+    }
 }
 
 # 6. Dependency propagation (disabled - only pack when product inputs change)

@@ -103,8 +103,11 @@ internal sealed class AiAgentFactory : IAiAgentFactory
             }
         }
 
-        // Create MAF ChatClientAgent using the extension method
-        return chatClient.CreateAIAgent(
+        // Create MAF ChatClientAgent directly using constructor
+        // The CreateAIAgent extension method was removed in newer versions
+        return new ChatClientAgent(
+            chatClient,
+            instructions: agent.Instructions,
             name: agent.Name,
             description: agent.Description,
             tools: tools);

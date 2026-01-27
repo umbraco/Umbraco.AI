@@ -89,9 +89,9 @@ For each agent, DevUI displays:
 
 ### Endpoints
 
-The package provides the following endpoints:
+The package provides the following endpoints (all require backoffice authentication):
 
-- `/devui` - DevUI frontend interface
+- `/umbraco/devui` - DevUI frontend interface
 - `/meta` - DevUI metadata endpoint
 - `/v1/entities` - List all discoverable entities (agents)
 - `/v1/entities/{entityId}/info` - Get detailed information for a specific entity
@@ -128,14 +128,15 @@ To enable Development mode, set the `ASPNETCORE_ENVIRONMENT` or `DOTNET_ENVIRONM
 
 **All DevUI endpoints require backoffice authentication.** Users must be logged into the Umbraco backoffice to access:
 
-- `/devui` - The DevUI frontend interface
+- `/umbraco/devui` - The DevUI frontend interface
 - `/meta` - DevUI metadata API
 - `/v1/entities` - Entity discovery endpoints
 
-The package uses Umbraco's `BackOfficeAccess` authorization policy, which means:
+The package uses Umbraco's `BackOfficeAccess` authorization policy and cookie-based authentication:
 - Users must be authenticated as Umbraco backoffice users
+- Authentication cookies are automatically sent with requests to all DevUI endpoints
 - Standard Umbraco security policies apply
-- Unauthorized requests receive a 401 Unauthorized response
+- Unauthorized requests receive a 401 Unauthorized response or redirect to the login page
 
 ### Security Considerations
 

@@ -79,7 +79,7 @@ steps:
       echo "Package exports types - running npm pack"
 
       # Get version from NBGV
-      VERSION=$(nbgv get-version -v NuGetPackageVersion)
+      VERSION=$(cd "$PRODUCT" && nbgv get-version -v NuGetPackageVersion)
       echo "Using version: $VERSION"
 
       # Navigate to frontend client folder

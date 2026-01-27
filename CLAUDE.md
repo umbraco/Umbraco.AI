@@ -177,6 +177,7 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | `scripts/install-demo-site.sh` | Creates unified local dev environment (Linux/Mac) |
 | `Umbraco.Ai.local.sln` | Unified solution (generated) |
 | `package.json` | Root npm scripts for frontend builds |
+| `release-manifest.json` | Release-branch pack list (required on `release/*` branches) |
 
 ## Frontend Architecture
 
@@ -201,6 +202,10 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 - .NET 10.0 (`net10.0`)
 - Umbraco CMS 17.x
 - Central Package Management via `Directory.Packages.props`
+
+## Release Branch Packaging
+
+On `release/*` branches, CI requires a `release-manifest.json` at repo root. It must be a JSON array of product names and is treated as the authoritative list of packages to pack. CI fails if any changed product is missing from the list.
 
 ## Excluded Folders
 

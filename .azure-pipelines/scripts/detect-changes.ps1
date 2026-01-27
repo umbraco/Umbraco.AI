@@ -377,6 +377,60 @@ function Get-ChangedProducts {
     return $changed
 }
 
+function Get-ReleasePackageKeys {
+    <#
+    .SYNOPSIS
+    Loads and validates release-manifest.json and returns product keys.
+    #>
+    param(
+        [string]$RootPath,
+        [hashtable]$Products,
+        [hashtable]$ProductsByName
+    )
+
+    $manifestPath = Join-Path $RootPath "release-manifest.json"
+    if (-not (Test-Path $manifestPath)) {
+        throw "release-manifest.json is required on release branches"
+    }
+
+    $raw = Get-Content $manifestPath -Raw
+    try {
+        $list = $raw | ConvertFrom-Json
+    }
+    catch {
+        throw "Failed to parse release-manifest.json: $($_.Exception.Message)"
+    }
+
+    if ($null -eq $list -or $list -is [string]) {
+        throw "release-manifest.json must be a JSON array of product names"
+    }
+
+    $validNames = @($Products.Values | ForEach-Object { $_.DisplayName })
+    $keys = @()
+
+    foreach ($item in $list) {
+        if (-not ($item -is [string]) -or [string]::IsNullOrWhiteSpace($item)) {
+            throw "release-manifest.json must contain only non-empty strings"
+        }
+        if (-not ($validNames -contains $item)) {
+            throw "release-manifest.json contains unknown product: $item"
+        }
+        $key = $ProductsByName[$item]
+        if ($null -eq $key -or -not $Products.ContainsKey($key)) {
+            throw "release-manifest.json product is not a packable product: $item"
+        }
+        if ($keys -notcontains $key) {
+            $keys += $key
+        }
+    }
+
+    if ($keys.Count -eq 0) {
+        throw "release-manifest.json must list at least one product"
+    }
+
+    return $keys
+}
+
 function Add-DependentChanges {
     <#
     .SYNOPSIS
@@ -584,8 +638,29 @@ $dependents = Get-TransitiveDependents -Products $products
 # 4. Detect changes
 $changedProducts = Get-ChangedProducts -Products $products -SourceBranch $SourceBranch
 
-# 5. Propagate to dependents
-Add-DependentChanges -ChangedProducts $changedProducts -Dependents $dependents -Products $products
+# 5. Release branch manifest enforcement
+if ($SourceBranch -match '^refs/heads/release/') {
+    Write-Host "Release branch detected - enforcing release-manifest.json" -ForegroundColor Cyan
+
+    $releaseKeys = Get-ReleasePackageKeys -RootPath $RootPath -Products $products -ProductsByName $productsByName
+
+    $changedKeys = @($changedProducts.Keys | Where-Object { $changedProducts[$_] })
+    $missingKeys = @($changedKeys | Where-Object { $releaseKeys -notcontains $_ })
+    if ($missingKeys.Count -gt 0) {
+        $missingDisplay = $missingKeys | ForEach-Object { $products[$_].DisplayName }
+        throw "release-manifest.json is missing changed products: $($missingDisplay -join ', ')"
+    }
+
+    # Override change list to match manifest (force pack list)
+    $products.Keys | ForEach-Object { $changedProducts[$_] = $false }
+    foreach ($key in $releaseKeys) { $changedProducts[$key] = $true }
+
+    $releaseDisplay = $releaseKeys | ForEach-Object { $products[$_].DisplayName }
+    Write-Host "Release packages: $($releaseDisplay -join ', ')" -ForegroundColor Yellow
+}
+
+# 6. Dependency propagation (disabled - only pack when product inputs change)
+# Add-DependentChanges -ChangedProducts $changedProducts -Dependents $dependents -Products $products
 
 # 6. Output pipeline variables
 Write-PipelineVariables -Products $products -ChangedProducts $changedProducts -BuildLevels $buildLevels -RootPath $RootPath

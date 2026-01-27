@@ -94,6 +94,10 @@ This monorepo supports independent versioning per product:
 
 - **All packages**: Version 1.x (independent versioning from Umbraco CMS)
 
+### Release Branch Packaging
+
+On `release/*` branches, CI requires a `release-manifest.json` at repo root. It must be a JSON array of product names (e.g. `["Umbraco.Ai", "Umbraco.Ai.OpenAi"]`). The manifest is treated as the authoritative list of packages to pack, and CI will fail if any changed product is missing from the list.
+
 ### Branch Naming Convention
 
 - `main` - Main development branch

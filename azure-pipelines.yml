@@ -89,7 +89,7 @@ stages:
           - script: dotnet restore Umbraco.Ai.sln
             displayName: Restore
 
-          - script: dotnet build Umbraco.Ai.sln --configuration Release --no-restore
+          - script: dotnet build Umbraco.Ai.sln --configuration Release --no-restore -p:DisableCloudBuildNumber=true
             displayName: Build
 
           - script: dotnet test Umbraco.Ai.sln --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults

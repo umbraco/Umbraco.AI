@@ -1,0 +1,10 @@
+<Project>
+  <Target Name="DisableCloudBuildNumberInAzureDevOps"
+          AfterTargets="GetUmbracoBuildVersion"
+          BeforeTargets="SetCloudBuildNumberWithVersion"
+          Condition="'$(DisableCloudBuildNumber)' == 'true'">
+    <PropertyGroup>
+      <CloudBuildNumber></CloudBuildNumber>
+    </PropertyGroup>
+  </Target>
+</Project>

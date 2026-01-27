@@ -189,7 +189,13 @@ stages:
                 for item in "${ITEMS[@]}"; do
                   trimmed="$(echo "$item" | xargs)"
                   if [ -n "$trimmed" ]; then
-                    safe="$(echo "$trimmed" | tr ' .' '__' | tr -cd 'A-Za-z0-9_-')"
+                    name="$trimmed"
+                    if [[ "$name" == Umbraco.Ai.* ]]; then
+                      name="${name#Umbraco.Ai.}"
+                    elif [[ "$name" == Umbraco.Ai ]]; then
+                      name="core"
+                    fi
+                    safe="$(echo "$name" | tr '[:upper:]' '[:lower:]' | tr '.' '-' | tr -cd 'a-z0-9-')"
                     echo "##vso[build.addbuildtag]pack-$safe"
                   fi
                 done

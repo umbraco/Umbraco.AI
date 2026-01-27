@@ -10,7 +10,7 @@ namespace Umbraco.Ai.Core;
 public static class Constants
 {
     /// <summary>
-    /// Default JSON serializer options for Umbraco.Ai.
+    /// Default JSON serializer options for Umbraco.Ai. 
     /// </summary>
     public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {

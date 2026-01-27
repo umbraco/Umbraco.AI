@@ -14,7 +14,7 @@ public static class Constants
     /// </summary>
     public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
     {
-        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase, 
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
         Converters =

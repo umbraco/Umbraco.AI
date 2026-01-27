@@ -465,3 +465,26 @@ stages:
               targetPath: $(Build.SourcesDirectory)/all-npm-packages
               artifact: all-npm-packages
               publishLocation: pipeline
+
+  # ============================================================
+  # Finalize - set build number once after all NBGV steps
+  # ============================================================
+  - stage: Finalize
+    displayName: Finalize Build
+    dependsOn:
+      - Build
+      - Pack
+    condition: succeeded()
+    jobs:
+      - job: SetBuildNumber
+        displayName: Set build number
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Bash@3
+            displayName: Set build number (branch + date)
+            inputs:
+              targetType: inline
+              script: |
+                BUILD_DATE=$(date -u +%Y%m%d)
+                echo "##vso[build.updatebuildnumber]$(Build.SourceBranchName)-${BUILD_DATE}$(Rev:.r)"

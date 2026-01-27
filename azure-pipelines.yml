@@ -52,7 +52,7 @@ pr:
       - dev
 
 variables:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '22.x'
   DOTNET_NOLOGO: 'true'
   DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
 
@@ -487,4 +487,4 @@ stages:
               targetType: inline
               script: |
                 BUILD_DATE=$(date -u +%Y%m%d)
-                echo "##vso[build.updatebuildnumber]$(Build.SourceBranchName)-${BUILD_DATE}$(Rev:.r)"
+                echo "##vso[build.updatebuildnumber]$(Build.SourceBranchName)-${BUILD_DATE}-$(Build.BuildID)"

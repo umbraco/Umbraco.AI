@@ -108,16 +108,50 @@ stages:
               publishLocation: pipeline
 
   # ============================================================
+  # Validate Changelogs - Only runs on release branches
+  # Ensures CHANGELOGs are present and match version.json
+  # ============================================================
+  - stage: ValidateChangelogs
+    displayName: Validate Changelogs
+    dependsOn: Build
+    # Only validate on release branches (not hotfix, main, or dev)
+    condition: |
+      and(
+        succeeded(),
+        ne(variables['Build.Reason'], 'PullRequest'),
+        startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
+      )
+    jobs:
+      - job: ValidateChangelogFiles
+        displayName: Validate CHANGELOG.md Files
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: PowerShell@2
+            displayName: Validate changelogs
+            inputs:
+              filePath: .azure-pipelines/scripts/validate-changelogs.ps1
+              pwsh: true
+              failOnStderr: false
+
+  # ============================================================
   # Pack Stage - Only runs on push to main/dev/hotfix/release branches
   # Uses dynamic change detection to only pack products that changed
   # ============================================================
   - stage: Pack
     displayName: Pack NuGet Packages
-    dependsOn: Build
+    dependsOn:
+      - Build
+      - ValidateChangelogs
     # Only pack on push (not PR) to main/dev/hotfix/release branches
+    # ValidateChangelogs may be skipped on non-release branches, which is OK
     condition: |
       and(
-        succeeded(),
+        in(dependencies.Build.result, 'Succeeded'),
+        in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
         ne(variables['Build.Reason'], 'PullRequest'),
         or(
           startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'),

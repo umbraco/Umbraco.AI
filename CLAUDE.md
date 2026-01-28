@@ -362,6 +362,16 @@ npm run changelog -- --product=Umbraco.Ai --unreleased
 
 Each product has a `changelog.config.json` file defining its scopes. The generation script automatically discovers all products by scanning for these config files - no hardcoded product lists.
 
+### Automated Validation
+
+On `release/*` branches, Azure DevOps automatically validates changelogs:
+- ✅ CHANGELOG.md exists for each product in release-manifest.json
+- ✅ CHANGELOG.md was updated in recent commits
+- ✅ Version in CHANGELOG.md matches version.json
+- ❌ **Build fails if validation fails**
+
+This prevents releasing without proper changelog documentation.
+
 **For full details on commit scopes, changelog workflow, and release process, see [CONTRIBUTING.md](CONTRIBUTING.md#maintaining-changelogs).**
 
 ## Coding Standards

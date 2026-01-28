@@ -708,7 +708,13 @@ When creating a release, follow these steps:
    git push -u origin release/2026.01
    ```
 
-9. **Azure DevOps builds** and publishes to MyGet (pre-release)
+9. **Azure DevOps validates and builds:**
+   - **Changelog validation** runs automatically (release branches only)
+     - Verifies CHANGELOG.md exists for each product in manifest
+     - Checks CHANGELOG.md was updated in recent commits
+     - Validates version in CHANGELOG.md matches version.json
+     - **Build fails if validation fails** - fix issues and push again
+   - Builds and publishes to MyGet (pre-release)
 
 10. **Test packages** from MyGet
 
@@ -755,6 +761,35 @@ The repository uses `commitlint` to validate commit messages. Invalid commits wi
 .\scripts\setup-git-hooks.ps1    # Windows
 ./scripts/setup-git-hooks.sh     # Linux/Mac
 ```
+
+### Troubleshooting Changelog Validation
+
+If the Azure DevOps build fails with changelog validation errors on a release branch:
+
+**Error: "CHANGELOG.md not found"**
+```bash
+# Generate the missing changelog
+npm run changelog -- --product=<ProductName> --version=<Version>
+git add <Product>/CHANGELOG.md
+git commit -m "docs(<scope>): add CHANGELOG for v<Version>"
+git push
+```
+
+**Error: "Version mismatch"**
+```bash
+# The version in CHANGELOG.md doesn't match version.json
+# Either update the changelog version manually, or regenerate it:
+npm run changelog -- --product=<ProductName> --version=<Version>
+git add <Product>/CHANGELOG.md
+git commit -m "docs(<scope>): update CHANGELOG version to v<Version>"
+git push
+```
+
+**Warning: "CHANGELOG.md does not appear to have been updated"**
+- This is a warning, not an error - build will still pass
+- Indicates the CHANGELOG.md exists but wasn't modified in recent commits
+- Usually means you forgot to regenerate the changelog for this release
+- Regenerate and commit to resolve
 
 This enables:
 - **commit-msg hook**: Validates commit messages using commitlint

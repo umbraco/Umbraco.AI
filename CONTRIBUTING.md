@@ -329,16 +329,38 @@ git commit -m "chore(release): prepare 2026.01"
 git push -u origin release/2026.01
 ```
 
-#### 4. CI/CD Builds and Deploys
+#### 4. CI/CD Build Pipeline
 
 Azure DevOps detects the `release/*` branch pattern:
-- Enforces `release-manifest.json`
-- Packs only the listed products
-- Deploys to **MyGet** (pre-release feed)
+- Enforces `release-manifest.json` (CI fails if any changed product is missing from the list)
+- Builds and packs only the listed products
+- Publishes two artifacts:
+  - `all-nuget-packages` - Contains all NuGet packages (.nupkg)
+  - `all-npm-packages` - Contains all npm packages (.tgz)
+- Publishes `pack-manifest` artifact - Contains metadata for each package (name, version, type)
 
-MyGet URL: `https://www.myget.org/F/umbraco-ai/api/v3/index.json`
+#### 5. Release Pipeline Deployment
 
-#### 5. Test Pre-Release
+The Azure DevOps **release pipeline** automatically triggers after the build completes:
+
+1. **Download Artifacts**
+   - Downloads `all-nuget-packages` artifact (contains all .nupkg files)
+   - Downloads `all-npm-packages` artifact (contains all .tgz files)
+   - Downloads `pack-manifest` artifact (contains package metadata)
+
+2. **Deploy Packages**
+   - Deploys NuGet packages to **MyGet** (pre-release feed)
+   - Deploys npm packages to **npm registry** with `@next` tag
+
+3. **Tag Git Repository**
+   - Reads `pack-manifest` artifact to get each package name and version
+   - Creates git tag for each deployed package: `[Product_Name]@[Version]`
+   - Examples: `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+   - Tags are pushed to the source branch
+
+**MyGet URL:** `https://www.myget.org/F/umbraco-ai/api/v3/index.json`
+
+#### 6. Test Pre-Release
 
 ```bash
 # Add MyGet feed
@@ -346,32 +368,49 @@ dotnet nuget add source https://www.myget.org/F/umbraco-ai/api/v3/index.json -n 
 
 # Install pre-release package
 dotnet add package Umbraco.Ai.Core --version 17.1.0-*
+
+# Install pre-release npm package
+npm install @umbraco-ai/core@next
 ```
 
-Test the package in a real Umbraco site.
+Test the packages in a real Umbraco site.
 
-#### 6. Create Release Tag
+#### 7. Create Release Tag
 
-Once testing passes:
+Once testing passes, create the release tag to trigger production deployment:
 
 ```bash
 git checkout release/2026.01
 git pull origin release/2026.01
 
-# Create and push tag
+# Create and push release tag
 git tag release-2026.01
 git push origin release-2026.01
 ```
 
-#### 7. Production Deployment
+#### 8. Production Release Pipeline
 
-Azure DevOps detects the `release-*` tag pattern:
-- Rebuilds with release configuration
-- Deploys to **NuGet.org** (production feed)
+Azure DevOps detects the `release-*` tag pattern and triggers the production release pipeline:
 
-NuGet URL: `https://www.nuget.org/packages/Umbraco.Ai.Core`
+1. **Download Artifacts**
+   - Downloads `all-nuget-packages` artifact from the build
+   - Downloads `all-npm-packages` artifact from the build
+   - Downloads `pack-manifest` artifact
 
-#### 8. Merge to Main
+2. **Deploy to Production**
+   - Deploys NuGet packages to **NuGet.org**
+   - Deploys npm packages to **npm registry** with `@latest` tag
+
+3. **Tag Git Repository**
+   - Reads `pack-manifest` to get each package name and version
+   - Creates git tag for each deployed package: `[Product_Name]@[Version]`
+   - Examples: `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+   - Tags are pushed to the repository
+
+**NuGet URL:** `https://www.nuget.org/packages/Umbraco.Ai.Core`
+**npm URL:** `https://www.npmjs.com/package/@umbraco-ai/core`
+
+#### 9. Merge to Main
 
 ```bash
 # Create PR: release/2026.01 → main
@@ -381,6 +420,8 @@ git pull origin main
 git branch -d release/2026.01
 git push origin --delete release/2026.01
 ```
+
+**Note on Git Tags:** The release pipeline automatically creates product-specific tags (e.g., `Umbraco.Ai@17.1.0`). These tags reference the exact commit that was released and can be used to trace which code version is in production.
 
 ### Hotfix Workflow
 
@@ -398,26 +439,125 @@ git checkout -b hotfix/2026.01.1
 # Change: "version": "17.1.1"
 
 # 4. (Optional) Add release-manifest.json if you want an explicit pack list
+# On hotfix/* branches, the manifest is optional:
+#   - If present: Only listed products are packed (enforced)
+#   - If absent: Change detection is used (automatic)
+echo '["Umbraco.Ai"]' > release-manifest.json
 
 # 5. Commit and push
-git commit -am "fix(core): resolve critical security issue"
+git add .
+git commit -m "fix(core): resolve critical security issue"
 git push -u origin hotfix/2026.01.1
 
-# 6. CI/CD deploys to MyGet
-# 7. Test hotfix
-# 8. Create tag
+# 6. Build pipeline runs
+# - Packs affected products (per manifest or change detection)
+# - Publishes artifacts: all-nuget-packages, all-npm-packages, pack-manifest
+
+# 7. Release pipeline deploys to MyGet and creates pre-release tags
+# Tags example: Umbraco.Ai@17.1.1-preview
+
+# 8. Test hotfix packages
+dotnet add package Umbraco.Ai.Core --version 17.1.1-*
+
+# 9. Create hotfix tag for production release
 git tag hotfix-2026.01.1
 git push origin hotfix-2026.01.1
 
-# 9. CI/CD deploys to NuGet.org
-# 10. Merge hotfix to main
+# 10. Production release pipeline runs
+# - Deploys to NuGet.org and npm registry
+# - Creates production tags: Umbraco.Ai@17.1.1
+
+# 11. Merge hotfix to main
 ```
 
 ### Releasing Multiple Products
 
-List all products in `release-manifest.json` on a single `release/*` branch and update their `version.json` files together. CI will pack only the manifest list and fail if any changed product is missing.
+To release multiple products in a single release:
+
+1. **Create `release-manifest.json`** at repo root with all products to release:
+
+```json
+[
+  "Umbraco.Ai",
+  "Umbraco.Ai.OpenAi",
+  "Umbraco.Ai.Anthropic"
+]
+```
+
+2. **Update `version.json`** for each listed product
+
+3. **Push release branch** - CI enforces that all listed products are packed
+
+4. **Release pipeline creates tags** for each product:
+   - `Umbraco.Ai@17.1.0`
+   - `Umbraco.Ai.OpenAi@1.2.0`
+   - `Umbraco.Ai.Anthropic@1.2.0`
+
+**Important:** On `release/*` branches, `release-manifest.json` is **required**. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
+
+On `hotfix/*` branches, the manifest is **optional**. If present, it is enforced the same way; if absent, change detection is used automatically.
 
 ## CI/CD Pipeline
+
+### Overview
+
+The CI/CD pipeline consists of two main stages:
+
+1. **Build Pipeline** - Triggered by commits to `release/*`, `hotfix/*`, or other branches
+   - Builds and tests products
+   - Creates NuGet and npm packages
+   - Publishes artifacts for deployment
+
+2. **Release Pipeline** - Triggered by build completion or git tags
+   - Downloads artifacts from build pipeline
+   - Deploys packages to package feeds
+   - Tags git repository with package versions
+
+### Build Artifacts
+
+Each build produces the following artifacts:
+
+| Artifact Name | Contents | Used By |
+|---------------|----------|---------|
+| `all-nuget-packages` | All .nupkg files from the build | Release pipeline (NuGet deployment) |
+| `all-npm-packages` | All .tgz files from the build | Release pipeline (npm deployment) |
+| `pack-manifest` | JSON metadata for each package (name, version, type) | Release pipeline (git tagging) |
+
+**Example `pack-manifest` content:**
+```json
+[
+  {
+    "name": "Umbraco.Ai",
+    "version": "17.1.0",
+    "type": "nuget"
+  },
+  {
+    "name": "@umbraco-ai/core",
+    "version": "17.1.0",
+    "type": "npm"
+  }
+]
+```
+
+### Git Tagging Strategy
+
+The release pipeline automatically creates git tags for traceability:
+
+| Tag Format | Example | Purpose | Created When |
+|------------|---------|---------|--------------|
+| `release-<version>` | `release-2026.01` | Triggers production deployment | Manual (by developer) |
+| `hotfix-<version>` | `hotfix-2026.01.1` | Triggers production deployment | Manual (by developer) |
+| `<Product>@<Version>` | `Umbraco.Ai@17.1.0` | Tracks deployed package version | Automated (by release pipeline) |
+
+**How it works:**
+1. Release pipeline reads `pack-manifest` artifact
+2. For each package in the manifest, creates a git tag: `[Product_Name]@[Version]`
+3. Tags are pushed to the source branch (e.g., `release/2026.01` or `main`)
+
+**Benefits:**
+- Trace which exact commit was deployed for each package
+- Navigate to source code for any production version
+- Compare versions across products (e.g., `git log Umbraco.Ai@17.0.0..Umbraco.Ai@17.1.0`)
 
 ### Change Detection
 
@@ -443,35 +583,63 @@ if ($file.StartsWith("Umbraco.Ai/")) {
 ### Pipeline Stages
 
 ```mermaid
-graph LR
+graph TB
     A[DetectChanges] --> B[Build]
     B --> C[Test]
-    C --> D[DeployMyGet]
-    C --> E[DeployNuGet]
+    B --> D[PublishArtifacts]
+    D --> E[ReleasePipeline]
+    E --> F{Deploy Type}
+    F -->|release/* branch| G[MyGet/npm@next]
+    F -->|release-* tag| H[NuGet/npm@latest]
+    G --> I[TagRepository]
+    H --> I[TagRepository]
 ```
 
+#### Build Pipeline Stages
+
 **1. DetectChanges**
-- Analyzes git changes or tag names
+- Analyzes git changes or reads `release-manifest.json`
 - Sets variables: `CoreChanged`, `AgentChanged`, etc.
+- Enforces manifest requirements on `release/*` branches
 
 **2. Build (Parallel)**
-- Builds only changed products
-- Uses `UseProjectReferences=false` for distribution
-- Generates NuGet packages
-- Publishes artifacts
+- Builds only changed products (or manifest-listed products)
+- Uses `UseProjectReferences=false` for distribution builds
+- Generates NuGet packages (.nupkg) and npm packages (.tgz)
+- Creates `pack-manifest` with metadata
 
 **3. Test (Parallel)**
-- Runs unit tests
-- Runs integration tests
-- Publishes code coverage
+- Runs unit tests for changed products
+- Runs integration tests where applicable
+- Publishes code coverage reports
 
-**4. DeployMyGet**
-- Triggers on: `release/*` branches
-- Deploys to MyGet (pre-release feed)
+**4. PublishArtifacts**
+- Publishes `all-nuget-packages` artifact
+- Publishes `all-npm-packages` artifact
+- Publishes `pack-manifest` artifact
 
-**5. DeployNuGet**
-- Triggers on: `release-*` tags
-- Deploys to NuGet.org (production feed)
+#### Release Pipeline Stages
+
+**5. ReleasePipeline** (triggered on build completion or git tag)
+- Downloads artifacts from build pipeline
+- Validates package integrity
+- Determines deployment target (pre-release vs production)
+
+**6. DeployMyGet** (on `release/*` or `hotfix/*` branches)
+- Deploys NuGet packages to MyGet feed
+- Deploys npm packages with `@next` tag
+- URL: `https://www.myget.org/F/umbraco-ai/api/v3/index.json`
+
+**7. DeployProduction** (on `release-*` or `hotfix-*` tags)
+- Deploys NuGet packages to NuGet.org
+- Deploys npm packages with `@latest` tag
+- URLs: `https://www.nuget.org/`, `https://www.npmjs.com/`
+
+**8. TagRepository** (all deployments)
+- Reads `pack-manifest` artifact
+- Creates git tag for each package: `<Product>@<Version>`
+- Pushes tags to repository (e.g., `Umbraco.Ai@17.1.0`)
+- Tags point to the commit that was built
 
 ### Manual Triggers
 

@@ -178,6 +178,7 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | `Umbraco.Ai.local.sln` | Unified solution (generated) |
 | `package.json` | Root npm scripts for frontend builds |
 | `release-manifest.json` | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`) |
+| `pack-manifest` (artifact) | CI-generated metadata for deployed packages (used by release pipeline for git tagging) |
 
 ## Frontend Architecture
 
@@ -205,9 +206,41 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 
 ## Release and Hotfix Branch Packaging
 
-On `release/*` branches, CI requires a `release-manifest.json` at repo root. It must be a JSON array of product names and is treated as the authoritative list of packages to pack. CI fails if any changed product is missing from the list.
+### Release Manifest
 
-On `hotfix/*` branches, the manifest is optional. If present, it is enforced the same way; if absent, change detection is used.
+On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
+
+```json
+[
+  "Umbraco.Ai",
+  "Umbraco.Ai.OpenAi"
+]
+```
+
+The manifest is treated as the authoritative list of packages to pack and release. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
+
+On `hotfix/*` branches, the manifest is **optional**:
+- If present: Enforced the same way as release branches (explicit pack list)
+- If absent: Change detection is used automatically
+
+### Release Pipeline Artifacts
+
+The CI build produces the following artifacts for deployment:
+
+| Artifact | Description |
+|----------|-------------|
+| `all-nuget-packages` | All .nupkg files for NuGet deployment |
+| `all-npm-packages` | All .tgz files for npm deployment |
+| `pack-manifest` | Package metadata (name, version, type) for each package |
+
+The Azure DevOps release pipeline:
+1. Downloads these artifacts
+2. Deploys packages to package feeds (MyGet for pre-release, NuGet.org/npm for production)
+3. Tags the git repository with `[Product_Name]@[Version]` for each deployed package
+
+**Example tags:** `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+
+For detailed release workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
 ## Excluded Folders
 

@@ -94,11 +94,30 @@ This monorepo supports independent versioning per product:
 
 - **All packages**: Version 1.x (independent versioning from Umbraco CMS)
 
-### Release and Hotfix Branch Packaging
+### Release Manifest
 
-On `release/*` branches, CI requires a `release-manifest.json` at repo root. It must be a JSON array of product names (e.g. `["Umbraco.Ai", "Umbraco.Ai.OpenAi"]`). The manifest is treated as the authoritative list of packages to pack, and CI will fail if any changed product is missing from the list.
+On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
 
-On `hotfix/*` branches, the manifest is optional. If present, it is enforced the same way; if absent, change detection is used.
+```json
+["Umbraco.Ai", "Umbraco.Ai.OpenAi"]
+```
+
+The manifest defines which products are included in the release. CI will fail if any changed product is missing from the list.
+
+On `hotfix/*` branches, the manifest is optional (if present, it is enforced; if absent, change detection is used).
+
+### Release Pipeline
+
+The Azure DevOps release pipeline:
+
+1. **Builds** the products listed in `release-manifest.json`
+2. **Publishes artifacts**: `all-nuget-packages`, `all-npm-packages`, `pack-manifest`
+3. **Deploys** packages to NuGet.org and npm registry
+4. **Tags** the git repository with `[Product_Name]@[Version]` for each deployed package
+
+**Example tags:** `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+
+These tags allow tracing exactly which code version is in production for each package.
 
 ### Branch Naming Convention
 
@@ -108,10 +127,15 @@ On `hotfix/*` branches, the manifest is optional. If present, it is enforced the
 - `release/<anything>` - Release branches (e.g., `release/2026.01`)
 - `hotfix/<anything>` - Hotfix branches (e.g., `hotfix/2026.01.1`)
 
-### Release Tags
+### Git Tags
 
-- `release-2026.01` - Release tag
-- `hotfix-2026.01.1` - Hotfix tag
+| Tag Type | Format | Example | Created By |
+|----------|--------|---------|------------|
+| Release trigger | `release-<version>` | `release-2026.01` | Manual (triggers production deployment) |
+| Hotfix trigger | `hotfix-<version>` | `hotfix-2026.01.1` | Manual (triggers production deployment) |
+| Package version | `<Product>@<Version>` | `Umbraco.Ai@17.1.0` | Automated by release pipeline |
+
+For detailed workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
 ## Target Framework
 

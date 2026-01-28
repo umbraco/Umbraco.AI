@@ -156,58 +156,58 @@ Add-ProductProjects -ProductFolder "Umbraco.Ai.Amazon" -SolutionFolder "Amazon"
 
 # Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
-dotnet sln "Umbraco.Ai.local.sln" add "demo\Umbraco.Ai.DemoSite\Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
+dotnet sln "Umbraco.Ai.local.sln" add "demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
 
 # Step 13: Add project references to demo site
 Write-Host "Adding project references to demo site..." -ForegroundColor Green
-$demoProject = "demo\Umbraco.Ai.DemoSite\Umbraco.Ai.DemoSite.csproj"
+$demoProject = "demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj"
 
 # Core references (meta-package + SQLite persistence)
-dotnet add $demoProject reference "Umbraco.Ai\src\Umbraco.Ai\Umbraco.Ai.csproj"
-dotnet add $demoProject reference "Umbraco.Ai\src\Umbraco.Ai.Persistence.Sqlite\Umbraco.Ai.Persistence.Sqlite.csproj"
+dotnet add $demoProject reference "Umbraco.Ai/src/Umbraco.Ai/Umbraco.Ai.csproj"
+dotnet add $demoProject reference "Umbraco.Ai/src/Umbraco.Ai.Persistence.Sqlite/Umbraco.Ai.Persistence.Sqlite.csproj"
 
 # OpenAI provider
-if (Test-Path "Umbraco.Ai.OpenAi\src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.OpenAi\src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj"
+if (Test-Path "Umbraco.Ai.OpenAi/src/Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.OpenAi/src/Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.csproj"
 }
 
 # Anthropic provider
-if (Test-Path "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj"
+if (Test-Path "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj"
 }
 
 # Microsoft Foundry provider
-if (Test-Path "Umbraco.Ai.MicrosoftFoundry\src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.MicrosoftFoundry\src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj"
+if (Test-Path "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj"
 }
 
 # Google provider
-if (Test-Path "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj"
+if (Test-Path "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj"
 }
 
 # Amazon provider
-if (Test-Path "Umbraco.Ai.Amazon\src\Umbraco.Ai.Amazon\Umbraco.Ai.Amazon.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Amazon\src\Umbraco.Ai.Amazon\Umbraco.Ai.Amazon.csproj"
+if (Test-Path "Umbraco.Ai.Amazon/src/Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Amazon/src/Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.csproj"
 }
 
 # Prompt add-on (meta-package + SQLite persistence)
-if (Test-Path "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt\Umbraco.Ai.Prompt.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt\Umbraco.Ai.Prompt.csproj"
-    dotnet add $demoProject reference "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Persistence.Sqlite\Umbraco.Ai.Prompt.Persistence.Sqlite.csproj"
+if (Test-Path "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.csproj"
+    dotnet add $demoProject reference "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Persistence.Sqlite/Umbraco.Ai.Prompt.Persistence.Sqlite.csproj"
 }
 
 # Agent add-on (meta-package + SQLite persistence)
-if (Test-Path "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent\Umbraco.Ai.Agent.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent\Umbraco.Ai.Agent.csproj"
-    dotnet add $demoProject reference "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Persistence.Sqlite\Umbraco.Ai.Agent.Persistence.Sqlite.csproj"
+if (Test-Path "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent/Umbraco.Ai.Agent.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent/Umbraco.Ai.Agent.csproj"
+    dotnet add $demoProject reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Persistence.Sqlite/Umbraco.Ai.Agent.Persistence.Sqlite.csproj"
 }
 
 Write-Host ""
 Write-Host "=== Setup Complete! ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "Solution: Umbraco.Ai.local.sln" -ForegroundColor Cyan
-Write-Host "Demo site: demo\Umbraco.Ai.DemoSite" -ForegroundColor Cyan
+Write-Host "Demo site: demo/Umbraco.Ai.DemoSite" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Credentials:" -ForegroundColor Yellow
 Write-Host "  Email: admin@example.com"

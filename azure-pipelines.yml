@@ -422,73 +422,6 @@ stages:
           - checkout: self
             fetchDepth: 0
 
-          - task: UseDotNet@2
-            displayName: Setup .NET
-            inputs:
-              useGlobalJson: true
-
-          - script: dotnet tool install --global nbgv || true
-            displayName: Install NBGV
-
-          - task: PowerShell@2
-            displayName: Build pack manifest (projects -> version)
-            name: buildManifest
-            inputs:
-              targetType: inline
-              pwsh: true
-              script: |
-                $manifestDir = Join-Path $env:BUILD_SOURCESDIRECTORY "artifacts"
-                $manifestFile = Join-Path $manifestDir "pack-manifest.json"
-                New-Item -ItemType Directory -Force -Path $manifestDir | Out-Null
-
-                $entries = New-Object System.Collections.Generic.List[object]
-
-                function Add-Version {
-                  param([string]$Product)
-                  if (-not (Test-Path $Product)) {
-                    return
-                  }
-                  Push-Location $Product
-                  try {
-                    & nbgv cloud | Out-Null
-                    $version = & nbgv get-version -v NuGetPackageVersion
-                    $entries.Add([pscustomobject]@{ name = $Product; version = $version })
-                  } finally {
-                    Pop-Location
-                  }
-                }
-
-                if ("$(CoreChanged)" -eq "true") {
-                  Add-Version "Umbraco.Ai"
-                }
-
-                $level1 = $env:LEVEL1_JSON | ConvertFrom-Json
-
-                foreach ($p in $level1) {
-                  $changeVar = [string]$p.changeVar
-                  $changed = [Environment]::GetEnvironmentVariable($changeVar)
-                  if (-not $changed) {
-                    $changed = [Environment]::GetEnvironmentVariable($changeVar.ToUpper())
-                  }
-                  if ($changed -eq "true") {
-                    Add-Version $p.name
-                  }
-                }
-
-                $json = $entries | ConvertTo-Json -Depth 3
-                $json | Out-File -FilePath $manifestFile -Encoding utf8
-                Write-Host "Pack manifest written to $manifestFile"
-                Write-Host $json
-            env:
-              LEVEL1_JSON: ${{ convertToJson(parameters.level1Products) }}
-
-          - task: PublishPipelineArtifact@1
-            displayName: Upload pack manifest
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/pack-manifest.json
-              artifact: pack-manifest
-              publishLocation: pipeline
-
           # Download Core NuGet packages (only if Core changed)
           - task: DownloadPipelineArtifact@2
             displayName: Download Umbraco.Ai NuGet packages
@@ -523,6 +456,88 @@ stages:
                 inputs:
                   artifact: '${{ product.name }}-npm-packages'
                   targetPath: '$(Pipeline.Workspace)/npm'
+
+          - task: PowerShell@2
+            displayName: Build pack manifest (projects -> version)
+            name: buildManifest
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                $manifestDir = Join-Path $env:BUILD_SOURCESDIRECTORY "artifacts"
+                $manifestFile = Join-Path $manifestDir "pack-manifest.json"
+                New-Item -ItemType Directory -Force -Path $manifestDir | Out-Null
+
+                $entries = New-Object System.Collections.Generic.List[object]
+                $packages = @()
+                $nugetRoot = Join-Path $env:PIPELINE_WORKSPACE "nuget"
+
+                if (Test-Path $nugetRoot) {
+                  Add-Type -AssemblyName System.IO.Compression.FileSystem
+                  $files = Get-ChildItem -Path $nugetRoot -Recurse -Filter "*.nupkg" -File
+                  foreach ($f in $files) {
+                    $zip = [System.IO.Compression.ZipFile]::OpenRead($f.FullName)
+                    try {
+                      $nuspecEntry = $zip.Entries | Where-Object { $_.FullName -like "*.nuspec" } | Select-Object -First 1
+                      if ($null -ne $nuspecEntry) {
+                        $reader = New-Object System.IO.StreamReader($nuspecEntry.Open())
+                        try {
+                          $xml = [xml]$reader.ReadToEnd()
+                        } finally {
+                          $reader.Close()
+                        }
+                        $id = $xml.package.metadata.id
+                        $version = $xml.package.metadata.version
+                        if ($id -and $version) {
+                          $packages += [pscustomobject]@{ id = $id; version = $version }
+                        }
+                      }
+                    } finally {
+                      $zip.Dispose()
+                    }
+                  }
+                }
+
+                function Add-VersionByProduct {
+                  param([string]$Product)
+                  $match = $packages | Where-Object { $_.id -eq $Product } | Select-Object -First 1
+                  if (-not $match) {
+                    $match = $packages | Where-Object { $_.id -like "$Product.*" } | Select-Object -First 1
+                  }
+                  if ($match) {
+                    $entries.Add([pscustomobject]@{ name = $Product; version = $match.version })
+                  }
+                }
+
+                if ("$(CoreChanged)" -eq "true") {
+                  Add-VersionByProduct "Umbraco.Ai"
+                }
+
+                $level1 = $env:LEVEL1_JSON | ConvertFrom-Json
+                foreach ($p in $level1) {
+                  $changeVar = [string]$p.changeVar
+                  $changed = [Environment]::GetEnvironmentVariable($changeVar)
+                  if (-not $changed) {
+                    $changed = [Environment]::GetEnvironmentVariable($changeVar.ToUpper())
+                  }
+                  if ($changed -eq "true") {
+                    Add-VersionByProduct $p.name
+                  }
+                }
+
+                $json = $entries | ConvertTo-Json -Depth 3
+                $json | Out-File -FilePath $manifestFile -Encoding utf8
+                Write-Host "Pack manifest written to $manifestFile"
+                Write-Host $json
+            env:
+              LEVEL1_JSON: ${{ convertToJson(parameters.level1Products) }}
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload pack manifest
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/pack-manifest.json
+              artifact: pack-manifest
+              publishLocation: pipeline
 
           # Flatten and collect NuGet packages
           - task: Bash@3

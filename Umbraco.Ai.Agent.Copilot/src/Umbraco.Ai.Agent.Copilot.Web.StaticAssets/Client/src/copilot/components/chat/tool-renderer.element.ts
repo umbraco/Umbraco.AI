@@ -4,7 +4,7 @@ import type {
   ManifestUaiAgentTool,
   UaiAgentToolElement,
   UaiAgentToolStatus,
-} from "../../../agent/tools";
+} from "../../tools";
 import type { UaiToolCallInfo } from "../../types.js";
 import { safeParseJson } from "../../utils";
 import { UAI_COPILOT_CONTEXT } from "../../copilot.context.js";

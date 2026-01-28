@@ -3,7 +3,7 @@ import type { UaiToolManager } from "./tool.manager.ts";
 import type { UaiInterruptInfo, UaiToolCallInfo, UaiToolCallStatus } from "../types.js";
 import type { UaiInterruptContext } from "../interrupts/types.js";
 import type UaiHitlContext from "../hitl.context.js";
-import { ManifestUaiAgentTool } from "../../agent/tools";
+import { ManifestUaiAgentTool } from "../tools";
 
 /**
  * Result of a frontend tool execution.

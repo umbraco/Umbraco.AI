@@ -1,7 +1,7 @@
 import { customElement, property, state, css, html, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import type { ManifestUaiAgentTool } from "../../../agent/tools/index.js";
+import type { ManifestUaiAgentTool } from "../../tools/index.js";
 import type { UaiInterruptInfo } from "../../types.js";
 import type { UaiApprovalBaseConfig } from "./approval-base.element.js";
 

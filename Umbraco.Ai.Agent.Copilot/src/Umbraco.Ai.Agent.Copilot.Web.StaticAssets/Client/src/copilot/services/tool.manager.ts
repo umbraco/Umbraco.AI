@@ -4,7 +4,7 @@ import { loadManifestApi, loadManifestElement } from "@umbraco-cms/backoffice/ex
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject } from "@umbraco-cms/backoffice/external/rxjs";
 import type { UaiToolCallInfo } from "../types.js";
-import { ManifestUaiAgentTool, UaiAgentToolApi, UaiAgentToolElement } from "../../agent/tools";
+import { ManifestUaiAgentTool, UaiAgentToolApi, UaiAgentToolElement } from "../tools";
 import { AguiTool } from "../transport";
 
 /** Element constructor type for tool UI components */

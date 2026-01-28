@@ -1,4 +1,4 @@
-import type { UmbExtensionManifest, UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension-registry";
+import type { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension-registry";
 import { copilotManifests } from "./copilot/manifests.js";
 import { manifests as langManifests } from "./lang/manifests.js";
 

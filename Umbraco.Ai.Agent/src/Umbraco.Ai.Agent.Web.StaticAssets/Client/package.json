@@ -2,6 +2,14 @@
   "name": "@umbraco-ai/agent",
   "version": "0.0.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
   "scripts": {
     "watch": "tsc && vite build --watch",
     "build": "tsc -p tsconfig.json && vite build",

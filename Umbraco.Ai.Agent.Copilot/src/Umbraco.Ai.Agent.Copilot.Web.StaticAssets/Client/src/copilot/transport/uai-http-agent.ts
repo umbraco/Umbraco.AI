@@ -1,14 +1,14 @@
 import { AbstractAgent, type RunAgentInput, type BaseEvent, type Message, type Tool } from "@ag-ui/client";
 import { Observable } from "rxjs";
-import { AgentsService } from "../../api/sdk.gen.js";
-import type {
-  AguiRunRequestModel,
-  AguiMessageModel,
-  AguiToolModel,
-  AguiToolCallModel,
-  AguiMessageRoleModel,
-  AguiContextItemModel,
-} from "../../api/types.gen.js";
+import {
+  AgentsService,
+  type AguiRunRequestModel,
+  type AguiMessageModel,
+  type AguiToolModel,
+  type AguiToolCallModel,
+  type AguiMessageRoleModel,
+  type AguiContextItemModel,
+} from "@umbraco-ai/agent";
 import type { AgentTransport } from "./types.js";
 
 /**

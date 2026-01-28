@@ -5,7 +5,7 @@ import { loadManifestElement } from "@umbraco-cms/backoffice/extension-api";
 import type {
   ManifestUaiAgentApprovalElement,
   UaiAgentApprovalElement,
-} from "../../../agent/approval/index.js";
+} from "../../approval/index.js";
 
 /**
  * Configuration for the base approval element.

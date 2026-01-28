@@ -1,5 +1,3 @@
-import type { UmbExtensionManifest } from "@umbraco-cms/backoffice/extension-registry";
-
 const localizationManifests: UmbExtensionManifest[] = [
     {
         type: "localization",

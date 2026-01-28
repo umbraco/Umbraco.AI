@@ -1,5 +1,5 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { AgentsService } from "../../api";
+import { AgentsService } from "@umbraco-ai/agent";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { UaiCopilotAgentItem } from "../types.js";
 

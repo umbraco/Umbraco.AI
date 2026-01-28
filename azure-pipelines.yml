@@ -430,52 +430,57 @@ stages:
           - script: dotnet tool install --global nbgv || true
             displayName: Install NBGV
 
-          - task: Bash@3
+          - task: PowerShell@2
             displayName: Build pack manifest (projects -> version)
             name: buildManifest
             inputs:
               targetType: inline
+              pwsh: true
               script: |
-                set -euo pipefail
+                $manifestDir = Join-Path $env:BUILD_SOURCESDIRECTORY "artifacts"
+                $manifestFile = Join-Path $manifestDir "pack-manifest.json"
+                New-Item -ItemType Directory -Force -Path $manifestDir | Out-Null
 
-                MANIFEST_DIR="$(Build.SourcesDirectory)/artifacts"
-                MANIFEST_FILE="$MANIFEST_DIR/pack-manifest.json"
-                mkdir -p "$MANIFEST_DIR"
+                $entries = New-Object System.Collections.Generic.List[object]
 
-                versions=()
-
-                add_version() {
-                  local product="$1"
-                  if [ -d "$product" ]; then
-                    local version
-                    version="$(cd "$product" && nbgv get-version -v NuGetPackageVersion)"
-                    versions+=("{\"name\":\"$product\",\"version\":\"$version\"}")
-                  fi
+                function Add-Version {
+                  param([string]$Product)
+                  if (-not (Test-Path $Product)) {
+                    return
+                  }
+                  Push-Location $Product
+                  try {
+                    $version = & nbgv get-version -v NuGetPackageVersion
+                    $entries.Add([pscustomobject]@{ name = $Product; version = $version })
+                  } finally {
+                    Pop-Location
+                  }
                 }
 
-                if [ "$(CoreChanged)" = "true" ]; then
-                  add_version "Umbraco.Ai"
-                fi
+                if ("$(CoreChanged)" -eq "true") {
+                  Add-Version "Umbraco.Ai"
+                }
 
-                ${{ each product in parameters.level1Products }}:
-                  if [ "$( ${{ product.changeVar }} )" = "true" ]; then
-                    add_version "${{ product.name }}"
-                  fi
+                $level1Json = @'
+${{ convertToJson(parameters.level1Products) }}
+'@
+                $level1 = $level1Json | ConvertFrom-Json
 
-                {
-                  echo "["
-                  for i in "${!versions[@]}"; do
-                    sep=","
-                    if [ "$i" -eq 0 ]; then
-                      sep=""
-                    fi
-                    echo "  $sep${versions[$i]}"
-                  done
-                  echo "]"
-                } > "$MANIFEST_FILE"
+                foreach ($p in $level1) {
+                  $changeVar = [string]$p.changeVar
+                  $changed = [Environment]::GetEnvironmentVariable($changeVar)
+                  if (-not $changed) {
+                    $changed = [Environment]::GetEnvironmentVariable($changeVar.ToUpper())
+                  }
+                  if ($changed -eq "true") {
+                    Add-Version $p.name
+                  }
+                }
 
-                echo "Pack manifest written to $MANIFEST_FILE"
-                cat "$MANIFEST_FILE"
+                $json = $entries | ConvertTo-Json -Depth 3
+                $json | Out-File -FilePath $manifestFile -Encoding utf8
+                Write-Host "Pack manifest written to $manifestFile"
+                Write-Host $json
 
           - task: PublishPipelineArtifact@1
             displayName: Upload pack manifest

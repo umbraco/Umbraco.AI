@@ -11,6 +11,7 @@ This is a monorepo containing Umbraco.Ai and its add-on packages:
 | **Umbraco.Ai** | Core AI integration layer for Umbraco CMS | `Umbraco.Ai/` |
 | **Umbraco.Ai.Prompt** | Prompt template management add-on | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.Agent** | AI agent management add-on | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | `Umbraco.Ai.Agent.Copilot/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider plugin | `Umbraco.Ai.Anthropic/` |
 | **Umbraco.Ai.Amazon** | Amazon Bedrock provider plugin | `Umbraco.Ai.Amazon/` |

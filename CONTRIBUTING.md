@@ -607,7 +607,8 @@ Scopes are automatically discovered from product `changelog.config.json` files:
 | Product | Scopes |
 |---------|--------|
 | **Umbraco.Ai** | `core`, `profile`, `chat`, `embedding`, `connection`, `middleware`, `registry`, `settings`, `providers`, `ui`, `frontend`, `api` |
-| **Umbraco.Ai.Agent** | `agent`, `copilot`, `tools`, `approval` |
+| **Umbraco.Ai.Agent** | `agent` |
+| **Umbraco.Ai.Agent.Copilot** | `copilot`, `tools`, `approval` |
 | **Umbraco.Ai.Prompt** | `prompt` |
 | **Umbraco.Ai.OpenAi** | `openai` |
 | **Umbraco.Ai.Anthropic** | `anthropic` |

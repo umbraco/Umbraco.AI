@@ -13,19 +13,24 @@
     "build:core": "npm run build -w @umbraco-ai/core",
     "build:prompt": "npm run build -w @umbraco-ai/prompt",
     "build:agent": "npm run build -w @umbraco-ai/agent",
-
     "watch": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run watch:core\" \"npm run watch:prompt\" \"npm run watch:agent\"",
     "watch:core": "npm run watch -w @umbraco-ai/core",
     "watch:prompt": "npm run watch -w @umbraco-ai/prompt",
     "watch:agent": "npm run watch -w @umbraco-ai/agent",
-
     "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
     "generate-client:core": "npm run generate-client -w @umbraco-ai/core",
     "generate-client:prompt": "npm run generate-client -w @umbraco-ai/prompt",
-    "generate-client:agent": "npm run generate-client -w @umbraco-ai/agent"
+    "generate-client:agent": "npm run generate-client -w @umbraco-ai/agent",
+    "changelog": "node scripts/generate-changelog.js",
+    "changelog:list": "node scripts/generate-changelog.js --list",
+    "changelog:all": "node scripts/generate-all-changelogs.js"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "@commitlint/cli": "^20.3.1",
+    "@commitlint/config-conventional": "^20.3.1",
+    "concurrently": "^9.1.2",
+    "conventional-changelog-cli": "^5.0.0",
+    "conventional-changelog-conventionalcommits": "^9.1.0"
   },
   "overrides": {
     "rxjs": "^7.8.2"

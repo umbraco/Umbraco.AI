@@ -36,6 +36,7 @@ Write-Host "✓ Git hooks configured successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "The following hooks are now active:"
 Write-Host "  - pre-push: Validates branch naming conventions"
+Write-Host "  - commit-msg: Validates commit messages (conventional commits)"
 Write-Host ""
 Write-Host "To disable hooks, run:"
 Write-Host "  git config --unset core.hooksPath"

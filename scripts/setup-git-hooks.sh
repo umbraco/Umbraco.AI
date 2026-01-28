@@ -28,6 +28,7 @@ fi
 echo "Making hook scripts executable..."
 chmod +x "$HOOKS_DIR/pre-push"
 chmod +x "$HOOKS_DIR/pre-push.sh"
+chmod +x "$HOOKS_DIR/commit-msg"
 
 # Configure git to use the custom hooks directory
 echo "Configuring git to use custom hooks directory..."
@@ -38,6 +39,7 @@ echo "✓ Git hooks configured successfully!"
 echo ""
 echo "The following hooks are now active:"
 echo "  - pre-push: Validates branch naming conventions"
+echo "  - commit-msg: Validates commit messages (conventional commits)"
 echo ""
 echo "To disable hooks, run:"
 echo "  git config --unset core.hooksPath"

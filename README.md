@@ -128,6 +128,8 @@ Umbraco.Ai (Core)
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
 - Development workflow and branch naming conventions
+- Commit message format (conventional commits)
+- Changelog generation and maintenance
 - Pull request process
 - Release and deployment procedures
 - Coding standards

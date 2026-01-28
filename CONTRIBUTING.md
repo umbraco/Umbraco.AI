@@ -565,6 +565,212 @@ dotnet build Umbraco.Ai.local.sln /p:UseProjectReferences=false
 dotnet list Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Core package --include-transitive | grep Umbraco.Ai.Core
 ```
 
+## Maintaining Changelogs
+
+Each product maintains its own `CHANGELOG.md` file at the product root, auto-generated from git history using conventional commits. Changelogs follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
+
+### Commit Message Format
+
+All commits should follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Type** - The kind of change:
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `perf`: Performance improvement
+- `docs`: Documentation only
+- `test`: Tests only
+- `chore`: Maintenance
+- `ci`: CI/CD changes
+- `build`: Build system changes
+- `revert`: Reverts a previous commit
+
+**Scope** - The product or feature area affected (see table below)
+
+**Description** - Brief summary in present tense (e.g., "add streaming support")
+
+### Commit Scopes
+
+Scopes are automatically discovered from product `changelog.config.json` files:
+
+| Product | Scopes |
+|---------|--------|
+| **Umbraco.Ai** | `core`, `profile`, `chat`, `embedding`, `connection`, `middleware`, `registry`, `settings`, `providers`, `ui`, `frontend`, `api` |
+| **Umbraco.Ai.Agent** | `agent`, `copilot`, `tools`, `approval` |
+| **Umbraco.Ai.Prompt** | `prompt` |
+| **Umbraco.Ai.OpenAi** | `openai` |
+| **Umbraco.Ai.Anthropic** | `anthropic` |
+| **Umbraco.Ai.Amazon** | `amazon` |
+| **Umbraco.Ai.Google** | `google` |
+| **Umbraco.Ai.MicrosoftFoundry** | `microsoft-foundry` |
+| **Meta scopes** | `deps`, `ci`, `docs`, `release` |
+
+**Examples:**
+```bash
+# Single product
+feat(chat): add streaming support
+fix(openai): handle rate limit errors correctly
+docs(prompt): update template examples
+
+# Multiple products
+feat(core,agent): add shared context API
+fix(openai,anthropic): standardize error handling
+
+# Breaking changes
+feat(core): redesign profile API
+
+BREAKING CHANGE: Profile.GetByName() removed, use GetByAlias() instead
+```
+
+### Generating Changelogs
+
+Changelogs are generated manually before creating a release in Azure DevOps.
+
+**List available products:**
+```bash
+npm run changelog:list
+# Or: node scripts/generate-changelog.js --list
+```
+
+**Generate changelog for a specific product:**
+```bash
+# Using npm script
+npm run changelog -- --product=Umbraco.Ai --version=17.1.0
+
+# Using Node.js directly
+node scripts/generate-changelog.js --product=Umbraco.Ai --version=17.1.0
+
+# Using PowerShell wrapper
+.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 17.1.0
+
+# Using Bash wrapper
+./scripts/generate-changelog.sh --product=Umbraco.Ai --version=17.1.0
+```
+
+**Generate unreleased changes:**
+```bash
+npm run changelog -- --product=Umbraco.Ai --unreleased
+```
+
+**Generate all changelogs at once:**
+```bash
+npm run changelog:all
+```
+
+### Updated Release Workflow with Changelogs
+
+When creating a release, follow these steps:
+
+1. **Create release branch:**
+   ```bash
+   git checkout -b release/2026.01
+   ```
+
+2. **Create release manifest** (`release-manifest.json`):
+   ```json
+   ["Umbraco.Ai", "Umbraco.Ai.OpenAi"]
+   ```
+
+3. **Update version.json** for each product in the manifest
+
+4. **Generate changelogs** for each product:
+   ```bash
+   npm run changelog -- --product=Umbraco.Ai --version=17.1.0
+   npm run changelog -- --product=Umbraco.Ai.OpenAi --version=1.2.0
+   ```
+
+5. **Review and edit** generated changelogs (if needed):
+   - Check that entries are accurate
+   - Add context to commit messages if needed
+   - Group related changes
+   - Highlight important changes
+
+6. **Commit changelogs:**
+   ```bash
+   git add Umbraco.Ai/CHANGELOG.md Umbraco.Ai.OpenAi/CHANGELOG.md
+   git commit -m "docs(core,openai): update CHANGELOGs for release 2026.01"
+   ```
+
+7. **Commit version updates:**
+   ```bash
+   git add release-manifest.json Umbraco.Ai/version.json Umbraco.Ai.OpenAi/version.json
+   git commit -m "chore(release): prepare 2026.01"
+   ```
+
+8. **Push release branch:**
+   ```bash
+   git push -u origin release/2026.01
+   ```
+
+9. **Azure DevOps builds** and publishes to MyGet (pre-release)
+
+10. **Test packages** from MyGet
+
+11. **Trigger production release** from Azure DevOps
+    - Release pipeline deploys to NuGet.org and npm
+    - Automatically creates git tags: `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+    - Tags include the changelog commits
+
+12. **Merge release branch to main**
+
+### Adding a New Product
+
+To add changelog support for a new product:
+
+1. **Create product directory:** `Umbraco.Ai.NewProduct/`
+
+2. **Create changelog config:**
+   ```json
+   // Umbraco.Ai.NewProduct/changelog.config.json
+   {
+     "scopes": ["new-product"]
+   }
+   ```
+
+3. **Verify discovery:**
+   ```bash
+   npm run changelog:list
+   # Should show your new product automatically!
+   ```
+
+4. **Generate initial changelog:**
+   ```bash
+   npm run changelog -- --product=Umbraco.Ai.NewProduct --unreleased
+   ```
+
+No script changes needed - products are discovered automatically by convention!
+
+### Commit Message Validation
+
+The repository uses `commitlint` to validate commit messages. Invalid commits will show warnings but are still allowed.
+
+**Setup validation hooks:**
+```bash
+.\scripts\setup-git-hooks.ps1    # Windows
+./scripts/setup-git-hooks.sh     # Linux/Mac
+```
+
+This enables:
+- **commit-msg hook**: Validates commit messages using commitlint
+- **pre-push hook**: Validates branch naming conventions
+
+**Testing your commit message:**
+```bash
+# Test a commit message
+echo "feat(chat): add streaming" | npx commitlint
+
+# Check recent commits
+npx commitlint --from HEAD~5 --to HEAD
+```
+
 ## CI/CD Pipeline
 
 ### Overview

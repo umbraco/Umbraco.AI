@@ -388,8 +388,8 @@ Once testing passes, trigger the production release from Azure DevOps. The relea
 
 3. **Tag Git Repository**
    - Reads `pack-manifest` to get each package name and version
-   - Creates git tag for each deployed package: `[Product_Name]@v[Version]`
-   - Examples: `Umbraco.Ai@v1.1.0`, `Umbraco.Ai.OpenAi@v1.2.0`
+   - Creates git tag for each deployed package: `[Product_Name]@[Version]`
+   - Examples: `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
    - Tags are pushed to the repository
 
 **NuGet URL:** `https://www.nuget.org/packages/Umbraco.Ai.Core`
@@ -419,7 +419,7 @@ For emergency fixes to production:
 # 1. Create hotfix branch from the production tag
 # Find the specific product version that needs fixing
 git tag --list | grep "Umbraco.Ai@"
-# Example output: Umbraco.Ai@v1.1.0, Umbraco.Ai.OpenAi@v1.2.0
+# Example output: Umbraco.Ai@1.1.0, Umbraco.Ai.OpenAi@1.2.0
 
 # Branch from the specific product tag
 git checkout -b hotfix/2026.01.1 Umbraco.Ai@1.1.0

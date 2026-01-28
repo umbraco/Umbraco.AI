@@ -1,8 +1,5 @@
 {
   "scopes": [
-    "agent",
-    "copilot",
-    "tools",
-    "approval"
+    "agent"
   ]
 }

@@ -8,7 +8,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Determine repository root (parent of scripts folder)
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot = Split-Path -Parent $ScriptDir
+
+# Change to repository root to ensure consistent behavior
+Push-Location $RepoRoot
+
 Write-Host "=== Umbraco.Ai Unified Demo Site Setup ===" -ForegroundColor Cyan
+Write-Host "Working directory: $RepoRoot" -ForegroundColor Gray
 Write-Host ""
 
 # Check if demo already exists
@@ -210,3 +218,6 @@ Write-Host "  1. Open Umbraco.Ai.local.sln in your IDE"
 Write-Host "  2. Build the solution"
 Write-Host "  3. Run the Umbraco.Ai.DemoSite project"
 Write-Host ""
+
+# Restore original directory
+Pop-Location

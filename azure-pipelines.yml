@@ -461,10 +461,7 @@ stages:
                   Add-Version "Umbraco.Ai"
                 }
 
-                $level1Json = @'
-${{ convertToJson(parameters.level1Products) }}
-'@
-                $level1 = $level1Json | ConvertFrom-Json
+                $level1 = $env:LEVEL1_JSON | ConvertFrom-Json
 
                 foreach ($p in $level1) {
                   $changeVar = [string]$p.changeVar
@@ -481,6 +478,8 @@ ${{ convertToJson(parameters.level1Products) }}
                 $json | Out-File -FilePath $manifestFile -Encoding utf8
                 Write-Host "Pack manifest written to $manifestFile"
                 Write-Host $json
+            env:
+              LEVEL1_JSON: ${{ convertToJson(parameters.level1Products) }}
 
           - task: PublishPipelineArtifact@1
             displayName: Upload pack manifest

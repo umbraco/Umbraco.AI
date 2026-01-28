@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.csproj" />
+  </Folder>
+</Solution>

@@ -80,7 +80,7 @@ npm run watch:copilot
 ```
 Umbraco.Ai.Agent.Copilot/
 ├── src/
-│   └── Umbraco.Ai.Agent.Copilot.Web.StaticAssets/
+│   └── Umbraco.Ai.Agent.Copilot/
 │       └── Client/
 │           ├── src/
 │           │   ├── copilot/          # Chat UI components
@@ -92,7 +92,7 @@ Umbraco.Ai.Agent.Copilot/
 │           │   └── lang/             # Localization
 │           └── public/
 │               └── umbraco-package.json
-├── Umbraco.Ai.Agent.Copilot.slnx
+├── Umbraco.Ai.Agent.Copilot.sln
 └── Directory.Build.props
 ```
 

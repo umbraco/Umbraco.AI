@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/umbraco/Umbraco.CMS.Backoffice/main/umbraco-package-schema.json",
+  "id": "Umbraco.Ai.Agent.Copilot",
+  "name": "Umbraco AI Agent Copilot",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "bundle",
+      "alias": "Umbraco.Ai.Agent.Copilot.Bundle",
+      "name": "Umbraco AI Agent Copilot Bundle",
+      "js": "/App_Plugins/UmbracoAiAgentCopilot/umbraco-ai-agent-copilot.js"
+    }
+  ],
+  "importmap": {
+    "imports": {
+      "@umbraco-ai/agent-copilot": "/App_Plugins/UmbracoAiAgentCopilot/umbraco-ai-agent-copilot.js"
+    }
+  }
+}

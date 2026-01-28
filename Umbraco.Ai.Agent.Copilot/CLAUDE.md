@@ -33,7 +33,7 @@ npm run build:copilot
 npm run watch:copilot
 
 # Build .NET solution (minimal - just static assets)
-dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.slnx
+dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.sln
 ```
 
 ## Project Structure
@@ -41,7 +41,7 @@ dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.slnx
 ```
 Umbraco.Ai.Agent.Copilot/
 ├── src/
-│   └── Umbraco.Ai.Agent.Copilot.Web.StaticAssets/
+│   └── Umbraco.Ai.Agent.Copilot/
 │       ├── Client/
 │       │   ├── src/
 │       │   │   ├── copilot/              # Main copilot module
@@ -64,9 +64,9 @@ Umbraco.Ai.Agent.Copilot/
 │       │   ├── package.json
 │       │   ├── tsconfig.json
 │       │   └── vite.config.ts
-│       └── Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj
+│       └── Umbraco.Ai.Agent.Copilot.csproj
 ├── Directory.Build.props
-├── Umbraco.Ai.Agent.Copilot.slnx
+├── Umbraco.Ai.Agent.Copilot.sln
 ├── README.md
 └── CLAUDE.md
 ```

@@ -45,9 +45,9 @@ start Umbraco.Ai.local.sln
 
 ```
 Umbraco.Ai/                    # Monorepo root
-├── Umbraco.Ai/                # Core AI layer (17.x)
-├── Umbraco.Ai.Agent/          # Agent add-on (17.x)
-├── Umbraco.Ai.Prompt/         # Prompt add-on (17.x)
+├── Umbraco.Ai/                # Core AI layer (1.x)
+├── Umbraco.Ai.Agent/          # Agent add-on (1.x)
+├── Umbraco.Ai.Prompt/         # Prompt add-on (1.x)
 ├── Umbraco.Ai.OpenAi/         # OpenAI provider (1.x)
 ├── Umbraco.Ai.Anthropic/      # Anthropic provider (1.x)
 ├── Umbraco.Ai.Amazon/         # Amazon Bedrock provider (1.x)
@@ -273,9 +273,9 @@ Each product is versioned and released independently using Nerdbank.GitVersionin
 
 | Product | Version Scheme | Current |
 |---------|----------------|---------|
-| Umbraco.Ai (Core) | 17.x (matches Umbraco CMS) | 17.0.0 |
-| Umbraco.Ai.Agent | 17.x (matches Umbraco CMS) | 17.0.0 |
-| Umbraco.Ai.Prompt | 17.x (matches Umbraco CMS) | 17.0.0 |
+| Umbraco.Ai (Core) | 1.x (independent) | 1.0.0 |
+| Umbraco.Ai.Agent | 1.x (independent) | 1.0.0 |
+| Umbraco.Ai.Prompt | 1.x (independent) | 1.0.0 |
 | Umbraco.Ai.OpenAi | 1.x (independent) | 1.0.0 |
 | Umbraco.Ai.Anthropic | 1.x (independent) | 1.0.0 |
 | Umbraco.Ai.Amazon | 1.x (independent) | 1.0.0 |
@@ -309,16 +309,14 @@ Edit each product's `version.json` in the manifest:
 
 ```json
 {
-  "version": "17.1.0",
+  "version": "1.1.0",
   "assemblyVersion": {
     "precision": "build"
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
     "^refs/heads/release/",
-    "^refs/heads/hotfix/",
-    "^refs/tags/release-",
-    "^refs/tags/hotfix-"
+    "^refs/heads/hotfix/"
   ]
 }
 ```
@@ -355,7 +353,7 @@ The Azure DevOps **release pipeline** automatically triggers after the build com
 3. **Tag Git Repository**
    - Reads `pack-manifest` artifact to get each package name and version
    - Creates git tag for each deployed package: `[Product_Name]@[Version]`
-   - Examples: `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+   - Examples: `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
    - Tags are pushed to the repository
 
 **MyGet URL:** `https://www.myget.org/F/umbraco-ai/api/v3/index.json`
@@ -367,7 +365,7 @@ The Azure DevOps **release pipeline** automatically triggers after the build com
 dotnet nuget add source https://www.myget.org/F/umbraco-ai/api/v3/index.json -n UmbracoAi
 
 # Install pre-release package
-dotnet add package Umbraco.Ai.Core --version 17.1.0-*
+dotnet add package Umbraco.Ai.Core --version 1.1.0-*
 
 # Install pre-release npm package
 npm install @umbraco-ai/core@next
@@ -391,7 +389,7 @@ Once testing passes, trigger the production release from Azure DevOps. The relea
 3. **Tag Git Repository**
    - Reads `pack-manifest` to get each package name and version
    - Creates git tag for each deployed package: `[Product_Name]@v[Version]`
-   - Examples: `Umbraco.Ai@v17.1.0`, `Umbraco.Ai.OpenAi@v1.2.0`
+   - Examples: `Umbraco.Ai@v1.1.0`, `Umbraco.Ai.OpenAi@v1.2.0`
    - Tags are pushed to the repository
 
 **NuGet URL:** `https://www.nuget.org/packages/Umbraco.Ai.Core`
@@ -409,7 +407,7 @@ git push origin --delete release/2026.01
 ```
 
 **Note on Git Tags:** The release pipeline automatically creates git tags during deployment:
-- Product-specific tags (e.g., `Umbraco.Ai@17.1.0`) track each deployed package version
+- Product-specific tags (e.g., `Umbraco.Ai@1.1.0`) track each deployed package version
 - These tags reference the exact commit that was built and released
 - Use these tags as base points for hotfix branches or to trace which code version is in production
 
@@ -421,10 +419,10 @@ For emergency fixes to production:
 # 1. Create hotfix branch from the production tag
 # Find the specific product version that needs fixing
 git tag --list | grep "Umbraco.Ai@"
-# Example output: Umbraco.Ai@v17.1.0, Umbraco.Ai.OpenAi@v1.2.0
+# Example output: Umbraco.Ai@v1.1.0, Umbraco.Ai.OpenAi@v1.2.0
 
 # Branch from the specific product tag
-git checkout -b hotfix/2026.01.1 Umbraco.Ai@17.1.0
+git checkout -b hotfix/2026.01.1 Umbraco.Ai@1.1.0
 
 # If multiple products need hotfixes, branch from main instead
 # git checkout -b hotfix/2026.01.1 main
@@ -433,7 +431,7 @@ git checkout -b hotfix/2026.01.1 Umbraco.Ai@17.1.0
 # Edit: Umbraco.Ai/src/...
 
 # 3. Update version.json for affected products
-# Change: "version": "17.1.1"
+# Change: "version": "1.1.1"
 # Edit: Umbraco.Ai/version.json
 
 # 4. (Optional) Add release-manifest.json if you want an explicit pack list
@@ -452,14 +450,14 @@ git push -u origin hotfix/2026.01.1
 # - Publishes artifacts: all-nuget-packages, all-npm-packages, pack-manifest
 
 # 7. Release pipeline deploys to MyGet and creates pre-release tags
-# Tags example: Umbraco.Ai@17.1.1-preview
+# Tags example: Umbraco.Ai@1.1.1-preview
 
 # 8. Test hotfix packages
-dotnet add package Umbraco.Ai.Core --version 17.1.1-*
+dotnet add package Umbraco.Ai.Core --version 1.1.1-*
 
 # 9. Trigger production release from Azure DevOps
 # - Release pipeline deploys to NuGet.org and npm registry
-# - Automatically creates production tags: Umbraco.Ai@17.1.1
+# - Automatically creates production tags: Umbraco.Ai@1.1.1
 
 # 10. Merge hotfix to main
 # Create PR: hotfix/2026.01.1 → main
@@ -485,7 +483,7 @@ To release multiple products in a single release:
 3. **Push release branch** - CI enforces that all listed products are packed
 
 4. **Release pipeline creates tags** for each product:
-   - `Umbraco.Ai@17.1.0`
+   - `Umbraco.Ai@1.1.0`
    - `Umbraco.Ai.OpenAi@1.2.0`
    - `Umbraco.Ai.Anthropic@1.2.0`
 
@@ -501,22 +499,22 @@ Add-on packages and providers depend on Umbraco.Ai (Core). When releasing produc
 
 **Always use version ranges** for cross-product dependencies. This allows add-ons to work with a range of Core versions without requiring simultaneous releases.
 
-**Example:** If Umbraco.Ai.Prompt 17.1.0 is compatible with Core 17.1.x and later within the 17.x series:
+**Example:** If Umbraco.Ai.Prompt 1.1.0 is compatible with Core 1.1.x and later within the 1.x series:
 
 ```xml
 <!-- Umbraco.Ai.Prompt/Directory.Packages.props -->
 <Project>
   <ItemGroup>
-    <!-- Use a range: minimum version 17.1.0, up to (but not including) 17.999.999 -->
-    <PackageVersion Include="Umbraco.Ai.Core" Version="[17.1.0, 17.999.999)" />
+    <!-- Use a range: minimum version 1.1.0, up to (but not including) 1.999.999 -->
+    <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
   </ItemGroup>
 </Project>
 ```
 
 The range format `[minimum, maximum)` means:
-- `[` = inclusive lower bound (>= 17.1.0)
-- `)` = exclusive upper bound (< 17.999.999)
-- Result: accepts any 17.x version from 17.1.0 onwards
+- `[` = inclusive lower bound (>= 1.1.0)
+- `)` = exclusive upper bound (< 1.999.999)
+- Result: accepts any 1.x version from 1.1.0 onwards
 
 #### How It Works
 
@@ -529,10 +527,10 @@ The range format `[minimum, maximum)` means:
 
 When releasing Core with breaking changes:
 
-1. **Bump Core minor version**: `17.1.0` → `17.2.0`
+1. **Bump Core minor version**: `1.1.0` → `1.2.0`
 2. **Update dependent products**: Update their `Directory.Packages.props` to the new minimum version:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[17.2.0, 17.999.999)" />
+   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.2.0, 1.999.999)" />
    ```
 3. **Include in release manifest**: All dependent products must be included in the same release:
    ```json
@@ -547,9 +545,9 @@ When releasing Core with breaking changes:
 
 | Scenario | Range Format | Example | Description |
 |----------|--------------|---------|-------------|
-| Minor version series | `[X.Y.0, X.999.999)` | `[17.1.0, 17.999.999)` | Min 17.1.0, accepts all 17.x |
-| Specific minimum | `[X.Y.Z, X.999.999)` | `[17.1.5, 17.999.999)` | Min 17.1.5, accepts all 17.x |
-| Exact version | `[X.Y.Z]` | `[17.1.0]` | **Avoid** - prevents any updates |
+| Minor version series | `[X.Y.0, X.999.999)` | `[1.1.0, 1.999.999)` | Min 1.1.0, accepts all 1.x |
+| Specific minimum | `[X.Y.Z, X.999.999)` | `[1.1.5, 1.999.999)` | Min 1.1.5, accepts all 1.x |
+| Exact version | `[X.Y.Z]` | `[1.1.0]` | **Avoid** - prevents any updates |
 
 **Best Practice:** Use `[X.Y.0, X.999.999)` format where X.Y.0 is the minimum supported Core version. This allows all future patch and minor releases within the major version.
 
@@ -643,16 +641,16 @@ npm run changelog:list
 **Generate changelog for a specific product:**
 ```bash
 # Using npm script
-npm run changelog -- --product=Umbraco.Ai --version=17.1.0
+npm run changelog -- --product=Umbraco.Ai --version=1.1.0
 
 # Using Node.js directly
-node scripts/generate-changelog.js --product=Umbraco.Ai --version=17.1.0
+node scripts/generate-changelog.js --product=Umbraco.Ai --version=1.1.0
 
 # Using PowerShell wrapper
-.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 17.1.0
+.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
 
 # Using Bash wrapper
-./scripts/generate-changelog.sh --product=Umbraco.Ai --version=17.1.0
+./scripts/generate-changelog.sh --product=Umbraco.Ai --version=1.1.0
 ```
 
 **Generate unreleased changes:**
@@ -683,7 +681,7 @@ When creating a release, follow these steps:
 
 4. **Generate changelogs** for each product:
    ```bash
-   npm run changelog -- --product=Umbraco.Ai --version=17.1.0
+   npm run changelog -- --product=Umbraco.Ai --version=1.1.0
    npm run changelog -- --product=Umbraco.Ai.OpenAi --version=1.2.0
    ```
 
@@ -716,7 +714,7 @@ When creating a release, follow these steps:
 
 11. **Trigger production release** from Azure DevOps
     - Release pipeline deploys to NuGet.org and npm
-    - Automatically creates git tags: `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+    - Automatically creates git tags: `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
     - Tags include the changelog commits
 
 12. **Merge release branch to main**
@@ -802,12 +800,12 @@ Each build produces the following artifacts:
 [
   {
     "name": "Umbraco.Ai",
-    "version": "17.1.0",
+    "version": "1.1.0",
     "type": "nuget"
   },
   {
     "name": "@umbraco-ai/core",
-    "version": "17.1.0",
+    "version": "1.1.0",
     "type": "npm"
   }
 ]
@@ -819,7 +817,7 @@ The release pipeline automatically creates git tags for traceability:
 
 | Tag Format | Example | Purpose | Created When |
 |------------|---------|---------|--------------|
-| `<Product>@<Version>` | `Umbraco.Ai@17.1.0` | Tracks deployed package version | Automated (by release pipeline) |
+| `<Product>@<Version>` | `Umbraco.Ai@1.1.0` | Tracks deployed package version | Automated (by release pipeline) |
 | `<Product>@<Version>` | `Umbraco.Ai.OpenAi@1.2.0` | Tracks deployed package version | Automated (by release pipeline) |
 
 **How it works:**
@@ -831,7 +829,7 @@ The release pipeline automatically creates git tags for traceability:
 - Trace which exact commit was deployed for each package
 - Navigate to source code for any production version
 - Use tags as base points for hotfix branches
-- Compare versions across products (e.g., `git log Umbraco.Ai@17.0.0..Umbraco.Ai@17.1.0`)
+- Compare versions across products (e.g., `git log Umbraco.Ai@1.0.0..Umbraco.Ai@1.1.0`)
 
 ### Change Detection
 
@@ -912,7 +910,7 @@ graph TB
 **8. TagRepository** (all deployments)
 - Reads `pack-manifest` artifact
 - Creates git tag for each package: `<Product>@<Version>`
-- Pushes tags to repository (e.g., `Umbraco.Ai@17.1.0`)
+- Pushes tags to repository (e.g., `Umbraco.Ai@1.1.0`)
 - Tags point to the commit that was built
 
 ## Coding Standards
@@ -990,7 +988,7 @@ Update documentation when:
 ### Reporting Bugs
 
 Include:
-- Product and version (e.g., Umbraco.Ai.Core 17.0.0)
+- Product and version (e.g., Umbraco.Ai.Core 1.0.0)
 - Umbraco CMS version
 - .NET version
 - Steps to reproduce

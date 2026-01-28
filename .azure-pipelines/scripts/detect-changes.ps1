@@ -309,18 +309,6 @@ function Get-ChangedProducts {
     $changed = @{}
     $Products.Keys | ForEach-Object { $changed[$_] = $false }
 
-    # Tag-based detection (release builds)
-    if ($SourceBranch -match "^refs/tags/release-([a-z]+)-") {
-        $productKey = $Matches[1]
-        Write-Host "Tag-based detection: release-$productKey-*" -ForegroundColor Cyan
-
-        if ($Products.ContainsKey($productKey)) {
-            $changed[$productKey] = $true
-            Write-Host "  ✓ $productKey changed (release tag)" -ForegroundColor Green
-        }
-        return $changed
-    }
-
     # Git diff-based detection
     Write-Host "Git diff-based detection" -ForegroundColor Cyan
 

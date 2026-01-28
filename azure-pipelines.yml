@@ -41,9 +41,6 @@ trigger:
       - dev
       - release/*
       - hotfix/*
-  tags:
-    include:
-      - release-*
 
 pr:
   branches:
@@ -111,19 +108,20 @@ stages:
               publishLocation: pipeline
 
   # ============================================================
-  # Pack Stage - Only runs on push to main/dev or release tags
+  # Pack Stage - Only runs on push to main/dev/hotfix/release branches
   # Uses dynamic change detection to only pack products that changed
   # ============================================================
   - stage: Pack
     displayName: Pack NuGet Packages
     dependsOn: Build
-    # Only pack on push (not PR) to main/dev branches or release tags
+    # Only pack on push (not PR) to main/dev/hotfix/release branches
     condition: |
       and(
         succeeded(),
         ne(variables['Build.Reason'], 'PullRequest'),
         or(
-          startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'),
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'),
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
           eq(variables['Build.SourceBranch'], 'refs/heads/main'),
           eq(variables['Build.SourceBranch'], 'refs/heads/dev')
         )

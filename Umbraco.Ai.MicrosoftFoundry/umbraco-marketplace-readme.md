@@ -19,6 +19,6 @@ Microsoft AI Foundry provider for Umbraco.Ai - unified access to multiple AI pro
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 17.0.0+
+- Umbraco.Ai 1.0.0+
 - .NET 10.0
 - Azure subscription with AI Foundry resource

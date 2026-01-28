@@ -11,9 +11,7 @@
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
     "^refs/heads/hotfix/",
-    "^refs/heads/release/",
-    "^refs/tags/release-",
-    "^refs/tags/hotfix-"
+    "^refs/heads/release/"
   ],
   "cloudBuild": {
     "buildNumber": {

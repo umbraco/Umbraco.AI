@@ -106,7 +106,30 @@ async function generateChangelog(product, version, options = {}) {
   const tagPrefix = config.tagPrefix;
 
   // Get commit range
-  const previousTag = options.from || getPreviousVersion(product, version, tagPrefix);
+  let previousTag = options.from || getPreviousVersion(product, version, tagPrefix);
+
+  // For unreleased mode without a previous tag, limit to recent commits to improve performance
+  if (options.unreleased && !previousTag && !options.from) {
+    console.log(`  No previous tags found for ${product}`);
+
+    // Try to find the last 100 commits that touched this product's directory
+    // This significantly improves performance for initial changelog generation
+    try {
+      const recentCommits = execSync(
+        `git log -100 --format=%H -- "${config.directory}/"`,
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }
+      ).trim().split('\n').filter(c => c);
+
+      if (recentCommits.length > 0) {
+        // Use the oldest of the recent commits as the starting point
+        previousTag = recentCommits[recentCommits.length - 1];
+        console.log(`  Using last 100 commits touching ${config.directory}/ (from ${previousTag.substring(0, 7)})`);
+      }
+    } catch (err) {
+      console.warn(`  Warning: Could not get recent commits, using full history`);
+    }
+  }
+
   const fromRef = previousTag || ''; // Empty string means from beginning
   const toRef = options.to || 'HEAD';
 
@@ -114,6 +137,14 @@ async function generateChangelog(product, version, options = {}) {
   console.log(`  From: ${fromRef || '(beginning)'}`);
   console.log(`  To: ${toRef}`);
   console.log(`  Scopes: ${config.scopes.join(', ')}`);
+  console.log(`  Note: Processing commits without scopes by checking file paths (may be slow for large histories)`);
+
+  // Track progress for unscoped commits
+  let processedCommits = 0;
+  let includedCommits = 0;
+
+  // Cache file paths for commits to avoid repeated git calls
+  const commitFilesCache = new Map();
 
   // conventional-changelog options
   const changelogOptions = {
@@ -165,26 +196,85 @@ async function generateChangelog(product, version, options = {}) {
   const writerOpts = {
     // Transform commits - filter by scope and file paths
     transform: (commit, context) => {
+      processedCommits++;
+
+      // Progress indicator every 50 commits
+      if (processedCommits % 50 === 0) {
+        process.stderr.write(`  Processed ${processedCommits} commits (${includedCommits} included)...\r`);
+      }
+
       // Skip merge commits
       if (commit.merge) {
         return null;
       }
 
-      // Filter by scope
+      // Filter by scope (primary filter)
       if (commit.scope) {
         const scopes = commit.scope.split(',').map(s => s.trim());
         const hasMatchingScope = scopes.some(s => config.scopes.includes(s));
         if (!hasMatchingScope) {
           return null; // Exclude this commit
         }
+      } else {
+        // No scope - filter by file paths (fallback)
+        // Check if commit touches product files
+        if (!commit.hash) {
+          return null; // Can't check files without hash
+        }
+
+        try {
+          // Check cache first
+          let files = commitFilesCache.get(commit.hash);
+
+          if (!files) {
+            // Get files changed in this commit
+            files = execSync(`git diff-tree --no-commit-id --name-only -r ${commit.hash}`, {
+              encoding: 'utf-8',
+              stdio: ['pipe', 'pipe', 'ignore'] // Suppress stderr
+            }).trim().split('\n').filter(f => f);
+
+            // Cache the result
+            commitFilesCache.set(commit.hash, files);
+          }
+
+          // Check if any file is in the product directory
+          const inProductDir = files.some(file => {
+            // Check if file is in product directory
+            const normalizedFile = file.replace(/\\/g, '/'); // Normalize path separators
+            const normalizedDir = config.directory.replace(/\\/g, '/');
+
+            if (normalizedFile.startsWith(`${normalizedDir}/`)) {
+              return true;
+            }
+
+            // Check additional paths if configured
+            if (config.additionalPaths && config.additionalPaths.length > 0) {
+              return config.additionalPaths.some(pattern => {
+                const normalizedPattern = pattern.replace(/\\/g, '/');
+                return normalizedFile.startsWith(normalizedPattern);
+              });
+            }
+
+            return false;
+          });
+
+          if (!inProductDir) {
+            return null; // Exclude - doesn't touch product files
+          }
+        } catch (err) {
+          // If we can't determine files, exclude commit (fail closed for accuracy)
+          console.warn(`Warning: Could not get files for commit ${commit.hash}, excluding`);
+          return null;
+        }
       }
-      // Note: Unscoped commits are included for now
-      // TODO: Add file path filtering for better accuracy (see plan for enhancement)
 
       // Filter by commit type (hide certain types)
       if (commit.type === 'chore' || commit.type === 'ci' || commit.type === 'test' || commit.type === 'docs') {
         return null; // Exclude maintenance commits
       }
+
+      // Count included commits
+      includedCommits++;
 
       // Create a new commit object with our additions (don't modify immutable original)
       const transformedCommit = {
@@ -225,6 +315,11 @@ async function generateChangelog(product, version, options = {}) {
     });
 
     stream.on('end', () => {
+      // Clear progress indicator
+      if (processedCommits > 0) {
+        process.stderr.write(`  Processed ${processedCommits} commits (${includedCommits} included)...done\n`);
+      }
+
       // Prepend to existing changelog or create new
       let existingChangelog = '';
       if (fs.existsSync(changelogPath) && !options.overwrite) {

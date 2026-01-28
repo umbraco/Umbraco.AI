@@ -12,7 +12,7 @@ public static class Constants
     /// <summary>
     /// Default JSON serializer options for Umbraco.Ai. 
     /// </summary>
-    public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    public static JsonSerializerOptions DefaultJsonSerializerOptions = new() 
     {
         DictionaryKeyPolicy = JsonNamingPolicy.CamelCase, 
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

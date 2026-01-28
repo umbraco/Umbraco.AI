@@ -195,5 +195,6 @@ runAgent('writing-assistant', [
 
 - Configure [Instructions](instructions.md) for better agent behavior
 - Learn about [Streaming](streaming.md) for advanced event handling
-- Add [Frontend Tools](frontend-tools.md) for interactive capabilities
+- Install [Agent Copilot](../agent-copilot/README.md) for the chat sidebar UI
+- Add [Frontend Tools](../agent-copilot/frontend-tools.md) for interactive capabilities
 - Review the [API Reference](api/README.md) for programmatic access

@@ -1,19 +1,19 @@
 ## Umbraco.Ai.Agent.Copilot
 
-AI Copilot
+Copilot chat UI for Umbraco AI Agents - a frontend-only package providing the backoffice sidebar interface for interacting with AI agents.
 
 ### Features
 
-- **AG-UI Protocol** - Industry-standard protocol for agent-to-UI communication with Server-Sent Events streaming
-- **Conversational Agents** - Define agents with system instructions, AI profiles, and context sources
-- **Real-Time Streaming** - Stream AI responses token-by-token with lifecycle events (start, content, end)
-- **Frontend Tools** - Define tools in your UI that agents can invoke with structured arguments
-- **Human-in-the-Loop** - Built-in support for approval workflows and tool execution confirmation
-- **Copilot Sidebar** - Ready-to-use chat interface with entity awareness and tool execution UI
+- **Copilot Sidebar** - Ready-to-use chat interface that appears in the Umbraco backoffice header
+- **Frontend Tools** - Extension system for registering custom tools that agents can invoke
+- **Human-in-the-Loop** - Approval element system for tool execution confirmation workflows
+- **Real-Time Streaming** - AG-UI client integration for token-by-token response streaming
+- **Entity Awareness** - Context-aware chat with knowledge of the current content being edited
+
+> This package requires [Umbraco.Ai.Agent](https://www.nuget.org/packages/Umbraco.Ai.Agent) for agent management and backend APIs.
 
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
 - Umbraco.Ai.Agent 1.0.0+
 - .NET 10.0

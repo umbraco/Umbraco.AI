@@ -5,6 +5,10 @@ description: >-
 
 # Frontend Tools
 
+{% hint style="warning" %}
+Frontend tools are part of the [`Umbraco.Ai.Agent.Copilot`](../agent-copilot/README.md) package. See the [Agent Copilot frontend tools documentation](../agent-copilot/frontend-tools.md) for full details.
+{% endhint %}
+
 Frontend tools allow agents to perform actions in the browser. When an agent calls a tool, the frontend receives the call and executes the action.
 
 ## How Frontend Tools Work
@@ -254,5 +258,6 @@ async function handleAgentEvents(events: AsyncIterable<AgentEvent>) {
 
 ## Related
 
+* [Agent Copilot](../agent-copilot/README.md) - Full Copilot package documentation
 * [Concepts](concepts.md) - Agent and tool concepts
 * [Streaming](streaming.md) - Event handling

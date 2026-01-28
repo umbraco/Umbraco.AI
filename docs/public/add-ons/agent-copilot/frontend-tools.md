@@ -254,5 +254,6 @@ async function handleAgentEvents(events: AsyncIterable<AgentEvent>) {
 
 ## Related
 
-* [Concepts](concepts.md) - Agent and tool concepts
-* [Streaming](streaming.md) - Event handling
+* [Copilot](copilot.md) - Using the chat interface
+* [Concepts](../agent/concepts.md) - Agent and tool concepts
+* [Streaming](../agent/streaming.md) - Event handling

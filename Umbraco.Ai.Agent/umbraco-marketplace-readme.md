@@ -1,17 +1,19 @@
 ## Umbraco.Ai.Agent
 
-AI agent runtime for Umbraco.Ai - build conversational agents with real-time streaming and tool execution via the AG-UI protocol.
+AI agent management and runtime for Umbraco.Ai - store, manage, and execute conversational agents with real-time streaming via the AG-UI protocol.
 
 ### Features
 
+- **Agent Management** - Store and manage AI agent definitions with instructions and configuration
 - **AG-UI Protocol** - Industry-standard protocol for agent-to-UI communication with Server-Sent Events streaming
-- **Conversational Agents** - Define agents with system instructions, AI profiles, and context sources
 - **Real-Time Streaming** - Stream AI responses token-by-token with lifecycle events (start, content, end)
-- **Frontend Tools** - Define tools in your UI that agents can invoke with structured arguments
-- **Human-in-the-Loop** - Built-in support for approval workflows and tool execution confirmation
+- **Profile Integration** - Link agents to Umbraco.Ai profiles for model configuration
 - **Context Injection** - Attach AI contexts for RAG scenarios and brand voice consistency
-- **Copilot Sidebar** - Ready-to-use chat interface with entity awareness and tool execution UI
+- **Management API** - RESTful API for agent CRUD operations and execution
+- **Backoffice UI** - Agent management interface integrated into Umbraco
 - **Standalone SDK** - Umbraco.Ai.Agui package can be used independently for custom AG-UI endpoints
+
+> For the Copilot chat sidebar with tool execution and HITL approval UI, install [Umbraco.Ai.Agent.Copilot](https://www.nuget.org/packages/Umbraco.Ai.Agent.Copilot) alongside this package.
 
 ### Requirements
 

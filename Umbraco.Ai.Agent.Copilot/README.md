@@ -4,7 +4,7 @@ Copilot chat UI for Umbraco AI Agent. This package provides the backoffice sideb
 
 ## Overview
 
-`Umbraco.Ai.Agent.Copilot` is the execution layer for AI agents, providing:
+`Umbraco.Ai.Agent.Copilot` is a **frontend-only package** that provides the chat UI layer for AI agents:
 
 - **Copilot Sidebar** - Chat interface that appears in the Umbraco backoffice
 - **Tool Execution System** - Framework for frontend-executable tools

@@ -204,6 +204,7 @@ The Copilot shows the current agent status:
 
 ## Related
 
-* [Concepts](concepts.md) - Agent fundamentals
-* [Instructions](instructions.md) - Configuring agent behavior
+* [Agent Runtime](../agent/README.md) - Backend agent functionality
+* [Concepts](../agent/concepts.md) - Agent fundamentals
+* [Instructions](../agent/instructions.md) - Configuring agent behavior
 * [Frontend Tools](frontend-tools.md) - Custom tool integrations

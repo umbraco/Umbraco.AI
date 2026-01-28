@@ -13,34 +13,40 @@ Umbraco.Ai can be extended with add-on packages that provide specialized functio
 |--------|---------|-------------|
 | [Prompt Management](prompt/README.md) | `Umbraco.Ai.Prompt` | Create, manage, and execute reusable prompt templates |
 | [Agent Runtime](agent/README.md) | `Umbraco.Ai.Agent` | Configure and run AI agents with streaming responses |
+| [Agent Copilot](agent-copilot/README.md) | `Umbraco.Ai.Agent.Copilot` | Chat sidebar UI for agent interaction (requires Agent) |
 
 ## Architecture
 
 Add-ons depend on the core `Umbraco.Ai` package and extend its capabilities:
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                   Your Application                     │
-├────────────────────────────────────────────────────────┤
-│   ┌───────────────────┐      ┌──────────────────┐      │
-│   │ Umbraco.Ai.Prompt │      │ Umbraco.Ai.Agent │      │
-│   │   (Prompt Mgmt)   │      │  (Agent Runtime) │      │
-│   └────────┬──────────┘      └─────────┬────────┘      │
-│            │                           │               │
-│            └─────────────┬─────────────┘               │
-│                          │                             │
-│                ┌─────────▼─────────┐                   │
-│                │    Umbraco.Ai     │                   │
-│                │      (Core)       │                   │
-│                └─────────┬─────────┘                   │
-│                          │                             │
-│         ┌────────────────┼───────────────┐             │
-│         │                │               │             │
-│    ┌────▼─────┐    ┌─────▼─────┐    ┌────▼─────┐       │
-│    │ OpenAI   │    │ Anthropic │    │ Google   │  ...  │
-│    │ Provider │    │ Provider  │    │ Provider │       │
-│    └──────────┘    └───────────┘    └──────────┘       │
-└────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                      Your Application                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                  ┌──────────────────────────┐   │
+│                                  │ Umbraco.Ai.Agent.Copilot │   │
+│                                  │     (Chat UI Add-on)     │   │
+│                                  └────────────┬─────────────┘   │
+│                                               │                 │
+│   ┌───────────────────┐      ┌────────────────▼───────────┐     │
+│   │ Umbraco.Ai.Prompt │      │     Umbraco.Ai.Agent       │     │
+│   │   (Prompt Mgmt)   │      │     (Agent Runtime)        │     │
+│   └────────┬──────────┘      └─────────────┬──────────────┘     │
+│            │                               │                    │
+│            └───────────────┬───────────────┘                    │
+│                            │                                    │
+│                  ┌─────────▼─────────┐                          │
+│                  │    Umbraco.Ai     │                          │
+│                  │      (Core)       │                          │
+│                  └─────────┬─────────┘                          │
+│                            │                                    │
+│           ┌────────────────┼───────────────┐                    │
+│           │                │               │                    │
+│      ┌────▼─────┐    ┌─────▼─────┐    ┌────▼─────┐              │
+│      │ OpenAI   │    │ Anthropic │    │ Google   │  ...        │
+│      │ Provider │    │ Provider  │    │ Provider │              │
+│      └──────────┘    └───────────┘    └──────────┘              │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Installing Add-ons
@@ -79,6 +85,10 @@ Each add-on has its own database tables with a package-specific prefix:
 |--------|-----------------|
 | Prompt | `UmbracoAiPrompt_` |
 | Agent | `UmbracoAiAgent_` |
+
+{% hint style="info" %}
+Agent Copilot is a frontend-only package with no database tables.
+{% endhint %}
 
 Migrations run automatically on application startup.
 

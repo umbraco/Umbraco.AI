@@ -9,7 +9,8 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 | Product | Description | Version | Location |
 |---------|-------------|---------|----------|
 | **Umbraco.Ai** | Core AI integration layer | 1.x | `Umbraco.Ai/` |
-| **Umbraco.Ai.Agent** | AI agent management | 1.x | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.Agent** | AI agent management and runtime | 1.x | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | 1.x | `Umbraco.Ai.Agent.Copilot/` |
 | **Umbraco.Ai.Prompt** | Prompt template management | 1.x | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider | 1.x | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider | 1.x | `Umbraco.Ai.Anthropic/` |
@@ -107,6 +108,7 @@ Umbraco.Ai (Core)
     ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
     └── Umbraco.Ai.Agent (Add-on - depends on Core)
+            └── Umbraco.Ai.Agent.Copilot (Chat UI - depends on Agent)
 ```
 
 ## Documentation
@@ -116,6 +118,7 @@ Umbraco.Ai (Core)
 - Product-specific guides:
   - [Umbraco.Ai/CLAUDE.md](Umbraco.Ai/CLAUDE.md) - Core package
   - [Umbraco.Ai.Agent/CLAUDE.md](Umbraco.Ai.Agent/CLAUDE.md) - Agent add-on
+  - [Umbraco.Ai.Agent.Copilot/CLAUDE.md](Umbraco.Ai.Agent.Copilot/CLAUDE.md) - Agent Copilot add-on
   - [Umbraco.Ai.Prompt/CLAUDE.md](Umbraco.Ai.Prompt/CLAUDE.md) - Prompt add-on
 
 ## Target Framework

@@ -27,11 +27,15 @@ dotnet add package Umbraco.Ai.Agent
 
 - **Agent Definitions** - Configure reusable AI agents with instructions
 - **AG-UI Protocol** - Stream responses using the AG-UI event protocol
-- **Frontend Tools** - Define tools that execute in the browser
 - **Profile Association** - Link agents to specific AI profiles
 - **Context Injection** - Include AI Contexts for brand voice
 - **Version History** - Track changes with full rollback support
 - **Backoffice Management** - Full UI for managing agents
+- **Management API** - RESTful API for agent operations
+
+{% hint style="info" %}
+For the **Copilot chat sidebar** with frontend tools and HITL approval, install the [Agent Copilot](../agent-copilot/README.md) add-on alongside this package.
+{% endhint %}
 
 ## Quick Start
 
@@ -119,9 +123,16 @@ The Agent Runtime uses the AG-UI (Agent UI) protocol for streaming responses. Th
 | [Getting Started](getting-started.md) | Step-by-step setup guide |
 | [Instructions](instructions.md) | Agent instruction configuration |
 | [Streaming](streaming.md) | SSE streaming and event handling |
-| [Frontend Tools](frontend-tools.md) | Defining browser-executable tools |
 | [API Reference](api/README.md) | Management API endpoints |
 | [Service Reference](reference/ai-agent-service.md) | IAiAgentService |
+
+For Copilot-specific features:
+
+| Section | Description |
+|---------|-------------|
+| [Copilot Overview](../agent-copilot/README.md) | Chat sidebar and tool execution |
+| [Frontend Tools](../agent-copilot/frontend-tools.md) | Browser-executable tools |
+| [Copilot Usage](../agent-copilot/copilot.md) | Using the chat interface |
 
 ## Related
 

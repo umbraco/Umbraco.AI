@@ -54,9 +54,7 @@
   * [Concepts](add-ons/agent/concepts.md)
   * [Getting Started](add-ons/agent/getting-started.md)
   * [Instructions](add-ons/agent/instructions.md)
-  * [Copilot](add-ons/agent/copilot.md)
   * [Streaming](add-ons/agent/streaming.md)
-  * [Frontend Tools](add-ons/agent/frontend-tools.md)
   * [API](add-ons/agent/api/README.md)
     * [List](add-ons/agent/api/list.md)
     * [Get](add-ons/agent/api/get.md)
@@ -66,6 +64,9 @@
     * [Run](add-ons/agent/api/run.md)
   * [Reference](add-ons/agent/reference/ai-agent-service.md)
     * [AiAgent](add-ons/agent/reference/ai-agent.md)
+* [Agent Copilot](add-ons/agent-copilot/README.md)
+  * [Copilot Usage](add-ons/agent-copilot/copilot.md)
+  * [Frontend Tools](add-ons/agent-copilot/frontend-tools.md)
 
 ## Using the API
 

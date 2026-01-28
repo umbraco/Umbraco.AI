@@ -434,32 +434,37 @@ git checkout -b hotfix/2026.01.1 Umbraco.Ai@1.1.0
 # Change: "version": "1.1.1"
 # Edit: Umbraco.Ai/version.json
 
-# 4. (Optional) Add release-manifest.json if you want an explicit pack list
+# 4. Generate changelog for the hotfix
+npm run changelog -- --product=Umbraco.Ai --version=1.1.1
+# Review and edit the changelog entry
+
+# 5. (Optional) Add release-manifest.json if you want an explicit pack list
 # On hotfix/* branches, the manifest is optional:
 #   - If present: Only listed products are packed (enforced)
 #   - If absent: Change detection is used (automatic)
 echo '["Umbraco.Ai"]' > release-manifest.json
 
-# 5. Commit and push
-git add release-manifest.json Umbraco.Ai/version.json
+# 6. Commit and push
+git add Umbraco.Ai/CHANGELOG.md release-manifest.json Umbraco.Ai/version.json
 git commit -m "fix(core): resolve critical security issue"
 git push -u origin hotfix/2026.01.1
 
-# 6. Build pipeline runs
+# 7. Build pipeline runs
+# - Changelog validation runs (same as release branches)
 # - Packs affected products (per manifest or change detection)
 # - Publishes artifacts: all-nuget-packages, all-npm-packages, pack-manifest
 
-# 7. Release pipeline deploys to MyGet and creates pre-release tags
+# 8. Release pipeline deploys to MyGet and creates pre-release tags
 # Tags example: Umbraco.Ai@1.1.1-preview
 
-# 8. Test hotfix packages
+# 9. Test hotfix packages
 dotnet add package Umbraco.Ai.Core --version 1.1.1-*
 
-# 9. Trigger production release from Azure DevOps
+# 10. Trigger production release from Azure DevOps
 # - Release pipeline deploys to NuGet.org and npm registry
 # - Automatically creates production tags: Umbraco.Ai@1.1.1
 
-# 10. Merge hotfix to main
+# 11. Merge hotfix to main
 # Create PR: hotfix/2026.01.1 → main
 # After approval and merge, delete hotfix branch
 ```
@@ -709,7 +714,7 @@ When creating a release, follow these steps:
    ```
 
 9. **Azure DevOps validates and builds:**
-   - **Changelog validation** runs automatically (release branches only)
+   - **Changelog validation** runs automatically (release and hotfix branches)
      - Verifies CHANGELOG.md exists for each product in manifest
      - Checks CHANGELOG.md was updated in recent commits
      - Validates version in CHANGELOG.md matches version.json

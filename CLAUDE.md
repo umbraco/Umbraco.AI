@@ -364,13 +364,13 @@ Each product has a `changelog.config.json` file defining its scopes. The generat
 
 ### Automated Validation
 
-On `release/*` branches, Azure DevOps automatically validates changelogs:
+On `release/*` and `hotfix/*` branches, Azure DevOps automatically validates changelogs:
 - ✅ CHANGELOG.md exists for each product in release-manifest.json
 - ✅ CHANGELOG.md was updated in recent commits
 - ✅ Version in CHANGELOG.md matches version.json
 - ❌ **Build fails if validation fails**
 
-This prevents releasing without proper changelog documentation.
+This prevents releasing without proper changelog documentation for both regular releases and emergency hotfixes.
 
 **For full details on commit scopes, changelog workflow, and release process, see [CONTRIBUTING.md](CONTRIBUTING.md#maintaining-changelogs).**
 

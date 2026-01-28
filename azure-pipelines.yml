@@ -108,18 +108,21 @@ stages:
               publishLocation: pipeline
 
   # ============================================================
-  # Validate Changelogs - Only runs on release branches
+  # Validate Changelogs - Only runs on release and hotfix branches
   # Ensures CHANGELOGs are present and match version.json
   # ============================================================
   - stage: ValidateChangelogs
     displayName: Validate Changelogs
     dependsOn: Build
-    # Only validate on release branches (not hotfix, main, or dev)
+    # Only validate on release and hotfix branches (not main or dev)
     condition: |
       and(
         succeeded(),
         ne(variables['Build.Reason'], 'PullRequest'),
-        startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')
+        or(
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/')
+        )
       )
     jobs:
       - job: ValidateChangelogFiles

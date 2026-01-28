@@ -242,6 +242,71 @@ The Azure DevOps release pipeline:
 
 For detailed release workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
+## Cross-Product Dependency Management
+
+Add-on packages and providers depend on Umbraco.Ai (Core). These dependencies are managed using **Central Package Management** via `Directory.Packages.props`.
+
+### Version Ranges for Add-ons
+
+**Always use version ranges** for cross-product dependencies. This allows add-ons to work with a range of Core versions without requiring simultaneous releases.
+
+When an add-on (e.g., Umbraco.Ai.Prompt or Umbraco.Ai.Agent) needs to depend on a specific version range of Core, create a `Directory.Packages.props` file within the product folder:
+
+**Example:** `Umbraco.Ai.Prompt/Directory.Packages.props`
+```xml
+<Project>
+  <ItemGroup>
+    <!-- Minimum version 17.1.0, accepts all 17.x versions -->
+    <PackageVersion Include="Umbraco.Ai.Core" Version="[17.1.0, 17.999.999)" />
+  </ItemGroup>
+</Project>
+```
+
+The range format `[minimum, maximum)` means:
+- `[` = inclusive lower bound (>= 17.1.0)
+- `)` = exclusive upper bound (< 17.999.999)
+- Result: accepts any 17.x version from 17.1.0 onwards
+
+**How it works:**
+- **Root level** (`Directory.Packages.props` at repo root): Defines default package versions and ranges for all products
+- **Product level** (`ProductFolder/Directory.Packages.props`): Overrides specific package version ranges for that product only
+- **During local development**: Project references (`UseProjectReferences=true`) bypass NuGet versions entirely
+- **During CI/CD build**: Distribution builds (`UseProjectReferences=false`) use the specified NuGet version ranges
+
+### Example Scenario
+
+If you release Core 17.1.0 with breaking changes, but Agent 17.0.0 isn't ready for the upgrade:
+
+1. **Agent's Directory.Packages.props** specifies minimum Core 17.0.0:
+   ```xml
+   <PackageVersion Include="Umbraco.Ai.Core" Version="[17.0.0, 17.999.999)" />
+   ```
+
+2. **Root Directory.Packages.props** may have a broader or different range:
+   ```xml
+   <PackageVersion Include="Umbraco.Ai.Core" Version="[17.0.0, 17.999.999)" />
+   ```
+
+3. When Agent is ready for Core 17.1.0+, update its `Directory.Packages.props` minimum version:
+   ```xml
+   <PackageVersion Include="Umbraco.Ai.Core" Version="[17.1.0, 17.999.999)" />
+   ```
+
+### Version Range Guidelines
+
+| Scenario | Range Format | Example | Use Case |
+|----------|--------------|---------|----------|
+| Minor version series | `[X.Y.0, X.999.999)` | `[17.1.0, 17.999.999)` | Add-on requires min 17.1.0, accepts all 17.x |
+| Specific minimum | `[X.Y.Z, X.999.999)` | `[17.1.5, 17.999.999)` | Add-on requires min 17.1.5, accepts all 17.x |
+| Exact version | `[X.Y.Z]` | `[17.1.0]` | **Avoid** - prevents any updates |
+
+### Best Practices
+
+- **Local development**: Always use project references (default). Changes to Core are immediately visible to add-ons.
+- **Release coordination**: When releasing Core with breaking changes, verify all dependent products in the release manifest are updated to the new minimum version.
+- **Version ranges**: Always use `[X.Y.0, X.999.999)` format where X.Y.0 is the minimum supported Core version.
+- **Testing**: Always test with `UseProjectReferences=false` before releasing to ensure NuGet dependencies resolve correctly.
+
 ## Excluded Folders
 
 - `Ref/` - External reference projects (not part of build)

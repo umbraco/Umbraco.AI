@@ -19,12 +19,42 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 
 ## Quick Start
 
+The fastest way to get started is using the install-demo script, which creates a unified development environment with all packages and a demo Umbraco site:
+
 ```bash
-# Build all products
-dotnet build Umbraco.Ai.sln
+# Windows
+.\scripts\install-demo-site.ps1
+
+# Linux/Mac
+./scripts/install-demo-site.sh
 ```
 
+This creates:
+- `Umbraco.Ai.local.sln` - Unified solution with all products
+- `demo/Umbraco.Ai.DemoSite/` - Umbraco instance with all packages referenced
+
+After running the script, build the frontend and backend:
+
+```bash
+# Install frontend dependencies
+npm install
+
+# Build all frontend packages
+npm run build
+
+# Build the unified solution
+dotnet build Umbraco.Ai.local.sln
+
+# Run the demo site (from demo/Umbraco.Ai.DemoSite/)
+cd demo/Umbraco.Ai.DemoSite
+dotnet run
+```
+
+**Demo site credentials:** admin@example.com / password1234
+
 ## Local Development
+
+### Building Individual Products
 
 Each product has its own solution file and can be built independently:
 

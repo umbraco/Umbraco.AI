@@ -9,8 +9,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Determine repository root (parent of scripts folder)
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RepoRoot = Split-Path -Parent $ScriptDir
+$ScriptDir = $PSScriptRoot
+$RepoRoot = (Resolve-Path (Split-Path -Parent $ScriptDir)).Path
 
 # Change to repository root to ensure consistent behavior
 Push-Location $RepoRoot

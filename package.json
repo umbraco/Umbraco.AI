@@ -6,18 +6,21 @@
   "workspaces": [
     "Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
     "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Web.StaticAssets/Client",
-    "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Web.StaticAssets/Client"
+    "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Web.StaticAssets/Client",
+    "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot.Web.StaticAssets/Client"
   ],
   "scripts": {
-    "build": "npm run build:core && npm run build:prompt && npm run build:agent",
+    "build": "npm run build:core && npm run build:prompt && npm run build:agent && npm run build:copilot",
     "build:core": "npm run build -w @umbraco-ai/core",
     "build:prompt": "npm run build -w @umbraco-ai/prompt",
     "build:agent": "npm run build -w @umbraco-ai/agent",
+    "build:copilot": "npm run build -w @umbraco-ai/agent-copilot",
 
-    "watch": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run watch:core\" \"npm run watch:prompt\" \"npm run watch:agent\"",
+    "watch": "concurrently --names \"core,prompt,agent,copilot\" -c \"blue,green,yellow,magenta\" \"npm run watch:core\" \"npm run watch:prompt\" \"npm run watch:agent\" \"npm run watch:copilot\"",
     "watch:core": "npm run watch -w @umbraco-ai/core",
     "watch:prompt": "npm run watch -w @umbraco-ai/prompt",
     "watch:agent": "npm run watch -w @umbraco-ai/agent",
+    "watch:copilot": "npm run watch -w @umbraco-ai/agent-copilot",
 
     "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
     "generate-client:core": "npm run generate-client -w @umbraco-ai/core",

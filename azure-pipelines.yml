@@ -419,6 +419,71 @@ stages:
           ${{ each product in parameters.level1Products }}:
             ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
         steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: Setup .NET
+            inputs:
+              useGlobalJson: true
+
+          - script: dotnet tool install --global nbgv || true
+            displayName: Install NBGV
+
+          - task: Bash@3
+            displayName: Build pack manifest (projects -> version)
+            name: buildManifest
+            inputs:
+              targetType: inline
+              script: |
+                set -euo pipefail
+
+                MANIFEST_DIR="$(Build.SourcesDirectory)/artifacts"
+                MANIFEST_FILE="$MANIFEST_DIR/pack-manifest.json"
+                mkdir -p "$MANIFEST_DIR"
+
+                versions=()
+
+                add_version() {
+                  local product="$1"
+                  if [ -d "$product" ]; then
+                    local version
+                    version="$(cd "$product" && nbgv get-version -v NuGetPackageVersion)"
+                    versions+=("{\"name\":\"$product\",\"version\":\"$version\"}")
+                  fi
+                }
+
+                if [ "$(CoreChanged)" = "true" ]; then
+                  add_version "Umbraco.Ai"
+                fi
+
+                ${{ each product in parameters.level1Products }}:
+                  if [ "$( ${{ product.changeVar }} )" = "true" ]; then
+                    add_version "${{ product.name }}"
+                  fi
+
+                {
+                  echo "["
+                  for i in "${!versions[@]}"; do
+                    sep=","
+                    if [ "$i" -eq 0 ]; then
+                      sep=""
+                    fi
+                    echo "  $sep${versions[$i]}"
+                  done
+                  echo "]"
+                } > "$MANIFEST_FILE"
+
+                echo "Pack manifest written to $MANIFEST_FILE"
+                cat "$MANIFEST_FILE"
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload pack manifest
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/pack-manifest.json
+              artifact: pack-manifest
+              publishLocation: pipeline
+
           # Download Core NuGet packages (only if Core changed)
           - task: DownloadPipelineArtifact@2
             displayName: Download Umbraco.Ai NuGet packages

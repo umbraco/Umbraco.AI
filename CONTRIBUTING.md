@@ -375,22 +375,9 @@ npm install @umbraco-ai/core@next
 
 Test the packages in a real Umbraco site.
 
-#### 7. Create Release Tag
+#### 7. Production Release Pipeline
 
-Once testing passes, create the release tag to trigger production deployment:
-
-```bash
-git checkout release/2026.01
-git pull origin release/2026.01
-
-# Create and push release tag
-git tag release-2026.01
-git push origin release-2026.01
-```
-
-#### 8. Production Release Pipeline
-
-Azure DevOps detects the `release-*` tag pattern and triggers the production release pipeline:
+Once testing passes, trigger the production release from Azure DevOps. The release pipeline:
 
 1. **Download Artifacts**
    - Downloads `all-nuget-packages` artifact from the build
@@ -410,7 +397,7 @@ Azure DevOps detects the `release-*` tag pattern and triggers the production rel
 **NuGet URL:** `https://www.nuget.org/packages/Umbraco.Ai.Core`
 **npm URL:** `https://www.npmjs.com/package/@umbraco-ai/core`
 
-#### 9. Merge to Main
+#### 8. Merge to Main
 
 ```bash
 # Create PR: release/2026.01 → main
@@ -421,7 +408,10 @@ git branch -d release/2026.01
 git push origin --delete release/2026.01
 ```
 
-**Note on Git Tags:** The release pipeline automatically creates product-specific tags (e.g., `Umbraco.Ai@17.1.0`). These tags reference the exact commit that was released and can be used to trace which code version is in production.
+**Note on Git Tags:** The release pipeline automatically creates git tags during deployment:
+- Product-specific tags (e.g., `Umbraco.Ai@17.1.0`) track each deployed package version
+- Release tags (e.g., `release-2026.01`) mark the commit that triggered the production deployment
+These tags reference the exact commit that was released and can be used to trace which code version is in production.
 
 ### Hotfix Workflow
 
@@ -459,15 +449,11 @@ git push -u origin hotfix/2026.01.1
 # 8. Test hotfix packages
 dotnet add package Umbraco.Ai.Core --version 17.1.1-*
 
-# 9. Create hotfix tag for production release
-git tag hotfix-2026.01.1
-git push origin hotfix-2026.01.1
+# 9. Trigger production release from Azure DevOps
+# - Release pipeline deploys to NuGet.org and npm registry
+# - Automatically creates production tags: Umbraco.Ai@17.1.1, hotfix-2026.01.1
 
-# 10. Production release pipeline runs
-# - Deploys to NuGet.org and npm registry
-# - Creates production tags: Umbraco.Ai@17.1.1
-
-# 11. Merge hotfix to main
+# 10. Merge hotfix to main
 ```
 
 ### Releasing Multiple Products
@@ -545,8 +531,8 @@ The release pipeline automatically creates git tags for traceability:
 
 | Tag Format | Example | Purpose | Created When |
 |------------|---------|---------|--------------|
-| `release-<version>` | `release-2026.01` | Triggers production deployment | Manual (by developer) |
-| `hotfix-<version>` | `hotfix-2026.01.1` | Triggers production deployment | Manual (by developer) |
+| `release-<version>` | `release-2026.01` | Marks production release commit | Automated (by release pipeline) |
+| `hotfix-<version>` | `hotfix-2026.01.1` | Marks production hotfix commit | Automated (by release pipeline) |
 | `<Product>@<Version>` | `Umbraco.Ai@17.1.0` | Tracks deployed package version | Automated (by release pipeline) |
 
 **How it works:**
@@ -640,20 +626,6 @@ graph TB
 - Creates git tag for each package: `<Product>@<Version>`
 - Pushes tags to repository (e.g., `Umbraco.Ai@17.1.0`)
 - Tags point to the commit that was built
-
-### Manual Triggers
-
-To force a build of all products (bypass change detection):
-
-```yaml
-# Azure DevOps: Queue new build
-# Set pipeline variables:
-forceReleaseCore: true
-forceReleaseAgent: true
-forceReleasePrompt: true
-forceReleaseOpenAi: true
-forceReleaseAnthropic: true
-```
 
 ## Coding Standards
 

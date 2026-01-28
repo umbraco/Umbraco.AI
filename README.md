@@ -118,55 +118,6 @@ Umbraco.Ai (Core)
   - [Umbraco.Ai.Agent/CLAUDE.md](Umbraco.Ai.Agent/CLAUDE.md) - Agent add-on
   - [Umbraco.Ai.Prompt/CLAUDE.md](Umbraco.Ai.Prompt/CLAUDE.md) - Prompt add-on
 
-## Release Process
-
-This monorepo supports independent versioning per product:
-
-- **All packages**: Version 1.x (independent versioning from Umbraco CMS)
-
-### Release Manifest
-
-On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
-
-```json
-["Umbraco.Ai", "Umbraco.Ai.OpenAi"]
-```
-
-The manifest defines which products are included in the release. CI will fail if any changed product is missing from the list.
-
-On `hotfix/*` branches, the manifest is optional (if present, it is enforced; if absent, change detection is used).
-
-### Release Pipeline
-
-The Azure DevOps release pipeline:
-
-1. **Builds** the products listed in `release-manifest.json`
-2. **Publishes artifacts**: `all-nuget-packages`, `all-npm-packages`, `pack-manifest`
-3. **Deploys** packages to NuGet.org and npm registry
-4. **Tags** the git repository with `[Product_Name]@[Version]` for each deployed package
-
-**Example tags:** `Umbraco.Ai@17.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
-
-These tags allow tracing exactly which code version is in production for each package.
-
-### Branch Naming Convention
-
-- `main` - Main development branch
-- `dev` - Integration branch
-- `feature/<anything>` - Feature branches (e.g., `feature/add-caching`)
-- `release/<anything>` - Release branches (e.g., `release/2026.01`)
-- `hotfix/<anything>` - Hotfix branches (e.g., `hotfix/2026.01.1`)
-
-### Git Tags
-
-| Tag Type | Format | Example | Created By |
-|----------|--------|---------|------------|
-| Release trigger | `release-<version>` | `release-2026.01` | Manual (triggers production deployment) |
-| Hotfix trigger | `hotfix-<version>` | `hotfix-2026.01.1` | Manual (triggers production deployment) |
-| Package version | `<Product>@<Version>` | `Umbraco.Ai@17.1.0` | Automated by release pipeline |
-
-For detailed workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
-
 ## Target Framework
 
 - .NET 10.0 (`net10.0`)
@@ -175,13 +126,13 @@ For detailed workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
-- Development workflow and branch naming
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+- Development workflow and branch naming conventions
 - Pull request process
 - Release and deployment procedures
-- Coding standards and conventions
+- Coding standards
 
-For technical details, see [CLAUDE.md](CLAUDE.md).
+For development setup and build commands, see [CLAUDE.md](CLAUDE.md).
 
 ## License
 

@@ -36,6 +36,7 @@
     <PackageVersion Include="Umbraco.Ai.Agui" Version="[17.0.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Startup" Version="[17.0.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Agent" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Ai.Agent.Copilot" Version="[17.0.0, 17.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->

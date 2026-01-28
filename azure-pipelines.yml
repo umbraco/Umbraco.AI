@@ -450,6 +450,7 @@ stages:
                   }
                   Push-Location $Product
                   try {
+                    & nbgv cloud | Out-Null
                     $version = & nbgv get-version -v NuGetPackageVersion
                     $entries.Add([pscustomobject]@{ name = $Product; version = $version })
                   } finally {

@@ -175,10 +175,16 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 |------|---------|
 | `scripts/install-demo-site.ps1` | Creates unified local dev environment (Windows) |
 | `scripts/install-demo-site.sh` | Creates unified local dev environment (Linux/Mac) |
+| `scripts/generate-changelog.ps1` | Generate changelogs for release (Windows) |
+| `scripts/generate-changelog.sh` | Generate changelogs for release (Linux/Mac) |
+| `scripts/generate-changelog.js` | Node.js changelog generator (main implementation) |
 | `Umbraco.Ai.local.sln` | Unified solution (generated) |
-| `package.json` | Root npm scripts for frontend builds |
+| `package.json` | Root npm scripts for frontend builds and changelog generation |
+| `commitlint.config.js` | Commit message validation with dynamic scope loading |
 | `release-manifest.json` | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`) |
 | `pack-manifest` (artifact) | CI-generated metadata for deployed packages (used by release pipeline for git tagging) |
+| `<Product>/changelog.config.json` | Per-product scopes for changelog generation (auto-discovered) |
+| `<Product>/CHANGELOG.md` | Per-product changelog (auto-generated from git history) |
 
 ## Frontend Architecture
 
@@ -311,6 +317,52 @@ If you release Core 1.1.0 with breaking changes, but Agent 1.0.0 isn't ready for
 
 - `Ref/` - External reference projects (not part of build)
 - `Umbraco.Ai-entity-snapshot-service/` - Legacy/alternate reference
+
+## Changelog Generation
+
+Each product maintains its own `CHANGELOG.md` file at the product root, auto-generated from git history using conventional commits.
+
+### Commit Message Format
+
+All commits should follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <description>
+```
+
+**Examples:**
+```bash
+feat(chat): add streaming support
+fix(openai): handle rate limit errors
+docs(core): update API examples
+```
+
+Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
+
+### Generating Changelogs
+
+Changelogs are generated manually before creating a release:
+
+```bash
+# List available products
+npm run changelog:list
+
+# Generate changelog for a specific product
+npm run changelog -- --product=Umbraco.Ai --version=1.1.0
+
+# Generate for unreleased changes
+npm run changelog -- --product=Umbraco.Ai --unreleased
+
+# PowerShell wrapper
+.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
+
+# Bash wrapper
+./scripts/generate-changelog.sh --product=Umbraco.Ai --version=1.1.0
+```
+
+Each product has a `changelog.config.json` file defining its scopes. The generation script automatically discovers all products by scanning for these config files - no hardcoded product lists.
+
+**For full details on commit scopes, changelog workflow, and release process, see [CONTRIBUTING.md](CONTRIBUTING.md#maintaining-changelogs).**
 
 ## Coding Standards
 

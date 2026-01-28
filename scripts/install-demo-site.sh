@@ -225,8 +225,8 @@ if [ -f "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent/Umbraco.Ai.Agent.csproj" ]; then
 fi
 
 # Agent Copilot add-on (frontend-only static assets)
-if [ -f "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot.Web.StaticAssets/Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj" ]; then
-    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot.Web.StaticAssets/Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj"
+if [ -f "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.csproj"
 fi
 
 echo ""

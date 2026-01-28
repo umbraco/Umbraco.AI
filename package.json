@@ -7,7 +7,7 @@
     "Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client",
     "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Web.StaticAssets/Client",
     "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Web.StaticAssets/Client",
-    "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot.Web.StaticAssets/Client"
+    "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot/Client"
   ],
   "scripts": {
     "build": "npm run build:core && npm run build:prompt && npm run build:agent && npm run build:copilot",

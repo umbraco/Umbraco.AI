@@ -73,7 +73,7 @@ dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
 dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
 dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
 dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
-dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.slnx
+dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.sln
 
 # Run tests for a product
 dotnet test Umbraco.Ai/Umbraco.Ai.sln

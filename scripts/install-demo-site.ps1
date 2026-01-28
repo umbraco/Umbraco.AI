@@ -200,8 +200,8 @@ if (Test-Path "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent\Umbraco.Ai.Agent.csproj") {
 }
 
 # Agent Copilot add-on (frontend-only static assets)
-if (Test-Path "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot.Web.StaticAssets\Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot.Web.StaticAssets\Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj"
+if (Test-Path "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot\Umbraco.Ai.Agent.Copilot.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot\Umbraco.Ai.Agent.Copilot.csproj"
 }
 
 Write-Host ""

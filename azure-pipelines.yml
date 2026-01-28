@@ -229,6 +229,52 @@ stages:
               publishLocation: pipeline
 
       # ============================================================
+      # Pack Tier 4 (Agent Copilot - depends on Agent)
+      # ============================================================
+      - job: PackTier4
+        displayName: Pack Tier 4 (Agent Copilot)
+        dependsOn: PackTier3
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: Setup .NET
+            inputs:
+              useGlobalJson: true
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download build outputs
+            inputs:
+              artifact: build-outputs
+              path: $(Build.SourcesDirectory)
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Tier 1 packages (local feed)
+            inputs:
+              artifact: Umbraco.Ai-packages
+              path: $(Build.SourcesDirectory)/artifacts/nupkg
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Tier 3 Agent packages (local feed)
+            inputs:
+              artifact: Umbraco.Ai.Agent-packages
+              path: $(Build.SourcesDirectory)/artifacts/nupkg
+
+          - template: build/templates/pack-product.yml
+            parameters:
+              product: Umbraco.Ai.Agent.Copilot
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload Umbraco.Ai.Agent.Copilot packages
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
+              artifact: Umbraco.Ai.Agent.Copilot-packages
+              publishLocation: pipeline
+
+      # ============================================================
       # Collect all packages into single artifact
       # ============================================================
       - job: CollectPackages
@@ -237,6 +283,7 @@ stages:
           - PackTier1
           - PackTier2
           - PackTier3
+          - PackTier4
         pool:
           vmImage: 'ubuntu-latest'
         steps:
@@ -286,6 +333,12 @@ stages:
             displayName: Download Umbraco.Ai.Agent packages
             inputs:
               artifact: Umbraco.Ai.Agent-packages
+              path: $(Build.SourcesDirectory)/all-packages
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai.Agent.Copilot packages
+            inputs:
+              artifact: Umbraco.Ai.Agent.Copilot-packages
               path: $(Build.SourcesDirectory)/all-packages
 
           - task: PublishPipelineArtifact@1

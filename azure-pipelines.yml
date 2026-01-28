@@ -6,6 +6,7 @@
 # ============================================================
 # Level 0: Core package (no internal dependencies)
 # Level 1: All packages that depend on Core
+# Level 2: All packages that depend on Level 1 packages
 parameters:
   - name: level1Products
     type: object
@@ -33,6 +34,13 @@ parameters:
       - name: Umbraco.Ai.Agent
         changeVar: AgentChanged
         hasNpm: false
+  - name: level2Products
+    type: object
+    default:
+      # Copilot (depends on Agent - exports npm types)
+      - name: Umbraco.Ai.Agent.Copilot
+        changeVar: CopilotChanged
+        hasNpm: true
 
 trigger:
   branches:
@@ -264,36 +272,9 @@ stages:
             parameters:
               product: Umbraco.Ai
 
-          - task: PublishPipelineArtifact@1
-            displayName: Upload Umbraco.Ai NuGet packages
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-              artifact: Umbraco.Ai-packages
-              publishLocation: pipeline
-
-          # Upload npm packages if they were created
-          - task: Bash@3
-            displayName: Check for npm packages
-            name: checkNpm
-            inputs:
-              targetType: inline
-              script: |
-                if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
-                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
-                  echo "npm packages found:"
-                  ls -la artifacts/npm/
-                else
-                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
-                  echo "No npm packages to upload"
-                fi
-
-          - task: PublishPipelineArtifact@1
-            displayName: Upload Umbraco.Ai npm packages
-            condition: eq(variables['checkNpm.hasNpmPackages'], 'true')
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/npm
-              artifact: Umbraco.Ai-npm-packages
-              publishLocation: pipeline
+          - template: .azure-pipelines/templates/upload-packages.yml
+            parameters:
+              product: Umbraco.Ai
 
       # ============================================================
       # Pack Level 1 (Providers + Add-ons - depend on Core)
@@ -329,106 +310,77 @@ stages:
           - checkout: self
             fetchDepth: 0
 
-          # Determine if this specific product should be packed
-          # The changeVar from matrix tells us which variable to check
-          - task: PowerShell@2
-            displayName: Check if $(product) changed
-            name: check
-            inputs:
-              targetType: inline
-              pwsh: true
-              script: |
-                $product = "$(product)"
-                $changeVarName = "$(changeVar)"
+          - template: .azure-pipelines/templates/check-should-pack.yml
 
-                # Azure DevOps variables are available as environment variables
-                # Variable names are converted: dots become underscores, uppercase
-                $envVarName = $changeVarName.ToUpper()
-                $changed = [Environment]::GetEnvironmentVariable($envVarName)
-
-                # Also try the original case
-                if (-not $changed) {
-                  $changed = [Environment]::GetEnvironmentVariable($changeVarName)
-                }
-
-                Write-Host "Product: $product"
-                Write-Host "Change variable: $changeVarName (env: $envVarName)"
-                Write-Host "Changed value: '$changed'"
-
-                if ($changed -eq "true") {
-                  Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]true"
-                  Write-Host "$product changed - will pack"
-                } else {
-                  Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]false"
-                  Write-Host "$product not changed - skipping (value was: $changed)"
-                }
-
-          - task: UseDotNet@2
-            displayName: Setup .NET
-            condition: eq(variables['check.shouldPack'], 'true')
-            inputs:
-              useGlobalJson: true
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download build outputs
-            condition: eq(variables['check.shouldPack'], 'true')
-            inputs:
-              artifact: build-outputs
-              path: $(Build.SourcesDirectory)
-
-          # Download Core packages as local feed (if Core was packed)
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Core packages (local feed)
-            condition: |
-              and(
-                eq(variables['check.shouldPack'], 'true'),
-                eq(variables['CoreChanged'], 'true')
-              )
-            inputs:
-              artifact: Umbraco.Ai-packages
-              path: $(Build.SourcesDirectory)/artifacts/nupkg
+          - template: .azure-pipelines/templates/setup-pack-job.yml
+            parameters:
+              downloadCore: true
+              downloadLevel1: false
 
           - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: $(product)
               condition: eq(variables['check.shouldPack'], 'true')
 
-          - task: PublishPipelineArtifact@1
-            displayName: Upload $(product) NuGet packages
-            condition: eq(variables['check.shouldPack'], 'true')
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-              artifact: $(product)-packages
-              publishLocation: pipeline
+          - template: .azure-pipelines/templates/upload-packages.yml
+            parameters:
+              product: $(product)
+              condition: eq(variables['check.shouldPack'], 'true')
 
-          # Upload npm packages if they were created
-          - task: Bash@3
-            displayName: Check for npm packages
-            condition: eq(variables['check.shouldPack'], 'true')
-            name: checkNpm
-            inputs:
-              targetType: inline
-              script: |
-                if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
-                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
-                  echo "npm packages found:"
-                  ls -la artifacts/npm/
-                else
-                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
-                  echo "No npm packages to upload"
-                fi
+      # ============================================================
+      # Pack Level 2 (Copilot - depends on Agent)
+      # Matrix generated from parameters.level2Products
+      # ============================================================
+      - job: PackLevel2
+        displayName: Pack Level 2
+        dependsOn:
+          - DetectChanges
+          - PackCore
+          - PackLevel1
+        condition: |
+          and(
+            not(failed()),
+            not(canceled()),
+            eq(dependencies.DetectChanges.outputs['detect.Level2Changed'], 'true')
+          )
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          matrix:
+            # Generated from parameters.level2Products
+            ${{ each product in parameters.level2Products }}:
+              ${{ replace(replace(product.name, 'Umbraco.Ai.', ''), '.', '_') }}:
+                product: ${{ product.name }}
+                changeVar: ${{ product.changeVar }}
+          maxParallel: 10
+        variables:
+          # Pass all per-product change flags as job variables
+          CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
+          ${{ each product in parameters.level1Products }}:
+            ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+          ${{ each product in parameters.level2Products }}:
+            ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+        steps:
+          - checkout: self
+            fetchDepth: 0
 
-          - task: PublishPipelineArtifact@1
-            displayName: Upload $(product) npm packages
-            condition: |
-              and(
-                eq(variables['check.shouldPack'], 'true'),
-                eq(variables['checkNpm.hasNpmPackages'], 'true')
-              )
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/npm
-              artifact: $(product)-npm-packages
-              publishLocation: pipeline
+          - template: .azure-pipelines/templates/check-should-pack.yml
+
+          - template: .azure-pipelines/templates/setup-pack-job.yml
+            parameters:
+              downloadCore: true
+              downloadLevel1: true
+              level1Products: ${{ parameters.level1Products }}
+
+          - template: .azure-pipelines/templates/pack-product.yml
+            parameters:
+              product: $(product)
+              condition: eq(variables['check.shouldPack'], 'true')
+
+          - template: .azure-pipelines/templates/upload-packages.yml
+            parameters:
+              product: $(product)
+              condition: eq(variables['check.shouldPack'], 'true')
 
       # ============================================================
       # Collect all packages into single artifact
@@ -440,6 +392,7 @@ stages:
           - DetectChanges
           - PackCore
           - PackLevel1
+          - PackLevel2
         condition: |
           and(
             not(failed()),
@@ -452,6 +405,8 @@ stages:
           # Map dependency outputs to job variables (dependencies context only works at job level)
           CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
           ${{ each product in parameters.level1Products }}:
+            ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+          ${{ each product in parameters.level2Products }}:
             ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
         steps:
           - checkout: self
@@ -484,6 +439,25 @@ stages:
 
           # Download Level 1 npm packages (only for products that have npm packages)
           - ${{ each product in parameters.level1Products }}:
+            - ${{ if eq(product.hasNpm, true) }}:
+              - task: DownloadPipelineArtifact@2
+                displayName: Download ${{ product.name }} npm packages
+                condition: eq(variables.${{ product.changeVar }}, 'true')
+                inputs:
+                  artifact: '${{ product.name }}-npm-packages'
+                  targetPath: '$(Pipeline.Workspace)/npm'
+
+          # Download Level 2 NuGet packages (only if product changed)
+          - ${{ each product in parameters.level2Products }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download ${{ product.name }} NuGet packages
+              condition: eq(variables.${{ product.changeVar }}, 'true')
+              inputs:
+                artifact: '${{ product.name }}-packages'
+                targetPath: '$(Pipeline.Workspace)/nuget'
+
+          # Download Level 2 npm packages (only for products that have npm packages)
+          - ${{ each product in parameters.level2Products }}:
             - ${{ if eq(product.hasNpm, true) }}:
               - task: DownloadPipelineArtifact@2
                 displayName: Download ${{ product.name }} npm packages
@@ -560,12 +534,25 @@ stages:
                   }
                 }
 
+                $level2 = $env:LEVEL2_JSON | ConvertFrom-Json
+                foreach ($p in $level2) {
+                  $changeVar = [string]$p.changeVar
+                  $changed = [Environment]::GetEnvironmentVariable($changeVar)
+                  if (-not $changed) {
+                    $changed = [Environment]::GetEnvironmentVariable($changeVar.ToUpper())
+                  }
+                  if ($changed -eq "true") {
+                    Add-VersionByProduct $p.name
+                  }
+                }
+
                 $json = $entries | ConvertTo-Json -Depth 3
                 $json | Out-File -FilePath $manifestFile -Encoding utf8
                 Write-Host "Pack manifest written to $manifestFile"
                 Write-Host $json
             env:
               LEVEL1_JSON: ${{ convertToJson(parameters.level1Products) }}
+              LEVEL2_JSON: ${{ convertToJson(parameters.level2Products) }}
 
           - task: PublishPipelineArtifact@1
             displayName: Upload pack manifest

@@ -6,6 +6,18 @@
         <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Core\Umbraco.Ai.Agent.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.Ai.Agent.Core" />
+    </ItemGroup>
+
     <ItemGroup>
         <!-- Dont include the client folder as part of packaging nuget build -->
         <Content Remove="Client\**" />

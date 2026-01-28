@@ -11,7 +11,6 @@ This is a monorepo containing Umbraco.Ai and its add-on packages:
 | **Umbraco.Ai** | Core AI integration layer for Umbraco CMS | `Umbraco.Ai/` |
 | **Umbraco.Ai.Prompt** | Prompt template management add-on | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.Agent** | AI agent management add-on | `Umbraco.Ai.Agent/` |
-| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for AI agents | `Umbraco.Ai.Agent.Copilot/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider plugin | `Umbraco.Ai.Anthropic/` |
 | **Umbraco.Ai.Amazon** | Amazon Bedrock provider plugin | `Umbraco.Ai.Amazon/` |
@@ -73,7 +72,6 @@ dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
 dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
 dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
 dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
-dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.sln
 
 # Run tests for a product
 dotnet test Umbraco.Ai/Umbraco.Ai.sln
@@ -87,7 +85,7 @@ This monorepo uses **npm workspaces** for efficient dependency management. Add-o
 # Install all workspace dependencies (run from root)
 npm install
 
-# Build all frontends (sequential: core -> prompt -> agent -> copilot)
+# Build all frontends (sequential: core -> prompt -> agent)
 npm run build
 
 # Watch all frontends in parallel
@@ -100,11 +98,9 @@ npm run generate-client
 npm run build:core
 npm run build:prompt
 npm run build:agent
-npm run build:copilot
 npm run watch:core
 npm run watch:prompt
 npm run watch:agent
-npm run watch:copilot
 ```
 
 **Workspace Benefits:**
@@ -125,8 +121,7 @@ Umbraco.Ai (Core)
     ├── Umbraco.Ai.Google (Provider - depends on Core)
     ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
-    ├── Umbraco.Ai.Agent (Add-on - depends on Core)
-    └── Umbraco.Ai.Agent.Copilot (Add-on - depends on Agent)
+    └── Umbraco.Ai.Agent (Add-on - depends on Core)
 ```
 
 ### Standard Project Structure
@@ -180,8 +175,16 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 |------|---------|
 | `scripts/install-demo-site.ps1` | Creates unified local dev environment (Windows) |
 | `scripts/install-demo-site.sh` | Creates unified local dev environment (Linux/Mac) |
+| `scripts/generate-changelog.ps1` | Generate changelogs for release (Windows) |
+| `scripts/generate-changelog.sh` | Generate changelogs for release (Linux/Mac) |
+| `scripts/generate-changelog.js` | Node.js changelog generator (main implementation) |
 | `Umbraco.Ai.local.sln` | Unified solution (generated) |
-| `package.json` | Root npm scripts for frontend builds |
+| `package.json` | Root npm scripts for frontend builds and changelog generation |
+| `commitlint.config.js` | Commit message validation with dynamic scope loading |
+| `release-manifest.json` | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`) |
+| `pack-manifest` (artifact) | CI-generated metadata for deployed packages (used by release pipeline for git tagging) |
+| `<Product>/changelog.config.json` | Per-product scopes for changelog generation (auto-discovered) |
+| `<Product>/CHANGELOG.md` | Per-product changelog (auto-generated from git history) |
 
 ## Frontend Architecture
 
@@ -207,10 +210,169 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 - Umbraco CMS 17.x
 - Central Package Management via `Directory.Packages.props`
 
+## Release and Hotfix Branch Packaging
+
+### Release Manifest
+
+On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
+
+```json
+[
+  "Umbraco.Ai",
+  "Umbraco.Ai.OpenAi"
+]
+```
+
+The manifest is treated as the authoritative list of packages to pack and release. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
+
+On `hotfix/*` branches, the manifest is **optional**:
+- If present: Enforced the same way as release branches (explicit pack list)
+- If absent: Change detection is used automatically
+
+### Release Pipeline Artifacts
+
+The CI build produces the following artifacts for deployment:
+
+| Artifact | Description |
+|----------|-------------|
+| `all-nuget-packages` | All .nupkg files for NuGet deployment |
+| `all-npm-packages` | All .tgz files for npm deployment |
+| `pack-manifest` | Package metadata (name, version, type) for each package |
+
+The Azure DevOps release pipeline:
+1. Downloads these artifacts
+2. Deploys packages to package feeds (MyGet for pre-release, NuGet.org/npm for production)
+3. Tags the git repository with `[Product_Name]@[Version]` for each deployed package
+
+**Example tags:** `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+
+For detailed release workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
+
+## Cross-Product Dependency Management
+
+Add-on packages and providers depend on Umbraco.Ai (Core). These dependencies are managed using **Central Package Management** via `Directory.Packages.props`.
+
+### Version Ranges for Add-ons
+
+**Always use version ranges** for cross-product dependencies. This allows add-ons to work with a range of Core versions without requiring simultaneous releases.
+
+When an add-on (e.g., Umbraco.Ai.Prompt or Umbraco.Ai.Agent) needs to depend on a specific version range of Core, create a `Directory.Packages.props` file within the product folder:
+
+**Example:** `Umbraco.Ai.Prompt/Directory.Packages.props`
+```xml
+<Project>
+  <ItemGroup>
+    <!-- Minimum version 1.1.0, accepts all 1.x versions -->
+    <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
+  </ItemGroup>
+</Project>
+```
+
+The range format `[minimum, maximum)` means:
+- `[` = inclusive lower bound (>= 1.1.0)
+- `)` = exclusive upper bound (< 1.999.999)
+- Result: accepts any 1.x version from 1.1.0 onwards
+
+**How it works:**
+- **Root level** (`Directory.Packages.props` at repo root): Defines default package versions and ranges for all products
+- **Product level** (`ProductFolder/Directory.Packages.props`): Overrides specific package version ranges for that product only
+- **During local development**: Project references (`UseProjectReferences=true`) bypass NuGet versions entirely
+- **During CI/CD build**: Distribution builds (`UseProjectReferences=false`) use the specified NuGet version ranges
+
+### Example Scenario
+
+If you release Core 1.1.0 with breaking changes, but Agent 1.0.0 isn't ready for the upgrade:
+
+1. **Agent's Directory.Packages.props** specifies minimum Core 1.0.0:
+   ```xml
+   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
+   ```
+
+2. **Root Directory.Packages.props** may have a broader or different range:
+   ```xml
+   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
+   ```
+
+3. When Agent is ready for Core 1.1.0+, update its `Directory.Packages.props` minimum version:
+   ```xml
+   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
+   ```
+
+### Version Range Guidelines
+
+| Scenario | Range Format | Example | Use Case |
+|----------|--------------|---------|----------|
+| Minor version series | `[X.Y.0, X.999.999)` | `[1.1.0, 1.999.999)` | Add-on requires min 1.1.0, accepts all 1.x |
+| Specific minimum | `[X.Y.Z, X.999.999)` | `[1.1.5, 1.999.999)` | Add-on requires min 1.1.5, accepts all 1.x |
+| Exact version | `[X.Y.Z]` | `[1.1.0]` | **Avoid** - prevents any updates |
+
+### Best Practices
+
+- **Local development**: Always use project references (default). Changes to Core are immediately visible to add-ons.
+- **Release coordination**: When releasing Core with breaking changes, verify all dependent products in the release manifest are updated to the new minimum version.
+- **Version ranges**: Always use `[X.Y.0, X.999.999)` format where X.Y.0 is the minimum supported Core version.
+- **Testing**: Always test with `UseProjectReferences=false` before releasing to ensure NuGet dependencies resolve correctly.
+
 ## Excluded Folders
 
 - `Ref/` - External reference projects (not part of build)
 - `Umbraco.Ai-entity-snapshot-service/` - Legacy/alternate reference
+
+## Changelog Generation
+
+Each product maintains its own `CHANGELOG.md` file at the product root, auto-generated from git history using conventional commits.
+
+### Commit Message Format
+
+All commits should follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <description>
+```
+
+**Examples:**
+```bash
+feat(chat): add streaming support
+fix(openai): handle rate limit errors
+docs(core): update API examples
+```
+
+Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
+
+### Generating Changelogs
+
+Changelogs are generated manually before creating a release:
+
+```bash
+# List available products
+npm run changelog:list
+
+# Generate changelog for a specific product
+npm run changelog -- --product=Umbraco.Ai --version=1.1.0
+
+# Generate for unreleased changes
+npm run changelog -- --product=Umbraco.Ai --unreleased
+
+# PowerShell wrapper
+.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
+
+# Bash wrapper
+./scripts/generate-changelog.sh --product=Umbraco.Ai --version=1.1.0
+```
+
+Each product has a `changelog.config.json` file defining its scopes. The generation script automatically discovers all products by scanning for these config files - no hardcoded product lists.
+
+### Automated Validation
+
+On `release/*` and `hotfix/*` branches, Azure DevOps automatically validates changelogs:
+- ✅ CHANGELOG.md exists for each product in release-manifest.json
+- ✅ CHANGELOG.md was updated in recent commits
+- ✅ Version in CHANGELOG.md matches version.json
+- ❌ **Build fails if validation fails**
+
+This prevents releasing without proper changelog documentation for both regular releases and emergency hotfixes.
+
+**For full details on commit scopes, changelog workflow, and release process, see [CONTRIBUTING.md](CONTRIBUTING.md#maintaining-changelogs).**
 
 ## Coding Standards
 

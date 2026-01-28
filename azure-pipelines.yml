@@ -1,6 +1,39 @@
 # Azure DevOps CI Pipeline for Umbraco.Ai
 # Converted from GitHub Actions (.github/workflows/ci.yml)
 
+# ============================================================
+# Product Definitions - UPDATE HERE WHEN ADDING NEW PACKAGES
+# ============================================================
+# Level 0: Core package (no internal dependencies)
+# Level 1: All packages that depend on Core
+parameters:
+  - name: level1Products
+    type: object
+    default:
+      # Providers (no frontend)
+      - name: Umbraco.Ai.OpenAi
+        changeVar: OpenaiChanged
+        hasNpm: false
+      - name: Umbraco.Ai.Anthropic
+        changeVar: AnthropicChanged
+        hasNpm: false
+      - name: Umbraco.Ai.Amazon
+        changeVar: AmazonChanged
+        hasNpm: false
+      - name: Umbraco.Ai.Google
+        changeVar: GoogleChanged
+        hasNpm: false
+      - name: Umbraco.Ai.MicrosoftFoundry
+        changeVar: MicrosoftfoundryChanged
+        hasNpm: false
+      # Add-ons (have frontend but don't export types)
+      - name: Umbraco.Ai.Prompt
+        changeVar: PromptChanged
+        hasNpm: false
+      - name: Umbraco.Ai.Agent
+        changeVar: AgentChanged
+        hasNpm: false
+
 trigger:
   branches:
     include:
@@ -8,9 +41,6 @@ trigger:
       - dev
       - release/*
       - hotfix/*
-  tags:
-    include:
-      - release-*
 
 pr:
   branches:
@@ -19,7 +49,7 @@ pr:
       - dev
 
 variables:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '22.x'
   DOTNET_NOLOGO: 'true'
   DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
 
@@ -56,7 +86,7 @@ stages:
           - script: dotnet restore Umbraco.Ai.sln
             displayName: Restore
 
-          - script: dotnet build Umbraco.Ai.sln --configuration Release --no-restore
+          - script: dotnet build Umbraco.Ai.sln --configuration Release --no-restore -p:DisableCloudBuildNumber=true
             displayName: Build
 
           - script: dotnet test Umbraco.Ai.sln --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
@@ -78,28 +108,141 @@ stages:
               publishLocation: pipeline
 
   # ============================================================
-  # Pack Stage - Only runs on push to main/dev or release tags
+  # Validate Changelogs - Only runs on release and hotfix branches
+  # Ensures CHANGELOGs are present and match version.json
   # ============================================================
-  - stage: Pack
-    displayName: Pack NuGet Packages
+  - stage: ValidateChangelogs
+    displayName: Validate Changelogs
     dependsOn: Build
-    # Only pack on push (not PR) to main/dev branches or release tags
+    # Only validate on release and hotfix branches (not main or dev)
     condition: |
       and(
         succeeded(),
         ne(variables['Build.Reason'], 'PullRequest'),
         or(
-          startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'),
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/')
+        )
+      )
+    jobs:
+      - job: ValidateChangelogFiles
+        displayName: Validate CHANGELOG.md Files
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: PowerShell@2
+            displayName: Validate changelogs
+            inputs:
+              filePath: .azure-pipelines/scripts/validate-changelogs.ps1
+              pwsh: true
+              failOnStderr: false
+
+  # ============================================================
+  # Pack Stage - Only runs on push to main/dev/hotfix/release branches
+  # Uses dynamic change detection to only pack products that changed
+  # ============================================================
+  - stage: Pack
+    displayName: Pack NuGet Packages
+    dependsOn:
+      - Build
+      - ValidateChangelogs
+    # Only pack on push (not PR) to main/dev/hotfix/release branches
+    # ValidateChangelogs may be skipped on non-release branches, which is OK
+    condition: |
+      and(
+        in(dependencies.Build.result, 'Succeeded'),
+        in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
+        ne(variables['Build.Reason'], 'PullRequest'),
+        or(
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'),
+          startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
           eq(variables['Build.SourceBranch'], 'refs/heads/main'),
           eq(variables['Build.SourceBranch'], 'refs/heads/dev')
         )
       )
     jobs:
       # ============================================================
-      # Pack Tier 1 (Core - no internal dependencies)
+      # Detect which products changed
       # ============================================================
-      - job: PackTier1
-        displayName: Pack Tier 1 (Core)
+      - job: DetectChanges
+        displayName: Detect Changed Products
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: PowerShell@2
+            displayName: Run change detection
+            name: detect
+            inputs:
+              filePath: .azure-pipelines/scripts/detect-changes.ps1
+              pwsh: true
+
+          - task: Bash@3
+            displayName: Summarize packed products + tag build
+            inputs:
+              targetType: inline
+              script: |
+                PRODUCTS="$(detect.AllChangedProducts)"
+                ANY="$(detect.AnyChanged)"
+                MAX_LEVEL="$(detect.MaxLevel)"
+
+                if [ -z "$PRODUCTS" ]; then
+                  PRODUCTS="(none)"
+                fi
+
+                SUMMARY_FILE="$(Build.ArtifactStagingDirectory)/pack-summary.md"
+                {
+                  echo "## Pack Summary"
+                  echo ""
+                  echo "- AnyChanged: ${ANY:-false}"
+                  echo "- MaxLevel: ${MAX_LEVEL:-0}"
+                  echo "- CoreChanged: $(detect.CoreChanged)"
+                  echo "- Products: ${PRODUCTS}"
+                  echo ""
+                  echo "Artifacts (if produced):"
+                  echo "- all-nuget-packages"
+                  echo "- all-npm-packages"
+                } > "$SUMMARY_FILE"
+
+                echo "##vso[task.uploadsummary]$SUMMARY_FILE"
+
+                if [ "$PRODUCTS" = "(none)" ]; then
+                  echo "##vso[build.addbuildtag]pack-none"
+                  exit 0
+                fi
+
+                if [ "$(detect.CoreChanged)" = "true" ]; then
+                  echo "##vso[build.addbuildtag]pack-core"
+                fi
+
+                IFS=',' read -ra ITEMS <<< "$PRODUCTS"
+                for item in "${ITEMS[@]}"; do
+                  trimmed="$(echo "$item" | xargs)"
+                  if [ -n "$trimmed" ]; then
+                    name="$trimmed"
+                    if [[ "$name" == Umbraco.Ai.* ]]; then
+                      name="${name#Umbraco.Ai.}"
+                    elif [[ "$name" == Umbraco.Ai ]]; then
+                      name="core"
+                    fi
+                    safe="$(echo "$name" | tr '[:upper:]' '[:lower:]' | tr '.' '-' | tr -cd 'a-z0-9-')"
+                    echo "##vso[build.addbuildtag]pack-$safe"
+                  fi
+                done
+
+      # ============================================================
+      # Pack Core (Level 0 - no internal dependencies)
+      # Conditional based on change detection
+      # ============================================================
+      - job: PackCore
+        displayName: Pack Umbraco.Ai
+        dependsOn: DetectChanges
+        condition: eq(dependencies.DetectChanges.outputs['detect.CoreChanged'], 'true')
         pool:
           vmImage: 'ubuntu-latest'
         steps:
@@ -117,233 +260,404 @@ stages:
               artifact: build-outputs
               path: $(Build.SourcesDirectory)
 
-          - template: build/templates/pack-product.yml
+          - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: Umbraco.Ai
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload Umbraco.Ai packages
+            displayName: Upload Umbraco.Ai NuGet packages
             inputs:
               targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
               artifact: Umbraco.Ai-packages
               publishLocation: pipeline
 
+          # Upload npm packages if they were created
+          - task: Bash@3
+            displayName: Check for npm packages
+            name: checkNpm
+            inputs:
+              targetType: inline
+              script: |
+                if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                  echo "npm packages found:"
+                  ls -la artifacts/npm/
+                else
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  echo "No npm packages to upload"
+                fi
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload Umbraco.Ai npm packages
+            condition: eq(variables['checkNpm.hasNpmPackages'], 'true')
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/npm
+              artifact: Umbraco.Ai-npm-packages
+              publishLocation: pipeline
+
       # ============================================================
-      # Pack Tier 2 (Providers - depend on Core)
+      # Pack Level 1 (Providers + Add-ons - depend on Core)
+      # Matrix generated from parameters.level1Products
       # ============================================================
-      - job: PackTier2
-        displayName: Pack Tier 2
-        dependsOn: PackTier1
+      - job: PackLevel1
+        displayName: Pack Level 1
+        dependsOn:
+          - DetectChanges
+          - PackCore
+        condition: |
+          and(
+            not(failed()),
+            not(canceled()),
+            eq(dependencies.DetectChanges.outputs['detect.Level1Changed'], 'true')
+          )
         pool:
           vmImage: 'ubuntu-latest'
         strategy:
           matrix:
-            OpenAi:
-              product: Umbraco.Ai.OpenAi
-            Anthropic:
-              product: Umbraco.Ai.Anthropic
-            Amazon:
-              product: Umbraco.Ai.Amazon
-            Google:
-              product: Umbraco.Ai.Google
-            MicrosoftFoundry:
-              product: Umbraco.Ai.MicrosoftFoundry
-          maxParallel: 5
+            # Generated from parameters.level1Products
+            ${{ each product in parameters.level1Products }}:
+              ${{ replace(replace(product.name, 'Umbraco.Ai.', ''), '.', '_') }}:
+                product: ${{ product.name }}
+                changeVar: ${{ product.changeVar }}
+          maxParallel: 10
+        variables:
+          # Pass all per-product change flags as job variables
+          CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
+          ${{ each product in parameters.level1Products }}:
+            ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
         steps:
           - checkout: self
             fetchDepth: 0
 
+          # Determine if this specific product should be packed
+          # The changeVar from matrix tells us which variable to check
+          - task: PowerShell@2
+            displayName: Check if $(product) changed
+            name: check
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                $product = "$(product)"
+                $changeVarName = "$(changeVar)"
+
+                # Azure DevOps variables are available as environment variables
+                # Variable names are converted: dots become underscores, uppercase
+                $envVarName = $changeVarName.ToUpper()
+                $changed = [Environment]::GetEnvironmentVariable($envVarName)
+
+                # Also try the original case
+                if (-not $changed) {
+                  $changed = [Environment]::GetEnvironmentVariable($changeVarName)
+                }
+
+                Write-Host "Product: $product"
+                Write-Host "Change variable: $changeVarName (env: $envVarName)"
+                Write-Host "Changed value: '$changed'"
+
+                if ($changed -eq "true") {
+                  Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]true"
+                  Write-Host "$product changed - will pack"
+                } else {
+                  Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]false"
+                  Write-Host "$product not changed - skipping (value was: $changed)"
+                }
+
           - task: UseDotNet@2
             displayName: Setup .NET
+            condition: eq(variables['check.shouldPack'], 'true')
             inputs:
               useGlobalJson: true
 
           - task: DownloadPipelineArtifact@2
             displayName: Download build outputs
+            condition: eq(variables['check.shouldPack'], 'true')
             inputs:
               artifact: build-outputs
               path: $(Build.SourcesDirectory)
 
+          # Download Core packages as local feed (if Core was packed)
           - task: DownloadPipelineArtifact@2
-            displayName: Download Tier 1 packages (local feed)
+            displayName: Download Core packages (local feed)
+            condition: |
+              and(
+                eq(variables['check.shouldPack'], 'true'),
+                eq(variables['CoreChanged'], 'true')
+              )
             inputs:
               artifact: Umbraco.Ai-packages
               path: $(Build.SourcesDirectory)/artifacts/nupkg
 
-          - template: build/templates/pack-product.yml
+          - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: $(product)
+              condition: eq(variables['check.shouldPack'], 'true')
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload $(product) packages
+            displayName: Upload $(product) NuGet packages
+            condition: eq(variables['check.shouldPack'], 'true')
             inputs:
               targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
               artifact: $(product)-packages
               publishLocation: pipeline
 
-      # ============================================================
-      # Pack Tier 3 (Add-ons - depend on Core + Startup)
-      # ============================================================
-      - job: PackTier3
-        displayName: Pack Tier 3
-        dependsOn: PackTier1
-        pool:
-          vmImage: 'ubuntu-latest'
-        strategy:
-          matrix:
-            Prompt:
-              product: Umbraco.Ai.Prompt
-            Agent:
-              product: Umbraco.Ai.Agent
-          maxParallel: 2
-        steps:
-          - checkout: self
-            fetchDepth: 0
-
-          - task: UseDotNet@2
-            displayName: Setup .NET
+          # Upload npm packages if they were created
+          - task: Bash@3
+            displayName: Check for npm packages
+            condition: eq(variables['check.shouldPack'], 'true')
+            name: checkNpm
             inputs:
-              useGlobalJson: true
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download build outputs
-            inputs:
-              artifact: build-outputs
-              path: $(Build.SourcesDirectory)
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Tier 1 packages (local feed)
-            inputs:
-              artifact: Umbraco.Ai-packages
-              path: $(Build.SourcesDirectory)/artifacts/nupkg
-
-          - template: build/templates/pack-product.yml
-            parameters:
-              product: $(product)
+              targetType: inline
+              script: |
+                if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                  echo "npm packages found:"
+                  ls -la artifacts/npm/
+                else
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  echo "No npm packages to upload"
+                fi
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload $(product) packages
+            displayName: Upload $(product) npm packages
+            condition: |
+              and(
+                eq(variables['check.shouldPack'], 'true'),
+                eq(variables['checkNpm.hasNpmPackages'], 'true')
+              )
             inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-              artifact: $(product)-packages
-              publishLocation: pipeline
-
-      # ============================================================
-      # Pack Tier 4 (Agent Copilot - depends on Agent)
-      # ============================================================
-      - job: PackTier4
-        displayName: Pack Tier 4 (Agent Copilot)
-        dependsOn: PackTier3
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
-          - checkout: self
-            fetchDepth: 0
-
-          - task: UseDotNet@2
-            displayName: Setup .NET
-            inputs:
-              useGlobalJson: true
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download build outputs
-            inputs:
-              artifact: build-outputs
-              path: $(Build.SourcesDirectory)
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Tier 1 packages (local feed)
-            inputs:
-              artifact: Umbraco.Ai-packages
-              path: $(Build.SourcesDirectory)/artifacts/nupkg
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Tier 3 Agent packages (local feed)
-            inputs:
-              artifact: Umbraco.Ai.Agent-packages
-              path: $(Build.SourcesDirectory)/artifacts/nupkg
-
-          - template: build/templates/pack-product.yml
-            parameters:
-              product: Umbraco.Ai.Agent.Copilot
-
-          - task: PublishPipelineArtifact@1
-            displayName: Upload Umbraco.Ai.Agent.Copilot packages
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-              artifact: Umbraco.Ai.Agent.Copilot-packages
+              targetPath: $(Build.SourcesDirectory)/artifacts/npm
+              artifact: $(product)-npm-packages
               publishLocation: pipeline
 
       # ============================================================
       # Collect all packages into single artifact
+      # Downloads artifacts from all pack jobs using ${{ each }}
       # ============================================================
       - job: CollectPackages
         displayName: Collect All Packages
         dependsOn:
-          - PackTier1
-          - PackTier2
-          - PackTier3
-          - PackTier4
+          - DetectChanges
+          - PackCore
+          - PackLevel1
+        condition: |
+          and(
+            not(failed()),
+            not(canceled()),
+            eq(dependencies.DetectChanges.outputs['detect.AnyChanged'], 'true')
+          )
+        pool:
+          vmImage: 'ubuntu-latest'
+        variables:
+          # Map dependency outputs to job variables (dependencies context only works at job level)
+          CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
+          ${{ each product in parameters.level1Products }}:
+            ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          # Download Core NuGet packages (only if Core changed)
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai NuGet packages
+            condition: eq(variables.CoreChanged, 'true')
+            inputs:
+              artifact: 'Umbraco.Ai-packages'
+              targetPath: '$(Pipeline.Workspace)/nuget'
+
+          # Download Core npm packages (only if Core changed - Core always has npm packages)
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Umbraco.Ai npm packages
+            condition: eq(variables.CoreChanged, 'true')
+            inputs:
+              artifact: 'Umbraco.Ai-npm-packages'
+              targetPath: '$(Pipeline.Workspace)/npm'
+
+          # Download Level 1 NuGet packages (only if product changed)
+          - ${{ each product in parameters.level1Products }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download ${{ product.name }} NuGet packages
+              condition: eq(variables.${{ product.changeVar }}, 'true')
+              inputs:
+                artifact: '${{ product.name }}-packages'
+                targetPath: '$(Pipeline.Workspace)/nuget'
+
+          # Download Level 1 npm packages (only for products that have npm packages)
+          - ${{ each product in parameters.level1Products }}:
+            - ${{ if eq(product.hasNpm, true) }}:
+              - task: DownloadPipelineArtifact@2
+                displayName: Download ${{ product.name }} npm packages
+                condition: eq(variables.${{ product.changeVar }}, 'true')
+                inputs:
+                  artifact: '${{ product.name }}-npm-packages'
+                  targetPath: '$(Pipeline.Workspace)/npm'
+
+          - task: PowerShell@2
+            displayName: Build pack manifest (projects -> version)
+            name: buildManifest
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                $manifestDir = Join-Path $env:BUILD_SOURCESDIRECTORY "artifacts"
+                $manifestFile = Join-Path $manifestDir "pack-manifest.json"
+                New-Item -ItemType Directory -Force -Path $manifestDir | Out-Null
+
+                $entries = New-Object System.Collections.Generic.List[object]
+                $packages = @()
+                $nugetRoot = Join-Path $env:PIPELINE_WORKSPACE "nuget"
+
+                if (Test-Path $nugetRoot) {
+                  Add-Type -AssemblyName System.IO.Compression.FileSystem
+                  $files = Get-ChildItem -Path $nugetRoot -Recurse -Filter "*.nupkg" -File
+                  foreach ($f in $files) {
+                    $zip = [System.IO.Compression.ZipFile]::OpenRead($f.FullName)
+                    try {
+                      $nuspecEntry = $zip.Entries | Where-Object { $_.FullName -like "*.nuspec" } | Select-Object -First 1
+                      if ($null -ne $nuspecEntry) {
+                        $reader = New-Object System.IO.StreamReader($nuspecEntry.Open())
+                        try {
+                          $xml = [xml]$reader.ReadToEnd()
+                        } finally {
+                          $reader.Close()
+                        }
+                        $id = $xml.package.metadata.id
+                        $version = $xml.package.metadata.version
+                        if ($id -and $version) {
+                          $packages += [pscustomobject]@{ id = $id; version = $version }
+                        }
+                      }
+                    } finally {
+                      $zip.Dispose()
+                    }
+                  }
+                }
+
+                function Add-VersionByProduct {
+                  param([string]$Product)
+                  $match = $packages | Where-Object { $_.id -eq $Product } | Select-Object -First 1
+                  if (-not $match) {
+                    $match = $packages | Where-Object { $_.id -like "$Product.*" } | Select-Object -First 1
+                  }
+                  if ($match) {
+                    $entries.Add([pscustomobject]@{ name = $Product; version = $match.version })
+                  }
+                }
+
+                if ("$(CoreChanged)" -eq "true") {
+                  Add-VersionByProduct "Umbraco.Ai"
+                }
+
+                $level1 = $env:LEVEL1_JSON | ConvertFrom-Json
+                foreach ($p in $level1) {
+                  $changeVar = [string]$p.changeVar
+                  $changed = [Environment]::GetEnvironmentVariable($changeVar)
+                  if (-not $changed) {
+                    $changed = [Environment]::GetEnvironmentVariable($changeVar.ToUpper())
+                  }
+                  if ($changed -eq "true") {
+                    Add-VersionByProduct $p.name
+                  }
+                }
+
+                $json = $entries | ConvertTo-Json -Depth 3
+                $json | Out-File -FilePath $manifestFile -Encoding utf8
+                Write-Host "Pack manifest written to $manifestFile"
+                Write-Host $json
+            env:
+              LEVEL1_JSON: ${{ convertToJson(parameters.level1Products) }}
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload pack manifest
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/artifacts/pack-manifest.json
+              artifact: pack-manifest
+              publishLocation: pipeline
+
+          # Flatten and collect NuGet packages
+          - task: Bash@3
+            displayName: Collect NuGet packages
+            name: collectNuget
+            inputs:
+              targetType: inline
+              script: |
+                mkdir -p all-nuget-packages
+
+                # Find all .nupkg and .snupkg files and move to single directory (only if source dir exists)
+                if [ -d "$(Pipeline.Workspace)/nuget" ]; then
+                  find "$(Pipeline.Workspace)/nuget" -name "*.nupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
+                  find "$(Pipeline.Workspace)/nuget" -name "*.snupkg" -exec mv {} all-nuget-packages/ \; 2>/dev/null || true
+                fi
+
+                # Check if any packages were collected
+                if [ -d "all-nuget-packages" ] && [ "$(ls -A all-nuget-packages 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNugetPackages;isOutput=true]true"
+                  echo "Collected NuGet packages:"
+                  ls -la all-nuget-packages/
+                else
+                  echo "##vso[task.setvariable variable=hasNugetPackages;isOutput=true]false"
+                  echo "No NuGet packages collected"
+                fi
+
+          # Flatten and collect npm packages
+          - task: Bash@3
+            displayName: Collect npm packages
+            name: collectNpm
+            inputs:
+              targetType: inline
+              script: |
+                mkdir -p all-npm-packages
+
+                # Find all .tgz files and move to single directory (only if source dir exists)
+                if [ -d "$(Pipeline.Workspace)/npm" ]; then
+                  find "$(Pipeline.Workspace)/npm" -name "*.tgz" -exec mv {} all-npm-packages/ \; 2>/dev/null || true
+                fi
+
+                # Check if any packages were collected
+                if [ -d "all-npm-packages" ] && [ "$(ls -A all-npm-packages 2>/dev/null)" ]; then
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                  echo "Collected npm packages:"
+                  ls -la all-npm-packages/
+                else
+                  echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                  echo "No npm packages collected"
+                fi
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload combined NuGet artifact
+            condition: eq(variables['collectNuget.hasNugetPackages'], 'true')
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/all-nuget-packages
+              artifact: all-nuget-packages
+              publishLocation: pipeline
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload combined npm artifact
+            condition: eq(variables['collectNpm.hasNpmPackages'], 'true')
+            inputs:
+              targetPath: $(Build.SourcesDirectory)/all-npm-packages
+              artifact: all-npm-packages
+              publishLocation: pipeline
+
+  # ============================================================
+  # Finalize - set build number once after all NBGV steps
+  # ============================================================
+  - stage: Finalize
+    displayName: Finalize Build
+    dependsOn:
+      - Build
+      - Pack
+    condition: succeeded()
+    jobs:
+      - job: SetBuildNumber
+        displayName: Set build number
         pool:
           vmImage: 'ubuntu-latest'
         steps:
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai packages
+          - task: Bash@3
+            displayName: Set build number (branch + date)
             inputs:
-              artifact: Umbraco.Ai-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.OpenAi packages
-            inputs:
-              artifact: Umbraco.Ai.OpenAi-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Anthropic packages
-            inputs:
-              artifact: Umbraco.Ai.Anthropic-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Amazon packages
-            inputs:
-              artifact: Umbraco.Ai.Amazon-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Google packages
-            inputs:
-              artifact: Umbraco.Ai.Google-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.MicrosoftFoundry packages
-            inputs:
-              artifact: Umbraco.Ai.MicrosoftFoundry-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Prompt packages
-            inputs:
-              artifact: Umbraco.Ai.Prompt-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Agent packages
-            inputs:
-              artifact: Umbraco.Ai.Agent-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai.Agent.Copilot packages
-            inputs:
-              artifact: Umbraco.Ai.Agent.Copilot-packages
-              path: $(Build.SourcesDirectory)/all-packages
-
-          - task: PublishPipelineArtifact@1
-            displayName: Upload combined artifact
-            inputs:
-              targetPath: $(Build.SourcesDirectory)/all-packages
-              artifact: all-nuget-packages
-              publishLocation: pipeline
+              targetType: inline
+              script: |
+                BUILD_DATE=$(date -u +%Y%m%d)
+                echo "##vso[build.updatebuildnumber]$(Build.SourceBranchName)-${BUILD_DATE}-$(Build.BuildID)"

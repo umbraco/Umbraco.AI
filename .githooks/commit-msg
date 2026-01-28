@@ -1,0 +1,5 @@
+#!/bin/sh
+# Git commit-msg hook to validate commit messages using commitlint
+# This hook runs commitlint to check if commit messages follow conventional commit format
+
+npx --no-install commitlint --edit $1

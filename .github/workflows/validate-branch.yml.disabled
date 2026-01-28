@@ -1,0 +1,62 @@
+name: 🌿 Validate Branch Name
+
+on:
+  push:
+    branches:
+      - '**'  # Run on all branch pushes
+  pull_request:
+    branches:
+      - '**'  # Run on all PR target branches
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    name: Validate Branch Naming Convention
+
+    steps:
+      - name: Check branch name
+        run: |
+          # Get the branch name
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+          else
+            BRANCH_NAME="${{ github.ref_name }}"
+          fi
+
+          echo "Validating branch: $BRANCH_NAME"
+
+          # Allow main and dev branches
+          if [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "dev" ]; then
+            echo "✓ Valid branch: $BRANCH_NAME"
+            exit 0
+          fi
+
+          # Validate branch name pattern
+          VALID=false
+          if echo "$BRANCH_NAME" | grep -qE "^(feature|release|hotfix)/.+"; then
+            VALID=true
+          fi
+
+          # Report result
+          if [ "$VALID" == "true" ]; then
+            echo "✓ Valid branch name: $BRANCH_NAME"
+            exit 0
+          else
+            echo "========================================"
+            echo "ERROR: Invalid branch name: $BRANCH_NAME"
+            echo "========================================"
+            echo ""
+            echo "Branch names must follow one of these patterns:"
+            echo "  main"
+            echo "  dev"
+            echo "  feature/<anything>"
+            echo "  release/<anything>"
+            echo "  hotfix/<anything>"
+            echo ""
+            echo "Examples:"
+            echo "  feature/add-caching"
+            echo "  release/2026.01"
+            echo "  hotfix/2026.01.1"
+            echo "========================================"
+            exit 1
+          fi

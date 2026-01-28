@@ -12,6 +12,6 @@ Google provider for Umbraco.Ai - integrate Google's Gemini models with extended 
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 17.0.0+
+- Umbraco.Ai 1.0.0+
 - .NET 10.0
 - Google AI API key

@@ -4,6 +4,13 @@
 
 set -e
 
+# Determine repository root (parent of scripts folder)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &>/dev/null && pwd )"
+REPO_ROOT="$( cd "$SCRIPT_DIR/.." &>/dev/null && pwd )"
+
+# Change to repository root to ensure consistent behavior
+cd "$REPO_ROOT" || exit 1
+
 # Parse arguments
 SKIP_TEMPLATE_INSTALL=false
 FORCE=false
@@ -38,6 +45,7 @@ done
 echo "========================================="
 echo "Umbraco.Ai Unified Demo Site Setup"
 echo "========================================="
+echo "Working directory: $REPO_ROOT"
 echo ""
 
 # Check if demo already exists

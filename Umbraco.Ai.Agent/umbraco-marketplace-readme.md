@@ -16,5 +16,5 @@ AI agent runtime for Umbraco.Ai - build conversational agents with real-time str
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 17.0.0+
+- Umbraco.Ai 1.0.0+
 - .NET 10.0

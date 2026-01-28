@@ -130,6 +130,10 @@ Add-ProductProjects -ProductFolder "Umbraco.Ai.Prompt" -SolutionFolder "Prompt"
 Write-Host "Adding Umbraco.Ai.Agent projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.Ai.Agent" -SolutionFolder "Agent"
 
+# Step 8.1: Add Agent Copilot projects
+Write-Host "Adding Umbraco.Ai.Agent.Copilot projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.Ai.Agent.Copilot" -SolutionFolder "AgentCopilot"
+
 # Step 9: Add Anthropic provider projects
 Write-Host "Adding Umbraco.Ai.Anthropic projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.Ai.Anthropic" -SolutionFolder "Anthropic"
@@ -193,6 +197,11 @@ if (Test-Path "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt\Umbraco.Ai.Prompt.csproj"
 if (Test-Path "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent\Umbraco.Ai.Agent.csproj") {
     dotnet add $demoProject reference "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent\Umbraco.Ai.Agent.csproj"
     dotnet add $demoProject reference "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Persistence.Sqlite\Umbraco.Ai.Agent.Persistence.Sqlite.csproj"
+}
+
+# Agent Copilot add-on (frontend-only static assets)
+if (Test-Path "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot.Web.StaticAssets\Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj") {
+    dotnet add $demoProject reference "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot.Web.StaticAssets\Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj"
 }
 
 Write-Host ""

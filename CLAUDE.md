@@ -11,6 +11,7 @@ This is a monorepo containing Umbraco.Ai and its add-on packages:
 | **Umbraco.Ai** | Core AI integration layer for Umbraco CMS | `Umbraco.Ai/` |
 | **Umbraco.Ai.Prompt** | Prompt template management add-on | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.Agent** | AI agent management add-on | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for AI agents | `Umbraco.Ai.Agent.Copilot/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider plugin | `Umbraco.Ai.Anthropic/` |
 | **Umbraco.Ai.Amazon** | Amazon Bedrock provider plugin | `Umbraco.Ai.Amazon/` |
@@ -72,6 +73,7 @@ dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
 dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
 dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
 dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
+dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.slnx
 
 # Run tests for a product
 dotnet test Umbraco.Ai/Umbraco.Ai.sln
@@ -85,7 +87,7 @@ This monorepo uses **npm workspaces** for efficient dependency management. Add-o
 # Install all workspace dependencies (run from root)
 npm install
 
-# Build all frontends (sequential: core -> prompt -> agent)
+# Build all frontends (sequential: core -> prompt -> agent -> copilot)
 npm run build
 
 # Watch all frontends in parallel
@@ -98,9 +100,11 @@ npm run generate-client
 npm run build:core
 npm run build:prompt
 npm run build:agent
+npm run build:copilot
 npm run watch:core
 npm run watch:prompt
 npm run watch:agent
+npm run watch:copilot
 ```
 
 **Workspace Benefits:**
@@ -121,7 +125,8 @@ Umbraco.Ai (Core)
     ├── Umbraco.Ai.Google (Provider - depends on Core)
     ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
-    └── Umbraco.Ai.Agent (Add-on - depends on Core)
+    ├── Umbraco.Ai.Agent (Add-on - depends on Core)
+    └── Umbraco.Ai.Agent.Copilot (Add-on - depends on Agent)
 ```
 
 ### Standard Project Structure

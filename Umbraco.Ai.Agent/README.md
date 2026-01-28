@@ -8,9 +8,10 @@ An agent management add-on for Umbraco.Ai that provides storage, execution, and 
 - **Agent Execution** - Run agents with real-time SSE streaming via the AG-UI protocol
 - **Profile Integration** - Link agents to Umbraco.Ai profiles for model configuration
 - **Context Injection** - Attach context sources to agents for RAG scenarios
-- **Frontend Tools** - Support for frontend tool invocation in AG-UI clients
-- **Backoffice UI** - Full management interface integrated into Umbraco
+- **Backoffice UI** - Agent management interface integrated into Umbraco
 - **Management API** - RESTful API for agent CRUD operations and execution
+
+> **Note:** For the Copilot chat UI (sidebar, tool execution, HITL approval), install [`Umbraco.Ai.Agent.Copilot`](../Umbraco.Ai.Agent.Copilot/README.md) alongside this package.
 
 ## Monorepo Context
 
@@ -19,7 +20,12 @@ This package is part of the [Umbraco.Ai monorepo](../README.md). For local devel
 ## Installation
 
 ```bash
+# Agent only (management + APIs)
 dotnet add package Umbraco.Ai.Agent
+
+# Agent + Copilot (includes chat UI)
+dotnet add package Umbraco.Ai.Agent
+dotnet add package Umbraco.Ai.Agent.Copilot
 ```
 
 This meta-package includes all required components. For more control, install individual packages:

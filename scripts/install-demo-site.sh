@@ -155,6 +155,10 @@ add_product_projects "Umbraco.Ai.Prompt" "Prompt"
 echo "Adding Umbraco.Ai.Agent projects..."
 add_product_projects "Umbraco.Ai.Agent" "Agent"
 
+# Step 8.1: Add Agent Copilot projects
+echo "Adding Umbraco.Ai.Agent.Copilot projects..."
+add_product_projects "Umbraco.Ai.Agent.Copilot" "AgentCopilot"
+
 # Step 9: Add Anthropic provider projects
 echo "Adding Umbraco.Ai.Anthropic projects..."
 add_product_projects "Umbraco.Ai.Anthropic" "Anthropic"
@@ -218,6 +222,11 @@ fi
 if [ -f "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent/Umbraco.Ai.Agent.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent/Umbraco.Ai.Agent.csproj"
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Persistence.Sqlite/Umbraco.Ai.Agent.Persistence.Sqlite.csproj"
+fi
+
+# Agent Copilot add-on (frontend-only static assets)
+if [ -f "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot.Web.StaticAssets/Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot.Web.StaticAssets/Umbraco.Ai.Agent.Copilot.Web.StaticAssets.csproj"
 fi
 
 echo ""

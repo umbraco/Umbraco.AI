@@ -71,6 +71,29 @@ Umbraco.Ai/                    # Monorepo root
 | `release/<anything>` | Release preparation | `release/2026.01` |
 | `hotfix/<anything>` | Emergency fixes | `hotfix/2026.01.1` |
 
+### Recommended Naming Conventions
+
+While the pattern allows `<anything>` after the prefix, we recommend these conventions for consistency:
+
+**Release branches:** `release/YYYY.MM`
+- `YYYY.MM` = Year and month of the release
+- Example: `release/2026.01` for a January 2026 release
+- Example: `release/2026.12` for a December 2026 release
+
+**Hotfix branches:** `hotfix/YYYY.MM.N`
+- `YYYY.MM` = Year and month
+- `.N` = Sequential number (1st, 2nd, 3rd hotfix in that period)
+- Example: `hotfix/2026.01.1` for the first hotfix in January 2026
+- Example: `hotfix/2026.01.2` for the second hotfix in January 2026
+
+**Benefits of this convention:**
+- Calendar-based organization makes it easy to find branches chronologically
+- Clear distinction between regular releases (monthly cadence) and hotfixes (emergency patches)
+- Sequential hotfix numbering prevents branch name conflicts
+- Independent from product version numbers (which follow semantic versioning)
+
+**Note:** This is a recommendation, not a requirement. The validation only enforces the prefix pattern (`release/` or `hotfix/`).
+
 ### Examples
 
 **Correct:**
@@ -78,8 +101,10 @@ Umbraco.Ai/                    # Monorepo root
 feature/add-streaming-support
 feature/improve-context-handling
 feature/add-versioning
-release/2026.01
-hotfix/2026.01.1
+release/2026.01              # Recommended: calendar-based
+release/v1.1.0               # Valid: version-based
+hotfix/2026.01.1             # Recommended: calendar-based with sequence
+hotfix/critical-security-fix # Valid: descriptive name
 ```
 
 **Incorrect:**

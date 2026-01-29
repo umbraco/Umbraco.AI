@@ -51,14 +51,23 @@ steps:
       set -e
 
       PRODUCT="${{ parameters.product }}"
+
+      # Try standard path first (Web.StaticAssets), then fall back to direct project path
+      # (Copilot uses direct path as it's frontend-only with no separate Web.StaticAssets project)
       CLIENT_DIR="$PRODUCT/src/$PRODUCT.Web.StaticAssets/Client"
+      if [ ! -d "$CLIENT_DIR" ]; then
+        CLIENT_DIR="$PRODUCT/src/$PRODUCT/Client"
+      fi
+
       PACKAGE_JSON="$CLIENT_DIR/package.json"
 
       # Check if frontend client folder exists
       if [ ! -d "$CLIENT_DIR" ]; then
-        echo "No frontend client folder found at $CLIENT_DIR - skipping npm pack"
+        echo "No frontend client folder found - skipping npm pack"
         exit 0
       fi
+
+      echo "Found frontend client folder at $CLIENT_DIR"
 
       # Check if package.json exists
       if [ ! -f "$PACKAGE_JSON" ]; then

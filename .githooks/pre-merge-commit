@@ -16,11 +16,12 @@ if git ls-tree HEAD release-manifest.json | grep -q .; then
         # File is not in the index (was deleted in merge)
         echo "🔒 Restoring release-manifest.json on $current_branch branch..."
 
-        # Restore the file from HEAD
-        git restore --staged --worktree --source=HEAD release-manifest.json
+        # Restore the file from HEAD and add it to the merge commit
+        git checkout HEAD -- release-manifest.json
+        git add release-manifest.json
 
         if [ $? -eq 0 ]; then
-            echo "✓ release-manifest.json restored successfully"
+            echo "✓ release-manifest.json restored and staged for merge commit"
         else
             echo "⚠️  Failed to restore release-manifest.json"
             exit 1

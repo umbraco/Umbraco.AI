@@ -18,11 +18,12 @@ if ($fileInHead -and -not $fileInIndex) {
     # File exists in HEAD but not in index (was deleted in merge)
     Write-Host "🔒 Restoring release-manifest.json on $currentBranch branch..." -ForegroundColor Cyan
 
-    # Restore the file from HEAD
-    git restore --staged --worktree --source=HEAD release-manifest.json
+    # Restore the file from HEAD and add it to the merge commit
+    git checkout HEAD -- release-manifest.json
+    git add release-manifest.json
 
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✓ release-manifest.json restored successfully" -ForegroundColor Green
+        Write-Host "✓ release-manifest.json restored and staged for merge commit" -ForegroundColor Green
     } else {
         Write-Host "⚠️  Failed to restore release-manifest.json" -ForegroundColor Red
         exit 1

@@ -179,6 +179,8 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | `scripts/generate-changelog.ps1` | Generate changelogs for release (Windows) |
 | `scripts/generate-changelog.sh` | Generate changelogs for release (Linux/Mac) |
 | `scripts/generate-changelog.js` | Node.js changelog generator (main implementation) |
+| `scripts/generate-release-manifest.ps1` | Interactive release manifest generator (Windows) |
+| `scripts/generate-release-manifest.sh` | Interactive release manifest generator (Linux/Mac) |
 | `Umbraco.Ai.local.sln` | Unified solution (generated) |
 | `package.json` | Root npm scripts for frontend builds and changelog generation |
 | `commitlint.config.js` | Commit message validation with dynamic scope loading |
@@ -223,6 +225,23 @@ On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
   "Umbraco.Ai.OpenAi"
 ]
 ```
+
+**Generating the manifest:**
+
+Use the interactive script to select which products to include:
+
+```bash
+# Windows
+.\scripts\generate-release-manifest.ps1
+
+# Linux/Mac
+./scripts/generate-release-manifest.sh
+```
+
+The script will:
+1. Scan for all `Umbraco.Ai*` product folders
+2. Present an interactive multiselect interface
+3. Generate `release-manifest.json` at the repository root
 
 The manifest is treated as the authoritative list of packages to pack and release. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
 

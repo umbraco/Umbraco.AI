@@ -1,0 +1,20 @@
+#!/bin/sh
+# Post-merge hook - Clean up release-manifest.json on long-term branches
+
+# Get current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Only run on main, dev, or support/* branches
+if [ "$current_branch" != "main" ] && [ "$current_branch" != "dev" ] && ! echo "$current_branch" | grep -q "^support/"; then
+    exit 0
+fi
+
+# Check if release-manifest.json exists
+if [ -f "release-manifest.json" ]; then
+    echo "🧹 Cleaning up release-manifest.json after merge to $current_branch..."
+    git rm release-manifest.json
+    git commit -m "chore: remove release-manifest.json after merge"
+    echo "✓ release-manifest.json removed and committed"
+fi
+
+exit 0

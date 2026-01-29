@@ -67,6 +67,7 @@ Umbraco.Ai/                    # Monorepo root
 |---------|-------------|---------|
 | `main` | Main development branch | `main` |
 | `dev` | Integration branch | `dev` |
+| `support/<anything>` | Long-term support branches | `support/1.x`, `support/2.x` |
 | `feature/<anything>` | New feature development | `feature/add-embeddings` |
 | `release/<anything>` | Release preparation | `release/2026.01` |
 | `hotfix/<anything>` | Emergency fixes | `hotfix/2026.01.1` |
@@ -118,7 +119,11 @@ release-2026.01              # Wrong delimiter
 Branch naming is enforced at two levels:
 
 1. **Git Hooks** (`.githooks/pre-push`): Local validation before push
-2. **GitHub Actions** (`.github/workflows/validate-branch.yml`): CI/CD validation (cannot be bypassed)
+2. **Azure DevOps CI/CD**: Validation in pipeline (cannot be bypassed)
+
+### Automatic Cleanup
+
+The repository includes a `post-merge` git hook that automatically removes `release-manifest.json` after merging to `main`, `dev`, or `support/*` branches. This ensures the manifest file (which is only needed on release/hotfix branches) doesn't clutter the long-term branches.
 
 To bypass git hooks temporarily (not recommended):
 ```bash
@@ -319,7 +324,17 @@ git checkout -b release/2026.01
 
 #### 2. Define Release Manifest
 
-Create `release-manifest.json` at repo root:
+Use the interactive script to generate `release-manifest.json`:
+
+```bash
+# Windows
+.\scripts\generate-release-manifest.ps1
+
+# Linux/Mac
+./scripts/generate-release-manifest.sh
+```
+
+The script will scan for all products and present an interactive multiselect interface. Alternatively, create the file manually:
 
 ```json
 [
@@ -424,11 +439,19 @@ Once testing passes, trigger the production release from Azure DevOps. The relea
 
 ```bash
 # Create PR: release/2026.01 → main
-# After approval and merge, delete release branch
+# After approval and merge, the post-merge hook automatically removes release-manifest.json
 git checkout main
 git pull origin main
+
+# Clean up release branch
 git branch -d release/2026.01
 git push origin --delete release/2026.01
+```
+
+**Automatic Cleanup:** When you merge to `main`, `dev`, or `support/*`, the `post-merge` git hook automatically removes `release-manifest.json` and commits the cleanup. You'll see:
+```
+🧹 Cleaning up release-manifest.json after merge to main...
+✓ release-manifest.json removed and committed
 ```
 
 **Note on Git Tags:** The release pipeline automatically creates git tags during deployment:
@@ -449,8 +472,9 @@ git tag --list | grep "Umbraco.Ai@"
 # Branch from the specific product tag
 git checkout -b hotfix/2026.01.1 Umbraco.Ai@1.1.0
 
-# If multiple products need hotfixes, branch from main instead
+# If multiple products need hotfixes, branch from main or support branch
 # git checkout -b hotfix/2026.01.1 main
+# git checkout -b hotfix/2026.01.1 support/1.x
 
 # 2. Fix the issue
 # Edit: Umbraco.Ai/src/...
@@ -467,6 +491,12 @@ npm run changelog -- --product=Umbraco.Ai --version=1.1.1
 # On hotfix/* branches, the manifest is optional:
 #   - If present: Only listed products are packed (enforced)
 #   - If absent: Change detection is used (automatic)
+
+# Use interactive script (recommended):
+.\scripts\generate-release-manifest.ps1   # Windows
+./scripts/generate-release-manifest.sh    # Linux/Mac
+
+# Or create manually:
 echo '["Umbraco.Ai"]' > release-manifest.json
 
 # 6. Commit and push
@@ -489,16 +519,29 @@ dotnet add package Umbraco.Ai.Core --version 1.1.1-*
 # - Release pipeline deploys to NuGet.org and npm registry
 # - Automatically creates production tags: Umbraco.Ai@1.1.1
 
-# 11. Merge hotfix to main
-# Create PR: hotfix/2026.01.1 → main
-# After approval and merge, delete hotfix branch
+# 11. Merge hotfix to main (or support branch)
+# Create PR: hotfix/2026.01.1 → main (or support/1.x)
+# After approval and merge, post-merge hook automatically removes release-manifest.json
+# Then delete hotfix branch
 ```
+
+**Note:** If the hotfix targets a support branch (e.g., `support/1.x`), the `post-merge` hook will also clean up `release-manifest.json` automatically.
 
 ### Releasing Multiple Products
 
 To release multiple products in a single release:
 
-1. **Create `release-manifest.json`** at repo root with all products to release:
+1. **Create `release-manifest.json`** using the interactive script:
+
+```bash
+# Windows
+.\scripts\generate-release-manifest.ps1
+
+# Linux/Mac
+./scripts/generate-release-manifest.sh
+```
+
+Or manually create the file at repo root:
 
 ```json
 [
@@ -703,7 +746,12 @@ When creating a release, follow these steps:
    git checkout -b release/2026.01
    ```
 
-2. **Create release manifest** (`release-manifest.json`):
+2. **Create release manifest** using the interactive script:
+   ```bash
+   .\scripts\generate-release-manifest.ps1   # Windows
+   ./scripts/generate-release-manifest.sh    # Linux/Mac
+   ```
+   Or manually create `release-manifest.json`:
    ```json
    ["Umbraco.Ai", "Umbraco.Ai.OpenAi"]
    ```
@@ -792,6 +840,11 @@ The repository uses `commitlint` to validate commit messages. Invalid commits wi
 .\scripts\setup-git-hooks.ps1    # Windows
 ./scripts/setup-git-hooks.sh     # Linux/Mac
 ```
+
+This enables:
+- **commit-msg hook**: Validates commit messages using commitlint
+- **pre-push hook**: Validates branch naming conventions
+- **post-merge hook**: Automatically cleans up `release-manifest.json` after merging to main, dev, or support branches
 
 ### Troubleshooting Changelog Validation
 

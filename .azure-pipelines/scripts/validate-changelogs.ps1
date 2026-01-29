@@ -57,9 +57,10 @@ function Get-VersionFromChangelog {
         return $null
     }
 
-    # Look for the first version header: ## [X.Y.Z] - YYYY-MM-DD or ## [X.Y.Z] - TBC
+    # Look for the first version header: ## [X.Y.Z] - YYYY-MM-DD or ## [X.Y.Z-prerelease] - TBC
+    # Supports prerelease tags like -alpha1, -beta2, -rc3, etc.
     $content = Get-Content $Path -Raw
-    if ($content -match '## \[(\d+\.\d+\.\d+)\]') {
+    if ($content -match '## \[(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?)\]') {
         return $Matches[1]
     }
 
@@ -143,7 +144,7 @@ foreach ($product in $manifest) {
         Write-ColorOutput "  ⚠️  Could not read version from version.json" $Yellow
         $warnings += "Could not validate version for $product"
     } elseif (-not $versionChangelog) {
-        Write-ColorOutput "  ❌ Could not find version in CHANGELOG.md (expected format: ## [X.Y.Z] - YYYY-MM-DD)" $Red
+        Write-ColorOutput "  ❌ Could not find version in CHANGELOG.md (expected format: ## [X.Y.Z] or ## [X.Y.Z-prerelease] - YYYY-MM-DD)" $Red
         $hasErrors = $true
     } elseif ($versionJson -ne $versionChangelog) {
         Write-ColorOutput "  ❌ Version mismatch!" $Red

@@ -21,7 +21,7 @@ Added a new parameter to `azure-pipelines.yml` for Level 2 products:
   default:
     # Copilot (depends on Agent - exports npm types)
     - name: Umbraco.Ai.Agent.Copilot
-      changeVar: CopilotChanged
+      changeVar: AgentCopilotChanged
       hasNpm: true
 ```
 
@@ -110,9 +110,11 @@ To add additional Level 2 products:
 1. **Add to `level2Products` parameter** in `azure-pipelines.yml`:
    ```yaml
    - name: Umbraco.Ai.NewProduct
-     changeVar: NewproductChanged
+     changeVar: NewproductChanged  # Must match variable from detect-changes.ps1
      hasNpm: false  # or true if it exports npm types
    ```
+
+   **Important**: The `changeVar` must match the auto-generated variable name from `detect-changes.ps1`. For "Umbraco.Ai.Agent.NewProduct", the script generates "AgentNewproductChanged".
 
 2. **No other pipeline changes needed** - the matrix strategy handles any number of Level 2 products
 
@@ -136,7 +138,7 @@ To test the Level 2 implementation:
 1. Make a change to `Umbraco.Ai.Agent.Copilot/` folder
 2. Commit and push to `dev` branch
 3. Verify in Azure DevOps:
-   - DetectChanges reports `Level2Changed=true`, `CopilotChanged=true`
+   - DetectChanges reports `Level2Changed=true`, `AgentCopilotChanged=true`
    - PackLevel2 job runs for Copilot
    - CollectPackages includes Copilot packages in final artifacts
 
@@ -144,4 +146,4 @@ To test the Level 2 implementation:
 
 - The pipeline supports arbitrary dependency levels (Level 3, 4, etc.) through `detect-changes.ps1`
 - Level 2+ products must specify `hasNpm: true` if they export TypeScript types for npm
-- The `changeVar` naming convention should match the product key (e.g., "copilot" → "CopilotChanged")
+- The `changeVar` naming convention must match the auto-generated variable from `detect-changes.ps1` (e.g., "Umbraco.Ai.Agent.Copilot" → "agent.copilot" → "AgentCopilotChanged")

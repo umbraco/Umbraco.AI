@@ -39,7 +39,7 @@ parameters:
     default:
       # Copilot (depends on Agent - exports npm types)
       - name: Umbraco.Ai.Agent.Copilot
-        changeVar: CopilotChanged
+        changeVar: AgentCopilotChanged
         hasNpm: true
 
 trigger:

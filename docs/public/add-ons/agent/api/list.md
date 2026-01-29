@@ -21,6 +21,7 @@ GET /umbraco/ai/management/api/v1/agent
 | `take` | int | 100 | Number of items to return |
 | `filter` | string | null | Filter by name (contains) |
 | `profileId` | guid | null | Filter by associated profile |
+| `scopeId` | string | null | Filter by scope (e.g., "copilot") |
 
 ## Response
 
@@ -36,6 +37,7 @@ GET /umbraco/ai/management/api/v1/agent
       "name": "Content Assistant",
       "description": "Helps users write and improve content",
       "profileId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+      "scopeIds": ["copilot"],
       "isActive": true,
       "version": 2
     }
@@ -51,5 +53,33 @@ GET /umbraco/ai/management/api/v1/agent
 ```bash
 curl -X GET "https://your-site.com/umbraco/ai/management/api/v1/agent?skip=0&take=10" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+{% endcode %}
+
+### Filter by Scope
+
+{% code title="cURL" %}
+```bash
+curl -X GET "https://your-site.com/umbraco/ai/management/api/v1/agent?scopeId=copilot" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+{% endcode %}
+
+## List Scopes
+
+Returns all registered agent scopes.
+
+```http
+GET /umbraco/ai/management/api/v1/agent/scopes
+```
+
+{% code title="200 OK" %}
+```json
+[
+  {
+    "id": "copilot",
+    "icon": "icon-chat"
+  }
+]
 ```
 {% endcode %}

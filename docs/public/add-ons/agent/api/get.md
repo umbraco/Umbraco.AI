@@ -32,6 +32,7 @@ GET /umbraco/ai/management/api/v1/agent/{idOrAlias}
   "description": "Helps users write and improve content",
   "profileId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
   "contextIds": ["e401f2ff-7d65-5c12-a1f7-e812859g1962"],
+  "scopeIds": ["copilot"],
   "instructions": "You are a helpful content assistant...",
   "isActive": true,
   "version": 2,

@@ -29,6 +29,7 @@ dotnet add package Umbraco.Ai.Agent
 - **AG-UI Protocol** - Stream responses using the AG-UI event protocol
 - **Profile Association** - Link agents to specific AI profiles
 - **Context Injection** - Include AI Contexts for brand voice
+- **Scopes** - Categorize agents for specific purposes (e.g., copilot)
 - **Version History** - Track changes with full rollback support
 - **Backoffice Management** - Full UI for managing agents
 - **Management API** - RESTful API for agent operations
@@ -122,6 +123,7 @@ The Agent Runtime uses the AG-UI (Agent UI) protocol for streaming responses. Th
 | [Concepts](concepts.md) | Agent architecture and AG-UI protocol |
 | [Getting Started](getting-started.md) | Step-by-step setup guide |
 | [Instructions](instructions.md) | Agent instruction configuration |
+| [Scopes](scopes.md) | Categorizing agents with scopes |
 | [Streaming](streaming.md) | SSE streaming and event handling |
 | [Frontend Client](frontend-client.md) | UaiAgentClient for custom agent UIs |
 | [API Reference](api/README.md) | Management API endpoints |

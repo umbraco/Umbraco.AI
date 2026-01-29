@@ -23,6 +23,7 @@ POST /umbraco/ai/management/api/v1/agent
   "description": "Helps users write and improve content",
   "profileId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
   "contextIds": ["e401f2ff-7d65-5c12-a1f7-e812859g1962"],
+  "scopeIds": ["copilot"],
   "instructions": "You are a helpful content assistant.\n\nYour role is to help users write and improve content.",
   "isActive": true
 }
@@ -38,6 +39,7 @@ POST /umbraco/ai/management/api/v1/agent
 | `description` | string | No | Optional description |
 | `profileId` | guid | No | Associated AI profile (null uses default) |
 | `contextIds` | guid[] | No | AI Contexts to inject |
+| `scopeIds` | string[] | No | Scope IDs for categorization (e.g., `["copilot"]`) |
 | `instructions` | string | No | Agent system prompt |
 | `isActive` | bool | No | Whether agent is available (default: true) |
 

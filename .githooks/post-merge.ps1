@@ -16,7 +16,7 @@ if (Test-Path $manifestFile) {
     Write-Host "🧹 Cleaning up release-manifest.json after merge to $currentBranch..." -ForegroundColor Cyan
     git rm release-manifest.json
     if ($LASTEXITCODE -eq 0) {
-        git commit -m "chore: remove release-manifest.json after merge"
+        git commit -m "chore(ci): Remove release-manifest.json after merge"
         if ($LASTEXITCODE -eq 0) {
             Write-Host "✓ release-manifest.json removed and committed" -ForegroundColor Green
         }

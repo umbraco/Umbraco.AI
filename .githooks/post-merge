@@ -13,7 +13,7 @@ fi
 if [ -f "release-manifest.json" ]; then
     echo "🧹 Cleaning up release-manifest.json after merge to $current_branch..."
     git rm release-manifest.json
-    git commit -m "chore: remove release-manifest.json after merge"
+    git commit -m "chore(ci): Remove release-manifest.json after merge"
     echo "✓ release-manifest.json removed and committed"
 fi
 

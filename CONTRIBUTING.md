@@ -33,7 +33,7 @@ cd Umbraco.Ai
 .\scripts\install-demo-site.ps1  # Windows
 ./scripts/install-demo-site.sh   # Linux/Mac
 
-# Configure git hooks (enforces branch naming)
+# Configure git hooks (enforces branch naming and commit message syntax)
 .\scripts\setup-git-hooks.ps1  # Windows
 ./scripts/setup-git-hooks.sh   # Linux/Mac
 

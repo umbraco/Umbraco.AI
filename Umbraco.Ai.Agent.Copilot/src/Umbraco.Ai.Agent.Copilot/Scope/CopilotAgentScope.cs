@@ -8,5 +8,5 @@ public class CopilotAgentScope : AiAgentScopeBase
     /// <summary>
     /// The identifier for the Copilot agent scope.
     /// </summary>
-    public const string ScopeId = "copilot";
+    public const string ScopeId = "copilot"; 
 }

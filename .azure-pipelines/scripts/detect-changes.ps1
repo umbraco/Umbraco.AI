@@ -329,10 +329,24 @@ function Get-ChangedProducts {
         }
     }
     elseif ($SourceBranch -match '^refs/heads/(main|dev)$') {
-        # For main/dev pushes: compare with previous commit (preserve current behavior)
-        Write-Host "  Main/dev branch detected, comparing with previous commit" -ForegroundColor Cyan
-        $comparisonBase = "HEAD~1"
-        $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
+        # For main/dev pushes: compare with remote tracking branch to capture all commits in push
+        $branchName = if ($SourceBranch -match '/main$') { 'main' } else { 'dev' }
+        Write-Host "  Main/dev branch detected, comparing with origin/$branchName" -ForegroundColor Cyan
+
+        # Try to use origin branch (captures all commits in multi-commit push)
+        $remoteBranch = "origin/$branchName"
+        $remoteExists = git rev-parse --verify "$remoteBranch" 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $comparisonBase = $remoteBranch
+            $changedFiles = git diff --name-only $remoteBranch HEAD 2>&1
+            Write-Host "  Comparing against remote: $remoteBranch" -ForegroundColor Cyan
+        }
+        else {
+            # Fallback to HEAD~1 if remote branch doesn't exist (e.g., first push)
+            Write-Host "  Remote branch not found, falling back to HEAD~1" -ForegroundColor Yellow
+            $comparisonBase = "HEAD~1"
+            $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
+        }
     }
     else {
         # For feature/release/hotfix branches: compare with merge-base against appropriate base

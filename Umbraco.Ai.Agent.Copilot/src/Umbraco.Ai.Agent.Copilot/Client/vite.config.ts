@@ -7,7 +7,7 @@ export default defineConfig({
       entry: {
         "umbraco-ai-agent-copilot-manifests": resolve(__dirname, "src/manifests.ts"),
         "umbraco-ai-agent-copilot-app": resolve(__dirname, "src/app.ts"),
-      },
+      }, 
       formats: ["es"],
     },
     outDir: "../wwwroot",

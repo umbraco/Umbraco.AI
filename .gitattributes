@@ -1,0 +1,2 @@
+# Preserve release-manifest.json on release/hotfix branches during merges
+release-manifest.json merge=preserve-on-release

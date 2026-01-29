@@ -64,6 +64,7 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
         string? filter = null,
         Guid? profileId = null,
         string? scopeId = null,
+        bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiAgentDbContext> scope = _scopeProvider.CreateScope();
@@ -91,6 +92,11 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
                 // Using LIKE to search within JSON array (works for both SQL Server and SQLite)
                 var scopePattern = $"\"{scopeId}\"";
                 query = query.Where(e => e.ScopeIds != null && e.ScopeIds.Contains(scopePattern));
+            }
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(e => e.IsActive == isActive.Value);
             }
 
             var total = await query.CountAsync(cancellationToken);

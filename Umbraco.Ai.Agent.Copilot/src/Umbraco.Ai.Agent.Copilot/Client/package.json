@@ -3,12 +3,6 @@
   "version": "0.0.0",
   "type": "module",
   "types": "./types/umbraco-ai-agent-copilot-public-types.d.ts",
-  "exports": {
-    ".": {
-      "types": "./types/umbraco-ai-agent-copilot-public-types.d.ts",
-      "import": "./src/manifests.ts"
-    }
-  },
   "files": [
     "types/umbraco-ai-agent-copilot-public-types.d.ts",
     "README.md"

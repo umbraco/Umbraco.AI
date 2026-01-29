@@ -33,7 +33,7 @@ parameters:
         hasNpm: false
       - name: Umbraco.Ai.Agent
         changeVar: AgentChanged
-        hasNpm: false
+        hasNpm: true
   - name: level2Products
     type: object
     default:

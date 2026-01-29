@@ -7,7 +7,7 @@
     
     "Umbraco.Ai.Amazon",
     "Umbraco.Ai.OpenAi",
-    "Umbraco.Ai.Anthorpic",
+    "Umbraco.Ai.Anthropic",
     "Umbraco.Ai.Google",
     "Umbraco.Ai.MicrosoftFoundry"
 ]

@@ -324,7 +324,17 @@ git checkout -b release/2026.01
 
 #### 2. Define Release Manifest
 
-Create `release-manifest.json` at repo root:
+Use the interactive script to generate `release-manifest.json`:
+
+```bash
+# Windows
+.\scripts\generate-release-manifest.ps1
+
+# Linux/Mac
+./scripts/generate-release-manifest.sh
+```
+
+The script will scan for all products and present an interactive multiselect interface. Alternatively, create the file manually:
 
 ```json
 [
@@ -481,6 +491,12 @@ npm run changelog -- --product=Umbraco.Ai --version=1.1.1
 # On hotfix/* branches, the manifest is optional:
 #   - If present: Only listed products are packed (enforced)
 #   - If absent: Change detection is used (automatic)
+
+# Use interactive script (recommended):
+.\scripts\generate-release-manifest.ps1   # Windows
+./scripts/generate-release-manifest.sh    # Linux/Mac
+
+# Or create manually:
 echo '["Umbraco.Ai"]' > release-manifest.json
 
 # 6. Commit and push
@@ -515,7 +531,17 @@ dotnet add package Umbraco.Ai.Core --version 1.1.1-*
 
 To release multiple products in a single release:
 
-1. **Create `release-manifest.json`** at repo root with all products to release:
+1. **Create `release-manifest.json`** using the interactive script:
+
+```bash
+# Windows
+.\scripts\generate-release-manifest.ps1
+
+# Linux/Mac
+./scripts/generate-release-manifest.sh
+```
+
+Or manually create the file at repo root:
 
 ```json
 [
@@ -720,7 +746,12 @@ When creating a release, follow these steps:
    git checkout -b release/2026.01
    ```
 
-2. **Create release manifest** (`release-manifest.json`):
+2. **Create release manifest** using the interactive script:
+   ```bash
+   .\scripts\generate-release-manifest.ps1   # Windows
+   ./scripts/generate-release-manifest.sh    # Linux/Mac
+   ```
+   Or manually create `release-manifest.json`:
    ```json
    ["Umbraco.Ai", "Umbraco.Ai.OpenAi"]
    ```

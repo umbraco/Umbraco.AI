@@ -309,16 +309,58 @@ function Get-ChangedProducts {
     $changed = @{}
     $Products.Keys | ForEach-Object { $changed[$_] = $false }
 
-    # Git diff-based detection
+    # Git diff-based detection with intelligent base selection
     Write-Host "Git diff-based detection" -ForegroundColor Cyan
 
-    $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
+    $changedFiles = $null
+    $comparisonBase = $null
+
+    # Determine comparison point based on build context
+    if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
+        # For PRs: compare against merge-base with target branch
+        $targetBranch = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
+        Write-Host "  PR detected, target branch: $targetBranch" -ForegroundColor Cyan
+
+        $mergeBase = git merge-base "origin/$targetBranch" HEAD 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $comparisonBase = $mergeBase.Trim()
+            Write-Host "  Comparing PR against merge-base: $comparisonBase" -ForegroundColor Cyan
+            $changedFiles = git diff --name-only $comparisonBase HEAD 2>&1
+        }
+    }
+    elseif ($SourceBranch -match '^refs/heads/(main|dev)$') {
+        # For main/dev pushes: compare with previous commit (preserve current behavior)
+        Write-Host "  Main/dev branch detected, comparing with previous commit" -ForegroundColor Cyan
+        $comparisonBase = "HEAD~1"
+        $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
+    }
+    else {
+        # For feature/release/hotfix branches: compare with merge-base against appropriate base
+        $baseBranch = if ($SourceBranch -match '^refs/heads/(release|hotfix)/') { "main" } else { "dev" }
+        Write-Host "  Feature/release/hotfix branch detected, comparing against $baseBranch" -ForegroundColor Cyan
+
+        $mergeBase = git merge-base "origin/$baseBranch" HEAD 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $comparisonBase = $mergeBase.Trim()
+            Write-Host "  Using merge-base with $baseBranch`: $comparisonBase" -ForegroundColor Cyan
+            $changedFiles = git diff --name-only $comparisonBase HEAD 2>&1
+        }
+    }
+
+    # Fallback if merge-base approach failed
+    if ($LASTEXITCODE -ne 0 -or $null -eq $changedFiles) {
+        Write-Host "  Warning: Merge-base comparison failed, falling back to HEAD~1" -ForegroundColor Yellow
+        $comparisonBase = "HEAD~1"
+        $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
+    }
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "  Warning: Could not determine changed files, building all products" -ForegroundColor Yellow
         $Products.Keys | ForEach-Object { $changed[$_] = $true }
         return $changed
     }
+
+    Write-Host "  Comparison: $comparisonBase..HEAD" -ForegroundColor Gray
 
     # Check product folders
     foreach ($file in $changedFiles) {

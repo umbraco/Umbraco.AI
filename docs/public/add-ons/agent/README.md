@@ -123,6 +123,7 @@ The Agent Runtime uses the AG-UI (Agent UI) protocol for streaming responses. Th
 | [Getting Started](getting-started.md) | Step-by-step setup guide |
 | [Instructions](instructions.md) | Agent instruction configuration |
 | [Streaming](streaming.md) | SSE streaming and event handling |
+| [Frontend Client](frontend-client.md) | UaiAgentClient for custom agent UIs |
 | [API Reference](api/README.md) | Management API endpoints |
 | [Service Reference](reference/ai-agent-service.md) | IAiAgentService |
 

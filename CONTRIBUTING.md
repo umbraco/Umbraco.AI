@@ -121,9 +121,21 @@ Branch naming is enforced at two levels:
 1. **Git Hooks** (`.githooks/pre-push`): Local validation before push
 2. **Azure DevOps CI/CD**: Validation in pipeline (cannot be bypassed)
 
-### Automatic Cleanup
+### Git Hooks for Release Manifest Protection
 
-The repository includes a `post-merge` git hook that automatically removes `release-manifest.json` after merging to `main`, `dev`, or `support/*` branches. This ensures the manifest file (which is only needed on release/hotfix branches) doesn't clutter the long-term branches.
+The repository includes several git hooks to manage `release-manifest.json` lifecycle:
+
+**Protection on release/hotfix branches:**
+- **pre-merge-commit hook**: Automatically restores `release-manifest.json` if it gets deleted during a merge to a `release/*` or `hotfix/*` branch (e.g., when merging from `dev`)
+- **merge driver**: Preserves `release-manifest.json` when there are content conflicts (defense-in-depth)
+
+**Cleanup on long-term branches:**
+- **post-merge hook**: Automatically removes `release-manifest.json` after merging to `main`, `dev`, or `support/*` branches (these branches should never have the manifest file)
+
+This ensures:
+- ✅ Release branches always keep their manifest during merges
+- ✅ Long-term branches never accumulate manifest files
+- ✅ No manual intervention needed
 
 To bypass git hooks temporarily (not recommended):
 ```bash
@@ -842,9 +854,11 @@ The repository uses `commitlint` to validate commit messages. Invalid commits wi
 ```
 
 This enables:
-- **commit-msg hook**: Validates commit messages using commitlint
-- **pre-push hook**: Validates branch naming conventions
-- **post-merge hook**: Automatically cleans up `release-manifest.json` after merging to main, dev, or support branches
+- **commit-msg hook**: Validates commit messages using commitlint (warnings only)
+- **pre-push hook**: Validates branch naming conventions (blocks invalid names)
+- **post-merge hook**: Cleans up `release-manifest.json` after merge to main/dev/support/*
+- **pre-merge-commit hook**: Restores `release-manifest.json` on release/hotfix branches if deleted during merge
+- **merge driver**: Preserves `release-manifest.json` on release/hotfix branches (content conflicts only)
 
 ### Troubleshooting Changelog Validation
 
@@ -875,9 +889,34 @@ git push
 - Usually means you forgot to regenerate the changelog for this release
 - Regenerate and commit to resolve
 
-This enables:
-- **commit-msg hook**: Validates commit messages using commitlint
-- **pre-push hook**: Validates branch naming conventions
+### Troubleshooting Release Manifest Issues
+
+If `release-manifest.json` gets deleted when merging `dev` into a release branch:
+
+**Scenario: Manifest deleted during merge**
+
+This should be automatically prevented by the `pre-merge-commit` hook, but if it still happens:
+
+```bash
+# 1. Verify git hooks are configured
+git config --get core.hooksPath
+# Should output: .githooks
+
+# 2. If not configured, run setup script
+.\scripts\setup-git-hooks.ps1    # Windows
+./scripts/setup-git-hooks.sh     # Linux/Mac
+
+# 3. If manifest was deleted, restore it manually
+git show HEAD:release-manifest.json > release-manifest.json
+git add release-manifest.json
+git commit -m "fix(ci): restore release-manifest.json"
+git push
+```
+
+**Why this happens:**
+- Git's merge drivers are only invoked for content conflicts, not file deletions
+- The `pre-merge-commit` hook detects and restores the file automatically
+- If hooks aren't configured, the file will be deleted during merge
 
 **Testing your commit message:**
 ```bash

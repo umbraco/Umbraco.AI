@@ -100,7 +100,7 @@ const confirmActionManifest: ManifestUaiAgentTool = {
     approval: {
       // Uses default element (Uai.AgentApprovalElement.Default)
       config: {
-        title: "#uAiAgentCopilot_approvalDefaultTitle",
+        title: "#uaiAgentCopilotapprovalDefaultTitle",
         // Message will come from LLM args
       },
     },

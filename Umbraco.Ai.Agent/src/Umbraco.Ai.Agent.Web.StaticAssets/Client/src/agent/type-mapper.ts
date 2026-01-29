@@ -13,6 +13,7 @@ export const UaiAgentTypeMapper = {
             description: response.description ?? null,
             profileId: response.profileId ?? null,
             contextIds: response.contextIds ?? [],
+            scopeIds: response.scopeIds ?? [],
             instructions: response.instructions ?? null,
             isActive: response.isActive,
             dateCreated: response.dateCreated,
@@ -30,6 +31,7 @@ export const UaiAgentTypeMapper = {
             description: response.description ?? null,
             profileId: response.profileId ?? null,
             contextIds: response.contextIds ?? [],
+            scopeIds: response.scopeIds ?? [],
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -43,6 +45,7 @@ export const UaiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             contextIds: model.contextIds,
+            scopeIds: model.scopeIds,
             instructions: model.instructions,
         };
     },
@@ -54,6 +57,7 @@ export const UaiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             contextIds: model.contextIds,
+            scopeIds: model.scopeIds,
             instructions: model.instructions,
             isActive: model.isActive,
         };

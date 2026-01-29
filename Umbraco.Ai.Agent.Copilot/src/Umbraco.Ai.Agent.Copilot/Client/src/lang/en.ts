@@ -1,7 +1,11 @@
 import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
 
 export default {
-    uAiAgentCopilot: {
+    uaiAgentScope:{
+        copilotLabel: "Copilot",
+        copilotDescription: "Enable Copilot features for this agent.",  
+    },
+    uaiAgentCopilot: {
         // HITL Approval element defaults
         approvalDefaultTitle: "Approval Required",
         approvalDefaultMessage: "Do you want to proceed with this action?",

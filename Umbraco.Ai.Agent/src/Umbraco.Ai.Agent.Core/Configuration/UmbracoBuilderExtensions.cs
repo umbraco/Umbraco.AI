@@ -4,6 +4,8 @@ using Umbraco.Ai.Agent.Core.Agui;
 using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agent.Core.Context;
 using Umbraco.Ai.Agent.Core.Models;
+using Umbraco.Ai.Agent.Core.Scopes;
+using Umbraco.Ai.Agent.Extensions;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -56,6 +58,10 @@ public static class UmbracoBuilderExtensions
 
         // Register versionable entity adapter for agents
         builder.AiVersionableEntityAdapters().Add<AiAgentVersionableEntityAdapter>();
+
+        // Auto-discover agent scopes via [AiAgentScope] attribute
+        builder.AiAgentScopes()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiAgentScope, AiAgentScopeAttribute>(cache: true));
 
         return builder;
     }

@@ -17,7 +17,7 @@ export class UaiCopilotAgentRepository {
     const response = await tryExecute(
       this.#host,
       AgentsService.getAllAgents({
-        query: { skip: 0, take: 100 },
+        query: { skip: 0, take: 100, scopeId: "copilot" },
       })
     );
 

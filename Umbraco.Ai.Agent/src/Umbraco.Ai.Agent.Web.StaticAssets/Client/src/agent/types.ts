@@ -11,6 +11,7 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     description: string | null;
     profileId: string | null;
     contextIds: string[];
+    scopeIds: string[];
     instructions: string | null;
     isActive: boolean;
     dateCreated: string | null;
@@ -29,6 +30,7 @@ export interface UaiAgentItemModel extends UmbEntityModel {
     description: string | null;
     profileId: string | null;
     contextIds: string[];
+    scopeIds: string[];
     isActive: boolean;
     dateCreated: string | null;
     dateModified: string | null;

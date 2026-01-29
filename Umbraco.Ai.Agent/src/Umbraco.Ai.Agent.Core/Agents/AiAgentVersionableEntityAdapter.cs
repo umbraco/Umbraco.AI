@@ -35,6 +35,7 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
             entity.Description,
             entity.ProfileId,
             ContextIds = entity.ContextIds.Count > 0 ? string.Join(',', entity.ContextIds) : null,
+            ScopeIds = entity.ScopeIds.Count > 0 ? string.Join(',', entity.ScopeIds) : null,
             entity.Instructions,
             entity.IsActive,
             entity.Version,
@@ -74,6 +75,19 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
                 }
             }
 
+            IReadOnlyList<string> scopeIds = Array.Empty<string>();
+            if (root.TryGetProperty("scopeIds", out var scopeIdsElement) &&
+                scopeIdsElement.ValueKind == JsonValueKind.String)
+            {
+                var scopeIdsString = scopeIdsElement.GetString();
+                if (!string.IsNullOrEmpty(scopeIdsString))
+                {
+                    scopeIds = scopeIdsString
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .ToList();
+                }
+            }
+
             return new AiAgent
             {
                 Id = root.GetProperty("id").GetGuid(),
@@ -83,6 +97,7 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
                     ? descEl.GetString() : null,
                 ProfileId = root.GetProperty("profileId").GetGuid(),
                 ContextIds = contextIds,
+                ScopeIds = scopeIds,
                 Instructions = root.TryGetProperty("instructions", out var instrEl) && instrEl.ValueKind == JsonValueKind.String
                     ? instrEl.GetString() : null,
                 IsActive = root.GetProperty("isActive").GetBoolean(),
@@ -133,6 +148,14 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
         if (fromContextIds != toContextIds)
         {
             changes.Add(new AiPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
+        }
+
+        // Compare scope IDs
+        var fromScopeIds = string.Join(",", from.ScopeIds);
+        var toScopeIds = string.Join(",", to.ScopeIds);
+        if (fromScopeIds != toScopeIds)
+        {
+            changes.Add(new AiPropertyChange("ScopeIds", fromScopeIds.Length > 0 ? fromScopeIds : "(none)", toScopeIds.Length > 0 ? toScopeIds : "(none)"));
         }
 
         if (from.Instructions != to.Instructions)

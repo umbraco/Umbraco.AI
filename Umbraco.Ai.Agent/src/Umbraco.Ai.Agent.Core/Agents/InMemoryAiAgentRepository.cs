@@ -46,6 +46,7 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
+        string? scopeId = null,
         CancellationToken cancellationToken = default)
     {
         var query = _agents.Values.AsEnumerable();
@@ -62,6 +63,11 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
             query = query.Where(p => p.ProfileId == profileId.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(scopeId))
+        {
+            query = query.Where(p => p.ScopeIds.Contains(scopeId, StringComparer.OrdinalIgnoreCase));
+        }
+
         var total = query.Count();
         var items = query
             .OrderBy(p => p.Name)
@@ -70,6 +76,15 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
             .ToList();
 
         return Task.FromResult(new PagedModel<AiAgent>(total, items));
+    }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiAgent>> GetByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
+    {
+        var agents = _agents.Values
+            .Where(p => p.ScopeIds.Contains(scopeId, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        return Task.FromResult<IEnumerable<AiAgent>>(agents);
     }
 
     /// <inheritdoc />

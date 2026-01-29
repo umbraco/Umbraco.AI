@@ -40,22 +40,22 @@ export class UaiAgentApprovalDefaultElement
     // const title = this.#localize.string(
     //   (this.config.title as string) ??
     //     (this.args.title as string) ??
-    //     "#uAiAgentCopilot_approvalDefaultTitle"
+    //     "#uaiAgentCopilotapprovalDefaultTitle"
     // );
     // const message = this.#localize.string(
     //   (this.config.message as string) ??
     //     (this.args.message as string) ??
-    //     "#uAiAgentCopilot_approvalDefaultMessage"
+    //     "#uaiAgentCopilotapprovalDefaultMessage"
     // );
     const approveLabel = this.#localize.string(
       (this.config.approveLabel as string) ??
         (this.args.approveLabel as string) ??
-        "#uAiAgentCopilot_approvalApprove"
+        "#uaiAgentCopilotapprovalApprove"
     );
     const denyLabel = this.#localize.string(
       (this.config.denyLabel as string) ??
         (this.args.denyLabel as string) ??
-        "#uAiAgentCopilot_approvalDeny"
+        "#uaiAgentCopilotapprovalDeny"
     );
 
     return html`

@@ -69,8 +69,13 @@ internal sealed class AiAgentService : IAiAgentService
         int take,
         string? filter = null,
         Guid? profileId = null,
+        string? scopeId = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetPagedAsync(skip, take, filter, profileId, cancellationToken);
+        => _repository.GetPagedAsync(skip, take, filter, profileId, scopeId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AiAgent>> GetAgentsByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
+        => _repository.GetByScopeAsync(scopeId, cancellationToken);
 
     /// <inheritdoc />
     public async Task<AiAgent> SaveAgentAsync(AiAgent agent, CancellationToken cancellationToken = default)

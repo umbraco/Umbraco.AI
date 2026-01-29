@@ -67,6 +67,17 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onScopeIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
+                { scopeIds: picker.value ?? [] },
+                "scopeIds"
+            )
+        );
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -96,6 +107,15 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this._model.contextIds}
                         @change=${this.#onContextIdsChange}
                     ></uai-context-picker>
+                </umb-property-layout>
+
+                <umb-property-layout label="Scopes" description="Categorize this agent for specific purposes (e.g., Copilot chat)">
+                    <uai-scope-picker
+                        slot="editor"
+                        multiple
+                        .value=${this._model.scopeIds}
+                        @change=${this.#onScopeIdsChange}
+                    ></uai-scope-picker>
                 </umb-property-layout>
 
                 <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves">

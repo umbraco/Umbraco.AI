@@ -40,6 +40,15 @@ public sealed class AiAgent : IAiVersionableEntity
     public IReadOnlyList<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
+    /// Scope IDs that categorize this agent for specific purposes.
+    /// </summary>
+    /// <remarks>
+    /// Agents can belong to multiple scopes. An agent with no scopes will appear
+    /// in general listings but not in any scoped queries.
+    /// </remarks>
+    public IReadOnlyList<string> ScopeIds { get; set; } = [];
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

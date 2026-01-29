@@ -109,21 +109,22 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-context-picker>
                 </umb-property-layout>
 
-                <umb-property-layout label="Scopes" description="Categorize this agent for specific purposes (e.g., Copilot chat)">
-                    <uai-scope-picker
-                        slot="editor"
-                        multiple
-                        .value=${this._model.scopeIds}
-                        @change=${this.#onScopeIdsChange}
-                    ></uai-scope-picker>
-                </umb-property-layout>
-
                 <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves">
                     <umb-input-markdown
                         slot="editor"
                         .value=${this._model.instructions ?? ""}
                         @change=${this.#onInstructionsChange}
                     ></umb-input-markdown>
+                </umb-property-layout>
+            </uui-box>
+            <uui-box headline="Scope">
+                <umb-property-layout label="Scopes" description="Select how this agent can be used (e.g., Copilot chat)">
+                    <uai-scope-picker
+                            slot="editor"
+                            multiple
+                            .value=${this._model.scopeIds}
+                            @change=${this.#onScopeIdsChange}
+                    ></uai-scope-picker>
                 </umb-property-layout>
             </uui-box>
         `;

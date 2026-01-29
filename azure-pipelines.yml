@@ -634,7 +634,6 @@ stages:
     dependsOn:
       - Build
       - Pack
-    condition: not(failed())
     jobs:
       - job: SetBuildNumber
         displayName: Set build number

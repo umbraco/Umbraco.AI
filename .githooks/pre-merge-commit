@@ -1,0 +1,31 @@
+#!/bin/sh
+# Pre-merge-commit hook - Restore release-manifest.json on release/hotfix branches
+
+# Get current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Only run on release or hotfix branches
+if ! echo "$current_branch" | grep -qE "^(release|hotfix)/"; then
+    exit 0
+fi
+
+# Check if release-manifest.json exists in HEAD but was deleted in the merge
+if git ls-tree HEAD release-manifest.json | grep -q .; then
+    # File exists in HEAD
+    if ! git ls-files --stage release-manifest.json | grep -q .; then
+        # File is not in the index (was deleted in merge)
+        echo "🔒 Restoring release-manifest.json on $current_branch branch..."
+
+        # Restore the file from HEAD
+        git restore --staged --worktree --source=HEAD release-manifest.json
+
+        if [ $? -eq 0 ]; then
+            echo "✓ release-manifest.json restored successfully"
+        else
+            echo "⚠️  Failed to restore release-manifest.json"
+            exit 1
+        fi
+    fi
+fi
+
+exit 0

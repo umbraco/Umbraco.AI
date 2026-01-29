@@ -1,4 +1,2 @@
-export * from './agent/index.js';
-export * from './api/index.js';
-export * from './transport/index.js';
-export * from './scope/index.js';
+// Re-export the public API
+export * from './exports.js';

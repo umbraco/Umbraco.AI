@@ -21,3 +21,7 @@ export { UAI_AGENT_COLLECTION_ALIAS } from './collection/constants.js';
 
 // Agent icon
 export { UAI_AGENT_ICON } from './constants.js';
+
+// Read-only repository for fetching active agents
+export { UaiAgentRepository } from './repository/read/index.js';
+export type { UaiAgentRepositoryOptions } from './repository/read/index.js';

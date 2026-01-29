@@ -40,6 +40,7 @@ public interface IAiAgentService
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
     /// <param name="scopeId">Optional scope ID filter.</param>
+    /// <param name="isActive">Optional active status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged result containing Agents and total count.</returns>
     Task<PagedModel<AiAgent>> GetAgentsPagedAsync(
@@ -48,6 +49,7 @@ public interface IAiAgentService
         string? filter = null,
         Guid? profileId = null,
         string? scopeId = null,
+        bool? isActive = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

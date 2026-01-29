@@ -158,6 +158,7 @@ export type GetAllAgentsData = {
         filter?: string;
         profileId?: string;
         scopeId?: string;
+        isActive?: boolean;
     };
     url: '/umbraco/ai/management/api/v1/agents';
 };

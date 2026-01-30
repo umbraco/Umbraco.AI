@@ -25,8 +25,6 @@ internal sealed class AiAgentService : IAiAgentService
     private readonly IAguiStreamingService _streamingService;
     private readonly IAguiToolConverter _toolConverter;
     private readonly IAguiContextConverter _contextConverter;
-    private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
-    private readonly AiRuntimeContextContributorCollection _contextContributors;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AiAgentService(
@@ -36,8 +34,6 @@ internal sealed class AiAgentService : IAiAgentService
         IAguiStreamingService streamingService,
         IAguiToolConverter toolConverter,
         IAguiContextConverter contextConverter,
-        IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
-        AiRuntimeContextContributorCollection contextContributors,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -46,8 +42,6 @@ internal sealed class AiAgentService : IAiAgentService
         _streamingService = streamingService;
         _toolConverter = toolConverter;
         _contextConverter = contextConverter;
-        _runtimeContextScopeProvider = runtimeContextScopeProvider;
-        _contextContributors = contextContributors;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -151,14 +145,7 @@ internal sealed class AiAgentService : IAiAgentService
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
         var frontendTools = _toolConverter.ConvertToFrontendTools(frontendToolDefinitions);
 
-        // 3. Create runtime context scope
-        using var scope = _runtimeContextScopeProvider.CreateScope(contextItems);
-        var runtimeContext = scope.Context;
-
-        // 4. Populate context with contributors
-        _contextContributors.Populate(runtimeContext);
-
-        // 5. Build additional properties for auditing
+        // 3. Build additional properties for telemetry/logging
         var additionalProperties = new Dictionary<string, object?>
         {
             { Constants.ContextKeys.RunId, request.RunId },
@@ -170,21 +157,18 @@ internal sealed class AiAgentService : IAiAgentService
             }}
         };
 
-        // 6. Create MAF agent (inside scope - context is now valid!)
-        var mafAgent = await _agentFactory.CreateAgentAsync(
+        // 4. Create MAF agent
+        //    System message injection is handled automatically by ScopedAIAgent
+        var agentInst = await _agentFactory.CreateAgentAsync(
             agent,
+            contextItems,
             frontendTools,
             additionalProperties,
             cancellationToken);
 
-        // 7. Build additional system prompt from context contributors
-        var additionalSystemPrompt = runtimeContext.SystemMessageParts.Count > 0
-            ? string.Join("\n\n", runtimeContext.SystemMessageParts)
-            : null;
-
-        // 8. Stream via generic streaming service
-        await foreach (var evt in _streamingService.StreamAgentAsync(
-            mafAgent, request, frontendTools, additionalSystemPrompt, cancellationToken))
+        // 5. Stream via AG-UI streaming service
+        //    No additionalSystemPrompt needed - ScopedAIAgent handles it
+        await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, frontendTools, cancellationToken))
         {
             yield return evt;
         }

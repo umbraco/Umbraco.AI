@@ -16,7 +16,8 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// </summary>
 internal sealed class AiAgentFactory : IAiAgentFactory
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
+    private readonly AiRuntimeContextContributorCollection _contextContributors;
     private readonly IAiProfileService _profileService;
     private readonly IAiChatClientFactory _chatClientFactory;
     private readonly AiToolCollection _toolCollection;
@@ -26,13 +27,15 @@ internal sealed class AiAgentFactory : IAiAgentFactory
     /// Initializes a new instance of the <see cref="AiAgentFactory"/> class.
     /// </summary>
     public AiAgentFactory(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
+        IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
+        AiRuntimeContextContributorCollection contextContributors,
         IAiProfileService profileService,
         IAiChatClientFactory chatClientFactory,
         AiToolCollection toolCollection,
         IAiFunctionFactory functionFactory)
     {
-        _runtimeContextAccessor = runtimeContextAccessor ?? throw new ArgumentNullException(nameof(runtimeContextAccessor));
+        _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
+        _contextContributors = contextContributors ?? throw new ArgumentNullException(nameof(contextContributors));
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
         _toolCollection = toolCollection ?? throw new ArgumentNullException(nameof(toolCollection));
@@ -42,8 +45,9 @@ internal sealed class AiAgentFactory : IAiAgentFactory
     /// <inheritdoc />
     public async Task<AIAgent> CreateAgentAsync(
         AiAgent agent,
+        IEnumerable<AiRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
-        IEnumerable<KeyValuePair<string, object?>>? additionalProperties = null,
+        IReadOnlyDictionary<string, object?>? additionalProperties = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(agent);
@@ -53,16 +57,13 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         tools.AddRange(_toolCollection.ToSystemToolFunctions(_functionFactory));
         tools.AddRange(_toolCollection.ToUserToolFunctions(_functionFactory));
 
-        // Collect frontend tool names and add them to additional properties
-        // AiToolReorderingChatMiddleware reads these to reorder tool calls
-        var frontendToolNames = additionalTools?.Select(t => t.Name).ToList() ?? [];
-        if (additionalTools != null)
+        var frontendTools = additionalTools?.ToList() ?? [];
+        if (frontendTools.Count > 0)
         {
-            tools.AddRange(additionalTools);
+            tools.AddRange(frontendTools);
         }
 
         // Get profile - use default Chat profile if not specified
-        // The factory applies all middleware including AiToolReorderingChatMiddleware
         AiProfile profile;
         if (agent.ProfileId.HasValue)
         {
@@ -76,40 +77,22 @@ internal sealed class AiAgentFactory : IAiAgentFactory
 
         var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 
-        // Set agent metadata in runtime context for auditing and telemetry
-        if (_runtimeContextAccessor.Context is not null)
-        {
-            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.AgentId, agent.Id);
-            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.AgentAlias, agent.Alias);
-            
-            _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureType, "agent");
-            _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureId, agent.Id);
-            _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureAlias, agent.Alias);
-            _runtimeContextAccessor.Context.SetValue(CoreConstants.ContextKeys.FeatureVersion, agent.Version);
-
-            if (additionalProperties != null)
-            {
-                foreach (var allAdditionalProperty in additionalProperties)
-                {
-                    _runtimeContextAccessor.Context.SetValue(allAdditionalProperty.Key, allAdditionalProperty.Value);
-                }
-            }
-
-            if (frontendToolNames.Count > 0)
-            {
-                _runtimeContextAccessor.Context.SetValue(
-                    Constants.ContextKeys.FrontendToolNames,
-                    frontendToolNames);
-            }
-        }
-
-        // Create MAF ChatClientAgent directly using constructor
-        // The CreateAIAgent extension method was removed in newer versions
-        return new ChatClientAgent(
+        // Create inner MAF agent (without runtime context metadata - that's set in ScopedAIAgent)
+        var innerAgent = new ChatClientAgent(
             chatClient,
             instructions: agent.Instructions,
             name: agent.Name,
             description: agent.Description,
             tools: tools);
+
+        // Wrap in scoped decorator (passes scope provider, contributors, and metadata)
+        return new ScopedAIAgent(
+            innerAgent,
+            agent,
+            contextItems ?? [],
+            frontendTools,
+            additionalProperties,
+            _runtimeContextScopeProvider,
+            _contextContributors);
     }
 }

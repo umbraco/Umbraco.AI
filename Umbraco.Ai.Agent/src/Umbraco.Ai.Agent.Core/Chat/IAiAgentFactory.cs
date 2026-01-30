@@ -1,6 +1,7 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Agent.Core.Chat;
 
@@ -32,18 +33,49 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 public interface IAiAgentFactory
 {
     /// <summary>
-    /// Creates a MAF AIAgent for the given agent definition.
+    /// Creates an AIAgent from an agent definition with automatic runtime context management.
     /// </summary>
-    /// <param name="agent">The agent definition containing instructions and context configuration.</param>
-    /// <param name="additionalTools">Optional additional tools to include in the agent.
-    ///  Primarily used for frontend tool injection in AG-UI scenarios.
-    /// </param>
-    /// <param name="additionalProperties">Optional additional to pass to chat client</param>
+    /// <param name="agent">The agent definition containing instructions and configuration.</param>
+    /// <param name="contextItems">Optional context items to populate the runtime context with.</param>
+    /// <param name="additionalTools">Optional additional tools to include in the agent (e.g., frontend tools).</param>
+    /// <param name="additionalProperties">Optional additional properties to set in the runtime context
+    ///  (e.g., RunId, ThreadId for telemetry/logging).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A configured <see cref="ChatClientAgent"/> with tools and context injection.</returns>
+    /// <returns>An <see cref="AIAgent"/> ready for use with MAF's RunAsync/RunStreamingAsync methods.</returns>
+    /// <remarks>
+    /// <para>
+    /// The returned agent automatically manages runtime context per-execution:
+    /// <list type="bullet">
+    ///   <item>Creates a fresh runtime context scope for each <c>RunAsync</c> or <c>RunStreamingAsync</c> call</item>
+    ///   <item>Populates the scope with context items and invokes context contributors</item>
+    ///   <item>Automatically injects system message parts from contributors into the conversation</item>
+    ///   <item>Disposes the scope after each execution completes</item>
+    ///   <item>Provides complete isolation between concurrent or sequential requests</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <strong>Example:</strong>
+    /// </para>
+    /// <code>
+    /// // Create agent once
+    /// var agent = await _agentFactory.CreateAgentAsync(
+    ///     agentDefinition,
+    ///     contextItems: new[] { new AiRequestContextItem { Description = "userId", Value = userId } },
+    ///     additionalTools: frontendTools,
+    ///     additionalProperties: new Dictionary&lt;string, object?&gt; { ["RunId"] = runId },
+    ///     cancellationToken);
+    ///
+    /// // Reuse for multiple requests - each gets fresh scope and context
+    /// var result1 = await agent.RunAsync(messages1, session: null, options: null, ct);
+    /// var result2 = await agent.RunAsync(messages2, session: null, options: null, ct);
+    ///
+    /// // No manual scope management needed - all automatic
+    /// </code>
+    /// </remarks>
     Task<AIAgent> CreateAgentAsync(
         AiAgent agent,
+        IEnumerable<AiRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
-        IEnumerable<KeyValuePair<string, object?>>? additionalProperties = null,
+        IReadOnlyDictionary<string, object?>? additionalProperties = null,
         CancellationToken cancellationToken = default);
 }

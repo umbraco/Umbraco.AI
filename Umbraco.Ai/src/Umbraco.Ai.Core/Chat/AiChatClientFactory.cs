@@ -33,15 +33,9 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         // Apply middleware in order
         chatClient = ApplyMiddleware(chatClient);
 
-        // Set runtime context metadata
-        if (_runtimeContextAccessor.Context != null)
-        {
-            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileId, profile.Id);
-            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileAlias, profile.Alias);
-            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProfileVersion, profile.Version);
-            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ProviderId, profile.Model.ProviderId);
-            _runtimeContextAccessor.Context.SetValue(Constants.ContextKeys.ModelId, profile.Model.ModelId);
-        }
+        // Wrap in scoped client to set profile metadata per-execution
+        // This is the outermost wrapper so middleware can access profile metadata in context
+        chatClient = new ScopedProfileChatClient(chatClient, profile, _runtimeContextAccessor);
 
         return chatClient;
     }

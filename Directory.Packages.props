@@ -41,8 +41,8 @@
 
   <!-- Microsoft AI Agent packages -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Agents.AI" Version="1.0.0-preview.260121.1" />
-    <PackageVersion Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.260121.1" />
+    <PackageVersion Include="Microsoft.Agents.AI" Version="1.0.0-preview.260128.1" />
+    <PackageVersion Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.260128.1" />
   </ItemGroup>
 
   <!-- Provider packages -->

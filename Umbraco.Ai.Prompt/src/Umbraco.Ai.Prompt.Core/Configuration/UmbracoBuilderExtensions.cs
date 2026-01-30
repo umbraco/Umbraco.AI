@@ -5,6 +5,7 @@ using Umbraco.Ai.Prompt.Core.Media;
 using Umbraco.Ai.Prompt.Core.Models;
 using Umbraco.Ai.Prompt.Core.Prompts;
 using Umbraco.Ai.Prompt.Core.Templates.Processors;
+using Umbraco.Ai.Prompt.Core.Tests;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.Ai.Prompt.Core.Configuration;
@@ -52,6 +53,9 @@ public static class UmbracoBuilderExtensions
 
         // Register versionable entity adapter for prompts
         builder.AiVersionableEntityAdapters().Add<AiPromptVersionableEntityAdapter>();
+
+        // Register prompt test feature for AI testing
+        builder.AiTestFeatures().Add<PromptTestFeature>();
 
         return builder;
     }

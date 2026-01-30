@@ -5,6 +5,7 @@ using Umbraco.Ai.Agent.Core.Chat;
 using Umbraco.Ai.Agent.Core.Context;
 using Umbraco.Ai.Agent.Core.Models;
 using Umbraco.Ai.Agent.Core.Scopes;
+using Umbraco.Ai.Agent.Core.Tests;
 using Umbraco.Ai.Agent.Extensions;
 using Umbraco.Ai.Core.Chat.Middleware;
 using Umbraco.Ai.Extensions;
@@ -62,6 +63,9 @@ public static class UmbracoBuilderExtensions
         // Auto-discover agent scopes via [AiAgentScope] attribute
         builder.AiAgentScopes()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiAgentScope, AiAgentScopeAttribute>(cache: true));
+
+        // Register agent test feature for AI testing
+        builder.AiTestFeatures().Add<AgentTestFeature>();
 
         return builder;
     }

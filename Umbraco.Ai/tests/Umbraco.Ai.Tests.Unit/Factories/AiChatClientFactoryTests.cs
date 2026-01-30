@@ -14,12 +14,16 @@ public class AiChatClientFactoryTests
 {
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
     private readonly Mock<IAiRuntimeContextAccessor> _runtimeContextAccessorMock;
+    private readonly Mock<IAiRuntimeContextScopeProvider> _scopeProviderMock;
+    private readonly AiRuntimeContextContributorCollection _contributors;
     private readonly AiChatMiddlewareCollection _middleware;
 
     public AiChatClientFactoryTests()
     {
         _connectionServiceMock = new Mock<IAiConnectionService>();
         _runtimeContextAccessorMock = new Mock<IAiRuntimeContextAccessor>();
+        _scopeProviderMock = new Mock<IAiRuntimeContextScopeProvider>();
+        _contributors = new AiRuntimeContextContributorCollection(() => Enumerable.Empty<IAiRuntimeContextContributor>());
         _middleware = new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
     }
 
@@ -28,7 +32,9 @@ public class AiChatClientFactoryTests
         return new AiChatClientFactory(
             _connectionServiceMock.Object,
             _middleware,
-            _runtimeContextAccessorMock.Object);
+            _runtimeContextAccessorMock.Object,
+            _scopeProviderMock.Object,
+            _contributors);
     }
 
     private AiChatClientFactory CreateFactory(AiChatMiddlewareCollection middleware)
@@ -36,7 +42,9 @@ public class AiChatClientFactoryTests
         return new AiChatClientFactory(
             _connectionServiceMock.Object,
             middleware,
-            _runtimeContextAccessorMock.Object);
+            _runtimeContextAccessorMock.Object,
+            _scopeProviderMock.Object,
+            _contributors);
     }
 
     private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(

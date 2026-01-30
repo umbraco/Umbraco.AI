@@ -13,7 +13,7 @@ namespace Umbraco.Ai.Core.Chat;
 /// <para>
 /// This client wraps a base <see cref="IChatClient"/> and automatically populates runtime context
 /// with profile metadata (ProfileId, ProfileAlias, ProviderId, ModelId) whenever a chat operation
-/// is executed. The metadata is only set if an active runtime context scope exists.
+/// is executed.
 /// </para>
 /// <para>
 /// This decorator is used by <see cref="IAiChatClientFactory"/> to ensure profile metadata is
@@ -23,16 +23,18 @@ namespace Umbraco.Ai.Core.Chat;
 /// <strong>Scope Management:</strong>
 /// </para>
 /// <list type="bullet">
-///   <item>Does NOT create its own scope - expects an active scope to exist</item>
-///   <item>If no scope exists, silently skips metadata setting and proceeds with execution</item>
-///   <item>Sets metadata at the beginning of each GetResponseAsync/GetStreamingResponseAsync call</item>
-///   <item>Works seamlessly with <c>ScopedAIAgent</c> which creates the scope</item>
+///   <item>If an active scope exists, uses it to set metadata (e.g., when used with <c>ScopedAIAgent</c>)</item>
+///   <item>If no scope exists, creates a temporary scope for the execution</item>
+///   <item>Automatically disposes any scope it creates after execution completes</item>
+///   <item>Works standalone or as part of a scoped agent</item>
 /// </list>
 /// </remarks>
 internal sealed class ScopedProfileChatClient : DelegatingChatClient
 {
     private readonly AiProfile _profile;
     private readonly IAiRuntimeContextAccessor _contextAccessor;
+    private readonly IAiRuntimeContextScopeProvider _scopeProvider;
+    private readonly AiRuntimeContextContributorCollection _contributors;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScopedProfileChatClient"/> class.
@@ -40,14 +42,20 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
     /// <param name="innerClient">The base chat client to wrap.</param>
     /// <param name="profile">The profile containing metadata to set in the runtime context.</param>
     /// <param name="contextAccessor">Accessor for the runtime context.</param>
+    /// <param name="scopeProvider">Provider for creating runtime context scopes.</param>
+    /// <param name="contributors">Collection of context contributors to populate the scope.</param>
     public ScopedProfileChatClient(
         IChatClient innerClient,
         AiProfile profile,
-        IAiRuntimeContextAccessor contextAccessor)
+        IAiRuntimeContextAccessor contextAccessor,
+        IAiRuntimeContextScopeProvider scopeProvider,
+        AiRuntimeContextContributorCollection contributors)
         : base(innerClient)
     {
         _profile = profile ?? throw new ArgumentNullException(nameof(profile));
         _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
+        _scopeProvider = scopeProvider ?? throw new ArgumentNullException(nameof(scopeProvider));
+        _contributors = contributors ?? throw new ArgumentNullException(nameof(contributors));
     }
 
     /// <inheritdoc />
@@ -56,8 +64,26 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        PopulateProfileMetadata();
-        return await base.GetResponseAsync(messages, options, cancellationToken);
+        var scopeExisted = _contextAccessor.Context != null;
+        IAiRuntimeContextScope? createdScope = null;
+
+        try
+        {
+            if (!scopeExisted)
+            {
+                // Create temporary scope for this execution
+                createdScope = _scopeProvider.CreateScope([]);
+                _contributors.Populate(createdScope.Context);
+            }
+
+            PopulateProfileMetadata();
+            return await base.GetResponseAsync(messages, options, cancellationToken);
+        }
+        finally
+        {
+            // Only dispose scope we created
+            createdScope?.Dispose();
+        }
     }
 
     /// <inheritdoc />
@@ -66,28 +92,50 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        PopulateProfileMetadata();
-        await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken))
+        var scopeExisted = _contextAccessor.Context != null;
+        IAiRuntimeContextScope? createdScope = null;
+
+        try
         {
-            yield return update;
+            if (!scopeExisted)
+            {
+                // Create temporary scope for this execution
+                createdScope = _scopeProvider.CreateScope([]);
+                _contributors.Populate(createdScope.Context);
+            }
+
+            PopulateProfileMetadata();
+
+            await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken))
+            {
+                yield return update;
+            }
+        }
+        finally
+        {
+            // Only dispose scope we created
+            createdScope?.Dispose();
         }
     }
 
     /// <summary>
-    /// Populates profile metadata in the runtime context if an active scope exists.
+    /// Populates profile metadata in the runtime context.
     /// </summary>
+    /// <remarks>
+    /// This method assumes a scope exists (either pre-existing or just created).
+    /// </remarks>
     private void PopulateProfileMetadata()
     {
-        // Only set metadata if there's an active scope
-        if (_contextAccessor.Context is null)
+        var context = _contextAccessor.Context;
+        if (context is null)
         {
             return;
         }
 
-        _contextAccessor.Context.SetValue(Constants.ContextKeys.ProfileId, _profile.Id);
-        _contextAccessor.Context.SetValue(Constants.ContextKeys.ProfileAlias, _profile.Alias);
-        _contextAccessor.Context.SetValue(Constants.ContextKeys.ProfileVersion, _profile.Version);
-        _contextAccessor.Context.SetValue(Constants.ContextKeys.ProviderId, _profile.Model.ProviderId);
-        _contextAccessor.Context.SetValue(Constants.ContextKeys.ModelId, _profile.Model.ModelId);
+        context.SetValue(Constants.ContextKeys.ProfileId, _profile.Id);
+        context.SetValue(Constants.ContextKeys.ProfileAlias, _profile.Alias);
+        context.SetValue(Constants.ContextKeys.ProfileVersion, _profile.Version);
+        context.SetValue(Constants.ContextKeys.ProviderId, _profile.Model.ProviderId);
+        context.SetValue(Constants.ContextKeys.ModelId, _profile.Model.ModelId);
     }
 }

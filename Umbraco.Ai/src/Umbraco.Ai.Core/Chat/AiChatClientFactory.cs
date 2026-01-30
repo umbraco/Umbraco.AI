@@ -11,15 +11,21 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
     private readonly IAiConnectionService _connectionService;
     private readonly AiChatMiddlewareCollection _middleware;
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAiRuntimeContextScopeProvider _scopeProvider;
+    private readonly AiRuntimeContextContributorCollection _contributors;
 
     public AiChatClientFactory(
         IAiConnectionService connectionService,
         AiChatMiddlewareCollection middleware,
-        IAiRuntimeContextAccessor runtimeContextAccessor)
+        IAiRuntimeContextAccessor runtimeContextAccessor,
+        IAiRuntimeContextScopeProvider scopeProvider,
+        AiRuntimeContextContributorCollection contributors)
     {
         _connectionService = connectionService;
         _middleware = middleware;
         _runtimeContextAccessor = runtimeContextAccessor;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
     }
 
     public async Task<IChatClient> CreateClientAsync(AiProfile profile, CancellationToken cancellationToken = default)
@@ -35,7 +41,13 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
 
         // Wrap in scoped client to set profile metadata per-execution
         // This is the outermost wrapper so middleware can access profile metadata in context
-        chatClient = new ScopedProfileChatClient(chatClient, profile, _runtimeContextAccessor);
+        // Creates scope if needed for standalone usage
+        chatClient = new ScopedProfileChatClient(
+            chatClient,
+            profile,
+            _runtimeContextAccessor,
+            _scopeProvider,
+            _contributors);
 
         return chatClient;
     }

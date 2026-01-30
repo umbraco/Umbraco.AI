@@ -4,10 +4,9 @@
     <source media="(prefers-color-scheme: light)" srcset="./assets/logo_dark.png">
     <img alt="Umbraco AI" src="./assets/logo_dark.png" width="500">
   </picture>
-  <br />&nbsp;
+  <br />&nbsp;<br />
+  AI integration layer for Umbraco CMS, built on Microsoft.Extensions.AI.
 </p>
-
-AI integration layer for Umbraco CMS, built on Microsoft.Extensions.AI.
 
 ## Products
 

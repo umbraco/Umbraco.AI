@@ -10,16 +10,12 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/anthropic-",
-    "^refs/heads/hotfix/anthropic-",
-    "^refs/tags/release-anthropic-"
+    "^refs/heads/hotfix/",
+    "^refs/heads/release/"
   ],
   "cloudBuild": {
     "buildNumber": {
-      "enabled": true
+      "enabled": false
     }
-  },
-  "release": {
-    "branchName": "release/anthropic-{version}"
   }
 }

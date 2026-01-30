@@ -34,6 +34,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
             dateCreated: null,
             dateModified: null,
             version: 0,
+            scopeIds: [],
             ...preset,
         };
 

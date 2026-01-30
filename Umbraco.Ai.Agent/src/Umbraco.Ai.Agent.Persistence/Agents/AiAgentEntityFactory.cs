@@ -26,6 +26,7 @@ internal static class AiAgentEntityFactory
             Description = entity.Description,
             ProfileId = entity.ProfileId,
             ContextIds = DeserializeContextIds(entity.ContextIds),
+            ScopeIds = DeserializeScopeIds(entity.ScopeIds),
             Instructions = entity.Instructions,
             IsActive = entity.IsActive,
             DateCreated = entity.DateCreated,
@@ -49,6 +50,7 @@ internal static class AiAgentEntityFactory
             Description = aiAgent.Description,
             ProfileId = aiAgent.ProfileId,
             ContextIds = SerializeContextIds(aiAgent.ContextIds),
+            ScopeIds = SerializeScopeIds(aiAgent.ScopeIds),
             Instructions = aiAgent.Instructions,
             IsActive = aiAgent.IsActive,
             DateCreated = aiAgent.DateCreated,
@@ -69,6 +71,7 @@ internal static class AiAgentEntityFactory
         entity.Description = aiAgent.Description;
         entity.ProfileId = aiAgent.ProfileId;
         entity.ContextIds = SerializeContextIds(aiAgent.ContextIds);
+        entity.ScopeIds = SerializeScopeIds(aiAgent.ScopeIds);
         entity.Instructions = aiAgent.Instructions;
         entity.IsActive = aiAgent.IsActive;
         entity.DateModified = aiAgent.DateModified;
@@ -97,6 +100,33 @@ internal static class AiAgentEntityFactory
         try
         {
             return JsonSerializer.Deserialize<List<Guid>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static string? SerializeScopeIds(IReadOnlyList<string> scopeIds)
+    {
+        if (scopeIds.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(scopeIds, JsonOptions);
+    }
+
+    private static IReadOnlyList<string> DeserializeScopeIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json, JsonOptions) ?? [];
         }
         catch
         {

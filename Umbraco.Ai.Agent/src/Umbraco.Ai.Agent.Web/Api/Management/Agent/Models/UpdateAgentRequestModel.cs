@@ -40,6 +40,11 @@ public class UpdateAgentRequestModel
     public IEnumerable<Guid>? ContextIds { get; init; }
 
     /// <summary>
+    /// Optional scope IDs that categorize this agent for specific purposes.
+    /// </summary>
+    public IEnumerable<string>? ScopeIds { get; init; }
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; init; }

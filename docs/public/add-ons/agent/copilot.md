@@ -5,6 +5,10 @@ description: >-
 
 # Copilot
 
+{% hint style="warning" %}
+The Copilot UI is now provided by the separate [`Umbraco.Ai.Agent.Copilot`](../agent-copilot/README.md) package. See the [Agent Copilot documentation](../agent-copilot/copilot.md) for full details.
+{% endhint %}
+
 The Copilot is an AI-powered assistant that appears as a sidebar in the Umbraco backoffice. It provides conversational AI capabilities directly within your content editing workflow.
 
 ## Overview
@@ -204,6 +208,7 @@ The Copilot shows the current agent status:
 
 ## Related
 
+* [Agent Copilot](../agent-copilot/README.md) - Full Copilot package documentation
 * [Concepts](concepts.md) - Agent fundamentals
 * [Instructions](instructions.md) - Configuring agent behavior
-* [Frontend Tools](frontend-tools.md) - Custom tool integrations
+* [Frontend Tools](../agent-copilot/frontend-tools.md) - Custom tool integrations

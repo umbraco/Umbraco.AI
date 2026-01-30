@@ -31,11 +31,25 @@ Write-Host "Configuring git hooks..."
 # Configure git to use the custom hooks directory
 git config core.hooksPath .githooks
 
+# Configure custom merge driver for release-manifest.json
+Write-Host "Configuring custom merge driver for release-manifest.json..."
+$mergeDriverScript = if ($IsWindows -or $env:OS -match "Windows") {
+    "pwsh .githooks/merge-preserve-on-release.ps1 %O %A %B %L %P"
+} else {
+    ".githooks/merge-preserve-on-release.sh %O %A %B %L %P"
+}
+git config merge.preserve-on-release.name "Preserve release-manifest.json on release/hotfix branches"
+git config merge.preserve-on-release.driver $mergeDriverScript
+
 Write-Host ""
 Write-Host "✓ Git hooks configured successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "The following hooks are now active:"
 Write-Host "  - pre-push: Validates branch naming conventions"
+Write-Host "  - commit-msg: Validates commit messages (conventional commits)"
+Write-Host "  - post-merge: Cleans up release-manifest.json after merge to main/dev/support/*"
+Write-Host "  - pre-merge-commit: Restores release-manifest.json on release/hotfix branches if deleted during merge"
+Write-Host "  - merge driver: Preserves release-manifest.json on release/hotfix branches (content conflicts only)"
 Write-Host ""
 Write-Host "To disable hooks, run:"
 Write-Host "  git config --unset core.hooksPath"

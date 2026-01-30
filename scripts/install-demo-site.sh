@@ -4,6 +4,13 @@
 
 set -e
 
+# Determine repository root (parent of scripts folder)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &>/dev/null && pwd )"
+REPO_ROOT="$( cd "$SCRIPT_DIR/.." &>/dev/null && pwd )"
+
+# Change to repository root to ensure consistent behavior
+cd "$REPO_ROOT" || exit 1
+
 # Parse arguments
 SKIP_TEMPLATE_INSTALL=false
 FORCE=false
@@ -38,6 +45,7 @@ done
 echo "========================================="
 echo "Umbraco.Ai Unified Demo Site Setup"
 echo "========================================="
+echo "Working directory: $REPO_ROOT"
 echo ""
 
 # Check if demo already exists
@@ -155,6 +163,10 @@ add_product_projects "Umbraco.Ai.Prompt" "Prompt"
 echo "Adding Umbraco.Ai.Agent projects..."
 add_product_projects "Umbraco.Ai.Agent" "Agent"
 
+# Step 8.1: Add Agent Copilot projects
+echo "Adding Umbraco.Ai.Agent.Copilot projects..."
+add_product_projects "Umbraco.Ai.Agent.Copilot" "AgentCopilot"
+
 # Step 9: Add Anthropic provider projects
 echo "Adding Umbraco.Ai.Anthropic projects..."
 add_product_projects "Umbraco.Ai.Anthropic" "Anthropic"
@@ -218,6 +230,11 @@ fi
 if [ -f "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent/Umbraco.Ai.Agent.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent/Umbraco.Ai.Agent.csproj"
     dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Persistence.Sqlite/Umbraco.Ai.Agent.Persistence.Sqlite.csproj"
+fi
+
+# Agent Copilot add-on (frontend-only static assets)
+if [ -f "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.Ai.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.csproj"
 fi
 
 echo ""

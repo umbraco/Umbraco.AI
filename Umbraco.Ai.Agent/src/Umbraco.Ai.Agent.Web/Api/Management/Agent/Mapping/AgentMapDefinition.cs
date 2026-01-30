@@ -1,4 +1,5 @@
 using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.Ai.Agent.Core.Scopes;
 using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Core.Strings;
@@ -27,6 +28,9 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             Alias = string.Empty,
             Name = string.Empty
         }, MapFromUpdateRequest);
+        
+        // Scope mappings
+        mapper.Define<IAiAgentScope, AgentScopeItemResponseModel>((_, _) => new AgentScopeItemResponseModel(), MapToResponse);
     }
 
     private AiAgent CreateAgentFactory(CreateAgentRequestModel source, MapperContext context)
@@ -50,6 +54,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
+        target.ScopeIds = source.ScopeIds?.ToList() ?? [];
         target.Instructions = source.Instructions;
         target.IsActive = true;
     }
@@ -62,6 +67,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
+        target.ScopeIds = source.ScopeIds?.ToList() ?? [];
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
     }
@@ -75,6 +81,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
+        target.ScopeIds = source.ScopeIds;
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
@@ -91,8 +98,15 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
+        target.ScopeIds = source.ScopeIds;
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
+    }
+
+    private static void MapToResponse(IAiAgentScope source, AgentScopeItemResponseModel target, MapperContext context)
+    {
+        target.Id = source.Id;
+        target.Icon = source.Icon;
     }
 }

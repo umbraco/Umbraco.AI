@@ -38,6 +38,8 @@ internal interface IAiAgentRepository
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
+    /// <param name="scopeId">Optional scope ID filter.</param>
+    /// <param name="isActive">Optional active status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged result containing Agents and total count.</returns>
     Task<PagedModel<AiAgent>> GetPagedAsync(
@@ -45,7 +47,17 @@ internal interface IAiAgentRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
+        string? scopeId = null,
+        bool? isActive = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all agents that belong to a specific scope.
+    /// </summary>
+    /// <param name="scopeId">The scope ID to filter by.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Agents that have the specified scope ID in their ScopeIds.</returns>
+    Task<IEnumerable<AiAgent>> GetByScopeAsync(string scopeId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves an agent (creates or updates).

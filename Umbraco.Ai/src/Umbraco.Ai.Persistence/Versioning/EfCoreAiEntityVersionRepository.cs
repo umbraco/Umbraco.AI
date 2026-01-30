@@ -155,25 +155,23 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
 
         var deleted = await scope.ExecuteWithContextAsync(async db =>
         {
-            // Get IDs of versions to delete using a subquery approach:
-            // For each (EntityId, EntityType) group, find versions that are beyond the max count
-            var versionsToDelete = await db.EntityVersions
-                .GroupBy(v => new { v.EntityId, v.EntityType })
-                .SelectMany(g => g
-                    .OrderByDescending(v => v.Version)
-                    .Skip(maxVersionsPerEntity)
-                    .Select(v => v.Id))
-                .ToListAsync(cancellationToken);
+            // Use ROW_NUMBER window function to identify excess versions per entity
+            // This is more efficient than GroupBy + SelectMany and works in both SQL Server and SQLite
+            var sql = @"
+                DELETE FROM umbracoAiEntityVersion
+                WHERE Id IN (
+                    SELECT Id FROM (
+                        SELECT Id,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY EntityId, EntityType
+                                   ORDER BY Version DESC
+                               ) AS RowNum
+                        FROM umbracoAiEntityVersion
+                    ) AS Ranked
+                    WHERE RowNum > {0}
+                )";
 
-            if (versionsToDelete.Count == 0)
-            {
-                return 0;
-            }
-
-            // Delete the identified versions
-            return await db.EntityVersions
-                .Where(v => versionsToDelete.Contains(v.Id))
-                .ExecuteDeleteAsync(cancellationToken);
+            return await db.Database.ExecuteSqlRawAsync(sql, [maxVersionsPerEntity], cancellationToken);
         });
 
         scope.Complete();

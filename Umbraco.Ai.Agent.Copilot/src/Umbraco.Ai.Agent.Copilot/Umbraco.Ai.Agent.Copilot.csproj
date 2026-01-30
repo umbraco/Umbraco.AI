@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+    <PropertyGroup>
+        <Title>Umbraco Ai Agent Copilot</Title>
+        <Description>Copilot chat UI for Umbraco Ai Agent</Description>
+        <StaticWebAssetBasePath>App_Plugins/UmbracoAiAgentCopilot</StaticWebAssetBasePath>
+        <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Core\Umbraco.Ai.Agent.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.Ai.Agent.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Dont include the client folder as part of packaging nuget build -->
+        <Content Remove="Client\**" />
+        <Content Include="Client\package.json" />
+        <Content Include="Client\tsconfig.json" />
+
+        <!-- However make the Umbraco-package.json included for dotnet pack or nuget package and visible to the solution -->
+        <None Include="Client\public\umbraco-package.json" Pack="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+    <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild"
+            DependsOnTargets="GetBuildVersion;GetUmbracoBuildVersion"
+            Condition="Exists('wwwroot\umbraco-package.json') AND '$(JsonPathUpdateValueDefined)' == 'true'">
+        <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
+        <ItemGroup>
+            <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
+        </ItemGroup>
+        <JsonPathUpdateValue JsonFile="%(_PackageManifestFiles.FullPath)" Path="$.version" Value="&quot;$(PackageVersion)&quot;" />
+    </Target>
+</Project>

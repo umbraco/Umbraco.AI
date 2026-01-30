@@ -64,6 +64,10 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
                     b.Property<Guid?>("ProfileId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ScopeIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Version")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")

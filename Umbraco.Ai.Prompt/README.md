@@ -1,6 +1,6 @@
 # Umbraco.Ai.Prompt
 
-A prompt template management add-on for Umbraco.Ai that provides storage, organization, and management of AI prompt templates.
+A prompt template management add-on for Umbraco.Ai that provides storage, organization, and management of AI prompt templates with full backoffice integration.
 
 ## Features
 

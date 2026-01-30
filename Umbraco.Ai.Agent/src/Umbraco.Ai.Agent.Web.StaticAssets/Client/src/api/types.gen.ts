@@ -11,6 +11,7 @@ export type AgentItemResponseModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds: Array<string>;
+    scopeIds: Array<string>;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -23,11 +24,17 @@ export type AgentResponseModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds: Array<string>;
+    scopeIds: Array<string>;
     instructions?: string | null;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
     version: number;
+};
+
+export type AgentScopeItemResponseModel = {
+    id: string;
+    icon: string;
 };
 
 export type AguiContextItemModel = {
@@ -91,6 +98,7 @@ export type CreateAgentRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
+    scopeIds?: Array<string> | null;
     instructions?: string | null;
 };
 
@@ -122,6 +130,7 @@ export type UpdateAgentRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
+    scopeIds?: Array<string> | null;
     instructions?: string | null;
     isActive: boolean;
 };
@@ -148,6 +157,8 @@ export type GetAllAgentsData = {
         take?: number;
         filter?: string;
         profileId?: string;
+        scopeId?: string;
+        isActive?: boolean;
     };
     url: '/umbraco/ai/management/api/v1/agents';
 };
@@ -330,3 +341,26 @@ export type RunAgentResponses = {
 };
 
 export type RunAgentResponse = RunAgentResponses[keyof RunAgentResponses];
+
+export type GetAgentScopesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/agents/scopes';
+};
+
+export type GetAgentScopesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAgentScopesResponses = {
+    /**
+     * OK
+     */
+    200: Array<AgentScopeItemResponseModel>;
+};
+
+export type GetAgentScopesResponse = GetAgentScopesResponses[keyof GetAgentScopesResponses];

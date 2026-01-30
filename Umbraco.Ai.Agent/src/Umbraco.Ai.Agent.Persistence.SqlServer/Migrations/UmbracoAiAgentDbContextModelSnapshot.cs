@@ -69,6 +69,10 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
                     b.Property<Guid?>("ProfileId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ScopeIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<int>("Version")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")

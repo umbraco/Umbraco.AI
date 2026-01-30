@@ -9,7 +9,8 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 | Product | Description | Version | Location |
 |---------|-------------|---------|----------|
 | **Umbraco.Ai** | Core AI integration layer | 1.x | `Umbraco.Ai/` |
-| **Umbraco.Ai.Agent** | AI agent management | 1.x | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.Agent** | AI agent management and runtime | 1.x | `Umbraco.Ai.Agent/` |
+| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | 1.x | `Umbraco.Ai.Agent.Copilot/` |
 | **Umbraco.Ai.Prompt** | Prompt template management | 1.x | `Umbraco.Ai.Prompt/` |
 | **Umbraco.Ai.OpenAi** | OpenAI provider | 1.x | `Umbraco.Ai.OpenAi/` |
 | **Umbraco.Ai.Anthropic** | Anthropic provider | 1.x | `Umbraco.Ai.Anthropic/` |
@@ -19,12 +20,42 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 
 ## Quick Start
 
+The fastest way to get started is using the install-demo script, which creates a unified development environment with all packages and a demo Umbraco site:
+
 ```bash
-# Build all products
-dotnet build Umbraco.Ai.sln
+# Windows
+.\scripts\install-demo-site.ps1
+
+# Linux/Mac
+./scripts/install-demo-site.sh
 ```
 
+This creates:
+- `Umbraco.Ai.local.sln` - Unified solution with all products
+- `demo/Umbraco.Ai.DemoSite/` - Umbraco instance with all packages referenced
+
+After running the script, build the frontend and backend:
+
+```bash
+# Install frontend dependencies
+npm install
+
+# Build all frontend packages
+npm run build
+
+# Build the unified solution
+dotnet build Umbraco.Ai.local.sln
+
+# Run the demo site (from demo/Umbraco.Ai.DemoSite/)
+cd demo/Umbraco.Ai.DemoSite
+dotnet run
+```
+
+**Demo site credentials:** admin@example.com / password1234
+
 ## Local Development
+
+### Building Individual Products
 
 Each product has its own solution file and can be built independently:
 
@@ -77,6 +108,7 @@ Umbraco.Ai (Core)
     ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
     └── Umbraco.Ai.Agent (Add-on - depends on Core)
+            └── Umbraco.Ai.Agent.Copilot (Chat UI - depends on Agent)
 ```
 
 ## Documentation
@@ -86,31 +118,8 @@ Umbraco.Ai (Core)
 - Product-specific guides:
   - [Umbraco.Ai/CLAUDE.md](Umbraco.Ai/CLAUDE.md) - Core package
   - [Umbraco.Ai.Agent/CLAUDE.md](Umbraco.Ai.Agent/CLAUDE.md) - Agent add-on
+  - [Umbraco.Ai.Agent.Copilot/CLAUDE.md](Umbraco.Ai.Agent.Copilot/CLAUDE.md) - Agent Copilot add-on
   - [Umbraco.Ai.Prompt/CLAUDE.md](Umbraco.Ai.Prompt/CLAUDE.md) - Prompt add-on
-
-## Release Process
-
-This monorepo supports independent versioning per product:
-
-- **All packages**: Version 1.x (independent versioning from Umbraco CMS)
-
-### Branch Naming Convention
-
-- `main` - Main development branch
-- `feature/<product>-<name>` - Feature branches (e.g., `feature/core-add-caching`)
-- `release/<product>-<version>` - Release branches (e.g., `release/core-1.0.1`)
-- `hotfix/<product>-<version>` - Hotfix branches (e.g., `hotfix/openai-1.0.1`)
-
-### Release Tags
-
-- `release-core-1.0.1` - Core release
-- `release-agent-1.0.1` - Agent release
-- `release-prompt-1.0.1` - Prompt release
-- `release-openai-1.0.1` - OpenAI provider release
-- `release-anthropic-1.0.1` - Anthropic provider release
-- `release-amazon-1.0.1` - Amazon Bedrock provider release
-- `release-google-1.0.1` - Google Gemini provider release
-- `release-microsoft-foundry-1.0.1` - Microsoft AI Foundry provider release
 
 ## Target Framework
 
@@ -120,13 +129,15 @@ This monorepo supports independent versioning per product:
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
-- Development workflow and branch naming
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+- Development workflow and branch naming conventions
+- Commit message format (conventional commits)
+- Changelog generation and maintenance
 - Pull request process
 - Release and deployment procedures
-- Coding standards and conventions
+- Coding standards
 
-For technical details, see [CLAUDE.md](CLAUDE.md).
+For development setup and build commands, see [CLAUDE.md](CLAUDE.md).
 
 ## License
 

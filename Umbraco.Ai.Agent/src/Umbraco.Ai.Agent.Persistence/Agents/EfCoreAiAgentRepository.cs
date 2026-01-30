@@ -63,6 +63,8 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
+        string? scopeId = null,
+        bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAiAgentDbContext> scope = _scopeProvider.CreateScope();
@@ -84,6 +86,19 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
                 query = query.Where(e => e.ProfileId == profileId.Value);
             }
 
+            if (!string.IsNullOrWhiteSpace(scopeId))
+            {
+                // Filter agents that have the scopeId in their ScopeIds JSON array
+                // Using LIKE to search within JSON array (works for both SQL Server and SQLite)
+                var scopePattern = $"\"{scopeId}\"";
+                query = query.Where(e => e.ScopeIds != null && e.ScopeIds.Contains(scopePattern));
+            }
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(e => e.IsActive == isActive.Value);
+            }
+
             var total = await query.CountAsync(cancellationToken);
             var items = await query
                 .OrderBy(e => e.Name)
@@ -98,6 +113,26 @@ internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
 
         var Agents = result.items.Select(AiAgentEntityFactory.BuildDomain).ToList();
         return new PagedModel<Core.Agents.AiAgent>(result.total, Agents);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Core.Agents.AiAgent>> GetByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAiAgentDbContext> scope = _scopeProvider.CreateScope();
+
+        var entities = await scope.ExecuteWithContextAsync(async db =>
+        {
+            // Filter agents that have the scopeId in their ScopeIds JSON array
+            var scopePattern = $"\"{scopeId}\"";
+            return await db.Agents.AsNoTracking()
+                .Where(e => e.ScopeIds != null && e.ScopeIds.Contains(scopePattern))
+                .OrderBy(e => e.Name)
+                .ToListAsync(cancellationToken);
+        });
+
+        scope.Complete();
+
+        return entities.Select(AiAgentEntityFactory.BuildDomain);
     }
 
     /// <inheritdoc />

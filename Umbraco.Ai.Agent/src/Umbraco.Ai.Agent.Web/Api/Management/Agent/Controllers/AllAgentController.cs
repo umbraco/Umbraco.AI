@@ -33,6 +33,8 @@ public class AllAgentController : AgentControllerBase
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
+    /// <param name="scopeId">Optional scope ID filter. Only returns agents with this scope assigned.</param>
+    /// <param name="isActive">Optional active status filter. If true, returns only active agents; if false, returns only inactive agents; if null, returns all agents.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged list of Agents.</returns>
     [HttpGet]
@@ -43,9 +45,11 @@ public class AllAgentController : AgentControllerBase
         int take = 100,
         string? filter = null,
         Guid? profileId = null,
+        string? scopeId = null,
+        bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await _AiAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, cancellationToken);
+        var result = await _AiAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, scopeId, isActive, cancellationToken);
 
         var viewModel = new PagedViewModel<AgentItemResponseModel>
         {

@@ -37,6 +37,11 @@ public class AgentItemResponseModel
     public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
+    /// Scope IDs that categorize this agent for specific purposes.
+    /// </summary>
+    public IEnumerable<string> ScopeIds { get; set; } = [];
+
+    /// <summary>
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }

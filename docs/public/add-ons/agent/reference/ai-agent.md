@@ -24,7 +24,8 @@ public class AiAgent : IAiVersionableEntity
     public required string Name { get; set; }
     public string? Description { get; set; }
     public Guid? ProfileId { get; set; }
-    public IReadOnlyList<Guid> ContextIds { get; set; } = Array.Empty<Guid>();
+    public IReadOnlyList<Guid> ContextIds { get; set; } = [];
+    public IReadOnlyList<string> ScopeIds { get; set; } = [];
     public string? Instructions { get; set; }
     public bool IsActive { get; set; } = true;
 
@@ -50,6 +51,7 @@ public class AiAgent : IAiVersionableEntity
 | `Description` | `string?` | Optional description |
 | `ProfileId` | `Guid?` | Associated AI profile (null uses default) |
 | `ContextIds` | `IReadOnlyList<Guid>` | AI Contexts to inject |
+| `ScopeIds` | `IReadOnlyList<string>` | Scope IDs for categorization |
 | `Instructions` | `string?` | Agent system prompt |
 | `IsActive` | `bool` | Whether agent is available |
 | `DateCreated` | `DateTime` | When created |
@@ -66,7 +68,8 @@ var agent = new AiAgent
     Name = "Content Assistant",
     Description = "Helps users write and improve content",
     ProfileId = chatProfileId,
-    ContextIds = new[] { brandVoiceContextId },
+    ContextIds = [brandVoiceContextId],
+    ScopeIds = ["copilot"],
     Instructions = @"You are a helpful content assistant.
 
 Your role is to help users write and improve content for the website.
@@ -86,3 +89,4 @@ var saved = await _agentService.SaveAgentAsync(agent);
 
 * [IAiAgentService](ai-agent-service.md) - Agent service
 * [Agent Concepts](../concepts.md) - Concepts overview
+* [Scopes](../scopes.md) - Agent categorization

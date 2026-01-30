@@ -14,6 +14,6 @@ OpenAI provider for Umbraco.Ai - connect to OpenAI API or Azure OpenAI Service w
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 17.0.0+
+- Umbraco.Ai 1.0.0+
 - .NET 10.0
 - OpenAI API key or Azure OpenAI credentials

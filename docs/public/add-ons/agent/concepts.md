@@ -24,6 +24,7 @@ An agent is a configured AI assistant that can:
 | `Instructions` | System prompt defining agent behavior |
 | `ProfileId` | Associated AI profile (or uses default) |
 | `ContextIds` | AI Contexts to inject |
+| `ScopeIds` | Scopes for categorization (e.g., "copilot") |
 | `IsActive` | Whether the agent is available |
 
 ## AG-UI Protocol
@@ -162,4 +163,5 @@ Every change to an agent creates a new version:
 
 * [Instructions](instructions.md) - Configuring agent behavior
 * [Streaming](streaming.md) - SSE event handling
+* [Scopes](scopes.md) - Categorizing agents
 * [Frontend Tools](frontend-tools.md) - Defining tools

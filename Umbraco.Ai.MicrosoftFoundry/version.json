@@ -10,16 +10,12 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
-    "^refs/heads/release/microsoft-foundry-",
-    "^refs/heads/hotfix/microsoft-foundry-",
-    "^refs/tags/release-microsoft-foundry-"
+    "^refs/heads/hotfix/",
+    "^refs/heads/release/"
   ],
   "cloudBuild": {
     "buildNumber": {
-      "enabled": true
+      "enabled": false
     }
-  },
-  "release": {
-    "branchName": "release/microsoft-foundry-{version}"
   }
 }

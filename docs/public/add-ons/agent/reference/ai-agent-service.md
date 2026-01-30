@@ -30,6 +30,11 @@ public interface IAiAgentService
         int take = 100,
         string? filter = null,
         Guid? profileId = null,
+        string? scopeId = null,
+        CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<AiAgent>> GetAgentsByScopeAsync(
+        string scopeId,
         CancellationToken cancellationToken = default);
 
     Task<AiAgent> SaveAgentAsync(AiAgent agent, CancellationToken cancellationToken = default);
@@ -87,9 +92,21 @@ Gets agents with pagination and filtering.
 | `take` | `int` | Items to take |
 | `filter` | `string?` | Filter by name |
 | `profileId` | `Guid?` | Filter by profile |
+| `scopeId` | `string?` | Filter by scope (e.g., "copilot") |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: Paged result with items and total count.
+
+### GetAgentsByScopeAsync
+
+Gets all agents belonging to a specific scope.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `scopeId` | `string` | The scope ID to filter by |
+| `cancellationToken` | `CancellationToken` | Cancellation token |
+
+**Returns**: All agents with the specified scope.
 
 ### SaveAgentAsync
 
@@ -205,3 +222,4 @@ public class AiFrontendToolDefinition
 
 * [AiAgent Model](ai-agent.md) - Agent model reference
 * [Agent Concepts](../concepts.md) - Concepts overview
+* [Scopes](../scopes.md) - Agent categorization

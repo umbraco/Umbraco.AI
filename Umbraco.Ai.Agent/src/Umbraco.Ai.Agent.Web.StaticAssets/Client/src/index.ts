@@ -1,3 +1,2 @@
-export * from './agent/index.js';
-export * from './api/index.js';
-export * from './copilot/index.js';
+// Re-export the public API
+export * from './exports.js';

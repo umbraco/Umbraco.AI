@@ -283,7 +283,7 @@ public class AguiStreamingServiceTests
         // Act & Assert - cancellation from agent should propagate
         await Should.ThrowAsync<OperationCanceledException>(async () =>
         {
-            await foreach (var _ in _service.StreamAgentAsync(agent, request, null, null, CancellationToken.None))
+            await foreach (var _ in _service.StreamAgentAsync(agent, request, null, CancellationToken.None))
             {
                 // Consume
             }
@@ -337,11 +337,10 @@ public class AguiStreamingServiceTests
     private async Task<List<IAguiEvent>> CollectEvents(
         AIAgent agent,
         AguiRunRequest request,
-        IEnumerable<AITool>? frontendTools = null,
-        string? additionalSystemPrompt = null)
+        IEnumerable<AITool>? frontendTools = null)
     {
         var events = new List<IAguiEvent>();
-        await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools, additionalSystemPrompt, CancellationToken.None))
+        await foreach (var evt in _service.StreamAgentAsync(agent, request, frontendTools, CancellationToken.None))
         {
             events.Add(evt);
         }

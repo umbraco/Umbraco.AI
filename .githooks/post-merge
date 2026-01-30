@@ -1,20 +1,33 @@
 #!/bin/sh
-# Post-merge hook - Clean up release-manifest.json on long-term branches
+# Post-merge hook - Clean up or commit release-manifest.json based on branch type
 
 # Get current branch
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-# Only run on main, dev, or support/* branches
-if [ "$current_branch" != "main" ] && [ "$current_branch" != "dev" ] && ! echo "$current_branch" | grep -q "^support/"; then
+# Handle release/hotfix branches - commit staged manifest if present
+if echo "$current_branch" | grep -qE '^(release|hotfix)/'; then
+    # Check if release-manifest.json is staged but not committed
+    if git diff --cached --name-only | grep -q "^release-manifest.json$"; then
+        echo "📝 Committing staged release-manifest.json after merge to $current_branch..."
+        git commit -m "chore(ci): Preserve release-manifest.json after merge"
+        if [ $? -eq 0 ]; then
+            echo "✓ release-manifest.json committed"
+        else
+            echo "⚠️  Failed to commit release-manifest.json"
+        fi
+    fi
     exit 0
 fi
 
-# Check if release-manifest.json exists
-if [ -f "release-manifest.json" ]; then
-    echo "🧹 Cleaning up release-manifest.json after merge to $current_branch..."
-    git rm release-manifest.json
-    git commit -m "chore(ci): Remove release-manifest.json after merge"
-    echo "✓ release-manifest.json removed and committed"
+# Handle long-term branches (main/dev/support) - remove manifest
+if [ "$current_branch" = "main" ] || [ "$current_branch" = "dev" ] || echo "$current_branch" | grep -q "^support/"; then
+    # Check if release-manifest.json exists
+    if [ -f "release-manifest.json" ]; then
+        echo "🧹 Cleaning up release-manifest.json after merge to $current_branch..."
+        git rm release-manifest.json
+        git commit -m "chore(ci): Remove release-manifest.json after merge"
+        echo "✓ release-manifest.json removed and committed"
+    fi
 fi
 
 exit 0

@@ -40,7 +40,6 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         AIAgent agent,
         AguiRunRequest request,
         IEnumerable<AITool>? frontendTools,
-        string? additionalSystemPrompt = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var emitter = new AguiEventEmitter(request.ThreadId, request.RunId);
@@ -53,7 +52,7 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         yield return emitter.EmitRunStarted();
 
         // Use manual enumerator pattern to avoid "yield in try with catch" limitation
-        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, additionalSystemPrompt, cancellationToken);
+        var coreStream = StreamCoreAsync(agent, request, emitter, frontendToolNames, cancellationToken);
         var enumerator = coreStream.GetAsyncEnumerator(cancellationToken);
 
         try
@@ -109,19 +108,30 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         AguiRunRequest request,
         AguiEventEmitter emitter,
         HashSet<string> frontendToolNames,
-        string? additionalSystemPrompt,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        // Build messages (may inject additional system prompt)
-        var chatMessages = BuildChatMessages(request, additionalSystemPrompt);
+        // Convert AG-UI messages to M.E.AI chat messages
+        var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages);
+
+        // Handle resume - inject tool results from resume payload
+        if (request.Resume != null)
+        {
+            var resumeMessages = ExtractToolResultsFromResume(request.Resume);
+            chatMessages.AddRange(resumeMessages);
+
+            _logger.LogDebug(
+                "Resume from interrupt {InterruptId} with {ResultCount} tool results",
+                request.Resume.InterruptId,
+                resumeMessages.Count);
+        }
 
         _logger.LogDebug(
             "Starting agent streaming with {MessageCount} messages, {ToolCount} frontend tools",
             chatMessages.Count,
             frontendToolNames.Count);
 
-        // Use MAF streaming with options (thread=null, options=agentOptions)
-        await foreach (var update in agent.RunStreamingAsync(chatMessages, thread: null, cancellationToken: cancellationToken))
+        // Use MAF streaming with options (session=null for new session)
+        await foreach (var update in agent.RunStreamingAsync(chatMessages, session: null, cancellationToken: cancellationToken))
         {
             // Process content items (tool calls and results first, then text)
             if (update.Contents != null)
@@ -157,49 +167,6 @@ internal sealed class AguiStreamingService : IAguiStreamingService
         }
     }
 
-    /// <summary>
-    /// Builds chat messages from the request, injecting additional system prompt if provided.
-    /// </summary>
-    private List<ChatMessage> BuildChatMessages(AguiRunRequest request, string? additionalSystemPrompt)
-    {
-        // Convert AG-UI messages
-        var chatMessages = _messageConverter.ConvertToChatMessages(request.Messages);
-
-        // Inject additional system prompt (e.g., from runtime context contributors)
-        if (!string.IsNullOrEmpty(additionalSystemPrompt))
-        {
-            // Check if there's already a system message to combine with
-            var existingSystemIndex = chatMessages.FindIndex(m => m.Role == ChatRole.System);
-            if (existingSystemIndex >= 0)
-            {
-                // Prepend additional content to existing system message
-                var existingContent = chatMessages[existingSystemIndex].Text ?? string.Empty;
-                var combinedContent = string.IsNullOrEmpty(existingContent)
-                    ? additionalSystemPrompt
-                    : $"{additionalSystemPrompt}\n\n{existingContent}";
-                chatMessages[existingSystemIndex] = new ChatMessage(ChatRole.System, combinedContent);
-            }
-            else
-            {
-                // Insert new system message at the beginning
-                chatMessages.Insert(0, new ChatMessage(ChatRole.System, additionalSystemPrompt));
-            }
-        }
-
-        // Handle resume - inject tool results from resume payload
-        if (request.Resume != null)
-        {
-            var resumeMessages = ExtractToolResultsFromResume(request.Resume);
-            chatMessages.AddRange(resumeMessages);
-
-            _logger.LogDebug(
-                "Resume from interrupt {InterruptId} with {ResultCount} tool results",
-                request.Resume.InterruptId,
-                resumeMessages.Count);
-        }
-
-        return chatMessages;
-    }
 
     private IAguiEvent? ProcessFunctionCall(
         AguiEventEmitter emitter,

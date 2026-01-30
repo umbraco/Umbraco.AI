@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Humanizer.Core" />
         <PackageReference Include="Umbraco.Cms.Api.Management" />
     </ItemGroup>
 

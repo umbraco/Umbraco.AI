@@ -220,6 +220,10 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<IAiRuntimeContextAccessor>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
         services.AddSingleton<IAiRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
 
+        // Runtime context contributors collection (empty for tests)
+        services.AddSingleton<AiRuntimeContextContributorCollection>(
+            _ => new AiRuntimeContextContributorCollection(() => Enumerable.Empty<IAiRuntimeContextContributor>()));
+
         // Settings resolution
         services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();
 

@@ -8,6 +8,8 @@
   AI integration layer for Umbraco CMS, built on Microsoft.Extensions.AI.
 </p>
 
+<hr />
+
 ## Products
 
 This is a monorepo containing multiple Umbraco.Ai packages:

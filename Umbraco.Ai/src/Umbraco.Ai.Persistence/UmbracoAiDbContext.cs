@@ -7,6 +7,7 @@ using Umbraco.Ai.Persistence.Analytics;
 using Umbraco.Ai.Persistence.Analytics.Usage;
 using Umbraco.Ai.Persistence.Settings;
 using Umbraco.Ai.Persistence.Versioning;
+using Umbraco.Ai.Persistence.Tests;
 
 namespace Umbraco.Ai.Persistence;
 
@@ -64,6 +65,31 @@ public class UmbracoAiDbContext : DbContext
     /// AI settings (key-value store).
     /// </summary>
     internal DbSet<AiSettingsEntity> Settings { get; set; } = null!;
+
+    /// <summary>
+    /// AI tests.
+    /// </summary>
+    internal DbSet<AiTestEntity> Tests { get; set; } = null!;
+
+    /// <summary>
+    /// AI test graders.
+    /// </summary>
+    internal DbSet<AiTestGraderEntity> TestGraders { get; set; } = null!;
+
+    /// <summary>
+    /// AI test runs.
+    /// </summary>
+    internal DbSet<AiTestRunEntity> TestRuns { get; set; } = null!;
+
+    /// <summary>
+    /// AI test transcripts.
+    /// </summary>
+    internal DbSet<AiTestTranscriptEntity> TestTranscripts { get; set; } = null!;
+
+    /// <summary>
+    /// AI test grader results.
+    /// </summary>
+    internal DbSet<AiTestGraderResultEntity> TestGraderResults { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
@@ -575,6 +601,243 @@ public class UmbracoAiDbContext : DbContext
             // Unique constraint on Key to ensure only one value per setting
             entity.HasIndex(e => e.Key)
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<AiTestEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiTest");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Alias)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.TestTypeId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.TargetId)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.TargetIsAlias)
+                .IsRequired();
+
+            entity.Property(e => e.TestCaseJson)
+                .IsRequired();
+
+            entity.Property(e => e.RunCount)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.Property(e => e.Tags)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.IsEnabled)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.BaselineRunId);
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateModified)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedByUserId);
+            entity.Property(e => e.ModifiedByUserId);
+
+            entity.HasIndex(e => e.Alias)
+                .IsUnique();
+
+            entity.HasIndex(e => e.TestTypeId);
+            entity.HasIndex(e => e.IsEnabled);
+            entity.HasIndex(e => e.Tags);
+
+            entity.HasMany(e => e.Graders)
+                .WithOne(g => g.Test)
+                .HasForeignKey(g => g.TestId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AiTestGraderEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiTestGrader");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.TestId)
+                .IsRequired();
+
+            entity.Property(e => e.GraderTypeId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.ConfigJson)
+                .IsRequired();
+
+            entity.Property(e => e.Negate)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.Severity)
+                .IsRequired()
+                .HasDefaultValue(2);
+
+            entity.Property(e => e.Weight)
+                .IsRequired()
+                .HasDefaultValue(1.0f);
+
+            entity.Property(e => e.SortOrder)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            entity.HasIndex(e => e.TestId);
+            entity.HasIndex(e => e.GraderTypeId);
+        });
+
+        modelBuilder.Entity<AiTestRunEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiTestRun");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.TestId)
+                .IsRequired();
+
+            entity.Property(e => e.TestVersion)
+                .IsRequired();
+
+            entity.Property(e => e.RunNumber)
+                .IsRequired();
+
+            entity.Property(e => e.ProfileId)
+                .IsRequired();
+
+            entity.Property(e => e.ContextIdsJson);
+
+            entity.Property(e => e.ExecutedAt)
+                .IsRequired();
+
+            entity.Property(e => e.ExecutedByUserId);
+
+            entity.Property(e => e.DurationMs)
+                .IsRequired();
+
+            entity.Property(e => e.Status)
+                .IsRequired();
+
+            entity.Property(e => e.ErrorMessage)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.OutcomeType)
+                .IsRequired();
+
+            entity.Property(e => e.OutcomeValue)
+                .IsRequired();
+
+            entity.Property(e => e.FinishReason)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.InputTokens);
+            entity.Property(e => e.OutputTokens);
+
+            entity.Property(e => e.MetadataJson);
+            entity.Property(e => e.BatchId);
+
+            entity.HasIndex(e => new { e.TestId, e.RunNumber });
+            entity.HasIndex(e => e.ExecutedAt);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.BatchId);
+            entity.HasIndex(e => e.ProfileId);
+
+            entity.HasOne(e => e.Test)
+                .WithMany()
+                .HasForeignKey(e => e.TestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Transcript)
+                .WithOne(t => t.Run)
+                .HasForeignKey<AiTestTranscriptEntity>(t => t.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.GraderResults)
+                .WithOne(r => r.Run)
+                .HasForeignKey(r => r.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AiTestTranscriptEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiTestTranscript");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.RunId)
+                .IsRequired();
+
+            entity.Property(e => e.MessagesJson)
+                .IsRequired();
+
+            entity.Property(e => e.ToolCallsJson);
+            entity.Property(e => e.ReasoningJson);
+            entity.Property(e => e.TimingJson);
+
+            entity.Property(e => e.FinalOutputJson)
+                .IsRequired();
+
+            entity.HasIndex(e => e.RunId);
+        });
+
+        modelBuilder.Entity<AiTestGraderResultEntity>(entity =>
+        {
+            entity.ToTable("umbracoAiTestGraderResult");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.RunId)
+                .IsRequired();
+
+            entity.Property(e => e.GraderId)
+                .IsRequired();
+
+            entity.Property(e => e.Passed)
+                .IsRequired();
+
+            entity.Property(e => e.Score);
+
+            entity.Property(e => e.ActualValue);
+
+            entity.Property(e => e.ExpectedValue);
+
+            entity.Property(e => e.FailureMessage)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.MetadataJson);
+
+            entity.HasIndex(e => e.RunId);
+            entity.HasIndex(e => e.GraderId);
+            entity.HasIndex(e => e.Passed);
+
+            entity.HasOne(e => e.Grader)
+                .WithMany()
+                .HasForeignKey(e => e.GraderId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

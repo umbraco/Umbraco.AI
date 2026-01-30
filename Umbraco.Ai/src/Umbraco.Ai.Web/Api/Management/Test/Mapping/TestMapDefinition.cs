@@ -23,7 +23,7 @@ public class TestMapDefinition : IMapDefinition
             Name = string.Empty,
             TestTypeId = string.Empty,
             Target = new AiTestTarget { TargetId = string.Empty },
-            TestCase = new AiTestTestCase { TestCaseJson = string.Empty }
+            TestCase = new AiTestCase { TestCaseJson = string.Empty }
         }, MapFromUpdateRequest);
 
         // Run mappings
@@ -48,7 +48,7 @@ public class TestMapDefinition : IMapDefinition
                 TargetId = source.Target.TargetId,
                 IsAlias = source.Target.IsAlias
             },
-            TestCase = new AiTestTestCase
+            TestCase = new AiTestCase
             {
                 TestCaseJson = source.TestCase.TestCaseJson
             },
@@ -60,7 +60,7 @@ public class TestMapDefinition : IMapDefinition
                 Description = g.Description,
                 ConfigJson = g.ConfigJson,
                 Negate = g.Negate,
-                Severity = g.Severity,
+                Severity = (AiTestGraderSeverity)g.Severity,
                 Weight = g.Weight,
                 SortOrder = g.SortOrder
             }).ToList(),
@@ -87,7 +87,7 @@ public class TestMapDefinition : IMapDefinition
             TargetId = source.Target.TargetId,
             IsAlias = source.Target.IsAlias
         };
-        target.TestCase = new AiTestTestCase
+        target.TestCase = new AiTestCase
         {
             TestCaseJson = source.TestCase.TestCaseJson
         };
@@ -101,7 +101,7 @@ public class TestMapDefinition : IMapDefinition
             Description = g.Description,
             ConfigJson = g.ConfigJson,
             Negate = g.Negate,
-            Severity = g.Severity,
+            Severity = (AiTestGraderSeverity)g.Severity,
             Weight = g.Weight,
             SortOrder = g.SortOrder
         }).ToList();
@@ -136,7 +136,7 @@ public class TestMapDefinition : IMapDefinition
             Description = g.Description,
             ConfigJson = g.ConfigJson,
             Negate = g.Negate,
-            Severity = g.Severity,
+            Severity = (int)g.Severity,
             Weight = g.Weight,
             SortOrder = g.SortOrder
         }).ToList();

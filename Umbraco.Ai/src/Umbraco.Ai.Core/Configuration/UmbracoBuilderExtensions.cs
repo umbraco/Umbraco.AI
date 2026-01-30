@@ -24,6 +24,7 @@ using Umbraco.Ai.Core.RuntimeContext.Contributors;
 using Umbraco.Ai.Core.RuntimeContext.Middleware;
 using Umbraco.Ai.Core.Security;
 using Umbraco.Ai.Core.TaskQueue;
+using Umbraco.Ai.Core.Tests;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Core.Tools.Web;
 using Umbraco.Ai.Core.Versioning;
@@ -211,6 +212,21 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AiUsageHourlyAggregationJob>();
         services.AddHostedService<AiUsageDailyRollupJob>();
         services.AddHostedService<AiUsageStatisticsCleanupJob>();
+
+        // Test infrastructure
+        // Note: IAiTestRepository and IAiTestRunRepository are registered by persistence layer
+        services.AddScoped<IAiTestRunner, AiTestRunner>();
+        services.AddSingleton<IAiTestService, AiTestService>();
+
+        // Test feature collection - auto-discover via [AiTestFeature] attribute
+        services.AddSingleton<AiTestFeatureCollection>();
+        builder.AiTestFeatures()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiTestFeature, AiTestFeatureAttribute>(cache: true));
+
+        // Grader collection - auto-discover via [AiTestGrader] attribute
+        services.AddSingleton<AiTestGraderCollection>();
+        builder.AiTestGraders()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiTestGrader, AiTestGraderAttribute>(cache: true));
 
         return builder;
     }

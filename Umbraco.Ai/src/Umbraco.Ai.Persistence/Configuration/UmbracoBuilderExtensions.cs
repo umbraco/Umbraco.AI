@@ -7,6 +7,7 @@ using Umbraco.Ai.Core.Contexts;
 using Umbraco.Ai.Core.AuditLog;
 using Umbraco.Ai.Core.Profiles;
 using Umbraco.Ai.Core.Settings;
+using Umbraco.Ai.Core.Tests;
 using Umbraco.Ai.Core.Versioning;
 using Umbraco.Ai.Persistence;
 using Umbraco.Ai.Persistence.Analytics;
@@ -17,6 +18,7 @@ using Umbraco.Ai.Persistence.AuditLog;
 using Umbraco.Ai.Persistence.Notifications;
 using Umbraco.Ai.Persistence.Profiles;
 using Umbraco.Ai.Persistence.Settings;
+using Umbraco.Ai.Persistence.Tests;
 using Umbraco.Ai.Persistence.Versioning;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -54,6 +56,10 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAiUsageRecordRepository, EfCoreAiUsageRecordRepository>();
         builder.Services.AddSingleton<IAiUsageStatisticsRepository, EfCoreAiUsageStatisticsRepository>();
         builder.Services.AddSingleton<IAiSettingsRepository, EfCoreAiSettingsRepository>();
+
+        // Test repositories (EF Core implementations)
+        builder.Services.AddSingleton<IAiTestRepository, EfCoreAiTestRepository>();
+        builder.Services.AddSingleton<IAiTestRunRepository, EfCoreAiTestRunRepository>();
 
         // Unified versioning repository
         builder.Services.AddSingleton<IAiEntityVersionRepository, EfCoreAiEntityVersionRepository>();

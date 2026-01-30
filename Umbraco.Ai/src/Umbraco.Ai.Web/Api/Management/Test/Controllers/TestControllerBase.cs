@@ -16,32 +16,40 @@ public abstract class TestControllerBase : UmbracoAiCoreManagementControllerBase
     /// <summary>
     /// Returns a not found result for a test.
     /// </summary>
-    protected IActionResult TestNotFound() => NotFound(ProblemDetailsBuilder()
-        .WithTitle("Test not found")
-        .WithDetail("The specified test does not exist.")
-        .Build());
+    protected IActionResult TestNotFound()
+        => OperationStatusResult(TestOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Test not found")
+                .WithDetail("The specified test does not exist.")
+                .Build()));
 
     /// <summary>
     /// Returns a not found result for a test run.
     /// </summary>
-    protected IActionResult TestRunNotFound() => NotFound(ProblemDetailsBuilder()
-        .WithTitle("Test run not found")
-        .WithDetail("The specified test run does not exist.")
-        .Build());
+    protected IActionResult TestRunNotFound()
+        => OperationStatusResult(TestOperationStatus.NotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Test run not found")
+                .WithDetail("The specified test run does not exist.")
+                .Build()));
 
     /// <summary>
     /// Returns a not found result for a test feature.
     /// </summary>
-    protected IActionResult TestFeatureNotFound() => NotFound(ProblemDetailsBuilder()
-        .WithTitle("Test feature not found")
-        .WithDetail("The specified test feature does not exist.")
-        .Build());
+    protected IActionResult TestFeatureNotFound()
+        => OperationStatusResult(TestOperationStatus.TestFeatureNotFound, problemDetailsBuilder
+            => NotFound(problemDetailsBuilder
+                .WithTitle("Test feature not found")
+                .WithDetail("The specified test feature does not exist.")
+                .Build()));
 
     /// <summary>
     /// Returns a bad request result for duplicate alias.
     /// </summary>
-    protected IActionResult DuplicateAliasResult() => BadRequest(ProblemDetailsBuilder()
-        .WithTitle("Duplicate alias")
-        .WithDetail("A test with this alias already exists.")
-        .Build());
+    protected IActionResult DuplicateAliasResult()
+        => OperationStatusResult(TestOperationStatus.DuplicateAlias, problemDetailsBuilder
+            => BadRequest(problemDetailsBuilder
+                .WithTitle("Duplicate alias")
+                .WithDetail("A test with this alias already exists.")
+                .Build()));
 }

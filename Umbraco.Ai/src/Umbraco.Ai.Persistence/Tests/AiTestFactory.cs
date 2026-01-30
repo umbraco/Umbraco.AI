@@ -78,4 +78,35 @@ internal static class AiTestFactory
             Graders = test.Graders.Select(AiTestGraderFactory.BuildEntity).ToList()
         };
     }
+
+    /// <summary>
+    /// Updates an existing <see cref="AiTestEntity"/> with values from a domain model.
+    /// </summary>
+    /// <param name="entity">The entity to update.</param>
+    /// <param name="test">The domain model with updated values.</param>
+    public static void UpdateEntity(AiTestEntity entity, AiTest test)
+    {
+        entity.Alias = test.Alias;
+        entity.Name = test.Name;
+        entity.Description = test.Description;
+        entity.TestTypeId = test.TestTypeId;
+        entity.TargetId = test.Target.TargetId;
+        entity.TargetIsAlias = test.Target.IsAlias;
+        entity.TestCaseJson = test.TestCase.TestCaseJson;
+        entity.RunCount = test.RunCount;
+        entity.Tags = test.Tags.Any() ? string.Join(',', test.Tags) : null;
+        entity.IsEnabled = test.IsEnabled;
+        entity.BaselineRunId = test.BaselineRunId;
+        entity.Version = test.Version;
+        entity.DateModified = test.DateModified;
+        entity.ModifiedByUserId = test.ModifiedByUserId;
+        // DateCreated and CreatedByUserId are intentionally not updated
+
+        // Update graders - remove old, add new
+        entity.Graders.Clear();
+        foreach (var grader in test.Graders)
+        {
+            entity.Graders.Add(AiTestGraderFactory.BuildEntity(grader));
+        }
+    }
 }

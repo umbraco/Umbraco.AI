@@ -1,6 +1,7 @@
 using Umbraco.Ai.Core.Chat;
 using Umbraco.Ai.Core.Embeddings;
 using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.Ai.Core.Tests;
 using Umbraco.Ai.Core.Tools;
 using Umbraco.Ai.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -94,4 +95,36 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AiVersionableEntityAdapterCollectionBuilder AiVersionableEntityAdapters(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AiVersionableEntityAdapterCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI test feature collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI test feature collection builder.</returns>
+    /// <remarks>
+    /// Use this to add or exclude AI test features. Test features are auto-discovered via the [AiTestFeature] attribute.
+    /// <code>
+    /// builder.AiTestFeatures()
+    ///     .Add&lt;CustomTestFeature&gt;()
+    ///     .Exclude&lt;UnwantedTestFeature&gt;();
+    /// </code>
+    /// </remarks>
+    public static AiTestFeatureCollectionBuilder AiTestFeatures(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AiTestFeatureCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI test grader collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI test grader collection builder.</returns>
+    /// <remarks>
+    /// Use this to add or exclude AI test graders. Graders are auto-discovered via the [AiTestGrader] attribute.
+    /// <code>
+    /// builder.AiTestGraders()
+    ///     .Add&lt;CustomGrader&gt;()
+    ///     .Exclude&lt;UnwantedGrader&gt;();
+    /// </code>
+    /// </remarks>
+    public static AiTestGraderCollectionBuilder AiTestGraders(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AiTestGraderCollectionBuilder>();
 }

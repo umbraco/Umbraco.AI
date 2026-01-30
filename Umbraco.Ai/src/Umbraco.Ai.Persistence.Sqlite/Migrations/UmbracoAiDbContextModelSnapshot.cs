@@ -593,6 +593,333 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiProfile", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Settings.AiSettingsEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAiSettings", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Alias")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("BaselineRunId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RunCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("TargetIsAlias")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TestCaseJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TestTypeId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Alias")
+                        .IsUnique();
+
+                    b.HasIndex("IsEnabled");
+
+                    b.HasIndex("Tags");
+
+                    b.HasIndex("TestTypeId");
+
+                    b.ToTable("umbracoAiTest", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestGraderEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GraderTypeId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Negate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("Severity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(2);
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<Guid>("TestId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<float>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("REAL")
+                        .HasDefaultValue(1f);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GraderTypeId");
+
+                    b.HasIndex("TestId");
+
+                    b.ToTable("umbracoAiTestGrader", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestGraderResultEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ActualValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExpectedValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("GraderId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Passed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<float?>("Score")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GraderId");
+
+                    b.HasIndex("Passed");
+
+                    b.HasIndex("RunId");
+
+                    b.ToTable("umbracoAiTestGraderResult", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestRunEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("BatchId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContextIdsJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExecutedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ExecutedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FinishReason")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("InputTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OutcomeType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OutcomeValue")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("OutputTokens")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RunNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("TestId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TestVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("ExecutedAt");
+
+                    b.HasIndex("ProfileId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TestId", "RunNumber");
+
+                    b.ToTable("umbracoAiTestRun", (string)null);
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestTranscriptEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FinalOutputJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MessagesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReasoningJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TimingJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ToolCallsJson")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAiTestTranscript", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.Ai.Persistence.Versioning.AiEntityVersionEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -634,41 +961,6 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAiEntityVersion", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Settings.AiSettingsEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("CreatedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("DateModified")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ModifiedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Key")
-                        .IsUnique();
-
-                    b.ToTable("umbracoAiSettings", (string)null);
-                });
-
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>
                 {
                     b.HasOne("Umbraco.Ai.Persistence.Context.AiContextEntity", "Context")
@@ -689,9 +981,73 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestGraderEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Tests.AiTestEntity", "Test")
+                        .WithMany("Graders")
+                        .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Test");
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestGraderResultEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Tests.AiTestGraderEntity", "Grader")
+                        .WithMany()
+                        .HasForeignKey("GraderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Umbraco.Ai.Persistence.Tests.AiTestRunEntity", "Run")
+                        .WithMany("GraderResults")
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Grader");
+
+                    b.Navigation("Run");
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestRunEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Tests.AiTestEntity", "Test")
+                        .WithMany()
+                        .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Test");
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestTranscriptEntity", b =>
+                {
+                    b.HasOne("Umbraco.Ai.Persistence.Tests.AiTestRunEntity", "Run")
+                        .WithOne("Transcript")
+                        .HasForeignKey("Umbraco.Ai.Persistence.Tests.AiTestTranscriptEntity", "RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Run");
+                });
+
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
                 {
                     b.Navigation("Resources");
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestEntity", b =>
+                {
+                    b.Navigation("Graders");
+                });
+
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Tests.AiTestRunEntity", b =>
+                {
+                    b.Navigation("GraderResults");
+
+                    b.Navigation("Transcript");
                 });
 #pragma warning restore 612, 618
         }

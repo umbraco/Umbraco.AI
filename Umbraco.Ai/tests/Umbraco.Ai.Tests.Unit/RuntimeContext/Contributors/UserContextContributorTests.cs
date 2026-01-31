@@ -189,7 +189,7 @@ public class UserContextContributorTests
         _contributor.Contribute(context);
 
         // Assert
-        context.HandledRequestContextItemCount.ShouldBe(0);
+        context.RequestContextItems.HandledCount.ShouldBe(0);
     }
 
     private void SetupAuthenticatedUser(

@@ -9,7 +9,7 @@ internal sealed class DefaultSystemMessageContributor : IAiRuntimeContextContrib
     /// <inheritdoc />
     public void Contribute(AiRuntimeContext context)
     {
-        context.HandleUnhandledRequestContextItems(item =>
+        context.RequestContextItems.HandleUnhandled(item =>
         {
             if (!string.IsNullOrWhiteSpace(item.Description))
             {

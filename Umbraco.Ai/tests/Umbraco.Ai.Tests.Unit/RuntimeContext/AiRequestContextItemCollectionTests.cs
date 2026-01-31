@@ -2,10 +2,10 @@ using Umbraco.Ai.Core.RuntimeContext;
 
 namespace Umbraco.Ai.Tests.Unit.RuntimeContext;
 
-public class AiRuntimeContextTests
+public class AiRequestContextItemCollectionTests
 {
     [Fact]
-    public void HandleRequestContextItem_WhenMatchFound_InvokesHandlerAndReturnsTrue()
+    public void Handle_WhenMatchFound_InvokesHandlerAndReturnsTrue()
     {
         // Arrange
         var items = new[]
@@ -13,11 +13,11 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "Item 1", Value = "value1" },
             new AiRequestContextItem { Description = "Item 2", Value = "value2" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
         var handledItem = (AiRequestContextItem?)null;
 
         // Act
-        var result = context.HandleRequestContextItem(
+        var result = collection.Handle(
             item => item.Description == "Item 2",
             item => handledItem = item);
 
@@ -28,49 +28,49 @@ public class AiRuntimeContextTests
     }
 
     [Fact]
-    public void HandleRequestContextItem_WhenMatchFound_MarksItemAsHandled()
+    public void Handle_WhenMatchFound_MarksItemAsHandled()
     {
         // Arrange
         var items = new[]
         {
             new AiRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Act
-        context.HandleRequestContextItem(
+        collection.Handle(
             item => item.Description == "Item 1",
             _ => { });
 
         // Assert
-        context.IsRequestContextItemHandled(items[0]).ShouldBeTrue();
-        context.HandledRequestContextItemCount.ShouldBe(1);
+        collection.IsHandled(items[0]).ShouldBeTrue();
+        collection.HandledCount.ShouldBe(1);
     }
 
     [Fact]
-    public void HandleRequestContextItem_WhenNoMatch_ReturnsFalseAndDoesNotInvokeHandler()
+    public void Handle_WhenNoMatch_ReturnsFalseAndDoesNotInvokeHandler()
     {
         // Arrange
         var items = new[]
         {
             new AiRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
         var handlerInvoked = false;
 
         // Act
-        var result = context.HandleRequestContextItem(
+        var result = collection.Handle(
             item => item.Description == "Nonexistent",
             _ => handlerInvoked = true);
 
         // Assert
         result.ShouldBeFalse();
         handlerInvoked.ShouldBeFalse();
-        context.HandledRequestContextItemCount.ShouldBe(0);
+        collection.HandledCount.ShouldBe(0);
     }
 
     [Fact]
-    public void HandleRequestContextItem_SkipsAlreadyHandledItems()
+    public void Handle_SkipsAlreadyHandledItems()
     {
         // Arrange
         var items = new[]
@@ -78,16 +78,16 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "Item 1", Value = "value1" },
             new AiRequestContextItem { Description = "Item 1", Value = "value2" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
         var handledValues = new List<string?>();
 
         // Act - Handle first matching item
-        context.HandleRequestContextItem(
+        collection.Handle(
             item => item.Description == "Item 1",
             item => handledValues.Add(item.Value));
 
         // Act - Try to handle again (should get the second one)
-        context.HandleRequestContextItem(
+        collection.Handle(
             item => item.Description == "Item 1",
             item => handledValues.Add(item.Value));
 
@@ -98,7 +98,7 @@ public class AiRuntimeContextTests
     }
 
     [Fact]
-    public void HandleRequestContextItems_InvokesHandlerForAllMatches()
+    public void HandleAll_InvokesHandlerForAllMatches()
     {
         // Arrange
         var items = new[]
@@ -107,11 +107,11 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "TypeB", Value = "value2" },
             new AiRequestContextItem { Description = "TypeA", Value = "value3" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
         var handledValues = new List<string?>();
 
         // Act
-        context.HandleRequestContextItems(
+        collection.HandleAll(
             item => item.Description == "TypeA",
             item => handledValues.Add(item.Value));
 
@@ -122,7 +122,7 @@ public class AiRuntimeContextTests
     }
 
     [Fact]
-    public void HandleRequestContextItems_MarksAllMatchedItemsAsHandled()
+    public void HandleAll_MarksAllMatchedItemsAsHandled()
     {
         // Arrange
         var items = new[]
@@ -131,22 +131,22 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "TypeB", Value = "value2" },
             new AiRequestContextItem { Description = "TypeA", Value = "value3" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Act
-        context.HandleRequestContextItems(
+        collection.HandleAll(
             item => item.Description == "TypeA",
             _ => { });
 
         // Assert
-        context.IsRequestContextItemHandled(items[0]).ShouldBeTrue();
-        context.IsRequestContextItemHandled(items[1]).ShouldBeFalse();
-        context.IsRequestContextItemHandled(items[2]).ShouldBeTrue();
-        context.HandledRequestContextItemCount.ShouldBe(2);
+        collection.IsHandled(items[0]).ShouldBeTrue();
+        collection.IsHandled(items[1]).ShouldBeFalse();
+        collection.IsHandled(items[2]).ShouldBeTrue();
+        collection.HandledCount.ShouldBe(2);
     }
 
     [Fact]
-    public void HandleRequestContextItems_SkipsAlreadyHandledItems()
+    public void HandleAll_SkipsAlreadyHandledItems()
     {
         // Arrange
         var items = new[]
@@ -154,17 +154,17 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "TypeA", Value = "value1" },
             new AiRequestContextItem { Description = "TypeA", Value = "value2" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Handle first item individually
-        context.HandleRequestContextItem(
+        collection.Handle(
             item => item.Description == "TypeA",
             _ => { });
 
         var handledValues = new List<string?>();
 
-        // Act - HandleRequestContextItems should skip the already handled item
-        context.HandleRequestContextItems(
+        // Act - HandleAll should skip the already handled item
+        collection.HandleAll(
             item => item.Description == "TypeA",
             item => handledValues.Add(item.Value));
 
@@ -174,7 +174,7 @@ public class AiRuntimeContextTests
     }
 
     [Fact]
-    public void HandleUnhandledRequestContextItems_InvokesHandlerForAllUnhandled()
+    public void HandleUnhandled_InvokesHandlerForAllUnhandled()
     {
         // Arrange
         var items = new[]
@@ -183,17 +183,17 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "Item 2", Value = "value2" },
             new AiRequestContextItem { Description = "Item 3", Value = "value3" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Handle first item
-        context.HandleRequestContextItem(
+        collection.Handle(
             item => item.Description == "Item 1",
             _ => { });
 
         var handledValues = new List<string?>();
 
         // Act
-        context.HandleUnhandledRequestContextItems(item => handledValues.Add(item.Value));
+        collection.HandleUnhandled(item => handledValues.Add(item.Value));
 
         // Assert
         handledValues.Count.ShouldBe(2);
@@ -202,7 +202,7 @@ public class AiRuntimeContextTests
     }
 
     [Fact]
-    public void HandleUnhandledRequestContextItems_MarksAllItemsAsHandled()
+    public void HandleUnhandled_MarksAllItemsAsHandled()
     {
         // Arrange
         var items = new[]
@@ -210,73 +210,73 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "Item 1", Value = "value1" },
             new AiRequestContextItem { Description = "Item 2", Value = "value2" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Act
-        context.HandleUnhandledRequestContextItems(_ => { });
+        collection.HandleUnhandled(_ => { });
 
         // Assert
-        context.IsRequestContextItemHandled(items[0]).ShouldBeTrue();
-        context.IsRequestContextItemHandled(items[1]).ShouldBeTrue();
-        context.HandledRequestContextItemCount.ShouldBe(2);
+        collection.IsHandled(items[0]).ShouldBeTrue();
+        collection.IsHandled(items[1]).ShouldBeTrue();
+        collection.HandledCount.ShouldBe(2);
     }
 
     [Fact]
-    public void HandleUnhandledRequestContextItems_WhenAllHandled_DoesNotInvokeHandler()
+    public void HandleUnhandled_WhenAllHandled_DoesNotInvokeHandler()
     {
         // Arrange
         var items = new[]
         {
             new AiRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Handle all items first
-        context.HandleUnhandledRequestContextItems(_ => { });
+        collection.HandleUnhandled(_ => { });
 
         var handlerInvoked = false;
 
         // Act
-        context.HandleUnhandledRequestContextItems(_ => handlerInvoked = true);
+        collection.HandleUnhandled(_ => handlerInvoked = true);
 
         // Assert
         handlerInvoked.ShouldBeFalse();
     }
 
     [Fact]
-    public void IsRequestContextItemHandled_ReturnsTrueForHandledItem()
+    public void IsHandled_ReturnsTrueForHandledItem()
     {
         // Arrange
         var items = new[]
         {
             new AiRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
-        context.HandleRequestContextItem(
+        collection.Handle(
             item => item.Description == "Item 1",
             _ => { });
 
         // Act & Assert
-        context.IsRequestContextItemHandled(items[0]).ShouldBeTrue();
+        collection.IsHandled(items[0]).ShouldBeTrue();
     }
 
     [Fact]
-    public void IsRequestContextItemHandled_ReturnsFalseForUnhandledItem()
+    public void IsHandled_ReturnsFalseForUnhandledItem()
     {
         // Arrange
         var items = new[]
         {
             new AiRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Act & Assert
-        context.IsRequestContextItemHandled(items[0]).ShouldBeFalse();
+        collection.IsHandled(items[0]).ShouldBeFalse();
     }
 
     [Fact]
-    public void HandledRequestContextItemCount_ReturnsCorrectCount()
+    public void HandledCount_ReturnsCorrectCount()
     {
         // Arrange
         var items = new[]
@@ -285,68 +285,123 @@ public class AiRuntimeContextTests
             new AiRequestContextItem { Description = "Item 2", Value = "value2" },
             new AiRequestContextItem { Description = "Item 3", Value = "value3" }
         };
-        var context = new AiRuntimeContext(items);
+        var collection = new AiRequestContextItemCollection(items);
 
         // Act
-        context.HandleRequestContextItem(item => item.Description == "Item 1", _ => { });
-        context.HandleRequestContextItem(item => item.Description == "Item 2", _ => { });
+        collection.Handle(item => item.Description == "Item 1", _ => { });
+        collection.Handle(item => item.Description == "Item 2", _ => { });
 
         // Assert
-        context.HandledRequestContextItemCount.ShouldBe(2);
+        collection.HandledCount.ShouldBe(2);
     }
 
     [Fact]
-    public void HandleRequestContextItem_NullPredicate_ThrowsArgumentNullException()
+    public void Handle_NullPredicate_ThrowsArgumentNullException()
     {
         // Arrange
-        var context = new AiRuntimeContext([]);
+        var collection = new AiRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            context.HandleRequestContextItem(null!, _ => { }));
+            collection.Handle(null!, _ => { }));
     }
 
     [Fact]
-    public void HandleRequestContextItem_NullHandler_ThrowsArgumentNullException()
+    public void Handle_NullHandler_ThrowsArgumentNullException()
     {
         // Arrange
-        var context = new AiRuntimeContext([]);
+        var collection = new AiRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            context.HandleRequestContextItem(_ => true, null!));
+            collection.Handle(_ => true, null!));
     }
 
     [Fact]
-    public void HandleRequestContextItems_NullPredicate_ThrowsArgumentNullException()
+    public void HandleAll_NullPredicate_ThrowsArgumentNullException()
     {
         // Arrange
-        var context = new AiRuntimeContext([]);
+        var collection = new AiRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            context.HandleRequestContextItems(null!, _ => { }));
+            collection.HandleAll(null!, _ => { }));
     }
 
     [Fact]
-    public void HandleRequestContextItems_NullHandler_ThrowsArgumentNullException()
+    public void HandleAll_NullHandler_ThrowsArgumentNullException()
     {
         // Arrange
-        var context = new AiRuntimeContext([]);
+        var collection = new AiRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            context.HandleRequestContextItems(_ => true, null!));
+            collection.HandleAll(_ => true, null!));
     }
 
     [Fact]
-    public void HandleUnhandledRequestContextItems_NullHandler_ThrowsArgumentNullException()
+    public void HandleUnhandled_NullHandler_ThrowsArgumentNullException()
     {
         // Arrange
-        var context = new AiRuntimeContext([]);
+        var collection = new AiRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            context.HandleUnhandledRequestContextItems(null!));
+            collection.HandleUnhandled(null!));
+    }
+
+    [Fact]
+    public void Count_ReturnsCorrectItemCount()
+    {
+        // Arrange
+        var items = new[]
+        {
+            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+        };
+        var collection = new AiRequestContextItemCollection(items);
+
+        // Act & Assert
+        collection.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Indexer_ReturnsCorrectItem()
+    {
+        // Arrange
+        var items = new[]
+        {
+            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+        };
+        var collection = new AiRequestContextItemCollection(items);
+
+        // Act & Assert
+        collection[0].Description.ShouldBe("Item 1");
+        collection[1].Description.ShouldBe("Item 2");
+    }
+
+    [Fact]
+    public void GetEnumerator_IteratesAllItems()
+    {
+        // Arrange
+        var items = new[]
+        {
+            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+        };
+        var collection = new AiRequestContextItemCollection(items);
+        var enumerated = new List<AiRequestContextItem>();
+
+        // Act
+        foreach (var item in collection)
+        {
+            enumerated.Add(item);
+        }
+
+        // Assert
+        enumerated.Count.ShouldBe(2);
+        enumerated[0].Description.ShouldBe("Item 1");
+        enumerated[1].Description.ShouldBe("Item 2");
     }
 }

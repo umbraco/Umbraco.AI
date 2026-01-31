@@ -8,10 +8,10 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// <remarks>
 /// <para>
 /// Contributors are executed in registration order. Use
-/// <see cref="AiRuntimeContext.HandleRequestContextItem"/> or
-/// <see cref="AiRuntimeContext.HandleRequestContextItems"/> to process
+/// <see cref="AiRequestContextItemCollection.Handle"/> or
+/// <see cref="AiRequestContextItemCollection.HandleAll"/> to process
 /// specific request context items. Use
-/// <see cref="AiRuntimeContext.HandleUnhandledRequestContextItems"/> for
+/// <see cref="AiRequestContextItemCollection.HandleUnhandled"/> for
 /// fallback processing of remaining items.
 /// </para>
 /// </remarks>

@@ -28,7 +28,7 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
     /// <inheritdoc />
     public void Contribute(AiRuntimeContext context)
     {
-        context.HandleRequestContextItem(
+        context.RequestContextItems.Handle(
             IsSerializedEntity,
             item => ProcessSerializedEntity(item, context));
     }

@@ -56,31 +56,37 @@ The setup script creates:
 - `-s, --skip-template-install` - Skip reinstalling Umbraco.Templates
 - `-f, --force` - Recreate demo if it already exists
 
-### Running the Demo Site (Claude Code)
+### Managing the Demo Site (Claude Code)
 
-**IMPORTANT:** When running the demo site in Claude Code sessions, always use the `DemoSite-Claude` launch profile:
+For demo site operations in Claude Code sessions, use the dedicated skills:
 
+**Infrastructure Operations:**
 ```bash
-# Run with DemoSite-Claude profile (uses dynamic port for automatic discovery)
-dotnet run --project demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj --launch-profile DemoSite-Claude
+/demo-site start              # Start with DemoSite-Claude profile (dynamic port)
+/demo-site stop               # Stop the running demo site
+/demo-site open               # Open in browser (auto-discovers port)
+/demo-site generate-client    # Generate OpenAPI clients
+/demo-site status             # Check running status and port info
+/demo-site restart            # Stop and restart
 ```
 
-**Why this matters:**
-- The `DemoSite-Claude` profile uses a dynamic port (avoids conflicts with user's local instances)
-- The demo site exposes its port via a **named pipe** with a unique identifier based on your git branch/worktree
-- Pipe names: `umbraco-ai-demo-port-{branch}` (main worktree) or `umbraco-ai-demo-port-{worktree-name}` (worktrees)
-- Named pipes are automatically cleaned up when the process dies (even on crashes/force-kill)
-- The `npm run generate-client` scripts calculate the same identifier and connect to the matching pipe
-- **Multiple instances work simultaneously** - each worktree gets its own unique pipe
-- Enables fully automated OpenAPI client generation without manual configuration
-- No stale data - pipe only exists while demo site is running
+**Browser Automation:**
+```bash
+/demo-site-ix login                      # Login to Umbraco backoffice
+/demo-site-ix navigate-to-connections    # Navigate to AI Connections
+/demo-site-ix navigate-to-profiles       # Navigate to AI Profiles
+/demo-site-ix navigate-to-prompts        # Navigate to AI Prompts
+/demo-site-ix navigate-to-agents         # Navigate to AI Agents
+/demo-site-ix create-connection [provider]  # Create new connection
+# ... see skill for full list of commands
+```
 
-**Examples:**
-- Main worktree on `dev` branch → `umbraco-ai-demo-port-dev`
-- Worktree named `feature-ai-tools` → `umbraco-ai-demo-port-feature-ai-tools`
-- Another worktree `bugfix-123` → `umbraco-ai-demo-port-bugfix-123`
-
-**For local developers:** The default `DemoSite` profile uses fixed port 44355 and works without any special configuration.
+**Technical Details:**
+- Uses `DemoSite-Claude` launch profile with dynamic port allocation
+- Port discovery via named pipes: `umbraco-ai-demo-port-{branch-or-worktree}`
+- Multiple worktrees can run simultaneously without conflicts
+- Named pipes auto-cleanup when process exits
+- For manual development, use `DemoSite` profile (fixed port 44355)
 
 ## Build Commands
 

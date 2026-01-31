@@ -1,7 +1,7 @@
 ---
 name: demo-site
 description: Manage the Umbraco.Ai demo site for development. Handles starting with DemoSite-Claude profile, port discovery via named pipes, and OpenAPI client generation.
-argument-hint: [start|stop|generate-client|status|restart]
+argument-hint: [start|stop|generate-client|status|restart|open]
 allowed-tools: Bash, Read, TaskOutput, TaskStop
 ---
 
@@ -20,6 +20,7 @@ Execute the requested demo site operation.
 - **generate-client**: Generate OpenAPI clients (starts site if needed)
 - **status**: Check if site is running and show port/pipe info
 - **restart**: Stop and restart the demo site
+- **open**: Open the demo site in default browser (discovers port automatically)
 
 ## Current Environment
 
@@ -118,6 +119,22 @@ Use multi-method detection to determine site status:
 
 ### For "restart"
 Execute stop operation, wait 3 seconds, then execute start operation.
+
+### For "open"
+1. Check if demo site is running using status detection methods
+2. If not running, report error: "Demo site not running. Start it with `/demo-site start`"
+3. If running, discover the port:
+   - Look for background task output file
+   - Extract port from "Now listening on: https://127.0.0.1:<port>" line
+   - Or try common ports (55209, 44355, etc.)
+4. Launch default browser with discovered URL:
+   - Windows: `cmd.exe /c start https://127.0.0.1:<port>`
+   - Linux: `xdg-open https://127.0.0.1:<port>`
+   - macOS: `open https://127.0.0.1:<port>`
+5. Report:
+   - Browser launched
+   - URL opened
+   - Credentials reminder: admin@example.com / password1234
 
 ## Detection Helper Commands
 

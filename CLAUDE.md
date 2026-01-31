@@ -20,45 +20,19 @@ This is a monorepo containing Umbraco.Ai and its add-on packages:
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
-## Local Development Setup
+## Development Environment
 
-### Quick Start
+### Initial Setup
 
+Use the setup skill for first-time repository configuration:
 ```bash
-# One-time setup: creates unified solution + demo site
-.\scripts\install-demo-site.ps1  # Windows
-./scripts/install-demo-site.sh   # Linux/Mac
-
-# Configure git hooks (enforces branch naming convention)
-.\scripts\setup-git-hooks.ps1  # Windows
-./scripts/setup-git-hooks.sh   # Linux/Mac
-
-# Open the unified solution
-# Umbraco.Ai.local.sln
-
-# Build everything
-dotnet build Umbraco.Ai.local.sln
+/setup-repo  # Interactive setup: git hooks, demo site, dependencies, build
 ```
 
 ### Demo Site
 
-The setup script creates:
-- `Umbraco.Ai.local.sln` - Unified solution with all products
-- `demo/Umbraco.Ai.DemoSite/` - Umbraco instance with all packages referenced
-
+**Location:** `demo/Umbraco.Ai.DemoSite/`
 **Credentials:** admin@example.com / password1234
-
-**Script options (PowerShell):**
-- `-SkipTemplateInstall` - Skip reinstalling Umbraco.Templates
-- `-Force` - Recreate demo if it already exists
-
-**Script options (Bash):**
-- `-s, --skip-template-install` - Skip reinstalling Umbraco.Templates
-- `-f, --force` - Recreate demo if it already exists
-
-### Managing the Demo Site (Claude Code)
-
-For demo site operations in Claude Code sessions, use the dedicated skills:
 
 **Infrastructure Operations:**
 ```bash
@@ -67,26 +41,20 @@ For demo site operations in Claude Code sessions, use the dedicated skills:
 /demo-site open               # Open in browser (auto-discovers port)
 /demo-site generate-client    # Generate OpenAPI clients
 /demo-site status             # Check running status and port info
-/demo-site restart            # Stop and restart
 ```
 
-**Browser Automation:**
+**Browser Automation (Playwright):**
 ```bash
-/demo-site-ix login                      # Login to Umbraco backoffice
-/demo-site-ix navigate-to-connections    # Navigate to AI Connections
-/demo-site-ix navigate-to-profiles       # Navigate to AI Profiles
-/demo-site-ix navigate-to-prompts        # Navigate to AI Prompts
-/demo-site-ix navigate-to-agents         # Navigate to AI Agents
-/demo-site-ix create-connection [provider]  # Create new connection
-# ... see skill for full list of commands
+/demo-site-ix login                         # Login to Umbraco backoffice
+/demo-site-ix navigate-to-connections       # Navigate to AI settings sections
+/demo-site-ix create-connection [provider]  # Create/edit AI entities
 ```
 
-**Technical Details:**
-- Uses `DemoSite-Claude` launch profile with dynamic port allocation
+**Architecture Notes:**
+- `DemoSite-Claude` profile uses dynamic ports to avoid conflicts between worktrees
 - Port discovery via named pipes: `umbraco-ai-demo-port-{branch-or-worktree}`
-- Multiple worktrees can run simultaneously without conflicts
-- Named pipes auto-cleanup when process exits
-- For manual development, use `DemoSite` profile (fixed port 44355)
+- Named pipes auto-cleanup on process exit
+- Multiple worktrees run simultaneously without port conflicts
 
 ## Build Commands
 

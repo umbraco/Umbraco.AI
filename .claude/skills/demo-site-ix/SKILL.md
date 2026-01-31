@@ -107,12 +107,16 @@ browser_snapshot (confirm)
 4. Take snapshot to show connections list
 5. Report: "Navigated to AI Connections. Found X connections."
 
-**Umbraco section URLs:**
-- Connections: `/umbraco#/ai/connections`
-- Profiles: `/umbraco#/ai/profiles`
-- Prompts: `/umbraco#/ai-prompt/prompts` (if Umbraco.Ai.Prompt installed)
-- Agents: `/umbraco#/ai-agent/agents` (if Umbraco.Ai.Agent installed)
-- Copilot: `/umbraco#/ai-agent/copilot` (if Umbraco.Ai.Agent.Copilot installed)
+**Umbraco section URLs (all under Settings section):**
+- Connections: `/umbraco/section/settings/workspace/uai:connection-root`
+- Profiles: `/umbraco/section/settings/workspace/uai:profile-root`
+- Prompts: `/umbraco/section/settings/workspace/uai:prompt-root`
+- Agents: `/umbraco/section/settings/workspace/uai:agent-root`
+- Contexts: `/umbraco/section/settings/workspace/uai:context-root`
+- Analytics: `/umbraco/section/settings/workspace/ai-analytics-root`
+- Logs: `/umbraco/section/settings/workspace/uai:trace-root`
+- AI Settings: `/umbraco/section/settings/workspace/uai:settings-root`
+- Copilot: Available via "AI Assistant" button in top toolbar
 
 #### For "create-connection [provider]"
 

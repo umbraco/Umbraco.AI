@@ -128,12 +128,13 @@ Execute stop operation, wait 3 seconds, then execute start operation.
    - Extract port from "Now listening on: https://127.0.0.1:<port>" line
    - Or try common ports (55209, 44355, etc.)
 4. Launch default browser with discovered URL:
-   - Windows: `cmd.exe /c start https://127.0.0.1:<port>`
+   - Windows: `powershell.exe -Command "Start-Process 'https://127.0.0.1:<port>'"`
    - Linux: `xdg-open https://127.0.0.1:<port>`
    - macOS: `open https://127.0.0.1:<port>`
 5. Report:
    - Browser launched
    - URL opened
+   - Note about certificate warning (self-signed HTTPS)
    - Credentials reminder: admin@example.com / password1234
 
 ## Detection Helper Commands

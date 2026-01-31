@@ -84,14 +84,22 @@ $launchSettings = @"
 {
   "`$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Umbraco.Ai.DemoSite": {
+    "DemoSite": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "applicationUrl": "https://localhost:44355",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      }      
+    },
+    "DemoSite-Claude": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://127.0.0.1:0",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }      
     }
   }
 }

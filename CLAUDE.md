@@ -352,10 +352,21 @@ All commits should follow the [Conventional Commits](https://www.conventionalcom
 
 **Examples:**
 ```bash
-feat(chat): add streaming support
-fix(openai): handle rate limit errors
-docs(core): update API examples
+feat(chat): Add streaming support
+fix(openai): Handle rate limit errors
+docs(core): Update API examples
 ```
+
+**Formatting Rules (enforced by commitlint):**
+
+1. **Subject must be sentence-case** - Capitalize the first word after the scope
+   - ✅ `fix(frontend): Prevent scripts from hanging`
+   - ❌ `fix(frontend): prevent scripts from hanging`
+
+2. **Scope must be valid** - Use one of the allowed scopes:
+   - `agent`, `amazon`, `anthropic`, `api`, `approval`, `chat`, `ci`, `connection`, `copilot`, `core`, `deps`, `docs`, `embedding`, `frontend`, `google`, `microsoft-foundry`, `middleware`, `openai`, `profile`, `prompt`, `providers`, `registry`, `release`, `settings`, `tools`, `ui`
+
+3. **Body lines must not exceed 100 characters** - Wrap long lines in the commit body
 
 Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
 
@@ -540,3 +551,5 @@ public interface IAiProfileRepository
 ### Extension Methods
 
 All extension methods MUST be placed in the `Umbraco.Ai.Extensions` namespace (or the product-specific equivalent like `Umbraco.Ai.Prompt.Extensions`) for ease of discovery via IntelliSense.
+
+# Lessons Learned

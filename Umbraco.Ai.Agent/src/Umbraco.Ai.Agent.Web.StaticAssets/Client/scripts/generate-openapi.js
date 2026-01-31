@@ -25,7 +25,7 @@ fetch(swaggerUrl).then(async (response) => {
     console.error(chalk.red(`ERROR: OpenAPI spec returned with a non OK (200) response: ${response.status} ${response.statusText}`));
     console.error(`The URL to your Umbraco instance may be wrong or the instance is not running`);
     console.error(`Please verify or change the URL in the ${chalk.yellow('package.json')} for the script ${chalk.yellow('generate-openapi')}`);
-    return;
+    process.exit(1);
   }
 
   console.log(`OpenAPI spec fetched successfully`);
@@ -45,9 +45,12 @@ fetch(swaggerUrl).then(async (response) => {
     ]
   });
 
+  console.log(chalk.green('✓ TypeScript client generated successfully'));
+  process.exit(0);
 })
   .catch(error => {
     console.error(`ERROR: Failed to connect to the OpenAPI spec: ${chalk.red(error.message)}`);
     console.error(`The URL to your Umbraco instance may be wrong or the instance is not running`);
     console.error(`Please verify or change the URL in the ${chalk.yellow('package.json')} for the script ${chalk.yellow('generate-openapi')}`);
+    process.exit(1);
   });

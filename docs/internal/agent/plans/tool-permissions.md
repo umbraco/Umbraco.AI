@@ -642,15 +642,39 @@ public async Task<AIAgent> CreateAgentAsync(
 
     tools.AddRange(enabledTools.Select(t => _functionFactory.Create(t)));
 
-    // Frontend tools - filter through permissions (Option B: stricter)
+    // Frontend tools - filter through permissions
+    // Note: Tool metadata (scope info) is extracted from forwardedProps in RunAgentController
+    // and passed to this method via additionalProperties
     var frontendTools = additionalTools?.ToList() ?? [];
     if (frontendTools.Count > 0)
     {
-        // Extract frontend tool names and check permissions
+        // Extract tool metadata from additional properties (populated by RunAgentController)
+        var toolMetadata = ExtractToolMetadata(additionalProperties);
+
         var allowedFrontendTools = frontendTools
             .Where(t => {
                 var toolName = t.Metadata?.Name ?? string.Empty;
-                return enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase);
+
+                // Find metadata for this tool
+                var metadata = toolMetadata.FirstOrDefault(m =>
+                    m.Name.Equals(toolName, StringComparer.OrdinalIgnoreCase));
+
+                if (metadata == null)
+                {
+                    // No metadata - only allow if explicitly in EnabledToolIds
+                    return enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase);
+                }
+
+                // Check if tool ID is explicitly enabled
+                if (enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase))
+                    return true;
+
+                // Check if tool scope is enabled
+                if (!string.IsNullOrEmpty(metadata.Scope) &&
+                    agent.EnabledToolScopeIds.Contains(metadata.Scope, StringComparer.OrdinalIgnoreCase))
+                    return true;
+
+                return false;
             });
         tools.AddRange(allowedFrontendTools);
     }
@@ -661,7 +685,7 @@ public async Task<AIAgent> CreateAgentAsync(
 
 **Why here**: This ensures only permitted tools are passed to the AI model. The LLM cannot invoke tools that weren't included in its tool list.
 
-**Frontend Tool Permission Approach (Option B: Stricter)**:
+**Frontend Tool Permission Approach**:
 
 Frontend tools (e.g., `setPropertyValue`, entity mutation tools) will respect agent permissions for consistency and defense-in-depth:
 
@@ -670,16 +694,14 @@ Frontend tools (e.g., `setPropertyValue`, entity mutation tools) will respect ag
   - Defense in depth - permissions checked before tools are even available to the LLM
   - Prevents the LLM from attempting to call tools the agent shouldn't have access to
   - Better error messages - permission denied vs. tool not found
-- **Implementation**: Filter frontend tools through `enabledToolIds` check (code above)
-- **Frontend Consideration**: Frontend must send all available tools, backend filters based on agent permissions
+- **Implementation**: Extract tool metadata from `forwardedProps` and validate against agent permissions
+- **Frontend Consideration**: Frontend sends tool metadata via AGUI `forwardedProps` field
 
-**Frontend Tool Scope Checking**:
+**Frontend Tool Metadata via forwardedProps**:
 
-Frontend tool manifests (`uaiAgentTool`) need scope information for scope-based permission checks. There are several approaches:
+Frontend tool manifests (`uaiAgentTool`) include scope information in their `meta` field. This metadata is sent to the backend via the AGUI protocol's `forwardedProps` field.
 
-**Recommended: Option A - Add Scope to Frontend Tool Manifests**
-
-Update frontend tool manifests to include scope:
+**1. Add Scope to Frontend Tool Manifests**:
 
 ```typescript
 const setPropertyValueManifest: ManifestUaiAgentTool = {
@@ -688,72 +710,101 @@ const setPropertyValueManifest: ManifestUaiAgentTool = {
   meta: {
     toolName: "setPropertyValue",
     description: "Update a property value...",
-    scope: "Entity",  // ← NEW: Add scope
-    isDestructive: true,  // ← Already exists
+    scope: "entity.write",  // ← NEW: Add scope (operation-level)
+    isDestructive: true,
     parameters: { /* ... */ }
   }
 };
 ```
 
-Then update the filtering code:
+**2. Frontend Sends Metadata via forwardedProps**:
+
+In `copilot-run.controller.ts`, when calling the agent API:
+
+```typescript
+// Extract tool metadata from manifests
+const toolMetadata = this.#toolManager.frontendTools.map(manifest => ({
+  name: manifest.meta.toolName,
+  scope: manifest.meta.scope,
+  isDestructive: manifest.meta.isDestructive ?? false
+}));
+
+// Send via forwardedProps
+await this.#client.sendMessage(
+  nextMessages,
+  this.#toolManager.frontendTools,  // Standard AGUI tools
+  this.#pendingContext,
+  {
+    toolMetadata: toolMetadata  // ← Metadata in forwardedProps
+  }
+);
+```
+
+**3. Backend Extracts and Validates Metadata**:
+
+In `RunAgentController`, extract metadata from `forwardedProps`:
 
 ```csharp
+// Extract tool metadata from forwardedProps
+var toolMetadata = ExtractToolMetadata(request.ForwardedProps);
+
+// Validate each frontend tool against agent permissions
 var allowedFrontendTools = frontendTools
     .Where(t => {
         var toolName = t.Metadata?.Name ?? string.Empty;
-        var toolScope = t.Metadata?.AdditionalProperties?
-            .GetValueOrDefault("scope")?.ToString();
+
+        // Find metadata for this tool
+        var metadata = toolMetadata.FirstOrDefault(m =>
+            m.Name.Equals(toolName, StringComparer.OrdinalIgnoreCase));
+
+        if (metadata == null)
+        {
+            // No metadata - only allow if explicitly in EnabledToolIds
+            return enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase);
+        }
 
         // Check if tool ID is explicitly enabled
         if (enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase))
             return true;
 
         // Check if tool scope is enabled
-        if (!string.IsNullOrEmpty(toolScope) &&
-            agent.EnabledToolScopeIds.Contains(toolScope, StringComparer.OrdinalIgnoreCase))
+        if (!string.IsNullOrEmpty(metadata.Scope) &&
+            agent.EnabledToolScopeIds.Contains(metadata.Scope, StringComparer.OrdinalIgnoreCase))
             return true;
 
         return false;
     });
 ```
 
-**Alternative: Option B - Backend Tool Registry Lookup**
-
-If frontend tool names match backend tool IDs, look up scope from `AiToolCollection`:
+**Helper Method for Extracting Metadata**:
 
 ```csharp
-var allowedFrontendTools = frontendTools
-    .Where(t => {
-        var toolName = t.Metadata?.Name ?? string.Empty;
+private IReadOnlyList<ToolMetadata> ExtractToolMetadata(object? forwardedProps)
+{
+    if (forwardedProps == null)
+        return Array.Empty<ToolMetadata>();
 
-        // Find matching backend tool definition
-        var backendTool = _toolCollection.FirstOrDefault(bt =>
-            bt.Id.Equals(toolName, StringComparison.OrdinalIgnoreCase));
+    // Deserialize forwardedProps to extract toolMetadata
+    var json = JsonSerializer.Serialize(forwardedProps);
+    var props = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
 
-        if (backendTool != null)
-        {
-            // Use backend tool's scope
-            if (enabledToolIds.Contains(backendTool.Id, StringComparer.OrdinalIgnoreCase))
-                return true;
+    if (props?.TryGetValue("toolMetadata", out var metadataElement) == true)
+    {
+        return JsonSerializer.Deserialize<List<ToolMetadata>>(metadataElement.GetRawText())
+            ?? Array.Empty<ToolMetadata>();
+    }
 
-            if (agent.EnabledToolScopeIds.Contains(backendTool.ScopeId, StringComparer.OrdinalIgnoreCase))
-                return true;
-        }
-        else
-        {
-            // No backend definition - only allow if explicitly listed in EnabledToolIds
-            return enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase);
-        }
+    return Array.Empty<ToolMetadata>();
+}
 
-        return false;
-    });
+private record ToolMetadata(string Name, string? Scope, bool IsDestructive);
 ```
 
-**Recommendation**: Use **Option A** (add scope to manifests) for:
-- Explicit scope declaration at the frontend
-- No coupling between frontend tool names and backend tool IDs
-- Simpler permission logic
-- Frontend can validate permissions before sending request (optional future enhancement)
+**Benefits of Using forwardedProps**:
+- **AGUI Protocol Compliant**: Uses official extensibility mechanism
+- **No Custom Events**: Simpler than creating custom event handlers
+- **Defense in Depth**: Backend validates all tools regardless of frontend filtering
+- **Standard Tool Format**: AGUI tools remain unchanged, metadata travels separately
 
 #### 4.2 Constructor Injection
 **File**: Same as above
@@ -773,6 +824,86 @@ public AiAgentFactory(
 ```
 
 **Note**: `AiAgentFactory` may already have `IAiAgentService` injected. If so, just use the existing field.
+
+#### 4.3 Tool Metadata Extraction in RunAgentController
+**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Api\Management\Agent\Controllers\RunAgentController.cs`
+
+**Method**: Agent run endpoint handler
+
+**Changes**:
+1. Extract tool metadata from `request.ForwardedProps`
+2. Pass metadata to `AiAgentFactory` via `additionalProperties`
+3. Log validation failures for audit
+
+```csharp
+[HttpPost("{agentIdOrAlias}/run")]
+public async Task<IActionResult> RunAgent(
+    string agentIdOrAlias,
+    [FromBody] AguiRunRequestModel request,
+    CancellationToken ct)
+{
+    // Resolve agent
+    var agent = await ResolveAgent(agentIdOrAlias, ct);
+    if (agent == null)
+        return NotFound();
+
+    // Extract tool metadata from forwardedProps
+    var toolMetadata = ExtractToolMetadata(request.ForwardedProps);
+
+    // Pass metadata to factory via additionalProperties
+    var additionalProperties = new Dictionary<string, object?>
+    {
+        ["toolMetadata"] = toolMetadata,
+        // ... other properties
+    };
+
+    // Convert frontend tools to AITool format
+    var frontendTools = ConvertAguiTools(request.Tools);
+
+    // Create agent with tools and metadata
+    var agentInstance = await _agentFactory.CreateAgentAsync(
+        agent,
+        contextItems,
+        frontendTools,
+        additionalProperties,
+        ct);
+
+    // Stream response
+    return StreamAgentResponse(agentInstance, request.Messages, ct);
+}
+
+private IReadOnlyList<ToolMetadata> ExtractToolMetadata(object? forwardedProps)
+{
+    if (forwardedProps == null)
+        return Array.Empty<ToolMetadata>();
+
+    try
+    {
+        // Deserialize forwardedProps to extract toolMetadata
+        var json = JsonSerializer.Serialize(forwardedProps);
+        var props = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+
+        if (props?.TryGetValue("toolMetadata", out var metadataElement) == true)
+        {
+            return JsonSerializer.Deserialize<List<ToolMetadata>>(
+                metadataElement.GetRawText()) ?? Array.Empty<ToolMetadata>();
+        }
+    }
+    catch (JsonException ex)
+    {
+        _logger.LogWarning(ex, "Failed to extract tool metadata from forwardedProps");
+    }
+
+    return Array.Empty<ToolMetadata>();
+}
+
+private record ToolMetadata(string Name, string? Scope, bool IsDestructive);
+```
+
+**Why here**: RunAgentController is the entry point for agent execution. It's responsible for:
+- Receiving AGUI protocol requests
+- Extracting metadata from `forwardedProps` (AGUI extensibility field)
+- Passing validated data to the service layer
 
 ### 5. API Changes
 
@@ -1211,9 +1342,17 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Create `GetAgentToolsController.cs` - get enabled tools for agent (optional)
 - [ ] Create `GetToolsController.cs` - get all available tools metadata (required for UI)
 
-### Frontend UI Components
+### Frontend - Tool Metadata via forwardedProps
 - [ ] Update `ManifestUaiAgentTool` type to include optional `scope` field in `meta`
 - [ ] Add `scope` to existing frontend tool manifests (e.g., `setPropertyValue`)
+- [ ] Update `copilot-run.controller.ts` to extract tool metadata from manifests
+- [ ] Update `copilot-run.controller.ts` to send metadata via `forwardedProps` in AGUI request
+- [ ] Update `RunAgentController` to extract tool metadata from `request.ForwardedProps`
+- [ ] Update `AiAgentFactory.CreateAgentAsync()` to receive metadata via `additionalProperties`
+- [ ] Add helper method in `AiAgentFactory` to extract tool metadata from `additionalProperties`
+- [ ] Update tool filtering logic to validate against metadata
+
+### Frontend UI Components
 - [ ] Create `<uai-tool-selector>` element (agent/components/tool-selector/)
 - [ ] Create `<uai-scope-checkbox-list>` element
 - [ ] Create `<uai-tool-tag-input>` element
@@ -1242,13 +1381,15 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 | `Umbraco.Ai.Agent.Core/Agents/AiAgent.cs` | Domain model | Add `EnabledToolIds`, `EnabledToolScopeIds` |
 | `Umbraco.Ai.Agent.Core/Agents/IAiAgentService.cs` | Service interface | Add `GetEnabledToolIdsAsync`, `IsToolEnabledAsync` methods |
 | `Umbraco.Ai.Agent.Core/Agents/AiAgentService.cs` | Service implementation | Implement tool permission methods, inject `AiToolCollection` |
-| `Umbraco.Ai.Agent.Core/Chat/AiAgentFactory.cs` | Agent creation | Call `_agentService.GetEnabledToolIdsAsync()`, filter tools |
+| `Umbraco.Ai.Agent.Core/Chat/AiAgentFactory.cs` | Agent creation | Call `_agentService.GetEnabledToolIdsAsync()`, filter tools using metadata from `additionalProperties` |
 | `Umbraco.Ai.Agent.Persistence/Agents/AiAgentEntity.cs` | EF entity | Add JSON columns |
 | `Umbraco.Ai.Agent.Persistence/UmbracoAiAgentDbContext.cs` | EF configuration | Add JSON converters |
+| `Umbraco.Ai.Agent.Web/.../RunAgentController.cs` | Agent execution | Extract tool metadata from `forwardedProps`, pass to factory |
 | `Umbraco.Ai.Agent.Web/...Models/AgentCreateRequestModel.cs` | API model | Add properties |
 | `Umbraco.Ai.Agent.Web/...Models/AgentUpdateRequestModel.cs` | API model | Add properties |
 | `Umbraco.Ai.Agent.Web/...Models/AgentResponseModel.cs` | API model | Add properties |
 | `Umbraco.Ai.Agent.Web/Mapping/AgentMapDefinition.cs` | Mapping config | Map new properties |
+| `Umbraco.Ai.Agent.Copilot/.../copilot-run.controller.ts` | Frontend controller | Extract tool metadata, send via `forwardedProps` |
 
 ## Verification
 
@@ -1307,6 +1448,13 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - Frontend would need to duplicate permission logic
 - Backend is authoritative anyway
 - Frontend HITL approval already provides UI for destructive tools
+
+### Why forwardedProps for Tool Metadata?
+- **AGUI Protocol Compliant**: `forwardedProps` is an official AGUI field designed for extensibility
+- **No Custom Events**: Simpler than creating custom event handlers
+- **Standard Tool Format**: AGUI tools remain unchanged (`{ name, description, parameters }`)
+- **Defense in Depth**: Backend validates all tools regardless of frontend
+- **Single Request**: Metadata travels with run request, no additional round trips
 
 ### Why NOT Tool-Level Permissions in V1?
 - Agent-level control is sufficient for most cases

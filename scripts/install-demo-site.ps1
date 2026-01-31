@@ -110,99 +110,10 @@ Set-Content -Path $launchSettingsPath -Value $launchSettings
 
 # Step 3.3: Add PortDiscoveryMiddleware for automatic port detection
 Write-Host "Adding PortDiscoveryMiddleware for automatic port detection..." -ForegroundColor Green
-$portDiscoveryMiddleware = @"
-using Microsoft.AspNetCore.Builder;
-using Umbraco.Cms.Core.Composing;
-using Umbraco.Cms.Core.DependencyInjection;
-using Umbraco.Cms.Web.Common.ApplicationBuilder;
-
-namespace Umbraco.Ai.DemoSite.Middleware;
-
-/// <summary>
-/// Middleware that writes the demo site's port to demo/.env.local for API client generation.
-/// This enables Claude Code and local developers to automatically discover the running port.
-/// </summary>
-public class PortDiscoveryMiddleware
-{
-    private static bool _portFileWritten;
-    private readonly RequestDelegate _next;
-    private readonly IHostEnvironment _hostEnvironment;
-
-    public PortDiscoveryMiddleware(RequestDelegate next, IHostEnvironment hostEnvironment)
-    {
-        _next = next;
-        _hostEnvironment = hostEnvironment;
-    }
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        if (!_portFileWritten && _hostEnvironment.IsDevelopment())
-        {
-            _portFileWritten = true;
-
-            var port = context.Request.Host.Port;
-            if (port.HasValue)
-            {
-                await WritePortToEnvFile(port.Value);
-            }
-        }
-
-        await _next(context);
-    }
-
-    private static async Task WritePortToEnvFile(int port)
-    {
-        try
-        {
-            var repoRoot = FindRepoRoot();
-            var demoFolder = Path.Combine(repoRoot, "demo");
-
-            // Create demo folder if it doesn't exist (shouldn't happen, but safe)
-            Directory.CreateDirectory(demoFolder);
-
-            var envPath = Path.Combine(demoFolder, ".env.local");
-            await File.WriteAllTextAsync(envPath, `$"DEMO_PORT={port}\n");
-        }
-        catch
-        {
-            // Silently fail - this is a development-only convenience feature
-        }
-    }
-
-    private static string FindRepoRoot()
-    {
-        var current = Directory.GetCurrentDirectory();
-        while (current != null && !File.Exists(Path.Combine(current, "package.json")))
-        {
-            current = Directory.GetParent(current)?.FullName;
-        }
-        return current ?? Directory.GetCurrentDirectory();
-    }
-}
-
-/// <summary>
-/// Composer that automatically registers the PortDiscoveryMiddleware.
-/// No manual Program.cs changes required.
-/// </summary>
-public class PortDiscoveryComposer : IComposer
-{
-    public void Compose(IUmbracoBuilder builder)
-    {
-        builder.Services.Configure<UmbracoPipelineOptions>(options =>
-        {
-            options.AddFilter(new UmbracoPipelineFilter(
-                "PortDiscovery",
-                applicationBuilder => { },
-                applicationBuilder => { applicationBuilder.UseMiddleware<PortDiscoveryMiddleware>(); },
-                applicationBuilder => { }
-            ));
-        });
-    }
-}
-"@
-$portDiscoveryPath = "demo\Umbraco.Ai.DemoSite\Middleware\PortDiscoveryMiddleware.cs"
-New-Item -ItemType Directory -Path (Split-Path $portDiscoveryPath) -Force | Out-Null
-Set-Content -Path $portDiscoveryPath -Value $portDiscoveryMiddleware
+$middlewareSourcePath = Join-Path $ScriptDir "templates\PortDiscoveryMiddleware.cs"
+$middlewareDestPath = "demo\Umbraco.Ai.DemoSite\Middleware\PortDiscoveryMiddleware.cs"
+New-Item -ItemType Directory -Path (Split-Path $middlewareDestPath) -Force | Out-Null
+Copy-Item -Path $middlewareSourcePath -Destination $middlewareDestPath -Force
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green

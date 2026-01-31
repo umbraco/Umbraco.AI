@@ -56,6 +56,32 @@ The setup script creates:
 - `-s, --skip-template-install` - Skip reinstalling Umbraco.Templates
 - `-f, --force` - Recreate demo if it already exists
 
+### Running the Demo Site (Claude Code)
+
+**IMPORTANT:** When running the demo site in Claude Code sessions, always use the `DemoSite-Claude` launch profile:
+
+```bash
+# Run with DemoSite-Claude profile (uses dynamic port for automatic discovery)
+dotnet run --project demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj --launch-profile DemoSite-Claude
+```
+
+**Why this matters:**
+- The `DemoSite-Claude` profile uses a dynamic port (avoids conflicts with user's local instances)
+- The demo site exposes its port via a **named pipe** with a unique identifier based on your git branch/worktree
+- Pipe names: `umbraco-ai-demo-port-{branch}` (main worktree) or `umbraco-ai-demo-port-{worktree-name}` (worktrees)
+- Named pipes are automatically cleaned up when the process dies (even on crashes/force-kill)
+- The `npm run generate-client` scripts calculate the same identifier and connect to the matching pipe
+- **Multiple instances work simultaneously** - each worktree gets its own unique pipe
+- Enables fully automated OpenAPI client generation without manual configuration
+- No stale data - pipe only exists while demo site is running
+
+**Examples:**
+- Main worktree on `dev` branch → `umbraco-ai-demo-port-dev`
+- Worktree named `feature-ai-tools` → `umbraco-ai-demo-port-feature-ai-tools`
+- Another worktree `bugfix-123` → `umbraco-ai-demo-port-bugfix-123`
+
+**For local developers:** The default `DemoSite` profile uses fixed port 44355 and works without any special configuration.
+
 ## Build Commands
 
 ### .NET
@@ -92,8 +118,8 @@ npm run build
 # Watch all frontends in parallel
 npm run watch
 
-# Generate OpenAPI clients (requires running demo site)
-npm run generate-client
+# Generate OpenAPI clients (requires running demo site with DemoSite-Claude profile)
+npm run generate-client  # Automatically discovers port via named pipe
 
 # Target specific products
 npm run build:core

@@ -51,38 +51,65 @@ public class PortDiscoveryMiddleware
         var pipeName = $"umbraco-ai-demo-port-{identifier}";
         Console.WriteLine($"Port discovery pipe: {pipeName} (port {port})");
 
+        var tasks = new List<Task>();
+
         while (!ct.IsCancellationRequested)
         {
             try
             {
-                // Create named pipe (auto-cleaned up when process dies)
-                using var pipeServer = new NamedPipeServerStream(
-                    pipeName,
-                    PipeDirection.Out,
-                    NamedPipeServerStream.MaxAllowedServerInstances, // Allow multiple concurrent connections
-                    PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous);
+                // Spawn a new server instance to handle the next client
+                tasks.Add(HandleClientAsync(pipeName, port, ct));
 
-                // Wait for client to connect
-                await pipeServer.WaitForConnectionAsync(ct);
+                // Clean up completed tasks to prevent memory leaks
+                tasks.RemoveAll(t => t.IsCompleted);
 
-                // Send port number
-                var portBytes = Encoding.UTF8.GetBytes(port.ToString());
-                await pipeServer.WriteAsync(portBytes, ct);
-                await pipeServer.FlushAsync(ct);
-
-                // Disconnect and wait for next client
-                pipeServer.Disconnect();
+                // Small delay to prevent tight loop
+                await Task.Delay(10, ct);
             }
             catch (OperationCanceledException)
             {
                 break; // Clean shutdown
             }
-            catch
-            {
-                // Silently retry - pipe server should keep trying
-                await Task.Delay(1000, ct);
-            }
+        }
+
+        // Wait for all active connections to complete
+        try
+        {
+            await Task.WhenAll(tasks);
+        }
+        catch
+        {
+            // Ignore exceptions during shutdown
+        }
+    }
+
+    private static async Task HandleClientAsync(string pipeName, int port, CancellationToken ct)
+    {
+        try
+        {
+            // Create named pipe (auto-cleaned up when process dies)
+            using var pipeServer = new NamedPipeServerStream(
+                pipeName,
+                PipeDirection.Out,
+                NamedPipeServerStream.MaxAllowedServerInstances, // Allow multiple concurrent connections
+                PipeTransmissionMode.Byte,
+                PipeOptions.Asynchronous);
+
+            // Wait for client to connect
+            await pipeServer.WaitForConnectionAsync(ct);
+
+            // Send port number
+            var portBytes = Encoding.UTF8.GetBytes(port.ToString());
+            await pipeServer.WriteAsync(portBytes, ct);
+            await pipeServer.FlushAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // Clean shutdown
+        }
+        catch
+        {
+            // Silently fail - individual client failures shouldn't crash the server
         }
     }
 

@@ -19,7 +19,7 @@
     "build": "npm run build:api && npm run build:app",
     "build:app": "tsc -p tsconfig.json && vite build",
     "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)",
-    "generate-client": "node scripts/generate-openapi.js https://localhost:44355/umbraco/swagger/ai-agent-management/swagger.json"
+    "generate-client": "node --no-warnings scripts/generate-openapi.js"
   },
   "peerDependencies": {
     "@umbraco-ai/core": "^17.0.0",

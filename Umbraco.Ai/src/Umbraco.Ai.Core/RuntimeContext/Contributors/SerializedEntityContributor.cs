@@ -26,7 +26,14 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
     }
 
     /// <inheritdoc />
-    public bool CanHandle(AiRequestContextItem item)
+    public void Contribute(AiRuntimeContext context)
+    {
+        context.HandleRequestContextItem(
+            IsSerializedEntity,
+            item => ProcessSerializedEntity(item, context));
+    }
+
+    private bool IsSerializedEntity(AiRequestContextItem item)
     {
         // Check if the value contains entity structure by looking for entityType and properties
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
@@ -47,8 +54,7 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
         }
     }
 
-    /// <inheritdoc />
-    public void Contribute(AiRequestContextItem item, AiRuntimeContext context)
+    private void ProcessSerializedEntity(AiRequestContextItem item, AiRuntimeContext context)
     {
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {

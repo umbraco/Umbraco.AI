@@ -8,6 +8,8 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// </summary>
 public sealed class AiRuntimeContext
 {
+    private readonly HashSet<AiRequestContextItem> _handledRequestContextItems = [];
+
     /// <summary>
     /// The raw context items from the request.
     /// </summary>
@@ -112,6 +114,91 @@ public sealed class AiRuntimeContext
     /// </summary>
     /// <param name="key">The key to store under.</param>
     /// <param name="value">The value to store.</param>
-    public void SetValue(string key, object? value) 
+    public void SetValue(string key, object? value)
         => Data[key] = value;
+
+    /// <summary>
+    /// Handles the first unhandled request context item matching the predicate.
+    /// The item is automatically marked as handled before the handler is invoked.
+    /// </summary>
+    /// <param name="predicate">Predicate to find a matching item.</param>
+    /// <param name="handler">Action to process the matched item.</param>
+    /// <returns>True if an item was found and handled; otherwise false.</returns>
+    public bool HandleRequestContextItem(
+        Func<AiRequestContextItem, bool> predicate,
+        Action<AiRequestContextItem> handler)
+    {
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(handler);
+
+        var item = RequestContextItems
+            .Where(i => !_handledRequestContextItems.Contains(i))
+            .FirstOrDefault(predicate);
+
+        if (item is null)
+            return false;
+
+        _handledRequestContextItems.Add(item);
+        handler(item);
+        return true;
+    }
+
+    /// <summary>
+    /// Handles all unhandled request context items matching the predicate.
+    /// Each item is automatically marked as handled before the handler is invoked.
+    /// </summary>
+    /// <param name="predicate">Predicate to find matching items.</param>
+    /// <param name="handler">Action to process each matched item.</param>
+    public void HandleRequestContextItems(
+        Func<AiRequestContextItem, bool> predicate,
+        Action<AiRequestContextItem> handler)
+    {
+        ArgumentNullException.ThrowIfNull(predicate);
+        ArgumentNullException.ThrowIfNull(handler);
+
+        var matching = RequestContextItems
+            .Where(i => !_handledRequestContextItems.Contains(i))
+            .Where(predicate)
+            .ToList();
+
+        foreach (var item in matching)
+        {
+            _handledRequestContextItems.Add(item);
+            handler(item);
+        }
+    }
+
+    /// <summary>
+    /// Handles all remaining unhandled request context items.
+    /// Each item is automatically marked as handled before the handler is invoked.
+    /// Typically used by fallback contributors that process any remaining items.
+    /// </summary>
+    /// <param name="handler">Action to process each unhandled item.</param>
+    public void HandleUnhandledRequestContextItems(Action<AiRequestContextItem> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        var unhandled = RequestContextItems
+            .Where(i => !_handledRequestContextItems.Contains(i))
+            .ToList();
+
+        foreach (var item in unhandled)
+        {
+            _handledRequestContextItems.Add(item);
+            handler(item);
+        }
+    }
+
+    /// <summary>
+    /// Gets the count of request context items that have been handled.
+    /// </summary>
+    public int HandledRequestContextItemCount => _handledRequestContextItems.Count;
+
+    /// <summary>
+    /// Gets whether a specific request context item has been handled.
+    /// </summary>
+    /// <param name="item">The item to check.</param>
+    /// <returns>True if the item has been handled; otherwise false.</returns>
+    public bool IsRequestContextItemHandled(AiRequestContextItem item)
+        => _handledRequestContextItems.Contains(item);
 }

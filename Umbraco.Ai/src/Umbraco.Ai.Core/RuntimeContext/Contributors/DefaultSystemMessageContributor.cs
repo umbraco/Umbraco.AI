@@ -7,22 +7,14 @@ namespace Umbraco.Ai.Core.RuntimeContext.Contributors;
 internal sealed class DefaultSystemMessageContributor : IAiRuntimeContextContributor
 {
     /// <inheritdoc />
-    public bool CanHandle(AiRequestContextItem item)
+    public void Contribute(AiRuntimeContext context)
     {
-        // This is a fallback - only handle items with descriptions that haven't
-        // been fully processed by other contributors. Since we can't know if other
-        // contributors handled an item, we always return true and let the description
-        // be added to the system message.
-        return !string.IsNullOrWhiteSpace(item.Description);
-    }
-
-    /// <inheritdoc />
-    public void Contribute(AiRequestContextItem item, AiRuntimeContext context)
-    {
-        // Add the description as a system message part if it's meaningful
-        if (!string.IsNullOrWhiteSpace(item.Description))
+        context.HandleUnhandledRequestContextItems(item =>
         {
-            context.SystemMessageParts.Add($"Context: {item.Description}");
-        }
+            if (!string.IsNullOrWhiteSpace(item.Description))
+            {
+                context.SystemMessageParts.Add($"Context: {item.Description}");
+            }
+        });
     }
 }

@@ -16,16 +16,14 @@ public sealed class AiRuntimeContextContributorCollection : BuilderCollectionBas
     { }
 
     /// <summary>
-    /// Populates a runtime context with data from all context items through registered contributors.
+    /// Populates a runtime context by invoking all registered contributors in order.
     /// </summary>
     /// <param name="context">The runtime context to populate.</param>
     public void Populate(AiRuntimeContext context)
     {
-        // For each item, find contributors that can handle it
-        foreach (var item in context.RequestContextItems)
+        foreach (var contributor in this)
         {
-            var contributor = this.FirstOrDefault(x => x.CanHandle(item));
-            contributor?.Contribute(item, context);
+            contributor.Contribute(context);
         }
     }
 }

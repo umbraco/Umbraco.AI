@@ -166,6 +166,10 @@ fetch(swaggerUrl).then(async (response) => {
   console.log(`OpenAPI spec fetched successfully`);
   console.log(`Calling ${chalk.yellow('hey-api')} to generate TypeScript client`);
 
+  // Suppress hey-api banner output
+  const originalLog = console.log;
+  console.log = () => {};
+
   await createClient({
     input: swaggerUrl,
     output: outputDir,
@@ -179,6 +183,9 @@ fetch(swaggerUrl).then(async (response) => {
       }
     ]
   });
+
+  // Restore console.log
+  console.log = originalLog;
 
   console.log(chalk.green('✓ TypeScript client generated successfully'));
   process.exit(0);

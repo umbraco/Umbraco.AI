@@ -98,10 +98,10 @@ echo "Configuring fixed port (44355)..."
 mkdir -p "demo/Umbraco.Ai.DemoSite/Properties"
 cp "$SCRIPT_DIR/templates/launchSettings.json" "demo/Umbraco.Ai.DemoSite/Properties/launchSettings.json"
 
-# Step 3.3: Add PortDiscoveryMiddleware for automatic port detection
-echo "Adding PortDiscoveryMiddleware for automatic port detection..."
-mkdir -p "demo/Umbraco.Ai.DemoSite/Middleware"
-cp "$SCRIPT_DIR/templates/PortDiscoveryMiddleware.cs" "demo/Umbraco.Ai.DemoSite/Middleware/PortDiscoveryMiddleware.cs"
+# Step 3.3: Add NamedPipeListenerComposer for HTTP over named pipes
+echo "Adding NamedPipeListenerComposer for HTTP over named pipes..."
+mkdir -p "demo/Umbraco.Ai.DemoSite/Composers"
+cp "$SCRIPT_DIR/templates/NamedPipeListenerComposer.cs" "demo/Umbraco.Ai.DemoSite/Composers/NamedPipeListenerComposer.cs"
 
 # Step 4: Create unified solution
 echo "Creating unified solution..."

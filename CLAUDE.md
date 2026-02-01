@@ -52,7 +52,8 @@ Use the setup skill for first-time repository configuration:
 
 **Architecture Notes:**
 - `DemoSite-Claude` profile uses dynamic ports to avoid conflicts between worktrees
-- Port discovery via named pipes: `umbraco-ai-demo-port-{branch-or-worktree}`
+- HTTP over named pipes: `umbraco-ai-demo-{branch-or-worktree}`
+- Port info endpoint: `/port-info` (query via named pipe to get port number)
 - Named pipes auto-cleanup on process exit
 - Multiple worktrees run simultaneously without port conflicts
 

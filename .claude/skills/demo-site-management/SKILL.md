@@ -32,18 +32,16 @@ Execute the requested demo site operation.
 
 ### For "start"
 1. Check if already running using multi-method detection:
-   - Try connecting to common ports (44355, 5000-65535 range is too broad, skip)
+   - Try querying port info endpoint via named pipe (see "Query port info via named pipe" section)
    - Check if background tasks exist with "DemoSite" in description
    - If running, report and exit
 2. If not running, start in background: `cd demo/Umbraco.Ai.DemoSite && dotnet run --launch-profile DemoSite-Claude`
 3. Wait 15-20 seconds for startup
-4. Read the task output to find the port number (look for "Now listening on: https://127.0.0.1:<port>")
-5. Make initial request to trigger middleware using the discovered port: `curl -k https://127.0.0.1:<port>`
-6. Wait 2 seconds, then read task output again to find the pipe name (look for "Port discovery pipe: umbraco-ai-demo-port-<identifier>")
-7. Report:
+4. Query port info endpoint via named pipe to get port and pipe name (see "Query port info via named pipe" section)
+5. Report:
    - Task ID for later stopping (save this for future commands)
-   - Port number
-   - Pipe name (format: umbraco-ai-demo-port-{branch-or-worktree})
+   - Port number (from port info endpoint)
+   - Pipe name (format: umbraco-ai-demo-{branch-or-worktree})
    - Site URL
 
 ### For "stop"
@@ -69,51 +67,41 @@ Execute the requested demo site operation.
    - Note: Pipes are automatically cleaned up when process exits
 
 ### For "generate-client"
-1. Check if site is running using multi-method detection:
-   - Look for background task output files in temp directory
-   - Try connecting to expected ports (check 44355 first, common default)
+1. Check if site is running:
+   - Try querying port info endpoint via named pipe (see "Query port info via named pipe" section)
    - Check if any background bash tasks are related to DemoSite
 2. If not running, report error with suggestion: "Demo site not running. Start it with `/demo-site-management start`"
-3. If running but just started, ensure middleware is initialized:
-   - Wait 2 seconds if site was just started
-   - Middleware only starts on first HTTP request
-4. Run: `npm run generate-client` (runs all three packages concurrently)
-5. Monitor output for:
-   - "Connected to demo site named pipe" (should appear 3 times)
-   - "Discovered demo site on port X via named pipe" (should appear 3 times)
+3. Run: `npm run generate-client` (runs all three packages concurrently)
+4. Monitor output for:
+   - "Using named pipe: umbraco-ai-demo-{identifier}" (should appear 3 times)
    - "✓ TypeScript client generated successfully" (should appear 3 times)
-   - Any EPIPE errors (should be none)
-6. Report summary:
+   - No errors (EPIPE, connection refused, etc.)
+5. Report summary:
    - Success/failure for each package (core, prompt, agent)
-   - Port discovered via pipe
-   - Whether concurrent connections worked (no EPIPE errors)
-   - Whether banner was suppressed (no ASCII art visible)
+   - Pipe name used
+   - Whether concurrent connections worked (no errors)
 
 ### For "status"
 Use multi-method detection to determine site status:
 
-1. **Check background tasks**: Look for tasks with "DemoSite" or "demo-site" in name/output
-   - If found, extract task ID and read output for port info
+1. **Query port info endpoint**: Try querying via named pipe (see "Query port info via named pipe" section)
+   - If successful, site is running and you have port info
+   - If fails, continue to other methods
 
-2. **Check port connectivity**: Try connecting to common ports
-   - Try 44355 (default): `curl -k --connect-timeout 1 https://localhost:44355 2>&1`
-   - If background task found with port, try that port
+2. **Check background tasks**: Look for tasks with "DemoSite" or "demo-site" in name/output
+   - If found, extract task ID
 
-3. **Check named pipe** (Windows-specific, informational only):
-   - Expected pipe name based on git: `umbraco-ai-demo-port-{branch-or-worktree}`
-   - Note: Enumerating pipes from Bash on Windows is difficult
-
-4. **Determine git context**:
+3. **Determine git context**:
    - Run `git rev-parse --git-dir` to check if worktree
    - If worktree, extract name from `.git/worktrees/{name}`
    - Otherwise use `git branch --show-current`
    - If no git, identifier is "default"
 
-5. **Report comprehensive status**:
-   - Running: yes/no (based on task or port connectivity)
+4. **Report comprehensive status**:
+   - Running: yes/no (based on port info endpoint response)
    - Task ID: if background task found
-   - Port: if discoverable from task output or connectivity test
-   - Expected pipe name: `umbraco-ai-demo-port-{identifier}`
+   - Port: from port info endpoint
+   - Pipe name: `umbraco-ai-demo-{identifier}`
    - Git context: branch name, worktree name, or "not in git repo"
    - Suggestion: How to start if not running, or how to connect if running
 
@@ -121,21 +109,71 @@ Use multi-method detection to determine site status:
 Execute stop operation, wait 3 seconds, then execute start operation.
 
 ### For "open"
-1. Check if demo site is running using status detection methods
-2. If not running, report error: "Demo site not running. Start it with `/demo-site-management start`"
-3. If running, discover the port:
-   - Look for background task output file
-   - Extract port from "Now listening on: https://127.0.0.1:<port>" line
-   - Or try common ports (55209, 44355, etc.)
-4. Launch default browser with discovered URL:
+1. Check if demo site is running and get port info:
+   - Query port info endpoint via named pipe (see "Query port info via named pipe" section)
+   - If fails, report error: "Demo site not running. Start it with `/demo-site-management start`"
+2. Launch default browser with discovered URL:
    - Windows: `powershell.exe -Command "Start-Process 'https://127.0.0.1:<port>'"`
    - Linux: `xdg-open https://127.0.0.1:<port>`
    - macOS: `open https://127.0.0.1:<port>`
-5. Report:
+3. Report:
    - Browser launched
    - URL opened
    - Note about certificate warning (self-signed HTTPS)
    - Credentials reminder: admin@example.com / password1234
+
+## Query Port Info via Named Pipe
+
+The demo site exposes a `/port-info` endpoint that returns port and pipe information as JSON.
+Query it via HTTP over named pipes without needing to know the port:
+
+**Using Node.js** (recommended, cross-platform):
+```javascript
+import http from 'http';
+import { execSync } from 'child_process';
+
+// Get pipe name from git context
+function getIdentifier() {
+  try {
+    const gitDir = execSync('git rev-parse --git-dir', { encoding: 'utf-8' }).trim();
+    if (gitDir.includes('worktrees')) {
+      return gitDir.split(/[\\\/]/).find((p, i, arr) => arr[i-1] === 'worktrees') || 'default';
+    }
+    return execSync('git branch --show-current', { encoding: 'utf-8' }).trim() || 'default';
+  } catch { return 'default'; }
+}
+
+const identifier = getIdentifier().replace(/[^a-zA-Z0-9\-_]/g, '') || 'default';
+const pipeName = `umbraco-ai-demo-${identifier}`;
+const socketPath = process.platform === 'win32' ? `\\\\.\\pipe\\${pipeName}` : `/tmp/${pipeName}`;
+
+const data = await new Promise((resolve, reject) => {
+  http.get({ socketPath, path: '/port-info' }, (res) => {
+    let body = '';
+    res.on('data', chunk => body += chunk);
+    res.on('end', () => res.statusCode === 200 ? resolve(JSON.parse(body)) : reject(new Error(`HTTP ${res.statusCode}`)));
+  }).on('error', reject);
+});
+
+// data = { port: 55209, addresses: ["https://127.0.0.1:55209"], pipeName: "umbraco-ai-demo-dev", identifier: "dev" }
+```
+
+**Using curl** (PowerShell on Windows):
+```powershell
+$identifier = (git branch --show-current).Trim() -replace '[^a-zA-Z0-9\-_]', ''
+$pipeName = "umbraco-ai-demo-$identifier"
+curl.exe --unix-socket "//./pipe/$pipeName" http://localhost/port-info
+```
+
+**Response format:**
+```json
+{
+  "port": 55209,
+  "addresses": ["https://127.0.0.1:55209"],
+  "pipeName": "umbraco-ai-demo-dev",
+  "identifier": "dev"
+}
+```
 
 ## Detection Helper Commands
 
@@ -145,12 +183,6 @@ Use these commands for reliable cross-platform detection:
 ```bash
 # Look for tasks with DemoSite in output (path varies by platform)
 # Use /tasks command or check TaskOutput for running demo site tasks
-```
-
-**Test port connectivity:**
-```bash
-# Quick connection test (1 second timeout)
-curl -k --connect-timeout 1 https://localhost:44355 2>&1 | head -1
 ```
 
 **Determine git identifier:**
@@ -164,40 +196,35 @@ else
 fi
 ```
 
-**Read task output for port:**
-```bash
-# Extract port from task output
-grep "Now listening on:" /path/to/task.output | grep -oP 'https://[^:]+:\K[0-9]+'
-```
-
 ## Port Discovery Details
 
-The demo site uses named pipes for automatic port discovery:
-- **Pipe naming**: `umbraco-ai-demo-port-<identifier>`
+The demo site uses HTTP over named pipes for automatic port discovery:
+- **Pipe naming**: `umbraco-ai-demo-<identifier>`
 - **Identifier logic**:
   - Worktree: extracted from `.git/worktrees/<name>`
   - Main repo: current branch name
   - No git: `default`
-- **Middleware**: Starts on first HTTP request (InvokeAsync in pipeline)
-- **Concurrent support**: Multiple generate-client instances can connect simultaneously
-- **Implementation**: `demo/Umbraco.Ai.DemoSite/Middleware/PortDiscoveryMiddleware.cs`
+- **Port info endpoint**: `/port-info` (returns JSON with port, addresses, pipeName, identifier)
+- **HTTP transport**: Kestrel listens on both named pipe and HTTP/HTTPS
+- **Concurrent support**: Multiple clients can connect simultaneously
+- **Implementation**: `demo/Umbraco.Ai.DemoSite/Composers/NamedPipeListenerComposer.cs`
 
 ## Common Issues
 
 ### Pipe not found
-- Middleware only starts on first HTTP request
-- Solution: Make a curl request to the site to trigger it
+- Demo site not running or still starting up
+- Solution: Wait 15-20 seconds after start, or check status with `/demo-site-management status`
 
-### Generate-client falls back to 44355
+### Connection refused
 - Pipe doesn't exist or connection failed
-- Check that site is running and middleware initialized
-- Verify pipe name matches git context
+- Check that site is running: `/demo-site-management status`
+- Verify pipe name matches git context (branch/worktree)
 
 ### Multiple instances conflict
 - Each worktree/branch gets unique pipe name
-- Main branch: `umbraco-ai-demo-port-<branch-name>`
-- Worktree: `umbraco-ai-demo-port-<worktree-name>`
-- No git: `umbraco-ai-demo-port-default`
+- Main branch: `umbraco-ai-demo-<branch-name>`
+- Worktree: `umbraco-ai-demo-<worktree-name>`
+- No git: `umbraco-ai-demo-default`
 
 ## Success Criteria
 

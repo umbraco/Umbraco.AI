@@ -73,12 +73,12 @@ $launchSettingsPath = "demo\Umbraco.Ai.DemoSite\Properties\launchSettings.json"
 New-Item -ItemType Directory -Path (Split-Path $launchSettingsPath) -Force | Out-Null
 Copy-Item -Path $launchSettingsSource -Destination $launchSettingsPath -Force
 
-# Step 3.3: Add PortDiscoveryMiddleware for automatic port detection
-Write-Host "Adding PortDiscoveryMiddleware for automatic port detection..." -ForegroundColor Green
-$middlewareSourcePath = Join-Path $ScriptDir "templates\PortDiscoveryMiddleware.cs"
-$middlewareDestPath = "demo\Umbraco.Ai.DemoSite\Middleware\PortDiscoveryMiddleware.cs"
-New-Item -ItemType Directory -Path (Split-Path $middlewareDestPath) -Force | Out-Null
-Copy-Item -Path $middlewareSourcePath -Destination $middlewareDestPath -Force
+# Step 3.3: Add NamedPipeListenerComposer for HTTP over named pipes
+Write-Host "Adding NamedPipeListenerComposer for HTTP over named pipes..." -ForegroundColor Green
+$composerSourcePath = Join-Path $ScriptDir "templates\NamedPipeListenerComposer.cs"
+$composerDestPath = "demo\Umbraco.Ai.DemoSite\Composers\NamedPipeListenerComposer.cs"
+New-Item -ItemType Directory -Path (Split-Path $composerDestPath) -Force | Out-Null
+Copy-Item -Path $composerSourcePath -Destination $composerDestPath -Force
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green

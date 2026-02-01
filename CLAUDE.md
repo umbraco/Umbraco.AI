@@ -56,6 +56,20 @@ Use the setup skill for first-time repository configuration:
 - Named pipes auto-cleanup on process exit
 - Multiple worktrees run simultaneously without port conflicts
 
+## Project Management
+
+**Azure DevOps Configuration:**
+
+All task management for this project is handled in Azure DevOps:
+
+- **Project:** D-Team Tracker
+- **Backlog:** AI Team
+- **Default Tag:** Umbraco AI
+
+**Default behavior:**
+- Unless otherwise specified, all Azure DevOps related tasks (work items, issues, sprints, etc.) should be managed in the D-Team Tracker project under the AI Team backlog
+- All backlog items created for this repository should be tagged with `Umbraco AI` unless explicitly stated otherwise
+
 ## Build Commands
 
 ### .NET

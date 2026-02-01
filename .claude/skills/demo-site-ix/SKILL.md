@@ -203,9 +203,9 @@ This skill depends on the `demo-site-management` skill for infrastructure:
 ```bash
 # Typical workflow
 /demo-site-management start                     # Start the demo site
-/demo-site-management-automation login           # Login via browser
-/demo-site-management-automation navigate-to-connections  # Navigate to section
-/demo-site-management-automation create-connection OpenAI # Create entity
+/demo-site-automation login           # Login via browser
+/demo-site-automation navigate-to-connections  # Navigate to section
+/demo-site-automation create-connection OpenAI # Create entity
 ```
 
 ## Success Criteria
@@ -221,21 +221,21 @@ This skill depends on the `demo-site-management` skill for infrastructure:
 ```bash
 # Start demo site and login
 /demo-site-management start
-/demo-site-management-automation login
+/demo-site-automation login
 
 # Create a connection
-/demo-site-management-automation create-connection OpenAI
+/demo-site-automation create-connection OpenAI
 
 # Navigate and edit
-/demo-site-management-automation navigate-to-profiles
-/demo-site-management-automation edit-profile "Default Chat"
+/demo-site-automation navigate-to-profiles
+/demo-site-automation edit-profile "Default Chat"
 
 # Work with add-on packages
-/demo-site-management-automation navigate-to-prompts
-/demo-site-management-automation create-prompt
+/demo-site-automation navigate-to-prompts
+/demo-site-automation create-prompt
 
 # Check status anytime
-/demo-site-management-automation status
+/demo-site-automation status
 ```
 
 ## Tips

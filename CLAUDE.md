@@ -363,10 +363,18 @@ docs(core): Update API examples
    - ✅ `fix(frontend): Prevent scripts from hanging`
    - ❌ `fix(frontend): prevent scripts from hanging`
 
-2. **Scope must be valid** - Use one of the allowed scopes:
-   - `agent`, `amazon`, `anthropic`, `api`, `approval`, `chat`, `ci`, `connection`, `copilot`, `core`, `deps`, `docs`, `embedding`, `frontend`, `google`, `microsoft-foundry`, `middleware`, `openai`, `profile`, `prompt`, `providers`, `registry`, `release`, `settings`, `tools`, `ui`
+2. **Scope must be valid** - Use one of the allowed scopes defined in `commitlint.config.js`
+   - **Valid types**: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `revert`, `build`
+   - **Valid scopes**: Dynamically loaded from all `<Product>/changelog.config.json` files + meta scopes (`deps`, `ci`, `docs`, `release`)
+   - **Single scope only** - Multiple scopes are not supported (e.g., `fix(core,agent):` is invalid)
+   - **To list current options**: `npm run commit-options` or `node scripts/list-commit-options.js`
+   - **For Claude Code**: Read `commitlint.config.js` at runtime to discover valid types and scopes - never use hardcoded lists
 
 3. **Body lines must not exceed 100 characters** - Wrap long lines in the commit body
+
+4. **Split commits when changes affect multiple areas** - If your changes span multiple scopes, create separate commits
+   - ✅ Split into: `fix(core): Fix issue A` + `fix(agent): Fix issue B`
+   - ❌ Don't use: `fix(core,agent): Fix issues`
 
 Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
 

@@ -22,7 +22,7 @@ fi
 
 # Check if branch matches valid patterns
 valid_branch=false
-if [[ $current_branch =~ ^(feature|release|hotfix)/.+ ]]; then
+if [[ $current_branch =~ ^(feature|claude|release|hotfix)/.+ ]]; then
     valid_branch=true
 fi
 

@@ -16,15 +16,15 @@ This is a monorepo containing multiple Umbraco.Ai packages:
 
 | Product | Description | Version | Location |
 |---------|-------------|---------|----------|
-| **Umbraco.Ai** | Core AI integration layer | 1.x | `Umbraco.Ai/` |
-| **Umbraco.Ai.Agent** | AI agent management and runtime | 1.x | `Umbraco.Ai.Agent/` |
-| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | 1.x | `Umbraco.Ai.Agent.Copilot/` |
-| **Umbraco.Ai.Prompt** | Prompt template management | 1.x | `Umbraco.Ai.Prompt/` |
-| **Umbraco.Ai.OpenAi** | OpenAI provider | 1.x | `Umbraco.Ai.OpenAi/` |
-| **Umbraco.Ai.Anthropic** | Anthropic provider | 1.x | `Umbraco.Ai.Anthropic/` |
-| **Umbraco.Ai.Amazon** | Amazon Bedrock provider | 1.x | `Umbraco.Ai.Amazon/` |
-| **Umbraco.Ai.Google** | Google Gemini provider | 1.x | `Umbraco.Ai.Google/` |
-| **Umbraco.Ai.MicrosoftFoundry** | Microsoft AI Foundry provider | 1.x | `Umbraco.Ai.MicrosoftFoundry/` |
+| [**Umbraco.Ai**](Umbraco.Ai/) | Core AI integration layer | 1.x | `Umbraco.Ai/` |
+| [**Umbraco.Ai.Agent**](Umbraco.Ai.Agent/) | AI agent management and runtime | 1.x | `Umbraco.Ai.Agent/` |
+| [**Umbraco.Ai.Agent.Copilot**](Umbraco.Ai.Agent.Copilot/) | Copilot chat UI for agents (frontend-only) | 1.x | `Umbraco.Ai.Agent.Copilot/` |
+| [**Umbraco.Ai.Prompt**](Umbraco.Ai.Prompt/) | Prompt template management | 1.x | `Umbraco.Ai.Prompt/` |
+| [**Umbraco.Ai.OpenAi**](Umbraco.Ai.OpenAi/) | OpenAI provider | 1.x | `Umbraco.Ai.OpenAi/` |
+| [**Umbraco.Ai.Anthropic**](Umbraco.Ai.Anthropic/) | Anthropic provider | 1.x | `Umbraco.Ai.Anthropic/` |
+| [**Umbraco.Ai.Amazon**](Umbraco.Ai.Amazon/) | Amazon Bedrock provider | 1.x | `Umbraco.Ai.Amazon/` |
+| [**Umbraco.Ai.Google**](Umbraco.Ai.Google/) | Google Gemini provider | 1.x | `Umbraco.Ai.Google/` |
+| [**Umbraco.Ai.MicrosoftFoundry**](Umbraco.Ai.MicrosoftFoundry/) | Microsoft AI Foundry provider | 1.x | `Umbraco.Ai.MicrosoftFoundry/` |
 
 ## Quick Start
 

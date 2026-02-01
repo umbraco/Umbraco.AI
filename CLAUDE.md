@@ -20,41 +20,41 @@ This is a monorepo containing Umbraco.Ai and its add-on packages:
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
-## Local Development Setup
+## Development Environment
 
-### Quick Start
+### Initial Setup
 
+Use the setup skill for first-time repository configuration:
 ```bash
-# One-time setup: creates unified solution + demo site
-.\scripts\install-demo-site.ps1  # Windows
-./scripts/install-demo-site.sh   # Linux/Mac
-
-# Configure git hooks (enforces branch naming convention)
-.\scripts\setup-git-hooks.ps1  # Windows
-./scripts/setup-git-hooks.sh   # Linux/Mac
-
-# Open the unified solution
-# Umbraco.Ai.local.sln
-
-# Build everything
-dotnet build Umbraco.Ai.local.sln
+/repo-setup  # Interactive setup: git hooks, demo site, dependencies, build
 ```
 
 ### Demo Site
 
-The setup script creates:
-- `Umbraco.Ai.local.sln` - Unified solution with all products
-- `demo/Umbraco.Ai.DemoSite/` - Umbraco instance with all packages referenced
-
+**Location:** `demo/Umbraco.Ai.DemoSite/`
 **Credentials:** admin@example.com / password1234
 
-**Script options (PowerShell):**
-- `-SkipTemplateInstall` - Skip reinstalling Umbraco.Templates
-- `-Force` - Recreate demo if it already exists
+**Infrastructure Operations:**
+```bash
+/demo-site-management start              # Start with DemoSite-Claude profile (dynamic port)
+/demo-site-management stop               # Stop the running demo site
+/demo-site-management open               # Open in browser (auto-discovers port)
+/demo-site-management generate-client    # Generate OpenAPI clients
+/demo-site-management status             # Check running status and port info
+```
 
-**Script options (Bash):**
-- `-s, --skip-template-install` - Skip reinstalling Umbraco.Templates
-- `-f, --force` - Recreate demo if it already exists
+**Browser Automation (Playwright):**
+```bash
+/demo-site-automation login                         # Login to Umbraco backoffice
+/demo-site-automation navigate-to-connections       # Navigate to AI settings sections
+/demo-site-automation create-connection [provider]  # Create/edit AI entities
+```
+
+**Architecture Notes:**
+- `DemoSite-Claude` profile uses dynamic ports to avoid conflicts between worktrees
+- Port discovery via named pipes: `umbraco-ai-demo-port-{branch-or-worktree}`
+- Named pipes auto-cleanup on process exit
+- Multiple worktrees run simultaneously without port conflicts
 
 ## Build Commands
 
@@ -92,8 +92,8 @@ npm run build
 # Watch all frontends in parallel
 npm run watch
 
-# Generate OpenAPI clients (requires running demo site)
-npm run generate-client
+# Generate OpenAPI clients (requires running demo site with DemoSite-Claude profile)
+npm run generate-client  # Automatically discovers port via named pipe
 
 # Target specific products
 npm run build:core
@@ -352,10 +352,29 @@ All commits should follow the [Conventional Commits](https://www.conventionalcom
 
 **Examples:**
 ```bash
-feat(chat): add streaming support
-fix(openai): handle rate limit errors
-docs(core): update API examples
+feat(chat): Add streaming support
+fix(openai): Handle rate limit errors
+docs(core): Update API examples
 ```
+
+**Formatting Rules (enforced by commitlint):**
+
+1. **Subject must be sentence-case** - Capitalize the first word after the scope
+   - ✅ `fix(frontend): Prevent scripts from hanging`
+   - ❌ `fix(frontend): prevent scripts from hanging`
+
+2. **Scope must be valid** - Use one of the allowed scopes defined in `commitlint.config.js`
+   - **Valid types**: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `revert`, `build`
+   - **Valid scopes**: Dynamically loaded from all `<Product>/changelog.config.json` files + meta scopes (`deps`, `ci`, `docs`, `release`)
+   - **Single scope only** - Multiple scopes are not supported (e.g., `fix(core,agent):` is invalid)
+   - **To list current options**: `npm run commit-options` or `node scripts/list-commit-options.js`
+   - **For Claude Code**: Read `commitlint.config.js` at runtime to discover valid types and scopes - never use hardcoded lists
+
+3. **Body lines must not exceed 100 characters** - Wrap long lines in the commit body
+
+4. **Split commits when changes affect multiple areas** - If your changes span multiple scopes, create separate commits
+   - ✅ Split into: `fix(core): Fix issue A` + `fix(agent): Fix issue B`
+   - ❌ Don't use: `fix(core,agent): Fix issues`
 
 Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
 
@@ -540,3 +559,5 @@ public interface IAiProfileRepository
 ### Extension Methods
 
 All extension methods MUST be placed in the `Umbraco.Ai.Extensions` namespace (or the product-specific equivalent like `Umbraco.Ai.Prompt.Extensions`) for ease of discovery via IntelliSense.
+
+# Lessons Learned

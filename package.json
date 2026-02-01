@@ -29,7 +29,9 @@
 
     "changelog": "node scripts/generate-changelog.js",
     "changelog:list": "node scripts/generate-changelog.js --list",
-    "changelog:all": "node scripts/generate-all-changelogs.js"
+    "changelog:all": "node scripts/generate-all-changelogs.js",
+
+    "commit-options": "node scripts/list-commit-options.js"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.3.1",

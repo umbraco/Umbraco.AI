@@ -29,16 +29,35 @@ function loadScopes() {
   }
 
   // Add common meta scopes
-  scopes.add('deps');  // Dependency updates
-  scopes.add('ci');    // CI/CD changes
-  scopes.add('docs');  // Documentation
+  scopes.add('deps');     // Dependency updates
+  scopes.add('ci');       // CI/CD changes
+  scopes.add('docs');     // Documentation
   scopes.add('release');  // Release-related changes
+  scopes.add('hooks');    // Git hooks
+  scopes.add('build');    // Build system
+  scopes.add('config');   // Configuration files
 
   return Array.from(scopes).sort();
 }
 
 module.exports = {
   extends: ['@commitlint/config-conventional'],
+  plugins: [
+    {
+      rules: {
+        'scope-not-type': (parsed) => {
+          const { type, scope } = parsed;
+          if (scope && type && scope === type) {
+            return [
+              false,
+              `Scope "${scope}" should not match type "${type}". Use just "${type}:" without a scope, or use a more specific scope like "${type}(hooks):", "${type}(build):", etc.`
+            ];
+          }
+          return [true];
+        }
+      }
+    }
+  ],
   rules: {
     'scope-enum': [
       2,
@@ -46,6 +65,8 @@ module.exports = {
       loadScopes()  // Dynamically loaded from product changelog.config.json files!
     ],
     'scope-empty': [1, 'never'], // Warn if scope is missing (don't fail)
+    'scope-case': [2, 'always', ['lower-case', 'kebab-case']],
+    'scope-not-type': [2, 'always'],  // Enable the custom rule
     'subject-case': [2, 'always', 'sentence-case'],
     'type-enum': [
       2,

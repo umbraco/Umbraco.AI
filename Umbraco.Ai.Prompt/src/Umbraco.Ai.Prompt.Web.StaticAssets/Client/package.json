@@ -6,7 +6,7 @@
     "watch": "tsc && vite build --watch",
     "build": "tsc -p tsconfig.json && vite build",
     "build:app": "tsc -p tsconfig.app.json && vite build",
-    "generate-client": "node scripts/generate-openapi.js https://localhost:44355/umbraco/swagger/ai-prompt-management/swagger.json"
+    "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-prompt-management"
   },
   "peerDependencies": {
     "@umbraco-cms/backoffice": "^17.1.0",

@@ -112,18 +112,31 @@ cat > "demo/Umbraco.Ai.DemoSite/Properties/launchSettings.json" << 'EOF'
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Umbraco.Ai.DemoSite": {
+    "DemoSite": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "applicationUrl": "https://localhost:44355",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      }      
+    },
+    "DemoSite-Claude": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://127.0.0.1:0",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }      
     }
   }
 }
 EOF
+
+# Step 3.3: Add PortDiscoveryMiddleware for automatic port detection
+echo "Adding PortDiscoveryMiddleware for automatic port detection..."
+mkdir -p "demo/Umbraco.Ai.DemoSite/Middleware"
+cp "$SCRIPT_DIR/templates/PortDiscoveryMiddleware.cs" "demo/Umbraco.Ai.DemoSite/Middleware/PortDiscoveryMiddleware.cs"
 
 # Step 4: Create unified solution
 echo "Creating unified solution..."

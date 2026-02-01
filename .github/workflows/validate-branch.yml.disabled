@@ -33,7 +33,7 @@ jobs:
 
           # Validate branch name pattern
           VALID=false
-          if echo "$BRANCH_NAME" | grep -qE "^(feature|release|hotfix)/.+"; then
+          if echo "$BRANCH_NAME" | grep -qE "^(claude|feature|release|hotfix)/.+"; then
             VALID=true
           fi
 

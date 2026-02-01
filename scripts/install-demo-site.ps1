@@ -84,14 +84,22 @@ $launchSettings = @"
 {
   "`$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Umbraco.Ai.DemoSite": {
+    "DemoSite": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "applicationUrl": "https://localhost:44355",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      }      
+    },
+    "DemoSite-Claude": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://127.0.0.1:0",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }      
     }
   }
 }
@@ -99,6 +107,13 @@ $launchSettings = @"
 $launchSettingsPath = "demo\Umbraco.Ai.DemoSite\Properties\launchSettings.json"
 New-Item -ItemType Directory -Path (Split-Path $launchSettingsPath) -Force | Out-Null
 Set-Content -Path $launchSettingsPath -Value $launchSettings
+
+# Step 3.3: Add PortDiscoveryMiddleware for automatic port detection
+Write-Host "Adding PortDiscoveryMiddleware for automatic port detection..." -ForegroundColor Green
+$middlewareSourcePath = Join-Path $ScriptDir "templates\PortDiscoveryMiddleware.cs"
+$middlewareDestPath = "demo\Umbraco.Ai.DemoSite\Middleware\PortDiscoveryMiddleware.cs"
+New-Item -ItemType Directory -Path (Split-Path $middlewareDestPath) -Force | Out-Null
+Copy-Item -Path $middlewareSourcePath -Destination $middlewareDestPath -Force
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green

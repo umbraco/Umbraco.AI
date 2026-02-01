@@ -75,6 +75,18 @@ This repository uses two Azure DevOps projects:
 - All backlog items created for this repository should be tagged with `Umbraco AI` unless explicitly stated otherwise
 - CI/CD pipelines and build configurations are located in the Umbraco AI project
 
+**Searching for Work Items:**
+
+The Azure DevOps project used for backlog management is shared across multiple Umbraco products. When searching for work items without filters, you will get results from multiple product teams.
+
+**IMPORTANT**: Always scope searches to this repository's team backlog to avoid cross-product results:
+
+1. **Preferred approach**: Filter by team backlog using `wit_list_backlog_work_items` with the project/team specified in the configuration above
+
+2. **Fallback approach**: Fetch team backlog items first, then query over those specific work item IDs
+
+3. **Avoid**: Unfiltered searches that return items across all product teams
+
 ## Build Commands
 
 ### .NET

@@ -60,15 +60,20 @@ Use the setup skill for first-time repository configuration:
 
 **Azure DevOps Configuration:**
 
-All task management for this project is handled in Azure DevOps:
+This repository uses two Azure DevOps projects:
 
+**Backlog & Work Items:**
 - **Project:** D-Team Tracker
 - **Backlog:** AI Team
 - **Default Tag:** Umbraco AI
 
+**CI/CD Pipelines:**
+- **Project:** Umbraco AI
+
 **Default behavior:**
 - Unless otherwise specified, all Azure DevOps related tasks (work items, issues, sprints, etc.) should be managed in the D-Team Tracker project under the AI Team backlog
 - All backlog items created for this repository should be tagged with `Umbraco AI` unless explicitly stated otherwise
+- CI/CD pipelines and build configurations are located in the Umbraco AI project
 
 ## Build Commands
 

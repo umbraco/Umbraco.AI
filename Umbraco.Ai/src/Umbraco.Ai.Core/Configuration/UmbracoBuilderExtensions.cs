@@ -184,10 +184,11 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAiRuntimeContextAccessor>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
         services.AddSingleton<IAiRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
 
-        // Runtime context contributors - processes context items from frontend
+        // Runtime context contributors - executed in order
         builder.AiRuntimeContextContributors()
-            .Append<SerializedEntityContributor>()
-            .Append<DefaultSystemMessageContributor>();
+            .Append<UserContextContributor>()           // Ambient: adds current user info
+            .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities
+            .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items
 
         // Register media image resolver
         builder.Services.AddSingleton<IAiUmbracoMediaResolver, AiUmbracoMediaResolver>();

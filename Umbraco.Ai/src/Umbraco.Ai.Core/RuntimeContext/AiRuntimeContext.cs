@@ -9,9 +9,9 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 public sealed class AiRuntimeContext
 {
     /// <summary>
-    /// The raw context items from the request.
+    /// The raw context items from the request with support for handling tracking.
     /// </summary>
-    public IReadOnlyList<AiRequestContextItem> RequestContextItems { get; }
+    public AiRequestContextItemCollection RequestContextItems { get; }
 
     /// <summary>
     /// System message parts to inject (aggregated from contributors).
@@ -41,11 +41,11 @@ public sealed class AiRuntimeContext
     /// <summary>
     /// Creates a new runtime context from a collection of context items.
     /// </summary>
-    /// <param name="items">The raw context items from the request.</param>
+    /// <param name="requestContextItems">The raw context items from the request.</param>
     public AiRuntimeContext(IEnumerable<AiRequestContextItem> requestContextItems)
     {
         ArgumentNullException.ThrowIfNull(requestContextItems);
-        RequestContextItems = requestContextItems.ToList();
+        RequestContextItems = new AiRequestContextItemCollection(requestContextItems);
     }
 
     /// <summary>
@@ -112,6 +112,6 @@ public sealed class AiRuntimeContext
     /// </summary>
     /// <param name="key">The key to store under.</param>
     /// <param name="value">The value to store.</param>
-    public void SetValue(string key, object? value) 
+    public void SetValue(string key, object? value)
         => Data[key] = value;
 }

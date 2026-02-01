@@ -47,24 +47,12 @@ Write-Host "Creating demo folder..." -ForegroundColor Green
 New-Item -ItemType Directory -Path "demo" -Force | Out-Null
 
 # Disable package validation for demo folder
-$directoryBuildProps = @"
-<Project>
-  <PropertyGroup>
-    <EnablePackageValidation>false</EnablePackageValidation>
-  </PropertyGroup>
-</Project>
-"@
-Set-Content -Path "demo\Directory.Build.props" -Value $directoryBuildProps
+$directoryBuildPropsSource = Join-Path $ScriptDir "templates\Directory.Build.props"
+Copy-Item -Path $directoryBuildPropsSource -Destination "demo\Directory.Build.props" -Force
 
 # Disable central package management for demo folder
-$directoryPackagesProps = @"
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-"@
-Set-Content -Path "demo\Directory.Packages.props" -Value $directoryPackagesProps
+$directoryPackagesPropsSource = Join-Path $ScriptDir "templates\Directory.Packages.props"
+Copy-Item -Path $directoryPackagesPropsSource -Destination "demo\Directory.Packages.props" -Force
 
 # Step 3: Create the Umbraco demo site
 Write-Host "Creating Umbraco demo site..." -ForegroundColor Green
@@ -80,33 +68,10 @@ Pop-Location
 
 # Step 3.2: Set fixed port for consistent development
 Write-Host "Configuring fixed port (44355)..." -ForegroundColor Green
-$launchSettings = @"
-{
-  "`$schema": "https://json.schemastore.org/launchsettings.json",
-  "profiles": {
-    "DemoSite": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:44355",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }      
-    },
-    "DemoSite-Claude": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "applicationUrl": "https://127.0.0.1:0",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }      
-    }
-  }
-}
-"@
+$launchSettingsSource = Join-Path $ScriptDir "templates\launchSettings.json"
 $launchSettingsPath = "demo\Umbraco.Ai.DemoSite\Properties\launchSettings.json"
 New-Item -ItemType Directory -Path (Split-Path $launchSettingsPath) -Force | Out-Null
-Set-Content -Path $launchSettingsPath -Value $launchSettings
+Copy-Item -Path $launchSettingsSource -Destination $launchSettingsPath -Force
 
 # Step 3.3: Add PortDiscoveryMiddleware for automatic port detection
 Write-Host "Adding PortDiscoveryMiddleware for automatic port detection..." -ForegroundColor Green

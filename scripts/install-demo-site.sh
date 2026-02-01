@@ -76,22 +76,10 @@ echo "Creating demo folder..."
 mkdir -p "demo"
 
 # Disable package validation for demo folder
-cat > "demo/Directory.Build.props" << 'EOF'
-<Project>
-  <PropertyGroup>
-    <EnablePackageValidation>false</EnablePackageValidation>
-  </PropertyGroup>
-</Project>
-EOF
+cp "$SCRIPT_DIR/templates/Directory.Build.props" "demo/Directory.Build.props"
 
 # Disable central package management for demo folder
-cat > "demo/Directory.Packages.props" << 'EOF'
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
-EOF
+cp "$SCRIPT_DIR/templates/Directory.Packages.props" "demo/Directory.Packages.props"
 
 # Step 3: Create the Umbraco demo site
 echo "Creating Umbraco demo site..."
@@ -108,30 +96,7 @@ popd > /dev/null
 # Step 3.2: Set fixed port for consistent development
 echo "Configuring fixed port (44355)..."
 mkdir -p "demo/Umbraco.Ai.DemoSite/Properties"
-cat > "demo/Umbraco.Ai.DemoSite/Properties/launchSettings.json" << 'EOF'
-{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "profiles": {
-    "DemoSite": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:44355",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }      
-    },
-    "DemoSite-Claude": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "applicationUrl": "https://127.0.0.1:0",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }      
-    }
-  }
-}
-EOF
+cp "$SCRIPT_DIR/templates/launchSettings.json" "demo/Umbraco.Ai.DemoSite/Properties/launchSettings.json"
 
 # Step 3.3: Add PortDiscoveryMiddleware for automatic port detection
 echo "Adding PortDiscoveryMiddleware for automatic port detection..."

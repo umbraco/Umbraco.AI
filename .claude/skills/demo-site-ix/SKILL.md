@@ -1,5 +1,5 @@
 ---
-name: automating-demo-site-browser
+name: demo-site-automation
 description: Automates browser-based interactions with Umbraco.Ai demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents). Use when testing UI workflows, creating or editing AI entities through the backoffice, or demonstrating Umbraco.Ai features.
 argument-hint: [login|navigate-to-<section>|edit-<entity>|create-<entity>|status]
 allowed-tools: mcp__playwright__*, Bash, Read, Skill
@@ -53,12 +53,12 @@ Before any browser interaction, discover the demo site URL:
 
 ```bash
 # Use managing-demo-site skill to check status and get URL
-/managing-demo-site status
+/demo-site status
 ```
 
 If demo site is not running, start it first:
 ```bash
-/managing-demo-site start
+/demo-site start
 ```
 
 Extract the URL from the status output (format: `https://127.0.0.1:<port>` or `https://localhost:44355`).
@@ -169,7 +169,7 @@ Navigate to `/umbraco#/ai-agent/agents` (requires Umbraco.Ai.Agent package). Fol
 
 #### For "status"
 
-1. Check if demo-site is running: `/managing-demo-site status`
+1. Check if demo-site is running: `/demo-site status`
 2. Try to connect browser to demo site URL
 3. Take snapshot if connected
 4. Report:
@@ -185,7 +185,7 @@ Common errors and solutions:
 | Error | Solution |
 |-------|----------|
 | Browser not installed | Run `mcp__playwright__browser_install` |
-| Demo site not running | Run `/managing-demo-site start` first |
+| Demo site not running | Run `/demo-site start` first |
 | Login failed | Check credentials, take snapshot for debugging |
 | Element not found | Take snapshot, update selectors based on actual HTML |
 | Navigation timeout | Increase wait time, check for loading indicators |
@@ -198,14 +198,14 @@ Common errors and solutions:
 
 ## Integration with demo-site Skill
 
-This skill depends on the `managing-demo-site` skill for infrastructure:
+This skill depends on the `demo-site` skill for infrastructure:
 
 ```bash
 # Typical workflow
-/managing-demo-site start                     # Start the demo site
-/automating-demo-site-browser login           # Login via browser
-/automating-demo-site-browser navigate-to-connections  # Navigate to section
-/automating-demo-site-browser create-connection OpenAI # Create entity
+/demo-site start                     # Start the demo site
+/demo-site-automation login           # Login via browser
+/demo-site-automation navigate-to-connections  # Navigate to section
+/demo-site-automation create-connection OpenAI # Create entity
 ```
 
 ## Success Criteria
@@ -220,22 +220,22 @@ This skill depends on the `managing-demo-site` skill for infrastructure:
 
 ```bash
 # Start demo site and login
-/managing-demo-site start
-/automating-demo-site-browser login
+/demo-site start
+/demo-site-automation login
 
 # Create a connection
-/automating-demo-site-browser create-connection OpenAI
+/demo-site-automation create-connection OpenAI
 
 # Navigate and edit
-/automating-demo-site-browser navigate-to-profiles
-/automating-demo-site-browser edit-profile "Default Chat"
+/demo-site-automation navigate-to-profiles
+/demo-site-automation edit-profile "Default Chat"
 
 # Work with add-on packages
-/automating-demo-site-browser navigate-to-prompts
-/automating-demo-site-browser create-prompt
+/demo-site-automation navigate-to-prompts
+/demo-site-automation create-prompt
 
 # Check status anytime
-/automating-demo-site-browser status
+/demo-site-automation status
 ```
 
 ## Tips

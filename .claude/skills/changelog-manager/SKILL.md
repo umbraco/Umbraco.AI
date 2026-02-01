@@ -1,5 +1,5 @@
 ---
-name: managing-changelogs
+name: changelog-management
 description: Generates changelogs for products from conventional commit history. Use when preparing a release, updating release documentation, or previewing unreleased changes before creating a release branch.
 allowed-tools: Bash, Read, AskUserQuestion
 ---
@@ -85,7 +85,7 @@ Products are auto-discovered by scanning for `changelog.config.json` files:
 ## Example Flow
 
 ```
-User invokes: /managing-changelogs
+User invokes: /changelog-management
 
 You ask: "Which product?" (list available)
 User selects: Umbraco.Ai

@@ -1,5 +1,5 @@
 ---
-name: configuring-session-hooks
+name: session-hook-config
 description: Configures startup hooks for Claude Code on the web, particularly for .NET proxy setup. Use when setting up a repository for Claude Code web sessions, when dotnet restore fails with 401 errors in Claude Code web, or when configuring SessionStart hooks for environment initialization.
 ---
 

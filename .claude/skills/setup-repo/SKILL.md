@@ -1,5 +1,5 @@
 ---
-name: setting-up-repository
+name: repo-setup
 description: Performs initial repository setup including git hooks, demo site creation, and dependency installation. Use when cloning the repository for the first time, onboarding a new developer, or resetting the development environment.
 allowed-tools: Bash, AskUserQuestion, Read, Glob
 ---
@@ -51,7 +51,7 @@ Perform initial repository setup by running the appropriate setup scripts based 
 ## Example Flow
 
 ```
-User invokes: /setting-up-repository
+User invokes: /repo-setup
 
 You ask: "What would you like to set up?"
 - Git hooks only

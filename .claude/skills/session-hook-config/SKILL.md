@@ -1,6 +1,6 @@
 ---
-name: session-start-hook
-description: Creating and developing startup hooks for Claude Code on the web. Use when the user wants to set up a repository for Claude Code on the web, create a SessionStart hook to ensure their project can run tests and linters during web sessions.
+name: session-hook-config
+description: Configures startup hooks for Claude Code on the web, particularly for .NET proxy setup. Use when setting up a repository for Claude Code web sessions, when dotnet restore fails with 401 errors in Claude Code web, or when configuring SessionStart hooks for environment initialization.
 ---
 
 # Session Start Hook for .NET Proxy Setup

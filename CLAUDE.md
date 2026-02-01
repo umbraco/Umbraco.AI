@@ -26,7 +26,7 @@ Each product has its own solution file, CLAUDE.md, and can be built independentl
 
 Use the setup skill for first-time repository configuration:
 ```bash
-/setup-repo  # Interactive setup: git hooks, demo site, dependencies, build
+/repo-setup  # Interactive setup: git hooks, demo site, dependencies, build
 ```
 
 ### Demo Site
@@ -36,18 +36,18 @@ Use the setup skill for first-time repository configuration:
 
 **Infrastructure Operations:**
 ```bash
-/demo-site start              # Start with DemoSite-Claude profile (dynamic port)
-/demo-site stop               # Stop the running demo site
-/demo-site open               # Open in browser (auto-discovers port)
-/demo-site generate-client    # Generate OpenAPI clients
-/demo-site status             # Check running status and port info
+/demo-site-management start              # Start with DemoSite-Claude profile (dynamic port)
+/demo-site-management stop               # Stop the running demo site
+/demo-site-management open               # Open in browser (auto-discovers port)
+/demo-site-management generate-client    # Generate OpenAPI clients
+/demo-site-management status             # Check running status and port info
 ```
 
 **Browser Automation (Playwright):**
 ```bash
-/demo-site-ix login                         # Login to Umbraco backoffice
-/demo-site-ix navigate-to-connections       # Navigate to AI settings sections
-/demo-site-ix create-connection [provider]  # Create/edit AI entities
+/demo-site-automation login                         # Login to Umbraco backoffice
+/demo-site-automation navigate-to-connections       # Navigate to AI settings sections
+/demo-site-automation create-connection [provider]  # Create/edit AI entities
 ```
 
 **Architecture Notes:**

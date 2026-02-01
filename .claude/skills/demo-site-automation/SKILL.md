@@ -1,6 +1,6 @@
 ---
-name: demo-site-ix
-description: Browser-based interactions with Umbraco.Ai demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents).
+name: demo-site-automation
+description: Automates browser-based interactions with Umbraco.Ai demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents). Use when testing UI workflows, creating or editing AI entities through the backoffice, or demonstrating Umbraco.Ai features.
 argument-hint: [login|navigate-to-<section>|edit-<entity>|create-<entity>|status]
 allowed-tools: mcp__playwright__*, Bash, Read, Skill
 ---
@@ -52,13 +52,13 @@ Execute the requested browser interaction with the demo site.
 Before any browser interaction, discover the demo site URL:
 
 ```bash
-# Use demo-site skill to check status and get URL
-/demo-site status
+# Use demo-site-management skill to check status and get URL
+/demo-site-management status
 ```
 
 If demo site is not running, start it first:
 ```bash
-/demo-site start
+/demo-site-management start
 ```
 
 Extract the URL from the status output (format: `https://127.0.0.1:<port>` or `https://localhost:44355`).
@@ -107,16 +107,7 @@ browser_snapshot (confirm)
 4. Take snapshot to show connections list
 5. Report: "Navigated to AI Connections. Found X connections."
 
-**Umbraco section URLs (all under Settings section):**
-- Connections: `/umbraco/section/settings/workspace/uai:connection-root`
-- Profiles: `/umbraco/section/settings/workspace/uai:profile-root`
-- Prompts: `/umbraco/section/settings/workspace/uai:prompt-root`
-- Agents: `/umbraco/section/settings/workspace/uai:agent-root`
-- Contexts: `/umbraco/section/settings/workspace/uai:context-root`
-- Analytics: `/umbraco/section/settings/workspace/ai-analytics-root`
-- Logs: `/umbraco/section/settings/workspace/uai:trace-root`
-- AI Settings: `/umbraco/section/settings/workspace/uai:settings-root`
-- Copilot: Available via "AI Assistant" button in top toolbar
+**Section URLs**: See [UMBRACO-UI.md](UMBRACO-UI.md) for all section URLs.
 
 #### For "create-connection [provider]"
 
@@ -178,7 +169,7 @@ Navigate to `/umbraco#/ai-agent/agents` (requires Umbraco.Ai.Agent package). Fol
 
 #### For "status"
 
-1. Check if demo-site is running: `/demo-site status`
+1. Check if demo-site is running: `/demo-site-management status`
 2. Try to connect browser to demo site URL
 3. Take snapshot if connected
 4. Report:
@@ -194,60 +185,28 @@ Common errors and solutions:
 | Error | Solution |
 |-------|----------|
 | Browser not installed | Run `mcp__playwright__browser_install` |
-| Demo site not running | Run `/demo-site start` first |
+| Demo site not running | Run `/demo-site-management start` first |
 | Login failed | Check credentials, take snapshot for debugging |
 | Element not found | Take snapshot, update selectors based on actual HTML |
 | Navigation timeout | Increase wait time, check for loading indicators |
 
-## Umbraco Backoffice Structure
+## Reference Documentation
 
-### Common Element Patterns
+**Umbraco UI patterns**: See [UMBRACO-UI.md](UMBRACO-UI.md) for element patterns, section URLs, and snapshot tips.
 
-Umbraco backoffice uses Umbraco UI Library (Lit components):
-
-- **Buttons**: `<uui-button>` elements with `label` attribute
-- **Inputs**: `<uui-input>` elements with `name` attribute
-- **Selects**: `<uui-select>` or custom dropdowns
-- **Dialogs**: `<umb-modal-dialog>` elements
-- **Tables**: `<uui-table>` with rows/cells
-- **Navigation**: `<umb-section-sidebar>` and `<umb-workspace>` elements
-
-### Taking Snapshots for Discovery
-
-Always take a snapshot before interacting to:
-1. Verify page state (logged in, correct section, etc.)
-2. Find element references (ref attribute) for clicks/fills
-3. Understand current UI state
-4. Debug issues when interactions fail
-
-Use `browser_snapshot` liberally - it's fast and provides crucial context.
+**Playwright tools**: See [PLAYWRIGHT-REFERENCE.md](PLAYWRIGHT-REFERENCE.md) for tool details and common patterns.
 
 ## Integration with demo-site Skill
 
-This skill depends on the `demo-site` skill for infrastructure:
+This skill depends on the `demo-site-management` skill for infrastructure:
 
 ```bash
 # Typical workflow
-/demo-site start           # Start the demo site
-/demo-site-ix login        # Login via browser
-/demo-site-ix navigate-to-connections  # Navigate to section
-/demo-site-ix create-connection OpenAI # Create entity
+/demo-site-management start                     # Start the demo site
+/demo-site-automation login           # Login via browser
+/demo-site-automation navigate-to-connections  # Navigate to section
+/demo-site-automation create-connection OpenAI # Create entity
 ```
-
-## Playwright MCP Tools Reference
-
-Key tools for this skill:
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `browser_navigate` | Go to URL | Initial navigation, section changes |
-| `browser_snapshot` | Capture page state | Before/after actions, discovery |
-| `browser_click` | Click element | Buttons, links, icons |
-| `browser_fill_form` | Fill multiple fields | Login, create/edit forms |
-| `browser_type` | Type text slowly | Rich text editors, search boxes |
-| `browser_wait_for` | Wait for element/text | After navigation, async loading |
-| `browser_take_screenshot` | Visual screenshot | Debugging, visual confirmation |
-| `browser_evaluate` | Run JavaScript | Complex interactions, data extraction |
 
 ## Success Criteria
 
@@ -261,22 +220,22 @@ Key tools for this skill:
 
 ```bash
 # Start demo site and login
-/demo-site start
-/demo-site-ix login
+/demo-site-management start
+/demo-site-automation login
 
 # Create a connection
-/demo-site-ix create-connection OpenAI
+/demo-site-automation create-connection OpenAI
 
 # Navigate and edit
-/demo-site-ix navigate-to-profiles
-/demo-site-ix edit-profile "Default Chat"
+/demo-site-automation navigate-to-profiles
+/demo-site-automation edit-profile "Default Chat"
 
 # Work with add-on packages
-/demo-site-ix navigate-to-prompts
-/demo-site-ix create-prompt
+/demo-site-automation navigate-to-prompts
+/demo-site-automation create-prompt
 
 # Check status anytime
-/demo-site-ix status
+/demo-site-automation status
 ```
 
 ## Tips

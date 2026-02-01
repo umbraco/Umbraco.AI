@@ -52,7 +52,7 @@ Execute the requested browser interaction with the demo site.
 Before any browser interaction, discover the demo site URL:
 
 ```bash
-# Use managing-demo-site skill to check status and get URL
+# Use demo-site-management skill to check status and get URL
 /demo-site-management status
 ```
 

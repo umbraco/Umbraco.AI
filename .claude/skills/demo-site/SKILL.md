@@ -1,5 +1,5 @@
 ---
-name: demo-site
+name: demo-site-management
 description: Manages the Umbraco.Ai demo site for development. Handles starting with DemoSite-Claude profile, port discovery via named pipes, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
 argument-hint: [start|stop|generate-client|status|restart|open]
 allowed-tools: Bash, Read, TaskOutput, TaskStop
@@ -57,7 +57,7 @@ Execute the requested demo site operation.
 
 3. If no task found:
    - Report that no running demo site was found
-   - Suggest checking with `/demo-site status`
+   - Suggest checking with `/demo-site-management status`
 
 4. Verify shutdown:
    - Try connecting to the last known port (should fail)
@@ -73,7 +73,7 @@ Execute the requested demo site operation.
    - Look for background task output files in temp directory
    - Try connecting to expected ports (check 44355 first, common default)
    - Check if any background bash tasks are related to DemoSite
-2. If not running, report error with suggestion: "Demo site not running. Start it with `/demo-site start`"
+2. If not running, report error with suggestion: "Demo site not running. Start it with `/demo-site-management start`"
 3. If running but just started, ensure middleware is initialized:
    - Wait 2 seconds if site was just started
    - Middleware only starts on first HTTP request
@@ -122,7 +122,7 @@ Execute stop operation, wait 3 seconds, then execute start operation.
 
 ### For "open"
 1. Check if demo site is running using status detection methods
-2. If not running, report error: "Demo site not running. Start it with `/demo-site start`"
+2. If not running, report error: "Demo site not running. Start it with `/demo-site-management start`"
 3. If running, discover the port:
    - Look for background task output file
    - Extract port from "Now listening on: https://127.0.0.1:<port>" line

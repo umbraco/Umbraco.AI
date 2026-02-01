@@ -36,11 +36,11 @@ Use the setup skill for first-time repository configuration:
 
 **Infrastructure Operations:**
 ```bash
-/demo-site start              # Start with DemoSite-Claude profile (dynamic port)
-/demo-site stop               # Stop the running demo site
-/demo-site open               # Open in browser (auto-discovers port)
-/demo-site generate-client    # Generate OpenAPI clients
-/demo-site status             # Check running status and port info
+/demo-site-management start              # Start with DemoSite-Claude profile (dynamic port)
+/demo-site-management stop               # Stop the running demo site
+/demo-site-management open               # Open in browser (auto-discovers port)
+/demo-site-management generate-client    # Generate OpenAPI clients
+/demo-site-management status             # Check running status and port info
 ```
 
 **Browser Automation (Playwright):**

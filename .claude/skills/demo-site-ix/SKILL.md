@@ -53,12 +53,12 @@ Before any browser interaction, discover the demo site URL:
 
 ```bash
 # Use managing-demo-site skill to check status and get URL
-/demo-site status
+/demo-site-management status
 ```
 
 If demo site is not running, start it first:
 ```bash
-/demo-site start
+/demo-site-management start
 ```
 
 Extract the URL from the status output (format: `https://127.0.0.1:<port>` or `https://localhost:44355`).
@@ -169,7 +169,7 @@ Navigate to `/umbraco#/ai-agent/agents` (requires Umbraco.Ai.Agent package). Fol
 
 #### For "status"
 
-1. Check if demo-site is running: `/demo-site status`
+1. Check if demo-site is running: `/demo-site-management status`
 2. Try to connect browser to demo site URL
 3. Take snapshot if connected
 4. Report:
@@ -185,7 +185,7 @@ Common errors and solutions:
 | Error | Solution |
 |-------|----------|
 | Browser not installed | Run `mcp__playwright__browser_install` |
-| Demo site not running | Run `/demo-site start` first |
+| Demo site not running | Run `/demo-site-management start` first |
 | Login failed | Check credentials, take snapshot for debugging |
 | Element not found | Take snapshot, update selectors based on actual HTML |
 | Navigation timeout | Increase wait time, check for loading indicators |
@@ -198,14 +198,14 @@ Common errors and solutions:
 
 ## Integration with demo-site Skill
 
-This skill depends on the `demo-site` skill for infrastructure:
+This skill depends on the `demo-site-management` skill for infrastructure:
 
 ```bash
 # Typical workflow
-/demo-site start                     # Start the demo site
-/demo-site-automation login           # Login via browser
-/demo-site-automation navigate-to-connections  # Navigate to section
-/demo-site-automation create-connection OpenAI # Create entity
+/demo-site-management start                     # Start the demo site
+/demo-site-management-automation login           # Login via browser
+/demo-site-management-automation navigate-to-connections  # Navigate to section
+/demo-site-management-automation create-connection OpenAI # Create entity
 ```
 
 ## Success Criteria
@@ -220,22 +220,22 @@ This skill depends on the `demo-site` skill for infrastructure:
 
 ```bash
 # Start demo site and login
-/demo-site start
-/demo-site-automation login
+/demo-site-management start
+/demo-site-management-automation login
 
 # Create a connection
-/demo-site-automation create-connection OpenAI
+/demo-site-management-automation create-connection OpenAI
 
 # Navigate and edit
-/demo-site-automation navigate-to-profiles
-/demo-site-automation edit-profile "Default Chat"
+/demo-site-management-automation navigate-to-profiles
+/demo-site-management-automation edit-profile "Default Chat"
 
 # Work with add-on packages
-/demo-site-automation navigate-to-prompts
-/demo-site-automation create-prompt
+/demo-site-management-automation navigate-to-prompts
+/demo-site-management-automation create-prompt
 
 # Check status anytime
-/demo-site-automation status
+/demo-site-management-automation status
 ```
 
 ## Tips

@@ -107,16 +107,7 @@ browser_snapshot (confirm)
 4. Take snapshot to show connections list
 5. Report: "Navigated to AI Connections. Found X connections."
 
-**Umbraco section URLs (all under Settings section):**
-- Connections: `/umbraco/section/settings/workspace/uai:connection-root`
-- Profiles: `/umbraco/section/settings/workspace/uai:profile-root`
-- Prompts: `/umbraco/section/settings/workspace/uai:prompt-root`
-- Agents: `/umbraco/section/settings/workspace/uai:agent-root`
-- Contexts: `/umbraco/section/settings/workspace/uai:context-root`
-- Analytics: `/umbraco/section/settings/workspace/ai-analytics-root`
-- Logs: `/umbraco/section/settings/workspace/uai:trace-root`
-- AI Settings: `/umbraco/section/settings/workspace/uai:settings-root`
-- Copilot: Available via "AI Assistant" button in top toolbar
+**Section URLs**: See [UMBRACO-UI.md](UMBRACO-UI.md) for all section URLs.
 
 #### For "create-connection [provider]"
 
@@ -199,28 +190,11 @@ Common errors and solutions:
 | Element not found | Take snapshot, update selectors based on actual HTML |
 | Navigation timeout | Increase wait time, check for loading indicators |
 
-## Umbraco Backoffice Structure
+## Reference Documentation
 
-### Common Element Patterns
+**Umbraco UI patterns**: See [UMBRACO-UI.md](UMBRACO-UI.md) for element patterns, section URLs, and snapshot tips.
 
-Umbraco backoffice uses Umbraco UI Library (Lit components):
-
-- **Buttons**: `<uui-button>` elements with `label` attribute
-- **Inputs**: `<uui-input>` elements with `name` attribute
-- **Selects**: `<uui-select>` or custom dropdowns
-- **Dialogs**: `<umb-modal-dialog>` elements
-- **Tables**: `<uui-table>` with rows/cells
-- **Navigation**: `<umb-section-sidebar>` and `<umb-workspace>` elements
-
-### Taking Snapshots for Discovery
-
-Always take a snapshot before interacting to:
-1. Verify page state (logged in, correct section, etc.)
-2. Find element references (ref attribute) for clicks/fills
-3. Understand current UI state
-4. Debug issues when interactions fail
-
-Use `browser_snapshot` liberally - it's fast and provides crucial context.
+**Playwright tools**: See [PLAYWRIGHT-REFERENCE.md](PLAYWRIGHT-REFERENCE.md) for tool details and common patterns.
 
 ## Integration with demo-site Skill
 
@@ -233,21 +207,6 @@ This skill depends on the `managing-demo-site` skill for infrastructure:
 /automating-demo-site-browser navigate-to-connections  # Navigate to section
 /automating-demo-site-browser create-connection OpenAI # Create entity
 ```
-
-## Playwright MCP Tools Reference
-
-Key tools for this skill:
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `browser_navigate` | Go to URL | Initial navigation, section changes |
-| `browser_snapshot` | Capture page state | Before/after actions, discovery |
-| `browser_click` | Click element | Buttons, links, icons |
-| `browser_fill_form` | Fill multiple fields | Login, create/edit forms |
-| `browser_type` | Type text slowly | Rich text editors, search boxes |
-| `browser_wait_for` | Wait for element/text | After navigation, async loading |
-| `browser_take_screenshot` | Visual screenshot | Debugging, visual confirmation |
-| `browser_evaluate` | Run JavaScript | Complex interactions, data extraction |
 
 ## Success Criteria
 

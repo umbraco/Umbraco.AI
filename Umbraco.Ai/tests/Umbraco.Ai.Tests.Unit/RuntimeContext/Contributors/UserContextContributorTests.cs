@@ -70,7 +70,7 @@ public class UserContextContributorTests
     }
 
     [Fact]
-    public void Contribute_WhenUserAuthenticated_IncludesUsername()
+    public void Contribute_WhenUsernameIsEmail_OmitsUsername()
     {
         // Arrange
         SetupAuthenticatedUser(username: "john.smith@example.com");
@@ -80,7 +80,22 @@ public class UserContextContributorTests
         _contributor.Contribute(context);
 
         // Assert
-        context.SystemMessageParts[0].ShouldContain("- Username: john.smith@example.com");
+        context.SystemMessageParts[0].ShouldNotContain("- Username:");
+        context.SystemMessageParts[0].ShouldNotContain("john.smith@example.com");
+    }
+
+    [Fact]
+    public void Contribute_WhenUsernameIsNotEmail_IncludesUsername()
+    {
+        // Arrange
+        SetupAuthenticatedUser(username: "adminuser");
+        var context = new AiRuntimeContext([]);
+
+        // Act
+        _contributor.Contribute(context);
+
+        // Assert
+        context.SystemMessageParts[0].ShouldContain("- Username: adminuser");
     }
 
     [Fact]

@@ -39,7 +39,12 @@ internal sealed class UserContextContributor : IAiRuntimeContextContributor
         sb.AppendLine("## Current User");
         sb.AppendLine($"- Key: {user.Key}");
         sb.AppendLine($"- Name: {user.Name}");
-        sb.AppendLine($"- Username: {user.Username}");
+
+        // Only include username if it doesn't look like an email (privacy protection)
+        if (!IsEmailLike(user.Username))
+        {
+            sb.AppendLine($"- Username: {user.Username}");
+        }
 
         if (!string.IsNullOrEmpty(user.Language))
         {
@@ -57,5 +62,15 @@ internal sealed class UserContextContributor : IAiRuntimeContextContributor
         }
 
         return sb.ToString().TrimEnd();
+    }
+
+    private static bool IsEmailLike(string? username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return false;
+        }
+
+        return username.Contains('@');
     }
 }

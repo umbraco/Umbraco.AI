@@ -33,6 +33,7 @@
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
     <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.Ai.Web" Version="[1.0.0, 1.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Agui" Version="[1.0.0, 1.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Startup" Version="[1.0.0, 1.999.999)" />
     <PackageVersion Include="Umbraco.Ai.Agent" Version="[1.0.0, 1.999.999)" />

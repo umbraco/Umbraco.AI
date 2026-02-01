@@ -32,7 +32,7 @@ steps:
     condition: ${{ parameters.condition }}
     workingDirectory: ${{ parameters.product }}
 
-  - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:DisableCloudBuildNumber=true
+  - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:UseProjectReferences=false -p:DisableCloudBuildNumber=true
     displayName: Restore packages
     condition: ${{ parameters.condition }}
 

@@ -1,6 +1,6 @@
 ---
-name: release-manager
-description: Generate and manage release manifests for release/hotfix branches
+name: managing-releases
+description: Generates and manages release manifests for release/hotfix branches. Use when creating a release or hotfix branch, selecting which products to include in a release, or preparing for CI validation.
 allowed-tools: Bash, Read, Write, Glob
 ---
 
@@ -73,7 +73,7 @@ Generate `release-manifest.json` at the repository root by discovering available
 7. **Remind about next steps**:
    - Commit the manifest to version control
    - CI will validate it against changed files on push
-   - Generate changelogs for included products using `/changelog-manager`
+   - Generate changelogs for included products using `/managing-changelogs`
 
 ## Important Notes
 
@@ -86,7 +86,7 @@ Generate `release-manifest.json` at the repository root by discovering available
 ## Example Flow
 
 ```
-User invokes: /release-manager
+User invokes: /managing-releases
 
 You discover and display:
 Select products to include in this release:
@@ -120,6 +120,6 @@ You confirm:
 
 You remind:
 - Commit the manifest file
-- Generate changelogs with /changelog-manager
+- Generate changelogs with /managing-changelogs
 - CI will validate on push
 ```

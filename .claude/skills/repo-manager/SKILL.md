@@ -1,6 +1,6 @@
 ---
-name: repo-manager
-description: Unified interface for repository management (setup, releases, changelogs, builds)
+name: managing-repository
+description: Provides a unified interface for repository management including setup, releases, changelogs, and builds. Use when unsure which management task to perform, or when needing guidance on repository operations like building, releasing, or generating changelogs.
 allowed-tools: AskUserQuestion, Skill, Bash
 ---
 
@@ -14,20 +14,20 @@ Present an interactive menu of available repository operations and delegate to s
 
 ## Available Operations
 
-### 1. Setup (`/setup-repo`)
+### 1. Setup (`/setting-up-repository`)
 Initial repository setup for new developers:
 - Install git hooks
 - Create demo site
 - Install dependencies
 - Run initial build
 
-### 2. Release Management (`/release-manager`)
+### 2. Release Management (`/managing-releases`)
 Generate release manifests for packaging:
 - Interactive product selection
 - Creates `release-manifest.json`
 - Required for `release/*` branches
 
-### 3. Changelog Generation (`/changelog-manager`)
+### 3. Changelog Generation (`/managing-changelogs`)
 Generate changelogs from commit history:
 - List available products
 - Generate for specific version or unreleased
@@ -50,9 +50,9 @@ Common build tasks:
    - "Watch frontends"
 
 2. **Delegate to appropriate skill** or execute directly:
-   - Setup → Invoke `/setup-repo` skill
-   - Release → Invoke `/release-manager` skill
-   - Changelog → Invoke `/changelog-manager` skill
+   - Setup → Invoke `/setting-up-repository` skill
+   - Release → Invoke `/managing-releases` skill
+   - Changelog → Invoke `/managing-changelogs` skill
    - Build → Execute command directly
 
 3. **Report results** - Show outcome and suggest next steps
@@ -78,7 +78,7 @@ Common build tasks:
 ## Example Flow
 
 ```
-User invokes: /repo-manager
+User invokes: /managing-repository
 
 You present menu:
 "What would you like to do?"
@@ -90,9 +90,9 @@ You present menu:
 
 User selects: "Generate release manifest"
 
-You invoke: /release-manager
+You invoke: /managing-releases
 
 After completion, you remind:
-- Next: Generate changelogs with /changelog-manager
+- Next: Generate changelogs with /managing-changelogs
 - CI will validate manifest on push
 ```

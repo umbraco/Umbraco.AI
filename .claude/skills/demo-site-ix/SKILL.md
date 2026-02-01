@@ -1,6 +1,6 @@
 ---
-name: demo-site-ix
-description: Browser-based interactions with Umbraco.Ai demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents).
+name: automating-demo-site-browser
+description: Automates browser-based interactions with Umbraco.Ai demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents). Use when testing UI workflows, creating or editing AI entities through the backoffice, or demonstrating Umbraco.Ai features.
 argument-hint: [login|navigate-to-<section>|edit-<entity>|create-<entity>|status]
 allowed-tools: mcp__playwright__*, Bash, Read, Skill
 ---
@@ -52,13 +52,13 @@ Execute the requested browser interaction with the demo site.
 Before any browser interaction, discover the demo site URL:
 
 ```bash
-# Use demo-site skill to check status and get URL
-/demo-site status
+# Use managing-demo-site skill to check status and get URL
+/managing-demo-site status
 ```
 
 If demo site is not running, start it first:
 ```bash
-/demo-site start
+/managing-demo-site start
 ```
 
 Extract the URL from the status output (format: `https://127.0.0.1:<port>` or `https://localhost:44355`).
@@ -178,7 +178,7 @@ Navigate to `/umbraco#/ai-agent/agents` (requires Umbraco.Ai.Agent package). Fol
 
 #### For "status"
 
-1. Check if demo-site is running: `/demo-site status`
+1. Check if demo-site is running: `/managing-demo-site status`
 2. Try to connect browser to demo site URL
 3. Take snapshot if connected
 4. Report:
@@ -194,7 +194,7 @@ Common errors and solutions:
 | Error | Solution |
 |-------|----------|
 | Browser not installed | Run `mcp__playwright__browser_install` |
-| Demo site not running | Run `/demo-site start` first |
+| Demo site not running | Run `/managing-demo-site start` first |
 | Login failed | Check credentials, take snapshot for debugging |
 | Element not found | Take snapshot, update selectors based on actual HTML |
 | Navigation timeout | Increase wait time, check for loading indicators |
@@ -224,14 +224,14 @@ Use `browser_snapshot` liberally - it's fast and provides crucial context.
 
 ## Integration with demo-site Skill
 
-This skill depends on the `demo-site` skill for infrastructure:
+This skill depends on the `managing-demo-site` skill for infrastructure:
 
 ```bash
 # Typical workflow
-/demo-site start           # Start the demo site
-/demo-site-ix login        # Login via browser
-/demo-site-ix navigate-to-connections  # Navigate to section
-/demo-site-ix create-connection OpenAI # Create entity
+/managing-demo-site start                     # Start the demo site
+/automating-demo-site-browser login           # Login via browser
+/automating-demo-site-browser navigate-to-connections  # Navigate to section
+/automating-demo-site-browser create-connection OpenAI # Create entity
 ```
 
 ## Playwright MCP Tools Reference
@@ -261,22 +261,22 @@ Key tools for this skill:
 
 ```bash
 # Start demo site and login
-/demo-site start
-/demo-site-ix login
+/managing-demo-site start
+/automating-demo-site-browser login
 
 # Create a connection
-/demo-site-ix create-connection OpenAI
+/automating-demo-site-browser create-connection OpenAI
 
 # Navigate and edit
-/demo-site-ix navigate-to-profiles
-/demo-site-ix edit-profile "Default Chat"
+/automating-demo-site-browser navigate-to-profiles
+/automating-demo-site-browser edit-profile "Default Chat"
 
 # Work with add-on packages
-/demo-site-ix navigate-to-prompts
-/demo-site-ix create-prompt
+/automating-demo-site-browser navigate-to-prompts
+/automating-demo-site-browser create-prompt
 
 # Check status anytime
-/demo-site-ix status
+/automating-demo-site-browser status
 ```
 
 ## Tips

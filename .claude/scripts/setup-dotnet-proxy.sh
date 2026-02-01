@@ -2,12 +2,43 @@
 # Setup proxy for .NET/NuGet in Claude Code web environment
 # This script detects if we're in the Claude Code web environment and sets up
 # px-proxy to handle the JWT-authenticated proxy for .NET tools.
+#
+# It also configures NuGet to use only nuget.org since MyGet and other feeds
+# may not be in the sandbox allowlist.
 
 set -e
+
+# Function to configure NuGet for sandbox environment
+configure_nuget_for_sandbox() {
+    # Create user-level NuGet config that restricts to nuget.org only
+    # This works around MyGet/other feeds not being in the sandbox allowlist
+    local NUGET_CONFIG_DIR="$HOME/.nuget/NuGet"
+    local NUGET_CONFIG="$NUGET_CONFIG_DIR/NuGet.Config"
+
+    # Only create if it doesn't exist (don't overwrite user config)
+    if [[ ! -f "$NUGET_CONFIG" ]]; then
+        mkdir -p "$NUGET_CONFIG_DIR"
+        cat > "$NUGET_CONFIG" << 'NUGETEOF'
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+</configuration>
+NUGETEOF
+        echo "Created NuGet config using nuget.org only (sandbox mode)"
+    else
+        echo "User NuGet config already exists, skipping sandbox configuration"
+    fi
+}
 
 # Check if we're in Claude Code web environment (look for JWT proxy pattern)
 if [[ "$HTTP_PROXY" =~ "jwt_" ]] && [[ "$HTTP_PROXY" =~ "@" ]]; then
     echo "Detected Claude Code web environment with JWT proxy"
+
+    # Configure NuGet to use only allowed sources
+    configure_nuget_for_sandbox
 
     # Check if px-proxy is already running
     if pgrep -f "px.*--port=3128" > /dev/null 2>&1; then

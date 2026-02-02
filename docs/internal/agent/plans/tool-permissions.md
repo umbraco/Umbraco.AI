@@ -2,19 +2,19 @@
 
 ## Overview
 
-Implement a tool permission system for Umbraco.Ai agents that allows administrators to control which tools each agent can access. This plan follows a **phased approach**: Phase 1 focuses on tool restrictions (implemented first), Phase 2 will add user group restrictions (future work).
+Implement a tool permission system for Umbraco.AI agents that allows administrators to control which tools each agent can access. This plan follows a **phased approach**: Phase 1 focuses on tool restrictions (implemented first), Phase 2 will add user group restrictions (future work).
 
 ## Context
 
 ### Current Architecture
-- **Agents**: Defined in `AiAgent` entity, reference optional `ProfileId` for AI configuration
-- **Tools**: Discovered via `[AiTool]` attribute, managed by `AiToolCollection`
-- **System Tools** (`IAiSystemTool`): Always included, cannot be disabled
+- **Agents**: Defined in `AIAgent` entity, reference optional `ProfileId` for AI configuration
+- **Tools**: Discovered via `[AITool]` attribute, managed by `AIToolCollection`
+- **System Tools** (`IAISystemTool`): Always included, cannot be disabled
 - **User Tools**: Regular tools that should be configurable per agent
 - **Execution Flow**:
   1. HTTP Request → `RunAgentController`
-  2. `AiAgentService.StreamAgentAsync()` orchestrates execution
-  3. `AiAgentFactory.CreateAgentAsync()` creates MAF agent with tool list
+  2. `AIAgentService.StreamAgentAsync()` orchestrates execution
+  3. `AIAgentFactory.CreateAgentAsync()` creates MAF agent with tool list
   4. `ScopedAIAgent` manages per-execution scope
   5. Tools are called via Microsoft.Extensions.AI function calling
 
@@ -28,8 +28,8 @@ Implement a tool permission system for Umbraco.Ai agents that allows administrat
 
 ### 1. Data Model Changes
 
-#### 1.1 Update AiAgent Entity
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Core\Agents\AiAgent.cs`
+#### 1.1 Update AIAgent Entity
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Agents\AIAgent.cs`
 
 Add two properties:
 
@@ -49,7 +49,7 @@ public IReadOnlyList<string> EnabledToolScopeIds { get; set; } = [];
 ```
 
 **Tool Resolution Logic**:
-1. System tools (`IAiSystemTool`) are **always included** (cannot be disabled)
+1. System tools (`IAISystemTool`) are **always included** (cannot be disabled)
 2. User tools are included if:
    - Tool ID is in `EnabledToolIds`, OR
    - Tool Scope is in `EnabledToolScopeIds`
@@ -163,19 +163,19 @@ For even more precise control, combine scopeswith specific tool IDs:
   - Can always add multi-scope support later without breaking changes
 - **Example**:
   ```csharp
-  [AiTool("content.get", "Get Content", Scope = "content.read")]
-  [AiTool("content.update", "Update Content", Scope = "content.write")]
+  [AITool("content.get", "Get Content", Scope = "content.read")]
+  [AITool("content.update", "Update Content", Scope = "content.write")]
   ```
 
 **Option B: Multiple Scopes (Future Enhancement)**
 - **Change**: Modify `ScopeId` to `ScopeIds` (string array)
 - **Implementation**:
   ```csharp
-  // IAiTool interface
+  // IAITool interface
   IReadOnlyList<string> ScopeIds { get; }
 
   // Tool attribute
-  [AiTool("hybrid.tool", "Hybrid Tool", ScopeIds = new[] {"content.read", "search"})]
+  [AITool("hybrid.tool", "Hybrid Tool", ScopeIds = new[] {"content.read", "search"})]
   ```
 - **Permission logic**: Tool is enabled if ANY of its scopesare enabled
 - **UI consideration**: Tool appears under multiple scopegroups
@@ -186,16 +186,16 @@ For even more precise control, combine scopeswith specific tool IDs:
 2. Treating `ScopeId` as a fallback if `ScopeIds` is empty
 3. Updating permission logic to check both
 
-**Tool Scope Implementation** (Aligned with IAiAgentScope Pattern):
+**Tool Scope Implementation** (Aligned with IAIAgentScope Pattern):
 
-Tool scopes will follow the same pattern as `IAiAgentScope` for consistency:
+Tool scopes will follow the same pattern as `IAIAgentScope` for consistency:
 
 #### Create Tool Scope Infrastructure
 
-**New Interface**: `IAiToolScope` (similar to `IAiAgentScope`)
+**New Interface**: `IAIToolScope` (similar to `IAIAgentScope`)
 
 ```csharp
-namespace Umbraco.Ai.Core.Tools.Scopes;
+namespace Umbraco.AI.Core.Tools.Scopes;
 
 /// <summary>
 /// Interface for tool scope definitions.
@@ -206,8 +206,8 @@ namespace Umbraco.Ai.Core.Tools.Scopes;
 /// They enable bulk tool enablement via scopes and clear destructiveness marking.
 /// </para>
 /// <para>
-/// Scopes are discovered via the <see cref="AiToolScopeAttribute"/> and registered
-/// in the <see cref="AiToolScopeCollection"/>.
+/// Scopes are discovered via the <see cref="AIToolScopeAttribute"/> and registered
+/// in the <see cref="AIToolScopeCollection"/>.
 /// </para>
 /// <para>
 /// Localization is handled by the frontend using the convention:
@@ -217,7 +217,7 @@ namespace Umbraco.Ai.Core.Tools.Scopes;
 /// </list>
 /// </para>
 /// </remarks>
-public interface IAiToolScope
+public interface IAIToolScope
 {
     /// <summary>
     /// Gets the unique identifier for this scope.
@@ -250,23 +250,23 @@ public interface IAiToolScope
 }
 ```
 
-**New Attribute**: `AiToolScopeAttribute`
+**New Attribute**: `AIToolScopeAttribute`
 
 ```csharp
-namespace Umbraco.Ai.Core.Tools.Scopes;
+namespace Umbraco.AI.Core.Tools.Scopes;
 
 /// <summary>
 /// Attribute to mark tool scope implementations for auto-discovery.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public sealed class AiToolScopeAttribute : Attribute
+public sealed class AIToolScopeAttribute : Attribute
 {
     public string Id { get; }
     public string Icon { get; set; } = "icon-tag";
     public bool IsDestructive { get; set; }
     public string Domain { get; set; } = "General";
 
-    public AiToolScopeAttribute(string id)
+    public AIToolScopeAttribute(string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         Id = id;
@@ -274,15 +274,15 @@ public sealed class AiToolScopeAttribute : Attribute
 }
 ```
 
-**Base Class**: `AiToolScopeBase`
+**Base Class**: `AIToolScopeBase`
 
 ```csharp
-namespace Umbraco.Ai.Core.Tools.Scopes;
+namespace Umbraco.AI.Core.Tools.Scopes;
 
 /// <summary>
 /// Base class for tool scope implementations.
 /// </summary>
-public abstract class AiToolScopeBase : IAiToolScope, IDiscoverable
+public abstract class AIToolScopeBase : IAIToolScope, IDiscoverable
 {
     public abstract string Id { get; }
     public abstract string Icon { get; }
@@ -291,24 +291,24 @@ public abstract class AiToolScopeBase : IAiToolScope, IDiscoverable
 }
 ```
 
-**Collection**: `AiToolScopeCollection` and `AiToolScopeCollectionBuilder`
+**Collection**: `AIToolScopeCollection` and `AIToolScopeCollectionBuilder`
 
 ```csharp
-namespace Umbraco.Ai.Core.Tools.Scopes;
+namespace Umbraco.AI.Core.Tools.Scopes;
 
-public class AiToolScopeCollection : BuilderCollectionBase<IAiToolScope>
+public class AIToolScopeCollection : BuilderCollectionBase<IAIToolScope>
 {
-    public IAiToolScope? GetById(string id) =>
+    public IAIToolScope? GetById(string id) =>
         this.FirstOrDefault(s => s.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
 
-    public IEnumerable<IAiToolScope> GetByDomain(string domain) =>
+    public IEnumerable<IAIToolScope> GetByDomain(string domain) =>
         this.Where(s => s.Domain.Equals(domain, StringComparison.OrdinalIgnoreCase));
 }
 
-public class AiToolScopeCollectionBuilder
-    : LazyCollectionBuilderBase<AiToolScopeCollectionBuilder, AiToolScopeCollection, IAiToolScope>
+public class AIToolScopeCollectionBuilder
+    : LazyCollectionBuilderBase<AIToolScopeCollectionBuilder, AIToolScopeCollection, IAIToolScope>
 {
-    // Auto-discovers scopes marked with [AiToolScope]
+    // Auto-discovers scopes marked with [AIToolScope]
 }
 ```
 
@@ -318,8 +318,8 @@ public class AiToolScopeCollectionBuilder
 
 ```csharp
 // Content scopes
-[AiToolScope("content.read", Icon = "icon-folder", Domain = "Content")]
-public class ContentReadScope : AiToolScopeBase
+[AIToolScope("content.read", Icon = "icon-folder", Domain = "Content")]
+public class ContentReadScope : AIToolScopeBase
 {
     public override string Id => "content.read";
     public override string Icon => "icon-folder";
@@ -327,8 +327,8 @@ public class ContentReadScope : AiToolScopeBase
     public override string Domain => "Content";
 }
 
-[AiToolScope("content.write", Icon = "icon-edit", IsDestructive = true, Domain = "Content")]
-public class ContentWriteScope : AiToolScopeBase
+[AIToolScope("content.write", Icon = "icon-edit", IsDestructive = true, Domain = "Content")]
+public class ContentWriteScope : AIToolScopeBase
 {
     public override string Id => "content.write";
     public override string Icon => "icon-edit";
@@ -337,21 +337,21 @@ public class ContentWriteScope : AiToolScopeBase
 }
 
 // Media scopes
-[AiToolScope("media.read", Icon = "icon-picture", Domain = "Media")]
-public class MediaReadScope : AiToolScopeBase { /* ... */ }
+[AIToolScope("media.read", Icon = "icon-picture", Domain = "Media")]
+public class MediaReadScope : AIToolScopeBase { /* ... */ }
 
-[AiToolScope("media.write", Icon = "icon-picture-add", IsDestructive = true, Domain = "Media")]
-public class MediaWriteScope : AiToolScopeBase { /* ... */ }
+[AIToolScope("media.write", Icon = "icon-picture-add", IsDestructive = true, Domain = "Media")]
+public class MediaWriteScope : AIToolScopeBase { /* ... */ }
 
 // General scopes
-[AiToolScope("search", Icon = "icon-search", Domain = "General")]
-public class SearchScope : AiToolScopeBase { /* ... */ }
+[AIToolScope("search", Icon = "icon-search", Domain = "General")]
+public class SearchScope : AIToolScopeBase { /* ... */ }
 
-[AiToolScope("navigation", Icon = "icon-sitemap", Domain = "General")]
-public class NavigationScope : AiToolScopeBase { /* ... */ }
+[AIToolScope("navigation", Icon = "icon-sitemap", Domain = "General")]
+public class NavigationScope : AIToolScopeBase { /* ... */ }
 
-[AiToolScope("translation", Icon = "icon-globe", Domain = "General")]
-public class TranslationScope : AiToolScopeBase { /* ... */ }
+[AIToolScope("translation", Icon = "icon-globe", Domain = "General")]
+public class TranslationScope : AIToolScopeBase { /* ... */ }
 
 // etc.
 ```
@@ -362,18 +362,18 @@ Change from `ScopeId` property to `ScopeId` property:
 
 ```csharp
 // Before (current)
-[AiTool("content.get", "Get Content", ScopeId = "Content")]
+[AITool("content.get", "Get Content", ScopeId = "Content")]
 
-// After (aligned with IAiAgentScope pattern)
-[AiTool("content.get", "Get Content", ScopeId = "content.read")]
-[AiTool("content.update", "Update Content", ScopeId = "content.write")]
-[AiTool("media.search", "Search Media", ScopeId = "media.read")]
+// After (aligned with IAIAgentScope pattern)
+[AITool("content.get", "Get Content", ScopeId = "content.read")]
+[AITool("content.update", "Update Content", ScopeId = "content.write")]
+[AITool("media.search", "Search Media", ScopeId = "media.read")]
 ```
 
-**Update IAiTool interface**:
+**Update IAITool interface**:
 
 ```csharp
-public interface IAiTool
+public interface IAITool
 {
     string Id { get; }
     string Name { get; }
@@ -383,17 +383,17 @@ public interface IAiTool
 }
 ```
 
-#### Benefits of Aligning with IAiAgentScope
+#### Benefits of Aligning with IAIAgentScope
 
 1. **Consistency**: Same pattern for both agent scopes and tool scopes
 2. **Type safety**: Scopes are first-class objects, not just strings
 3. **Metadata**: Scopes carry icon, destructiveness, domain grouping
 4. **Extensibility**: Add-ons can register custom scopes via attributes
 5. **Validation**: Can validate scope IDs exist in collection
-6. **UI**: Can query `AiToolScopeCollection` to build UI with icons, groups, metadata
+6. **UI**: Can query `AIToolScopeCollection` to build UI with icons, groups, metadata
 
 #### 1.2 Update Persistence Entity
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Persistence\Agents\AiAgentEntity.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\Agents\AIAgentEntity.cs`
 
 Add corresponding entity properties with JSON serialization:
 
@@ -410,7 +410,7 @@ public string? EnabledToolScopeIds { get; set; }
 ```
 
 #### 1.3 EF Core Configuration
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Persistence\UmbracoAiAgentDbContext.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\UmbracoAIAgentDbContext.cs`
 
 Update `OnModelCreating()` to handle JSON conversion (consistent with existing `ContextIds`, `ScopeIds` pattern):
 
@@ -429,7 +429,7 @@ builder.Property(e => e.EnabledToolScopeIds)
 ```
 
 #### 1.4 Database Migration
-**Migration Name**: `UmbracoAiAgent_AddToolPermissions`
+**Migration Name**: `UmbracoAIAgent_AddToolPermissions`
 
 **Changes**:
 - Add nullable `EnabledToolIds` column (nvarchar(4000))
@@ -441,14 +441,14 @@ Set common safe scopesfor backward compatibility:
 
 ```sql
 -- Migrate existing agents to have default tool scopes
-UPDATE UmbracoAiAgent_Agents
+UPDATE UmbracoAIAgent_Agents
 SET EnabledToolScopeIds = '["Search","Navigation","Translation","Web"]'
 WHERE EnabledToolScopeIds IS NULL;
 ```
 
-### 2. Update IAiAgentService Interface
+### 2. Update IAIAgentService Interface
 
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Core\Agents\IAiAgentService.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Agents\IAIAgentService.cs`
 
 Add two new methods to the existing interface:
 
@@ -461,7 +461,7 @@ Add two new methods to the existing interface:
 /// <param name="cancellationToken">Cancellation token.</param>
 /// <returns>Collection of enabled tool IDs.</returns>
 Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
-    AiAgent agent,
+    AIAgent agent,
     CancellationToken cancellationToken = default);
 
 /// <summary>
@@ -472,7 +472,7 @@ Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
 /// <param name="cancellationToken">Cancellation token.</param>
 /// <returns>True if tool is enabled, false otherwise.</returns>
 Task<bool> IsToolEnabledAsync(
-    AiAgent agent,
+    AIAgent agent,
     string toolId,
     CancellationToken cancellationToken = default);
 ```
@@ -496,18 +496,18 @@ Task<bool> IsToolEnabledAsync(
     CancellationToken cancellationToken = default);
 ```
 
-### 3. Update AiAgentService Implementation
+### 3. Update AIAgentService Implementation
 
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Core\Agents\AiAgentService.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Agents\AIAgentService.cs`
 
-Inject `AiToolCollection` into constructor (if not already present):
+Inject `AIToolCollection` into constructor (if not already present):
 
 ```csharp
-private readonly AiToolCollection _toolCollection;
+private readonly AIToolCollection _toolCollection;
 
-public AiAgentService(
+public AIAgentService(
     /* existing parameters */,
-    AiToolCollection toolCollection)
+    AIToolCollection toolCollection)
 {
     /* existing assignments */
     _toolCollection = toolCollection;
@@ -518,7 +518,7 @@ Add implementation methods:
 
 ```csharp
 public Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
-    AiAgent agent,
+    AIAgent agent,
     CancellationToken cancellationToken = default)
 {
     ArgumentNullException.ThrowIfNull(agent);
@@ -527,7 +527,7 @@ public Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
 
     // 1. Always include system tools
     var systemToolIds = _toolCollection
-        .Where(t => t is IAiSystemTool)
+        .Where(t => t is IAISystemTool)
         .Select(t => t.Id);
     enabledTools.AddRange(systemToolIds);
 
@@ -543,7 +543,7 @@ public Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
         foreach (var scope in agent.EnabledToolScopeIds)
         {
             var scopeToolIds = _toolCollection.GetByScope(scope)
-                .Where(t => t is not IAiSystemTool) // Don't duplicate system tools
+                .Where(t => t is not IAISystemTool) // Don't duplicate system tools
                 .Select(t => t.Id);
             enabledTools.AddRange(scopeToolIds);
         }
@@ -558,7 +558,7 @@ public Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
 }
 
 public async Task<bool> IsToolEnabledAsync(
-    AiAgent agent,
+    AIAgent agent,
     string toolId,
     CancellationToken cancellationToken = default)
 {
@@ -569,7 +569,7 @@ public async Task<bool> IsToolEnabledAsync(
     var tool = _toolCollection.FirstOrDefault(t =>
         t.Id.Equals(toolId, StringComparison.OrdinalIgnoreCase));
 
-    if (tool is IAiSystemTool)
+    if (tool is IAISystemTool)
     {
         return true;
     }
@@ -609,19 +609,19 @@ public async Task<bool> IsToolEnabledAsync(
 ### 4. Integration Points
 
 #### 4.1 Tool Resolution in Agent Factory
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Core\Chat\AiAgentFactory.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Chat\AIAgentFactory.cs`
 
 **Method**: `CreateAgentAsync` (around line 46-97)
 
 **Changes**:
-1. Inject `IAiAgentService` into constructor (if not already present)
+1. Inject `IAIAgentService` into constructor (if not already present)
 2. Get enabled tools for agent before creating tool list
 3. Filter tools to only include enabled ones
 
 ```csharp
 public async Task<AIAgent> CreateAgentAsync(
-    AiAgent agent,
-    IEnumerable<AiRequestContextItem>? contextItems = null,
+    AIAgent agent,
+    IEnumerable<AIRequestContextItem>? contextItems = null,
     IEnumerable<AITool>? additionalTools = null,
     IReadOnlyDictionary<string, object?>? additionalProperties = null,
     CancellationToken cancellationToken = default)
@@ -812,34 +812,34 @@ private record ToolMetadata(string Name, string? Scope, bool IsDestructive);
 Add constructor parameter (if not already present):
 
 ```csharp
-private readonly IAiAgentService _agentService;
+private readonly IAIAgentService _agentService;
 
-public AiAgentFactory(
+public AIAgentFactory(
     /* existing parameters */,
-    IAiAgentService agentService)
+    IAIAgentService agentService)
 {
     /* existing assignments */
     _agentService = agentService;
 }
 ```
 
-**Note**: `AiAgentFactory` may already have `IAiAgentService` injected. If so, just use the existing field.
+**Note**: `AIAgentFactory` may already have `IAIAgentService` injected. If so, just use the existing field.
 
 #### 4.3 Tool Metadata Extraction in RunAgentController
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Api\Management\Agent\Controllers\RunAgentController.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Controllers\RunAgentController.cs`
 
 **Method**: Agent run endpoint handler
 
 **Changes**:
 1. Extract tool metadata from `request.ForwardedProps`
-2. Pass metadata to `AiAgentFactory` via `additionalProperties`
+2. Pass metadata to `AIAgentFactory` via `additionalProperties`
 3. Log validation failures for audit
 
 ```csharp
 [HttpPost("{agentIdOrAlias}/run")]
 public async Task<IActionResult> RunAgent(
     string agentIdOrAlias,
-    [FromBody] AguiRunRequestModel request,
+    [FromBody] AGUIRunRequestModel request,
     CancellationToken ct)
 {
     // Resolve agent
@@ -858,7 +858,7 @@ public async Task<IActionResult> RunAgent(
     };
 
     // Convert frontend tools to AITool format
-    var frontendTools = ConvertAguiTools(request.Tools);
+    var frontendTools = ConvertAGUITools(request.Tools);
 
     // Create agent with tools and metadata
     var agentInstance = await _agentFactory.CreateAgentAsync(
@@ -909,9 +909,9 @@ private record ToolMetadata(string Name, string? Scope, bool IsDestructive);
 
 #### 5.1 Request/Response Models
 **Files**:
-- `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Api\Management\Agent\Models\AgentCreateRequestModel.cs`
-- `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Api\Management\Agent\Models\AgentUpdateRequestModel.cs`
-- `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Api\Management\Agent\Models\AgentResponseModel.cs`
+- `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Models\AgentCreateRequestModel.cs`
+- `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Models\AgentUpdateRequestModel.cs`
+- `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Models\AgentResponseModel.cs`
 
 Add properties to all three:
 
@@ -921,21 +921,21 @@ public IReadOnlyList<string>? EnabledToolScopeIds { get; set; }
 ```
 
 #### 5.2 Mapping Configuration
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Mapping\AgentMapDefinition.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Mapping\AgentMapDefinition.cs`
 
 Update mapper to include new properties in both directions (domain ↔ API models).
 
 #### 5.3 Optional: Tool Query Endpoint
-**New File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Api\Management\Agent\Controllers\GetAgentToolsController.cs`
+**New File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Controllers\GetAgentToolsController.cs`
 
 ```csharp
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class GetAgentToolsController : AgentControllerBase
 {
-    private readonly IAiAgentService _agentService;
+    private readonly IAIAgentService _agentService;
 
-    public GetAgentToolsController(IAiAgentService agentService)
+    public GetAgentToolsController(IAIAgentService agentService)
     {
         _agentService = agentService;
     }
@@ -1072,7 +1072,7 @@ public class GetAgentToolsController : AgentControllerBase
 
 **New Component**: `<uai-tool-selector>` (Lit element)
 
-**Location**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web.StaticAssets\Client\src\agent\components\tool-selector\`
+**Location**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web.StaticAssets\Client\src\agent\components\tool-selector\`
 
 **Props**:
 ```typescript
@@ -1097,7 +1097,7 @@ readonly: boolean = false;
 
 **API Integration**:
 - Fetch all available tools: `GET /umbraco/ai/management/api/v1/tools` (if exists)
-- Or: Extract from `AiToolCollection` via new API endpoint
+- Or: Extract from `AIToolCollection` via new API endpoint
 - Group tools by scope
 - Mark system tools
 
@@ -1172,7 +1172,7 @@ GET /umbraco/ai/management/api/v1/tools
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class GetToolsController : ControllerBase
 {
-    private readonly AiToolCollection _toolCollection;
+    private readonly AIToolCollection _toolCollection;
 
     [HttpGet]
     [ProducesResponseType(typeof(ToolMetadataResponse), StatusCodes.Status200OK)]
@@ -1185,7 +1185,7 @@ public class GetToolsController : ControllerBase
             Description = t.Description,
             Scope = t.ScopeId,
             IsDestructive = t.IsDestructive,
-            IsSystem = t is IAiSystemTool,
+            IsSystem = t is IAISystemTool,
             Tags = t.Tags.ToArray()
         });
 
@@ -1236,7 +1236,7 @@ public class GetToolsController : ControllerBase
 ### 8. Testing Strategy
 
 #### Unit Tests
-**File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\tests\Umbraco.Ai.Agent.Tests.Unit\Agents\AiAgentServiceTests.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\tests\Umbraco.AI.Agent.Tests.Unit\Agents\AIAgentServiceTests.cs`
 
 Add test methods for new functionality:
 - System tools always included
@@ -1248,10 +1248,10 @@ Add test methods for new functionality:
 - `IsToolEnabledAsync` returns correct results
 
 **Existing File Updates**:
-- `AiAgentFactoryTests.cs` - Verify tool filtering in CreateAgentAsync
+- `AIAgentFactoryTests.cs` - Verify tool filtering in CreateAgentAsync
 
 #### Integration Tests
-**New File**: `D:\Work\Umbraco\Umbraco.Ai\Umbraco.Ai.Agent\tests\Umbraco.Ai.Agent.Tests.Integration\Permissions\ToolPermissionIntegrationTests.cs`
+**New File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\tests\Umbraco.AI.Agent.Tests.Integration\Permissions\ToolPermissionIntegrationTests.cs`
 
 Test scenarios:
 - End-to-end agent execution with different tool configurations
@@ -1262,9 +1262,9 @@ Test scenarios:
 ### 9. Documentation Updates
 
 **Files to Update**:
-1. `D:\Work\Umbraco\Umbraco.Ai\docs\internal\core\umbraco-ai-agents-design.md` - Update Security and Permissions section
-2. `D:\Work\Umbraco\Umbraco.Ai\CLAUDE.md` - Add notes about agent tool permissions
-3. **New File**: `D:\Work\Umbraco\Umbraco.Ai\docs\internal\agent\tool-permissions.md` - Detailed permission system documentation
+1. `D:\Work\Umbraco\Umbraco.AI\docs\internal\core\umbraco-ai-agents-design.md` - Update Security and Permissions section
+2. `D:\Work\Umbraco\Umbraco.AI\CLAUDE.md` - Add notes about agent tool permissions
+3. **New File**: `D:\Work\Umbraco\Umbraco.AI\docs\internal\agent\tool-permissions.md` - Detailed permission system documentation
 
 ## Phase 2: User Group Permissions (Future Work)
 
@@ -1286,7 +1286,7 @@ Test scenarios:
 
 ### Proposed Phase 2 Design (Tentative)
 
-**Add to AiAgent**:
+**Add to AIAgent**:
 ```csharp
 public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 ```
@@ -1301,36 +1301,36 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 ## Implementation Checklist
 
 ### Domain Model (Core) - Tool Scopes Infrastructure
-- [ ] Create `IAiToolScope` interface (Umbraco.Ai.Core/Tools/Scopes/)
-- [ ] Create `AiToolScopeAttribute` class for discovery
-- [ ] Create `AiToolScopeBase` base class
-- [ ] Create `AiToolScopeCollection` and `AiToolScopeCollectionBuilder`
+- [ ] Create `IAIToolScope` interface (Umbraco.AI.Core/Tools/Scopes/)
+- [ ] Create `AIToolScopeAttribute` class for discovery
+- [ ] Create `AIToolScopeBase` base class
+- [ ] Create `AIToolScopeCollection` and `AIToolScopeCollectionBuilder`
 - [ ] Register built-in scopes (content.read, content.write, media.read, media.write, search, navigation, translation, web, entity.read, entity.write)
-- [ ] Add `UmbracoBuilderExtensions.AiToolScopes()` extension method
-- [ ] **Update IAiTool interface**: Change `ScopeId` to `ScopeId`
-- [ ] **Update AiToolAttribute**: Change `ScopeId` to `ScopeId`
-- [ ] **Update AiToolBase**: Change `ScopeId` property to `ScopeId`
+- [ ] Add `UmbracoBuilderExtensions.AIToolScopes()` extension method
+- [ ] **Update IAITool interface**: Change `ScopeId` to `ScopeId`
+- [ ] **Update AIToolAttribute**: Change `ScopeId` to `ScopeId`
+- [ ] **Update AIToolBase**: Change `ScopeId` property to `ScopeId`
 - [ ] **Update existing tool definitions** to use new `ScopeId` with operation-level scope IDs
-- [ ] Add scope validation in `AiToolCollectionBuilder` (validate scope IDs exist)
+- [ ] Add scope validation in `AIToolCollectionBuilder` (validate scope IDs exist)
 
 ### Domain Model (Core) - Agent Permissions
-- [ ] Add `EnabledToolIds` property to `AiAgent.cs`
-- [ ] Add `EnabledToolScopeIds` property to `AiAgent.cs`
-- [ ] Add `GetEnabledToolIdsAsync` method to `IAiAgentService.cs`
-- [ ] Add `IsToolEnabledAsync` method to `IAiAgentService.cs`
-- [ ] Implement tool permission methods in `AiAgentService.cs`
-- [ ] Inject `AiToolCollection` and `AiToolScopeCollection` into `AiAgentService`
+- [ ] Add `EnabledToolIds` property to `AIAgent.cs`
+- [ ] Add `EnabledToolScopeIds` property to `AIAgent.cs`
+- [ ] Add `GetEnabledToolIdsAsync` method to `IAIAgentService.cs`
+- [ ] Add `IsToolEnabledAsync` method to `IAIAgentService.cs`
+- [ ] Implement tool permission methods in `AIAgentService.cs`
+- [ ] Inject `AIToolCollection` and `AIToolScopeCollection` into `AIAgentService`
 
 ### Persistence Layer
-- [ ] Add properties to `AiAgentEntity.cs`
-- [ ] Update `UmbracoAiAgentDbContext.cs` with JSON converters
-- [ ] Update `AiAgentRepository.cs` mapping (if needed)
-- [ ] Create SQL Server migration: `UmbracoAiAgent_AddToolPermissions`
-- [ ] Create SQLite migration: `UmbracoAiAgent_AddToolPermissions`
+- [ ] Add properties to `AIAgentEntity.cs`
+- [ ] Update `UmbracoAIAgentDbContext.cs` with JSON converters
+- [ ] Update `AIAgentRepository.cs` mapping (if needed)
+- [ ] Create SQL Server migration: `UmbracoAIAgent_AddToolPermissions`
+- [ ] Create SQLite migration: `UmbracoAIAgent_AddToolPermissions`
 - [ ] Add migration script for default values
 
 ### Service Integration
-- [ ] Update `AiAgentFactory.cs` constructor (inject `IAiAgentService` if not present)
+- [ ] Update `AIAgentFactory.cs` constructor (inject `IAIAgentService` if not present)
 - [ ] Update `CreateAgentAsync` to call `_agentService.GetEnabledToolIdsAsync()`
 - [ ] Filter tools based on enabled tool IDs
 
@@ -1348,8 +1348,8 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Update `copilot-run.controller.ts` to extract tool metadata from manifests
 - [ ] Update `copilot-run.controller.ts` to send metadata via `forwardedProps` in AGUI request
 - [ ] Update `RunAgentController` to extract tool metadata from `request.ForwardedProps`
-- [ ] Update `AiAgentFactory.CreateAgentAsync()` to receive metadata via `additionalProperties`
-- [ ] Add helper method in `AiAgentFactory` to extract tool metadata from `additionalProperties`
+- [ ] Update `AIAgentFactory.CreateAgentAsync()` to receive metadata via `additionalProperties`
+- [ ] Add helper method in `AIAgentFactory` to extract tool metadata from `additionalProperties`
 - [ ] Update tool filtering logic to validate against metadata
 
 ### Frontend UI Components
@@ -1363,8 +1363,8 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Style components consistently with Umbraco design system
 
 ### Testing
-- [ ] Add unit tests to `AiAgentServiceTests.cs` for tool permission methods
-- [ ] Update `AiAgentFactoryTests.cs` (verify tool filtering)
+- [ ] Add unit tests to `AIAgentServiceTests.cs` for tool permission methods
+- [ ] Update `AIAgentFactoryTests.cs` (verify tool filtering)
 - [ ] Create `ToolPermissionIntegrationTests.cs` (end-to-end tests)
 - [ ] Test migration script with sample data
 
@@ -1378,18 +1378,18 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 
 | File | Purpose | Changes |
 |------|---------|---------|
-| `Umbraco.Ai.Agent.Core/Agents/AiAgent.cs` | Domain model | Add `EnabledToolIds`, `EnabledToolScopeIds` |
-| `Umbraco.Ai.Agent.Core/Agents/IAiAgentService.cs` | Service interface | Add `GetEnabledToolIdsAsync`, `IsToolEnabledAsync` methods |
-| `Umbraco.Ai.Agent.Core/Agents/AiAgentService.cs` | Service implementation | Implement tool permission methods, inject `AiToolCollection` |
-| `Umbraco.Ai.Agent.Core/Chat/AiAgentFactory.cs` | Agent creation | Call `_agentService.GetEnabledToolIdsAsync()`, filter tools using metadata from `additionalProperties` |
-| `Umbraco.Ai.Agent.Persistence/Agents/AiAgentEntity.cs` | EF entity | Add JSON columns |
-| `Umbraco.Ai.Agent.Persistence/UmbracoAiAgentDbContext.cs` | EF configuration | Add JSON converters |
-| `Umbraco.Ai.Agent.Web/.../RunAgentController.cs` | Agent execution | Extract tool metadata from `forwardedProps`, pass to factory |
-| `Umbraco.Ai.Agent.Web/...Models/AgentCreateRequestModel.cs` | API model | Add properties |
-| `Umbraco.Ai.Agent.Web/...Models/AgentUpdateRequestModel.cs` | API model | Add properties |
-| `Umbraco.Ai.Agent.Web/...Models/AgentResponseModel.cs` | API model | Add properties |
-| `Umbraco.Ai.Agent.Web/Mapping/AgentMapDefinition.cs` | Mapping config | Map new properties |
-| `Umbraco.Ai.Agent.Copilot/.../copilot-run.controller.ts` | Frontend controller | Extract tool metadata, send via `forwardedProps` |
+| `Umbraco.AI.Agent.Core/Agents/AIAgent.cs` | Domain model | Add `EnabledToolIds`, `EnabledToolScopeIds` |
+| `Umbraco.AI.Agent.Core/Agents/IAIAgentService.cs` | Service interface | Add `GetEnabledToolIdsAsync`, `IsToolEnabledAsync` methods |
+| `Umbraco.AI.Agent.Core/Agents/AIAgentService.cs` | Service implementation | Implement tool permission methods, inject `AIToolCollection` |
+| `Umbraco.AI.Agent.Core/Chat/AIAgentFactory.cs` | Agent creation | Call `_agentService.GetEnabledToolIdsAsync()`, filter tools using metadata from `additionalProperties` |
+| `Umbraco.AI.Agent.Persistence/Agents/AIAgentEntity.cs` | EF entity | Add JSON columns |
+| `Umbraco.AI.Agent.Persistence/UmbracoAIAgentDbContext.cs` | EF configuration | Add JSON converters |
+| `Umbraco.AI.Agent.Web/.../RunAgentController.cs` | Agent execution | Extract tool metadata from `forwardedProps`, pass to factory |
+| `Umbraco.AI.Agent.Web/...Models/AgentCreateRequestModel.cs` | API model | Add properties |
+| `Umbraco.AI.Agent.Web/...Models/AgentUpdateRequestModel.cs` | API model | Add properties |
+| `Umbraco.AI.Agent.Web/...Models/AgentResponseModel.cs` | API model | Add properties |
+| `Umbraco.AI.Agent.Web/Mapping/AgentMapDefinition.cs` | Mapping config | Map new properties |
+| `Umbraco.AI.Agent.Copilot/.../copilot-run.controller.ts` | Frontend controller | Extract tool metadata, send via `forwardedProps` |
 
 ## Verification
 
@@ -1426,8 +1426,8 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 
 5. **Run Unit Tests**:
    ```bash
-   dotnet test Umbraco.Ai.Agent.Tests.Unit
-   dotnet test Umbraco.Ai.Agent.Tests.Integration
+   dotnet test Umbraco.AI.Agent.Tests.Unit
+   dotnet test Umbraco.AI.Agent.Tests.Integration
    ```
 
 ## Design Rationale
@@ -1470,7 +1470,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - Add validation before tool resolution
 
 ### Phase 3: ToolSets (If Needed)
-- Add `AiToolSet` entity
+- Add `AIToolSet` entity
 - Add `EnabledToolSetAliases` to agent
 - Tool resolution includes tools from sets
 - Optional: ToolSets can have their own user group restrictions

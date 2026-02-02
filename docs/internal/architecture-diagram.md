@@ -1,6 +1,6 @@
-# Umbraco.Ai Architecture Overview
+# Umbraco.AI Architecture Overview
 
-This document provides a comprehensive architecture overview of Umbraco.Ai and its add-on packages.
+This document provides a comprehensive architecture overview of Umbraco.AI and its add-on packages.
 
 ## High-Level Architecture
 
@@ -98,7 +98,7 @@ The core architecture follows a clear hierarchy:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              PROVIDER                                       │
 │  Plugin that implements AI capabilities (e.g., OpenAI, Azure, Anthropic)   │
-│  • Discovered via [AiProvider] attribute                                    │
+│  • Discovered via [AIProvider] attribute                                    │
 │  • Registers supported capabilities                                         │
 │  • Defines provider-specific settings                                       │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -131,8 +131,8 @@ The core architecture follows a clear hierarchy:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            AI REQUEST                                       │
 │  Actual chat/embedding call using configured profile                       │
-│  • IAiChatService.GetResponseAsync()                                       │
-│  • IAiEmbeddingService.GenerateEmbeddingAsync()                           │
+│  • IAIChatService.GetResponseAsync()                                       │
+│  • IAIEmbeddingService.GenerateEmbeddingAsync()                           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -140,7 +140,7 @@ The core architecture follows a clear hierarchy:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           IAiCapability                                     │
+│                           IAICapability                                     │
 │                         (Base Interface)                                    │
 └───────────────────────────────┬─────────────────────────────────────────────┘
                                 │
@@ -148,7 +148,7 @@ The core architecture follows a clear hierarchy:
             │                                       │
             ▼                                       ▼
 ┌───────────────────────────────┐   ┌───────────────────────────────┐
-│      IAiChatCapability        │   │   IAiEmbeddingCapability      │
+│      IAIChatCapability        │   │   IAIEmbeddingCapability      │
 │                               │   │                               │
 │  Creates: IChatClient         │   │  Creates: IEmbeddingGenerator │
 │                               │   │                               │
@@ -160,7 +160,7 @@ The core architecture follows a clear hierarchy:
             │  Implementations                      │  Implementations
             ▼                                       ▼
 ┌───────────────────────────────┐   ┌───────────────────────────────┐
-│   OpenAiChatCapability        │   │  OpenAiEmbeddingCapability    │
+│   OpenAIChatCapability        │   │  OpenAIEmbeddingCapability    │
 │   AzureChatCapability         │   │  AzureEmbeddingCapability     │
 │   OllamaChatCapability        │   │  OllamaEmbeddingCapability    │
 │   ... (extensible)            │   │  ... (extensible)             │
@@ -180,7 +180,7 @@ The core architecture follows a clear hierarchy:
          │
          ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                      IAiChatService                              │
+│                      IAIChatService                              │
 │  GetResponseAsync(messages, options?, profileId?)                │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
@@ -188,7 +188,7 @@ The core architecture follows a clear hierarchy:
          │                                       │
          ▼                                       ▼
 ┌──────────────────────┐              ┌──────────────────────┐
-│  IAiProfileService   │              │ IAiConnectionService │
+│  IAIProfileService   │              │ IAIConnectionService │
 │                      │              │                      │
 │  GetProfileAsync()   │──────────────│ GetConfigured        │
 │  Resolves: settings, │              │ ProviderAsync()      │
@@ -198,7 +198,7 @@ The core architecture follows a clear hierarchy:
                                                  │
                                                  ▼
                               ┌───────────────────────────────────┐
-                              │     AiChatClientFactory           │
+                              │     AIChatClientFactory           │
                               │                                   │
                               │  CreateChatClientAsync(profile)   │
                               └───────────────────┬───────────────┘
@@ -222,7 +222,7 @@ The core architecture follows a clear hierarchy:
                                                 │
                                                 ▼
                               ┌───────────────────────────────────┐
-                              │     IAiChatCapability             │
+                              │     IAIChatCapability             │
                               │                                   │
                               │  CreateClient(settings, model)    │
                               └───────────────────┬───────────────┘
@@ -251,31 +251,31 @@ ProductName/
 │   │
 │   ├── ProductName.Core/                    # Domain Layer
 │   │   ├── Connections/                     # Connection domain
-│   │   │   ├── IAiConnectionService.cs
-│   │   │   ├── AiConnection.cs
-│   │   │   └── IAiConnectionRepository.cs
+│   │   │   ├── IAIConnectionService.cs
+│   │   │   ├── AIConnection.cs
+│   │   │   └── IAIConnectionRepository.cs
 │   │   ├── Profiles/                        # Profile domain
-│   │   │   ├── IAiProfileService.cs
-│   │   │   ├── AiProfile.cs
-│   │   │   └── IAiProfileRepository.cs
+│   │   │   ├── IAIProfileService.cs
+│   │   │   ├── AIProfile.cs
+│   │   │   └── IAIProfileRepository.cs
 │   │   ├── Providers/                       # Provider abstractions
-│   │   │   ├── IAiProvider.cs
-│   │   │   ├── IAiCapability.cs
-│   │   │   └── AiProviderBase.cs
+│   │   │   ├── IAIProvider.cs
+│   │   │   ├── IAICapability.cs
+│   │   │   └── AIProviderBase.cs
 │   │   ├── Chat/                            # Chat service
-│   │   │   ├── IAiChatService.cs
-│   │   │   └── IAiChatMiddleware.cs
+│   │   │   ├── IAIChatService.cs
+│   │   │   └── IAIChatMiddleware.cs
 │   │   └── Embeddings/                      # Embedding service
-│   │       └── IAiEmbeddingService.cs
+│   │       └── IAIEmbeddingService.cs
 │   │
 │   ├── ProductName.Persistence/             # Data Access Layer
-│   │   ├── UmbracoAiDbContext.cs
+│   │   ├── UmbracoAIDbContext.cs
 │   │   ├── Entities/
-│   │   │   ├── AiConnectionEntity.cs
-│   │   │   └── AiProfileEntity.cs
+│   │   │   ├── AIConnectionEntity.cs
+│   │   │   └── AIProfileEntity.cs
 │   │   └── Repositories/
-│   │       ├── EfCoreAiConnectionRepository.cs
-│   │       └── EfCoreAiProfileRepository.cs
+│   │       ├── EfCoreAIConnectionRepository.cs
+│   │       └── EfCoreAIProfileRepository.cs
 │   │
 │   ├── ProductName.Persistence.SqlServer/   # SQL Server Migrations
 │   │   └── Migrations/
@@ -304,7 +304,7 @@ ProductName/
 │   │       └── vite.config.ts
 │   │
 │   ├── ProductName.Startup/                 # DI Registration
-│   │   └── UmbracoAiComposer.cs
+│   │   └── UmbracoAIComposer.cs
 │   │
 │   └── ProductName/                         # Meta-package
 │       └── ProductName.csproj               # References all projects
@@ -327,10 +327,10 @@ ProductName/
 
 1. CUSTOM PROVIDERS
    ┌────────────────────────────────────────────────────────────────────────┐
-   │  [AiProvider("custom", "My Custom Provider")]                         │
-   │  public class CustomProvider : AiProviderBase<CustomProviderSettings> │
+   │  [AIProvider("custom", "My Custom Provider")]                         │
+   │  public class CustomProvider : AIProviderBase<CustomProviderSettings> │
    │  {                                                                    │
-   │      public CustomProvider(IAiProviderInfrastructure infrastructure)  │
+   │      public CustomProvider(IAIProviderInfrastructure infrastructure)  │
    │          : base(infrastructure)                                       │
    │      {                                                                │
    │          WithCapability<CustomChatCapability>();                      │
@@ -340,7 +340,7 @@ ProductName/
 
 2. CUSTOM MIDDLEWARE
    ┌────────────────────────────────────────────────────────────────────────┐
-   │  public class LoggingMiddleware : IAiChatMiddleware                   │
+   │  public class LoggingMiddleware : IAIChatMiddleware                   │
    │  {                                                                    │
    │      public IChatClient Apply(IChatClient client)                     │
    │      {                                                                │
@@ -349,18 +349,18 @@ ProductName/
    │  }                                                                    │
    │                                                                       │
    │  // Register in Composer:                                             │
-   │  builder.AiChatMiddleware().Append<LoggingMiddleware>();              │
+   │  builder.AIChatMiddleware().Append<LoggingMiddleware>();              │
    └────────────────────────────────────────────────────────────────────────┘
 
 3. CUSTOM CAPABILITIES
    ┌────────────────────────────────────────────────────────────────────────┐
    │  public class CustomChatCapability                                    │
-   │      : AiChatCapabilityBase<CustomProviderSettings>                   │
+   │      : AIChatCapabilityBase<CustomProviderSettings>                   │
    │  {                                                                    │
    │      public override IChatClient CreateClient(                        │
    │          CustomProviderSettings settings, string modelId) { ... }     │
    │                                                                       │
-   │      public override Task<IEnumerable<AiModel>> GetModelsAsync() ...  │
+   │      public override Task<IEnumerable<AIModel>> GetModelsAsync() ...  │
    │  }                                                                    │
    └────────────────────────────────────────────────────────────────────────┘
 
@@ -370,11 +370,11 @@ ProductName/
    │  {                                                                    │
    │      public void Compose(IUmbracoBuilder builder)                     │
    │      {                                                                │
-   │          builder.AiProviders()                                        │
+   │          builder.AIProviders()                                        │
    │              .Add<CustomProvider>()                                   │
    │              .Exclude<UnwantedProvider>();                            │
    │                                                                       │
-   │          builder.AiChatMiddleware()                                   │
+   │          builder.AIChatMiddleware()                                   │
    │              .Append<LoggingMiddleware>()                             │
    │              .InsertBefore<LoggingMiddleware, TracingMiddleware>();   │
    │      }                                                                │
@@ -382,7 +382,7 @@ ProductName/
    └────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Umbraco.Ai.Prompt Features
+## Umbraco.AI.Prompt Features
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -391,7 +391,7 @@ ProductName/
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            AiPrompt                                         │
+│                            AIPrompt                                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Id          : Guid           │  Unique identifier                         │
 │  Alias       : string         │  URL-safe identifier for API access        │
@@ -401,7 +401,7 @@ ProductName/
 │  ProfileId   : Guid?          │  Links to AI profile for execution         │
 │  Tags        : string[]       │  Categorization tags                       │
 │  IsActive    : bool           │  Enable/disable flag                       │
-│  Scope       : AiPromptScope? │  Where prompt can be executed              │
+│  Scope       : AIPromptScope? │  Where prompt can be executed              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 FEATURES:
@@ -428,7 +428,7 @@ EXAMPLE PROMPT:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Umbraco.Ai.Agent Features
+## Umbraco.AI.Agent Features
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -437,7 +437,7 @@ EXAMPLE PROMPT:
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                             AiAgent                                         │
+│                             AIAgent                                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Id           : Guid          │  Unique identifier                         │
 │  Alias        : string        │  URL-safe identifier for API access        │
@@ -479,9 +479,9 @@ EXAMPLE AGENT:
 │                          DATABASE TABLES                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-UMBRACO.AI (CORE)                    Prefix: UmbracoAi_
+UMBRACO.AI (CORE)                    Prefix: UmbracoAI_
 ┌─────────────────────────────────┐  ┌─────────────────────────────────┐
-│      UmbracoAiConnections       │  │       UmbracoAiProfiles         │
+│      UmbracoAIConnections       │  │       UmbracoAIProfiles         │
 ├─────────────────────────────────┤  ├─────────────────────────────────┤
 │ Id          : uniqueidentifier  │  │ Id          : uniqueidentifier  │
 │ Alias       : nvarchar(255)     │  │ Alias       : nvarchar(255)     │
@@ -495,9 +495,9 @@ UMBRACO.AI (CORE)                    Prefix: UmbracoAi_
               │ FK                    │ DateModified: datetime2         │  │
               └───────────────────────┴─────────────────────────────────┘  │
                                                                            │
-UMBRACO.AI.PROMPT                    Prefix: UmbracoAiPrompt_              │
+UMBRACO.AI.PROMPT                    Prefix: UmbracoAIPrompt_              │
 ┌─────────────────────────────────┐                                        │
-│       UmbracoAiPrompts          │                                        │
+│       UmbracoAIPrompts          │                                        │
 ├─────────────────────────────────┤                                        │
 │ Id          : uniqueidentifier  │                                        │
 │ Alias       : nvarchar(255)     │                                        │
@@ -512,9 +512,9 @@ UMBRACO.AI.PROMPT                    Prefix: UmbracoAiPrompt_              │
 │ DateModified: datetime2         │                                        │
 └─────────────────────────────────┘                                        │
                                                                            │
-UMBRACO.AI.AGENT                     Prefix: UmbracoAiAgent_               │
+UMBRACO.AI.AGENT                     Prefix: UmbracoAIAgent_               │
 ┌─────────────────────────────────┐                                        │
-│        UmbracoAiAgents          │                                        │
+│        UmbracoAIAgents          │                                        │
 ├─────────────────────────────────┤                                        │
 │ Id          : uniqueidentifier  │                                        │
 │ Alias       : nvarchar(255)     │                                        │
@@ -603,7 +603,7 @@ AGENTS (Add-on)
 
 ## Summary
 
-**Umbraco.Ai** provides a clean, provider-agnostic AI integration layer for Umbraco CMS built on Microsoft.Extensions.AI. The architecture emphasizes:
+**Umbraco.AI** provides a clean, provider-agnostic AI integration layer for Umbraco CMS built on Microsoft.Extensions.AI. The architecture emphasizes:
 
 1. **Extensibility** - Custom providers, capabilities, and middleware can be added via collection builders
 2. **Configuration-driven** - Settings can reference configuration values for secure credential management

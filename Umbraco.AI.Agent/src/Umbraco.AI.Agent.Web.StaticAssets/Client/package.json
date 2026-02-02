@@ -1,0 +1,46 @@
+{
+  "name": "@umbraco-ai/agent",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./types/umbraco-ai-agent-public-types.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/umbraco-ai-agent-public-types.d.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "files": [
+    "types/umbraco-ai-agent-public-types.d.ts",
+    "README.md"
+  ],
+  "scripts": {
+    "watch": "tsc && vite build --watch",
+    "build": "npm run build:api && npm run build:app",
+    "build:app": "tsc -p tsconfig.json && vite build",
+    "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)",
+    "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-agent-management"
+  },
+  "peerDependencies": {
+    "@umbraco-ai/core": "^17.0.0",
+    "@umbraco-cms/backoffice": "^17.1.0"
+  },
+  "dependencies": {
+    "@ag-ui/client": "^0.0.42",
+    "rxjs": "^7.8.2"
+  },
+  "overrides": {
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.85.0",
+    "@microsoft/api-extractor": "^7.55.1",
+    "@umbraco-ai/core": "*",
+    "@umbraco-cms/backoffice": "^17.1.0",
+    "chalk": "^5.6.0",
+    "cross-env": "^10.0.0",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3"
+  }
+}

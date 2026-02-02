@@ -1,13 +1,13 @@
-# Umbraco.Ai v1 Core Implementation Plan
+# Umbraco.AI v1 Core Implementation Plan
 
 ## Overview
 
-Complete the v1 core implementation of Umbraco.Ai with:
+Complete the v1 core implementation of Umbraco.AI with:
 1. Database persistence (EF Core) replacing in-memory repositories
 2. Management API endpoints following Umbraco patterns
 3. Full CRUD UI for Connections and Profiles with dynamic settings forms
 4. Middleware collection builder using Umbraco's collection builder pattern
-5. IAiEmbeddingService implementation (Search deferred to v2)
+5. IAIEmbeddingService implementation (Search deferred to v2)
 
 ---
 
@@ -18,22 +18,22 @@ Convert provider registration to use Umbraco's collection builder pattern for co
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
-- ✅ `IAiProvider.cs` - Added `IDiscoverable` marker interface
-- ✅ `AiProviderCollection.cs` - Created with `GetById()` and `GetWithCapability<T>()` helpers
-- ✅ `AiProviderCollectionBuilder.cs` - Created extending `LazyCollectionBuilderBase`
-- ✅ `UmbracoBuilderExtensions.Providers.cs` - Created with `AiProviders()` extension method
+- ✅ `IAIProvider.cs` - Added `IDiscoverable` marker interface
+- ✅ `AIProviderCollection.cs` - Created with `GetById()` and `GetWithCapability<T>()` helpers
+- ✅ `AIProviderCollectionBuilder.cs` - Created extending `LazyCollectionBuilderBase`
+- ✅ `UmbracoBuilderExtensions.Providers.cs` - Created with `AIProviders()` extension method
 - ✅ `UmbracoBuilderExtensions.cs` - Updated to use TypeLoader auto-discovery, removed old `RegisterProviders()` method
-- ✅ `AiRegistry.cs` - Updated to inject `AiProviderCollection` instead of `IEnumerable<IAiProvider>`
+- ✅ `AIRegistry.cs` - Updated to inject `AIProviderCollection` instead of `IEnumerable<IAIProvider>`
 
 **Branch:** `feature/phase-0-provider-collection-builder`
 
-### Changes to IAiProvider
+### Changes to IAIProvider
 
-**`src/Umbraco.Ai.Core/Providers/IAiProvider.cs`** - Add `IDiscoverable` marker:
+**`src/Umbraco.AI.Core/Providers/IAIProvider.cs`** - Add `IDiscoverable` marker:
 ```csharp
 using Umbraco.Cms.Core.Composing;
 
-public interface IAiProvider : IDiscoverable
+public interface IAIProvider : IDiscoverable
 {
     // ... existing members
 }
@@ -41,43 +41,43 @@ public interface IAiProvider : IDiscoverable
 
 ### New Files
 
-**`src/Umbraco.Ai.Core/Providers/AiProviderCollection.cs`**
+**`src/Umbraco.AI.Core/Providers/AIProviderCollection.cs`**
 ```csharp
-public class AiProviderCollection : BuilderCollectionBase<IAiProvider>
+public class AIProviderCollection : BuilderCollectionBase<IAIProvider>
 {
-    public AiProviderCollection(Func<IEnumerable<IAiProvider>> items) : base(items) { }
+    public AIProviderCollection(Func<IEnumerable<IAIProvider>> items) : base(items) { }
 }
 ```
 
-**`src/Umbraco.Ai.Core/Providers/AiProviderCollectionBuilder.cs`**
+**`src/Umbraco.AI.Core/Providers/AIProviderCollectionBuilder.cs`**
 ```csharp
-public class AiProviderCollectionBuilder
-    : LazyCollectionBuilderBase<AiProviderCollectionBuilder, AiProviderCollection, IAiProvider>
+public class AIProviderCollectionBuilder
+    : LazyCollectionBuilderBase<AIProviderCollectionBuilder, AIProviderCollection, IAIProvider>
 {
-    protected override AiProviderCollectionBuilder This => this;
+    protected override AIProviderCollectionBuilder This => this;
 }
 ```
 
-**`src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.Providers.cs`**
+**`src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.Providers.cs`**
 ```csharp
 public static partial class UmbracoBuilderExtensions
 {
-    public static AiProviderCollectionBuilder AiProviders(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiProviderCollectionBuilder>();
+    public static AIProviderCollectionBuilder AIProviders(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIProviderCollectionBuilder>();
 }
 ```
 
 ### Auto-Discovery Registration
 
-In the core `AddUmbracoAi()` extension method, register a producer that uses TypeLoader:
+In the core `AddUmbracoAI()` extension method, register a producer that uses TypeLoader:
 
 ```csharp
 // In UmbracoBuilderExtensions.cs
-public static IUmbracoBuilder AddUmbracoAi(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddUmbracoAI(this IUmbracoBuilder builder)
 {
     // Auto-discover providers using TypeLoader
-    builder.AiProviders()
-        .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(true));
+    builder.AIProviders()
+        .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIProvider, AIProviderAttribute>(true));
 
     // ... rest of registration
 }
@@ -91,15 +91,15 @@ public static IUmbracoBuilder AddUmbracoAi(this IUmbracoBuilder builder)
 ### Usage Example
 ```csharp
 // In a Composer - add or exclude providers
-builder.AiProviders()
+builder.AIProviders()
     .Add<CustomProvider>()
     .Exclude<SomeUnwantedProvider>();
 ```
 
 ### Modified Files
-- `src/Umbraco.Ai.Core/Providers/IAiProvider.cs` - Add `: IDiscoverable`
-- `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs` - Initialize provider collection, remove old `RegisterProviders()` method
-- `src/Umbraco.Ai.Core/Registry/AiRegistry.cs` - Inject `AiProviderCollection` instead of `IEnumerable<IAiProvider>`
+- `src/Umbraco.AI.Core/Providers/IAIProvider.cs` - Add `: IDiscoverable`
+- `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Initialize provider collection, remove old `RegisterProviders()` method
+- `src/Umbraco.AI.Core/Registry/AIRegistry.cs` - Inject `AIProviderCollection` instead of `IEnumerable<IAIProvider>`
 
 ---
 
@@ -110,68 +110,68 @@ Convert middleware registration to use Umbraco's **OrderedCollectionBuilder** pa
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
-- ✅ `AiChatMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAiChatMiddleware>`
-- ✅ `AiChatMiddlewareCollectionBuilder.cs` - Created extending `OrderedCollectionBuilderBase`
-- ✅ `AiEmbeddingMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAiEmbeddingMiddleware>`
-- ✅ `AiEmbeddingMiddlewareCollectionBuilder.cs` - Created extending `OrderedCollectionBuilderBase`
-- ✅ `UmbracoBuilderExtensions.Collections.cs` - Created with `AiChatMiddleware()` and `AiEmbeddingMiddleware()` extension methods
-- ✅ `IAiChatMiddleware.cs` - Removed `Order` property (ordering now managed by collection builder)
-- ✅ `IAiEmbeddingMiddleware.cs` - Removed `Order` property (ordering now managed by collection builder)
-- ✅ `AiChatClientFactory.cs` - Updated to inject `AiChatMiddlewareCollection`
-- ✅ `AiEmbeddingGeneratorFactory.cs` - Updated to inject `AiEmbeddingMiddlewareCollection`
+- ✅ `AIChatMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAIChatMiddleware>`
+- ✅ `AIChatMiddlewareCollectionBuilder.cs` - Created extending `OrderedCollectionBuilderBase`
+- ✅ `AIEmbeddingMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAIEmbeddingMiddleware>`
+- ✅ `AIEmbeddingMiddlewareCollectionBuilder.cs` - Created extending `OrderedCollectionBuilderBase`
+- ✅ `UmbracoBuilderExtensions.Collections.cs` - Created with `AIChatMiddleware()` and `AIEmbeddingMiddleware()` extension methods
+- ✅ `IAIChatMiddleware.cs` - Removed `Order` property (ordering now managed by collection builder)
+- ✅ `IAIEmbeddingMiddleware.cs` - Removed `Order` property (ordering now managed by collection builder)
+- ✅ `AIChatClientFactory.cs` - Updated to inject `AIChatMiddlewareCollection`
+- ✅ `AIEmbeddingGeneratorFactory.cs` - Updated to inject `AIEmbeddingMiddlewareCollection`
 - ✅ `UmbracoBuilderExtensions.cs` - Updated to initialize middleware collections
-- ✅ `AiMiddlewareExtensions.cs` - Deleted (replaced by collection builders)
+- ✅ `AIMiddlewareExtensions.cs` - Deleted (replaced by collection builders)
 - ✅ `LoggingChatMiddleware.cs` - Updated example to remove `Order` property
 
 **Branch:** `feature/phase-1-middleware-collection-builder`
 
 ### New Files
 
-**`src/Umbraco.Ai.Core/Middleware/AiChatMiddlewareCollection.cs`**
+**`src/Umbraco.AI.Core/Middleware/AIChatMiddlewareCollection.cs`**
 ```csharp
-public class AiChatMiddlewareCollection : BuilderCollectionBase<IAiChatMiddleware>
+public class AIChatMiddlewareCollection : BuilderCollectionBase<IAIChatMiddleware>
 {
-    public AiChatMiddlewareCollection(Func<IEnumerable<IAiChatMiddleware>> items) : base(items) { }
+    public AIChatMiddlewareCollection(Func<IEnumerable<IAIChatMiddleware>> items) : base(items) { }
 }
 ```
 
-**`src/Umbraco.Ai.Core/Middleware/AiChatMiddlewareCollectionBuilder.cs`**
+**`src/Umbraco.AI.Core/Middleware/AIChatMiddlewareCollectionBuilder.cs`**
 ```csharp
-public class AiChatMiddlewareCollectionBuilder
-    : OrderedCollectionBuilderBase<AiChatMiddlewareCollectionBuilder, AiChatMiddlewareCollection, IAiChatMiddleware>
+public class AIChatMiddlewareCollectionBuilder
+    : OrderedCollectionBuilderBase<AIChatMiddlewareCollectionBuilder, AIChatMiddlewareCollection, IAIChatMiddleware>
 {
-    protected override AiChatMiddlewareCollectionBuilder This => this;
+    protected override AIChatMiddlewareCollectionBuilder This => this;
 }
 ```
 
-**`src/Umbraco.Ai.Core/Middleware/AiEmbeddingMiddlewareCollection.cs`** - Same pattern
+**`src/Umbraco.AI.Core/Middleware/AIEmbeddingMiddlewareCollection.cs`** - Same pattern
 
-**`src/Umbraco.Ai.Core/Middleware/AiEmbeddingMiddlewareCollectionBuilder.cs`** - Same pattern
+**`src/Umbraco.AI.Core/Middleware/AIEmbeddingMiddlewareCollectionBuilder.cs`** - Same pattern
 
-**`src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.Collections.cs`**
+**`src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.Collections.cs`**
 ```csharp
 public static partial class UmbracoBuilderExtensions
 {
-    public static AiChatMiddlewareCollectionBuilder AiChatMiddleware(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiChatMiddlewareCollectionBuilder>();
+    public static AIChatMiddlewareCollectionBuilder AIChatMiddleware(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIChatMiddlewareCollectionBuilder>();
 
-    public static AiEmbeddingMiddlewareCollectionBuilder AiEmbeddingMiddleware(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiEmbeddingMiddlewareCollectionBuilder>();
+    public static AIEmbeddingMiddlewareCollectionBuilder AIEmbeddingMiddleware(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIEmbeddingMiddlewareCollectionBuilder>();
 }
 ```
 
 ### Modified Files
 
-- `src/Umbraco.Ai.Core/Factories/AiChatClientFactory.cs` - Inject `AiChatMiddlewareCollection` instead of `IEnumerable<IAiChatMiddleware>`
-- `src/Umbraco.Ai.Core/Factories/AiEmbeddingGeneratorFactory.cs` - Same pattern
-- `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs` - Initialize collections, remove old middleware extension methods
-- Delete `src/Umbraco.Ai.Core/Middleware/AiMiddlewareExtensions.cs` (replaced by collection builders)
-- **Remove `Order` property from `IAiChatMiddleware` and `IAiEmbeddingMiddleware`** - ordering managed by collection builder
+- `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs` - Inject `AIChatMiddlewareCollection` instead of `IEnumerable<IAIChatMiddleware>`
+- `src/Umbraco.AI.Core/Factories/AIEmbeddingGeneratorFactory.cs` - Same pattern
+- `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Initialize collections, remove old middleware extension methods
+- Delete `src/Umbraco.AI.Core/Middleware/AIMiddlewareExtensions.cs` (replaced by collection builders)
+- **Remove `Order` property from `IAIChatMiddleware` and `IAIEmbeddingMiddleware`** - ordering managed by collection builder
 
 ### Usage Example
 ```csharp
 // In a Composer - OrderedCollectionBuilder API
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<LoggingChatMiddleware>()
     .Append<CachingMiddleware>()
     .InsertBefore<LoggingChatMiddleware, TracingMiddleware>()  // Tracing runs before Logging
@@ -180,24 +180,24 @@ builder.AiChatMiddleware()
 
 ---
 
-## Phase 2: IAiEmbeddingService Implementation ✅ COMPLETED
+## Phase 2: IAIEmbeddingService Implementation ✅ COMPLETED
 
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
-- ✅ `IAiEmbeddingService.cs` - Created interface with 5 methods for single/batch embedding generation and direct generator access
-- ✅ `AiEmbeddingService.cs` - Created internal implementation following `AiChatService` pattern
-- ✅ `UmbracoBuilderExtensions.cs` - Registered `IAiEmbeddingService` in DI container
+- ✅ `IAIEmbeddingService.cs` - Created interface with 5 methods for single/batch embedding generation and direct generator access
+- ✅ `AIEmbeddingService.cs` - Created internal implementation following `AIChatService` pattern
+- ✅ `UmbracoBuilderExtensions.cs` - Registered `IAIEmbeddingService` in DI container
 - ✅ `FakeEmbeddingCapability.cs` - Enhanced `FakeEmbeddingGenerator` to track received values/options for testing
-- ✅ `AiEmbeddingServiceTests.cs` - Created 16 comprehensive unit tests
+- ✅ `AIEmbeddingServiceTests.cs` - Created 16 comprehensive unit tests
 
 **Branch:** `feature/phase-2-embedding-service`
 
 ### New Files
 
-**`src/Umbraco.Ai.Core/Services/IAiEmbeddingService.cs`**
+**`src/Umbraco.AI.Core/Services/IAIEmbeddingService.cs`**
 ```csharp
-public interface IAiEmbeddingService
+public interface IAIEmbeddingService
 {
     // Single value - default profile
     Task<Embedding<float>> GenerateEmbeddingAsync(
@@ -232,20 +232,20 @@ public interface IAiEmbeddingService
 }
 ```
 
-**`src/Umbraco.Ai.Core/Services/AiEmbeddingService.cs`**
-- Inject `IAiEmbeddingGeneratorFactory`, `IAiProfileService`, `IOptionsMonitor<AiOptions>`
-- Resolve default profile via `IAiProfileService.GetDefaultProfileAsync(AiCapability.Embedding, ...)`
+**`src/Umbraco.AI.Core/Services/AIEmbeddingService.cs`**
+- Inject `IAIEmbeddingGeneratorFactory`, `IAIProfileService`, `IOptionsMonitor<AIOptions>`
+- Resolve default profile via `IAIProfileService.GetDefaultProfileAsync(AICapability.Embedding, ...)`
 - Delegate to factory for generator creation
 - Options merging: caller options override profile defaults
 
 ### Modified Files
 
-- `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs` - Register `IAiEmbeddingService`
-- `tests/Umbraco.Ai.Tests.Common/Fakes/FakeEmbeddingCapability.cs` - Enhanced `FakeEmbeddingGenerator` with `ReceivedValues` and `ReceivedOptions` tracking
+- `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Register `IAIEmbeddingService`
+- `tests/Umbraco.AI.Tests.Common/Fakes/FakeEmbeddingCapability.cs` - Enhanced `FakeEmbeddingGenerator` with `ReceivedValues` and `ReceivedOptions` tracking
 
 ### Tests Implemented
 
-**Unit Tests (`tests/Umbraco.Ai.Tests.Unit/Services/AiEmbeddingServiceTests.cs`):**
+**Unit Tests (`tests/Umbraco.AI.Tests.Unit/Services/AIEmbeddingServiceTests.cs`):**
 
 16 tests covering:
 - ✅ Default embedding profile resolution
@@ -263,8 +263,8 @@ public interface IAiEmbeddingService
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
-- ✅ `UmbracoAiApiRouteAttribute.cs` - Custom route attribute for `/umbraco/ai/management/api/v1`
-- ✅ `AiManagementControllerBase.cs` - Base controller with OpenAPI tags
+- ✅ `UmbracoAIApiRouteAttribute.cs` - Custom route attribute for `/umbraco/ai/management/api/v1`
+- ✅ `AIManagementControllerBase.cs` - Base controller with OpenAPI tags
 - ✅ Connection controllers (All, ById, Create, Update, Delete, Test)
 - ✅ Profile controllers (All, ById, ByAlias, Create, Update, Delete)
 - ✅ Provider controllers (All, ById, Models)
@@ -276,11 +276,11 @@ public interface IAiEmbeddingService
 ### File Structure
 
 ```
-src/Umbraco.Ai.Web/Api/Management/
+src/Umbraco.AI.Web/Api/Management/
 ├── Routing/
-│   └── UmbracoAiApiRouteAttribute.cs
+│   └── UmbracoAIApiRouteAttribute.cs
 ├── Controllers/
-│   └── AiManagementControllerBase.cs
+│   └── AIManagementControllerBase.cs
 ├── Connection/
 │   ├── Controllers/
 │   │   ├── ConnectionControllerBase.cs
@@ -367,7 +367,7 @@ src/Umbraco.Ai.Web/Api/Management/
 
 ### Testing Requirements
 
-**Unit Tests (`tests/Umbraco.Ai.Tests.Unit/Api/`):**
+**Unit Tests (`tests/Umbraco.AI.Tests.Unit/Api/`):**
 
 For each controller, test the critical request/response mapping and validation:
 
@@ -399,7 +399,7 @@ For each controller, test the critical request/response mapping and validation:
 - `CompleteChatController` - Validates messages array, returns response
 - `StreamChatController` - Returns SSE stream (integration test preferred)
 
-**Integration Tests (`tests/Umbraco.Ai.Tests.Integration/Api/`):**
+**Integration Tests (`tests/Umbraco.AI.Tests.Integration/Api/`):**
 
 Create integration tests for full HTTP request/response cycles:
 - Connection CRUD workflow (create → read → update → delete)
@@ -416,32 +416,32 @@ Create integration tests for full HTTP request/response cycles:
 Since we're using Umbraco's `UseUmbracoDatabaseProvider()` extension method, we can simplify to a **2-tier structure** with shared core and provider-specific migration assemblies:
 
 ```
-src/Umbraco.Ai.Persistence/           (SHARED CORE)
+src/Umbraco.AI.Persistence/           (SHARED CORE)
 ├── Entities/
-│   ├── AiConnectionEntity.cs
-│   └── AiProfileEntity.cs
+│   ├── AIConnectionEntity.cs
+│   └── AIProfileEntity.cs
 ├── Repositories/
-│   ├── EfCoreAiConnectionRepository.cs
-│   └── EfCoreAiProfileRepository.cs
+│   ├── EfCoreAIConnectionRepository.cs
+│   └── EfCoreAIProfileRepository.cs
 ├── Notifications/
-│   └── RunAiMigrationNotificationHandler.cs
+│   └── RunAIMigrationNotificationHandler.cs
 ├── Extensions/
 │   └── UmbracoBuilderExtensions.cs
 ├── Composers/
-│   └── UmbracoAiPersistenceComposer.cs
-└── UmbracoAiDbContext.cs
+│   └── UmbracoAIPersistenceComposer.cs
+└── UmbracoAIDbContext.cs
 
-src/Umbraco.Ai.Persistence.SqlServer/  (SQL Server migrations only)
+src/Umbraco.AI.Persistence.SqlServer/  (SQL Server migrations only)
 ├── Migrations/
 │   ├── 20251125_InitialCreate.cs
-│   └── UmbracoAiDbContextModelSnapshot.cs
-└── UmbracoAiSqlServerComposer.cs
+│   └── UmbracoAIDbContextModelSnapshot.cs
+└── UmbracoAISqlServerComposer.cs
 
-src/Umbraco.Ai.Persistence.Sqlite/     (SQLite migrations only)
+src/Umbraco.AI.Persistence.Sqlite/     (SQLite migrations only)
 ├── Migrations/
 │   ├── 20251125_InitialCreate.cs
-│   └── UmbracoAiDbContextModelSnapshot.cs
-└── UmbracoAiSqliteComposer.cs
+│   └── UmbracoAIDbContextModelSnapshot.cs
+└── UmbracoAISqliteComposer.cs
 ```
 
 ### Connection String Strategy
@@ -450,18 +450,18 @@ Uses Umbraco's database connection via `UseUmbracoDatabaseProvider()`. AI tables
 
 ### Registration
 
-**`src/Umbraco.Ai.Persistence/Extensions/UmbracoBuilderExtensions.cs`:**
+**`src/Umbraco.AI.Persistence/Extensions/UmbracoBuilderExtensions.cs`:**
 ```csharp
-public static IUmbracoBuilder AddUmbracoAiPersistence(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddUmbracoAIPersistence(this IUmbracoBuilder builder)
 {
-    builder.Services.AddUmbracoDbContext<UmbracoAiDbContext>((serviceProvider, options) =>
+    builder.Services.AddUmbracoDbContext<UmbracoAIDbContext>((serviceProvider, options) =>
     {
         options.UseUmbracoDatabaseProvider(serviceProvider);
     });
 
     // Replace in-memory repositories with EF Core implementations
-    builder.Services.AddScoped<IAiConnectionRepository, EfCoreAiConnectionRepository>();
-    builder.Services.AddScoped<IAiProfileRepository, EfCoreAiProfileRepository>();
+    builder.Services.AddScoped<IAIConnectionRepository, EfCoreAIConnectionRepository>();
+    builder.Services.AddScoped<IAIProfileRepository, EfCoreAIProfileRepository>();
 
     return builder;
 }
@@ -470,46 +470,46 @@ public static IUmbracoBuilder AddUmbracoAiPersistence(this IUmbracoBuilder build
 ### Project References
 
 ```
-Umbraco.Ai.Persistence
-└── References: Umbraco.Ai.Core, Microsoft.EntityFrameworkCore,
+Umbraco.AI.Persistence
+└── References: Umbraco.AI.Core, Microsoft.EntityFrameworkCore,
                 Microsoft.EntityFrameworkCore.SqlServer, Microsoft.EntityFrameworkCore.Sqlite
 
-Umbraco.Ai.Persistence.SqlServer
-└── References: Umbraco.Ai.Persistence
+Umbraco.AI.Persistence.SqlServer
+└── References: Umbraco.AI.Persistence
 
-Umbraco.Ai.Persistence.Sqlite
-└── References: Umbraco.Ai.Persistence
+Umbraco.AI.Persistence.Sqlite
+└── References: Umbraco.AI.Persistence
 ```
 
 **Note**: The shared project references both EF Core providers to use `UseDatabaseProvider()`. The provider-specific projects only contain migrations.
 
 ### DbContext Setup (Following Umbraco Patterns)
 
-**UmbracoAiDbContext.cs:**
+**UmbracoAIDbContext.cs:**
 ```csharp
-public class UmbracoAiDbContext : DbContext
+public class UmbracoAIDbContext : DbContext
 {
-    public required DbSet<AiConnectionEntity> Connections { get; set; }
-    public required DbSet<AiProfileEntity> Profiles { get; set; }
+    public required DbSet<AIConnectionEntity> Connections { get; set; }
+    public required DbSet<AIProfileEntity> Profiles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AiConnectionEntity>(entity =>
+        modelBuilder.Entity<AIConnectionEntity>(entity =>
         {
-            entity.ToTable("umbracoAiConnection");
+            entity.ToTable("umbracoAIConnection");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
             entity.Property(e => e.ProviderId).HasMaxLength(100).IsRequired();
             entity.HasIndex(e => e.ProviderId);
         });
 
-        modelBuilder.Entity<AiProfileEntity>(entity =>
+        modelBuilder.Entity<AIProfileEntity>(entity =>
         {
-            entity.ToTable("umbracoAiProfile");
+            entity.ToTable("umbracoAIProfile");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Alias).HasMaxLength(100).IsRequired();
             entity.HasIndex(e => e.Alias).IsUnique();
-            entity.HasOne<AiConnectionEntity>()
+            entity.HasOne<AIConnectionEntity>()
                   .WithMany()
                   .HasForeignKey(e => e.ConnectionId)
                   .OnDelete(DeleteBehavior.Restrict);
@@ -520,14 +520,14 @@ public class UmbracoAiDbContext : DbContext
 
 ### Auto-Migration on Startup
 
-**RunAiMigrationNotificationHandler.cs:**
+**RunAIMigrationNotificationHandler.cs:**
 ```csharp
-public class RunAiMigrationNotificationHandler
+public class RunAIMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
-    private readonly UmbracoAiDbContext _dbContext;
+    private readonly UmbracoAIDbContext _dbContext;
 
-    public RunAiMigrationNotificationHandler(UmbracoAiDbContext dbContext)
+    public RunAIMigrationNotificationHandler(UmbracoAIDbContext dbContext)
         => _dbContext = dbContext;
 
     public async Task HandleAsync(
@@ -545,16 +545,16 @@ public class RunAiMigrationNotificationHandler
 
 ### Repository Pattern with IEfCoreScopeProvider
 
-**EfCoreAiConnectionRepository.cs:**
+**EfCoreAIConnectionRepository.cs:**
 ```csharp
-public class EfCoreAiConnectionRepository : IAiConnectionRepository
+public class EfCoreAIConnectionRepository : IAIConnectionRepository
 {
-    private readonly IEfCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEfCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAiConnectionRepository(IEfCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
+    public EfCoreAIConnectionRepository(IEfCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
         => _scopeProvider = scopeProvider;
 
-    public async Task<AiConnection?> GetAsync(Guid id, CancellationToken ct = default)
+    public async Task<AIConnection?> GetAsync(Guid id, CancellationToken ct = default)
     {
         using var scope = _scopeProvider.CreateScope();
         var entity = await scope.ExecuteWithContextAsync(async db =>
@@ -563,7 +563,7 @@ public class EfCoreAiConnectionRepository : IAiConnectionRepository
         return entity is null ? null : MapToDomain(entity);
     }
 
-    public async Task<AiConnection> SaveAsync(AiConnection connection, CancellationToken ct = default)
+    public async Task<AIConnection> SaveAsync(AIConnection connection, CancellationToken ct = default)
     {
         using var scope = _scopeProvider.CreateScope();
         await scope.ExecuteWithContextAsync(async db =>
@@ -589,7 +589,7 @@ public class EfCoreAiConnectionRepository : IAiConnectionRepository
 
 ### Entity Definitions
 
-**AiConnectionEntity:**
+**AIConnectionEntity:**
 - `Id` (Guid, PK)
 - `Name` (string, required, max 255)
 - `ProviderId` (string, required, max 100, indexed)
@@ -598,7 +598,7 @@ public class EfCoreAiConnectionRepository : IAiConnectionRepository
 - `DateCreated` (DateTime)
 - `DateModified` (DateTime)
 
-**AiProfileEntity:**
+**AIProfileEntity:**
 - `Id` (Guid, PK)
 - `Alias` (string, required, max 100, unique index)
 - `Name` (string, required, max 255)
@@ -617,28 +617,28 @@ Generate migrations per database provider (context lives in shared project, migr
 ```bash
 # SQL Server
 dotnet ef migrations add InitialCreate \
-  --context UmbracoAiDbContext \
-  --project src/Umbraco.Ai.Persistence.SqlServer \
-  --startup-project src/Umbraco.Ai.DemoSite
+  --context UmbracoAIDbContext \
+  --project src/Umbraco.AI.Persistence.SqlServer \
+  --startup-project src/Umbraco.AI.DemoSite
 
 # SQLite
 dotnet ef migrations add InitialCreate \
-  --context UmbracoAiDbContext \
-  --project src/Umbraco.Ai.Persistence.Sqlite \
-  --startup-project src/Umbraco.Ai.DemoSite
+  --context UmbracoAIDbContext \
+  --project src/Umbraco.AI.Persistence.Sqlite \
+  --startup-project src/Umbraco.AI.DemoSite
 ```
 
 The `MigrationsAssembly()` call in each provider's setup ensures EF Core looks for migrations in the correct provider-specific assembly.
 
-Migrations auto-apply on startup via `RunAiMigrationNotificationHandler`.
+Migrations auto-apply on startup via `RunAIMigrationNotificationHandler`.
 
 ### Testing Requirements
 
-**Unit Tests (`tests/Umbraco.Ai.Tests.Unit/Repositories/`):**
+**Unit Tests (`tests/Umbraco.AI.Tests.Unit/Repositories/`):**
 
 Test repository methods with in-memory SQLite:
 
-**EfCoreAiConnectionRepository:**
+**EfCoreAIConnectionRepository:**
 - `GetAsync` - Returns null when not found
 - `GetAllAsync` - Returns empty list when no data
 - `SaveAsync` - Creates new entity (insert)
@@ -647,7 +647,7 @@ Test repository methods with in-memory SQLite:
 - `DeleteAsync` - Returns false when not found
 - Settings JSON serialization/deserialization
 
-**EfCoreAiProfileRepository:**
+**EfCoreAIProfileRepository:**
 - `GetByIdAsync` - Returns null when not found
 - `GetByAliasAsync` - Case-insensitive alias lookup
 - `GetAllAsync` - Filters by capability
@@ -659,19 +659,19 @@ Test repository methods with in-memory SQLite:
 - Verify migrations apply cleanly to empty database
 - Verify schema matches entity configuration
 
-**Test Fixture (`tests/Umbraco.Ai.Tests.Common/Fixtures/EfCoreTestFixture.cs`):**
+**Test Fixture (`tests/Umbraco.AI.Tests.Common/Fixtures/EfCoreTestFixture.cs`):**
 
 ```csharp
 public class EfCoreTestFixture : IDisposable
 {
     private readonly SqliteConnection _connection;
 
-    public UmbracoAiDbContext CreateContext()
+    public UmbracoAIDbContext CreateContext()
     {
-        var options = new DbContextOptionsBuilder<UmbracoAiDbContext>()
+        var options = new DbContextOptionsBuilder<UmbracoAIDbContext>()
             .UseSqlite(_connection)
             .Options;
-        return new UmbracoAiDbContext(options);
+        return new UmbracoAIDbContext(options);
     }
 
     public EfCoreTestFixture()
@@ -689,11 +689,11 @@ public class EfCoreTestFixture : IDisposable
 
 Usage in tests:
 ```csharp
-public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
+public class EfCoreAIConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
 
-    public EfCoreAiConnectionRepositoryTests(EfCoreTestFixture fixture)
+    public EfCoreAIConnectionRepositoryTests(EfCoreTestFixture fixture)
         => _fixture = fixture;
 
     [Fact]
@@ -701,7 +701,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
     {
         await using var context = _fixture.CreateContext();
         var scopeProvider = CreateScopeProvider(context);
-        var repository = new EfCoreAiConnectionRepository(scopeProvider);
+        var repository = new EfCoreAIConnectionRepository(scopeProvider);
 
         var result = await repository.GetAsync(Guid.NewGuid());
 
@@ -793,7 +793,7 @@ Client/src/
 
 **Constants Pattern (`constants.ts`):**
 ```typescript
-export const AiConnectionConstants = {
+export const AIConnectionConstants = {
     EntityType: {
         Collection: "ai:connections",
         Entity: "ai:connection",
@@ -803,12 +803,12 @@ export const AiConnectionConstants = {
         Entity: "icon-plug",
     },
     Workspace: {
-        Collection: 'UmbracoAi.Workspace.Connections',
-        Entity: 'UmbracoAi.Workspace.Connection',
+        Collection: 'UmbracoAI.Workspace.Connections',
+        Entity: 'UmbracoAI.Workspace.Connection',
     },
-    Store: 'UmbracoAi.Store.Connection',
-    Repository: 'UmbracoAi.Repository.Connection',
-    Collection: 'UmbracoAi.Collection.Connection',
+    Store: 'UmbracoAI.Store.Connection',
+    Repository: 'UmbracoAI.Repository.Connection',
+    Collection: 'UmbracoAI.Collection.Connection',
 }
 ```
 
@@ -819,12 +819,12 @@ export const AiConnectionConstants = {
 
 **Type Mapper Pattern (`type-mapper.ts`):**
 ```typescript
-export class AiConnectionTypeMapper {
-    static responseToViewModel(dto: ConnectionResponseModel): AiConnectionModel { ... }
-    static viewToCollectionModel(dto: ConnectionResponseModel): AiConnectionCollectionModel { ... }
-    static viewToEditModel(dto: ConnectionResponseModel): AiConnectionEditModel { ... }
-    static editToCreateRequest(model: AiConnectionEditModel): CreateConnectionRequestModel { ... }
-    static editToUpdateRequest(model: AiConnectionEditModel): UpdateConnectionRequestModel { ... }
+export class AIConnectionTypeMapper {
+    static responseToViewModel(dto: ConnectionResponseModel): AIConnectionModel { ... }
+    static viewToCollectionModel(dto: ConnectionResponseModel): AIConnectionCollectionModel { ... }
+    static viewToEditModel(dto: ConnectionResponseModel): AIConnectionEditModel { ... }
+    static editToCreateRequest(model: AIConnectionEditModel): CreateConnectionRequestModel { ... }
+    static editToUpdateRequest(model: AIConnectionEditModel): UpdateConnectionRequestModel { ... }
 }
 ```
 
@@ -850,24 +850,24 @@ export const manifests: UmbExtensionManifest[] = [
 
 **Entity Workspace Context** (for create/edit):
 ```typescript
-export class AiConnectionWorkspaceContext
-    extends UmbSubmittableWorkspaceContextBase<AiConnectionEditModel>
+export class AIConnectionWorkspaceContext
+    extends UmbSubmittableWorkspaceContextBase<AIConnectionEditModel>
     implements UmbSubmittableWorkspaceContext, UmbRoutableWorkspaceContext {
 
     readonly routes = new UmbWorkspaceRouteManager(this);
 
     constructor(host: UmbControllerHost) {
-        super(host, AiConnectionConstants.Workspace.Entity);
+        super(host, AIConnectionConstants.Workspace.Entity);
 
         this.routes.setRoutes([
             {
                 path: 'create',
-                component: AiConnectionWorkspaceEditorElement,
+                component: AIConnectionWorkspaceEditorElement,
                 setup: async () => { await this.scaffold(); },
             },
             {
                 path: ':unique',
-                component: AiConnectionWorkspaceEditorElement,
+                component: AIConnectionWorkspaceEditorElement,
                 setup: async (_component, info) => {
                     await this.load(info.match.params.unique);
                 },
@@ -929,7 +929,7 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
    - Update factories
    - Update DI registration
 
-2. **IAiEmbeddingService** (Phase 2)
+2. **IAIEmbeddingService** (Phase 2)
    - Interface and implementation
    - Register in DI
 
@@ -983,13 +983,13 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
 
 ## Critical Files to Read Before Implementation
 
-### Umbraco.Ai (Current)
-- `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs` - Central DI registration
-- `src/Umbraco.Ai.Core/Middleware/IAiChatMiddleware.cs` - Current middleware interface
-- `src/Umbraco.Ai.Core/Connections/IAiConnectionRepository.cs` - Repository interface
-- `src/Umbraco.Ai.Core/Profiles/IAiProfileRepository.cs` - Repository interface
-- `src/Umbraco.Ai.Core/Services/AiChatService.cs` - Pattern for embedding service
-- `src/Umbraco.Ai.Core/Factories/AiChatClientFactory.cs` - Middleware application pattern
+### Umbraco.AI (Current)
+- `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Central DI registration
+- `src/Umbraco.AI.Core/Middleware/IAIChatMiddleware.cs` - Current middleware interface
+- `src/Umbraco.AI.Core/Connections/IAIConnectionRepository.cs` - Repository interface
+- `src/Umbraco.AI.Core/Profiles/IAIProfileRepository.cs` - Repository interface
+- `src/Umbraco.AI.Core/Services/AIChatService.cs` - Pattern for embedding service
+- `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs` - Middleware application pattern
 
 ### Umbraco CMS (Reference)
 - `src/Umbraco.Core/Composing/WeightedCollectionBuilderBase.cs` - Collection builder pattern
@@ -1029,9 +1029,9 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
 | API style | Umbraco Management API patterns |
 | Search service | Deferred to v2 |
 | UI scope | Full CRUD UI |
-| Persistence packaging | 2-tier: shared `Umbraco.Ai.Persistence` (entities, DbContext, repos) + `Umbraco.Ai.Persistence.SqlServer`/`Sqlite` (migrations only) |
+| Persistence packaging | 2-tier: shared `Umbraco.AI.Persistence` (entities, DbContext, repos) + `Umbraco.AI.Persistence.SqlServer`/`Sqlite` (migrations only) |
 | Connection string | Use `UseUmbracoDatabaseProvider()` to reuse Umbraco's database |
 | UI location | Settings section with AI group (Connections, Profiles menu items) |
 | Middleware ordering | OrderedCollectionBuilder with `InsertBefore`/`InsertAfter` (remove `Order` property from interface) |
-| Provider discovery | `LazyCollectionBuilderBase` with auto-discovery via `FindClassesOfType<IAiProvider>()` |
+| Provider discovery | `LazyCollectionBuilderBase` with auto-discovery via `FindClassesOfType<IAIProvider>()` |
 | Chat streaming | SSE (Server-Sent Events) for streaming responses |

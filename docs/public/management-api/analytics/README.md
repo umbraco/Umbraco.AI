@@ -73,15 +73,15 @@ var to = DateTime.UtcNow;
 var query = $"from={from:O}&to={to:O}";
 
 // Get overall summary
-var summary = await httpClient.GetFromJsonAsync<AiUsageSummary>(
+var summary = await httpClient.GetFromJsonAsync<AIUsageSummary>(
     $"/umbraco/ai/management/api/v1/analytics/summary?{query}");
 
 // Get daily time series
-var timeSeries = await httpClient.GetFromJsonAsync<List<AiUsageTimeSeriesPoint>>(
+var timeSeries = await httpClient.GetFromJsonAsync<List<AIUsageTimeSeriesPoint>>(
     $"/umbraco/ai/management/api/v1/analytics/timeseries?{query}&granularity=day");
 
 // Get provider breakdown
-var byProvider = await httpClient.GetFromJsonAsync<List<AiUsageBreakdownItem>>(
+var byProvider = await httpClient.GetFromJsonAsync<List<AIUsageBreakdownItem>>(
     $"/umbraco/ai/management/api/v1/analytics/breakdown/provider?{query}");
 ```
 {% endcode %}

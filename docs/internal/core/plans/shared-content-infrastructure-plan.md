@@ -2,7 +2,7 @@
 
 ## Summary
 
-Create shared infrastructure in `Umbraco.Ai.Core` that serves both the Entity Snapshot Service and the Nested Element Support feature for the Prompt add-on. The Prompt service will leverage `IAiEntitySnapshotService.CreateSnapshot(IPublishedElement)` for rich template context.
+Create shared infrastructure in `Umbraco.AI.Core` that serves both the Entity Snapshot Service and the Nested Element Support feature for the Prompt add-on. The Prompt service will leverage `IAIEntitySnapshotService.CreateSnapshot(IPublishedElement)` for rich template context.
 
 **Key Simplification (v1)**: Instead of path-based element resolution, use an **element index map** approach:
 - Iterate the content model once to build a `Dictionary<Guid, IPublishedElement>`
@@ -17,40 +17,40 @@ This approach trades some memory overhead for significant implementation simplic
 ## Architecture Overview
 
 ```
-Umbraco.Ai.Core
+Umbraco.AI.Core
 ├── Content/                          # NEW: Shared content resolution infrastructure
 │   ├── IPublishedContentResolver.cs
 │   ├── PublishedContentResolver.cs
 │   ├── IPropertyEditorInfoResolver.cs
 │   ├── PropertyEditorInfoResolver.cs
-│   ├── IAiContextBuilder.cs          # High-level context builder
-│   ├── AiContextBuilder.cs
-│   ├── AiContextRequest.cs           # Request model for context building
-│   ├── AiResolvedContent.cs          # Lightweight resolved content (no snapshots)
+│   ├── IAIContextBuilder.cs          # High-level context builder
+│   ├── AIContextBuilder.cs
+│   ├── AIContextRequest.cs           # Request model for context building
+│   ├── AIResolvedContent.cs          # Lightweight resolved content (no snapshots)
 │   └── Internal/
 │       └── BlockStructureHelper.cs   # Shared block traversal + element indexing
 │
 ├── Templates/                        # NEW: Moved from Snapshots/, enhanced for elements
-│   ├── IAiTemplateResolver.cs        # Moved from Snapshots/
-│   ├── AiTemplateResolver.cs         # Moved from Snapshots/
-│   └── AiTemplateContext.cs          # Moved + flattened (no more AiRequestContext)
+│   ├── IAITemplateResolver.cs        # Moved from Snapshots/
+│   ├── AITemplateResolver.cs         # Moved from Snapshots/
+│   └── AITemplateContext.cs          # Moved + flattened (no more AIRequestContext)
 │
 ├── Snapshots/                        # EXISTING: Simplified
-│   ├── IAiEntitySnapshotService.cs
-│   ├── AiEntitySnapshotService.cs    # Modified to use IPublishedContentResolver
-│   ├── AiEntitySnapshot.cs
-│   ├── AiSnapshotOptions.cs
+│   ├── IAIEntitySnapshotService.cs
+│   ├── AIEntitySnapshotService.cs    # Modified to use IPublishedContentResolver
+│   ├── AIEntitySnapshot.cs
+│   ├── AISnapshotOptions.cs
 │   └── Serializers/
-│       └── BlockEditorAiPropertyValueSerializer.cs  # Uses BlockStructureHelper
+│       └── BlockEditorAIPropertyValueSerializer.cs  # Uses BlockStructureHelper
 ```
 
 ---
 
-## Phase 1: Shared Content Infrastructure (Umbraco.Ai.Core)
+## Phase 1: Shared Content Infrastructure (Umbraco.AI.Core)
 
 ### 1.1 Published Content Resolver
 
-**File**: `src/Umbraco.Ai.Core/Content/IPublishedContentResolver.cs`
+**File**: `src/Umbraco.AI.Core/Content/IPublishedContentResolver.cs`
 
 ```csharp
 public interface IPublishedContentResolver
@@ -65,7 +65,7 @@ public interface IPublishedContentResolver
 }
 ```
 
-**File**: `src/Umbraco.Ai.Core/Content/PublishedContentResolver.cs`
+**File**: `src/Umbraco.AI.Core/Content/PublishedContentResolver.cs`
 
 Uses `IUmbracoContextAccessor` for content/media, with fallback to member services for members.
 
@@ -73,7 +73,7 @@ Uses `IUmbracoContextAccessor` for content/media, with fallback to member servic
 
 Instead of path-based resolution with multiple finders, build a flat index of all nested elements.
 
-**File**: `src/Umbraco.Ai.Core/Content/Internal/BlockStructureHelper.cs`
+**File**: `src/Umbraco.AI.Core/Content/Internal/BlockStructureHelper.cs`
 
 This helper uses generic property iteration with reflection to traverse any nested structure, rather than explicit handling for specific block types. This makes it maintainable and works with any property editor that contains `IPublishedElement` instances.
 
@@ -208,13 +208,13 @@ internal static class BlockStructureHelper
 
 A high-level service that encapsulates content resolution and template context building. Designed to avoid resolving content twice - once for validation, once for context.
 
-**File**: `src/Umbraco.Ai.Core/Content/AiContextRequest.cs`
+**File**: `src/Umbraco.AI.Core/Content/AIContextRequest.cs`
 
 ```csharp
 /// <summary>
 /// Request model for building AI context.
 /// </summary>
-public class AiContextRequest
+public class AIContextRequest
 {
     public required Guid EntityId { get; init; }
     public required string EntityType { get; init; }
@@ -233,13 +233,13 @@ public class AiContextRequest
 }
 ```
 
-**File**: `src/Umbraco.Ai.Core/Content/AiResolvedContent.cs`
+**File**: `src/Umbraco.AI.Core/Content/AIResolvedContent.cs`
 
 ```csharp
 /// <summary>
 /// Lightweight model containing resolved content references (no snapshots yet).
 /// </summary>
-public class AiResolvedContent
+public class AIResolvedContent
 {
     /// <summary>
     /// The root content item (document/media/member).
@@ -254,41 +254,41 @@ public class AiResolvedContent
 }
 ```
 
-**File**: `src/Umbraco.Ai.Core/Content/IAiContextBuilder.cs`
+**File**: `src/Umbraco.AI.Core/Content/IAIContextBuilder.cs`
 
 ```csharp
 /// <summary>
 /// Builds AI context by resolving content and creating template contexts.
 /// </summary>
-public interface IAiContextBuilder
+public interface IAIContextBuilder
 {
     /// <summary>
     /// Resolves content and target element from the request.
     /// Builds an element index and looks up by key if ElementKey is provided.
     /// </summary>
-    AiResolvedContent ResolveContent(AiContextRequest request);
+    AIResolvedContent ResolveContent(AIContextRequest request);
 
     /// <summary>
     /// Builds template context from already-resolved content.
     /// Expensive operation - creates snapshots. Only call after validation passes.
     /// </summary>
-    AiTemplateContext BuildTemplateContext(AiResolvedContent resolved, AiContextRequest request);
+    AITemplateContext BuildTemplateContext(AIResolvedContent resolved, AIContextRequest request);
 }
 ```
 
-**File**: `src/Umbraco.Ai.Core/Content/AiContextBuilder.cs`
+**File**: `src/Umbraco.AI.Core/Content/AIContextBuilder.cs`
 
 ```csharp
-internal sealed class AiContextBuilder : IAiContextBuilder
+internal sealed class AIContextBuilder : IAIContextBuilder
 {
     private readonly IPublishedContentResolver _contentResolver;
-    private readonly IAiEntitySnapshotService _snapshotService;
+    private readonly IAIEntitySnapshotService _snapshotService;
 
-    public AiResolvedContent ResolveContent(AiContextRequest request)
+    public AIResolvedContent ResolveContent(AIContextRequest request)
     {
         var content = _contentResolver.Resolve(request.EntityId, request.EntityType);
         if (content is null)
-            return new AiResolvedContent();
+            return new AIResolvedContent();
 
         IPublishedElement? targetElement = content;
 
@@ -302,19 +302,19 @@ internal sealed class AiContextBuilder : IAiContextBuilder
             // If element not found, fall back to root content
         }
 
-        return new AiResolvedContent
+        return new AIResolvedContent
         {
             Content = content,
             TargetElement = targetElement
         };
     }
 
-    public AiTemplateContext BuildTemplateContext(AiResolvedContent resolved, AiContextRequest request)
+    public AITemplateContext BuildTemplateContext(AIResolvedContent resolved, AIContextRequest request)
     {
-        AiEntitySnapshot? contentSnapshot = null;
-        AiEntitySnapshot? elementSnapshot = null;
+        AIEntitySnapshot? contentSnapshot = null;
+        AIEntitySnapshot? elementSnapshot = null;
 
-        var options = new AiSnapshotOptions { Culture = request.Culture };
+        var options = new AISnapshotOptions { Culture = request.Culture };
 
         if (resolved.Content is not null)
         {
@@ -328,7 +328,7 @@ internal sealed class AiContextBuilder : IAiContextBuilder
             elementSnapshot = _snapshotService.CreateSnapshot(resolved.TargetElement, options);
         }
 
-        return new AiTemplateContext
+        return new AITemplateContext
         {
             Content = contentSnapshot,
             Element = elementSnapshot,
@@ -366,7 +366,7 @@ This ensures content is resolved only once, and snapshots are only created if va
 
 ### 1.4 Property Editor Info Resolver
 
-**File**: `src/Umbraco.Ai.Core/Content/IPropertyEditorInfoResolver.cs`
+**File**: `src/Umbraco.AI.Core/Content/IPropertyEditorInfoResolver.cs`
 
 ```csharp
 public interface IPropertyEditorInfoResolver
@@ -385,14 +385,14 @@ Uses `IDataTypeService` to get `EditorUiAlias` from the property's DataType.
 
 ### 1.5 DI Registration
 
-**File**: `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.Content.cs`
+**File**: `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.Content.cs`
 
 ```csharp
-public static IUmbracoBuilder AddAiContent(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddAIContent(this IUmbracoBuilder builder)
 {
     builder.Services.AddSingleton<IPublishedContentResolver, PublishedContentResolver>();
     builder.Services.AddSingleton<IPropertyEditorInfoResolver, PropertyEditorInfoResolver>();
-    builder.Services.AddScoped<IAiContextBuilder, AiContextBuilder>();
+    builder.Services.AddScoped<IAIContextBuilder, AIContextBuilder>();
 
     return builder;
 }
@@ -406,26 +406,26 @@ Move template resolution from `Snapshots/` to a dedicated `Templates/` feature a
 
 ### 1b.1 Updated Template Context
 
-**File**: `src/Umbraco.Ai.Core/Templates/AiTemplateContext.cs` (moved + enhanced)
+**File**: `src/Umbraco.AI.Core/Templates/AITemplateContext.cs` (moved + enhanced)
 
 ```csharp
 /// <summary>
 /// Context for template resolution with entity snapshots.
 /// </summary>
-public class AiTemplateContext
+public class AITemplateContext
 {
     /// <summary>
     /// Snapshot of the root content item.
     /// Template access: {{content.name}}, {{content.properties.title}}
     /// </summary>
-    public AiEntitySnapshot? Content { get; init; }
+    public AIEntitySnapshot? Content { get; init; }
 
     /// <summary>
     /// Snapshot of the target element (if nested).
     /// Null for root-level properties.
     /// Template access: {{element.name}}, {{element.properties.title}}
     /// </summary>
-    public AiEntitySnapshot? Element { get; init; }
+    public AIEntitySnapshot? Element { get; init; }
 
     /// <summary>
     /// The property alias being edited.
@@ -455,8 +455,8 @@ public class AiTemplateContext
 
 ### 1b.2 Template Resolver
 
-**File**: `src/Umbraco.Ai.Core/Templates/IAiTemplateResolver.cs` (moved)
-**File**: `src/Umbraco.Ai.Core/Templates/AiTemplateResolver.cs` (moved)
+**File**: `src/Umbraco.AI.Core/Templates/IAITemplateResolver.cs` (moved)
+**File**: `src/Umbraco.AI.Core/Templates/AITemplateResolver.cs` (moved)
 
 The implementation remains largely the same but the data dictionary now includes:
 - `content` → Content snapshot
@@ -466,19 +466,19 @@ The implementation remains largely the same but the data dictionary now includes
 - `culture` → Culture code
 - Plus any CustomData entries
 
-### 1b.3 Remove AiRequestContext
+### 1b.3 Remove AIRequestContext
 
-**Delete**: `src/Umbraco.Ai.Core/Snapshots/AiRequestContext.cs`
+**Delete**: `src/Umbraco.AI.Core/Snapshots/AIRequestContext.cs`
 
-This model is now redundant - its fields are flattened into `AiTemplateContext`.
+This model is now redundant - its fields are flattened into `AITemplateContext`.
 
 ---
 
 ## Phase 2: Refactor Snapshot Service
 
-### 2.1 Update AiEntitySnapshotService
+### 2.1 Update AIEntitySnapshotService
 
-**File**: `src/Umbraco.Ai.Core/Snapshots/AiEntitySnapshotService.cs`
+**File**: `src/Umbraco.AI.Core/Snapshots/AIEntitySnapshotService.cs`
 
 **Change**: Inject `IPublishedContentResolver` and use it in `CreateSnapshotAsync`:
 
@@ -511,10 +511,10 @@ IPublishedContent? content = entityTypeString != null
 
 ### 3.1 Update Request Model
 
-**File**: `src/Umbraco.Ai.Prompt.Core/Prompts/AiPromptExecutionRequest.cs`
+**File**: `src/Umbraco.AI.Prompt.Core/Prompts/AIPromptExecutionRequest.cs`
 
 ```csharp
-public class AiPromptExecutionRequest
+public class AIPromptExecutionRequest
 {
     // Existing properties...
 
@@ -528,35 +528,35 @@ public class AiPromptExecutionRequest
 
 ### 3.2 Update Scope Validator
 
-**File**: `src/Umbraco.Ai.Prompt.Core/Prompts/IAiPromptScopeValidator.cs`
+**File**: `src/Umbraco.AI.Prompt.Core/Prompts/IAIPromptScopeValidator.cs`
 
 Update interface to accept resolved element directly:
 
 ```csharp
-public interface IAiPromptScopeValidator
+public interface IAIPromptScopeValidator
 {
     /// <summary>
     /// Validates whether a prompt can execute against the given element and property.
     /// </summary>
-    Task<AiPromptScopeValidationResult> ValidateAsync(
-        AiPrompt prompt,
+    Task<AIPromptScopeValidationResult> ValidateAsync(
+        AIPrompt prompt,
         IPublishedElement targetElement,
         string propertyAlias,
         CancellationToken cancellationToken = default);
 }
 ```
 
-**File**: `src/Umbraco.Ai.Prompt.Core/Prompts/AiPromptScopeValidator.cs`
+**File**: `src/Umbraco.AI.Prompt.Core/Prompts/AIPromptScopeValidator.cs`
 
 Simplified - no longer resolves content itself:
 
 ```csharp
-internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
+internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
 {
     private readonly IPropertyEditorInfoResolver _propertyEditorInfoResolver;
 
-    public async Task<AiPromptScopeValidationResult> ValidateAsync(
-        AiPrompt prompt,
+    public async Task<AIPromptScopeValidationResult> ValidateAsync(
+        AIPrompt prompt,
         IPublishedElement targetElement,
         string propertyAlias,
         CancellationToken cancellationToken = default)
@@ -576,31 +576,31 @@ internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
 
 ### 3.3 Update Prompt Service
 
-**File**: `src/Umbraco.Ai.Prompt.Core/Prompts/AiPromptService.cs`
+**File**: `src/Umbraco.AI.Prompt.Core/Prompts/AIPromptService.cs`
 
-Simplified using `IAiContextBuilder`:
+Simplified using `IAIContextBuilder`:
 
 ```csharp
-internal sealed class AiPromptService : IAiPromptService
+internal sealed class AIPromptService : IAIPromptService
 {
-    private readonly IAiPromptRepository _repository;
-    private readonly IAiPromptScopeValidator _scopeValidator;
-    private readonly IAiContextBuilder _contextBuilder;
-    private readonly IAiTemplateResolver _templateResolver;
-    private readonly IAiChatService _chatService;
+    private readonly IAIPromptRepository _repository;
+    private readonly IAIPromptScopeValidator _scopeValidator;
+    private readonly IAIContextBuilder _contextBuilder;
+    private readonly IAITemplateResolver _templateResolver;
+    private readonly IAIChatService _chatService;
 
-    public async Task<AiPromptExecutionResult> ExecuteAsync(
+    public async Task<AIPromptExecutionResult> ExecuteAsync(
         Guid promptId,
-        AiPromptExecutionRequest request,
+        AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default)
     {
         // 1. Fetch prompt
         var prompt = await _repository.GetByIdAsync(promptId, cancellationToken);
         if (prompt is null)
-            return AiPromptExecutionResult.Failed("Prompt not found.");
+            return AIPromptExecutionResult.Failed("Prompt not found.");
 
         // 2. Build context request
-        var contextRequest = new AiContextRequest
+        var contextRequest = new AIContextRequest
         {
             EntityId = request.EntityId,
             EntityType = request.EntityType,
@@ -615,13 +615,13 @@ internal sealed class AiPromptService : IAiPromptService
         // 3. Resolve content (builds element index, looks up by key)
         var resolved = _contextBuilder.ResolveContent(contextRequest);
         if (resolved.TargetElement is null)
-            return AiPromptExecutionResult.Failed("Content not found.");
+            return AIPromptExecutionResult.Failed("Content not found.");
 
         // 4. Validate scope
         var validation = await _scopeValidator.ValidateAsync(
             prompt, resolved.TargetElement, request.PropertyAlias, cancellationToken);
         if (!validation.IsAllowed)
-            return AiPromptExecutionResult.Failed(validation.DenialReason ?? "Scope validation failed.");
+            return AIPromptExecutionResult.Failed(validation.DenialReason ?? "Scope validation failed.");
 
         // 5. Build template context (creates snapshots)
         var templateContext = _contextBuilder.BuildTemplateContext(resolved, contextRequest);
@@ -635,19 +635,19 @@ internal sealed class AiPromptService : IAiPromptService
             new ChatMessage(ChatRole.User, processedContent),
             cancellationToken: cancellationToken);
 
-        return AiPromptExecutionResult.Success(chatResponse);
+        return AIPromptExecutionResult.Success(chatResponse);
     }
 }
 ```
 
 **Key changes:**
-- Removed `IAiPromptTemplateService` - uses shared `IAiTemplateResolver` instead
-- Uses `IAiContextBuilder` for all content resolution and snapshot creation
+- Removed `IAIPromptTemplateService` - uses shared `IAITemplateResolver` instead
+- Uses `IAIContextBuilder` for all content resolution and snapshot creation
 - Clean separation: resolve → validate → build context → execute
 
 ### 3.4 Update Web Layer
 
-**File**: `src/Umbraco.Ai.Prompt.Web/Api/Management/Prompt/Models/PromptExecutionRequestModel.cs`
+**File**: `src/Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PromptExecutionRequestModel.cs`
 
 ```csharp
 public class PromptExecutionRequestModel
@@ -661,7 +661,7 @@ public class PromptExecutionRequestModel
 }
 ```
 
-**File**: `src/Umbraco.Ai.Prompt.Web/Api/Management/Prompt/Mapping/PromptExecutionMapDefinition.cs`
+**File**: `src/Umbraco.AI.Prompt.Web/Api/Management/Prompt/Mapping/PromptExecutionMapDefinition.cs`
 
 Add mapping for `ElementKey` property.
 
@@ -671,7 +671,7 @@ Add mapping for `ElementKey` property.
 
 With the element index map approach, the frontend implementation is **dramatically simplified**:
 
-### 4.1 Frontend Changes (Umbraco.Ai.Prompt)
+### 4.1 Frontend Changes (Umbraco.AI.Prompt)
 
 The frontend only needs to:
 1. Get the current element's key from the block entry context
@@ -730,7 +730,7 @@ Culture: {{culture}}
 
 ## Files Summary
 
-### New Files (Umbraco.Ai.Core)
+### New Files (Umbraco.AI.Core)
 
 | File | Purpose |
 |------|---------|
@@ -738,78 +738,78 @@ Culture: {{culture}}
 | `Content/PublishedContentResolver.cs` | Implementation using UmbracoContext |
 | `Content/IPropertyEditorInfoResolver.cs` | Interface for editor UI alias |
 | `Content/PropertyEditorInfoResolver.cs` | Implementation using DataTypeService |
-| `Content/IAiContextBuilder.cs` | High-level context builder interface |
-| `Content/AiContextBuilder.cs` | Context builder with element index |
-| `Content/AiContextRequest.cs` | Request model (with ElementKey) |
-| `Content/AiResolvedContent.cs` | Lightweight resolved content model |
+| `Content/IAIContextBuilder.cs` | High-level context builder interface |
+| `Content/AIContextBuilder.cs` | Context builder with element index |
+| `Content/AIContextRequest.cs` | Request model (with ElementKey) |
+| `Content/AIResolvedContent.cs` | Lightweight resolved content model |
 | `Content/Internal/BlockStructureHelper.cs` | Shared block traversal + element indexing |
 | `Configuration/UmbracoBuilderExtensions.Content.cs` | DI registration for Content services |
-| `Templates/IAiTemplateResolver.cs` | Moved from Snapshots/ |
-| `Templates/AiTemplateResolver.cs` | Moved from Snapshots/ |
-| `Templates/AiTemplateContext.cs` | Moved from Snapshots/, enhanced with Element |
+| `Templates/IAITemplateResolver.cs` | Moved from Snapshots/ |
+| `Templates/AITemplateResolver.cs` | Moved from Snapshots/ |
+| `Templates/AITemplateContext.cs` | Moved from Snapshots/, enhanced with Element |
 | `Configuration/UmbracoBuilderExtensions.Templates.cs` | DI registration for Templates services |
 
-### Modified Files (Umbraco.Ai.Core)
+### Modified Files (Umbraco.AI.Core)
 
 | File | Change |
 |------|--------|
-| `Snapshots/AiEntitySnapshotService.cs` | Use `IPublishedContentResolver` |
-| `Snapshots/Serializers/BlockEditorAiPropertyValueSerializer.cs` | Can optionally use `BlockStructureHelper` for traversal |
+| `Snapshots/AIEntitySnapshotService.cs` | Use `IPublishedContentResolver` |
+| `Snapshots/Serializers/BlockEditorAIPropertyValueSerializer.cs` | Can optionally use `BlockStructureHelper` for traversal |
 
-### Deleted Files (Umbraco.Ai.Core)
+### Deleted Files (Umbraco.AI.Core)
 
 | File | Reason |
 |------|--------|
-| `Snapshots/AiRequestContext.cs` | Redundant - fields flattened into `AiTemplateContext` |
-| `Snapshots/IAiTemplateResolver.cs` | Moved to `Templates/` |
-| `Snapshots/AiTemplateResolver.cs` | Moved to `Templates/` |
-| `Snapshots/AiTemplateContext.cs` | Moved to `Templates/` |
+| `Snapshots/AIRequestContext.cs` | Redundant - fields flattened into `AITemplateContext` |
+| `Snapshots/IAITemplateResolver.cs` | Moved to `Templates/` |
+| `Snapshots/AITemplateResolver.cs` | Moved to `Templates/` |
+| `Snapshots/AITemplateContext.cs` | Moved to `Templates/` |
 
-### Modified Files (Umbraco.Ai.Prompt)
+### Modified Files (Umbraco.AI.Prompt)
 
 | File | Change |
 |------|--------|
-| `Core/Prompts/AiPromptExecutionRequest.cs` | Add `ElementKey` property (Guid?) |
-| `Core/Prompts/IAiPromptScopeValidator.cs` | Signature change: accepts `IPublishedElement` |
-| `Core/Prompts/AiPromptScopeValidator.cs` | Simplified: uses `IPropertyEditorInfoResolver` |
-| `Core/Prompts/AiPromptService.cs` | Use `IAiContextBuilder` + `IAiTemplateResolver` |
+| `Core/Prompts/AIPromptExecutionRequest.cs` | Add `ElementKey` property (Guid?) |
+| `Core/Prompts/IAIPromptScopeValidator.cs` | Signature change: accepts `IPublishedElement` |
+| `Core/Prompts/AIPromptScopeValidator.cs` | Simplified: uses `IPropertyEditorInfoResolver` |
+| `Core/Prompts/AIPromptService.cs` | Use `IAIContextBuilder` + `IAITemplateResolver` |
 | `Web/.../Models/PromptExecutionRequestModel.cs` | Add `ElementKey` property |
 | `Web/.../Mapping/PromptExecutionMapDefinition.cs` | Map element key |
 | `Client/.../prompt-insert.property-action.ts` | Get element key from block context |
 | `Client/.../prompt-execution.server.data-source.ts` | Send element key to API |
 
-### Deleted Files (Umbraco.Ai.Prompt)
+### Deleted Files (Umbraco.AI.Prompt)
 
 | File | Reason |
 |------|--------|
-| `Core/Prompts/IAiPromptTemplateService.cs` | Replaced by shared `IAiTemplateResolver` |
-| `Core/Prompts/AiPromptTemplateService.cs` | Replaced by shared `IAiTemplateResolver` |
+| `Core/Prompts/IAIPromptTemplateService.cs` | Replaced by shared `IAITemplateResolver` |
+| `Core/Prompts/AIPromptTemplateService.cs` | Replaced by shared `IAITemplateResolver` |
 
 ---
 
 ## Implementation Order
 
-1. **Phase 1a**: Create `Content/` feature in Umbraco.Ai.Core
+1. **Phase 1a**: Create `Content/` feature in Umbraco.AI.Core
    - `IPublishedContentResolver`, `PublishedContentResolver`
    - `IPropertyEditorInfoResolver`, `PropertyEditorInfoResolver`
    - `BlockStructureHelper` with `BuildElementIndex()`
-   - `IAiContextBuilder`, `AiContextBuilder`, `AiContextRequest`, `AiResolvedContent`
+   - `IAIContextBuilder`, `AIContextBuilder`, `AIContextRequest`, `AIResolvedContent`
 
-2. **Phase 1b**: Create `Templates/` feature in Umbraco.Ai.Core
-   - Move `IAiTemplateResolver`, `AiTemplateResolver` from Snapshots/
-   - Update `AiTemplateContext` with flattened properties + Element support
-   - Delete `AiRequestContext`
+2. **Phase 1b**: Create `Templates/` feature in Umbraco.AI.Core
+   - Move `IAITemplateResolver`, `AITemplateResolver` from Snapshots/
+   - Update `AITemplateContext` with flattened properties + Element support
+   - Delete `AIRequestContext`
 
-3. **Phase 2**: Refactor `Snapshots/` in Umbraco.Ai.Core
-   - Update `AiEntitySnapshotService` to use `IPublishedContentResolver`
+3. **Phase 2**: Refactor `Snapshots/` in Umbraco.AI.Core
+   - Update `AIEntitySnapshotService` to use `IPublishedContentResolver`
 
-4. **Phase 3**: Update Umbraco.Ai.Prompt.Core
-   - Add `ElementKey` to `AiPromptExecutionRequest`
-   - Update `IAiPromptScopeValidator` signature
-   - Refactor `AiPromptService` to use `IAiContextBuilder` + `IAiTemplateResolver`
-   - Delete `IAiPromptTemplateService` and implementation
+4. **Phase 3**: Update Umbraco.AI.Prompt.Core
+   - Add `ElementKey` to `AIPromptExecutionRequest`
+   - Update `IAIPromptScopeValidator` signature
+   - Refactor `AIPromptService` to use `IAIContextBuilder` + `IAITemplateResolver`
+   - Delete `IAIPromptTemplateService` and implementation
 
-5. **Phase 4**: Update Umbraco.Ai.Prompt.Web API layer
+5. **Phase 4**: Update Umbraco.AI.Prompt.Web API layer
    - Add `ElementKey` to request model
    - Update mapping
 

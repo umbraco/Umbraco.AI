@@ -1,0 +1,175 @@
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Core.Models;
+using Umbraco.Extensions;
+
+namespace Umbraco.AI.Core.Providers;
+
+/// <summary>
+/// Attribute to mark AI provider implementations.
+/// </summary>
+/// <param name="id"></param>
+/// <param name="name"></param>
+[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+public class AIProviderAttribute(string id, string name) : Attribute
+{
+    /// <summary>
+    /// The unique identifier of the AI provider.
+    /// </summary>
+    public string Id { get; } = id;
+    
+    /// <summary>
+    /// The display name of the AI provider.
+    /// </summary>
+    public string Name { get; } = name;
+}
+
+/// <summary>
+/// Base class for AI providers.
+/// </summary>
+public abstract class AIProviderBase : IAIProvider
+{
+    /// <summary>
+    /// The infrastructure services for AI providers.
+    /// </summary>
+    protected readonly IAIProviderInfrastructure Infrastructure;
+    
+    /// <summary>
+    /// The capabilities supported by this provider.
+    /// </summary>
+    protected readonly List<IAICapability> Capabilities = [];
+    
+    /// <inheritdoc />
+    public string Id { get; }
+    
+    /// <inheritdoc />
+    public string Name { get; }
+
+    /// <inheritdoc />
+    public virtual Type? SettingsType => null;
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIProviderBase"/> class.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
+    protected AIProviderBase(IAIProviderInfrastructure infrastructure)
+    {
+        Infrastructure = infrastructure;
+        
+        var attribute = GetType().GetCustomAttribute<AIProviderAttribute>(inherit: false);
+        if (attribute == null)
+        {
+            throw new InvalidOperationException($"The AI provider '{GetType().FullName}' is missing the required AIProviderAttribute.");
+        }
+
+        Id = attribute.Id;
+        Name = attribute.Name;
+    }
+    
+    /// <summary>
+    /// Gets all capabilities supported by this provider.
+    /// </summary>
+    /// <returns></returns>
+    public IReadOnlyCollection<IAICapability> GetCapabilities()
+        => Capabilities.AsReadOnly();
+
+    /// <inheritdoc />
+    public bool TryGetCapability<TCapability>(out TCapability? capability)
+        where TCapability : class, IAICapability
+    {
+        capability = Capabilities.OfType<TCapability>().FirstOrDefault();
+        return capability != null;
+    }
+
+    /// <inheritdoc />
+    public TCapability GetCapability<TCapability>()
+        where TCapability : class, IAICapability
+        => TryGetCapability<TCapability>(out var capability) 
+            ? capability! 
+            : throw new InvalidOperationException($"The AI provider '{Id}' does not support the capability '{typeof(TCapability).FullName}'.");
+
+    /// <inheritdoc />
+    public bool HasCapability<TCapability>()
+        where TCapability : class, IAICapability
+        => TryGetCapability<TCapability>(out _);
+
+    /// <inheritdoc />
+    public virtual AIEditableModelSchema? GetSettingsSchema()
+    {
+        // Base implementation returns null (no settings)
+        return null;
+    }
+
+    /// <summary>
+    /// Adds a capability to this AI provider.
+    /// </summary>
+    /// <typeparam name="TCapability"></typeparam>
+    protected void WithCapability<TCapability>()
+        where TCapability : class, IAICapability
+    {
+        Capabilities.Add(Infrastructure.CapabilityFactory.Create<TCapability>(this));
+    }
+}
+
+/// <summary>
+/// Base class for AI providers with typed settings support.
+/// </summary>
+/// <typeparam name="TSettings">The type of settings object required by this provider.</typeparam>
+public abstract class AIProviderBase<TSettings> : AIProviderBase
+    where TSettings : class, new()
+{
+    /// <inheritdoc />
+    public override Type? SettingsType => typeof(TSettings);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIProviderBase{TSettings}"/> class.
+    /// </summary>
+    /// <param name="infrastructure"></param>
+    protected AIProviderBase(IAIProviderInfrastructure infrastructure)
+        : base(infrastructure)
+    { }
+
+    /// <inheritdoc />
+    public override AIEditableModelSchema? GetSettingsSchema()
+        => Infrastructure.SchemaBuilder.BuildForType<TSettings>(Id);
+
+    /// <summary>
+    /// Adds a capability to this AI provider.
+    /// </summary>
+    /// <typeparam name="TCapability"></typeparam>
+    protected new void WithCapability<TCapability>()
+        where TCapability : class, IAICapability<TSettings>
+    {
+        Capabilities.Add(Infrastructure.CapabilityFactory.Create<TCapability>(this));
+    }
+
+    private static string InferEditorUiAlias(Type type)
+    {
+        var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+        // TODO: DateTime, Enum, etc.
+        
+        if (underlyingType == typeof(string)) return "Umb.PropertyEditorUi.TextBox";
+        if (underlyingType == typeof(int)) return "Umb.PropertyEditorUi.Integer";
+        if (underlyingType == typeof(bool)) return "Umb.PropertyEditorUi.Toggle";
+        if (underlyingType == typeof(decimal) || underlyingType == typeof(double) || underlyingType == typeof(float))
+            return "Umb.PropertyEditorUi.Decimal";
+
+        return "Umb.PropertyEditorUi.TextBox"; // fallback
+    }
+    
+    private static IEnumerable<ValidationAttribute> InferValidationAttributes(PropertyInfo property)
+    {
+        var validationAttributes = property.GetCustomAttributes<ValidationAttribute>().ToList();
+        
+        // If the property is non-nullable and doesn't already have a Required attribute, add one
+        if (!property.PropertyType.IsNullable() && !validationAttributes.OfType<RequiredAttribute>().Any())
+        {
+            validationAttributes.Add(new RequiredAttribute());
+        }
+
+        return validationAttributes;
+    }
+}

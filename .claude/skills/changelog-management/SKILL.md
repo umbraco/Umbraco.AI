@@ -6,7 +6,7 @@ allowed-tools: Bash, Read, AskUserQuestion
 
 # Changelog Manager
 
-You are helping generate changelogs for Umbraco.Ai products from conventional commit history.
+You are helping generate changelogs for Umbraco.AI products from conventional commit history.
 
 ## Task
 
@@ -29,20 +29,20 @@ npm run changelog:list
 ### Generate Changelog
 ```bash
 # For a specific version
-npm run changelog -- --product=Umbraco.Ai --version=1.1.0
+npm run changelog -- --product=Umbraco.AI --version=1.1.0
 
 # For unreleased changes
-npm run changelog -- --product=Umbraco.Ai --unreleased
+npm run changelog -- --product=Umbraco.AI --unreleased
 ```
 
 ### PowerShell Wrapper
 ```powershell
-.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
+.\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0
 ```
 
 ### Bash Wrapper
 ```bash
-./scripts/generate-changelog.sh --product=Umbraco.Ai --version=1.1.0
+./scripts/generate-changelog.sh --product=Umbraco.AI --version=1.1.0
 ```
 
 ## Workflow
@@ -66,14 +66,14 @@ npm run changelog -- --product=Umbraco.Ai --unreleased
 ## Available Products
 
 Products are auto-discovered by scanning for `changelog.config.json` files:
-- Umbraco.Ai (core)
-- Umbraco.Ai.OpenAi
-- Umbraco.Ai.Anthropic
-- Umbraco.Ai.Amazon
-- Umbraco.Ai.Google
-- Umbraco.Ai.MicrosoftFoundry
-- Umbraco.Ai.Prompt
-- Umbraco.Ai.Agent
+- Umbraco.AI (core)
+- Umbraco.AI.OpenAI
+- Umbraco.AI.Anthropic
+- Umbraco.AI.Amazon
+- Umbraco.AI.Google
+- Umbraco.AI.MicrosoftFoundry
+- Umbraco.AI.Prompt
+- Umbraco.AI.Agent
 
 ## Important Notes
 
@@ -88,15 +88,15 @@ Products are auto-discovered by scanning for `changelog.config.json` files:
 User invokes: /changelog-management
 
 You ask: "Which product?" (list available)
-User selects: Umbraco.Ai
+User selects: Umbraco.AI
 
 You ask: "What version?" (or suggest --unreleased)
 User provides: 1.1.0
 
 You detect: Windows platform
-You run: .\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
+You run: .\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0
 
-You verify: Read Umbraco.Ai/CHANGELOG.md and show the new entry
+You verify: Read Umbraco.AI/CHANGELOG.md and show the new entry
 
 You remind:
 - Review the generated content

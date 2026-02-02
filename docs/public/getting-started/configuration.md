@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configure default profiles and provider settings for Umbraco.Ai.
+  Configure default profiles and provider settings for Umbraco.AI.
 ---
 
 # Configuration
@@ -22,7 +22,7 @@ See [Managing Settings](../backoffice/managing-settings.md) for detailed instruc
 
 ## How Default Profiles Work
 
-When you call `IAiChatService.GetChatResponseAsync()` without specifying a profile ID, the service uses the default profile configured in settings.
+When you call `IAIChatService.GetChatResponseAsync()` without specifying a profile ID, the service uses the default profile configured in settings.
 
 {% code title="Example.cs" %}
 ```csharp
@@ -75,9 +75,9 @@ You can also configure default profiles programmatically:
 ```csharp
 public class SettingsExample
 {
-    private readonly IAiSettingsService _settingsService;
+    private readonly IAISettingsService _settingsService;
 
-    public SettingsExample(IAiSettingsService settingsService)
+    public SettingsExample(IAISettingsService settingsService)
     {
         _settingsService = settingsService;
     }

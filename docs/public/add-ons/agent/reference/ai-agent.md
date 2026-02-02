@@ -3,21 +3,21 @@ description: >-
   Model representing an AI agent.
 ---
 
-# AiAgent
+# AIAgent
 
 Represents a configured AI agent with instructions and settings.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Agents;
 ```
 
 ## Definition
 
-{% code title="AiAgent" %}
+{% code title="AIAgent" %}
 ```csharp
-public class AiAgent : IAiVersionableEntity
+public class AIAgent : IAIVersionableEntity
 {
     public Guid Id { get; internal set; }
     public required string Alias { get; set; }
@@ -62,7 +62,7 @@ public class AiAgent : IAiVersionableEntity
 
 {% code title="Example" %}
 ```csharp
-var agent = new AiAgent
+var agent = new AIAgent
 {
     Alias = "content-assistant",
     Name = "Content Assistant",
@@ -87,6 +87,6 @@ var saved = await _agentService.SaveAgentAsync(agent);
 
 ## Related
 
-* [IAiAgentService](ai-agent-service.md) - Agent service
+* [IAIAgentService](ai-agent-service.md) - Agent service
 * [Agent Concepts](../concepts.md) - Concepts overview
 * [Scopes](../scopes.md) - Agent categorization

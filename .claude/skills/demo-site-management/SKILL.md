@@ -1,13 +1,13 @@
 ---
 name: demo-site-management
-description: Manages the Umbraco.Ai demo site for development. Handles starting with DemoSite-Claude profile, port discovery via named pipes, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
+description: Manages the Umbraco.AI demo site for development. Handles starting with DemoSite-Claude profile, port discovery via named pipes, and OpenAPI client generation. Use when starting, stopping, or checking the demo site, or when generating OpenAPI clients for frontend development.
 argument-hint: [start|stop|generate-client|status|restart|open]
 allowed-tools: Bash, Read, TaskOutput, TaskStop
 ---
 
 # Demo Site Management
 
-Manage the Umbraco.Ai demo site with automatic port discovery via named pipes.
+Manage the Umbraco.AI demo site with automatic port discovery via named pipes.
 
 ## Command: $ARGUMENTS
 
@@ -35,7 +35,7 @@ Execute the requested demo site operation.
    - Try querying site address endpoint via named pipe (see "Query site address via named pipe" section)
    - Check if background tasks exist with "DemoSite" in description
    - If running, report and exit
-2. If not running, start in background: `cd demo/Umbraco.Ai.DemoSite && dotnet run --launch-profile DemoSite-Claude`
+2. If not running, start in background: `cd demo/Umbraco.AI.DemoSite && dotnet run --launch-profile DemoSite-Claude`
 3. Wait 15-20 seconds for startup
 4. Query site address endpoint via named pipe to get port and pipe name (see "Query site address via named pipe" section)
 5. Report:
@@ -202,7 +202,7 @@ The demo site uses HTTP over named pipes for automatic port discovery:
 - **Site address endpoint**: `/site-address` (returns HTTPS address as plain text)
 - **HTTP transport**: Kestrel listens on both named pipe and HTTP/HTTPS
 - **Concurrent support**: Multiple clients can connect simultaneously
-- **Implementation**: `demo/Umbraco.Ai.DemoSite/Composers/NamedPipeListenerComposer.cs`
+- **Implementation**: `demo/Umbraco.AI.DemoSite/Composers/NamedPipeListenerComposer.cs`
 
 ## Common Issues
 

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Umbraco AI Persistence</Title>
+        <Description>EF Core persistence layer for Umbraco AI</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Umbraco.Cms.Persistence.EFCore" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Persistence.SqlServer</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Persistence.Sqlite</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Tests.Unit</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Tests.Integration</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+</Project>

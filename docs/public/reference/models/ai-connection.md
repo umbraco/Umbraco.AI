@@ -3,21 +3,21 @@ description: >-
   Connection to an AI provider with credentials.
 ---
 
-# AiConnection
+# AIConnection
 
 Represents a connection to an AI provider with authentication settings.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Connections;
+using Umbraco.AI.Core.Connections;
 ```
 
 ## Class Definition
 
-{% code title="AiConnection" %}
+{% code title="AIConnection" %}
 ```csharp
-public class AiConnection
+public class AIConnection
 {
     public Guid Id { get; internal set; }
     public required string Alias { get; init; }
@@ -52,7 +52,7 @@ Settings are provider-specific. Each provider defines its own settings class.
 
 {% code title="OpenAI Settings" %}
 ```csharp
-public class OpenAiProviderSettings
+public class OpenAIProviderSettings
 {
     public required string ApiKey { get; set; }
     public string? OrganizationId { get; set; }
@@ -67,7 +67,7 @@ Settings values starting with `$` are resolved from configuration:
 
 {% code title="Using Config References" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "production-openai",
     Name = "Production OpenAI",
@@ -94,9 +94,9 @@ var connection = new AiConnection
 
 {% code title="Example" %}
 ```csharp
-using Umbraco.Ai.Core.Connections;
+using Umbraco.AI.Core.Connections;
 
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "my-openai",
     Name = "My OpenAI Connection",

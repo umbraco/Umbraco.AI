@@ -11,7 +11,7 @@ OpenAI provides access to GPT models for chat and text-embedding models for sema
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.OpenAi
+Install-Package Umbraco.AI.OpenAI
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.OpenAi
+dotnet add package Umbraco.AI.OpenAI
 ```
 {% endcode %}
 
@@ -86,12 +86,12 @@ Keep your API key secure. Never commit it to source control or expose it in clie
 
 {% code title="Example.cs" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "openai-production",
     Name = "OpenAI Production",
     ProviderId = "openai",
-    Settings = new OpenAiProviderSettings
+    Settings = new OpenAIProviderSettings
     {
         ApiKey = "sk-...",
         OrganizationId = "org-..."
@@ -108,14 +108,14 @@ await _connectionService.SaveConnectionAsync(connection);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "content-writer",
     Name = "Content Writer",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     ConnectionId = connectionId,
-    Model = new AiModelRef("openai", "gpt-4o"),
-    Settings = new AiChatProfileSettings
+    Model = new AIModelRef("openai", "gpt-4o"),
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 2000,
@@ -131,13 +131,13 @@ await _profileService.SaveProfileAsync(profile);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "search-embeddings",
     Name = "Search Embeddings",
-    Capability = AiCapability.Embedding,
+    Capability = AICapability.Embedding,
     ConnectionId = connectionId,
-    Model = new AiModelRef("openai", "text-embedding-3-small")
+    Model = new AIModelRef("openai", "text-embedding-3-small")
 };
 
 await _profileService.SaveProfileAsync(profile);

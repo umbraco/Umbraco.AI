@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Umbraco AI AGUI</Title>
+        <Description>AG-UI protocol SDK for Umbraco AI - provides event types, models, and SSE streaming infrastructure</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+</Project>

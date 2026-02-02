@@ -88,7 +88,7 @@ var version = 3;
 
 var response = await httpClient.GetAsync(
     $"/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{version}");
-var versionData = await response.Content.ReadFromJsonAsync<AiEntityVersionWithSnapshotModel>();
+var versionData = await response.Content.ReadFromJsonAsync<AIEntityVersionWithSnapshotModel>();
 ```
 {% endcode %}
 

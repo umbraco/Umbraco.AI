@@ -5,13 +5,13 @@ description: >-
 
 # Chat Middleware
 
-Chat middleware wraps `IChatClient` instances to add behavior to chat completions. Implement `IAiChatMiddleware` to create custom middleware.
+Chat middleware wraps `IChatClient` instances to add behavior to chat completions. Implement `IAIChatMiddleware` to create custom middleware.
 
 ## Interface
 
-{% code title="IAiChatMiddleware" %}
+{% code title="IAIChatMiddleware" %}
 ```csharp
-public interface IAiChatMiddleware
+public interface IAIChatMiddleware
 {
     IChatClient Apply(IChatClient client);
 }
@@ -25,9 +25,9 @@ The `Apply` method receives the current client and returns a wrapped client.
 {% code title="SimpleChatMiddleware.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 
-public class SimpleChatMiddleware : IAiChatMiddleware
+public class SimpleChatMiddleware : IAIChatMiddleware
 {
     public IChatClient Apply(IChatClient client)
     {
@@ -48,7 +48,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-public class MetricsChatMiddleware : IAiChatMiddleware
+public class MetricsChatMiddleware : IAIChatMiddleware
 {
     private readonly ILogger<MetricsChatMiddleware> _logger;
 
@@ -142,7 +142,7 @@ Microsoft.Extensions.AI provides built-in middleware options. Use the builder pa
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-public class LoggingChatMiddleware : IAiChatMiddleware
+public class LoggingChatMiddleware : IAIChatMiddleware
 {
     private readonly ILoggerFactory _loggerFactory;
 
@@ -176,14 +176,14 @@ Register middleware in a Composer:
 
 {% code title="MyComposer.cs" %}
 ```csharp
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
 
 public class MyComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Append<MetricsChatMiddleware>();
     }
 }
@@ -198,7 +198,7 @@ Block responses containing specific content:
 ```csharp
 using Microsoft.Extensions.AI;
 
-public class ContentFilterMiddleware : IAiChatMiddleware
+public class ContentFilterMiddleware : IAIChatMiddleware
 {
     private readonly string[] _blockedTerms;
 
@@ -273,7 +273,7 @@ Add automatic retry logic for transient failures:
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-public class RetryChatMiddleware : IAiChatMiddleware
+public class RetryChatMiddleware : IAIChatMiddleware
 {
     private readonly ILogger<RetryChatMiddleware> _logger;
     private readonly int _maxRetries;

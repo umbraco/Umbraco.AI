@@ -132,7 +132,7 @@ Configure automatic cleanup in `appsettings.json`:
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "AuditLog": {
         "RetentionDays": 90,
         "AutoCleanupEnabled": true,

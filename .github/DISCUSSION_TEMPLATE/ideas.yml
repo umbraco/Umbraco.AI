@@ -6,11 +6,11 @@ body:
     attributes:
       label: "Which component is this idea related to?"
       options:
-      - Umbraco.Ai (Core)
-      - Umbraco.Ai.OpenAi
-      - Umbraco.Ai.Anthropic
-      - Umbraco.Ai.Prompt
-      - Umbraco.Ai.Agent
+      - Umbraco.AI (Core)
+      - Umbraco.AI.OpenAI
+      - Umbraco.AI.Anthropic
+      - Umbraco.AI.Prompt
+      - Umbraco.AI.Agent
         - Other / Not sure
       description: "Select which product/add-on type that you'd like to see improvements on"
     validations:

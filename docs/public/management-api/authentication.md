@@ -1,6 +1,6 @@
 ---
 description: >-
-  Authentication requirements for the Umbraco.Ai Management API.
+  Authentication requirements for the Umbraco.AI Management API.
 ---
 
 # Authentication
@@ -41,7 +41,7 @@ const response = await fetch('/umbraco/ai/management/api/v1/connections', {
 For server-to-server calls or background processes, use `IBackOfficeSecurityAccessor` to get the current user's context, or consider using a service account pattern.
 
 {% hint style="warning" %}
-The Management API is designed for backoffice integration, not for public-facing applications. For external integrations, consider creating your own API that wraps the Umbraco.Ai services.
+The Management API is designed for backoffice integration, not for public-facing applications. For external integrations, consider creating your own API that wraps the Umbraco.AI services.
 {% endhint %}
 
 ## Authorization Errors
@@ -87,9 +87,9 @@ If you need to expose AI capabilities publicly, create your own API controllers:
 [Route("api/chat")]
 public class PublicChatController : ControllerBase
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public PublicChatController(IAiChatService chatService)
+    public PublicChatController(IAIChatService chatService)
     {
         _chatService = chatService;
     }

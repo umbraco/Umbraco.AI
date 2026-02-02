@@ -3,44 +3,44 @@ description: >-
   Service for managing and executing prompts.
 ---
 
-# IAiPromptService
+# IAIPromptService
 
 Service for prompt CRUD operations and execution.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Prompts;
 ```
 
 ## Interface
 
-{% code title="IAiPromptService" %}
+{% code title="IAIPromptService" %}
 ```csharp
-public interface IAiPromptService
+public interface IAIPromptService
 {
-    Task<AiPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<AiPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default);
 
-    Task<PagedModel<AiPrompt>> GetPromptsPagedAsync(
+    Task<PagedModel<AIPrompt>> GetPromptsPagedAsync(
         int skip = 0,
         int take = 100,
         string? filter = null,
         Guid? profileId = null,
         CancellationToken cancellationToken = default);
 
-    Task<AiPrompt> SavePromptAsync(AiPrompt prompt, CancellationToken cancellationToken = default);
+    Task<AIPrompt> SavePromptAsync(AIPrompt prompt, CancellationToken cancellationToken = default);
 
     Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<bool> PromptAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
-    Task<AiPromptExecutionResult> ExecutePromptAsync(
+    Task<AIPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
-        AiPromptExecutionRequest request,
+        AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -96,7 +96,7 @@ Creates or updates a prompt.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `prompt` | `AiPrompt` | The prompt to save |
+| `prompt` | `AIPrompt` | The prompt to save |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved prompt with ID and version.
@@ -131,7 +131,7 @@ Executes a prompt with variables.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `promptId` | `Guid` | The prompt ID |
-| `request` | `AiPromptExecutionRequest` | Execution parameters |
+| `request` | `AIPromptExecutionRequest` | Execution parameters |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: Execution result with response.
@@ -140,7 +140,7 @@ Executes a prompt with variables.
 ```csharp
 var result = await _promptService.ExecutePromptAsync(
     promptId,
-    new AiPromptExecutionRequest
+    new AIPromptExecutionRequest
     {
         Variables = new Dictionary<string, string>
         {
@@ -156,11 +156,11 @@ Console.WriteLine($"Tokens used: {result.Usage.TotalTokens}");
 
 ## Related Models
 
-### AiPromptExecutionRequest
+### AIPromptExecutionRequest
 
-{% code title="AiPromptExecutionRequest" %}
+{% code title="AIPromptExecutionRequest" %}
 ```csharp
-public class AiPromptExecutionRequest
+public class AIPromptExecutionRequest
 {
     public IDictionary<string, string> Variables { get; set; }
     public string? EntityId { get; set; }
@@ -170,18 +170,18 @@ public class AiPromptExecutionRequest
 ```
 {% endcode %}
 
-### AiPromptExecutionResult
+### AIPromptExecutionResult
 
-{% code title="AiPromptExecutionResult" %}
+{% code title="AIPromptExecutionResult" %}
 ```csharp
-public class AiPromptExecutionResult
+public class AIPromptExecutionResult
 {
     public string Response { get; set; }
     public Guid PromptId { get; set; }
     public int PromptVersion { get; set; }
     public Guid ProfileId { get; set; }
-    public AiModelRef Model { get; set; }
-    public AiTokenUsage Usage { get; set; }
+    public AIModelRef Model { get; set; }
+    public AITokenUsage Usage { get; set; }
     public Guid AuditLogId { get; set; }
 }
 ```
@@ -189,5 +189,5 @@ public class AiPromptExecutionResult
 
 ## Related
 
-* [AiPrompt Model](ai-prompt.md) - Prompt model reference
+* [AIPrompt Model](ai-prompt.md) - Prompt model reference
 * [Prompt Concepts](../concepts.md) - Concepts overview

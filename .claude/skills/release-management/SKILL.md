@@ -6,7 +6,7 @@ allowed-tools: Bash, Read, Write, Glob
 
 # Release Manager
 
-You are helping manage release manifests for the Umbraco.Ai repository.
+You are helping manage release manifests for the Umbraco.AI repository.
 
 ## Task
 
@@ -17,28 +17,28 @@ Generate `release-manifest.json` at the repository root by discovering available
 - **Required** on `release/*` branches (CI will fail without it)
 - **Optional** on `hotfix/*` branches (falls back to change detection if absent)
 - Lists which products to package and release
-- Format: JSON array of product names (e.g., `["Umbraco.Ai", "Umbraco.Ai.OpenAi"]`)
+- Format: JSON array of product names (e.g., `["Umbraco.AI", "Umbraco.AI.OpenAI"]`)
 
 ## Workflow
 
-1. **Discover products** - Find all `Umbraco.Ai*` directories at repository root:
+1. **Discover products** - Find all `Umbraco.AI*` directories at repository root:
    ```bash
-   find . -maxdepth 1 -type d -name "Umbraco.Ai*" | sed 's|^\./||' | sort
+   find . -maxdepth 1 -type d -name "Umbraco.AI*" | sed 's|^\./||' | sort
    ```
 
 2. **Display numbered menu** - Show all products with numbers:
    ```
    Select products to include in this release:
 
-   1. Umbraco.Ai
-   2. Umbraco.Ai.Agent
-   3. Umbraco.Ai.Agent.Copilot
-   4. Umbraco.Ai.Amazon
-   5. Umbraco.Ai.Anthropic
-   6. Umbraco.Ai.Google
-   7. Umbraco.Ai.MicrosoftFoundry
-   8. Umbraco.Ai.OpenAi
-   9. Umbraco.Ai.Prompt
+   1. Umbraco.AI
+   2. Umbraco.AI.Agent
+   3. Umbraco.AI.Agent.Copilot
+   4. Umbraco.AI.Amazon
+   5. Umbraco.AI.Anthropic
+   6. Umbraco.AI.Google
+   7. Umbraco.AI.MicrosoftFoundry
+   8. Umbraco.AI.OpenAI
+   9. Umbraco.AI.Prompt
    ```
 
 3. **Get user selection** - Display the menu and wait for user response:
@@ -50,7 +50,7 @@ Generate `release-manifest.json` at the repository root by discovering available
      - Space-separated: `1 3 5 8`
      - Range notation: `1-4,7,9`
      - Special commands: `all`, `none`, `cancel`
-     - Product names: `Umbraco.Ai, Umbraco.Ai.OpenAi`
+     - Product names: `Umbraco.AI, Umbraco.AI.OpenAI`
 
 4. **Validate selection** - Check that:
    - Numbers are within valid range (1 to N)
@@ -60,8 +60,8 @@ Generate `release-manifest.json` at the repository root by discovering available
 5. **Generate manifest** - Write selected products to `release-manifest.json`:
    ```json
    [
-     "Umbraco.Ai",
-     "Umbraco.Ai.OpenAi"
+     "Umbraco.AI",
+     "Umbraco.AI.OpenAI"
    ]
    ```
    - Use Write tool to create the file at repository root
@@ -91,28 +91,28 @@ User invokes: /release-management
 You discover and display:
 Select products to include in this release:
 
-1. Umbraco.Ai
-2. Umbraco.Ai.Agent
-3. Umbraco.Ai.Agent.Copilot
-4. Umbraco.Ai.Amazon
-5. Umbraco.Ai.Anthropic
-6. Umbraco.Ai.Google
-7. Umbraco.Ai.MicrosoftFoundry
-8. Umbraco.Ai.OpenAi
-9. Umbraco.Ai.Prompt
+1. Umbraco.AI
+2. Umbraco.AI.Agent
+3. Umbraco.AI.Agent.Copilot
+4. Umbraco.AI.Amazon
+5. Umbraco.AI.Anthropic
+6. Umbraco.AI.Google
+7. Umbraco.AI.MicrosoftFoundry
+8. Umbraco.AI.OpenAI
+9. Umbraco.AI.Prompt
 
 You ask: "Enter product numbers (comma or space-separated, e.g., 1,3,5) or type 'all' for all products:"
 
 User types: "1,2,8,9"
 
-You parse: 1=Umbraco.Ai, 2=Umbraco.Ai.Agent, 8=Umbraco.Ai.OpenAi, 9=Umbraco.Ai.Prompt
+You parse: 1=Umbraco.AI, 2=Umbraco.AI.Agent, 8=Umbraco.AI.OpenAI, 9=Umbraco.AI.Prompt
 
 You generate release-manifest.json:
 [
-  "Umbraco.Ai",
-  "Umbraco.Ai.Agent",
-  "Umbraco.Ai.OpenAi",
-  "Umbraco.Ai.Prompt"
+  "Umbraco.AI",
+  "Umbraco.AI.Agent",
+  "Umbraco.AI.OpenAI",
+  "Umbraco.AI.Prompt"
 ]
 
 You confirm:

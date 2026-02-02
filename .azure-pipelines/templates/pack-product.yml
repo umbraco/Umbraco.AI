@@ -1,8 +1,8 @@
-# Reusable template for packing a single Umbraco.Ai product
+# Reusable template for packing a single Umbraco.AI product
 # Uses pre-built outputs from the Build stage
 #
 # Parameters:
-#   product: Product name (e.g., "Umbraco.Ai", "Umbraco.Ai.OpenAi")
+#   product: Product name (e.g., "Umbraco.AI", "Umbraco.AI.OpenAI")
 #   condition: Optional condition for all steps (default: true)
 #
 # Prerequisites:

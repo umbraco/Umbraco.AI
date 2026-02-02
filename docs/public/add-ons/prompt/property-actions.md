@@ -51,14 +51,14 @@ Control which content types can use a prompt through scoping rules:
 The prompt appears on all compatible property editors:
 
 ```csharp
-var prompt = new AiPrompt
+var prompt = new AIPrompt
 {
     Alias = "improve-seo",
     Name = "Improve SEO",
     Instructions = "Improve this text for SEO...",
-    Scope = new AiPromptScope
+    Scope = new AIPromptScope
     {
-        Mode = AiPromptScopeMode.AllowAll
+        Mode = AIPromptScopeMode.AllowAll
     }
 };
 ```
@@ -68,14 +68,14 @@ var prompt = new AiPrompt
 Only show on specific content types:
 
 ```csharp
-var prompt = new AiPrompt
+var prompt = new AIPrompt
 {
     Alias = "blog-enhancer",
     Name = "Enhance Blog Post",
     Instructions = "...",
-    Scope = new AiPromptScope
+    Scope = new AIPromptScope
     {
-        Mode = AiPromptScopeMode.AllowList,
+        Mode = AIPromptScopeMode.AllowList,
         ContentTypes = ["blogPost", "article"]
     }
 };
@@ -86,14 +86,14 @@ var prompt = new AiPrompt
 Show on all content types except specified ones:
 
 ```csharp
-var prompt = new AiPrompt
+var prompt = new AIPrompt
 {
     Alias = "general-assistant",
     Name = "Writing Assistant",
     Instructions = "...",
-    Scope = new AiPromptScope
+    Scope = new AIPromptScope
     {
-        Mode = AiPromptScopeMode.DenyList,
+        Mode = AIPromptScopeMode.DenyList,
         ContentTypes = ["settings", "folder"]
     }
 };

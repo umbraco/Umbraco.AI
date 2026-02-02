@@ -1,5 +1,5 @@
 # Unified Demo Site Setup Script
-# Creates a shared demo site with all Umbraco.Ai products
+# Creates a shared demo site with all Umbraco.AI products
 
 param(
     [switch]$SkipTemplateInstall,
@@ -15,14 +15,14 @@ $RepoRoot = (Resolve-Path (Split-Path -Parent $ScriptDir)).Path
 # Change to repository root to ensure consistent behavior
 Push-Location $RepoRoot
 
-Write-Host "=== Umbraco.Ai Unified Demo Site Setup ===" -ForegroundColor Cyan
+Write-Host "=== Umbraco.AI Unified Demo Site Setup ===" -ForegroundColor Cyan
 Write-Host "Working directory: $RepoRoot" -ForegroundColor Gray
 Write-Host ""
 
 # Check if demo already exists
 if ((Test-Path "demo") -and -not $Force) {
     Write-Host "Demo folder already exists. Use -Force to recreate." -ForegroundColor Yellow
-    Write-Host "Or open the existing Umbraco.Ai.local.sln" -ForegroundColor Yellow
+    Write-Host "Or open the existing Umbraco.AI.local.sln" -ForegroundColor Yellow
     exit 0
 }
 
@@ -32,8 +32,8 @@ if ($Force -and (Test-Path "demo")) {
     Remove-Item -Recurse -Force "demo"
 }
 
-if ($Force -and (Test-Path "Umbraco.Ai.local.sln")) {
-    Remove-Item -Force "Umbraco.Ai.local.sln"
+if ($Force -and (Test-Path "Umbraco.AI.local.sln")) {
+    Remove-Item -Force "Umbraco.AI.local.sln"
 }
 
 # Step 1: Install Umbraco templates
@@ -57,32 +57,32 @@ Copy-Item -Path $directoryPackagesPropsSource -Destination "demo\Directory.Packa
 # Step 3: Create the Umbraco demo site
 Write-Host "Creating Umbraco demo site..." -ForegroundColor Green
 Push-Location "demo"
-dotnet new umbraco --force -n "Umbraco.Ai.DemoSite" --friendly-name "Administrator" --email "admin@example.com" --password "password1234" --development-database-type SQLite
+dotnet new umbraco --force -n "Umbraco.AI.DemoSite" --friendly-name "Administrator" --email "admin@example.com" --password "password1234" --development-database-type SQLite
 Pop-Location
 
 # Step 3.1: Install Clean starter kit
 Write-Host "Installing Clean starter kit..." -ForegroundColor Green
-Push-Location "demo\Umbraco.Ai.DemoSite"
+Push-Location "demo\Umbraco.AI.DemoSite"
 dotnet add package Clean
 Pop-Location
 
 # Step 3.2: Set fixed port for consistent development
 Write-Host "Configuring fixed port (44355)..." -ForegroundColor Green
 $launchSettingsSource = Join-Path $ScriptDir "templates\launchSettings.json"
-$launchSettingsPath = "demo\Umbraco.Ai.DemoSite\Properties\launchSettings.json"
+$launchSettingsPath = "demo\Umbraco.AI.DemoSite\Properties\launchSettings.json"
 New-Item -ItemType Directory -Path (Split-Path $launchSettingsPath) -Force | Out-Null
 Copy-Item -Path $launchSettingsSource -Destination $launchSettingsPath -Force
 
 # Step 3.3: Add NamedPipeListenerComposer for HTTP over named pipes
 Write-Host "Adding NamedPipeListenerComposer for HTTP over named pipes..." -ForegroundColor Green
 $composerSourcePath = Join-Path $ScriptDir "templates\NamedPipeListenerComposer.cs"
-$composerDestPath = "demo\Umbraco.Ai.DemoSite\Composers\NamedPipeListenerComposer.cs"
+$composerDestPath = "demo\Umbraco.AI.DemoSite\Composers\NamedPipeListenerComposer.cs"
 New-Item -ItemType Directory -Path (Split-Path $composerDestPath) -Force | Out-Null
 Copy-Item -Path $composerSourcePath -Destination $composerDestPath -Force
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green
-dotnet new sln -n "Umbraco.Ai.local" --force
+dotnet new sln -n "Umbraco.AI.local" --force --format sln
 
 # Helper function to add all projects from a product's src folder
 function Add-ProductProjects {
@@ -96,119 +96,116 @@ function Add-ProductProjects {
         $projects = Get-ChildItem -Path $srcPath -Filter "*.csproj" -Recurse
         foreach ($proj in $projects) {
             Write-Host "  Adding $($proj.Name)" -ForegroundColor Gray
-            dotnet sln "Umbraco.Ai.local.sln" add $proj.FullName --solution-folder $SolutionFolder 2>$null
+            dotnet sln "Umbraco.AI.local.sln" add $proj.FullName --solution-folder $SolutionFolder 2>$null
         }
         Write-Host "  Added $($projects.Count) projects" -ForegroundColor DarkGreen
     }
 }
 
 # Step 5: Add Core projects
-Write-Host "Adding Umbraco.Ai (Core) projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai" -SolutionFolder "Core"
+Write-Host "Adding Umbraco.AI (Core) projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI" -SolutionFolder "Core"
 
 # Step 6: Add OpenAI provider projects
-Write-Host "Adding Umbraco.Ai.OpenAi projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.OpenAi" -SolutionFolder "OpenAi"
+Write-Host "Adding Umbraco.AI.OpenAI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.OpenAI" -SolutionFolder "OpenAI"
 
 # Step 7: Add Prompt projects
-Write-Host "Adding Umbraco.Ai.Prompt projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.Prompt" -SolutionFolder "Prompt"
+Write-Host "Adding Umbraco.AI.Prompt projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt" -SolutionFolder "Prompt"
 
 # Step 8: Add Agent projects
-Write-Host "Adding Umbraco.Ai.Agent projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.Agent" -SolutionFolder "Agent"
+Write-Host "Adding Umbraco.AI.Agent projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent" -SolutionFolder "Agent"
 
 # Step 8.1: Add Agent Copilot projects
-Write-Host "Adding Umbraco.Ai.Agent.Copilot projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.Agent.Copilot" -SolutionFolder "AgentCopilot"
+Write-Host "Adding Umbraco.AI.Agent.Copilot projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot" -SolutionFolder "AgentCopilot"
 
 # Step 9: Add Anthropic provider projects
-Write-Host "Adding Umbraco.Ai.Anthropic projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.Anthropic" -SolutionFolder "Anthropic"
+Write-Host "Adding Umbraco.AI.Anthropic projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Anthropic" -SolutionFolder "Anthropic"
 
 # Step 9.1: Add Microsoft Foundry provider projects
-Write-Host "Adding Umbraco.Ai.MicrosoftFoundry projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.MicrosoftFoundry" -SolutionFolder "MicrosoftFoundry"
+Write-Host "Adding Umbraco.AI.MicrosoftFoundry projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.MicrosoftFoundry" -SolutionFolder "MicrosoftFoundry"
 
 # Step 10: Add Google provider projects
-Write-Host "Adding Umbraco.Ai.Google projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.Google" -SolutionFolder "Google"
+Write-Host "Adding Umbraco.AI.Google projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Google" -SolutionFolder "Google"
 
 # Step 10.1: Add Amazon provider projects
-Write-Host "Adding Umbraco.Ai.Amazon projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.Ai.Amazon" -SolutionFolder "Amazon"
+Write-Host "Adding Umbraco.AI.Amazon projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Amazon" -SolutionFolder "Amazon"
 
 # Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
-dotnet sln "Umbraco.Ai.local.sln" add "demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj" --solution-folder "Demo"
+dotnet sln "Umbraco.AI.local.sln" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj" --solution-folder "Demo"
 
 # Step 13: Add project references to demo site
 Write-Host "Adding project references to demo site..." -ForegroundColor Green
-$demoProject = "demo/Umbraco.Ai.DemoSite/Umbraco.Ai.DemoSite.csproj"
+$demoProject = "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj"
 
-# Core references (Startup + Web.StaticAssets + SQLite persistence)
-dotnet add $demoProject reference "Umbraco.Ai/src/Umbraco.Ai.Startup/Umbraco.Ai.Startup.csproj"
-dotnet add $demoProject reference "Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Umbraco.Ai.Web.StaticAssets.csproj"
-dotnet add $demoProject reference "Umbraco.Ai/src/Umbraco.Ai.Persistence.Sqlite/Umbraco.Ai.Persistence.Sqlite.csproj"
+# Core references (Startup + Web.StaticAssets)
+dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI.Startup/Umbraco.AI.Startup.csproj"
+dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Umbraco.AI.Web.StaticAssets.csproj"
 
 # OpenAI provider
-if (Test-Path "Umbraco.Ai.OpenAi/src/Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.OpenAi/src/Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.csproj"
+if (Test-Path "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj"
 }
 
 # Anthropic provider
-if (Test-Path "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Anthropic/src/Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.csproj"
+if (Test-Path "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj"
 }
 
 # Microsoft Foundry provider
-if (Test-Path "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.MicrosoftFoundry/src/Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.csproj"
+if (Test-Path "Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.MicrosoftFoundry/src/Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.csproj"
 }
 
 # Google provider
-if (Test-Path "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Google/src/Umbraco.Ai.Google/Umbraco.Ai.Google.csproj"
+if (Test-Path "Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Google/src/Umbraco.AI.Google/Umbraco.AI.Google.csproj"
 }
 
 # Amazon provider
-if (Test-Path "Umbraco.Ai.Amazon/src/Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Amazon/src/Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.csproj"
+if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
 }
 
-# Prompt add-on (Startup + Web.StaticAssets + SQLite persistence)
-if (Test-Path "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Startup/Umbraco.Ai.Prompt.Startup.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Startup/Umbraco.Ai.Prompt.Startup.csproj"
-    dotnet add $demoProject reference "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Web.StaticAssets/Umbraco.Ai.Prompt.Web.StaticAssets.csproj"
-    dotnet add $demoProject reference "Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Persistence.Sqlite/Umbraco.Ai.Prompt.Persistence.Sqlite.csproj"
+# Prompt add-on (Startup + Web.StaticAssets)
+if (Test-Path "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Startup/Umbraco.AI.Prompt.Startup.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Startup/Umbraco.AI.Prompt.Startup.csproj"
+    dotnet add $demoProject reference "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Umbraco.AI.Prompt.Web.StaticAssets.csproj"
 }
 
-# Agent add-on (Startup + Web.StaticAssets + SQLite persistence)
-if (Test-Path "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Startup/Umbraco.Ai.Agent.Startup.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Startup/Umbraco.Ai.Agent.Startup.csproj"
-    dotnet add $demoProject reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Web.StaticAssets/Umbraco.Ai.Agent.Web.StaticAssets.csproj"
-    dotnet add $demoProject reference "Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Persistence.Sqlite/Umbraco.Ai.Agent.Persistence.Sqlite.csproj"
+# Agent add-on (Startup + Web.StaticAssets)
+if (Test-Path "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj"
+    dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Umbraco.AI.Agent.Web.StaticAssets.csproj"
 }
 
 # Agent Copilot add-on (frontend-only static assets)
-if (Test-Path "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot\Umbraco.Ai.Agent.Copilot.csproj") {
-    dotnet add $demoProject reference "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot\Umbraco.Ai.Agent.Copilot.csproj"
+if (Test-Path "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj"
 }
 
 Write-Host ""
 Write-Host "=== Setup Complete! ===" -ForegroundColor Green
 Write-Host ""
-Write-Host "Solution: Umbraco.Ai.local.sln" -ForegroundColor Cyan
-Write-Host "Demo site: demo/Umbraco.Ai.DemoSite" -ForegroundColor Cyan
+Write-Host "Solution: Umbraco.AI.local.sln" -ForegroundColor Cyan
+Write-Host "Demo site: demo/Umbraco.AI.DemoSite" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Credentials:" -ForegroundColor Yellow
 Write-Host "  Email: admin@example.com"
 Write-Host "  Password: password1234"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
-Write-Host "  1. Open Umbraco.Ai.local.sln in your IDE"
+Write-Host "  1. Open Umbraco.AI.local.sln in your IDE"
 Write-Host "  2. Build the solution"
-Write-Host "  3. Run the Umbraco.Ai.DemoSite project"
+Write-Host "  3. Run the Umbraco.AI.DemoSite project"
 Write-Host ""
 
 # Restore original directory

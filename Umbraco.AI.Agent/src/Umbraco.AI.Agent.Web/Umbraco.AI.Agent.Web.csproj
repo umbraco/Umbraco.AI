@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Agent Web</Title>
+        <Description>Management API for Umbraco AI Agent</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Web" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Umbraco.Cms.Api.Management" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj" />
+    </ItemGroup>
+</Project>

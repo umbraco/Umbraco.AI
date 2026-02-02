@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Moq" />
+        <PackageReference Include="Shouldly" />
+        <PackageReference Include="Umbraco.Cms.Core" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
+    </ItemGroup>
+
+</Project>

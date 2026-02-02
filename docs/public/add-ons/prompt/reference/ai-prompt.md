@@ -3,21 +3,21 @@ description: >-
   Model representing a prompt template.
 ---
 
-# AiPrompt
+# AIPrompt
 
 Represents a reusable prompt template with variables and configuration.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Prompts;
 ```
 
 ## Definition
 
-{% code title="AiPrompt" %}
+{% code title="AIPrompt" %}
 ```csharp
-public class AiPrompt : IAiVersionableEntity
+public class AIPrompt : IAIVersionableEntity
 {
     public Guid Id { get; internal set; }
     public required string Alias { get; set; }
@@ -29,7 +29,7 @@ public class AiPrompt : IAiVersionableEntity
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
     public bool IsActive { get; set; } = true;
     public bool IncludeEntityContext { get; set; } = true;
-    public AiPromptScope? Scope { get; set; }
+    public AIPromptScope? Scope { get; set; }
 
     // Audit properties
     public DateTime DateCreated { get; init; } = DateTime.UtcNow;
@@ -57,7 +57,7 @@ public class AiPrompt : IAiVersionableEntity
 | `Tags` | `IReadOnlyList<string>` | Organization tags |
 | `IsActive` | `bool` | Whether prompt is available |
 | `IncludeEntityContext` | `bool` | Include entity in system message |
-| `Scope` | `AiPromptScope?` | Content type scoping rules |
+| `Scope` | `AIPromptScope?` | Content type scoping rules |
 | `DateCreated` | `DateTime` | When created |
 | `DateModified` | `DateTime` | When last modified |
 | `Version` | `int` | Current version number |
@@ -66,7 +66,7 @@ public class AiPrompt : IAiVersionableEntity
 
 {% code title="Example" %}
 ```csharp
-var prompt = new AiPrompt
+var prompt = new AIPrompt
 {
     Alias = "meta-description",
     Name = "Generate Meta Description",
@@ -85,9 +85,9 @@ Requirements:
     Tags = new[] { "seo", "content" },
     IsActive = true,
     IncludeEntityContext = true,
-    Scope = new AiPromptScope
+    Scope = new AIPromptScope
     {
-        Mode = AiPromptScopeMode.Allow,
+        Mode = AIPromptScopeMode.Allow,
         ContentTypeAliases = new[] { "article", "blogPost" }
     }
 };
@@ -98,19 +98,19 @@ var saved = await _promptService.SavePromptAsync(prompt);
 
 ---
 
-# AiPromptScope
+# AIPromptScope
 
 Defines content type scoping rules for a prompt.
 
-{% code title="AiPromptScope" %}
+{% code title="AIPromptScope" %}
 ```csharp
-public class AiPromptScope
+public class AIPromptScope
 {
-    public AiPromptScopeMode Mode { get; set; } = AiPromptScopeMode.None;
+    public AIPromptScopeMode Mode { get; set; } = AIPromptScopeMode.None;
     public IReadOnlyList<string> ContentTypeAliases { get; set; } = Array.Empty<string>();
 }
 
-public enum AiPromptScopeMode
+public enum AIPromptScopeMode
 {
     None = 0,   // No restriction (default)
     Allow = 1,  // Only listed content types
@@ -121,5 +121,5 @@ public enum AiPromptScopeMode
 
 ## Related
 
-* [IAiPromptService](ai-prompt-service.md) - Prompt service
+* [IAIPromptService](ai-prompt-service.md) - Prompt service
 * [Template Syntax](../template-syntax.md) - Variable interpolation

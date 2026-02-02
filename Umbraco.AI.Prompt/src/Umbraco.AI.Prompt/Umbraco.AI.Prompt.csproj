@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Prompt</Title>
+        <Description>Prompt management plugin for Umbraco AI</Description>
+        <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+        <PackageTags>umbraco ai prompt umbraco-marketplace</PackageTags>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeSymbols>false</IncludeSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="..\..\README.md" Pack="true" PackagePath="docs\" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Startup.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
+    </ItemGroup>
+</Project>

@@ -3,26 +3,26 @@ description: >-
   Model representing an AI context with resources.
 ---
 
-# AiContext
+# AIContext
 
 Represents a collection of resources (brand voice, guidelines, content) that can be injected into AI operations.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core.Contexts;
 ```
 
 ## Definition
 
-{% code title="AiContext" %}
+{% code title="AIContext" %}
 ```csharp
-public class AiContext : IAiVersionableEntity
+public class AIContext : IAIVersionableEntity
 {
     public Guid Id { get; internal set; }
     public required string Alias { get; set; }
     public required string Name { get; set; }
-    public IList<AiContextResource> Resources { get; set; } = new List<AiContextResource>();
+    public IList<AIContextResource> Resources { get; set; } = new List<AIContextResource>();
 
     // Audit properties
     public DateTime DateCreated { get; init; } = DateTime.UtcNow;
@@ -43,7 +43,7 @@ public class AiContext : IAiVersionableEntity
 | `Id` | `Guid` | Unique identifier (auto-generated) |
 | `Alias` | `string` | Unique alias for programmatic lookup (required) |
 | `Name` | `string` | Display name (required) |
-| `Resources` | `IList<AiContextResource>` | Collection of resources |
+| `Resources` | `IList<AIContextResource>` | Collection of resources |
 | `DateCreated` | `DateTime` | When created (UTC) |
 | `DateModified` | `DateTime` | When last modified (UTC) |
 | `CreatedByUserId` | `Guid?` | User who created |
@@ -54,22 +54,22 @@ public class AiContext : IAiVersionableEntity
 
 {% code title="Example" %}
 ```csharp
-var context = new AiContext
+var context = new AIContext
 {
     Alias = "brand-guidelines",
     Name = "Brand Guidelines",
-    Resources = new List<AiContextResource>
+    Resources = new List<AIContextResource>
     {
-        new AiContextResource
+        new AIContextResource
         {
             ResourceTypeId = "text",
             Name = "Tone of Voice",
             Description = "Writing style guidelines",
             SortOrder = 0,
             Data = "Always use a friendly, professional tone...",
-            InjectionMode = AiContextResourceInjectionMode.Always
+            InjectionMode = AIContextResourceInjectionMode.Always
         },
-        new AiContextResource
+        new AIContextResource
         {
             ResourceTypeId = "text",
             Name = "Product Terminology",
@@ -83,20 +83,20 @@ var context = new AiContext
 
 ## Related
 
-* [AiContextResource](#aicontextresource) - Resource model
-* [IAiContextService](../services/ai-context-service.md) - Context service
+* [AIContextResource](#aicontextresource) - Resource model
+* [IAIContextService](../services/ai-context-service.md) - Context service
 
 ---
 
-# AiContextResource
+# AIContextResource
 
 Represents a single resource within a context.
 
 ## Definition
 
-{% code title="AiContextResource" %}
+{% code title="AIContextResource" %}
 ```csharp
-public class AiContextResource
+public class AIContextResource
 {
     public Guid Id { get; internal set; }
     public required string ResourceTypeId { get; init; }
@@ -104,7 +104,7 @@ public class AiContextResource
     public string? Description { get; set; }
     public int SortOrder { get; set; }
     public object? Data { get; set; }
-    public AiContextResourceInjectionMode InjectionMode { get; set; } = AiContextResourceInjectionMode.Always;
+    public AIContextResourceInjectionMode InjectionMode { get; set; } = AIContextResourceInjectionMode.Always;
 }
 ```
 {% endcode %}
@@ -119,7 +119,7 @@ public class AiContextResource
 | `Description` | `string?` | Optional description |
 | `SortOrder` | `int` | Order for injection |
 | `Data` | `object?` | Resource content (type-specific) |
-| `InjectionMode` | `AiContextResourceInjectionMode` | When to inject |
+| `InjectionMode` | `AIContextResourceInjectionMode` | When to inject |
 
 ## Resource Types
 
@@ -131,9 +131,9 @@ public class AiContextResource
 
 ## Injection Modes
 
-{% code title="AiContextResourceInjectionMode" %}
+{% code title="AIContextResourceInjectionMode" %}
 ```csharp
-public enum AiContextResourceInjectionMode
+public enum AIContextResourceInjectionMode
 {
     Always = 0,   // Always inject
     OnDemand = 1  // Only inject when explicitly requested

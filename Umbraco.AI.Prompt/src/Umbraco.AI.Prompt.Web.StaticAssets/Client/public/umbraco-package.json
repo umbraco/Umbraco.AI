@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/umbraco/Umbraco.CMS.Backoffice/main/umbraco-package-schema.json",
+  "id": "Umbraco.AI.Prompt",
+  "name": "Umbraco AI Prompt",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "bundle",
+      "alias": "Umbraco.AI.Prompt.Bundle",
+      "name": "Umbraco AI Prompt Bundle",
+      "js": "/App_Plugins/UmbracoAIPrompt/umbraco-ai-prompt-manifests.js"
+    },
+    {
+      "type": "backofficeEntryPoint",
+      "name": "Umbraco AI Prompt Backoffice Entry Point",
+      "alias": "Umbraco.AI.Prompt.BackofficeEntryPoint",
+      "js": "/App_Plugins/UmbracoAIPrompt/umbraco-ai-prompt-app.js"
+    }
+  ],
+  "importmap": {
+    "imports": {
+      "@umbraco-ai/prompt": "/App_Plugins/UmbracoAIPrompt/umbraco-ai-prompt-app.js"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Prompt Startup</Title>
+        <Description>Startup and DI registration for Umbraco AI Prompt</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Startup" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.SqlServer\Umbraco.AI.Prompt.Persistence.SqlServer.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.Sqlite\Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Web\Umbraco.AI.Prompt.Web.csproj" />
+    </ItemGroup>
+</Project>

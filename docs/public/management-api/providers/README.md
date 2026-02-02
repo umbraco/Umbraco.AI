@@ -23,7 +23,7 @@ Providers are read-only resources - they're installed as NuGet packages and disc
 
 ## Authentication
 
-All endpoints require backoffice authentication with the `Umb.Ai.Management.Api` authorization policy.
+All endpoints require backoffice authentication with the `Umb.AI.Management.Api` authorization policy.
 
 ## Endpoints
 

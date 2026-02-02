@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Prompt Web</Title>
+        <Description>Management API for Umbraco AI Prompt</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+        <PackageReference Include="Umbraco.AI.Web" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Umbraco.Cms.Api.Management" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
+    </ItemGroup>
+</Project>

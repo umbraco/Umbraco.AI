@@ -1,0 +1,17 @@
+{
+    "name": "Umbraco AI Google Provider",
+    "$schema": "../umbraco-package-schema.json",
+    "extensions": [
+        {
+            "type": "localization",
+            "alias": "Uai.Google.Localization.En",
+            "weight": -100,
+            "name": "English",
+            "meta": {
+                "culture": "en"
+            },
+            "js": "/App_Plugins/UmbracoAIGoogle/lang/en.js"
+        }
+    ],
+    "version": ""
+}

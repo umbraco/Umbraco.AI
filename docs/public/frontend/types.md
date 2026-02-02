@@ -5,7 +5,7 @@ description: >-
 
 # Types
 
-The Umbraco.Ai frontend exports TypeScript types for type-safe chat integration.
+The Umbraco.AI frontend exports TypeScript types for type-safe chat integration.
 
 ## Import
 

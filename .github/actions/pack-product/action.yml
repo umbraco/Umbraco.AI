@@ -1,9 +1,9 @@
-name: 'Pack Umbraco.Ai Product'
+name: 'Pack Umbraco.AI Product'
 description: 'Packs a product using pre-built outputs with package references'
 
 inputs:
   product:
-    description: 'Product name (e.g., Umbraco.Ai.OpenAi)'
+    description: 'Product name (e.g., Umbraco.AI.OpenAI)'
     required: true
 
 runs:

@@ -3,21 +3,21 @@ description: >-
   Enumeration of AI capability types.
 ---
 
-# AiCapability
+# AICapability
 
 Enumeration defining the types of AI capabilities available.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 ```
 
 ## Definition
 
-{% code title="AiCapability" %}
+{% code title="AICapability" %}
 ```csharp
-public enum AiCapability
+public enum AICapability
 {
     Chat = 0,
     Embedding = 1,
@@ -43,10 +43,10 @@ public enum AiCapability
 {% code title="Example" %}
 ```csharp
 // Get all chat profiles
-var chatProfiles = await profileService.GetProfilesAsync(AiCapability.Chat);
+var chatProfiles = await profileService.GetProfilesAsync(AICapability.Chat);
 
 // Get all embedding profiles
-var embeddingProfiles = await profileService.GetProfilesAsync(AiCapability.Embedding);
+var embeddingProfiles = await profileService.GetProfilesAsync(AICapability.Embedding);
 ```
 {% endcode %}
 
@@ -69,20 +69,20 @@ foreach (var capability in available)
 {% code title="Example" %}
 ```csharp
 // Chat profile
-var chatProfile = new AiProfile
+var chatProfile = new AIProfile
 {
     Alias = "chat-assistant",
     Name = "Chat Assistant",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     // ...
 };
 
 // Embedding profile
-var embeddingProfile = new AiProfile
+var embeddingProfile = new AIProfile
 {
     Alias = "document-embeddings",
     Name = "Document Embeddings",
-    Capability = AiCapability.Embedding,
+    Capability = AICapability.Embedding,
     // ...
 };
 ```
@@ -94,11 +94,11 @@ var embeddingProfile = new AiProfile
 ```csharp
 // Get connections that support chat
 var chatConnections = await connectionService.GetConnectionsByCapabilityAsync(
-    AiCapability.Chat);
+    AICapability.Chat);
 
 // Get connections that support embeddings
 var embeddingConnections = await connectionService.GetConnectionsByCapabilityAsync(
-    AiCapability.Embedding);
+    AICapability.Embedding);
 ```
 {% endcode %}
 

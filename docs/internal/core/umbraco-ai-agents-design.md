@@ -1,23 +1,23 @@
-# Umbraco.Ai.Agents - Design Document
+# Umbraco.AI.Agents - Design Document
 
 ## Executive Summary
 
-Umbraco.Ai.Agents extends Umbraco.Ai with autonomous AI capabilities that can perform actions within Umbraco CMS. While Umbraco.Ai provides foundational AI services (chat, embeddings), Agents add the ability for AI to use **tools** - executing searches, creating content, publishing pages, and more - with human oversight.
+Umbraco.AI.Agents extends Umbraco.AI with autonomous AI capabilities that can perform actions within Umbraco CMS. While Umbraco.AI provides foundational AI services (chat, embeddings), Agents add the ability for AI to use **tools** - executing searches, creating content, publishing pages, and more - with human oversight.
 
 ### Key Principles
 
 1. **Human-in-the-loop**: All destructive actions require explicit user approval
 2. **Native Integration**: Agents feel like a natural part of Umbraco, not bolted-on
 3. **Extensible by Design**: Developers can add custom tools for their specific needs
-4. **Built on Umbraco.Ai**: Leverages existing Providers, Connections, and Profiles
+4. **Built on Umbraco.AI**: Leverages existing Providers, Connections, and Profiles
 
 ---
 
-## How Agents Fit Into Umbraco.Ai
+## How Agents Fit Into Umbraco.AI
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Umbraco.Ai                               │
+│                        Umbraco.AI                               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │   Providers (OpenAI, Azure, Anthropic, etc.)                    │
@@ -134,7 +134,7 @@ Developers can create custom tools for domain-specific needs:
 - Marketing: Schedule campaigns, analyze engagement
 - Integration: Query external APIs, sync data
 
-Tools are registered via attributes and discovered automatically, following the same pattern as Umbraco.Ai providers.
+Tools are registered via attributes and discovered automatically, following the same pattern as Umbraco.AI providers.
 
 ---
 
@@ -351,7 +351,7 @@ Beyond the backoffice, agents can power frontend experiences:
 
 ```csharp
 // Example: Semantic search endpoint
-app.MapGet("/api/search", async (string query, IAiAgentService agentService) =>
+app.MapGet("/api/search", async (string query, IAIAgentService agentService) =>
 {
     var results = await agentService.ExecuteToolAsync("search.semantic", new { query });
     return results;
@@ -407,18 +407,18 @@ Protect against excessive usage:
 ### Backend Components
 
 ```
-Umbraco.Ai.Agents (new project)
+Umbraco.AI.Agents (new project)
 ├── Models/
-│   ├── AiAgent                    # Agent definition
+│   ├── AIAgent                    # Agent definition
 │   ├── AgentSession               # Conversation state
 │   └── ToolInvocation             # Tool call record
 ├── Tools/
-│   ├── IAiTool                    # Tool interface
-│   ├── AiToolAttribute            # Discovery attribute
+│   ├── IAITool                    # Tool interface
+│   ├── AIToolAttribute            # Discovery attribute
 │   └── Built-in tools...
 ├── Services/
-│   ├── IAiAgentService            # Agent CRUD
-│   ├── IAiAgentExecutor           # Execution engine
+│   ├── IAIAgentService            # Agent CRUD
+│   ├── IAIAgentExecutor           # Execution engine
 │   └── IAgentSessionStore         # Session memory
 └── Configuration/
     └── UmbracoBuilderExtensions   # DI registration
@@ -427,7 +427,7 @@ Umbraco.Ai.Agents (new project)
 ### Frontend Components
 
 ```
-Umbraco.Ai.Web.StaticAssets/Client/src/
+Umbraco.AI.Web.StaticAssets/Client/src/
 ├── sidebar/
 │   ├── ai-sidebar.element.ts       # Main chat sidebar
 │   ├── ai-message.element.ts       # Chat message bubble
@@ -523,9 +523,9 @@ GET    /umbraco/ai/api/v1/tools                     # List available tools
 
 ## Summary
 
-Umbraco.Ai.Agents brings autonomous AI capabilities to Umbraco CMS while maintaining human control. By integrating at multiple touchpoints (sidebar, entity actions, inline buttons) and requiring approval for all modifications, agents become powerful assistants that enhance productivity without compromising content governance.
+Umbraco.AI.Agents brings autonomous AI capabilities to Umbraco CMS while maintaining human control. By integrating at multiple touchpoints (sidebar, entity actions, inline buttons) and requiring approval for all modifications, agents become powerful assistants that enhance productivity without compromising content governance.
 
-The extension builds naturally on Umbraco.Ai's foundation, reusing Providers, Connections, and Profiles while adding the new concepts of Agents and Tools. This consistent architecture makes it familiar to developers already using Umbraco.Ai.
+The extension builds naturally on Umbraco.AI's foundation, reusing Providers, Connections, and Profiles while adding the new concepts of Agents and Tools. This consistent architecture makes it familiar to developers already using Umbraco.AI.
 
 Key differentiators:
 - **Human-in-the-loop**: Every change requires approval

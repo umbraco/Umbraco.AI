@@ -5,7 +5,7 @@ description: >-
 
 # Backoffice
 
-Umbraco.Ai adds an AI section to the Umbraco backoffice where you can manage connections and profiles without writing code.
+Umbraco.AI adds an AI section to the Umbraco backoffice where you can manage connections and profiles without writing code.
 
 ## Accessing the AI Section
 

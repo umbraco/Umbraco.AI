@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Not a test project - shared test utilities library -->
+    <IsTestProject>false</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+    <ProjectReference Include="..\..\src\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

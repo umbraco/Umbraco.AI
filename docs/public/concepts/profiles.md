@@ -123,23 +123,23 @@ When you make a request:
 ```csharp
 public class ProfileManagement
 {
-    private readonly IAiProfileService _profileService;
+    private readonly IAIProfileService _profileService;
 
-    public ProfileManagement(IAiProfileService profileService)
+    public ProfileManagement(IAIProfileService profileService)
     {
         _profileService = profileService;
     }
 
-    public async Task<AiProfile> CreateProfile()
+    public async Task<AIProfile> CreateProfile()
     {
-        var profile = new AiProfile
+        var profile = new AIProfile
         {
             Alias = "new-profile",
             Name = "New Profile",
-            Capability = AiCapability.Chat,
+            Capability = AICapability.Chat,
             ConnectionId = connectionId,
-            Model = new AiModelRef("openai", "gpt-4o"),
-            Settings = new AiChatProfileSettings
+            Model = new AIModelRef("openai", "gpt-4o"),
+            Settings = new AIChatProfileSettings
             {
                 Temperature = 0.7f
             }

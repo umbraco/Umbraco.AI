@@ -83,7 +83,7 @@ var to = DateTime.UtcNow;
 var response = await httpClient.GetAsync(
     $"/umbraco/ai/management/api/v1/analytics/timeseries?from={from:O}&to={to:O}&granularity=day");
 
-var timeSeries = await response.Content.ReadFromJsonAsync<AiUsageTimeSeriesResult>();
+var timeSeries = await response.Content.ReadFromJsonAsync<AIUsageTimeSeriesResult>();
 
 foreach (var point in timeSeries.Items)
 {

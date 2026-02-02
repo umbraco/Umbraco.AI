@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Web.Common.ApplicationBuilder;
 
-namespace Umbraco.Ai.DemoSite.Composers;
+namespace Umbraco.AI.DemoSite.Composers;
 
 /// <summary>
 /// Configures Kestrel to listen on a named pipe for the demo site.

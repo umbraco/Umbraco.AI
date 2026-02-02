@@ -5,7 +5,7 @@ description: >-
 
 # Version History
 
-Umbraco.Ai automatically tracks version history for connections, profiles, contexts, prompts, and agents. You can view what changed, compare versions, and rollback to a previous state.
+Umbraco.AI automatically tracks version history for connections, profiles, contexts, prompts, and agents. You can view what changed, compare versions, and rollback to a previous state.
 
 ## Viewing Version History
 
@@ -79,11 +79,11 @@ After rolling back to version 3:
 
 | Entity | Package | Location |
 |--------|---------|----------|
-| Connections | Umbraco.Ai | Settings > AI > Connections |
-| Profiles | Umbraco.Ai | Settings > AI > Profiles |
-| Contexts | Umbraco.Ai | Settings > AI > Contexts |
-| Prompts | Umbraco.Ai.Prompt | Settings > AI > Prompts |
-| Agents | Umbraco.Ai.Agent | Settings > AI > Agents |
+| Connections | Umbraco.AI | Settings > AI > Connections |
+| Profiles | Umbraco.AI | Settings > AI > Profiles |
+| Contexts | Umbraco.AI | Settings > AI > Contexts |
+| Prompts | Umbraco.AI.Prompt | Settings > AI > Prompts |
+| Agents | Umbraco.AI.Agent | Settings > AI > Agents |
 
 ## Version Cleanup
 
@@ -97,7 +97,7 @@ Configure in `appsettings.json`:
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "Versioning": {
         "MaxVersionsPerEntity": 50,
         "CleanupIntervalDays": 7

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Title>Umbraco AI Prompt Persistence SQLite</Title>
+        <Description>SQLite migrations for Umbraco AI Prompt</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+        <PackageReference Include="Umbraco.Cms.Persistence.EFCore.Sqlite" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
+    </ItemGroup>
+</Project>

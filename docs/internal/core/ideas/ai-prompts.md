@@ -2,7 +2,7 @@
 
 ## Status: Under Consideration
 
-This document explores **AI Prompts**, a system for executing pre-defined, single-step AI operations directly from property editors. Inspired by [Perplex AI ContentBuddy](https://marketplace.umbraco.com/package/perplex.ai.contentbuddy), adapted to fit Umbraco.Ai's design philosophy.
+This document explores **AI Prompts**, a system for executing pre-defined, single-step AI operations directly from property editors. Inspired by [Perplex AI ContentBuddy](https://marketplace.umbraco.com/package/perplex.ai.contentbuddy), adapted to fit Umbraco.AI's design philosophy.
 
 > **Note**: For automatic, event-driven automation, see [AI Workflows](./ai-workflows.md). AI Prompts are human-initiated via inline UI buttons.
 
@@ -42,7 +42,7 @@ AI Prompt
 Unlike AI Workflows (which chain multiple steps), AI Prompts execute a single operation:
 
 ```csharp
-public class AiPrompt
+public class AIPrompt
 {
     public Guid Id { get; set; }
     public string Alias { get; set; }           // "generate-meta-description"
@@ -95,7 +95,7 @@ AI Prompts appear as inline buttons on property editors:
 Prompts can be scoped to appear only on relevant properties:
 
 ```csharp
-public class AiPrompt
+public class AIPrompt
 {
     // Applicability filters (null = all)
     public IReadOnlyList<string>? ApplicablePropertyEditors { get; set; }  // ["Umbraco.TextBox", "Umbraco.TextArea"]
@@ -191,7 +191,7 @@ User clicks "Generate SEO Meta" on metaDescription field
 ┌─────────────────────────────────────────────────────────────────┐
 │ 3. Execute via Profile                                           │
 │    - Look up prompt.ProfileAlias                                 │
-│    - Call IAiChatService.CompleteAsync(profileAlias, builtPrompt)│
+│    - Call IAIChatService.CompleteAsync(profileAlias, builtPrompt)│
 └─────────────────────────────────────────────────────────────────┘
     │
     ▼
@@ -324,7 +324,7 @@ Clicking the button shows available prompts:
 
 ## Built-in Prompts
 
-Initial set of prompts to ship with Umbraco.Ai:
+Initial set of prompts to ship with Umbraco.AI:
 
 | Prompt | Description | Applicable Editors |
 |--------|-------------|-------------------|
@@ -343,10 +343,10 @@ Initial set of prompts to ship with Umbraco.Ai:
 AI Prompts automatically incorporate AI Context when executing. See [AI Context](./ai-context.md) for details.
 
 ```csharp
-public class AiPromptExecutor
+public class AIPromptExecutor
 {
     public async Task<PromptResult> ExecuteAsync(
-        AiPrompt prompt,
+        AIPrompt prompt,
         PropertyExecutionContext propertyContext)
     {
         // 1. Resolve AI Context for this site/property
@@ -405,17 +405,17 @@ public class AiPromptExecutor
 ### Backend Service
 
 ```csharp
-public interface IAiPromptService
+public interface IAIPromptService
 {
     // CRUD
-    Task<AiPrompt> CreateAsync(AiPrompt prompt, CancellationToken ct = default);
-    Task<AiPrompt?> GetByAliasAsync(string alias, CancellationToken ct = default);
-    Task<IEnumerable<AiPrompt>> GetAllAsync(CancellationToken ct = default);
-    Task UpdateAsync(AiPrompt prompt, CancellationToken ct = default);
+    Task<AIPrompt> CreateAsync(AIPrompt prompt, CancellationToken ct = default);
+    Task<AIPrompt?> GetByAliasAsync(string alias, CancellationToken ct = default);
+    Task<IEnumerable<AIPrompt>> GetAllAsync(CancellationToken ct = default);
+    Task UpdateAsync(AIPrompt prompt, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
 
     // Resolution
-    Task<IEnumerable<AiPrompt>> GetApplicablePromptsAsync(
+    Task<IEnumerable<AIPrompt>> GetApplicablePromptsAsync(
         string propertyEditorAlias,
         string? contentTypeAlias = null,
         string? propertyAlias = null,
@@ -423,7 +423,7 @@ public interface IAiPromptService
         CancellationToken ct = default);
 }
 
-public interface IAiPromptExecutor
+public interface IAIPromptExecutor
 {
     Task<PromptResult> ExecuteAsync(
         string promptAlias,
@@ -499,7 +499,7 @@ Should editors be able to create one-off prompts for specific content items?
 4. Property editor extension points in Umbraco backoffice
 
 ### Implementation Order
-1. AiPrompt model and repository
+1. AIPrompt model and repository
 2. Prompt execution service
 3. API endpoints
 4. Property editor button integration (frontend)
@@ -514,7 +514,7 @@ Should editors be able to create one-off prompts for specific content items?
 
 - [AI Workflows](./ai-workflows.md) - Multi-step automated pipelines
 - [AI Context](./ai-context.md) - Brand voice and property hints
-- [Umbraco.Ai.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants
+- [Umbraco.AI.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants
 
 ---
 

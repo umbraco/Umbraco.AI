@@ -27,11 +27,11 @@ The Versions API provides centralized access to version history for all versione
 
 | Entity Type | Package | Description |
 |-------------|---------|-------------|
-| `connection` | Umbraco.Ai | API connections and credentials |
-| `profile` | Umbraco.Ai | AI profile configurations |
-| `context` | Umbraco.Ai | Context resources and content |
-| `prompt` | Umbraco.Ai.Prompt | Prompt templates |
-| `agent` | Umbraco.Ai.Agent | Agent definitions |
+| `connection` | Umbraco.AI | API connections and credentials |
+| `profile` | Umbraco.AI | AI profile configurations |
+| `context` | Umbraco.AI | Context resources and content |
+| `prompt` | Umbraco.AI.Prompt | Prompt templates |
+| `agent` | Umbraco.AI.Agent | Agent definitions |
 
 ## Version Object
 

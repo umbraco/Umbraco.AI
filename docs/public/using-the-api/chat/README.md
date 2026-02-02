@@ -7,13 +7,13 @@ description: >-
 
 The chat API provides access to conversational AI capabilities. Use it for text generation, question answering, content creation, and more.
 
-## IAiChatService
+## IAIChatService
 
 The primary interface for chat operations:
 
-{% code title="IAiChatService.cs" %}
+{% code title="IAIChatService.cs" %}
 ```csharp
-public interface IAiChatService
+public interface IAIChatService
 {
     // Non-streaming responses
     Task<ChatResponse> GetChatResponseAsync(
@@ -52,13 +52,13 @@ public interface IAiChatService
 {% code title="Example.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 
 public class ContentAssistant
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public ContentAssistant(IAiChatService chatService)
+    public ContentAssistant(IAIChatService chatService)
     {
         _chatService = chatService;
     }

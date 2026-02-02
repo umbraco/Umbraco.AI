@@ -65,7 +65,7 @@ Chat Profile
     ├── Capability: Chat
     ├── Connection: OpenAI Prod
     ├── Model: gpt-4o
-    └── Settings: AiChatProfileSettings
+    └── Settings: AIChatProfileSettings
             ├── Temperature: 0.7
             ├── MaxTokens: 2000
             └── SystemPrompt: "..."
@@ -74,7 +74,7 @@ Embedding Profile
     ├── Capability: Embedding
     ├── Connection: OpenAI Prod
     ├── Model: text-embedding-3-small
-    └── Settings: AiEmbeddingProfileSettings
+    └── Settings: AIEmbeddingProfileSettings
 ```
 
 ## Checking Provider Capabilities
@@ -85,12 +85,12 @@ Not all providers support all capabilities. You can check what a provider suppor
 ```csharp
 var provider = _registry.GetProvider("openai");
 
-if (provider.HasCapability<IAiChatCapability>())
+if (provider.HasCapability<IAIChatCapability>())
 {
     // Provider supports chat
 }
 
-if (provider.HasCapability<IAiEmbeddingCapability>())
+if (provider.HasCapability<IAIEmbeddingCapability>())
 {
     // Provider supports embeddings
 }
@@ -99,27 +99,27 @@ if (provider.HasCapability<IAiEmbeddingCapability>())
 
 ## Capability Interfaces
 
-Capabilities are defined by interfaces in `Umbraco.Ai.Core`:
+Capabilities are defined by interfaces in `Umbraco.AI.Core`:
 
-{% code title="IAiChatCapability.cs" %}
+{% code title="IAIChatCapability.cs" %}
 ```csharp
-public interface IAiChatCapability : IAiCapability
+public interface IAIChatCapability : IAICapability
 {
     Task<IChatClient> CreateChatClientAsync(
         object settings,
-        AiProfile profile,
+        AIProfile profile,
         CancellationToken cancellationToken = default);
 }
 ```
 {% endcode %}
 
-{% code title="IAiEmbeddingCapability.cs" %}
+{% code title="IAIEmbeddingCapability.cs" %}
 ```csharp
-public interface IAiEmbeddingCapability : IAiCapability
+public interface IAIEmbeddingCapability : IAICapability
 {
     Task<IEmbeddingGenerator<string, Embedding<float>>> CreateEmbeddingGeneratorAsync(
         object settings,
-        AiProfile profile,
+        AIProfile profile,
         CancellationToken cancellationToken = default);
 }
 ```

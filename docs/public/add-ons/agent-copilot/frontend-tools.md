@@ -33,7 +33,7 @@ Tools are defined when running the agent:
 ```csharp
 var frontendTools = new[]
 {
-    new AiFrontendToolDefinition
+    new AIFrontendToolDefinition
     {
         Name = "insert_content",
         Description = "Insert content at the current cursor position in the editor",
@@ -51,7 +51,7 @@ var frontendTools = new[]
             ["required"] = new JsonArray { "content" }
         }
     },
-    new AiFrontendToolDefinition
+    new AIFrontendToolDefinition
     {
         Name = "replace_selection",
         Description = "Replace the currently selected text",

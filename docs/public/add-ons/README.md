@@ -1,42 +1,42 @@
 ---
 description: >-
-  Add-on packages that extend Umbraco.Ai with additional capabilities.
+  Add-on packages that extend Umbraco.AI with additional capabilities.
 ---
 
 # Add-ons
 
-Umbraco.Ai can be extended with add-on packages that provide specialized functionality. Each add-on builds on the core AI infrastructure while adding domain-specific features.
+Umbraco.AI can be extended with add-on packages that provide specialized functionality. Each add-on builds on the core AI infrastructure while adding domain-specific features.
 
 ## Available Add-ons
 
 | Add-on | Package | Description |
 |--------|---------|-------------|
-| [Prompt Management](prompt/README.md) | `Umbraco.Ai.Prompt` | Create, manage, and execute reusable prompt templates |
-| [Agent Runtime](agent/README.md) | `Umbraco.Ai.Agent` | Configure and run AI agents with streaming responses |
-| [Agent Copilot](agent-copilot/README.md) | `Umbraco.Ai.Agent.Copilot` | Chat sidebar UI for agent interaction (requires Agent) |
+| [Prompt Management](prompt/README.md) | `Umbraco.AI.Prompt` | Create, manage, and execute reusable prompt templates |
+| [Agent Runtime](agent/README.md) | `Umbraco.AI.Agent` | Configure and run AI agents with streaming responses |
+| [Agent Copilot](agent-copilot/README.md) | `Umbraco.AI.Agent.Copilot` | Chat sidebar UI for agent interaction (requires Agent) |
 
 ## Architecture
 
-Add-ons depend on the core `Umbraco.Ai` package and extend its capabilities:
+Add-ons depend on the core `Umbraco.AI` package and extend its capabilities:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Your Application                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                                  ┌──────────────────────────┐   │
-│                                  │ Umbraco.Ai.Agent.Copilot │   │
+│                                  │ Umbraco.AI.Agent.Copilot │   │
 │                                  │     (Chat UI Add-on)     │   │
 │                                  └────────────┬─────────────┘   │
 │                                               │                 │
 │   ┌───────────────────┐      ┌────────────────▼───────────┐     │
-│   │ Umbraco.Ai.Prompt │      │     Umbraco.Ai.Agent       │     │
+│   │ Umbraco.AI.Prompt │      │     Umbraco.AI.Agent       │     │
 │   │   (Prompt Mgmt)   │      │     (Agent Runtime)        │     │
 │   └────────┬──────────┘      └─────────────┬──────────────┘     │
 │            │                               │                    │
 │            └───────────────┬───────────────┘                    │
 │                            │                                    │
 │                  ┌─────────▼─────────┐                          │
-│                  │    Umbraco.Ai     │                          │
+│                  │    Umbraco.AI     │                          │
 │                  │      (Core)       │                          │
 │                  └─────────┬─────────┘                          │
 │                            │                                    │
@@ -56,14 +56,14 @@ Add-ons are installed via NuGet alongside the core package:
 {% code title="Package Manager Console" %}
 ```powershell
 # Install core (required)
-Install-Package Umbraco.Ai
+Install-Package Umbraco.AI
 
 # Install a provider (at least one required)
-Install-Package Umbraco.Ai.OpenAi
+Install-Package Umbraco.AI.OpenAI
 
 # Install add-ons (optional)
-Install-Package Umbraco.Ai.Prompt
-Install-Package Umbraco.Ai.Agent
+Install-Package Umbraco.AI.Prompt
+Install-Package Umbraco.AI.Agent
 ```
 {% endcode %}
 
@@ -83,8 +83,8 @@ Each add-on has its own database tables with a package-specific prefix:
 
 | Add-on | Migration Prefix |
 |--------|-----------------|
-| Prompt | `UmbracoAiPrompt_` |
-| Agent | `UmbracoAiAgent_` |
+| Prompt | `UmbracoAIPrompt_` |
+| Agent | `UmbracoAIAgent_` |
 
 {% hint style="info" %}
 Agent Copilot is a frontend-only package with no database tables.
@@ -94,5 +94,5 @@ Migrations run automatically on application startup.
 
 ## Related
 
-* [Umbraco.Ai Core](../getting-started/README.md) - Core package documentation
+* [Umbraco.AI Core](../getting-started/README.md) - Core package documentation
 * [Providers](../providers/README.md) - AI provider configuration

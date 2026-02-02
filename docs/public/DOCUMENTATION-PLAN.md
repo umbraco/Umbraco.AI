@@ -1,6 +1,6 @@
-# Umbraco.Ai Documentation Plan
+# Umbraco.AI Documentation Plan
 
-This document outlines the structure and content plan for Umbraco.Ai public documentation, following Umbraco.Docs conventions.
+This document outlines the structure and content plan for Umbraco.AI public documentation, following Umbraco.Docs conventions.
 
 ## Documentation Conventions
 
@@ -62,13 +62,13 @@ docs/public/
 │       └── (screenshots)
 │
 ├── extending/
-│   ├── README.md                       # Extending Umbraco.Ai overview
+│   ├── README.md                       # Extending Umbraco.AI overview
 │   ├── providers/
 │   │   ├── README.md                   # Custom providers overview
 │   │   ├── creating-a-provider.md      # Step-by-step guide
-│   │   ├── provider-settings.md        # AiSettingAttribute usage
-│   │   ├── chat-capability.md          # Implementing IAiChatCapability
-│   │   └── embedding-capability.md     # Implementing IAiEmbeddingCapability
+│   │   ├── provider-settings.md        # AISettingAttribute usage
+│   │   ├── chat-capability.md          # Implementing IAIChatCapability
+│   │   └── embedding-capability.md     # Implementing IAIEmbeddingCapability
 │   ├── middleware/
 │   │   ├── README.md                   # Middleware overview
 │   │   ├── chat-middleware.md          # Creating chat middleware
@@ -76,7 +76,7 @@ docs/public/
 │   │   └── middleware-ordering.md      # Collection builder ordering
 │   └── tools/
 │       ├── README.md                   # Custom tools overview
-│       └── creating-a-tool.md          # Implementing IAiTool
+│       └── creating-a-tool.md          # Implementing IAITool
 │
 ├── management-api/
 │   ├── README.md                       # Management API overview
@@ -120,19 +120,19 @@ docs/public/
     ├── README.md                       # API Reference overview
     ├── services/
     │   ├── README.md                   # Services reference
-    │   ├── ai-chat-service.md          # IAiChatService
-    │   ├── ai-profile-service.md       # IAiProfileService
-    │   ├── ai-connection-service.md    # IAiConnectionService
-    │   └── ai-embedding-service.md     # IAiEmbeddingService
+    │   ├── ai-chat-service.md          # IAIChatService
+    │   ├── ai-profile-service.md       # IAIProfileService
+    │   ├── ai-connection-service.md    # IAIConnectionService
+    │   └── ai-embedding-service.md     # IAIEmbeddingService
     ├── models/
     │   ├── README.md                   # Models reference
-    │   ├── ai-profile.md               # AiProfile class
-    │   ├── ai-connection.md            # AiConnection class
-    │   ├── ai-capability.md            # AiCapability enum
-    │   └── ai-model-ref.md             # AiModelRef struct
+    │   ├── ai-profile.md               # AIProfile class
+    │   ├── ai-connection.md            # AIConnection class
+    │   ├── ai-capability.md            # AICapability enum
+    │   └── ai-model-ref.md             # AIModelRef struct
     └── configuration/
         ├── README.md                   # Configuration reference
-        └── ai-options.md               # AiOptions class
+        └── ai-options.md               # AIOptions class
 ```
 
 ---
@@ -146,7 +146,7 @@ docs/public/
 | Article | Content |
 |---------|---------|
 | `installation.md` | NuGet package installation, provider packages (OpenAI), prerequisites (.NET 10, Umbraco 17+) |
-| `configuration.md` | appsettings.json structure, `Umbraco:Ai` section, default profile aliases |
+| `configuration.md` | appsettings.json structure, `Umbraco:AI` section, default profile aliases |
 | `first-connection.md` | Backoffice walkthrough: create connection, enter API key, configuration references, multiple connections |
 | `first-profile.md` | Create a chat profile, select model, configure settings, use in code |
 
@@ -156,7 +156,7 @@ docs/public/
 
 | Article | Content |
 |---------|---------|
-| `providers.md` | Provider = installable plugin (NuGet), discovery via `[AiProvider]`, examples (OpenAI) |
+| `providers.md` | Provider = installable plugin (NuGet), discovery via `[AIProvider]`, examples (OpenAI) |
 | `connections.md` | Connection = credentials + provider, stored in DB, can have multiple per provider |
 | `profiles.md` | Profile = connection + model + settings, use-case specific (e.g., "content-assistant") |
 | `capabilities.md` | Chat, Embedding, future (Media, Moderation), M.E.AI types (`IChatClient`, `IEmbeddingGenerator`) |
@@ -167,13 +167,13 @@ docs/public/
 **Purpose**: Developer guide for consuming AI services
 
 **Chat Section**:
-- Basic `IAiChatService.GetResponseAsync()` usage
+- Basic `IAIChatService.GetResponseAsync()` usage
 - Streaming with `GetStreamingResponseAsync()`
 - System prompts via profile settings
 - Options: temperature, max tokens, stop sequences
 
 **Embeddings Section**:
-- Basic `IAiEmbeddingService.GenerateEmbeddingAsync()` usage
+- Basic `IAIEmbeddingService.GenerateEmbeddingAsync()` usage
 - Batch operations with `GenerateEmbeddingsAsync()`
 
 **Tools Section**:
@@ -197,22 +197,22 @@ docs/public/
 **Providers Section**:
 | Article | Content |
 |---------|---------|
-| `creating-a-provider.md` | Full walkthrough: create project, `[AiProvider]` attribute, `AiProviderBase<TSettings>`, register capabilities |
-| `provider-settings.md` | `[AiSetting]` attribute, editor UI aliases, config resolution (`$ConfigKey`) |
-| `chat-capability.md` | `AiChatCapabilityBase<TSettings>`, `CreateChatClient()` implementation |
-| `embedding-capability.md` | `AiEmbeddingCapabilityBase<TSettings>`, `CreateEmbeddingGenerator()` implementation |
+| `creating-a-provider.md` | Full walkthrough: create project, `[AIProvider]` attribute, `AIProviderBase<TSettings>`, register capabilities |
+| `provider-settings.md` | `[AISetting]` attribute, editor UI aliases, config resolution (`$ConfigKey`) |
+| `chat-capability.md` | `AIChatCapabilityBase<TSettings>`, `CreateChatClient()` implementation |
+| `embedding-capability.md` | `AIEmbeddingCapabilityBase<TSettings>`, `CreateEmbeddingGenerator()` implementation |
 
 **Middleware Section**:
 | Article | Content |
 |---------|---------|
-| `chat-middleware.md` | `IAiChatMiddleware` interface, `Apply()` method, delegating pattern |
-| `embedding-middleware.md` | `IAiEmbeddingMiddleware` interface |
-| `middleware-ordering.md` | `builder.AiChatMiddleware().Append<T>().InsertBefore<T, U>()` |
+| `chat-middleware.md` | `IAIChatMiddleware` interface, `Apply()` method, delegating pattern |
+| `embedding-middleware.md` | `IAIEmbeddingMiddleware` interface |
+| `middleware-ordering.md` | `builder.AIChatMiddleware().Append<T>().InsertBefore<T, U>()` |
 
 **Tools Section**:
 | Article | Content |
 |---------|---------|
-| `creating-a-tool.md` | `[AiTool]` attribute, `AiToolBase<TArgs>`, `ExecuteAsync()`, registration |
+| `creating-a-tool.md` | `[AITool]` attribute, `AIToolBase<TArgs>`, `ExecuteAsync()`, registration |
 
 ### 6. Management API
 
@@ -406,7 +406,7 @@ All images:
 ```markdown
 # Table of contents
 
-* [Umbraco.Ai](README.md)
+* [Umbraco.AI](README.md)
 
 ## Getting Started
 
@@ -497,17 +497,17 @@ All images:
 
 * [Overview](reference/README.md)
 * [Services](reference/services/README.md)
-  * [IAiChatService](reference/services/ai-chat-service.md)
-  * [IAiProfileService](reference/services/ai-profile-service.md)
-  * [IAiConnectionService](reference/services/ai-connection-service.md)
-  * [IAiEmbeddingService](reference/services/ai-embedding-service.md)
+  * [IAIChatService](reference/services/ai-chat-service.md)
+  * [IAIProfileService](reference/services/ai-profile-service.md)
+  * [IAIConnectionService](reference/services/ai-connection-service.md)
+  * [IAIEmbeddingService](reference/services/ai-embedding-service.md)
 * [Models](reference/models/README.md)
-  * [AiProfile](reference/models/ai-profile.md)
-  * [AiConnection](reference/models/ai-connection.md)
-  * [AiCapability](reference/models/ai-capability.md)
-  * [AiModelRef](reference/models/ai-model-ref.md)
+  * [AIProfile](reference/models/ai-profile.md)
+  * [AIConnection](reference/models/ai-connection.md)
+  * [AICapability](reference/models/ai-capability.md)
+  * [AIModelRef](reference/models/ai-model-ref.md)
 * [Configuration](reference/configuration/README.md)
-  * [AiOptions](reference/configuration/ai-options.md)
+  * [AIOptions](reference/configuration/ai-options.md)
 ```
 
 ---

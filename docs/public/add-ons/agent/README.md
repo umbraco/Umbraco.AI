@@ -5,13 +5,13 @@ description: >-
 
 # Agent Runtime
 
-The Agent Runtime add-on (`Umbraco.Ai.Agent`) enables you to configure and run AI agents that can interact with users through streaming responses and execute frontend tools.
+The Agent Runtime add-on (`Umbraco.AI.Agent`) enables you to configure and run AI agents that can interact with users through streaming responses and execute frontend tools.
 
 ## Installation
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Agent
+Install-Package Umbraco.AI.Agent
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Agent
+dotnet add package Umbraco.AI.Agent
 ```
 {% endcode %}
 
@@ -57,9 +57,9 @@ In the backoffice, navigate to **Settings** > **AI** > **Agents** and create a n
 ```csharp
 public class AgentRunner
 {
-    private readonly IAiAgentService _agentService;
+    private readonly IAIAgentService _agentService;
 
-    public AgentRunner(IAiAgentService agentService)
+    public AgentRunner(IAIAgentService agentService)
     {
         _agentService = agentService;
     }
@@ -72,11 +72,11 @@ public class AgentRunner
 
         await foreach (var evt in _agentService.StreamAgentAsync(
             agent!.Id,
-            new AiAgentRunRequest
+            new AIAgentRunRequest
             {
                 Messages = new[]
                 {
-                    new AiAgentMessage { Role = "user", Content = "Help me write a blog post about AI" }
+                    new AIAgentMessage { Role = "user", Content = "Help me write a blog post about AI" }
                 }
             }))
         {
@@ -127,7 +127,7 @@ The Agent Runtime uses the AG-UI (Agent UI) protocol for streaming responses. Th
 | [Streaming](streaming.md) | SSE streaming and event handling |
 | [Frontend Client](frontend-client.md) | UaiAgentClient for custom agent UIs |
 | [API Reference](api/README.md) | Management API endpoints |
-| [Service Reference](reference/ai-agent-service.md) | IAiAgentService |
+| [Service Reference](reference/ai-agent-service.md) | IAIAgentService |
 
 For Copilot-specific features:
 

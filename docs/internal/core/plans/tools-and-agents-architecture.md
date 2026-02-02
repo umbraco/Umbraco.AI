@@ -1,8 +1,8 @@
-# Umbraco.Ai Tools & Agents Architecture Plan
+# Umbraco.AI Tools & Agents Architecture Plan
 
 ## Summary
 
-Add tool infrastructure to Umbraco.Ai.Core and implement the full Umbraco.Ai.Agents layer for governed AI assistant capabilities.
+Add tool infrastructure to Umbraco.AI.Core and implement the full Umbraco.AI.Agents layer for governed AI assistant capabilities.
 
 ### Design Decisions Made
 
@@ -15,18 +15,18 @@ Add tool infrastructure to Umbraco.Ai.Core and implement the full Umbraco.Ai.Age
 
 ---
 
-## Part 1: Core Tool Infrastructure (Umbraco.Ai.Core)
+## Part 1: Core Tool Infrastructure (Umbraco.AI.Core)
 
 ### 1.1 New Files to Create
 
-#### `src/Umbraco.Ai.Core/Tools/IAiTool.cs`
+#### `src/Umbraco.AI.Core/Tools/IAITool.cs`
 ```csharp
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// Defines an AI tool that can be invoked by AI models.
 /// </summary>
-public interface IAiTool
+public interface IAITool
 {
     string Id { get; }
     string Name { get; }
@@ -42,42 +42,42 @@ public interface IAiTool
 }
 ```
 
-#### `src/Umbraco.Ai.Core/Tools/AiToolAttribute.cs`
+#### `src/Umbraco.AI.Core/Tools/AIToolAttribute.cs`
 ```csharp
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public sealed class AiToolAttribute : Attribute
+public sealed class AIToolAttribute : Attribute
 {
     public string Id { get; }
     public string Name { get; }
     public string Category { get; set; } = "General";
     public bool IsDestructive { get; set; } = false;
 
-    public AiToolAttribute(string id, string name) { ... }
+    public AIToolAttribute(string id, string name) { ... }
 }
 ```
 
-#### `src/Umbraco.Ai.Core/Tools/AiToolBase.cs`
+#### `src/Umbraco.AI.Core/Tools/AIToolBase.cs`
 Base class for implementing tools with automatic `AIFunction` creation via reflection on an `Execute`/`ExecuteAsync` method.
 
-#### `src/Umbraco.Ai.Core/Tools/IAiToolRegistry.cs`
+#### `src/Umbraco.AI.Core/Tools/IAIToolRegistry.cs`
 ```csharp
-public interface IAiToolRegistry
+public interface IAIToolRegistry
 {
-    IEnumerable<IAiTool> Tools { get; }
-    IAiTool? GetTool(string toolId);
-    IEnumerable<IAiTool> GetToolsByCategory(string category);
-    IEnumerable<IAiTool> GetToolsWithTag(string tag);
+    IEnumerable<IAITool> Tools { get; }
+    IAITool? GetTool(string toolId);
+    IEnumerable<IAITool> GetToolsByCategory(string category);
+    IEnumerable<IAITool> GetToolsWithTag(string tag);
     IReadOnlyList<AITool> ToAITools(IEnumerable<string> toolIds, IServiceProvider sp);
-    IReadOnlyList<AITool> ToAITools(Func<IAiTool, bool> predicate, IServiceProvider sp);
+    IReadOnlyList<AITool> ToAITools(Func<IAITool, bool> predicate, IServiceProvider sp);
 }
 ```
 
-#### `src/Umbraco.Ai.Core/Tools/AiToolRegistry.cs`
-Implementation using dictionary lookup, following `AiRegistry` pattern.
+#### `src/Umbraco.AI.Core/Tools/AIToolRegistry.cs`
+Implementation using dictionary lookup, following `AIRegistry` pattern.
 
 ### 1.2 Files to Modify
 
-#### `src/Umbraco.Ai.Core/Factories/AiChatClientFactory.cs`
+#### `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs`
 - Add `UseFunctionInvocation()` middleware to enable automatic tool execution when tools are present
 - This should be applied as the innermost middleware (closest to provider)
 
@@ -109,11 +109,11 @@ private IChatClient BuildClient(IChatClient baseClient, bool hasTools)
 
 **Recommendation**: Always add `UseFunctionInvocation()` - it's a no-op when no tools are in options.
 
-#### `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs`
+#### `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs`
 Add tool registration:
 ```csharp
 // Tool infrastructure
-services.AddSingleton<IAiToolRegistry, AiToolRegistry>();
+services.AddSingleton<IAIToolRegistry, AIToolRegistry>();
 
 // Scan and register tools (follows provider pattern)
 RegisterTools(services);
@@ -122,26 +122,26 @@ RegisterTools(services);
 ### 1.3 Project Structure Addition
 
 ```
-src/Umbraco.Ai.Core/
+src/Umbraco.AI.Core/
 └── Tools/
-    ├── IAiTool.cs
-    ├── AiToolAttribute.cs
-    ├── AiToolBase.cs
-    ├── IAiToolRegistry.cs
-    └── AiToolRegistry.cs
+    ├── IAITool.cs
+    ├── AIToolAttribute.cs
+    ├── AIToolBase.cs
+    ├── IAIToolRegistry.cs
+    └── AIToolRegistry.cs
 ```
 
 ---
 
-## Part 2: Agents Layer (Umbraco.Ai.Agents)
+## Part 2: Agents Layer (Umbraco.AI.Agents)
 
 ### 2.1 New Project Structure
 
 ```
-src/Umbraco.Ai.Agents/
-├── Umbraco.Ai.Agents.csproj
+src/Umbraco.AI.Agents/
+├── Umbraco.AI.Agents.csproj
 ├── Models/
-│   ├── AiAgent.cs
+│   ├── AIAgent.cs
 │   ├── AgentSession.cs
 │   ├── AgentMessage.cs
 │   ├── AgentContext.cs
@@ -156,10 +156,10 @@ src/Umbraco.Ai.Agents/
 │           ├── ContentCreateTool.cs
 │           └── ContentUpdateTool.cs
 ├── Services/
-│   ├── IAiAgentService.cs
-│   ├── AiAgentService.cs
-│   ├── IAiAgentExecutor.cs
-│   ├── AiAgentExecutor.cs
+│   ├── IAIAgentService.cs
+│   ├── AIAgentService.cs
+│   ├── IAIAgentExecutor.cs
+│   ├── AIAgentExecutor.cs
 │   ├── IAgentSessionService.cs
 │   └── AgentSessionService.cs
 ├── Approval/
@@ -167,7 +167,7 @@ src/Umbraco.Ai.Agents/
 │   ├── ToolApprovalService.cs
 │   └── ApprovalInterceptingChatClient.cs
 ├── Repositories/
-│   ├── IAiAgentRepository.cs
+│   ├── IAIAgentRepository.cs
 │   ├── InMemoryAgentRepository.cs
 │   ├── IAgentSessionRepository.cs      # Interface for DB-ready swap
 │   └── InMemorySessionRepository.cs
@@ -185,9 +185,9 @@ src/Umbraco.Ai.Agents/
 
 ### 2.2 Core Models
 
-#### `AiAgent.cs`
+#### `AIAgent.cs`
 ```csharp
-public sealed class AiAgent
+public sealed class AIAgent
 {
     public required Guid Id { get; init; }
     public required string Alias { get; init; }
@@ -273,22 +273,22 @@ public enum ApprovalStatus
 
 ### 2.3 Key Services
 
-#### `IAiAgentService.cs`
+#### `IAIAgentService.cs`
 ```csharp
-public interface IAiAgentService
+public interface IAIAgentService
 {
-    Task<AiAgent?> GetAgentAsync(Guid id, CancellationToken ct = default);
-    Task<AiAgent?> GetAgentByAliasAsync(string alias, CancellationToken ct = default);
-    Task<IEnumerable<AiAgent>> GetAllAgentsAsync(CancellationToken ct = default);
-    Task<IEnumerable<AiAgent>> GetAgentsForUserAsync(ClaimsPrincipal user, CancellationToken ct = default);
-    Task<AiAgent> SaveAgentAsync(AiAgent agent, CancellationToken ct = default);
+    Task<AIAgent?> GetAgentAsync(Guid id, CancellationToken ct = default);
+    Task<AIAgent?> GetAgentByAliasAsync(string alias, CancellationToken ct = default);
+    Task<IEnumerable<AIAgent>> GetAllAgentsAsync(CancellationToken ct = default);
+    Task<IEnumerable<AIAgent>> GetAgentsForUserAsync(ClaimsPrincipal user, CancellationToken ct = default);
+    Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken ct = default);
     Task DeleteAgentAsync(Guid id, CancellationToken ct = default);
 }
 ```
 
-#### `IAiAgentExecutor.cs`
+#### `IAIAgentExecutor.cs`
 ```csharp
-public interface IAiAgentExecutor
+public interface IAIAgentExecutor
 {
     /// <summary>
     /// Sends a message to an agent and gets a response.
@@ -342,7 +342,7 @@ public sealed class AgentResponse
 The approval workflow intercepts destructive tool calls:
 
 1. Agent requests tool invocation via MEAI function calling
-2. `AiAgentExecutor` intercepts before execution
+2. `AIAgentExecutor` intercepts before execution
 3. If tool is destructive (`IsDestructive = true`):
    - Create `ToolApproval` record with `Pending` status
    - Return response with `PendingApprovals` list
@@ -382,11 +382,11 @@ internal class ApprovalInterceptingChatClient : DelegatingChatClient
 
 ### 2.5 Built-in Tools
 
-Tools follow the Core `IAiTool` pattern. Example:
+Tools follow the Core `IAITool` pattern. Example:
 
 ```csharp
-[AiTool("content.search", "Search Content", Category = "Content")]
-public class ContentSearchTool : AiToolBase
+[AITool("content.search", "Search Content", Category = "Content")]
+public class ContentSearchTool : AIToolBase
 {
     private readonly IContentService _contentService;
 
@@ -410,8 +410,8 @@ public class ContentSearchTool : AiToolBase
 ```
 
 ```csharp
-[AiTool("content.update", "Update Content", Category = "Content", IsDestructive = true)]
-public class ContentUpdateTool : AiToolBase
+[AITool("content.update", "Update Content", Category = "Content", IsDestructive = true)]
+public class ContentUpdateTool : AIToolBase
 {
     public override string Description =>
         "Updates properties on an existing content item. Requires approval.";
@@ -428,7 +428,7 @@ public class ContentUpdateTool : AiToolBase
 
 ---
 
-## Part 3: Web Layer (Umbraco.Ai.Agents.Web)
+## Part 3: Web Layer (Umbraco.AI.Agents.Web)
 
 ### 3.1 API Endpoints
 
@@ -498,22 +498,22 @@ public record ToolApprovalResponse(
 ## Part 5: Implementation Phases
 
 ### Phase 1: Core Tool Infrastructure
-1. Create `Tools/` folder in Umbraco.Ai.Core
-2. Implement `IAiTool`, `AiToolAttribute`, `AiToolBase`
-3. Implement `IAiToolRegistry`, `AiToolRegistry`
-4. Update `AiChatClientFactory` to add `UseFunctionInvocation()`
+1. Create `Tools/` folder in Umbraco.AI.Core
+2. Implement `IAITool`, `AIToolAttribute`, `AIToolBase`
+3. Implement `IAIToolRegistry`, `AIToolRegistry`
+4. Update `AIChatClientFactory` to add `UseFunctionInvocation()`
 5. Update DI registration
 6. Add unit tests
 
 ### Phase 2: Agents Foundation
-1. Create `Umbraco.Ai.Agents` project (combined services + API)
-2. Implement models: `AiAgent`, `AgentSession`, `ToolApproval`
-3. Implement `IAiAgentService`, `IAgentSessionService`
+1. Create `Umbraco.AI.Agents` project (combined services + API)
+2. Implement models: `AIAgent`, `AgentSession`, `ToolApproval`
+3. Implement `IAIAgentService`, `IAgentSessionService`
 4. Implement in-memory repositories with `IAgentSessionRepository` interface (DB-ready pattern)
 5. Add unit tests
 
 ### Phase 3: Agent Execution
-1. Implement `IAiAgentExecutor`
+1. Implement `IAIAgentExecutor`
 2. Implement approval workflow with `ApprovalInterceptingChatClient`
 3. Implement `IToolApprovalService`
 4. Integration tests
@@ -525,7 +525,7 @@ public record ToolApprovalResponse(
 4. Implement `ContentUpdateTool` (destructive) - update content properties
 5. Additional tools (media, navigation, search) deferred to later phases
 
-### Phase 5: Web API (in Umbraco.Ai.Agents project)
+### Phase 5: Web API (in Umbraco.AI.Agents project)
 1. Implement API controllers in the Agents project
 2. Add OpenAPI documentation
 3. Integration tests
@@ -541,16 +541,16 @@ public record ToolApprovalResponse(
 
 ## Critical Files to Modify
 
-### Umbraco.Ai.Core
-- `src/Umbraco.Ai.Core/Factories/AiChatClientFactory.cs` - Add `UseFunctionInvocation()`
-- `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs` - Register tool services
-- `src/Umbraco.Ai.Core/Services/AiChatService.cs` - No changes needed (tools flow via ChatOptions)
+### Umbraco.AI.Core
+- `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs` - Add `UseFunctionInvocation()`
+- `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Register tool services
+- `src/Umbraco.AI.Core/Services/AIChatService.cs` - No changes needed (tools flow via ChatOptions)
 
 ### Reference Files (Patterns to Follow)
-- `src/Umbraco.Ai.Core/Registry/AiRegistry.cs` - Pattern for tool registry
-- `src/Umbraco.Ai.Core/Providers/AiProviderBase.cs` - Pattern for tool base class
-- `src/Umbraco.Ai.Core/Middleware/IAiChatMiddleware.cs` - Pattern for middleware
-- `src/Umbraco.Ai.OpenAi/OpenAiProvider.cs` - Pattern for attribute-based discovery
+- `src/Umbraco.AI.Core/Registry/AIRegistry.cs` - Pattern for tool registry
+- `src/Umbraco.AI.Core/Providers/AIProviderBase.cs` - Pattern for tool base class
+- `src/Umbraco.AI.Core/Middleware/IAIChatMiddleware.cs` - Pattern for middleware
+- `src/Umbraco.AI.OpenAI/OpenAIProvider.cs` - Pattern for attribute-based discovery
 
 ---
 
@@ -559,7 +559,7 @@ public record ToolApprovalResponse(
 | Question | Decision |
 |----------|----------|
 | Session Storage | In-memory with repository pattern (DB-ready for later) |
-| Project Structure | Combined `Umbraco.Ai.Agents` project (services + API) |
+| Project Structure | Combined `Umbraco.AI.Agents` project (services + API) |
 | Initial Tools | Content only (search, get, create, update) |
 | Safety Mode | No enforcement in Core - governance is consumer responsibility |
 | Profile Tools | No profile-level tool config - tools via ChatOptions only |

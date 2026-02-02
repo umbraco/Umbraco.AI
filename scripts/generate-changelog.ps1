@@ -26,8 +26,8 @@ if ($List) {
 if (-not $Product) {
     Write-Error "Error: -Product is required"
     Write-Host "`nUsage:"
-    Write-Host "  .\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 17.1.0"
-    Write-Host "  .\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Unreleased"
+    Write-Host "  .\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 17.1.0"
+    Write-Host "  .\scripts\generate-changelog.ps1 -Product Umbraco.AI -Unreleased"
     Write-Host "  .\scripts\generate-changelog.ps1 -List  # List available products"
     Write-Host ""
     & node "$scriptDir/generate-changelog.js" --list
@@ -62,6 +62,6 @@ if (-not $env:CI) {
     Write-Host "  git add $Product/CHANGELOG.md"
 
     # Convert product name to lowercase for commit message scope
-    $scope = $Product.Replace('Umbraco.Ai.', '').Replace('Umbraco.Ai', 'core').ToLower()
+    $scope = $Product.Replace('Umbraco.AI.', '').Replace('Umbraco.AI', 'core').ToLower()
     Write-Host "  git commit -m 'docs($scope): update CHANGELOG for v$Version'"
 }

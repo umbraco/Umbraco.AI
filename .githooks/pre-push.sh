@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pre-push hook to validate branch naming conventions for Umbraco.Ai monorepo
+# Pre-push hook to validate branch naming conventions for Umbraco.AI monorepo
 # Valid patterns:
 #   - main
 #   - dev

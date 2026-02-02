@@ -1,18 +1,18 @@
-# Capabilities in Umbraco.Ai
+# Capabilities in Umbraco.AI
 
 ## What Are Capabilities?
 
-Capabilities are the different types of AI functionality that Umbraco.Ai provides. Think of them as categories of AI skills—just like a person might have skills in writing, analysis, or visual arts, AI providers have different capabilities they can offer.
+Capabilities are the different types of AI functionality that Umbraco.AI provides. Think of them as categories of AI skills—just like a person might have skills in writing, analysis, or visual arts, AI providers have different capabilities they can offer.
 
 Each capability represents a specific type of AI task. When you want to use AI in your Umbraco application, you choose the capability that matches what you're trying to accomplish.
 
-## How Capabilities Fit Into Umbraco.Ai
+## How Capabilities Fit Into Umbraco.AI
 
-Umbraco.Ai is built around a simple hierarchy:
+Umbraco.AI is built around a simple hierarchy:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   Umbraco.Ai                        │
+│                   Umbraco.AI                        │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │   Providers (OpenAI, Azure, etc.)                   │
@@ -30,9 +30,9 @@ Here's how these pieces work together:
 
 - **Providers** are the AI services you connect to—companies like OpenAI or Microsoft Azure that offer AI models
 - **Capabilities** are what those providers can do—the specific AI functions they support
-- **Your Application** uses capabilities through Umbraco.Ai, without needing to know the technical details of each provider
+- **Your Application** uses capabilities through Umbraco.AI, without needing to know the technical details of each provider
 
-Different providers may support different capabilities. For example, one provider might excel at text generation while another specializes in image analysis. Umbraco.Ai gives you a consistent way to use these capabilities regardless of which provider powers them.
+Different providers may support different capabilities. For example, one provider might excel at text generation while another specializes in image analysis. Umbraco.AI gives you a consistent way to use these capabilities regardless of which provider powers them.
 
 ## Current Capabilities
 
@@ -78,7 +78,7 @@ The Embedding capability converts text into numerical representations called vec
 
 ## Future Capabilities
 
-Umbraco.Ai is designed to grow as AI technology evolves. Here are the capabilities planned for future releases:
+Umbraco.AI is designed to grow as AI technology evolves. Here are the capabilities planned for future releases:
 
 ### Media
 
@@ -136,7 +136,7 @@ The capability-based approach offers several advantages:
 Switch between AI providers without rewriting your application. If you start with OpenAI but later want to use Azure, your code stays the same—only the configuration changes.
 
 **Future-Proof**
-As new AI capabilities emerge, they can be added to Umbraco.Ai without disrupting existing functionality. Your investment in learning and implementing capabilities today will continue to pay off.
+As new AI capabilities emerge, they can be added to Umbraco.AI without disrupting existing functionality. Your investment in learning and implementing capabilities today will continue to pay off.
 
 **Clarity**
 Each capability has a clear purpose. You don't need to understand the entire AI landscape—just pick the capability that matches your need and use it.
@@ -146,7 +146,7 @@ Use only what you need. If you only need chat functionality, you're not burdened
 
 ## Capabilities and Profiles
 
-Capabilities work hand-in-hand with Umbraco.Ai's profile system. A profile is a pre-configured setup for using a specific capability.
+Capabilities work hand-in-hand with Umbraco.AI's profile system. A profile is a pre-configured setup for using a specific capability.
 
 Each profile targets exactly one capability. You might have:
 - A "content-writer" profile using the Chat capability with creative settings
@@ -168,4 +168,4 @@ This separation means you can have multiple profiles for the same capability, ea
 | OpenAI   | ✓    | ✓         | Planned | Planned |
 | Azure    | Planned | Planned | Planned | Planned |
 
-As Umbraco.Ai evolves, more providers and capabilities will be added. The capability-based architecture ensures these additions integrate smoothly without disrupting existing functionality.
+As Umbraco.AI evolves, more providers and capabilities will be added. The capability-based architecture ensures these additions integrate smoothly without disrupting existing functionality.

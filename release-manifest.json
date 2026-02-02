@@ -1,0 +1,11 @@
+[
+  "Umbraco.AI",
+  "Umbraco.AI.OpenAI",
+  "Umbraco.AI.Anthropic",
+  "Umbraco.AI.Amazon",
+  "Umbraco.AI.Google",
+  "Umbraco.AI.MicrosoftFoundry",
+  "Umbraco.AI.Prompt",
+  "Umbraco.AI.Agent",
+  "Umbraco.AI.Agent.Copilot"
+]

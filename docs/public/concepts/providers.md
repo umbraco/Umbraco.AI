@@ -1,19 +1,19 @@
 ---
 description: >-
-  Providers are installable plugins that connect Umbraco.Ai to AI services.
+  Providers are installable plugins that connect Umbraco.AI to AI services.
 ---
 
 # Providers
 
-A provider is a NuGet package that enables Umbraco.Ai to communicate with a specific AI service. Providers handle the details of API authentication, request formatting, and response parsing.
+A provider is a NuGet package that enables Umbraco.AI to communicate with a specific AI service. Providers handle the details of API authentication, request formatting, and response parsing.
 
 ## How Providers Work
 
-Providers are discovered automatically when you install their NuGet package. They register themselves using the `[AiProvider]` attribute and implement the `IAiProvider` interface.
+Providers are discovered automatically when you install their NuGet package. They register themselves using the `[AIProvider]` attribute and implement the `IAIProvider` interface.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                 Umbraco.Ai                                      │
+│                                 Umbraco.AI                                      │
 │    ┌─────────────────────────────────────────────────────────────────────────┐  │
 │    │                          Provider Registry                              │  │
 │    │  ┌──────────┐ ┌───────────┐ ┌──────────┐ ┌─────────┐ ┌───────────────┐  │  │
@@ -28,11 +28,11 @@ Providers are discovered automatically when you install their NuGet package. The
 
 | Provider | Package | Capabilities |
 |----------|---------|--------------|
-| OpenAI | `Umbraco.Ai.OpenAi` | Chat, Embedding |
-| Anthropic | `Umbraco.Ai.Anthropic` | Chat |
-| Google Gemini | `Umbraco.Ai.Google` | Chat |
-| Amazon Bedrock | `Umbraco.Ai.Amazon` | Chat, Embedding |
-| Microsoft AI Foundry | `Umbraco.Ai.MicrosoftFoundry` | Chat, Embedding |
+| OpenAI | `Umbraco.AI.OpenAI` | Chat, Embedding |
+| Anthropic | `Umbraco.AI.Anthropic` | Chat |
+| Google Gemini | `Umbraco.AI.Google` | Chat |
+| Amazon Bedrock | `Umbraco.AI.Amazon` | Chat, Embedding |
+| Microsoft AI Foundry | `Umbraco.AI.MicrosoftFoundry` | Chat, Embedding |
 
 {% hint style="info" %}
 For detailed configuration instructions for each provider, see the [Providers](../providers/README.md) section. You can also create custom providers.
@@ -40,18 +40,18 @@ For detailed configuration instructions for each provider, see the [Providers](.
 
 ## Provider Discovery
 
-Providers are discovered at application startup through assembly scanning. Any class with the `[AiProvider]` attribute that implements `IAiProvider` is automatically registered.
+Providers are discovered at application startup through assembly scanning. Any class with the `[AIProvider]` attribute that implements `IAIProvider` is automatically registered.
 
-{% code title="OpenAiProvider.cs" %}
+{% code title="OpenAIProvider.cs" %}
 ```csharp
-[AiProvider("openai", "OpenAI")]
-public class OpenAiProvider : AiProviderBase<OpenAiProviderSettings>
+[AIProvider("openai", "OpenAI")]
+public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
 {
-    public OpenAiProvider(IAiProviderInfrastructure infrastructure)
+    public OpenAIProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
-        WithCapability<OpenAiChatCapability>();
-        WithCapability<OpenAiEmbeddingCapability>();
+        WithCapability<OpenAIChatCapability>();
+        WithCapability<OpenAIEmbeddingCapability>();
     }
 }
 ```
@@ -67,16 +67,16 @@ Each provider defines its own settings class. Common settings include:
 | Endpoint | API URL (for custom endpoints) |
 | Organization | Organization identifier (if applicable) |
 
-Settings are defined using the `[AiSetting]` attribute:
+Settings are defined using the `[AISetting]` attribute:
 
-{% code title="OpenAiProviderSettings.cs" %}
+{% code title="OpenAIProviderSettings.cs" %}
 ```csharp
-public class OpenAiProviderSettings
+public class OpenAIProviderSettings
 {
-    [AiSetting(Label = "API Key", Description = "Your OpenAI API key")]
+    [AISetting(Label = "API Key", Description = "Your OpenAI API key")]
     public required string ApiKey { get; set; }
 
-    [AiSetting(Label = "Organization", Description = "Optional organization ID")]
+    [AISetting(Label = "Organization", Description = "Optional organization ID")]
     public string? Organization { get; set; }
 }
 ```
@@ -103,9 +103,9 @@ If you need to access provider information:
 ```csharp
 public class ProviderInfo
 {
-    private readonly IAiRegistry _registry;
+    private readonly IAIRegistry _registry;
 
-    public ProviderInfo(IAiRegistry registry)
+    public ProviderInfo(IAIRegistry registry)
     {
         _registry = registry;
     }

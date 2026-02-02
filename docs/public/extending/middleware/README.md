@@ -23,8 +23,8 @@ Each middleware receives a client and returns a wrapped client with additional b
 
 | Type | Interface | Wraps |
 |------|-----------|-------|
-| Chat | `IAiChatMiddleware` | `IChatClient` |
-| Embedding | `IAiEmbeddingMiddleware` | `IEmbeddingGenerator<string, Embedding<float>>` |
+| Chat | `IAIChatMiddleware` | `IChatClient` |
+| Embedding | `IAIEmbeddingMiddleware` | `IEmbeddingGenerator<string, Embedding<float>>` |
 
 ## Quick Example
 
@@ -32,9 +32,9 @@ Each middleware receives a client and returns a wrapped client with additional b
 ```csharp
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 
-public class LoggingChatMiddleware : IAiChatMiddleware
+public class LoggingChatMiddleware : IAIChatMiddleware
 {
     private readonly ILoggerFactory _loggerFactory;
 
@@ -55,14 +55,14 @@ public class LoggingChatMiddleware : IAiChatMiddleware
 
 {% code title="MyComposer.cs" %}
 ```csharp
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
 
 public class MyComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Append<LoggingChatMiddleware>();
     }
 }
@@ -76,7 +76,7 @@ public class MyComposer : IComposer
 Middleware executes in the order it's registered. The first middleware wraps the original client, the second wraps that result, and so on.
 
 ```csharp
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<TracingMiddleware>()     // Runs first (outermost)
     .Append<CachingMiddleware>()     // Runs second
     .Append<LoggingMiddleware>();    // Runs third (innermost)
@@ -87,7 +87,7 @@ builder.AiChatMiddleware()
 Middleware classes support constructor injection:
 
 ```csharp
-public class MyMiddleware : IAiChatMiddleware
+public class MyMiddleware : IAIChatMiddleware
 {
     private readonly ILogger<MyMiddleware> _logger;
     private readonly IMyService _myService;

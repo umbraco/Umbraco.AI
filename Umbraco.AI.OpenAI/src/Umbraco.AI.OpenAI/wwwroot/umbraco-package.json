@@ -1,0 +1,17 @@
+{
+    "name": "Umbraco AI OpenAI Provider",
+    "$schema": "../umbraco-package-schema.json",
+    "extensions": [
+        {
+            "type": "localization",
+            "alias": "Uai.OpenAI.Localization.En",
+            "weight": -100,
+            "name": "English",
+            "meta": {
+                "culture": "en"
+            },
+            "js": "/App_Plugins/UmbracoAIOpenAI/lang/en.js"
+        }
+    ],
+    "version": ""
+}

@@ -45,7 +45,7 @@ This means:
 
 Umbraco.AI's services provide convenient access through profiles and managed configuration. But when you need the raw `IChatClient` or `IEmbeddingGenerator`, you can get it:
 
-The high-level `IAiChatService` handles profile resolution and configuration for you. For advanced scenarios, you can request the underlying M.E.AI client and work with it directly.
+The high-level `IAIChatService` handles profile resolution and configuration for you. For advanced scenarios, you can request the underlying M.E.AI client and work with it directly.
 
 ### Transparent Middleware
 
@@ -110,7 +110,7 @@ M.E.AI is part of Microsoft's long-term .NET AI strategy. Improvements to the co
 
 ## When to Use What
 
-**Use Umbraco.AI services** for most development. The `IAiChatService` and related services handle profile resolution, connection management, and middleware automatically. This is the recommended path for Umbraco projects.
+**Use Umbraco.AI services** for most development. The `IAIChatService` and related services handle profile resolution, connection management, and middleware automatically. This is the recommended path for Umbraco projects.
 
 **Use M.E.AI directly** when you need capabilities not yet exposed through Umbraco.AI, when building provider packages, or when working in contexts outside Umbraco. You can always get the underlying `IChatClient` when needed.
 

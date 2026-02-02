@@ -3,30 +3,30 @@ description: >-
   Service for managing entity version history.
 ---
 
-# IAiEntityVersionService
+# IAIEntityVersionService
 
 Service for accessing version history, comparing versions, and creating snapshots of AI entities.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Versioning;
 ```
 
 ## Interface
 
-{% code title="IAiEntityVersionService" %}
+{% code title="IAIEntityVersionService" %}
 ```csharp
-public interface IAiEntityVersionService
+public interface IAIEntityVersionService
 {
-    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetVersionHistoryAsync(
+    Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
         int skip = 0,
         int take = 20,
         CancellationToken cancellationToken = default);
 
-    Task<AiEntityVersion?> GetVersionAsync(
+    Task<AIEntityVersion?> GetVersionAsync(
         Guid entityId,
         string entityType,
         int version,
@@ -36,21 +36,21 @@ public interface IAiEntityVersionService
         Guid entityId,
         int version,
         CancellationToken cancellationToken = default)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
     Task SaveVersionAsync<TEntity>(
         TEntity entity,
         Guid? userId = null,
         string? changeDescription = null,
         CancellationToken cancellationToken = default)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
     Task DeleteVersionsAsync(
         Guid entityId,
         string entityType,
         CancellationToken cancellationToken = default);
 
-    Task<AiVersionComparison?> CompareVersionsAsync(
+    Task<AIVersionComparison?> CompareVersionsAsync(
         Guid entityId,
         string entityType,
         int fromVersion,
@@ -58,12 +58,12 @@ public interface IAiEntityVersionService
         CancellationToken cancellationToken = default);
 
     string CreateSnapshot<TEntity>(TEntity entity)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
     TEntity? RestoreFromSnapshot<TEntity>(string snapshot)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
-    Task<AiVersionCleanupResult> CleanupVersionsAsync(
+    Task<AIVersionCleanupResult> CleanupVersionsAsync(
         CancellationToken cancellationToken = default);
 }
 ```
@@ -127,7 +127,7 @@ Gets the entity state at a specific version.
 
 {% code title="Example" %}
 ```csharp
-var previousProfile = await _versionService.GetVersionSnapshotAsync<AiProfile>(
+var previousProfile = await _versionService.GetVersionSnapshotAsync<AIProfile>(
     profileId,
     version: 3);
 
@@ -204,7 +204,7 @@ Creates and restores JSON snapshots of entities.
 var snapshot = _versionService.CreateSnapshot(profile);
 
 // Later, restore from snapshot
-var restored = _versionService.RestoreFromSnapshot<AiProfile>(snapshot);
+var restored = _versionService.RestoreFromSnapshot<AIProfile>(snapshot);
 ```
 {% endcode %}
 
@@ -225,13 +225,13 @@ Console.WriteLine($"Cleaned up {result.DeletedCount} old versions");
 
 | Type String | Entity Class |
 |-------------|--------------|
-| `"connection"` | `AiConnection` |
-| `"profile"` | `AiProfile` |
-| `"context"` | `AiContext` |
-| `"prompt"` | `AiPrompt` (requires Umbraco.Ai.Prompt) |
-| `"agent"` | `AiAgent` (requires Umbraco.Ai.Agent) |
+| `"connection"` | `AIConnection` |
+| `"profile"` | `AIProfile` |
+| `"context"` | `AIContext` |
+| `"prompt"` | `AIPrompt` (requires Umbraco.AI.Prompt) |
+| `"agent"` | `AIAgent` (requires Umbraco.AI.Agent) |
 
 ## Related
 
-* [AiEntityVersion](../models/ai-entity-version.md) - The version model
+* [AIEntityVersion](../models/ai-entity-version.md) - The version model
 * [Version History Concept](../../concepts/versioning.md) - Versioning concepts

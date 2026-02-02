@@ -5,15 +5,15 @@ description: >-
 
 # Provider Settings
 
-Provider settings define the configuration properties needed to connect to an AI service. Use the `[AiSetting]` attribute to control how settings appear in the backoffice UI.
+Provider settings define the configuration properties needed to connect to an AI service. Use the `[AISetting]` attribute to control how settings appear in the backoffice UI.
 
-## AiSettingAttribute
+## AISettingAttribute
 
-The `[AiSetting]` attribute decorates setting properties with UI metadata:
+The `[AISetting]` attribute decorates setting properties with UI metadata:
 
-{% code title="AiSettingAttribute Properties" %}
+{% code title="AISettingAttribute Properties" %}
 ```csharp
-[AiSetting(
+[AISetting(
     Label = "Display Label",           // Shown in the UI
     Description = "Help text",         // Description below the field
     EditorUiAlias = "Umb.PropertyEditorUi.TextBox",  // Umbraco editor
@@ -50,39 +50,39 @@ If `EditorUiAlias` is not specified, the editor is inferred from the property ty
 {% code title="MyProviderSettings.cs" %}
 ```csharp
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.AI.Core.Settings;
 
 public class MyProviderSettings
 {
-    [AiSetting(
+    [AISetting(
         Label = "API Key",
         Description = "Your API key. Supports config references like $MyProvider:ApiKey",
         SortOrder = 1)]
     [Required]
     public required string ApiKey { get; set; }
 
-    [AiSetting(
+    [AISetting(
         Label = "Base URL",
         Description = "Override the default API endpoint",
         DefaultValue = "https://api.myprovider.com",
         SortOrder = 2)]
     public string? BaseUrl { get; set; }
 
-    [AiSetting(
+    [AISetting(
         Label = "Max Retries",
         Description = "Number of retry attempts for failed requests",
         DefaultValue = 3,
         SortOrder = 3)]
     public int MaxRetries { get; set; } = 3;
 
-    [AiSetting(
+    [AISetting(
         Label = "Enable Logging",
         Description = "Log all requests and responses",
         DefaultValue = false,
         SortOrder = 4)]
     public bool EnableLogging { get; set; }
 
-    [AiSetting(
+    [AISetting(
         Label = "Timeout (seconds)",
         Description = "Request timeout in seconds",
         DefaultValue = 30.0,
@@ -94,25 +94,25 @@ public class MyProviderSettings
 
 ## Validation Attributes
 
-Use standard .NET validation attributes alongside `[AiSetting]`:
+Use standard .NET validation attributes alongside `[AISetting]`:
 
 {% code title="Validation Example" %}
 ```csharp
 public class ValidatedSettings
 {
-    [AiSetting(Label = "API Key")]
+    [AISetting(Label = "API Key")]
     [Required(ErrorMessage = "API Key is required")]
     public required string ApiKey { get; set; }
 
-    [AiSetting(Label = "Max Tokens")]
+    [AISetting(Label = "Max Tokens")]
     [Range(1, 100000, ErrorMessage = "Max tokens must be between 1 and 100000")]
     public int? MaxTokens { get; set; }
 
-    [AiSetting(Label = "Email")]
+    [AISetting(Label = "Email")]
     [EmailAddress(ErrorMessage = "Invalid email address")]
     public string? NotificationEmail { get; set; }
 
-    [AiSetting(Label = "Endpoint URL")]
+    [AISetting(Label = "Endpoint URL")]
     [Url(ErrorMessage = "Must be a valid URL")]
     public string? CustomEndpoint { get; set; }
 }
@@ -148,13 +148,13 @@ For API keys and secrets, don't use a special editor - use a regular text field.
 
 {% code title="Sensitive Settings" %}
 ```csharp
-[AiSetting(
+[AISetting(
     Label = "API Key",
     Description = "Your secret API key")]
 [Required]
 public required string ApiKey { get; set; }
 
-[AiSetting(
+[AISetting(
     Label = "Secret Token",
     Description = "Authentication token")]
 public string? SecretToken { get; set; }
@@ -168,13 +168,13 @@ Use Umbraco property editor UI aliases for specialized input:
 {% code title="Custom Editors" %}
 ```csharp
 // Textarea for longer text
-[AiSetting(
+[AISetting(
     Label = "System Prompt",
     EditorUiAlias = "Umb.PropertyEditorUi.TextArea")]
 public string? SystemPrompt { get; set; }
 
 // Integer with spinner
-[AiSetting(
+[AISetting(
     Label = "Max Tokens",
     EditorUiAlias = "Umb.PropertyEditorUi.Integer")]
 public int? MaxTokens { get; set; }
@@ -187,9 +187,9 @@ Settings are passed to capability methods after being resolved:
 
 {% code title="Using Settings" %}
 ```csharp
-public class MyChatCapability : AiChatCapabilityBase<MyProviderSettings>
+public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
 {
-    public MyChatCapability(IAiProvider provider) : base(provider) { }
+    public MyChatCapability(IAIProvider provider) : base(provider) { }
 
     protected override IChatClient CreateClient(MyProviderSettings settings, string? modelId)
     {

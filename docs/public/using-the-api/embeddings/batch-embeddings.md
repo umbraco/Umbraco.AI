@@ -12,13 +12,13 @@ When embedding multiple texts, use batch operations for better performance. A si
 {% code title="BatchEmbedding.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Embeddings;
+using Umbraco.AI.Core.Embeddings;
 
 public class BatchEmbeddingExample
 {
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIEmbeddingService _embeddingService;
 
-    public BatchEmbeddingExample(IAiEmbeddingService embeddingService)
+    public BatchEmbeddingExample(IAIEmbeddingService embeddingService)
     {
         _embeddingService = embeddingService;
     }
@@ -74,11 +74,11 @@ Index multiple content items efficiently:
 ```csharp
 public class BatchContentIndexer
 {
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIEmbeddingService _embeddingService;
     private readonly IVectorStore _vectorStore;
 
     public BatchContentIndexer(
-        IAiEmbeddingService embeddingService,
+        IAIEmbeddingService embeddingService,
         IVectorStore vectorStore)
     {
         _embeddingService = embeddingService;
@@ -123,10 +123,10 @@ Most providers have limits on batch size. Process large sets in chunks:
 ```csharp
 public class ChunkedEmbeddingService
 {
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIEmbeddingService _embeddingService;
     private const int BatchSize = 100;
 
-    public ChunkedEmbeddingService(IAiEmbeddingService embeddingService)
+    public ChunkedEmbeddingService(IAIEmbeddingService embeddingService)
     {
         _embeddingService = embeddingService;
     }

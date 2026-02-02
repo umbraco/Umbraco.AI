@@ -3,23 +3,23 @@ description: >-
   Reference to a specific AI model.
 ---
 
-# AiModelRef
+# AIModelRef
 
 A lightweight struct that references a specific AI model from a provider.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 ```
 
 ## Definition
 
-{% code title="AiModelRef" %}
+{% code title="AIModelRef" %}
 ```csharp
-public readonly struct AiModelRef
+public readonly struct AIModelRef
 {
-    public AiModelRef(string providerId, string modelId);
+    public AIModelRef(string providerId, string modelId);
 
     public string ProviderId { get; }
     public string ModelId { get; }
@@ -39,7 +39,7 @@ public readonly struct AiModelRef
 ## Constructor
 
 ```csharp
-public AiModelRef(string providerId, string modelId)
+public AIModelRef(string providerId, string modelId)
 ```
 
 | Parameter | Type | Description |
@@ -56,13 +56,13 @@ public AiModelRef(string providerId, string modelId)
 {% code title="Example" %}
 ```csharp
 // OpenAI GPT-4o
-var gpt4o = new AiModelRef("openai", "gpt-4o");
+var gpt4o = new AIModelRef("openai", "gpt-4o");
 
 // OpenAI GPT-4o mini
-var gpt4oMini = new AiModelRef("openai", "gpt-4o-mini");
+var gpt4oMini = new AIModelRef("openai", "gpt-4o-mini");
 
 // OpenAI embedding model
-var embedding = new AiModelRef("openai", "text-embedding-3-small");
+var embedding = new AIModelRef("openai", "text-embedding-3-small");
 ```
 {% endcode %}
 
@@ -70,12 +70,12 @@ var embedding = new AiModelRef("openai", "text-embedding-3-small");
 
 {% code title="Example" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "my-assistant",
     Name = "My Assistant",
-    Capability = AiCapability.Chat,
-    Model = new AiModelRef("openai", "gpt-4o"),
+    Capability = AICapability.Chat,
+    Model = new AIModelRef("openai", "gpt-4o"),
     ConnectionId = connectionId
 };
 ```
@@ -85,7 +85,7 @@ var profile = new AiProfile
 
 {% code title="Example" %}
 ```csharp
-var model = new AiModelRef("openai", "gpt-4o");
+var model = new AIModelRef("openai", "gpt-4o");
 Console.WriteLine(model.ToString()); // Output: "openai/gpt-4o"
 Console.WriteLine($"Using model: {model}"); // Output: "Using model: openai/gpt-4o"
 ```
@@ -112,6 +112,6 @@ Console.WriteLine($"Using model: {model}"); // Output: "Using model: openai/gpt-
 
 ## Notes
 
-- `AiModelRef` is a `readonly struct` for performance
+- `AIModelRef` is a `readonly struct` for performance
 - Both properties are required and validated in the constructor
 - The `ToString()` method provides a canonical string format

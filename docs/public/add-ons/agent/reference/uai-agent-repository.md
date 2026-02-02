@@ -27,7 +27,7 @@ The repository is included in the `@umbraco-ai/agent` package:
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Agent
+Install-Package Umbraco.AI.Agent
 ```
 {% endcode %}
 
@@ -35,7 +35,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Agent
+dotnet add package Umbraco.AI.Agent
 ```
 {% endcode %}
 

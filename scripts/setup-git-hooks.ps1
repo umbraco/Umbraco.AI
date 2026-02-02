@@ -1,9 +1,9 @@
-# Setup script to configure git hooks for Umbraco.Ai monorepo
+# Setup script to configure git hooks for Umbraco.AI monorepo
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "Umbraco.Ai Git Hooks Setup" -ForegroundColor Cyan
+Write-Host "Umbraco.AI Git Hooks Setup" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 

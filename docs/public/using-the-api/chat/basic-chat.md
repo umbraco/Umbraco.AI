@@ -12,13 +12,13 @@ Send messages and receive a complete response from AI models. This is suitable f
 {% code title="SimpleChat.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 
 public class ChatController : UmbracoApiController
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public ChatController(IAiChatService chatService)
+    public ChatController(IAIChatService chatService)
     {
         _chatService = chatService;
     }
@@ -104,10 +104,10 @@ Include previous messages to maintain context:
 ```csharp
 public class ConversationService
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
     private readonly List<ChatMessage> _history = new();
 
-    public ConversationService(IAiChatService chatService)
+    public ConversationService(IAIChatService chatService)
     {
         _chatService = chatService;
         _history.Add(new ChatMessage(ChatRole.System,
@@ -157,12 +157,12 @@ public async Task<string> GetResponse(Guid profileId, string question)
 ```csharp
 public class ProfiledChatService
 {
-    private readonly IAiChatService _chatService;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIChatService _chatService;
+    private readonly IAIProfileService _profileService;
 
     public ProfiledChatService(
-        IAiChatService chatService,
-        IAiProfileService profileService)
+        IAIChatService chatService,
+        IAIProfileService profileService)
     {
         _chatService = chatService;
         _profileService = profileService;

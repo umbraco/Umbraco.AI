@@ -28,9 +28,9 @@ Response ← [Middleware 1] ← [Middleware 2] ← [Middleware 3] ← Provider
 
 Wraps `IChatClient` instances:
 
-{% code title="IAiChatMiddleware.cs" %}
+{% code title="IAIChatMiddleware.cs" %}
 ```csharp
-public interface IAiChatMiddleware
+public interface IAIChatMiddleware
 {
     IChatClient Apply(IChatClient client);
 }
@@ -41,9 +41,9 @@ public interface IAiChatMiddleware
 
 Wraps `IEmbeddingGenerator<string, Embedding<float>>` instances:
 
-{% code title="IAiEmbeddingMiddleware.cs" %}
+{% code title="IAIEmbeddingMiddleware.cs" %}
 ```csharp
-public interface IAiEmbeddingMiddleware
+public interface IAIEmbeddingMiddleware
 {
     IEmbeddingGenerator<string, Embedding<float>> Apply(
         IEmbeddingGenerator<string, Embedding<float>> generator);
@@ -55,7 +55,7 @@ public interface IAiEmbeddingMiddleware
 
 {% code title="LoggingChatMiddleware.cs" %}
 ```csharp
-public class LoggingChatMiddleware : IAiChatMiddleware
+public class LoggingChatMiddleware : IAIChatMiddleware
 {
     private readonly ILogger<LoggingChatMiddleware> _logger;
 
@@ -102,13 +102,13 @@ public class LoggingChatClient : DelegatingChatClient
 
 Register middleware in a Composer using the collection builder:
 
-{% code title="AiComposer.cs" %}
+{% code title="AIComposer.cs" %}
 ```csharp
-public class AiComposer : IComposer
+public class AIComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Append<LoggingChatMiddleware>();
     }
 }
@@ -121,7 +121,7 @@ Middleware executes in the order it's registered. Use collection builder methods
 
 {% code title="Example.cs" %}
 ```csharp
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<LoggingMiddleware>()           // Added first
     .Append<CachingMiddleware>()           // Added second
     .InsertBefore<LoggingMiddleware, TracingMiddleware>()  // Before logging
@@ -191,7 +191,7 @@ Microsoft.Extensions.AI provides middleware you can use:
 
 {% code title="Example.cs" %}
 ```csharp
-public class OpenTelemetryMiddleware : IAiChatMiddleware
+public class OpenTelemetryMiddleware : IAIChatMiddleware
 {
     public IChatClient Apply(IChatClient client)
     {

@@ -110,7 +110,7 @@ Provider (which AI service)
 
 **Step by step:**
 
-1. **Install a Provider** - Add the NuGet package for your chosen AI service (e.g., `Umbraco.Ai.OpenAi`)
+1. **Install a Provider** - Add the NuGet package for your chosen AI service (e.g., `Umbraco.AI.OpenAI`)
 
 2. **Create a Connection** - In the backoffice, create a connection to that provider with your API credentials
 
@@ -139,9 +139,9 @@ Instead of manually configuring AI clients, API keys, and settings, developers i
 ```csharp
 public class MyContentService
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public MyContentService(IAiChatService chatService)
+    public MyContentService(IAIChatService chatService)
     {
         _chatService = chatService;
     }

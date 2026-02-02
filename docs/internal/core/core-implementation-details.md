@@ -1,6 +1,6 @@
-# Umbraco.Ai Core Implementation Details
+# Umbraco.AI Core Implementation Details
 
-This document provides comprehensive technical documentation of the Umbraco.Ai architecture and implementation. It serves both internal developers working on Umbraco.Ai itself and integration developers building AI features in Umbraco sites.
+This document provides comprehensive technical documentation of the Umbraco.AI architecture and implementation. It serves both internal developers working on Umbraco.AI itself and integration developers building AI features in Umbraco sites.
 
 ---
 
@@ -28,11 +28,11 @@ This document provides comprehensive technical documentation of the Umbraco.Ai a
 
 ### Purpose
 
-Umbraco.Ai is an AI integration layer for Umbraco CMS that provides a unified, provider-agnostic interface for AI capabilities. It enables developers to integrate AI features (chat completions, embeddings, and more) into their Umbraco sites without being locked into a specific AI provider.
+Umbraco.AI is an AI integration layer for Umbraco CMS that provides a unified, provider-agnostic interface for AI capabilities. It enables developers to integrate AI features (chat completions, embeddings, and more) into their Umbraco sites without being locked into a specific AI provider.
 
 ### Design Philosophy
 
-Umbraco.Ai follows a **thin wrapper** philosophy over Microsoft.Extensions.AI (MEAI). Rather than replacing or abstracting away MEAI, it adds Umbraco-specific features while exposing the underlying MEAI types directly:
+Umbraco.AI follows a **thin wrapper** philosophy over Microsoft.Extensions.AI (MEAI). Rather than replacing or abstracting away MEAI, it adds Umbraco-specific features while exposing the underlying MEAI types directly:
 
 - **Provider-agnostic**: Support multiple AI providers (OpenAI, Azure, Anthropic, etc.) through a unified interface
 - **Capability-based**: Providers expose discrete capabilities (Chat, Embedding, Media, Moderation)
@@ -43,31 +43,31 @@ Umbraco.Ai follows a **thin wrapper** philosophy over Microsoft.Extensions.AI (M
 ### Solution Structure
 
 ```
-Umbraco.Ai/
+Umbraco.AI/
 ├── src/
-│   ├── Umbraco.Ai.Core/           # Core abstractions and services
-│   ├── Umbraco.Ai.OpenAi/         # OpenAI provider implementation
-│   ├── Umbraco.Ai.Web/            # Management API layer
-│   ├── Umbraco.Ai.Startup/        # Composition and DI setup
-│   ├── Umbraco.Ai/                # Meta-package for distribution
-│   └── Umbraco.Ai.Web.StaticAssets/  # Backoffice UI components
+│   ├── Umbraco.AI.Core/           # Core abstractions and services
+│   ├── Umbraco.AI.OpenAI/         # OpenAI provider implementation
+│   ├── Umbraco.AI.Web/            # Management API layer
+│   ├── Umbraco.AI.Startup/        # Composition and DI setup
+│   ├── Umbraco.AI/                # Meta-package for distribution
+│   └── Umbraco.AI.Web.StaticAssets/  # Backoffice UI components
 ├── demo/
-│   └── Umbraco.Ai.DemoSite/       # Demo Umbraco site
+│   └── Umbraco.AI.DemoSite/       # Demo Umbraco site
 └── docs/                          # Documentation
 ```
 
 ### Project Dependencies
 
 ```
-Umbraco.Ai (meta-package)
-    └── Umbraco.Ai.Startup
-            ├── Umbraco.Ai.Core
+Umbraco.AI (meta-package)
+    └── Umbraco.AI.Startup
+            ├── Umbraco.AI.Core
             │       └── Microsoft.Extensions.AI
-            └── Umbraco.Ai.Web
+            └── Umbraco.AI.Web
                     └── Umbraco.Cms.Api.Management
 
-Umbraco.Ai.OpenAi
-    ├── Umbraco.Ai.Core
+Umbraco.AI.OpenAI
+    ├── Umbraco.AI.Core
     └── Microsoft.Extensions.AI.OpenAI
 ```
 
@@ -75,33 +75,33 @@ Umbraco.Ai.OpenAi
 
 ## 2. Project Organization
 
-### Umbraco.Ai.Core
+### Umbraco.AI.Core
 
 The core library containing all abstractions, services, and models:
 
 | Namespace | Purpose |
 |-----------|---------|
-| `Umbraco.Ai.Core.Providers` | Provider and capability interfaces/base classes |
-| `Umbraco.Ai.Core.Services` | High-level services (IAiChatService) |
-| `Umbraco.Ai.Core.Factories` | Client and generator factories |
-| `Umbraco.Ai.Core.Models` | Data models (AiConnection, AiProfile, etc.) |
-| `Umbraco.Ai.Core.Connections` | Connection management |
-| `Umbraco.Ai.Core.Profiles` | Profile management |
-| `Umbraco.Ai.Core.Middleware` | Middleware pipeline system |
-| `Umbraco.Ai.Core.Registry` | Provider registry |
-| `Umbraco.Ai.Core.Settings` | Settings resolution and validation |
-| `Umbraco.Ai.Extensions` | DI registration extensions |
+| `Umbraco.AI.Core.Providers` | Provider and capability interfaces/base classes |
+| `Umbraco.AI.Core.Services` | High-level services (IAIChatService) |
+| `Umbraco.AI.Core.Factories` | Client and generator factories |
+| `Umbraco.AI.Core.Models` | Data models (AIConnection, AIProfile, etc.) |
+| `Umbraco.AI.Core.Connections` | Connection management |
+| `Umbraco.AI.Core.Profiles` | Profile management |
+| `Umbraco.AI.Core.Middleware` | Middleware pipeline system |
+| `Umbraco.AI.Core.Registry` | Provider registry |
+| `Umbraco.AI.Core.Settings` | Settings resolution and validation |
+| `Umbraco.AI.Extensions` | DI registration extensions |
 
-### Umbraco.Ai.OpenAi
+### Umbraco.AI.OpenAI
 
 Reference implementation of an AI provider for OpenAI:
 
-- `OpenAiProvider` - Provider class with `[AiProvider]` attribute
-- `OpenAiProviderSettings` - Typed settings with `[AiField]` attributes
-- `OpenAiChatCapability` - Chat completion capability
-- `OpenAiEmbeddingCapability` - Text embedding capability
+- `OpenAIProvider` - Provider class with `[AIProvider]` attribute
+- `OpenAIProviderSettings` - Typed settings with `[AIField]` attributes
+- `OpenAIChatCapability` - Chat completion capability
+- `OpenAIEmbeddingCapability` - Text embedding capability
 
-### Umbraco.Ai.Web
+### Umbraco.AI.Web
 
 Management API layer for backoffice integration:
 
@@ -109,23 +109,23 @@ Management API layer for backoffice integration:
 - Swagger/OpenAPI configuration
 - Backoffice security integration
 
-### Umbraco.Ai.Startup
+### Umbraco.AI.Startup
 
 Umbraco integration via Composer pattern:
 
-- `UmbracoAiComposer` - Implements `IComposer` for auto-discovery
+- `UmbracoAIComposer` - Implements `IComposer` for auto-discovery
 - `UmbracoBuilderExtensions` - Extension methods for `IUmbracoBuilder`
 
-### Umbraco.Ai
+### Umbraco.AI
 
 Meta-package that bundles all components for NuGet distribution.
 
-### Umbraco.Ai.Web.StaticAssets
+### Umbraco.AI.Web.StaticAssets
 
 Frontend assets for backoffice UI:
 
 - TypeScript/JavaScript components in `Client/`
-- Compiled assets served from `App_Plugins/UmbracoAi`
+- Compiled assets served from `App_Plugins/UmbracoAI`
 
 ---
 
@@ -133,7 +133,7 @@ Frontend assets for backoffice UI:
 
 ### Hierarchical Model
 
-Umbraco.Ai uses a hierarchical configuration model:
+Umbraco.AI uses a hierarchical configuration model:
 
 ```
 Provider (plugin with capabilities)
@@ -163,12 +163,12 @@ Provider (plugin with capabilities)
 
 Providers are plugins that expose AI capabilities. They are automatically discovered via assembly scanning.
 
-### IAiProvider Interface
+### IAIProvider Interface
 
 Providers implement `IDiscoverable` for automatic discovery via Umbraco's TypeLoader:
 
 ```csharp
-public interface IAiProvider : IDiscoverable
+public interface IAIProvider : IDiscoverable
 {
     // The unique identifier for this provider (e.g., "openai")
     string Id { get; }
@@ -180,48 +180,48 @@ public interface IAiProvider : IDiscoverable
     Type? SettingsType { get; }
 
     // Get settings schema for UI rendering
-    AiEditableModelSchema? GetSettingsSchema();
+    AIEditableModelSchema? GetSettingsSchema();
 
     // Get all capabilities this provider supports
-    IReadOnlyCollection<IAiCapability> GetCapabilities();
+    IReadOnlyCollection<IAICapability> GetCapabilities();
 
     // Get a specific capability by type
-    TCapability? GetCapability<TCapability>() where TCapability : class, IAiCapability;
+    TCapability? GetCapability<TCapability>() where TCapability : class, IAICapability;
 
     // Check if provider has a specific capability
-    bool HasCapability<TCapability>() where TCapability : class, IAiCapability;
+    bool HasCapability<TCapability>() where TCapability : class, IAICapability;
 
     // Try to get a capability (returns false if not found)
     bool TryGeCapability<TCapability>(out TCapability? capability)
-        where TCapability : class, IAiCapability;
+        where TCapability : class, IAICapability;
 }
 ```
 
-### AiProviderBase<TSettings>
+### AIProviderBase<TSettings>
 
 Generic base class for implementing providers with typed settings:
 
 ```csharp
-[AiProvider("openai", "OpenAI")]
-public class OpenAiProvider : AiProviderBase<OpenAiProviderSettings>
+[AIProvider("openai", "OpenAI")]
+public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
 {
-    public OpenAiProvider(IAiProviderInfrastructure infrastructure)
+    public OpenAIProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
         // Register capabilities
-        WithCapability<OpenAiChatCapability>();
-        WithCapability<OpenAiEmbeddingCapability>();
+        WithCapability<OpenAIChatCapability>();
+        WithCapability<OpenAIEmbeddingCapability>();
     }
 }
 ```
 
-### AiProviderAttribute
+### AIProviderAttribute
 
 Marks classes for automatic discovery:
 
 ```csharp
 [AttributeUsage(AttributeTargets.Class)]
-public class AiProviderAttribute : Attribute
+public class AIProviderAttribute : Attribute
 {
     public string Id { get; }      // Unique provider identifier (e.g., "openai")
     public string Name { get; }    // Display name (e.g., "OpenAI")
@@ -230,36 +230,36 @@ public class AiProviderAttribute : Attribute
 
 ### Provider Collection Builder
 
-Providers are managed via `AiProviderCollectionBuilder`, which extends Umbraco's `LazyCollectionBuilderBase`. This provides:
+Providers are managed via `AIProviderCollectionBuilder`, which extends Umbraco's `LazyCollectionBuilderBase`. This provides:
 
-- **Auto-discovery**: Providers with `[AiProvider]` attribute implementing `IDiscoverable` are automatically found via TypeLoader
+- **Auto-discovery**: Providers with `[AIProvider]` attribute implementing `IDiscoverable` are automatically found via TypeLoader
 - **Extensibility**: Providers can be added or excluded in Composers
 - **Caching**: Uses Umbraco's TypeLoader caching for efficient type discovery
 
 ```csharp
-// In AddUmbracoAiCore() - auto-discover providers
-builder.AiProviders()
-    .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
+// In AddUmbracoAICore() - auto-discover providers
+builder.AIProviders()
+    .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIProvider, AIProviderAttribute>(cache: true));
 
 // In a custom Composer - add or exclude providers
-builder.AiProviders()
+builder.AIProviders()
     .Add<MyCustomProvider>()
     .Exclude<SomeUnwantedProvider>();
 ```
 
-### AiProviderCollection
+### AIProviderCollection
 
 The collection provides helper methods for accessing providers:
 
 ```csharp
-public class AiProviderCollection : BuilderCollectionBase<IAiProvider>
+public class AIProviderCollection : BuilderCollectionBase<IAIProvider>
 {
     // Get a provider by its unique identifier
-    public IAiProvider? GetById(string providerId);
+    public IAIProvider? GetById(string providerId);
 
     // Get all providers that support a specific capability
-    public IEnumerable<IAiProvider> GetWithCapability<TCapability>()
-        where TCapability : class, IAiCapability;
+    public IEnumerable<IAIProvider> GetWithCapability<TCapability>()
+        where TCapability : class, IAICapability;
 }
 ```
 
@@ -269,16 +269,16 @@ public class AiProviderCollection : BuilderCollectionBase<IAiProvider>
 
 Capabilities define what a provider can do. Each capability type has a specific interface.
 
-### IAiCapability Interface
+### IAICapability Interface
 
 ```csharp
-public interface IAiCapability
+public interface IAICapability
 {
     // The kind of capability (Chat, Embedding, Media, Moderation)
-    AiCapability Kind { get; }
+    AICapability Kind { get; }
 
     // Get available models for this capability
-    Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         object? settings = null,
         CancellationToken cancellationToken = default);
 }
@@ -287,7 +287,7 @@ public interface IAiCapability
 ### Capability Types
 
 ```csharp
-public enum AiCapability
+public enum AICapability
 {
     Chat = 0,       // Chat completions (conversational AI)
     Embedding = 1,  // Text embeddings (vector representations)
@@ -296,24 +296,24 @@ public enum AiCapability
 }
 ```
 
-### IAiChatCapability
+### IAIChatCapability
 
 For chat completion capabilities:
 
 ```csharp
-public interface IAiChatCapability : IAiCapability
+public interface IAIChatCapability : IAICapability
 {
     // Creates an IChatClient configured with the given settings
     IChatClient CreateClient(object? settings = null);
 }
 ```
 
-### IAiEmbeddingCapability
+### IAIEmbeddingCapability
 
 For text embedding capabilities:
 
 ```csharp
-public interface IAiEmbeddingCapability : IAiCapability
+public interface IAIEmbeddingCapability : IAICapability
 {
     // Creates an embedding generator configured with the given settings
     IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings);
@@ -326,33 +326,33 @@ Abstract base classes simplify capability implementation:
 
 | Base Class | Purpose |
 |------------|---------|
-| `AiCapabilityBase` | Base for capabilities without typed settings |
-| `AiCapabilityBase<TSettings>` | Base for capabilities with typed settings |
-| `AiChatCapabilityBase` | Chat capability without typed settings |
-| `AiChatCapabilityBase<TSettings>` | Chat capability with typed settings |
-| `AiEmbeddingCapabilityBase` | Embedding capability without typed settings |
-| `AiEmbeddingCapabilityBase<TSettings>` | Embedding capability with typed settings |
+| `AICapabilityBase` | Base for capabilities without typed settings |
+| `AICapabilityBase<TSettings>` | Base for capabilities with typed settings |
+| `AIChatCapabilityBase` | Chat capability without typed settings |
+| `AIChatCapabilityBase<TSettings>` | Chat capability with typed settings |
+| `AIEmbeddingCapabilityBase` | Embedding capability without typed settings |
+| `AIEmbeddingCapabilityBase<TSettings>` | Embedding capability with typed settings |
 
 ### Example: OpenAI Chat Capability
 
 ```csharp
-public class OpenAiChatCapability(OpenAiProvider provider)
-    : AiChatCapabilityBase<OpenAiProviderSettings>(provider)
+public class OpenAIChatCapability(OpenAIProvider provider)
+    : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
 {
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
-        OpenAiProviderSettings settings,
+    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
+        OpenAIProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var models = new List<AiModelDescriptor>
+        var models = new List<AIModelDescriptor>
         {
-            new(new AiModelRef(Provider.Id, "gpt-4o"), "GPT-4o"),
-            new(new AiModelRef(Provider.Id, "gpt-4o-mini"), "GPT-4o Mini"),
+            new(new AIModelRef(Provider.Id, "gpt-4o"), "GPT-4o"),
+            new(new AIModelRef(Provider.Id, "gpt-4o-mini"), "GPT-4o Mini"),
             // ... more models
         };
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(models);
+        return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(models);
     }
 
-    protected override IChatClient CreateClient(OpenAiProviderSettings settings)
+    protected override IChatClient CreateClient(OpenAIProviderSettings settings)
     {
         return new OpenAI.OpenAIClient(settings.ApiKey)
             .GetChatClient("gpt-4o")
@@ -367,10 +367,10 @@ public class OpenAiChatCapability(OpenAiProvider provider)
 
 Connections store credentials and provider-specific settings for authenticating with AI services.
 
-### AiConnection Model
+### AIConnection Model
 
 ```csharp
-public class AiConnection
+public class AIConnection
 {
     // Unique identifier
     public required Guid Id { get; init; }
@@ -393,15 +393,15 @@ public class AiConnection
 }
 ```
 
-### IAiConnectionService
+### IAIConnectionService
 
 ```csharp
-public interface IAiConnectionService
+public interface IAIConnectionService
 {
     // CRUD operations
-    Task<AiConnection?> GetConnectionAsync(Guid id, CancellationToken ct = default);
-    Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken ct = default);
-    Task<AiConnection> SaveConnectionAsync(AiConnection connection, CancellationToken ct = default);
+    Task<AIConnection?> GetConnectionAsync(Guid id, CancellationToken ct = default);
+    Task<IEnumerable<AIConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken ct = default);
+    Task<AIConnection> SaveConnectionAsync(AIConnection connection, CancellationToken ct = default);
     Task<bool> DeleteConnectionAsync(Guid id, CancellationToken ct = default);
 
     // Validation
@@ -412,7 +412,7 @@ public interface IAiConnectionService
 
 ### Current Storage
 
-Connections are currently stored in-memory via `InMemoryAiConnectionRepository`. This is a placeholder for future persistent storage implementations.
+Connections are currently stored in-memory via `InMemoryAIConnectionRepository`. This is a placeholder for future persistent storage implementations.
 
 ---
 
@@ -420,10 +420,10 @@ Connections are currently stored in-memory via `InMemoryAiConnectionRepository`.
 
 Profiles are reusable configurations that combine a connection with model settings.
 
-### AiProfile Model
+### AIProfile Model
 
 ```csharp
-public sealed class AiProfile
+public sealed class AIProfile
 {
     // Unique identifier
     public required Guid Id { get; init; }
@@ -435,10 +435,10 @@ public sealed class AiProfile
     public required string Name { get; init; }
 
     // Capability type (Chat, Embedding, etc.)
-    public AiCapability Capability { get; init; } = AiCapability.Chat;
+    public AICapability Capability { get; init; } = AICapability.Chat;
 
     // Model reference (provider ID + model ID)
-    public AiModelRef Model { get; init; }
+    public AIModelRef Model { get; init; }
 
     // Connection to use for authentication
     public required Guid ConnectionId { get; init; }
@@ -453,33 +453,33 @@ public sealed class AiProfile
 }
 ```
 
-### AiModelRef
+### AIModelRef
 
 Reference to a specific model:
 
 ```csharp
-public record AiModelRef(string ProviderId, string ModelId);
+public record AIModelRef(string ProviderId, string ModelId);
 ```
 
-### IAiProfileService
+### IAIProfileService
 
 ```csharp
-public interface IAiProfileService
+public interface IAIProfileService
 {
     // Get by ID
-    Task<AiProfile?> GetProfileAsync(Guid id, CancellationToken ct = default);
+    Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken ct = default);
 
     // Get by alias
-    Task<AiProfile?> GetProfileByAliasAsync(string alias, CancellationToken ct = default);
+    Task<AIProfile?> GetProfileByAliasAsync(string alias, CancellationToken ct = default);
 
     // Get all profiles, optionally filtered by capability
-    Task<IEnumerable<AiProfile>> GetProfilesAsync(AiCapability? capability = null, CancellationToken ct = default);
+    Task<IEnumerable<AIProfile>> GetProfilesAsync(AICapability? capability = null, CancellationToken ct = default);
 
-    // Get default profile for a capability (from AiOptions)
-    Task<AiProfile?> GetDefaultProfileAsync(AiCapability capability, CancellationToken ct = default);
+    // Get default profile for a capability (from AIOptions)
+    Task<AIProfile?> GetDefaultProfileAsync(AICapability capability, CancellationToken ct = default);
 
     // CRUD
-    Task<AiProfile> SaveProfileAsync(AiProfile profile, CancellationToken ct = default);
+    Task<AIProfile> SaveProfileAsync(AIProfile profile, CancellationToken ct = default);
     Task<bool> DeleteProfileAsync(Guid id, CancellationToken ct = default);
 }
 ```
@@ -490,12 +490,12 @@ public interface IAiProfileService
 
 High-level services provide the primary developer interface for using AI features.
 
-### IAiChatService
+### IAIChatService
 
 The main service for chat completions:
 
 ```csharp
-public interface IAiChatService
+public interface IAIChatService
 {
     // Get response using default profile
     Task<ChatResponse> GetResponseAsync(
@@ -532,7 +532,7 @@ public interface IAiChatService
 
 ### Option Merging
 
-When using `IAiChatService`, options are merged with priority:
+When using `IAIChatService`, options are merged with priority:
 
 1. **Caller options** (passed to method) - highest priority
 2. **Profile settings** (Temperature, MaxTokens, etc.) - defaults
@@ -544,9 +544,9 @@ This allows profiles to set defaults while callers can override specific setting
 ```csharp
 public class MyService
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public MyService(IAiChatService chatService)
+    public MyService(IAIChatService chatService)
     {
         _chatService = chatService;
     }
@@ -568,12 +568,12 @@ public class MyService
 
 ## 9. Factory & Middleware
 
-### IAiChatClientFactory
+### IAIChatClientFactory
 
 Creates configured `IChatClient` instances with middleware applied:
 
 ```csharp
-public interface IAiChatClientFactory
+public interface IAIChatClientFactory
 {
     Task<IChatClient> CreateClientAsync(
         Guid profileId,
@@ -589,24 +589,24 @@ The factory:
 5. Creates the raw client via the capability
 6. Applies middleware in order
 
-### IAiChatMiddleware
+### IAIChatMiddleware
 
 Middleware can wrap chat clients to add cross-cutting concerns. Note that the interface has no `Order` property - ordering is managed entirely via the collection builder.
 
 ```csharp
-public interface IAiChatMiddleware
+public interface IAIChatMiddleware
 {
     // Wraps the client with middleware behavior
     IChatClient Apply(IChatClient client);
 }
 ```
 
-### IAiEmbeddingMiddleware
+### IAIEmbeddingMiddleware
 
 Similarly for embedding middleware:
 
 ```csharp
-public interface IAiEmbeddingMiddleware
+public interface IAIEmbeddingMiddleware
 {
     // Wraps the generator with middleware behavior
     IEmbeddingGenerator<string, Embedding<float>> Apply(
@@ -618,12 +618,12 @@ public interface IAiEmbeddingMiddleware
 
 Both chat and embedding middleware use `OrderedCollectionBuilderBase` for explicit ordering:
 
-- `AiChatMiddlewareCollectionBuilder` - manages `IAiChatMiddleware` instances
-- `AiEmbeddingMiddlewareCollectionBuilder` - manages `IAiEmbeddingMiddleware` instances
+- `AIChatMiddlewareCollectionBuilder` - manages `IAIChatMiddleware` instances
+- `AIEmbeddingMiddlewareCollectionBuilder` - manages `IAIEmbeddingMiddleware` instances
 
 ### Middleware Ordering
 
-Middleware ordering is controlled via the `AiChatMiddlewareCollectionBuilder` using Umbraco's `OrderedCollectionBuilder` pattern. This provides explicit control with `Append()`, `InsertBefore<T>()`, and `InsertAfter<T>()` methods.
+Middleware ordering is controlled via the `AIChatMiddlewareCollectionBuilder` using Umbraco's `OrderedCollectionBuilder` pattern. This provides explicit control with `Append()`, `InsertBefore<T>()`, and `InsertAfter<T>()` methods.
 
 ```
 Caller
@@ -646,13 +646,13 @@ public class MyComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Append<RateLimitMiddleware>()
             .Append<CachingMiddleware>()
             .Append<LoggingMiddleware>();
 
         // Or use InsertBefore/InsertAfter for precise ordering:
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .InsertBefore<LoggingMiddleware, TracingMiddleware>();
     }
 }
@@ -661,7 +661,7 @@ public class MyComposer : IComposer
 ### Example: Logging Middleware
 
 ```csharp
-public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAiChatMiddleware
+public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAIChatMiddleware
 {
     public IChatClient Apply(IChatClient client)
     {
@@ -678,24 +678,24 @@ public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAiChatMiddle
 
 The registry provides central access to all registered providers.
 
-### IAiRegistry
+### IAIRegistry
 
 ```csharp
-public interface IAiRegistry
+public interface IAIRegistry
 {
     // All registered providers
-    IEnumerable<IAiProvider> Providers { get; }
+    IEnumerable<IAIProvider> Providers { get; }
 
     // Get providers that support a specific capability
-    IEnumerable<IAiProvider> GetProvidersWithCapability<TCapability>()
-        where TCapability : class, IAiCapability;
+    IEnumerable<IAIProvider> GetProvidersWithCapability<TCapability>()
+        where TCapability : class, IAICapability;
 
     // Get provider by ID (case-insensitive)
-    IAiProvider? GetProvider(string alias);
+    IAIProvider? GetProvider(string alias);
 
     // Get a specific capability from a provider
     TCapability? GetCapability<TCapability>(string providerId)
-        where TCapability : class, IAiCapability;
+        where TCapability : class, IAICapability;
 }
 ```
 
@@ -703,25 +703,25 @@ public interface IAiRegistry
 
 ```csharp
 // Get all providers that support chat
-var chatProviders = registry.GetProvidersWithCapability<IAiChatCapability>();
+var chatProviders = registry.GetProvidersWithCapability<IAIChatCapability>();
 
 // Get the OpenAI provider
 var openai = registry.GetProvider("openai");
 
 // Get chat capability directly
-var chatCapability = registry.GetCapability<IAiChatCapability>("openai");
+var chatCapability = registry.GetCapability<IAIChatCapability>("openai");
 ```
 
 ---
 
 ## 11. Configuration & Settings
 
-### AiOptions
+### AIOptions
 
 Global configuration from `appsettings.json`:
 
 ```csharp
-public class AiOptions
+public class AIOptions
 {
     public string? DefaultChatProfileAlias { get; set; }
     public string? DefaultEmbeddingProfileAlias { get; set; }
@@ -729,12 +729,12 @@ public class AiOptions
 }
 ```
 
-Configuration section: `Umbraco:Ai`
+Configuration section: `Umbraco:AI`
 
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "DefaultChatProfileAlias": "default-chat",
       "DefaultEmbeddingProfileAlias": "default-embedding"
     }
@@ -742,13 +742,13 @@ Configuration section: `Umbraco:Ai`
 }
 ```
 
-### AiFieldAttribute
+### AIFieldAttribute
 
 Decorates properties for UI generation (used for both provider settings and data models):
 
 ```csharp
 [AttributeUsage(AttributeTargets.Property)]
-public class AiFieldAttribute : Attribute
+public class AIFieldAttribute : Attribute
 {
     public string? Label { get; set; }           // Display label
     public string? Description { get; set; }     // Help text
@@ -761,9 +761,9 @@ public class AiFieldAttribute : Attribute
 ### Provider Settings Example
 
 ```csharp
-public class OpenAiProviderSettings
+public class OpenAIProviderSettings
 {
-    [AiField(
+    [AIField(
         Label = "API Key",
         Description = "Your OpenAI API key from platform.openai.com",
         EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
@@ -772,7 +772,7 @@ public class OpenAiProviderSettings
     [Required]
     public string? ApiKey { get; set; }
 
-    [AiField(
+    [AIField(
         Label = "Organization ID",
         Description = "Optional: Your OpenAI organization ID",
         EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
@@ -780,7 +780,7 @@ public class OpenAiProviderSettings
     )]
     public string? OrganizationId { get; set; }
 
-    [AiField(
+    [AIField(
         Label = "API Endpoint",
         Description = "Custom API endpoint (leave empty for default)",
         EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
@@ -793,7 +793,7 @@ public class OpenAiProviderSettings
 
 ### Environment Variable Resolution
 
-The `IAiEditableModelResolver` supports resolving values from configuration:
+The `IAIEditableModelResolver` supports resolving values from configuration:
 
 ```json
 // Connection settings in database
@@ -817,15 +817,15 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 
 ### Registration Flow
 
-1. **UmbracoAiComposer** (discovered by Umbraco)
-   - Calls `builder.AddUmbracoAi()`
+1. **UmbracoAIComposer** (discovered by Umbraco)
+   - Calls `builder.AddUmbracoAI()`
 
-2. **AddUmbracoAi()** (in Umbraco.Ai.Startup)
-   - Calls `AddUmbracoAiCore()` for core services
-   - Calls `AddUmbracoAiWeb()` for management API
+2. **AddUmbracoAI()** (in Umbraco.AI.Startup)
+   - Calls `AddUmbracoAICore()` for core services
+   - Calls `AddUmbracoAIWeb()` for management API
 
-3. **AddUmbracoAiCore()** (in Umbraco.Ai.Core)
-   - Binds `AiOptions` from configuration
+3. **AddUmbracoAICore()** (in Umbraco.AI.Core)
+   - Binds `AIOptions` from configuration
    - Registers infrastructure services
    - Scans and registers providers
    - Registers repositories, services, and factories
@@ -834,32 +834,32 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 
 | Service | Implementation | Lifetime |
 |---------|---------------|----------|
-| `IAiRegistry` | `AiRegistry` | Singleton |
-| `IAiCapabilityFactory` | `AiCapabilityFactory` | Singleton |
-| `IAiEditableModelSchemaBuilder` | `AiEditableModelSchemaBuilder` | Singleton |
-| `IAiProviderInfrastructure` | `AiProviderInfrastructure` | Singleton |
-| `IAiEditableModelResolver` | `AiEditableModelResolver` | Singleton |
-| `IAiConnectionRepository` | `InMemoryAiConnectionRepository` | Singleton |
-| `IAiConnectionService` | `AiConnectionService` | Singleton |
-| `IAiProfileRepository` | `InMemoryAiProfileRepository` | Singleton |
-| `IAiProfileService` | `AiProfileService` | Singleton |
-| `IAiChatClientFactory` | `AiChatClientFactory` | Singleton |
-| `IAiEmbeddingGeneratorFactory` | `AiEmbeddingGeneratorFactory` | Singleton |
-| `IAiChatService` | `AiChatService` | Singleton |
+| `IAIRegistry` | `AIRegistry` | Singleton |
+| `IAICapabilityFactory` | `AICapabilityFactory` | Singleton |
+| `IAIEditableModelSchemaBuilder` | `AIEditableModelSchemaBuilder` | Singleton |
+| `IAIProviderInfrastructure` | `AIProviderInfrastructure` | Singleton |
+| `IAIEditableModelResolver` | `AIEditableModelResolver` | Singleton |
+| `IAIConnectionRepository` | `InMemoryAIConnectionRepository` | Singleton |
+| `IAIConnectionService` | `AIConnectionService` | Singleton |
+| `IAIProfileRepository` | `InMemoryAIProfileRepository` | Singleton |
+| `IAIProfileService` | `AIProfileService` | Singleton |
+| `IAIChatClientFactory` | `AIChatClientFactory` | Singleton |
+| `IAIEmbeddingGeneratorFactory` | `AIEmbeddingGeneratorFactory` | Singleton |
+| `IAIChatService` | `AIChatService` | Singleton |
 
 ### Provider Registration
 
 Providers are discovered via Umbraco's TypeLoader and registered using the collection builder pattern:
 
 ```csharp
-// In AddUmbracoAiCore()
-builder.AiProviders()
-    .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AiProviderAttribute>(cache: true));
+// In AddUmbracoAICore()
+builder.AIProviders()
+    .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIProvider, AIProviderAttribute>(cache: true));
 ```
 
 This approach:
 - Uses Umbraco's cached, efficient type discovery via `TypeLoader`
-- Allows providers to be added or excluded in Composers via `AiProviders().Add<T>()` / `AiProviders().Exclude<T>()`
+- Allows providers to be added or excluded in Composers via `AIProviders().Add<T>()` / `AIProviders().Exclude<T>()`
 - Follows the standard Umbraco collection builder pattern
 
 ### Middleware Registration
@@ -867,12 +867,12 @@ This approach:
 Middleware collections are initialized (empty by default) and can be populated in Composers:
 
 ```csharp
-// In AddUmbracoAiCore() - initialize empty collections
-_ = builder.AiChatMiddleware();
-_ = builder.AiEmbeddingMiddleware();
+// In AddUmbracoAICore() - initialize empty collections
+_ = builder.AIChatMiddleware();
+_ = builder.AIEmbeddingMiddleware();
 
 // In a custom Composer - add middleware
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<LoggingChatMiddleware>()
     .InsertBefore<LoggingChatMiddleware, TracingMiddleware>();
 ```
@@ -885,13 +885,13 @@ builder.AiChatMiddleware()
 
 - **Root path**: `/umbraco/ai/management/api`
 - **API name**: `ai-management`
-- **Namespace prefix**: `Umbraco.Ai.Web.Api.Management`
+- **Namespace prefix**: `Umbraco.AI.Web.Api.Management`
 
 ### Security
 
 The management API integrates with Umbraco's backoffice security:
 
-- `UmbracoAiManagementApiBackOfficeSecurityRequirementsOperationFilter` extends `BackOfficeSecurityRequirementsOperationFilterBase`
+- `UmbracoAIManagementApiBackOfficeSecurityRequirementsOperationFilter` extends `BackOfficeSecurityRequirementsOperationFilterBase`
 - Requires backoffice authentication
 - Respects Umbraco user permissions
 
@@ -899,8 +899,8 @@ The management API integrates with Umbraco's backoffice security:
 
 OpenAPI documentation is automatically generated:
 
-- `UmbracoAiManagementApiSchemaIdHandler` - Generates schema IDs
-- `UmbracoAiManagementApiOperationIdHandler` - Generates operation IDs
+- `UmbracoAIManagementApiSchemaIdHandler` - Generates schema IDs
+- `UmbracoAIManagementApiOperationIdHandler` - Generates operation IDs
 
 ### Planned Controllers
 
@@ -918,12 +918,12 @@ OpenAPI documentation is automatically generated:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1. Application calls IAiChatService.GetResponseAsync()          │
+│ 1. Application calls IAIChatService.GetResponseAsync()          │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 2. Service resolves profile (by ID or default from AiOptions)   │
+│ 2. Service resolves profile (by ID or default from AIOptions)   │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -969,7 +969,7 @@ Profile.Model.ProviderId ("openai")
     Registry.GetProvider("openai")
           │
           ▼
-    Provider.GetCapability<IAiChatCapability>()
+    Provider.GetCapability<IAIChatCapability>()
           │
           ▼
     Connection.Settings (resolved)
@@ -989,7 +989,7 @@ Profile.Model.ProviderId ("openai")
 
 ### Overview
 
-Umbraco.Ai.Agents will extend Umbraco.Ai with autonomous AI capabilities that can perform actions within Umbraco CMS using **tools**.
+Umbraco.AI.Agents will extend Umbraco.AI with autonomous AI capabilities that can perform actions within Umbraco CMS using **tools**.
 
 ### Agent Concept
 
@@ -1003,12 +1003,12 @@ An agent is a configured AI assistant that can:
 
 ```csharp
 // Planned model
-public class AiAgent
+public class AIAgent
 {
     public Guid Id { get; }
     public string Name { get; }
     public string Description { get; }
-    public Guid ProfileId { get; }           // References AiProfile
+    public Guid ProfileId { get; }           // References AIProfile
     public string SystemPrompt { get; }       // Agent-specific instructions
     public IEnumerable<string> EnabledTools { get; }  // Tool IDs
     public IEnumerable<string> AllowedUserGroups { get; }  // Permissions
@@ -1035,17 +1035,17 @@ Tools are discrete actions that agents can invoke:
 ### Planned Architecture
 
 ```
-Umbraco.Ai.Agents (new project)
+Umbraco.AI.Agents (new project)
 ├── Models/
-│   ├── AiAgent              # Agent definition
+│   ├── AIAgent              # Agent definition
 │   ├── AgentSession         # Conversation state
 │   └── ToolInvocation       # Tool call record
 ├── Tools/
-│   ├── IAiTool              # Tool interface
-│   └── AiToolAttribute      # Discovery attribute
+│   ├── IAITool              # Tool interface
+│   └── AIToolAttribute      # Discovery attribute
 ├── Services/
-│   ├── IAiAgentService      # Agent CRUD
-│   ├── IAiAgentExecutor     # Execution engine
+│   ├── IAIAgentService      # Agent CRUD
+│   ├── IAIAgentExecutor     # Execution engine
 │   └── IAgentSessionStore   # Session memory
 ```
 
@@ -1060,7 +1060,7 @@ Umbraco.Ai.Agents (new project)
 
 ## Summary
 
-Umbraco.Ai provides a comprehensive, provider-agnostic AI integration layer for Umbraco CMS. Key architectural decisions include:
+Umbraco.AI provides a comprehensive, provider-agnostic AI integration layer for Umbraco CMS. Key architectural decisions include:
 
 - **Microsoft.Extensions.AI foundation**: Uses MEAI types directly, not abstracting them away
 - **Capability-based providers**: Providers expose discrete capabilities that can be queried

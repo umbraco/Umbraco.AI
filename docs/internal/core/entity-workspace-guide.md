@@ -1,6 +1,6 @@
 # Umbraco Backoffice Entity Workspace Guide
 
-A comprehensive guide for implementing entity management UI in the Umbraco backoffice, based on the actual patterns used in Umbraco.Ai (connection workspace).
+A comprehensive guide for implementing entity management UI in the Umbraco backoffice, based on the actual patterns used in Umbraco.AI (connection workspace).
 
 ## Overview
 
@@ -123,8 +123,8 @@ export const UAI_CONNECTION_ICON = 'icon-wall-plug';
 **File:** `{entity}/workspace/constants.ts`
 
 ```typescript
-export const UAI_CONNECTION_WORKSPACE_ALIAS = 'UmbracoAi.Workspace.Connection';
-export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = 'UmbracoAi.Workspace.ConnectionRoot';
+export const UAI_CONNECTION_WORKSPACE_ALIAS = 'UmbracoAI.Workspace.Connection';
+export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = 'UmbracoAI.Workspace.ConnectionRoot';
 ```
 
 ### Repository Constants
@@ -132,9 +132,9 @@ export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = 'UmbracoAi.Workspace.Connecti
 **File:** `{entity}/repository/constants.ts`
 
 ```typescript
-export const UAI_CONNECTION_DETAIL_REPOSITORY_ALIAS = 'UmbracoAi.Repository.Connection.Detail';
-export const UAI_CONNECTION_DETAIL_STORE_ALIAS = 'UmbracoAi.Store.Connection.Detail';
-export const UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS = 'UmbracoAi.Repository.Connection.Collection';
+export const UAI_CONNECTION_DETAIL_REPOSITORY_ALIAS = 'UmbracoAI.Repository.Connection.Detail';
+export const UAI_CONNECTION_DETAIL_STORE_ALIAS = 'UmbracoAI.Store.Connection.Detail';
+export const UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS = 'UmbracoAI.Repository.Connection.Collection';
 ```
 
 ### Collection Constants
@@ -142,12 +142,12 @@ export const UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS = 'UmbracoAi.Repository.
 **File:** `{entity}/collection/constants.ts`
 
 ```typescript
-export const UAI_CONNECTION_COLLECTION_ALIAS = 'UmbracoAi.Collection.Connection';
+export const UAI_CONNECTION_COLLECTION_ALIAS = 'UmbracoAI.Collection.Connection';
 ```
 
 **Naming Conventions:**
 - Entity types: Use prefixed format like `uai:connection` or CMS standard `webhook`
-- Aliases: Use dot notation like `UmbracoAi.Workspace.Connection`
+- Aliases: Use dot notation like `UmbracoAI.Workspace.Connection`
 - Icon: Define once at feature root, reference everywhere
 
 ---
@@ -1404,7 +1404,7 @@ export const connectionCollectionManifests: Array<ManifestCollection | ManifestC
     },
     {
         type: "collectionView",
-        alias: "UmbracoAi.CollectionView.Connection.Table",
+        alias: "UmbracoAI.CollectionView.Connection.Table",
         name: "Connection Table View",
         element: () => import("./views/table/connection-table-collection-view.element.js"),
         meta: {
@@ -1433,7 +1433,7 @@ export const connectionCollectionActionManifests: ManifestCollectionAction[] = [
     {
         type: "collectionAction",
         kind: "button",
-        alias: "UmbracoAi.CollectionAction.Connection.Create",
+        alias: "UmbracoAI.CollectionAction.Connection.Create",
         name: "Create Connection",
         meta: {
             label: "Create",
@@ -1457,14 +1457,14 @@ import { UAI_CONNECTION_ROOT_ENTITY_TYPE, UAI_CONNECTION_ICON } from "../constan
 export const connectionMenuManifests: ManifestMenuItem[] = [
     {
         type: "menuItem",
-        alias: "UmbracoAi.MenuItem.Connections",
+        alias: "UmbracoAI.MenuItem.Connections",
         name: "Connections Menu Item",
         weight: 100,
         meta: {
             label: "Connections",
             icon: UAI_CONNECTION_ICON,
             entityType: UAI_CONNECTION_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAi.Menu.Settings"],
+            menus: ["UmbracoAI.Menu.Settings"],
         },
     },
 ];
@@ -1514,7 +1514,7 @@ export const connectionEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAi.EntityAction.Connection.Create",
+        alias: "UmbracoAI.EntityAction.Connection.Create",
         name: "Create Connection Entity Action",
         weight: 1200,
         api: () => import("./connection-create.action.js"),
@@ -1547,7 +1547,7 @@ For the "+" button to appear next to a menu item:
        type: "sectionSidebarApp",
        kind: "menuWithEntityActions",  // Required!
        meta: {
-           menu: "UmbracoAi.Menu.Settings",
+           menu: "UmbracoAI.Menu.Settings",
        },
    }
    ```
@@ -1605,7 +1605,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceView",
         kind: "collection",
-        alias: "UmbracoAi.WorkspaceView.ConnectionRoot.Collection",
+        alias: "UmbracoAI.WorkspaceView.ConnectionRoot.Collection",
         name: "Connection Root Collection Workspace View",
         meta: {
             label: "Collection",
@@ -1647,7 +1647,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.Workspace.Connection.View.Details",
+        alias: "UmbracoAI.Workspace.Connection.View.Details",
         name: "Connection Details Workspace View",
         js: () => import("./views/connection-details-workspace-view.element.js"),
         weight: 100,
@@ -1666,7 +1666,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAi.WorkspaceAction.Connection.Save",
+        alias: "UmbracoAI.WorkspaceAction.Connection.Save",
         name: "Save Connection",
         api: UmbSubmitWorkspaceAction,
         meta: {

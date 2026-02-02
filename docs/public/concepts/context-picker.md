@@ -96,10 +96,10 @@ This enables powerful inheritance patterns:
 {% code title="Example.cs" %}
 ```csharp
 // Single context
-var context = content.GetValue<AiContext>("aiContext");
+var context = content.GetValue<AIContext>("aiContext");
 
 // Multiple contexts
-var contexts = content.GetValue<IEnumerable<AiContext>>("aiContext");
+var contexts = content.GetValue<IEnumerable<AIContext>>("aiContext");
 ```
 {% endcode %}
 
@@ -109,21 +109,21 @@ var contexts = content.GetValue<IEnumerable<AiContext>>("aiContext");
 ```csharp
 public class ContextExample
 {
-    private readonly IAiContextResolutionService _resolutionService;
+    private readonly IAIContextResolutionService _resolutionService;
 
-    public ContextExample(IAiContextResolutionService resolutionService)
+    public ContextExample(IAIContextResolutionService resolutionService)
     {
         _resolutionService = resolutionService;
     }
 
-    public async Task<AiResolvedContext> ResolveContexts(
+    public async Task<AIResolvedContext> ResolveContexts(
         Guid contentId,
         Guid profileId)
     {
-        var runtimeContext = new AiRuntimeContext
+        var runtimeContext = new AIRuntimeContext
         {
-            [AiRuntimeContextKeys.EntityId] = contentId,
-            [AiRuntimeContextKeys.ProfileId] = profileId
+            [AIRuntimeContextKeys.EntityId] = contentId,
+            [AIRuntimeContextKeys.ProfileId] = profileId
         };
 
         return await _resolutionService.ResolveContextsAsync(runtimeContext);
@@ -134,7 +134,7 @@ public class ContextExample
 
 ### Resolved Context Structure
 
-The `AiResolvedContext` contains:
+The `AIResolvedContext` contains:
 
 | Property | Description |
 |----------|-------------|

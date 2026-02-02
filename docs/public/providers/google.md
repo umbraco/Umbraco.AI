@@ -11,7 +11,7 @@ Google Gemini provides access to Google's latest AI models, offering strong perf
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Google
+Install-Package Umbraco.AI.Google
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Google
+dotnet add package Umbraco.AI.Google
 ```
 {% endcode %}
 
@@ -76,7 +76,7 @@ Gemini 1.5 Pro has a 2 million token context window - the largest available, ide
 
 {% code title="Example.cs" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "google-production",
     Name = "Google Production",
@@ -95,14 +95,14 @@ await _connectionService.SaveConnectionAsync(connection);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "gemini-assistant",
     Name = "Gemini Assistant",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     ConnectionId = connectionId,
-    Model = new AiModelRef("google", "gemini-2.0-flash"),
-    Settings = new AiChatProfileSettings
+    Model = new AIModelRef("google", "gemini-2.0-flash"),
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 8192,
@@ -131,14 +131,14 @@ Gemini Flash models offer strong performance at lower cost:
 {% code title="Example.cs" %}
 ```csharp
 // Use Flash for high-volume, cost-sensitive operations
-var costEfficientProfile = new AiProfile
+var costEfficientProfile = new AIProfile
 {
     Alias = "gemini-budget",
     Name = "Gemini Budget",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     ConnectionId = connectionId,
-    Model = new AiModelRef("google", "gemini-1.5-flash-8b"),
-    Settings = new AiChatProfileSettings
+    Model = new AIModelRef("google", "gemini-1.5-flash-8b"),
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.5f,
         MaxTokens = 1024

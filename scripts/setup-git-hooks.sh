@@ -1,10 +1,10 @@
 #!/bin/bash
-# Setup script to configure git hooks for Umbraco.Ai monorepo
+# Setup script to configure git hooks for Umbraco.AI monorepo
 
 set -e
 
 echo "========================================="
-echo "Umbraco.Ai Git Hooks Setup"
+echo "Umbraco.AI Git Hooks Setup"
 echo "========================================="
 echo ""
 

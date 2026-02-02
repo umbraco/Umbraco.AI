@@ -34,20 +34,20 @@ Use records for arguments - they're immutable and provide good serialization beh
 ## Step 2: Create the Tool Class
 
 Choose the appropriate base class:
-- `AiToolBase` - For tools without arguments
-- `AiToolBase<TArgs>` - For tools with typed arguments
+- `AIToolBase` - For tools without arguments
+- `AIToolBase<TArgs>` - For tools with typed arguments
 
 {% code title="ContentSearchTool.cs" %}
 ```csharp
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 
 namespace MyProject.Tools;
 
-[AiTool("search_content", "Search Content", Category = "Content")]
-public class ContentSearchTool : AiToolBase<ContentSearchArgs>
+[AITool("search_content", "Search Content", Category = "Content")]
+public class ContentSearchTool : AIToolBase<ContentSearchArgs>
 {
     private readonly IUmbracoContextFactory _contextFactory;
 
@@ -124,13 +124,13 @@ public class ContentItem
 ```
 {% endcode %}
 
-## Step 3: Configure the AiTool Attribute
+## Step 3: Configure the AITool Attribute
 
-The `[AiTool]` attribute provides metadata:
+The `[AITool]` attribute provides metadata:
 
 {% code title="Attribute Options" %}
 ```csharp
-[AiTool(
+[AITool(
     "tool_id",              // Unique identifier (required)
     "Display Name",         // Human-readable name (required)
     Category = "Category",  // Grouping category (default: "General")
@@ -182,11 +182,11 @@ For tools that don't need input:
 
 {% code title="ServerInfoTool.cs" %}
 ```csharp
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 using Umbraco.Cms.Core.Configuration;
 
-[AiTool("get_server_info", "Get Server Info", Category = "System")]
-public class ServerInfoTool : AiToolBase
+[AITool("get_server_info", "Get Server Info", Category = "System")]
+public class ServerInfoTool : AIToolBase
 {
     private readonly IUmbracoVersion _version;
 
@@ -282,22 +282,22 @@ Each tool should do one thing well:
 
 ```csharp
 // Good - single responsibility
-[AiTool("get_user", "Get User")]
-public class GetUserTool : AiToolBase<GetUserArgs> { }
+[AITool("get_user", "Get User")]
+public class GetUserTool : AIToolBase<GetUserArgs> { }
 
-[AiTool("create_user", "Create User", IsDestructive = true)]
-public class CreateUserTool : AiToolBase<CreateUserArgs> { }
+[AITool("create_user", "Create User", IsDestructive = true)]
+public class CreateUserTool : AIToolBase<CreateUserArgs> { }
 
 // Bad - too many responsibilities
-[AiTool("manage_users", "Manage Users")]
-public class ManageUsersTool : AiToolBase<ManageUsersArgs> { }
+[AITool("manage_users", "Manage Users")]
+public class ManageUsersTool : AIToolBase<ManageUsersArgs> { }
 ```
 
 ### Mark Destructive Operations
 
 ```csharp
-[AiTool("delete_content", "Delete Content", IsDestructive = true)]
-public class DeleteContentTool : AiToolBase<DeleteArgs>
+[AITool("delete_content", "Delete Content", IsDestructive = true)]
+public class DeleteContentTool : AIToolBase<DeleteArgs>
 {
     public override string Description =>
         "Permanently deletes a content item. This action cannot be undone.";
@@ -310,7 +310,7 @@ public class DeleteContentTool : AiToolBase<DeleteArgs>
 ```csharp
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 
 namespace MyProject.Tools;
 
@@ -326,8 +326,8 @@ public record WeatherResult(
     int Humidity,
     DateTime RetrievedAt);
 
-[AiTool("get_weather", "Get Weather", Category = "Utilities", Tags = new[] { "weather", "external" })]
-public class WeatherTool : AiToolBase<WeatherArgs>
+[AITool("get_weather", "Get Weather", Category = "Utilities", Tags = new[] { "weather", "external" })]
+public class WeatherTool : AIToolBase<WeatherArgs>
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<WeatherTool> _logger;

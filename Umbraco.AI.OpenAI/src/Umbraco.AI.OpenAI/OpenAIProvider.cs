@@ -3,7 +3,6 @@ using Microsoft.Extensions.Caching.Memory;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
 
-
 namespace Umbraco.AI.OpenAI;
 
 /// <summary>

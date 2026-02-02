@@ -2,6 +2,8 @@ import chalk from 'chalk';
 import { createClient, defaultPlugins } from '@hey-api/openapi-ts';
 import http from 'http';
 import { execSync } from 'child_process';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -94,6 +96,23 @@ try {
   });
 
   console.log = originalLog;
+
+  // Post-process types.gen.ts to fix AGUI casing
+  // hey-api transforms AGUI -> Agui for PascalCase consistency
+  // We need to preserve the all-caps AGUI naming from the OpenAPI spec
+  const typesPath = join(outputDir, 'types.gen.ts');
+  try {
+    const typesContent = readFileSync(typesPath, 'utf-8');
+    // Replace Agui with AGUI when followed by uppercase letter (type names)
+    // This catches: AguiMessage -> AGUIMessage, AguiTool -> AGUITool, etc.
+    const fixedContent = typesContent.replace(/\bAgui(?=[A-Z])/g, 'AGUI');
+    writeFileSync(typesPath, fixedContent, 'utf-8');
+    console.log(chalk.cyan('✓ Applied AGUI casing corrections'));
+  } catch (err) {
+    // Silently ignore if types file doesn't exist or can't be processed
+    // This is expected for APIs that don't have AGUI types
+  }
+
   console.log(chalk.green('✓ TypeScript client generated successfully'));
 } catch (error) {
   console.log = originalLog;

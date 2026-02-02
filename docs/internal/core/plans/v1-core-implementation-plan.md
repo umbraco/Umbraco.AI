@@ -496,7 +496,7 @@ public class UmbracoAiDbContext : DbContext
     {
         modelBuilder.Entity<AIConnectionEntity>(entity =>
         {
-            entity.ToTable("umbracoAiConnection");
+            entity.ToTable("umbracoAIConnection");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
             entity.Property(e => e.ProviderId).HasMaxLength(100).IsRequired();
@@ -505,7 +505,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AIProfileEntity>(entity =>
         {
-            entity.ToTable("umbracoAiProfile");
+            entity.ToTable("umbracoAIProfile");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Alias).HasMaxLength(100).IsRequired();
             entity.HasIndex(e => e.Alias).IsUnique();

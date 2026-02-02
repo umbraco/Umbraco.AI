@@ -28,11 +28,11 @@ This provider uses a simplified structure (single project):
 
 ### Provider Implementation
 
-The provider is implemented using the `AiProviderBase<TSettings>` pattern:
+The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 
 ```csharp
-[AiProvider("openai", "OpenAI")]
-public class OpenAIProvider : AiProviderBase<OpenAISettings>
+[AIProvider("openai", "OpenAI")]
+public class OpenAIProvider : AIProviderBase<OpenAISettings>
 {
     public OpenAIProvider(IAiProviderInfrastructure infrastructure)
         : base(infrastructure)
@@ -46,30 +46,30 @@ public class OpenAIProvider : AiProviderBase<OpenAISettings>
 ### Capabilities
 
 **Chat Capability** (`OpenAIChatCapability`):
-- Extends `AiChatCapabilityBase<OpenAISettings>`
+- Extends `AIChatCapabilityBase<OpenAISettings>`
 - Creates `IChatClient` instances using Microsoft.Extensions.AI.OpenAI
 - Supports both OpenAI API and Azure OpenAI endpoints
 - Handles model configuration (GPT-4, GPT-3.5-turbo, etc.)
 
 **Embedding Capability** (`OpenAIEmbeddingCapability`):
-- Extends `AiEmbeddingCapabilityBase<OpenAISettings>`
+- Extends `AIEmbeddingCapabilityBase<OpenAISettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
 - Supports text-embedding-3-large, text-embedding-3-small, text-embedding-ada-002
 
 ### Settings System
 
-Settings use the `[AiField]` attribute for UI generation:
+Settings use the `[AIField]` attribute for UI generation:
 
 ```csharp
 public class OpenAISettings
 {
-    [AiField("provider-type", "Provider Type", AiFieldType.Select)]
+    [AIField("provider-type", "Provider Type", AiFieldType.Select)]
     public string ProviderType { get; set; } = "openai"; // or "azure"
 
-    [AiField("api-key", "API Key", AiFieldType.Password)]
+    [AIField("api-key", "API Key", AiFieldType.Password)]
     public string ApiKey { get; set; } = string.Empty;
 
-    [AiField("endpoint", "Azure Endpoint", AiFieldType.Text)]
+    [AIField("endpoint", "Azure Endpoint", AiFieldType.Text)]
     public string? AzureEndpoint { get; set; }
 
     // ... other settings
@@ -140,16 +140,16 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
-1. `[AiProvider]` attribute on the provider class
+1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
-3. Registration in the `AiProvidersCollectionBuilder`
+3. Registration in the `AIProvidersCollectionBuilder`
 
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
 - `FakeAiProvider` - Test double for provider testing
-- `AiConnectionBuilder` - Fluent builder for test connections
-- `AiProfileBuilder` - Fluent builder for test profiles
+- `AIConnectionBuilder` - Fluent builder for test connections
+- `AIProfileBuilder` - Fluent builder for test profiles
 
 ## Contributing
 

@@ -23,7 +23,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Remove Version column from umbracoAiConnection
+            // Remove Version column from umbracoAIConnection
             migrationBuilder.DropColumn(
                 name: "Version",
                 table: "umbracoAIConnection");

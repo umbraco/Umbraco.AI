@@ -464,18 +464,18 @@ All async service methods MUST follow the pattern `[Action][Entity]Async`:
 **Correct Examples:**
 ```csharp
 // GOOD - follows [Action][Entity]Async
-Task<AiProfile?> GetProfileAsync(Guid id, CancellationToken ct);
-Task<AiConnection> CreateConnectionAsync(AiConnection connection, CancellationToken ct);
+Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken ct);
+Task<AIConnection> CreateConnectionAsync(AIConnection connection, CancellationToken ct);
 Task DeleteAgentAsync(Guid id, CancellationToken ct);
 Task<ChatResponse> GetChatResponseAsync(IEnumerable<ChatMessage> messages, CancellationToken ct);
-Task<IEnumerable<AiPrompt>> GetPromptsAsync(CancellationToken ct);
-Task<PagedResult<AiAgent>> GetAgentsPagedAsync(int skip, int take, CancellationToken ct);
+Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken ct);
+Task<PagedResult<AIAgent>> GetAgentsPagedAsync(int skip, int take, CancellationToken ct);
 ```
 
 **Incorrect Examples:**
 ```csharp
 // BAD - missing entity name
-Task<AiProfile?> GetAsync(Guid id, CancellationToken ct);           // Should be: GetProfileAsync
+Task<AIProfile?> GetAsync(Guid id, CancellationToken ct);           // Should be: GetProfileAsync
 Task DeleteAsync(Guid id, CancellationToken ct);                     // Should be: DeleteAgentAsync
 Task<ChatResponse> GetResponseAsync(...);                            // Should be: GetChatResponseAsync
 
@@ -483,7 +483,7 @@ Task<ChatResponse> GetResponseAsync(...);                            // Should b
 Task<bool> ProfileExistsAsync(string alias, CancellationToken ct);   // Should be: ExistsProfileAsync or ProfileAliasExistsAsync
 
 // BAD - missing Async suffix
-Task<AiProfile?> GetProfile(Guid id, CancellationToken ct);          // Should be: GetProfileAsync
+Task<AIProfile?> GetProfile(Guid id, CancellationToken ct);          // Should be: GetProfileAsync
 ```
 
 #### Variations and Qualifiers
@@ -492,15 +492,15 @@ Qualifiers like `ByAlias`, `Paged`, `All`, `Default` come after the entity:
 
 ```csharp
 // Qualified lookups
-Task<AiProfile?> GetProfileByAliasAsync(string alias, CancellationToken ct);
-Task<AiConnection?> GetConnectionByIdAsync(Guid id, CancellationToken ct);
+Task<AIProfile?> GetProfileByAliasAsync(string alias, CancellationToken ct);
+Task<AIConnection?> GetConnectionByIdAsync(Guid id, CancellationToken ct);
 
 // Collection operations
-Task<IEnumerable<AiProfile>> GetAllProfilesAsync(CancellationToken ct);
-Task<PagedResult<AiPrompt>> GetPromptsPagedAsync(int skip, int take, CancellationToken ct);
+Task<IEnumerable<AIProfile>> GetAllProfilesAsync(CancellationToken ct);
+Task<PagedResult<AIPrompt>> GetPromptsPagedAsync(int skip, int take, CancellationToken ct);
 
 // Default/specific retrieval
-Task<AiProfile?> GetDefaultProfileAsync(AiCapability capability, CancellationToken ct);
+Task<AIProfile?> GetDefaultProfileAsync(AICapability capability, CancellationToken ct);
 ```
 
 #### Existence Checks
@@ -530,7 +530,7 @@ Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId, CancellationToke
 **Correct:**
 ```csharp
 // Other services use the entity service, not the repository
-public class AiChatService
+public class AIChatService
 {
     private readonly IAiProfileService _profileService;  // ✓ Uses service
 
@@ -545,7 +545,7 @@ public class AiChatService
 **Incorrect:**
 ```csharp
 // BAD: Service directly accessing another entity's repository
-public class AiChatService
+public class AIChatService
 {
     private readonly IAiProfileRepository _profileRepository;  // ✗ Direct repository access
 
@@ -579,11 +579,11 @@ Repository methods can use shorter names since they operate on a single entity t
 ```csharp
 public interface IAiProfileRepository
 {
-    Task<AiProfile?> GetByIdAsync(Guid id, CancellationToken ct);
-    Task<AiProfile?> GetByAliasAsync(string alias, CancellationToken ct);
-    Task<IEnumerable<AiProfile>> GetAllAsync(CancellationToken ct);
-    Task AddAsync(AiProfile profile, CancellationToken ct);
-    Task UpdateAsync(AiProfile profile, CancellationToken ct);
+    Task<AIProfile?> GetByIdAsync(Guid id, CancellationToken ct);
+    Task<AIProfile?> GetByAliasAsync(string alias, CancellationToken ct);
+    Task<IEnumerable<AIProfile>> GetAllAsync(CancellationToken ct);
+    Task AddAsync(AIProfile profile, CancellationToken ct);
+    Task UpdateAsync(AIProfile profile, CancellationToken ct);
     Task DeleteAsync(Guid id, CancellationToken ct);
 }
 ```

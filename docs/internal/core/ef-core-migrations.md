@@ -92,7 +92,7 @@ At runtime, the actual database connection is configured in `UmbracoBuilderExten
 
 The persistence layer creates the following tables:
 
-### umbracoAiConnection
+### umbracoAIConnection
 
 Stores AI provider connection configurations (API keys, endpoints, etc.)
 
@@ -106,7 +106,7 @@ Stores AI provider connection configurations (API keys, endpoints, etc.)
 | DateCreated | datetime2 | Creation timestamp |
 | DateModified | datetime2 | Last modified timestamp |
 
-### umbracoAiProfile
+### umbracoAIProfile
 
 Stores AI profile configurations that link connections to specific models and settings.
 
@@ -118,7 +118,7 @@ Stores AI profile configurations that link connections to specific models and se
 | Capability | int | AI capability type (Chat, Embedding, etc.) |
 | ProviderId | nvarchar(100) | Provider identifier |
 | ModelId | nvarchar(255) | Model identifier (e.g., "gpt-4") |
-| ConnectionId | GUID | Foreign key to umbracoAiConnection |
+| ConnectionId | GUID | Foreign key to umbracoAIConnection |
 | Temperature | float | Optional temperature setting |
 | MaxTokens | int | Optional max tokens setting |
 | SystemPromptTemplate | nvarchar(max) | Optional system prompt |

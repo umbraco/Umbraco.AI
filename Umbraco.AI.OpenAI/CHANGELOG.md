@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Disable NBGV build number updates ([0a91e46](https://github.com/umbraco/Umbraco.AI/commit/0a91e46ab8c51b2022244d8f0a5839890ab76a39))
 * Align NBGV release refs to shared branches ([d85d468](https://github.com/umbraco/Umbraco.AI/commit/d85d468900fb2321102cc9589a7783efe0e2b0f6))
-* Add encryption support for sensitive AiFields using Data Protection API ([2aef55f](https://github.com/umbraco/Umbraco.AI/commit/2aef55f047784a0f2bd74f6d04565742e1ab1bd7))
+* Add encryption support for sensitive AIFields using Data Protection API ([2aef55f](https://github.com/umbraco/Umbraco.AI/commit/2aef55f047784a0f2bd74f6d04565742e1ab1bd7))
 * Update all package versions to 1.0.0 ([a40144b](https://github.com/umbraco/Umbraco.AI/commit/a40144bee41aafa361a17bce6d7736e7ac4fddb3))
 * Add Umbraco Marketplace metadata and readme files ([e1ec6e2](https://github.com/umbraco/Umbraco.AI/commit/e1ec6e2b982c15f5490b0e5fa79337d8b23c08b8))
 * Enforce committing the wwwroot folder in providers ([1f8af6e](https://github.com/umbraco/Umbraco.AI/commit/1f8af6e797350463bb407f587d1d65f40ba386cd))

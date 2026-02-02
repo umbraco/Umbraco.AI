@@ -28,11 +28,11 @@ This provider uses a simplified structure (single project):
 
 ### Provider Implementation
 
-The provider is implemented using the `AiProviderBase<TSettings>` pattern:
+The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 
 ```csharp
-[AiProvider("google", "Google")]
-public class GoogleProvider : AiProviderBase<GoogleProviderSettings>
+[AIProvider("google", "Google")]
+public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
 {
     public GoogleProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
@@ -45,19 +45,19 @@ public class GoogleProvider : AiProviderBase<GoogleProviderSettings>
 ### Capabilities
 
 **Chat Capability** (`GoogleChatCapability`):
-- Extends `AiChatCapabilityBase<GoogleProviderSettings>`
+- Extends `AIChatCapabilityBase<GoogleProviderSettings>`
 - Creates `IChatClient` instances using Google.GenAI SDK with `AsIChatClient()` extension
 - Supports Gemini 2.0, 1.5 Pro, 1.5 Flash models
 - Handles model configuration with extended context windows
 
 ### Settings System
 
-Settings use the `[AiField]` attribute for UI generation:
+Settings use the `[AIField]` attribute for UI generation:
 
 ```csharp
 public class GoogleProviderSettings
 {
-    [AiField]
+    [AIField]
     [Required]
     public string? ApiKey { get; set; }
 }
@@ -108,16 +108,16 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
-1. `[AiProvider]` attribute on the provider class
+1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
-3. Registration in the `AiProvidersCollectionBuilder`
+3. Registration in the `AIProvidersCollectionBuilder`
 
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
 - `FakeAiProvider` - Test double for provider testing
-- `AiConnectionBuilder` - Fluent builder for test connections
-- `AiProfileBuilder` - Fluent builder for test profiles
+- `AIConnectionBuilder` - Fluent builder for test connections
+- `AIProfileBuilder` - Fluent builder for test profiles
 
 ## Contributing
 

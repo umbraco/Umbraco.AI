@@ -28,11 +28,11 @@ This provider uses a simplified structure (single project):
 
 ### Provider Implementation
 
-The provider is implemented using the `AiProviderBase<TSettings>` pattern:
+The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 
 ```csharp
-[AiProvider("anthropic", "Anthropic")]
-public class AnthropicProvider : AiProviderBase<AnthropicSettings>
+[AIProvider("anthropic", "Anthropic")]
+public class AnthropicProvider : AIProviderBase<AnthropicSettings>
 {
     public AnthropicProvider(IAiProviderInfrastructure infrastructure)
         : base(infrastructure)
@@ -45,22 +45,22 @@ public class AnthropicProvider : AiProviderBase<AnthropicSettings>
 ### Capabilities
 
 **Chat Capability** (`AnthropicChatCapability`):
-- Extends `AiChatCapabilityBase<AnthropicSettings>`
+- Extends `AIChatCapabilityBase<AnthropicSettings>`
 - Creates `IChatClient` instances using Anthropic SDK
 - Supports Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku
 - Handles model configuration with extended context windows
 
 ### Settings System
 
-Settings use the `[AiField]` attribute for UI generation:
+Settings use the `[AIField]` attribute for UI generation:
 
 ```csharp
 public class AnthropicSettings
 {
-    [AiField("api-key", "API Key", AiFieldType.Password)]
+    [AIField("api-key", "API Key", AiFieldType.Password)]
     public string ApiKey { get; set; } = string.Empty;
 
-    [AiField("base-url", "Base URL", AiFieldType.Text)]
+    [AIField("base-url", "Base URL", AiFieldType.Text)]
     public string? BaseUrl { get; set; }
 
     // ... other settings
@@ -113,16 +113,16 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Anthropic:
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
-1. `[AiProvider]` attribute on the provider class
+1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
-3. Registration in the `AiProvidersCollectionBuilder`
+3. Registration in the `AIProvidersCollectionBuilder`
 
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
 - `FakeAiProvider` - Test double for provider testing
-- `AiConnectionBuilder` - Fluent builder for test connections
-- `AiProfileBuilder` - Fluent builder for test profiles
+- `AIConnectionBuilder` - Fluent builder for test connections
+- `AIProfileBuilder` - Fluent builder for test profiles
 
 ## Contributing
 

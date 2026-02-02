@@ -66,12 +66,12 @@ dotnet test Umbraco.AI.sln --collect:"XPlat Code Coverage" --results-directory .
 
 **Builders** - Fluent test data construction:
 ```csharp
-var profile = new AiProfileBuilder()
+var profile = new AIProfileBuilder()
     .WithAlias("chat-1")
-    .WithCapability(AiCapability.Chat)
+    .WithCapability(AICapability.Chat)
     .Build();
 
-var connection = new AiConnectionBuilder()
+var connection = new AIConnectionBuilder()
     .WithProviderAlias("openai")
     .Build();
 ```
@@ -94,7 +94,7 @@ public async Task GetProfileAsync_WithExistingId_ReturnsProfile()
 {
     // Arrange
     var profileId = Guid.NewGuid();
-    var profile = new AiProfileBuilder().WithId(profileId).Build();
+    var profile = new AIProfileBuilder().WithId(profileId).Build();
     _repositoryMock.Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
         .ReturnsAsync(profile);
 
@@ -154,7 +154,7 @@ Provider (plugin with capabilities)
                     └── AI Request (the actual call)
 ```
 
-- **Providers**: Installable NuGet packages supporting specific AI services. Discovered via `[AiProvider]` attribute and assembly scanning.
+- **Providers**: Installable NuGet packages supporting specific AI services. Discovered via `[AIProvider]` attribute and assembly scanning.
 - **Connections**: Store API keys and provider-specific settings. Persisted to database via EF Core.
 - **Profiles**: Combine a connection with model settings for specific use cases (e.g., "content-assistant" with GPT-4 and creative settings). Persisted to database via EF Core.
 
@@ -172,12 +172,12 @@ Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<stri
 Umbraco.AI uses Umbraco's collection builder pattern for extensibility:
 
 **Provider Collection** (`LazyCollectionBuilderBase`):
-- Providers are auto-discovered via `[AiProvider]` attribute and `IDiscoverable`
-- Use `AiProviders()` extension to add/exclude providers in a Composer
+- Providers are auto-discovered via `[AIProvider]` attribute and `IDiscoverable`
+- Use `AIProviders()` extension to add/exclude providers in a Composer
 
 ```csharp
 // In a Composer - add or exclude providers
-builder.AiProviders()
+builder.AIProviders()
     .Add<CustomProvider>()
     .Exclude<SomeUnwantedProvider>();
 ```
@@ -205,14 +205,14 @@ public interface IAiChatMiddleware
 }
 
 // Register middleware in a Composer:
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<LoggingChatMiddleware>()
     .InsertBefore<LoggingChatMiddleware, TracingMiddleware>();
 ```
 
 ### Settings System
 
-Provider settings use `[AiField]` attributes for UI generation. Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:ApiKey"` reads from config).
+Provider settings use `[AIField]` attributes for UI generation. Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:ApiKey"` reads from config).
 
 ### Management API
 
@@ -287,7 +287,7 @@ await profileService.GetProfileIdAsync(idOrAlias, cancellationToken);
 ### Naming Conventions
 
 - Interfaces: `I{Name}.cs` (e.g., `IAiChatService.cs`)
-- Implementations: `{Name}.cs` (e.g., `AiChatService.cs`)
+- Implementations: `{Name}.cs` (e.g., `AIChatService.cs`)
 - Collections: `{Name}Collection.cs` and `{Name}CollectionBuilder.cs`
 
 ### Exception: API Projects (Umbraco.AI.Web)
@@ -305,7 +305,7 @@ This is acceptable because:
 ### Exception: Test Projects
 
 Test projects use **layer-based organization**, not feature-sliced:
-- `Services/` - Service tests (AiChatServiceTests, AiProfileServiceTests)
+- `Services/` - Service tests (AIChatServiceTests, AIProfileServiceTests)
 - `Repositories/` - EF Core repository tests
 - `Factories/` - Factory tests
 - `Providers/` - Provider base class tests
@@ -314,7 +314,7 @@ Test projects use **layer-based organization**, not feature-sliced:
 This is intentional because:
 - Tests are located by *what they test* (class type), not by domain feature
 - When builds fail, developers look for "ServiceTests" not "ChatTests"
-- Direct mapping: `Services/AiChatServiceTests.cs` tests `AiChatService`
+- Direct mapping: `Services/AIChatServiceTests.cs` tests `AIChatService`
 - API tests are the exception - they mirror the Web project's feature structure
 
 ## Frontend Architecture
@@ -327,15 +327,15 @@ Located in `src/Umbraco.AI.Web.StaticAssets/Client/`:
 ## Creating a New Provider
 
 1. Create a new project referencing `Umbraco.AI.Core`
-2. Create settings class with `[AiField]` attributes
-3. Create provider class with `[AiProvider]` attribute extending `AiProviderBase<TSettings>`
+2. Create settings class with `[AIField]` attributes
+3. Create provider class with `[AIProvider]` attribute extending `AIProviderBase<TSettings>`
 4. Register capabilities using `WithCapability<T>()` in constructor
-5. Implement capability classes extending `AiChatCapabilityBase<TSettings>` or `AiEmbeddingCapabilityBase<TSettings>`
+5. Implement capability classes extending `AIChatCapabilityBase<TSettings>` or `AIEmbeddingCapabilityBase<TSettings>`
 
 Example:
 ```csharp
-[AiProvider("myprovider", "My Provider")]
-public class MyProvider : AiProviderBase<MyProviderSettings>
+[AIProvider("myprovider", "My Provider")]
+public class MyProvider : AIProviderBase<MyProviderSettings>
 {
     public MyProvider(IAiProviderInfrastructure infrastructure) : base(infrastructure)
     {
@@ -349,14 +349,14 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 **Feature namespaces (Umbraco.AI.Core):**
 - `Umbraco.AI.Core.Chat` - Chat service, factory, middleware (`IAiChatService`, `IAiChatClientFactory`)
 - `Umbraco.AI.Core.Embeddings` - Embedding service, factory, middleware (`IAiEmbeddingService`)
-- `Umbraco.AI.Core.Connections` - Connection model, service, repository (`AiConnection`, `IAiConnectionService`)
-- `Umbraco.AI.Core.Profiles` - Profile model, service, repository (`AiProfile`, `IAiProfileService`)
+- `Umbraco.AI.Core.Connections` - Connection model, service, repository (`AIConnection`, `IAiConnectionService`)
+- `Umbraco.AI.Core.Profiles` - Profile model, service, repository (`AIProfile`, `IAiProfileService`)
 
 **Shared namespaces (Umbraco.AI.Core):**
 - `Umbraco.AI.Core.Providers` - Provider SDK (base classes, capabilities, collections)
-- `Umbraco.AI.Core.Models` - Shared domain models (`AiCapability`, `AiModelRef`, `AiOptions`)
+- `Umbraco.AI.Core.Models` - Shared domain models (`AICapability`, `AIModelRef`, `AIOptions`)
 - `Umbraco.AI.Core.Registry` - Provider registry (`IAiRegistry`)
-- `Umbraco.AI.Core.EditableModels` - Editable model infrastructure (`AiFieldAttribute`, `AiEditableModelSchema`, `IAiEditableModelResolver`)
+- `Umbraco.AI.Core.EditableModels` - Editable model infrastructure (`AIFieldAttribute`, `AIEditableModelSchema`, `IAIEditableModelResolver`)
 
 **Persistence namespaces:**
 - `Umbraco.AI.Persistence.Connections` - EF Core connection repository and entity

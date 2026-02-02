@@ -53,7 +53,7 @@ Umbraco.AI.Agent is an agent management plugin for Umbraco.AI. It provides stora
 
 ### Domain Model
 
-The `AiAgent` entity represents a stored agent definition:
+The `AIAgent` entity represents a stored agent definition:
 - `Id` - Unique identifier
 - `Alias` - URL-safe unique identifier
 - `Name` - Display name

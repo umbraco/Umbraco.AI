@@ -28,11 +28,11 @@ This provider uses a simplified structure (single project):
 
 ### Provider Implementation
 
-The provider is implemented using the `AiProviderBase<TSettings>` pattern:
+The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 
 ```csharp
-[AiProvider("microsoft-foundry", "Microsoft AI Foundry")]
-public class MicrosoftFoundryProvider : AiProviderBase<MicrosoftFoundryProviderSettings>
+[AIProvider("microsoft-foundry", "Microsoft AI Foundry")]
+public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderSettings>
 {
     public MicrosoftFoundryProvider(IAiProviderInfrastructure infrastructure)
         : base(infrastructure)
@@ -46,29 +46,29 @@ public class MicrosoftFoundryProvider : AiProviderBase<MicrosoftFoundryProviderS
 ### Capabilities
 
 **Chat Capability** (`MicrosoftFoundryChatCapability`):
-- Extends `AiChatCapabilityBase<MicrosoftFoundryProviderSettings>`
+- Extends `AIChatCapabilityBase<MicrosoftFoundryProviderSettings>`
 - Creates `IChatClient` instances using Azure.AI.Inference with Microsoft.Extensions.AI.AzureAIInference
 - Returns empty model list (users specify model names in profiles)
 - Default model: `gpt-4o`
 
 **Embedding Capability** (`MicrosoftFoundryEmbeddingCapability`):
-- Extends `AiEmbeddingCapabilityBase<MicrosoftFoundryProviderSettings>`
+- Extends `AIEmbeddingCapabilityBase<MicrosoftFoundryProviderSettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
 - Returns empty model list (users specify model names in profiles)
 - Default model: `text-embedding-3-small`
 
 ### Settings System
 
-Settings use the `[AiField]` attribute for UI generation:
+Settings use the `[AIField]` attribute for UI generation:
 
 ```csharp
 public class MicrosoftFoundryProviderSettings
 {
-    [AiField]
+    [AIField]
     [Required]
     public string? Endpoint { get; set; }  // e.g., https://your-resource.services.ai.azure.com/
 
-    [AiField]
+    [AIField]
     [Required]
     public string? ApiKey { get; set; }
 }
@@ -121,9 +121,9 @@ One endpoint + one API key provides access to all deployed models. Users specify
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
-1. `[AiProvider]` attribute on the provider class
+1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
-3. Registration in the `AiProvidersCollectionBuilder`
+3. Registration in the `AIProvidersCollectionBuilder`
 
 ## Contributing
 

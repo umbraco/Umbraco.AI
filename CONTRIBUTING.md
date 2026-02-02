@@ -1080,14 +1080,14 @@ All contributions must follow the [coding standards in CLAUDE.md](CLAUDE.md#codi
 **Method Naming:**
 ```csharp
 // Async methods: [Action][Entity]Async
-Task<AiProfile?> GetProfileAsync(Guid id, CancellationToken ct);
-Task<IEnumerable<AiAgent>> GetAllAgentsAsync(CancellationToken ct);
+Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken ct);
+Task<IEnumerable<AIAgent>> GetAllAgentsAsync(CancellationToken ct);
 ```
 
 **Repository Access:**
 ```csharp
 // Only access your own repository
-public class AiProfileService
+public class AIProfileService
 {
     private readonly IAiProfileRepository _profileRepository;  // ✓ Own repo
     private readonly IAiConnectionRepository _connectionRepository; // ✗ Other repo

@@ -28,11 +28,11 @@ This provider uses a simplified structure (single project):
 
 ### Provider Implementation
 
-The provider is implemented using the `AiProviderBase<TSettings>` pattern:
+The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 
 ```csharp
-[AiProvider("amazon", "Amazon Bedrock")]
-public class AmazonProvider : AiProviderBase<AmazonProviderSettings>
+[AIProvider("amazon", "Amazon Bedrock")]
+public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
 {
     public AmazonProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
@@ -46,35 +46,35 @@ public class AmazonProvider : AiProviderBase<AmazonProviderSettings>
 ### Capabilities
 
 **Chat Capability** (`AmazonChatCapability`):
-- Extends `AiChatCapabilityBase<AmazonProviderSettings>`
+- Extends `AIChatCapabilityBase<AmazonProviderSettings>`
 - Creates `IChatClient` instances using AWS Bedrock SDK with M.E.AI integration
 - Supports Amazon Nova, Claude via Bedrock, Llama, Mistral models
 
 **Embedding Capability** (`AmazonEmbeddingCapability`):
-- Extends `AiEmbeddingCapabilityBase<AmazonProviderSettings>`
+- Extends `AIEmbeddingCapabilityBase<AmazonProviderSettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
 - Supports Amazon Titan Embeddings and Cohere Embed models
 
 ### Settings System
 
-Settings use the `[AiField]` attribute for UI generation:
+Settings use the `[AIField]` attribute for UI generation:
 
 ```csharp
 public class AmazonProviderSettings
 {
-    [AiField]
+    [AIField]
     [Required]
     public string? Region { get; set; }
 
-    [AiField]
+    [AIField]
     [Required]
     public string? AccessKeyId { get; set; }
 
-    [AiField]
+    [AIField]
     [Required]
     public string? SecretAccessKey { get; set; }
 
-    [AiField]
+    [AIField]
     public string? Endpoint { get; set; }
 }
 ```
@@ -126,16 +126,16 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$AWS:Access
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
-1. `[AiProvider]` attribute on the provider class
+1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
-3. Registration in the `AiProvidersCollectionBuilder`
+3. Registration in the `AIProvidersCollectionBuilder`
 
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
 - `FakeAiProvider` - Test double for provider testing
-- `AiConnectionBuilder` - Fluent builder for test connections
-- `AiProfileBuilder` - Fluent builder for test profiles
+- `AIConnectionBuilder` - Fluent builder for test connections
+- `AIProfileBuilder` - Fluent builder for test profiles
 
 ## Contributing
 

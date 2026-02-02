@@ -10,10 +10,10 @@ public interface IAIContextResourceTypeInfrastructure
     /// <summary>
     /// Builder for editable model schemas.
     /// </summary>
-    IAiEditableModelSchemaBuilder SchemaBuilder { get; }
+    IAIEditableModelSchemaBuilder SchemaBuilder { get; }
 
     /// <summary>
     /// Resolver for converting stored data to typed models.
     /// </summary>
-    IAiEditableModelResolver ModelResolver { get; }
+    IAIEditableModelResolver ModelResolver { get; }
 }

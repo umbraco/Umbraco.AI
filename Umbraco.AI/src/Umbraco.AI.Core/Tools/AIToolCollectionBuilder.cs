@@ -11,7 +11,7 @@ namespace Umbraco.AI.Core.Tools;
 /// or <see cref="LazyCollectionBuilderBase{TBuilder,TCollection,TItem}.Exclude{T}"/> to exclude auto-discovered tools.
 /// </remarks>
 public class AIToolCollectionBuilder
-    : LazyCollectionBuilderBase<AIToolCollectionBuilder, AIToolCollection, IAiTool>
+    : LazyCollectionBuilderBase<AIToolCollectionBuilder, AIToolCollection, IAITool>
 {
     /// <inheritdoc />
     protected override AIToolCollectionBuilder This => this;

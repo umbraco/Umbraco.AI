@@ -12,7 +12,7 @@ public sealed class AIContextResource
 
     /// <summary>
     /// The immutable identifier of the resource type (e.g., "brand-voice", "text").
-    /// Links to <see cref="ResourceTypes.IAiContextResourceType.Id"/>.
+    /// Links to <see cref="ResourceTypes.IAIContextResourceType.Id"/>.
     /// </summary>
     public required string ResourceTypeId { get; init; }
 

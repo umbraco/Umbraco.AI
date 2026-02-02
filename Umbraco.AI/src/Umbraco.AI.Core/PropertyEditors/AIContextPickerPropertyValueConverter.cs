@@ -23,13 +23,13 @@ namespace Umbraco.AI.Core.PropertyEditors;
 /// </remarks>
 public class AIContextPickerPropertyValueConverter : PropertyValueConverterBase
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextPickerPropertyValueConverter"/> class.
     /// </summary>
     /// <param name="contextService">The AI context service.</param>
-    public AIContextPickerPropertyValueConverter(IAiContextService contextService)
+    public AIContextPickerPropertyValueConverter(IAIContextService contextService)
     {
         _contextService = contextService;
     }

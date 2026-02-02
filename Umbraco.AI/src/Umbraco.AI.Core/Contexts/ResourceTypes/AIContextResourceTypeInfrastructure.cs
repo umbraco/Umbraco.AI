@@ -3,15 +3,15 @@ using Umbraco.AI.Core.EditableModels;
 namespace Umbraco.AI.Core.Contexts.ResourceTypes;
 
 /// <summary>
-/// Default implementation of <see cref="IAiContextResourceTypeInfrastructure"/>.
+/// Default implementation of <see cref="IAIContextResourceTypeInfrastructure"/>.
 /// </summary>
-internal sealed class AIContextResourceTypeInfrastructure : IAiContextResourceTypeInfrastructure
+internal sealed class AIContextResourceTypeInfrastructure : IAIContextResourceTypeInfrastructure
 {
     /// <inheritdoc />
-    public IAiEditableModelSchemaBuilder SchemaBuilder { get; }
+    public IAIEditableModelSchemaBuilder SchemaBuilder { get; }
 
     /// <inheritdoc />
-    public IAiEditableModelResolver ModelResolver { get; }
+    public IAIEditableModelResolver ModelResolver { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextResourceTypeInfrastructure"/> class.
@@ -19,8 +19,8 @@ internal sealed class AIContextResourceTypeInfrastructure : IAiContextResourceTy
     /// <param name="schemaBuilder">The editable model schema builder.</param>
     /// <param name="modelResolver">The editable model resolver.</param>
     public AIContextResourceTypeInfrastructure(
-        IAiEditableModelSchemaBuilder schemaBuilder,
-        IAiEditableModelResolver modelResolver)
+        IAIEditableModelSchemaBuilder schemaBuilder,
+        IAIEditableModelResolver modelResolver)
     {
         SchemaBuilder = schemaBuilder;
         ModelResolver = modelResolver;

@@ -18,7 +18,7 @@ public sealed class BrandVoiceResourceType : AIContextResourceTypeBase<BrandVoic
     /// Initializes a new instance of the <see cref="BrandVoiceResourceType"/> class.
     /// </summary>
     /// <param name="infrastructure">The infrastructure dependencies.</param>
-    public BrandVoiceResourceType(IAiContextResourceTypeInfrastructure infrastructure)
+    public BrandVoiceResourceType(IAIContextResourceTypeInfrastructure infrastructure)
         : base(infrastructure)
     { }
 

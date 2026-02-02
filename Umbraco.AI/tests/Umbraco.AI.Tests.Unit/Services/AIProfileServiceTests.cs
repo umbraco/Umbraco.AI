@@ -9,18 +9,18 @@ namespace Umbraco.AI.Tests.Unit.Services;
 
 public class AIProfileServiceTests
 {
-    private readonly Mock<IAiProfileRepository> _repositoryMock;
-    private readonly Mock<IAiSettingsService> _settingsServiceMock;
+    private readonly Mock<IAIProfileRepository> _repositoryMock;
+    private readonly Mock<IAISettingsService> _settingsServiceMock;
     private readonly Mock<IOptions<AIOptions>> _optionsMock;
-    private readonly Mock<IAiEntityVersionService> _versionServiceMock;
+    private readonly Mock<IAIEntityVersionService> _versionServiceMock;
     private readonly AIProfileService _service;
 
     public AIProfileServiceTests()
     {
-        _repositoryMock = new Mock<IAiProfileRepository>();
-        _settingsServiceMock = new Mock<IAiSettingsService>();
+        _repositoryMock = new Mock<IAIProfileRepository>();
+        _settingsServiceMock = new Mock<IAISettingsService>();
         _optionsMock = new Mock<IOptions<AIOptions>>();
-        _versionServiceMock = new Mock<IAiEntityVersionService>();
+        _versionServiceMock = new Mock<IAIEntityVersionService>();
         _optionsMock.Setup(x => x.Value).Returns(new AIOptions
         {
             DefaultChatProfileAlias = "default-chat",
@@ -181,7 +181,7 @@ public class AIProfileServiceTests
             DefaultEmbeddingProfileAlias = null
         });
 
-        var emptySettingsService = new Mock<IAiSettingsService>();
+        var emptySettingsService = new Mock<IAISettingsService>();
         emptySettingsService.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AISettings());
 

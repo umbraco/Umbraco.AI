@@ -9,18 +9,18 @@ namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 /// <summary>
 /// Middleware that records AI chat usage to the analytics system.
 /// </summary>
-internal sealed class AIUsageRecordingChatMiddleware : IAiChatMiddleware
+internal sealed class AIUsageRecordingChatMiddleware : IAIChatMiddleware
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IAiUsageRecordFactory _factory;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIUsageRecordingService _usageRecordingService;
+    private readonly IAIUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly ILogger<AIUsageRecordingChatClient> _logger;
 
     public AIUsageRecordingChatMiddleware(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiUsageRecordingService usageRecordingService,
-        IAiUsageRecordFactory factory,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIUsageRecordingService usageRecordingService,
+        IAIUsageRecordFactory factory,
         IOptionsMonitor<AIAnalyticsOptions> options,
         ILogger<AIUsageRecordingChatClient> logger)
     {

@@ -58,7 +58,7 @@ public class AIFunctionFactoryTests
     public void Create_WithMultipleTools_ReturnsListOfAIFunctions()
     {
         // Arrange
-        var tools = new IAiTool[]
+        var tools = new IAITool[]
         {
             new FakeTool(id: "tool-1", name: "Tool 1", description: "First tool"),
             new FakeTool(id: "tool-2", name: "Tool 2", description: "Second tool"),
@@ -79,7 +79,7 @@ public class AIFunctionFactoryTests
     public void Create_WithEmptyCollection_ReturnsEmptyList()
     {
         // Arrange
-        var tools = Array.Empty<IAiTool>();
+        var tools = Array.Empty<IAITool>();
 
         // Act
         var functions = _factory.Create(tools);

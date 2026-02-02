@@ -7,7 +7,7 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// <para>
 /// Inject this interface in orchestrators (like <c>AguiStreamingService</c>) that need to
 /// create a scope for the duration of an AI operation. The context is available via
-/// <see cref="IAiRuntimeContextAccessor"/> until the scope is disposed.
+/// <see cref="IAIRuntimeContextAccessor"/> until the scope is disposed.
 /// </para>
 /// <para>
 /// Scopes can be nested. Each call to <see cref="CreateScope()"/> creates a new isolated
@@ -20,14 +20,14 @@ public interface IAIRuntimeContextScopeProvider
 {
     /// <summary>
     /// Creates a new runtime context scope. The context is available via
-    /// <see cref="IAiRuntimeContextAccessor.Context"/> until the scope is disposed.
+    /// <see cref="IAIRuntimeContextAccessor.Context"/> until the scope is disposed.
     /// </summary>
     /// <returns>A disposable scope that owns the runtime context.</returns>
     /// <remarks>
     /// If called within an existing scope, creates a new nested scope with its own
     /// isolated context. Disposing the nested scope restores the parent context.
     /// </remarks>
-    IAiRuntimeContextScope CreateScope();
+    IAIRuntimeContextScope CreateScope();
 
     /// <summary>
     /// Creates a new runtime context scope with initial context items.
@@ -38,5 +38,5 @@ public interface IAIRuntimeContextScopeProvider
     /// If called within an existing scope, creates a new nested scope with its own
     /// isolated context. Disposing the nested scope restores the parent context.
     /// </remarks>
-    IAiRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items);
+    IAIRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items);
 }

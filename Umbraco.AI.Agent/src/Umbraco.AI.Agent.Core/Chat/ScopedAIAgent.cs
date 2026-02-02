@@ -51,7 +51,7 @@ internal sealed class ScopedAIAgent : AIAgent
     private readonly IReadOnlyList<AIRequestContextItem> _contextItems;
     private readonly IReadOnlyList<AITool> _frontendTools;
     private readonly IReadOnlyDictionary<string, object?>? _additionalProperties;
-    private readonly IAiRuntimeContextScopeProvider _scopeProvider;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
 
     /// <summary>
@@ -70,7 +70,7 @@ internal sealed class ScopedAIAgent : AIAgent
         IEnumerable<AIRequestContextItem> contextItems,
         IEnumerable<AITool> frontendTools,
         IReadOnlyDictionary<string, object?>? additionalProperties,
-        IAiRuntimeContextScopeProvider scopeProvider,
+        IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)
     {
         _innerAgent = innerAgent ?? throw new ArgumentNullException(nameof(innerAgent));

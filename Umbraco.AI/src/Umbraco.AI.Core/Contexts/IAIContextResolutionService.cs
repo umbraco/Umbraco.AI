@@ -8,7 +8,7 @@ namespace Umbraco.AI.Core.Contexts;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Resolution uses all registered <see cref="IAiContextResolver"/> implementations in order.
+/// Resolution uses all registered <see cref="IAIContextResolver"/> implementations in order.
 /// Resources from later resolvers take precedence over earlier resolvers when duplicates exist.
 /// </para>
 /// <para>
@@ -27,7 +27,7 @@ public interface IAIContextResolutionService
     /// </summary>
     /// <remarks>
     /// This is the primary method used by middleware. Each registered resolver
-    /// reads from <see cref="IAiRuntimeContextAccessor"/> to access request-scoped data.
+    /// reads from <see cref="IAIRuntimeContextAccessor"/> to access request-scoped data.
     /// </remarks>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The merged resolved context.</returns>

@@ -6,7 +6,7 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// <summary>
 /// Represents a stored prompt template that can be linked to AI profiles.
 /// </summary>
-public sealed class AIPrompt : IAiVersionableEntity
+public sealed class AIPrompt : IAIVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the prompt.

@@ -10,13 +10,13 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class ByIdOrAliasConnectionControllerTests
 {
-    private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIConnectionService> _connectionServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly ByIdOrAliasConnectionController _controller;
 
     public ByIdOrAliasConnectionControllerTests()
     {
-        _connectionServiceMock = new Mock<IAiConnectionService>();
+        _connectionServiceMock = new Mock<IAIConnectionService>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
         _controller = new ByIdOrAliasConnectionController(_connectionServiceMock.Object, _mapperMock.Object);

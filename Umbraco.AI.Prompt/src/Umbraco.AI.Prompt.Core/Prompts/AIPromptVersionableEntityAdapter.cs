@@ -10,15 +10,15 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIPrompt>
 {
-    private readonly IAiPromptService _promptService;
-    private readonly IAiEntityVersionService _versionService;
+    private readonly IAIPromptService _promptService;
+    private readonly IAIEntityVersionService _versionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIPromptVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="promptService">The prompt service for save operations.</param>
     /// <param name="versionService">The entity version service for retrieving snapshots.</param>
-    public AIPromptVersionableEntityAdapter(IAiPromptService promptService, IAiEntityVersionService versionService)
+    public AIPromptVersionableEntityAdapter(IAIPromptService promptService, IAIEntityVersionService versionService)
     {
         _promptService = promptService;
         _versionService = versionService;

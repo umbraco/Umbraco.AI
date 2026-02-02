@@ -16,17 +16,17 @@ namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 internal sealed class AIUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : AIBoundEmbeddingGeneratorBase<TInput, TEmbedding>
     where TEmbedding : Embedding
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IAiUsageRecordFactory _factory;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIUsageRecordingService _usageRecordingService;
+    private readonly IAIUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly ILogger<AIUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> _logger;
 
     public AIUsageRecordingEmbeddingGenerator(
         IEmbeddingGenerator<TInput, TEmbedding> innerGenerator,
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiUsageRecordingService usageRecordingService,
-        IAiUsageRecordFactory factory,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIUsageRecordingService usageRecordingService,
+        IAIUsageRecordFactory factory,
         IOptionsMonitor<AIAnalyticsOptions> options,
         ILogger<AIUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> logger)
         : base(innerGenerator)

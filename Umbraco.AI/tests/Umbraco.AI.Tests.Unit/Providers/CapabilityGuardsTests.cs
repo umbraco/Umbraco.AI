@@ -18,13 +18,13 @@ public class CapabilityGuardsTests
         var jsonElement = JsonDocument.Parse("{}").RootElement;
 
         // Act
-        var act = () => ((IAiCapability)capability).GetModelsAsync(jsonElement);
+        var act = () => ((IAICapability)capability).GetModelsAsync(jsonElement);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("GetModelsAsync");
-        exception.Message.ShouldContain("IAiConfiguredProvider");
+        exception.Message.ShouldContain("IAIConfiguredProvider");
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class CapabilityGuardsTests
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
 
         // Act
-        var result = await ((IAiCapability)capability).GetModelsAsync(settings);
+        var result = await ((IAICapability)capability).GetModelsAsync(settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -48,7 +48,7 @@ public class CapabilityGuardsTests
         var capability = new TestChatCapability();
 
         // Act
-        var act = () => ((IAiCapability)capability).GetModelsAsync(null);
+        var act = () => ((IAICapability)capability).GetModelsAsync(null);
 
         // Assert
         await Should.ThrowAsync<ArgumentNullException>(act);
@@ -66,13 +66,13 @@ public class CapabilityGuardsTests
         var jsonElement = JsonDocument.Parse("{}").RootElement;
 
         // Act
-        var act = () => ((IAiChatCapability)capability).CreateClient(jsonElement);
+        var act = () => ((IAIChatCapability)capability).CreateClient(jsonElement);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("CreateClient");
-        exception.Message.ShouldContain("IAiConfiguredProvider");
+        exception.Message.ShouldContain("IAIConfiguredProvider");
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class CapabilityGuardsTests
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
 
         // Act
-        var result = ((IAiChatCapability)capability).CreateClient(settings);
+        var result = ((IAIChatCapability)capability).CreateClient(settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -96,7 +96,7 @@ public class CapabilityGuardsTests
         var capability = new TestChatCapability();
 
         // Act
-        var act = () => ((IAiChatCapability)capability).CreateClient(null);
+        var act = () => ((IAIChatCapability)capability).CreateClient(null);
 
         // Assert
         Should.Throw<ArgumentNullException>(act);
@@ -114,13 +114,13 @@ public class CapabilityGuardsTests
         var jsonElement = JsonDocument.Parse("{}").RootElement;
 
         // Act
-        var act = () => ((IAiEmbeddingCapability)capability).CreateGenerator(jsonElement);
+        var act = () => ((IAIEmbeddingCapability)capability).CreateGenerator(jsonElement);
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
         exception.Message.ShouldContain("Settings must be resolved");
         exception.Message.ShouldContain("CreateGenerator");
-        exception.Message.ShouldContain("IAiConfiguredProvider");
+        exception.Message.ShouldContain("IAIConfiguredProvider");
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class CapabilityGuardsTests
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
 
         // Act
-        var result = ((IAiEmbeddingCapability)capability).CreateGenerator(settings);
+        var result = ((IAIEmbeddingCapability)capability).CreateGenerator(settings);
 
         // Assert
         result.ShouldNotBeNull();
@@ -144,7 +144,7 @@ public class CapabilityGuardsTests
         var capability = new TestEmbeddingCapability();
 
         // Act
-        var act = () => ((IAiEmbeddingCapability)capability).CreateGenerator(null);
+        var act = () => ((IAIEmbeddingCapability)capability).CreateGenerator(null);
 
         // Assert
         Should.Throw<ArgumentNullException>(act);

@@ -8,20 +8,20 @@ namespace Umbraco.AI.Core.AuditLog.Middleware;
 /// <summary>
 /// Embedding middleware that handles audit-log tracking for AI embedding operations.
 /// </summary>
-internal sealed class AIAuditingEmbeddingMiddleware : IAiEmbeddingMiddleware
+internal sealed class AIAuditingEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiAuditLogService _auditLogService;
-    private readonly IAiAuditLogFactory _auditLogFactory;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIAuditLogService _auditLogService;
+    private readonly IAIAuditLogFactory _auditLogFactory;
     private readonly IOptionsMonitor<AIAuditLogOptions> _auditLogOptions;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAuditingEmbeddingMiddleware"/> class.
     /// </summary>
     public AIAuditingEmbeddingMiddleware(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiAuditLogService auditLogService,
-        IAiAuditLogFactory auditLogFactory,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIAuditLogService auditLogService,
+        IAIAuditLogFactory auditLogFactory,
         IOptionsMonitor<AIAuditLogOptions> auditLogOptions)
     {
         _runtimeContextAccessor = runtimeContextAccessor;

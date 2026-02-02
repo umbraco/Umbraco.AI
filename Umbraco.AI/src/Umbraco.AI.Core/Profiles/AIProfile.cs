@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Profiles;
 /// <summary>
 /// Defines a profile for AI model usage, including model reference, capabilities, and configuration settings.
 /// </summary>
-public sealed class AIProfile : IAiVersionableEntity
+public sealed class AIProfile : IAIVersionableEntity
 {
     /// <summary>
     /// The unique identifier of the AI profile.
@@ -43,7 +43,7 @@ public sealed class AIProfile : IAiVersionableEntity
     /// <summary>
     /// Capability-specific settings. Type depends on <see cref="Capability"/> value.
     /// </summary>
-    public IAiProfileSettings? Settings { get; set; }
+    public IAIProfileSettings? Settings { get; set; }
 
     /// <summary>
     /// A list of tags associated with the AI profile for categorization and filtering.

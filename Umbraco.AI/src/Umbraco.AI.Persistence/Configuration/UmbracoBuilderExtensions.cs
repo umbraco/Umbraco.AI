@@ -44,19 +44,19 @@ public static class UmbracoBuilderExtensions
         });
 
         // Connection factory for entity/domain mapping with encryption support
-        builder.Services.AddSingleton<IAiConnectionFactory, AIConnectionFactory>();
+        builder.Services.AddSingleton<IAIConnectionFactory, AIConnectionFactory>();
 
         // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
-        builder.Services.AddSingleton<IAiConnectionRepository, EfCoreAiConnectionRepository>();
-        builder.Services.AddSingleton<IAiProfileRepository, EfCoreAiProfileRepository>();
-        builder.Services.AddSingleton<IAiContextRepository, EfCoreAiContextRepository>();
-        builder.Services.AddSingleton<IAiAuditLogRepository, EfCoreAiAuditLogRepository>();
-        builder.Services.AddSingleton<IAiUsageRecordRepository, EfCoreAiUsageRecordRepository>();
-        builder.Services.AddSingleton<IAiUsageStatisticsRepository, EfCoreAiUsageStatisticsRepository>();
-        builder.Services.AddSingleton<IAiSettingsRepository, EfCoreAiSettingsRepository>();
+        builder.Services.AddSingleton<IAIConnectionRepository, EfCoreAiConnectionRepository>();
+        builder.Services.AddSingleton<IAIProfileRepository, EfCoreAiProfileRepository>();
+        builder.Services.AddSingleton<IAIContextRepository, EfCoreAiContextRepository>();
+        builder.Services.AddSingleton<IAIAuditLogRepository, EfCoreAiAuditLogRepository>();
+        builder.Services.AddSingleton<IAIUsageRecordRepository, EfCoreAiUsageRecordRepository>();
+        builder.Services.AddSingleton<IAIUsageStatisticsRepository, EfCoreAiUsageStatisticsRepository>();
+        builder.Services.AddSingleton<IAISettingsRepository, EfCoreAiSettingsRepository>();
 
         // Unified versioning repository
-        builder.Services.AddSingleton<IAiEntityVersionRepository, EfCoreAiEntityVersionRepository>();
+        builder.Services.AddSingleton<IAIEntityVersionRepository, EfCoreAiEntityVersionRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAiMigrationNotificationHandler>();

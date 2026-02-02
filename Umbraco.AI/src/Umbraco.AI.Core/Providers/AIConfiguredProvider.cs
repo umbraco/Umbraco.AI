@@ -3,35 +3,35 @@ namespace Umbraco.AI.Core.Providers;
 /// <summary>
 /// Wraps a provider with resolved settings, exposing configured capabilities.
 /// </summary>
-internal sealed class AIConfiguredProvider(IAiProvider provider, object resolvedSettings) : IAiConfiguredProvider
+internal sealed class AIConfiguredProvider(IAIProvider provider, object resolvedSettings) : IAIConfiguredProvider
 {
-    private readonly IReadOnlyList<IAiConfiguredCapability> _capabilities = WrapCapabilities(provider.GetCapabilities(), resolvedSettings);
+    private readonly IReadOnlyList<IAIConfiguredCapability> _capabilities = WrapCapabilities(provider.GetCapabilities(), resolvedSettings);
 
     /// <inheritdoc />
-    public IAiProvider Provider { get; } = provider;
+    public IAIProvider Provider { get; } = provider;
 
     /// <inheritdoc />
-    public IReadOnlyList<IAiConfiguredCapability> GetCapabilities() => _capabilities;
+    public IReadOnlyList<IAIConfiguredCapability> GetCapabilities() => _capabilities;
 
     /// <inheritdoc />
-    public TCapability? GetCapability<TCapability>() where TCapability : class, IAiConfiguredCapability
+    public TCapability? GetCapability<TCapability>() where TCapability : class, IAIConfiguredCapability
         => _capabilities.OfType<TCapability>().FirstOrDefault();
 
     /// <inheritdoc />
-    public bool HasCapability<TCapability>() where TCapability : class, IAiConfiguredCapability
+    public bool HasCapability<TCapability>() where TCapability : class, IAIConfiguredCapability
         => _capabilities.OfType<TCapability>().Any();
 
-    private static IReadOnlyList<IAiConfiguredCapability> WrapCapabilities(
-        IReadOnlyCollection<IAiCapability> capabilities,
+    private static IReadOnlyList<IAIConfiguredCapability> WrapCapabilities(
+        IReadOnlyCollection<IAICapability> capabilities,
         object settings)
     {
-        var configured = new List<IAiConfiguredCapability>();
+        var configured = new List<IAIConfiguredCapability>();
         foreach (var cap in capabilities)
         {
-            IAiConfiguredCapability? wrapped = cap switch
+            IAIConfiguredCapability? wrapped = cap switch
             {
-                IAiChatCapability chat => new AIConfiguredChatCapability(chat, settings),
-                IAiEmbeddingCapability embedding => new AIConfiguredEmbeddingCapability(embedding, settings),
+                IAIChatCapability chat => new AIConfiguredChatCapability(chat, settings),
+                IAIEmbeddingCapability embedding => new AIConfiguredEmbeddingCapability(embedding, settings),
                 _ => null
             };
             if (wrapped is not null)

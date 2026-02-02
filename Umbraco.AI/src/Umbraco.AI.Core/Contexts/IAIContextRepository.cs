@@ -4,7 +4,7 @@ namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Defines a repository for managing AI contexts.
-/// Internal implementation detail - use <see cref="IAiContextService"/> for external access.
+/// Internal implementation detail - use <see cref="IAIContextService"/> for external access.
 /// </summary>
 internal interface IAIContextRepository
 {

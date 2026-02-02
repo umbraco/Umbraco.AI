@@ -20,7 +20,7 @@ public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
     /// </summary>
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
-    public OpenAiProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public OpenAiProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         _cache = cache;

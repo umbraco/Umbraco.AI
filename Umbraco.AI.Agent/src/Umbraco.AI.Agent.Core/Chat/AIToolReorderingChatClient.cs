@@ -31,14 +31,14 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// </remarks>
 internal sealed class AIToolReorderingChatClient : DelegatingChatClient
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIToolReorderingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client (typically the provider).</param>
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
-    public AIToolReorderingChatClient(IChatClient innerClient, IAiRuntimeContextAccessor runtimeContextAccessor)
+    public AIToolReorderingChatClient(IChatClient innerClient, IAIRuntimeContextAccessor runtimeContextAccessor)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor ?? throw new ArgumentNullException(nameof(runtimeContextAccessor));

@@ -4,7 +4,7 @@ using Umbraco.AI.Web.Api.Common.Models;
 namespace Umbraco.AI.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="IAiContextService"/> to support IdOrAlias lookups.
+/// Extension methods for <see cref="IAIContextService"/> to support IdOrAlias lookups.
 /// </summary>
 internal static class AIContextServiceExtensions
 {
@@ -16,7 +16,7 @@ internal static class AIContextServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context if found, otherwise null.</returns>
     public static async Task<AIContext?> GetContextAsync(
-        this IAiContextService service,
+        this IAIContextService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -42,7 +42,7 @@ internal static class AIContextServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context ID if found, otherwise null.</returns>
     public static async Task<Guid?> TryGetContextIdAsync(
-        this IAiContextService service,
+        this IAIContextService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -71,7 +71,7 @@ internal static class AIContextServiceExtensions
     /// <returns>The context ID.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the context is not found.</exception>
     public static async Task<Guid> GetContextIdAsync(
-        this IAiContextService service,
+        this IAIContextService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {

@@ -4,10 +4,10 @@ using Umbraco.AI.Core.RuntimeContext;
 namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
-/// Default implementation of <see cref="IAiContextResolutionService"/> that aggregates
+/// Default implementation of <see cref="IAIContextResolutionService"/> that aggregates
 /// context from all registered resolvers.
 /// </summary>
-internal sealed class AIContextResolutionService : IAiContextResolutionService
+internal sealed class AIContextResolutionService : IAIContextResolutionService
 {
     private readonly AIContextResolverCollection _resolvers;
 

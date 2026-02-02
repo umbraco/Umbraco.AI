@@ -14,12 +14,12 @@ public class ProviderMapDefinition : IMapDefinition
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)
     {
-        mapper.Define<IAiProvider, ProviderItemResponseModel>((_, _) => new ProviderItemResponseModel(), Map);
-        mapper.Define<IAiProvider, ProviderResponseModel>((_, _) => new ProviderResponseModel(), Map);
+        mapper.Define<IAIProvider, ProviderItemResponseModel>((_, _) => new ProviderItemResponseModel(), Map);
+        mapper.Define<IAIProvider, ProviderResponseModel>((_, _) => new ProviderResponseModel(), Map);
     }
 
     // Umbraco.Code.MapAll
-    private static void Map(IAiProvider source, ProviderItemResponseModel target, MapperContext context)
+    private static void Map(IAIProvider source, ProviderItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Name = source.Name;
@@ -27,7 +27,7 @@ public class ProviderMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static void Map(IAiProvider source, ProviderResponseModel target, MapperContext context)
+    private static void Map(IAIProvider source, ProviderResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Name = source.Name;

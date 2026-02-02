@@ -20,16 +20,16 @@ namespace Umbraco.AI.Web.Api.Management.Embedding.Controllers;
 [ApiVersion("1.0")]
 public class GenerateEmbeddingController : EmbeddingControllerBase
 {
-    private readonly IAiEmbeddingService _embeddingService;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIEmbeddingService _embeddingService;
+    private readonly IAIProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GenerateEmbeddingController"/> class.
     /// </summary>
     public GenerateEmbeddingController(
-        IAiEmbeddingService embeddingService,
-        IAiProfileService profileService,
+        IAIEmbeddingService embeddingService,
+        IAIProfileService profileService,
         IUmbracoMapper umbracoMapper)
     {
         _embeddingService = embeddingService;

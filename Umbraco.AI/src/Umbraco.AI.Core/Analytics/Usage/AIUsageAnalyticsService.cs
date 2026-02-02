@@ -5,15 +5,15 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// <summary>
 /// Service for querying aggregated AI usage statistics with hybrid live + historical data.
 /// </summary>
-internal sealed class AIUsageAnalyticsService : IAiUsageAnalyticsService
+internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
 {
-    private readonly IAiUsageRecordRepository _recordRepository;
-    private readonly IAiUsageStatisticsRepository _statisticsRepository;
+    private readonly IAIUsageRecordRepository _recordRepository;
+    private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly ILogger<AIUsageAnalyticsService> _logger;
 
     public AIUsageAnalyticsService(
-        IAiUsageRecordRepository recordRepository,
-        IAiUsageStatisticsRepository statisticsRepository,
+        IAIUsageRecordRepository recordRepository,
+        IAIUsageStatisticsRepository statisticsRepository,
         ILogger<AIUsageAnalyticsService> logger)
     {
         _recordRepository = recordRepository;

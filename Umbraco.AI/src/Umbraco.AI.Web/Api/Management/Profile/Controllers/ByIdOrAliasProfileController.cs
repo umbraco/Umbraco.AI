@@ -20,13 +20,13 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ByIdOrAliasProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileService _profileService;
+    private readonly IAIProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ByIdOrAliasProfileController"/> class.
     /// </summary>
-    public ByIdOrAliasProfileController(IAiProfileService profileService, IUmbracoMapper umbracoMapper)
+    public ByIdOrAliasProfileController(IAIProfileService profileService, IUmbracoMapper umbracoMapper)
     {
         _profileService = profileService;
         _umbracoMapper = umbracoMapper;

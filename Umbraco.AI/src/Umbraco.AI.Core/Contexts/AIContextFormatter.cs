@@ -5,9 +5,9 @@ using Umbraco.AI.Core.Contexts.ResourceTypes;
 namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
-/// Default implementation of <see cref="IAiContextFormatter"/>.
+/// Default implementation of <see cref="IAIContextFormatter"/>.
 /// </summary>
-internal sealed class AIContextFormatter : IAiContextFormatter
+internal sealed class AIContextFormatter : IAIContextFormatter
 {
     private readonly AIContextResourceTypeCollection _resourceTypes;
 

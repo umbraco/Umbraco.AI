@@ -21,14 +21,14 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class UpdateContextController : ContextControllerBase
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateContextController"/> class.
     /// </summary>
     public UpdateContextController(
-        IAiContextService contextService,
+        IAIContextService contextService,
         IUmbracoMapper umbracoMapper)
     {
         _contextService = contextService;

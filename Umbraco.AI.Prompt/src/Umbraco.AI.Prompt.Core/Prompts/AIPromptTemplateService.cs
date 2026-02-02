@@ -10,18 +10,18 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// Service implementation for processing prompt templates with variable replacement.
 /// Supports multimodal content through prefixed variables (e.g., {{image:propertyAlias}}).
 /// </summary>
-internal sealed partial class AIPromptTemplateService : IAiPromptTemplateService
+internal sealed partial class AIPromptTemplateService : IAIPromptTemplateService
 {
     [GeneratedRegex(@"\{\{([^}]+)\}\}", RegexOptions.Compiled)]
     private static partial Regex VariablePattern();
 
-    private readonly Dictionary<string, IAiTemplateVariableProcessor> _processors;
+    private readonly Dictionary<string, IAITemplateVariableProcessor> _processors;
 
     public AIPromptTemplateService(
         TextTemplateVariableProcessor textProcessor,
         ImageTemplateVariableProcessor imageProcessor)
     {
-        _processors = new Dictionary<string, IAiTemplateVariableProcessor>(StringComparer.OrdinalIgnoreCase)
+        _processors = new Dictionary<string, IAITemplateVariableProcessor>(StringComparer.OrdinalIgnoreCase)
         {
             [imageProcessor.Prefix] = imageProcessor,
             [textProcessor.Prefix] = textProcessor

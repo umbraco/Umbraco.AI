@@ -14,13 +14,13 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 [ApiVersion("1.0")]
 public class AllPromptController : PromptControllerBase
 {
-    private readonly IAiPromptService _aiPromptService;
+    private readonly IAIPromptService _aiPromptService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public AllPromptController(IAiPromptService aiPromptService, IUmbracoMapper umbracoMapper)
+    public AllPromptController(IAIPromptService aiPromptService, IUmbracoMapper umbracoMapper)
     {
         _aiPromptService = aiPromptService;
         _umbracoMapper = umbracoMapper;

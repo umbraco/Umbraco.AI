@@ -5,13 +5,13 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// <summary>
 /// Collection of runtime context contributors. Loops items and dispatches to handlers.
 /// </summary>
-public sealed class AIRuntimeContextContributorCollection : BuilderCollectionBase<IAiRuntimeContextContributor>
+public sealed class AIRuntimeContextContributorCollection : BuilderCollectionBase<IAIRuntimeContextContributor>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AIRuntimeContextContributorCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the contributor instances.</param>
-    public AIRuntimeContextContributorCollection(Func<IEnumerable<IAiRuntimeContextContributor>> items)
+    public AIRuntimeContextContributorCollection(Func<IEnumerable<IAIRuntimeContextContributor>> items)
         : base(items)
     { }
 

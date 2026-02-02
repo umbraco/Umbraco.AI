@@ -10,15 +10,15 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIAgent>
 {
-    private readonly IAiAgentService _agentService;
-    private readonly IAiEntityVersionService _versionService;
+    private readonly IAIAgentService _agentService;
+    private readonly IAIEntityVersionService _versionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="agentService">The agent service for save operations.</param>
     /// <param name="versionService">The entity version service for retrieving snapshots.</param>
-    public AIAgentVersionableEntityAdapter(IAiAgentService agentService, IAiEntityVersionService versionService)
+    public AIAgentVersionableEntityAdapter(IAIAgentService agentService, IAIEntityVersionService versionService)
     {
         _agentService = agentService;
         _versionService = versionService;

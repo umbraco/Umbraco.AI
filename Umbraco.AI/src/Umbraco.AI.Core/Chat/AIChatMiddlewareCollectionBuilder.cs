@@ -17,7 +17,7 @@ namespace Umbraco.AI.Core.Chat;
 /// Middleware is applied in collection order when wrapping the underlying chat client.
 /// </remarks>
 public class AIChatMiddlewareCollectionBuilder
-    : OrderedCollectionBuilderBase<AIChatMiddlewareCollectionBuilder, AIChatMiddlewareCollection, IAiChatMiddleware>
+    : OrderedCollectionBuilderBase<AIChatMiddlewareCollectionBuilder, AIChatMiddlewareCollection, IAIChatMiddleware>
 {
     /// <inheritdoc />
     protected override AIChatMiddlewareCollectionBuilder This => this;

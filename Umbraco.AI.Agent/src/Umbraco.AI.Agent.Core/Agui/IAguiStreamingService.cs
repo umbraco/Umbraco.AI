@@ -36,7 +36,7 @@ public interface IAguiStreamingService
     /// <returns>An async enumerable of AG-UI events.</returns>
     /// <remarks>
     /// System message injection is handled automatically by the agent.
-    /// The agent should be created using <see cref="IAiAgentFactory.CreateAgentAsync"/> to ensure
+    /// The agent should be created using <see cref="IAIAgentFactory.CreateAgentAsync"/> to ensure
     /// runtime context contributors populate system message parts correctly.
     /// </remarks>
     IAsyncEnumerable<IAguiEvent> StreamAgentAsync(

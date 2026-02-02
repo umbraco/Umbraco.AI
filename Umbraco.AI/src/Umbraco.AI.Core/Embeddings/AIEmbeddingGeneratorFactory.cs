@@ -5,13 +5,13 @@ using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.Core.Embeddings;
 
-internal sealed class AIEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
+internal sealed class AIEmbeddingGeneratorFactory : IAIEmbeddingGeneratorFactory
 {
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
     private readonly AIEmbeddingMiddlewareCollection _middleware;
 
     public AIEmbeddingGeneratorFactory(
-        IAiConnectionService connectionService,
+        IAIConnectionService connectionService,
         AIEmbeddingMiddlewareCollection middleware)
     {
         _connectionService = connectionService;
@@ -46,7 +46,7 @@ internal sealed class AIEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
         return generator;
     }
 
-    private async Task<IAiConfiguredEmbeddingCapability> GetConfiguredEmbeddingCapabilityAsync(
+    private async Task<IAIConfiguredEmbeddingCapability> GetConfiguredEmbeddingCapabilityAsync(
         AIProfile profile,
         CancellationToken cancellationToken)
     {
@@ -89,7 +89,7 @@ internal sealed class AIEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
                 $"but profile '{profile.Name}' requires provider '{profile.Model.ProviderId}'.");
         }
 
-        var embeddingCapability = configured.GetCapability<IAiConfiguredEmbeddingCapability>();
+        var embeddingCapability = configured.GetCapability<IAIConfiguredEmbeddingCapability>();
         if (embeddingCapability is null)
         {
             throw new InvalidOperationException(

@@ -5,7 +5,7 @@ namespace Umbraco.AI.Core.Providers;
 /// <summary>
 /// Factory for creating AI capability instances.
 /// </summary>
-public sealed class AICapabilityFactory : IAiCapabilityFactory
+public sealed class AICapabilityFactory : IAICapabilityFactory
 {
     private readonly IServiceProvider _serviceProvider;
 
@@ -24,8 +24,8 @@ public sealed class AICapabilityFactory : IAiCapabilityFactory
     /// <param name="provider"></param>
     /// <typeparam name="TCapability"></typeparam>
     /// <returns></returns>
-    public TCapability Create<TCapability>(IAiProvider provider)
-        where TCapability : class, IAiCapability
+    public TCapability Create<TCapability>(IAIProvider provider)
+        where TCapability : class, IAICapability
     {
         return _serviceProvider.CreateInstance<TCapability>(provider);
     }

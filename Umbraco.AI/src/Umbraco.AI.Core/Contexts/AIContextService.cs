@@ -5,12 +5,12 @@ using Umbraco.Cms.Core.Security;
 namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
-/// Default implementation of <see cref="IAiContextService"/>.
+/// Default implementation of <see cref="IAIContextService"/>.
 /// </summary>
-internal sealed class AIContextService : IAiContextService
+internal sealed class AIContextService : IAIContextService
 {
-    private readonly IAiContextRepository _repository;
-    private readonly IAiEntityVersionService _versionService;
+    private readonly IAIContextRepository _repository;
+    private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     /// <summary>
@@ -20,8 +20,8 @@ internal sealed class AIContextService : IAiContextService
     /// <param name="versionService">The unified versioning service.</param>
     /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user tracking.</param>
     public AIContextService(
-        IAiContextRepository repository,
-        IAiEntityVersionService versionService,
+        IAIContextRepository repository,
+        IAIEntityVersionService versionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;

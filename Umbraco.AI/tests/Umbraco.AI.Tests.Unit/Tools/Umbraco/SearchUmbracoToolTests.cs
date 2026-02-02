@@ -11,7 +11,7 @@ public class SearchUmbracoToolTests
 {
     private readonly Mock<IExamineManager> _examineManagerMock;
     private readonly Mock<IUmbracoContextAccessor> _umbracoContextAccessorMock;
-    private readonly IAiTool _tool;
+    private readonly IAITool _tool;
 
     public SearchUmbracoToolTests()
     {

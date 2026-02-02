@@ -17,12 +17,12 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class CapabilitiesConnectionController : ConnectionControllerBase
 {
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CapabilitiesConnectionController"/> class.
     /// </summary>
-    public CapabilitiesConnectionController(IAiConnectionService connectionService)
+    public CapabilitiesConnectionController(IAIConnectionService connectionService)
     {
         _connectionService = connectionService;
     }

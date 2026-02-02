@@ -15,7 +15,7 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// pushes a new context onto the stack, and disposing the scope pops it, restoring the previous context.
 /// </para>
 /// </remarks>
-internal sealed class AIRuntimeContextScopeProvider : IAiRuntimeContextScopeProvider, IAiRuntimeContextAccessor
+internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProvider, IAIRuntimeContextAccessor
 {
     private const string ContextKey = "Umbraco.Ai.RuntimeContext";
 
@@ -46,11 +46,11 @@ internal sealed class AIRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
     }
 
     /// <inheritdoc />
-    public IAiRuntimeContextScope CreateScope()
+    public IAIRuntimeContextScope CreateScope()
         => CreateScope([]);
 
     /// <inheritdoc />
-    public IAiRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items)
+    public IAIRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items)
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
@@ -77,7 +77,7 @@ internal sealed class AIRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
     /// <summary>
     /// A scope that owns a context on the stack and pops it on dispose.
     /// </summary>
-    private sealed class StackScope : IAiRuntimeContextScope
+    private sealed class StackScope : IAIRuntimeContextScope
     {
         private readonly AIRuntimeContextScopeProvider _provider;
         private readonly Stack<AIRuntimeContext> _stack;
@@ -129,7 +129,7 @@ internal sealed class AIRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
     /// <summary>
     /// A detached scope for scenarios without HttpContext.
     /// </summary>
-    private sealed class DetachedScope : IAiRuntimeContextScope
+    private sealed class DetachedScope : IAIRuntimeContextScope
     {
         public DetachedScope(AIRuntimeContext context)
         {

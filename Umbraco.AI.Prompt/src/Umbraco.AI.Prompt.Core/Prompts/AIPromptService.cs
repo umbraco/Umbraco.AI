@@ -15,28 +15,28 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// <summary>
 /// Service implementation for prompt management operations.
 /// </summary>
-internal sealed class AIPromptService : IAiPromptService
+internal sealed class AIPromptService : IAIPromptService
 {
-    private readonly IAiPromptRepository _repository;
-    private readonly IAiEntityVersionService _versionService;
-    private readonly IAiChatService _chatService;
-    private readonly IAiPromptTemplateService _templateService;
+    private readonly IAIPromptRepository _repository;
+    private readonly IAIEntityVersionService _versionService;
+    private readonly IAIChatService _chatService;
+    private readonly IAIPromptTemplateService _templateService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly AIToolCollection _tools;
-    private readonly IAiFunctionFactory _functionFactory;
-    private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
+    private readonly IAIFunctionFactory _functionFactory;
+    private readonly IAIRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AIRuntimeContextContributorCollection _contextContributors;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AIPromptService(
-        IAiPromptRepository repository,
-        IAiEntityVersionService versionService,
-        IAiChatService chatService,
-        IAiPromptTemplateService templateService,
+        IAIPromptRepository repository,
+        IAIEntityVersionService versionService,
+        IAIChatService chatService,
+        IAIPromptTemplateService templateService,
         IServiceScopeFactory serviceScopeFactory,
         AIToolCollection tools,
-        IAiFunctionFactory functionFactory,
-        IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
+        IAIFunctionFactory functionFactory,
+        IAIRuntimeContextScopeProvider runtimeContextScopeProvider,
         AIRuntimeContextContributorCollection contextContributors,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
@@ -130,9 +130,9 @@ internal sealed class AIPromptService : IAiPromptService
             ?? throw new InvalidOperationException($"Prompt {promptId} not found");
 
         // 2. Validate scope - ensure prompt is allowed to run for this context
-        // Use a scope to resolve the scoped IAiPromptScopeValidator
+        // Use a scope to resolve the scoped IAIPromptScopeValidator
         using var scope = _serviceScopeFactory.CreateScope();
-        var scopeValidator = scope.ServiceProvider.GetRequiredService<IAiPromptScopeValidator>();
+        var scopeValidator = scope.ServiceProvider.GetRequiredService<IAIPromptScopeValidator>();
         var scopeValidation = await scopeValidator.ValidateAsync(prompt, request, cancellationToken);
         if (!scopeValidation.IsAllowed)
         {

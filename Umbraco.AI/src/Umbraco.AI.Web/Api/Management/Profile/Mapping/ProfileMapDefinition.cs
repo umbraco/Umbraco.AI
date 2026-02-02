@@ -113,7 +113,7 @@ public class ProfileMapDefinition : IMapDefinition
         };
     }
 
-    private static IAiProfileSettings? MapSettingsFromRequest(AICapability capability, ProfileSettingsModel? settings)
+    private static IAIProfileSettings? MapSettingsFromRequest(AICapability capability, ProfileSettingsModel? settings)
     {
         return capability switch
         {

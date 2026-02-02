@@ -11,7 +11,7 @@ namespace Umbraco.AI.Core.EditableModels;
 /// <summary>
 /// Service for resolving editable models from various storage formats.
 /// </summary>
-internal sealed class AIEditableModelResolver : IAiEditableModelResolver
+internal sealed class AIEditableModelResolver : IAIEditableModelResolver
 {
     private const string ConfigPrefix = "$";
 

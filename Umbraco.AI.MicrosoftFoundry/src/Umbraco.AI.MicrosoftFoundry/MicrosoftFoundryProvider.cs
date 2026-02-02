@@ -33,7 +33,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
     /// <param name="cache">The memory cache.</param>
     /// <param name="httpClientFactory">The HTTP client factory.</param>
     public MicrosoftFoundryProvider(
-        IAiProviderInfrastructure infrastructure,
+        IAIProviderInfrastructure infrastructure,
         IMemoryCache cache,
         IHttpClientFactory httpClientFactory)
         : base(infrastructure)

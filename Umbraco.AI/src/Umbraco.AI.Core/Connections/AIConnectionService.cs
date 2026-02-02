@@ -9,19 +9,19 @@ namespace Umbraco.AI.Core.Connections;
 /// <summary>
 /// Service for managing AI provider connections with validation and business logic.
 /// </summary>
-internal sealed class AIConnectionService : IAiConnectionService
+internal sealed class AIConnectionService : IAIConnectionService
 {
-    private readonly IAiConnectionRepository _repository;
+    private readonly IAIConnectionRepository _repository;
     private readonly AIProviderCollection _providers;
-    private readonly IAiEditableModelResolver _modelResolver;
-    private readonly IAiEntityVersionService _versionService;
+    private readonly IAIEditableModelResolver _modelResolver;
+    private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AIConnectionService(
-        IAiConnectionRepository repository,
+        IAIConnectionRepository repository,
         AIProviderCollection providers,
-        IAiEditableModelResolver modelResolver,
-        IAiEntityVersionService versionService,
+        IAIEditableModelResolver modelResolver,
+        IAIEntityVersionService versionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -127,7 +127,7 @@ internal sealed class AIConnectionService : IAiConnectionService
         }
 
         // TODO: Check if connection is in use by profiles before deletion
-        // This will require IAiProfileService when implemented
+        // This will require IAIProfileService when implemented
 
         // Delete version history for this entity
         await _versionService.DeleteVersionsAsync(id, "Connection", cancellationToken);
@@ -191,7 +191,7 @@ internal sealed class AIConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public async Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    public async Task<IAIConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         var connection = await _repository.GetAsync(connectionId, cancellationToken);
         if (connection is null)

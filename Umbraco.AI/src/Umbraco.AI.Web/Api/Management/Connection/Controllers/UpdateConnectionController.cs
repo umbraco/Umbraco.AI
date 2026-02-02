@@ -20,14 +20,14 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class UpdateConnectionController : ConnectionControllerBase
 {
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateConnectionController"/> class.
     /// </summary>
     public UpdateConnectionController(
-        IAiConnectionService connectionService,
+        IAIConnectionService connectionService,
         IUmbracoMapper umbracoMapper)
     {
         _connectionService = connectionService;

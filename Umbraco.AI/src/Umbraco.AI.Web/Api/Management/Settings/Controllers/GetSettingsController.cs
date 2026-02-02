@@ -16,13 +16,13 @@ namespace Umbraco.AI.Web.Api.Management.Settings.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class GetSettingsController : SettingsControllerBase
 {
-    private readonly IAiSettingsService _settingsService;
+    private readonly IAISettingsService _settingsService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetSettingsController"/> class.
     /// </summary>
-    public GetSettingsController(IAiSettingsService settingsService, IUmbracoMapper umbracoMapper)
+    public GetSettingsController(IAISettingsService settingsService, IUmbracoMapper umbracoMapper)
     {
         _settingsService = settingsService;
         _umbracoMapper = umbracoMapper;

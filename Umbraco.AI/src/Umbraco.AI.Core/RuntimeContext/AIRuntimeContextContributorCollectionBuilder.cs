@@ -20,7 +20,7 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// </para>
 /// </remarks>
 public sealed class AIRuntimeContextContributorCollectionBuilder
-    : OrderedCollectionBuilderBase<AIRuntimeContextContributorCollectionBuilder, AIRuntimeContextContributorCollection, IAiRuntimeContextContributor>
+    : OrderedCollectionBuilderBase<AIRuntimeContextContributorCollectionBuilder, AIRuntimeContextContributorCollection, IAIRuntimeContextContributor>
 {
     /// <inheritdoc />
     protected override AIRuntimeContextContributorCollectionBuilder This => this;

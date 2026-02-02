@@ -11,7 +11,7 @@ namespace Umbraco.AI.Core.Contexts.ResourceTypes;
 /// or <see cref="LazyCollectionBuilderBase{TBuilder,TCollection,TItem}.Exclude{T}"/> to exclude auto-discovered types.
 /// </remarks>
 public class AIContextResourceTypeCollectionBuilder
-    : LazyCollectionBuilderBase<AIContextResourceTypeCollectionBuilder, AIContextResourceTypeCollection, IAiContextResourceType>
+    : LazyCollectionBuilderBase<AIContextResourceTypeCollectionBuilder, AIContextResourceTypeCollection, IAIContextResourceType>
 {
     /// <inheritdoc />
     protected override AIContextResourceTypeCollectionBuilder This => this;

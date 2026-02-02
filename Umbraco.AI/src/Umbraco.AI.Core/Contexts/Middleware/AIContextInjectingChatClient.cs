@@ -9,15 +9,15 @@ namespace Umbraco.AI.Core.Contexts.Middleware;
 /// </summary>
 /// <remarks>
 /// This client:
-/// - Resolves context using all registered resolvers via <see cref="IAiContextResolutionService"/>
+/// - Resolves context using all registered resolvers via <see cref="IAIContextResolutionService"/>
 /// - Injects "Always" mode resources into the system prompt
-/// - Makes the resolved context available via <see cref="IAiContextAccessor"/> for OnDemand tools
+/// - Makes the resolved context available via <see cref="IAIContextAccessor"/> for OnDemand tools
 /// </remarks>
 internal sealed class AIContextInjectingChatClient : DelegatingChatClient
 {
-    private readonly IAiContextResolutionService _contextResolutionService;
-    private readonly IAiContextFormatter _contextFormatter;
-    private readonly IAiContextAccessor _contextAccessor;
+    private readonly IAIContextResolutionService _contextResolutionService;
+    private readonly IAIContextFormatter _contextFormatter;
+    private readonly IAIContextAccessor _contextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextInjectingChatClient"/> class.
@@ -28,9 +28,9 @@ internal sealed class AIContextInjectingChatClient : DelegatingChatClient
     /// <param name="contextAccessor">The context accessor for tool access.</param>
     public AIContextInjectingChatClient(
         IChatClient innerClient,
-        IAiContextResolutionService contextResolutionService,
-        IAiContextFormatter contextFormatter,
-        IAiContextAccessor contextAccessor)
+        IAIContextResolutionService contextResolutionService,
+        IAIContextFormatter contextFormatter,
+        IAIContextAccessor contextAccessor)
         : base(innerClient)
     {
         _contextResolutionService = contextResolutionService;

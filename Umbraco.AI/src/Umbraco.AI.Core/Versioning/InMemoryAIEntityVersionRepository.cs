@@ -4,9 +4,9 @@ using Umbraco.AI.Core.Models;
 namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
-/// In-memory implementation of <see cref="IAiEntityVersionRepository"/> for testing.
+/// In-memory implementation of <see cref="IAIEntityVersionRepository"/> for testing.
 /// </summary>
-internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionRepository
+internal sealed class InMemoryAiEntityVersionRepository : IAIEntityVersionRepository
 {
     private readonly ConcurrentDictionary<string, AIEntityVersion> _versions = new();
 

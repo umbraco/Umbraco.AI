@@ -4,7 +4,7 @@ using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Profiles;
 
-internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
+internal sealed class InMemoryAiProfileRepository : IAIProfileRepository
 {
     private readonly ConcurrentDictionary<Guid, AIProfile> _profiles = new();
 

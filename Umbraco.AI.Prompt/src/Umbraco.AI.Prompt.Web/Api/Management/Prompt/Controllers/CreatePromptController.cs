@@ -16,13 +16,13 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class CreatePromptController : PromptControllerBase
 {
-    private readonly IAiPromptService _aiPromptService;
+    private readonly IAIPromptService _aiPromptService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public CreatePromptController(IAiPromptService aiPromptService, IUmbracoMapper umbracoMapper)
+    public CreatePromptController(IAIPromptService aiPromptService, IUmbracoMapper umbracoMapper)
     {
         _aiPromptService = aiPromptService;
         _umbracoMapper = umbracoMapper;

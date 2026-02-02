@@ -6,14 +6,14 @@ namespace Umbraco.AI.Tests.Unit.Services;
 
 public class AIContextServiceTests
 {
-    private readonly Mock<IAiContextRepository> _repositoryMock;
-    private readonly Mock<IAiEntityVersionService> _versionServiceMock;
+    private readonly Mock<IAIContextRepository> _repositoryMock;
+    private readonly Mock<IAIEntityVersionService> _versionServiceMock;
     private readonly AIContextService _service;
 
     public AIContextServiceTests()
     {
-        _repositoryMock = new Mock<IAiContextRepository>();
-        _versionServiceMock = new Mock<IAiEntityVersionService>();
+        _repositoryMock = new Mock<IAIContextRepository>();
+        _versionServiceMock = new Mock<IAIEntityVersionService>();
         _service = new AIContextService(_repositoryMock.Object, _versionServiceMock.Object);
     }
 

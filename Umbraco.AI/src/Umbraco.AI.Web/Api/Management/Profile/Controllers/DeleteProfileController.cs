@@ -18,12 +18,12 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class DeleteProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileService _profileService;
+    private readonly IAIProfileService _profileService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteProfileController"/> class.
     /// </summary>
-    public DeleteProfileController(IAiProfileService profileService)
+    public DeleteProfileController(IAIProfileService profileService)
     {
         _profileService = profileService;
     }

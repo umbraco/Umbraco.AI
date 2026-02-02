@@ -4,7 +4,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
 /// Repository interface for agent persistence operations.
-/// Internal implementation detail - use <see cref="IAiAgentService"/> for external access.
+/// Internal implementation detail - use <see cref="IAIAgentService"/> for external access.
 /// </summary>
 internal interface IAIAgentRepository
 {

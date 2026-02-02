@@ -16,7 +16,7 @@ public sealed class TextResourceType : AIContextResourceTypeBase<TextResourceDat
     /// Initializes a new instance of the <see cref="TextResourceType"/> class.
     /// </summary>
     /// <param name="infrastructure">The infrastructure dependencies.</param>
-    public TextResourceType(IAiContextResourceTypeInfrastructure infrastructure)
+    public TextResourceType(IAIContextResourceTypeInfrastructure infrastructure)
         : base(infrastructure)
     { }
 

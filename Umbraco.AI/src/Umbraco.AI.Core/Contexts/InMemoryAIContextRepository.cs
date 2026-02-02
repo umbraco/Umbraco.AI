@@ -5,9 +5,9 @@ using Umbraco.Extensions;
 namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
-/// In-memory implementation of <see cref="IAiContextRepository"/> for development/testing.
+/// In-memory implementation of <see cref="IAIContextRepository"/> for development/testing.
 /// </summary>
-internal sealed class InMemoryAiContextRepository : IAiContextRepository
+internal sealed class InMemoryAiContextRepository : IAIContextRepository
 {
     private readonly ConcurrentDictionary<Guid, AIContext> _contexts = new();
 

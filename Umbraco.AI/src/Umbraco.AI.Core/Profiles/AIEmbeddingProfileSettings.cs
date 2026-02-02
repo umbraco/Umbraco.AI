@@ -4,6 +4,6 @@ namespace Umbraco.AI.Core.Profiles;
 /// Settings specific to Embedding capability profiles.
 /// Currently empty - ready for future settings like Dimensions.
 /// </summary>
-public sealed class AIEmbeddingProfileSettings : IAiProfileSettings
+public sealed class AIEmbeddingProfileSettings : IAIProfileSettings
 {
 }

@@ -20,7 +20,7 @@ namespace Umbraco.AI.Core.Contexts.Resolvers;
 /// </para>
 /// </remarks>
 public class AIContextResolverCollectionBuilder
-    : OrderedCollectionBuilderBase<AIContextResolverCollectionBuilder, AIContextResolverCollection, IAiContextResolver>
+    : OrderedCollectionBuilderBase<AIContextResolverCollectionBuilder, AIContextResolverCollection, IAIContextResolver>
 {
     /// <inheritdoc />
     protected override AIContextResolverCollectionBuilder This => this;

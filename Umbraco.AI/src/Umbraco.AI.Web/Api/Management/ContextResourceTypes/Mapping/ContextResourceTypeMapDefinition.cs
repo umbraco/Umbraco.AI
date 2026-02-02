@@ -14,7 +14,7 @@ public class ContextResourceTypeMapDefinition : IMapDefinition
     public void DefineMaps(IUmbracoMapper mapper)
     {
         // Resource type mappings
-        mapper.Define<IAiContextResourceType, ContextResourceTypeResponseModel>((_, _) => new ContextResourceTypeResponseModel
+        mapper.Define<IAIContextResourceType, ContextResourceTypeResponseModel>((_, _) => new ContextResourceTypeResponseModel
         {
             Id = string.Empty,
             Name = string.Empty
@@ -22,7 +22,7 @@ public class ContextResourceTypeMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static void MapResourceTypeToResponse(IAiContextResourceType source, ContextResourceTypeResponseModel target, MapperContext context)
+    private static void MapResourceTypeToResponse(IAIContextResourceType source, ContextResourceTypeResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Name = source.Name;

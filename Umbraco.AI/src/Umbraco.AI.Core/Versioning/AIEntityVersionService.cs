@@ -4,11 +4,11 @@ using Umbraco.AI.Core.Models;
 namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
-/// Default implementation of <see cref="IAiEntityVersionService"/>.
+/// Default implementation of <see cref="IAIEntityVersionService"/>.
 /// </summary>
-internal sealed class AIEntityVersionService : IAiEntityVersionService
+internal sealed class AIEntityVersionService : IAIEntityVersionService
 {
-    private readonly IAiEntityVersionRepository _repository;
+    private readonly IAIEntityVersionRepository _repository;
     private readonly AIVersionableEntityAdapterCollection _entityTypes;
     private readonly IOptionsMonitor<AIVersionCleanupPolicy> _cleanupPolicy;
 
@@ -19,7 +19,7 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
     /// <param name="entityTypes">The collection of versionable entity type handlers.</param>
     /// <param name="cleanupPolicy">The version cleanup policy options.</param>
     public AIEntityVersionService(
-        IAiEntityVersionRepository repository,
+        IAIEntityVersionRepository repository,
         AIVersionableEntityAdapterCollection entityTypes,
         IOptionsMonitor<AIVersionCleanupPolicy> cleanupPolicy)
     {
@@ -66,7 +66,7 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
 
         // If not found in repository, check if it's the current version
         var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
-        if (currentEntity is IAiVersionableEntity versionable && versionable.Version == version)
+        if (currentEntity is IAIVersionableEntity versionable && versionable.Version == version)
         {
             // Return a synthetic version record for the current state
             return new AIEntityVersion
@@ -101,7 +101,7 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
         Guid entityId,
         int version,
         CancellationToken cancellationToken = default)
-        where TEntity : class, IAiVersionableEntity
+        where TEntity : class, IAIVersionableEntity
     {
         var handler = GetHandler<TEntity>();
 
@@ -128,7 +128,7 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
         Guid? userId,
         string? changeDescription = null,
         CancellationToken cancellationToken = default)
-        where TEntity : class, IAiVersionableEntity
+        where TEntity : class, IAIVersionableEntity
     {
         var handler = GetHandler<TEntity>();
 
@@ -189,7 +189,7 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
 
         // Get the current entity to check its version
         var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
-        var currentVersion = (currentEntity as IAiVersionableEntity)?.Version ?? 0;
+        var currentVersion = (currentEntity as IAIVersionableEntity)?.Version ?? 0;
 
         // Resolve "from" version - use current entity if it matches the requested version
         object? fromEntity;
@@ -227,7 +227,7 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
 
     /// <inheritdoc />
     public string CreateSnapshot<TEntity>(TEntity entity)
-        where TEntity : class, IAiVersionableEntity
+        where TEntity : class, IAIVersionableEntity
     {
         var handler = GetHandler<TEntity>();
         return handler.CreateSnapshot(entity);
@@ -235,7 +235,7 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
 
     /// <inheritdoc />
     public TEntity? RestoreFromSnapshot<TEntity>(string snapshot)
-        where TEntity : class, IAiVersionableEntity
+        where TEntity : class, IAIVersionableEntity
     {
         var handler = GetHandler<TEntity>();
         return handler.RestoreFromSnapshot(snapshot) as TEntity;
@@ -294,8 +294,8 @@ internal sealed class AIEntityVersionService : IAiEntityVersionService
         };
     }
 
-    private IAiVersionableEntityAdapter GetHandler<TEntity>()
-        where TEntity : class, IAiVersionableEntity
+    private IAIVersionableEntityAdapter GetHandler<TEntity>()
+        where TEntity : class, IAIVersionableEntity
     {
         var handler = _entityTypes.GetByType<TEntity>();
         if (handler is null)

@@ -8,16 +8,16 @@ namespace Umbraco.AI.Core.AuditLog.Middleware;
 
 internal sealed class AIAuditingEmbeddingGenerator : DelegatingEmbeddingGenerator<string, Embedding<float>>
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiAuditLogService _auditLogService;
-    private readonly IAiAuditLogFactory _auditLogFactory;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIAuditLogService _auditLogService;
+    private readonly IAIAuditLogFactory _auditLogFactory;
     private readonly IOptionsMonitor<AIAuditLogOptions> _auditLogOptions;
 
     public AIAuditingEmbeddingGenerator(
         IEmbeddingGenerator<string, Embedding<float>> innerGenerator,
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiAuditLogService auditLogService,
-        IAiAuditLogFactory auditLogFactory,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIAuditLogService auditLogService,
+        IAIAuditLogFactory auditLogFactory,
         IOptionsMonitor<AIAuditLogOptions> auditLogOptions)
         : base(innerGenerator)
     {

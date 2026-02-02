@@ -16,17 +16,17 @@ namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 /// </summary>
 internal sealed class AIUsageRecordingChatClient : AIBoundChatClientBase
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IAiUsageRecordFactory _factory;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIUsageRecordingService _usageRecordingService;
+    private readonly IAIUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly ILogger<AIUsageRecordingChatClient> _logger;
 
     public AIUsageRecordingChatClient(
         IChatClient innerClient,
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiUsageRecordingService usageRecordingService,
-        IAiUsageRecordFactory factory,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIUsageRecordingService usageRecordingService,
+        IAIUsageRecordFactory factory,
         IOptionsMonitor<AIAnalyticsOptions> options,
         ILogger<AIUsageRecordingChatClient> logger)
         : base(innerClient)

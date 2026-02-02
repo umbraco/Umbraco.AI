@@ -13,9 +13,9 @@ namespace Umbraco.AI.Core.Connections;
 /// </remarks>
 internal sealed class AIConnectionVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIConnection>
 {
-    private readonly IAiEditableModelSerializer _serializer;
+    private readonly IAIEditableModelSerializer _serializer;
     private readonly AIProviderCollection _providers;
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIConnectionVersionableEntityAdapter"/> class.
@@ -24,9 +24,9 @@ internal sealed class AIConnectionVersionableEntityAdapter : AIVersionableEntity
     /// <param name="providers">The provider collection for retrieving settings schemas.</param>
     /// <param name="connectionService">The connection service for rollback operations.</param>
     public AIConnectionVersionableEntityAdapter(
-        IAiEditableModelSerializer serializer,
+        IAIEditableModelSerializer serializer,
         AIProviderCollection providers,
-        IAiConnectionService connectionService)
+        IAIConnectionService connectionService)
     {
         _serializer = serializer;
         _providers = providers;

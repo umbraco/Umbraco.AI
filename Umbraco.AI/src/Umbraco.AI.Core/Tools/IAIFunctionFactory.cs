@@ -12,12 +12,12 @@ public interface IAIFunctionFactory
     /// </summary>
     /// <param name="tool">The tool to create a function for.</param>
     /// <returns>An AIFunction that invokes the tool.</returns>
-    AIFunction Create(IAiTool tool);
+    AIFunction Create(IAITool tool);
 
     /// <summary>
     /// Creates AIFunctions from multiple tools.
     /// </summary>
     /// <param name="tools">The tools to create functions for.</param>
     /// <returns>A list of AIFunctions.</returns>
-    IReadOnlyList<AIFunction> Create(IEnumerable<IAiTool> tools);
+    IReadOnlyList<AIFunction> Create(IEnumerable<IAITool> tools);
 }

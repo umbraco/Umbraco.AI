@@ -5,7 +5,7 @@ namespace Umbraco.AI.Core.Models;
 /// </summary>
 /// <remarks>
 /// Implement this interface on entities that need to track who created/modified them and when.
-/// For entities that also need version history with snapshots, implement <see cref="Versioning.IAiVersionableEntity"/> instead,
+/// For entities that also need version history with snapshots, implement <see cref="Versioning.IAIVersionableEntity"/> instead,
 /// which extends this interface.
 /// </remarks>
 public interface IAIAuditableEntity

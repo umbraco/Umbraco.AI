@@ -14,25 +14,25 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// <summary>
 /// Factory for creating MAF AIAgent instances from agent definitions.
 /// </summary>
-internal sealed class AIAgentFactory : IAiAgentFactory
+internal sealed class AIAgentFactory : IAIAgentFactory
 {
-    private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
+    private readonly IAIRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AIRuntimeContextContributorCollection _contextContributors;
-    private readonly IAiProfileService _profileService;
-    private readonly IAiChatClientFactory _chatClientFactory;
+    private readonly IAIProfileService _profileService;
+    private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIToolCollection _toolCollection;
-    private readonly IAiFunctionFactory _functionFactory;
+    private readonly IAIFunctionFactory _functionFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentFactory"/> class.
     /// </summary>
     public AIAgentFactory(
-        IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
+        IAIRuntimeContextScopeProvider runtimeContextScopeProvider,
         AIRuntimeContextContributorCollection contextContributors,
-        IAiProfileService profileService,
-        IAiChatClientFactory chatClientFactory,
+        IAIProfileService profileService,
+        IAIChatClientFactory chatClientFactory,
         AIToolCollection toolCollection,
-        IAiFunctionFactory functionFactory)
+        IAIFunctionFactory functionFactory)
     {
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
         _contextContributors = contextContributors ?? throw new ArgumentNullException(nameof(contextContributors));

@@ -81,7 +81,7 @@ internal sealed class AIAuditLogCleanupBackgroundJob : RecurringHostedServiceBas
 
         // Perform cleanup
         using var scope = _serviceProvider.CreateScope();
-        var traceService = scope.ServiceProvider.GetRequiredService<IAiAuditLogService>();
+        var traceService = scope.ServiceProvider.GetRequiredService<IAIAuditLogService>();
 
         try
         {

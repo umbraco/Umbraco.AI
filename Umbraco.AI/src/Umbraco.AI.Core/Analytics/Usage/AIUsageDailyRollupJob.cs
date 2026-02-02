@@ -14,8 +14,8 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// </summary>
 internal sealed class AIUsageDailyRollupJob : RecurringHostedServiceBase
 {
-    private readonly IAiUsageAggregationService _aggregationService;
-    private readonly IAiUsageStatisticsRepository _statisticsRepository;
+    private readonly IAIUsageAggregationService _aggregationService;
+    private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
@@ -27,8 +27,8 @@ internal sealed class AIUsageDailyRollupJob : RecurringHostedServiceBase
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(1);
 
     public AIUsageDailyRollupJob(
-        IAiUsageAggregationService aggregationService,
-        IAiUsageStatisticsRepository statisticsRepository,
+        IAIUsageAggregationService aggregationService,
+        IAIUsageStatisticsRepository statisticsRepository,
         IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,

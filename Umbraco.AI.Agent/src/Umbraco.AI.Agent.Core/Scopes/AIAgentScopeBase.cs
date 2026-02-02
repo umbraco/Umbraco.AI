@@ -17,7 +17,7 @@ namespace Umbraco.AI.Agent.Core.Scopes;
 /// public class CopilotScope : AIAgentScopeBase { }
 /// </code>
 /// </example>
-public abstract class AIAgentScopeBase : IAiAgentScope
+public abstract class AIAgentScopeBase : IAIAgentScope
 {
     /// <inheritdoc />
     public string Id { get; }

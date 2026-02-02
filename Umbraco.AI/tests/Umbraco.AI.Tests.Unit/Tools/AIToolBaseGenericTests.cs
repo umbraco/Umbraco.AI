@@ -29,7 +29,7 @@ public class AIToolBaseGenericTests
         var args = new TestArgs("Hello", 5);
 
         // Act
-        var result = await ((IAiTool)tool).ExecuteAsync(args, CancellationToken.None);
+        var result = await ((IAITool)tool).ExecuteAsync(args, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -46,7 +46,7 @@ public class AIToolBaseGenericTests
         var tool = new TypedTestTool();
 
         // Act
-        var act = () => ((IAiTool)tool).ExecuteAsync(null, CancellationToken.None);
+        var act = () => ((IAITool)tool).ExecuteAsync(null, CancellationToken.None);
 
         // Assert
         await Should.ThrowAsync<ArgumentNullException>(act);
@@ -60,7 +60,7 @@ public class AIToolBaseGenericTests
         var wrongArgs = new { Message = "wrong type" };
 
         // Act
-        var act = () => ((IAiTool)tool).ExecuteAsync(wrongArgs, CancellationToken.None);
+        var act = () => ((IAITool)tool).ExecuteAsync(wrongArgs, CancellationToken.None);
 
         // Assert
         await Should.ThrowAsync<InvalidCastException>(act);

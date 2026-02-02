@@ -30,7 +30,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         }, MapFromUpdateRequest);
         
         // Scope mappings
-        mapper.Define<IAiAgentScope, AgentScopeItemResponseModel>((_, _) => new AgentScopeItemResponseModel(), MapToResponse);
+        mapper.Define<IAIAgentScope, AgentScopeItemResponseModel>((_, _) => new AgentScopeItemResponseModel(), MapToResponse);
     }
 
     private AIAgent CreateAgentFactory(CreateAgentRequestModel source, MapperContext context)
@@ -104,7 +104,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.DateModified = source.DateModified;
     }
 
-    private static void MapToResponse(IAiAgentScope source, AgentScopeItemResponseModel target, MapperContext context)
+    private static void MapToResponse(IAIAgentScope source, AgentScopeItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Icon = source.Icon;

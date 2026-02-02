@@ -12,7 +12,7 @@ namespace Umbraco.AI.Core.Versioning;
 /// </para>
 /// <para>
 /// Implementations are registered via the <see cref="AIVersionableEntityAdapterCollectionBuilder"/> and
-/// discovered at runtime by the <see cref="IAiEntityVersionService"/>.
+/// discovered at runtime by the <see cref="IAIEntityVersionService"/>.
 /// </para>
 /// </remarks>
 public interface IAIVersionableEntityAdapter

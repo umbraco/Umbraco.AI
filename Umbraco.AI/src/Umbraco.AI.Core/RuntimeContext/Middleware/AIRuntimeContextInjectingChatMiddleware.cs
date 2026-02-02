@@ -17,15 +17,15 @@ namespace Umbraco.AI.Core.RuntimeContext.Middleware;
 /// the multimodal content, and marks the context clean.
 /// </para>
 /// </remarks>
-public sealed class AIRuntimeContextInjectingChatMiddleware : IAiChatMiddleware
+public sealed class AIRuntimeContextInjectingChatMiddleware : IAIChatMiddleware
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIRuntimeContextInjectingChatMiddleware"/> class.
     /// </summary>
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
-    public AIRuntimeContextInjectingChatMiddleware(IAiRuntimeContextAccessor runtimeContextAccessor)
+    public AIRuntimeContextInjectingChatMiddleware(IAIRuntimeContextAccessor runtimeContextAccessor)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
     }

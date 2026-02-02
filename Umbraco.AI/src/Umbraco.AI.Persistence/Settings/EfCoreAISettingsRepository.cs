@@ -7,7 +7,7 @@ namespace Umbraco.AI.Persistence.Settings;
 /// <summary>
 /// EF Core implementation of the settings repository.
 /// </summary>
-internal sealed class EfCoreAiSettingsRepository : IAiSettingsRepository
+internal sealed class EfCoreAiSettingsRepository : IAISettingsRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 

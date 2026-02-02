@@ -4,7 +4,7 @@ namespace Umbraco.AI.Core.Profiles;
 
 /// <summary>
 /// Defines a repository for managing AI profiles.
-/// Internal implementation detail - use <see cref="IAiProfileService"/> for external access.
+/// Internal implementation detail - use <see cref="IAIProfileService"/> for external access.
 /// </summary>
 internal interface IAIProfileRepository
 {

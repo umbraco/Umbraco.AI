@@ -7,11 +7,11 @@ namespace Umbraco.AI.Core.EditableModels;
 /// <summary>
 /// Serializes and deserializes editable model objects with automatic encryption of sensitive fields.
 /// </summary>
-internal sealed class AIEditableModelSerializer : IAiEditableModelSerializer
+internal sealed class AIEditableModelSerializer : IAIEditableModelSerializer
 {
-    private readonly IAiSensitiveFieldProtector _protector;
+    private readonly IAISensitiveFieldProtector _protector;
 
-    public AIEditableModelSerializer(IAiSensitiveFieldProtector protector)
+    public AIEditableModelSerializer(IAISensitiveFieldProtector protector)
     {
         _protector = protector;
     }

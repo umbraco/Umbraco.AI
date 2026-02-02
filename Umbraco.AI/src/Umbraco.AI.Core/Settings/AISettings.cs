@@ -5,7 +5,7 @@ namespace Umbraco.AI.Core.Settings;
 /// <summary>
 /// Represents AI settings configurable via the backoffice.
 /// </summary>
-public sealed class AISettings : IAiAuditableEntity
+public sealed class AISettings : IAIAuditableEntity
 {
     /// <summary>
     /// The fixed ID for the AI settings entity.

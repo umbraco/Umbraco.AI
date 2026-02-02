@@ -12,7 +12,7 @@ namespace Umbraco.AI.Core.RuntimeContext.Middleware;
 /// </remarks>
 internal sealed class AIRuntimeContextInjectingChatClient : DelegatingChatClient
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIRuntimeContextInjectingChatClient"/> class.
@@ -21,7 +21,7 @@ internal sealed class AIRuntimeContextInjectingChatClient : DelegatingChatClient
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
     public AIRuntimeContextInjectingChatClient(
         IChatClient innerClient,
-        IAiRuntimeContextAccessor runtimeContextAccessor)
+        IAIRuntimeContextAccessor runtimeContextAccessor)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor;

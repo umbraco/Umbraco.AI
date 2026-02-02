@@ -3,11 +3,11 @@ using Umbraco.AI.Core.EditableModels;
 namespace Umbraco.AI.Core.Providers;
 
 internal sealed class AIProviderInfrastructure(
-    IAiCapabilityFactory capabilityFactory,
-    IAiEditableModelSchemaBuilder schemaBuilder)
-    : IAiProviderInfrastructure
+    IAICapabilityFactory capabilityFactory,
+    IAIEditableModelSchemaBuilder schemaBuilder)
+    : IAIProviderInfrastructure
 {
-    public IAiCapabilityFactory CapabilityFactory { get; } = capabilityFactory;
+    public IAICapabilityFactory CapabilityFactory { get; } = capabilityFactory;
 
-    public IAiEditableModelSchemaBuilder SchemaBuilder { get; } = schemaBuilder;
+    public IAIEditableModelSchemaBuilder SchemaBuilder { get; } = schemaBuilder;
 }

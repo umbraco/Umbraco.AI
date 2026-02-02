@@ -88,7 +88,7 @@ public interface IAIConnectionService
     /// <param name="connectionId">The connection ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured provider with resolved settings, or null if connection/provider not found.</returns>
-    Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
+    Task<IAIConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the version history for a connection.

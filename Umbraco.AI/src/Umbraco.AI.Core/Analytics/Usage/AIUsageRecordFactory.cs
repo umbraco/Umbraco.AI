@@ -7,7 +7,7 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// <summary>
 /// Factory for creating AIUsageRecord instances with proper validation and user context capture.
 /// </summary>
-internal sealed class AIUsageRecordFactory : IAiUsageRecordFactory
+internal sealed class AIUsageRecordFactory : IAIUsageRecordFactory
 {
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IBackOfficeSecurityAccessor _securityAccessor;

@@ -8,15 +8,15 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// <summary>
 /// Service for recording raw AI usage data.
 /// </summary>
-internal sealed class AIUsageRecordingService : IAiUsageRecordingService
+internal sealed class AIUsageRecordingService : IAIUsageRecordingService
 {
-    private readonly IAiUsageRecordRepository _repository;
+    private readonly IAIUsageRecordRepository _repository;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IBackgroundTaskQueue _backgroundTaskQueue;
     private readonly ILogger<AIUsageRecordingService> _logger;
 
     public AIUsageRecordingService(
-        IAiUsageRecordRepository repository,
+        IAIUsageRecordRepository repository,
         IOptionsMonitor<AIAnalyticsOptions> options,
         IBackgroundTaskQueue backgroundTaskQueue,
         ILogger<AIUsageRecordingService> logger)
@@ -75,7 +75,7 @@ internal sealed class AIUsageRecordingService : IAiUsageRecordingService
             CorrelationId: record.Id.ToString(),
             RunAsync: async (sp, token) =>
             {
-                var repository = sp.GetRequiredService<IAiUsageRecordRepository>();
+                var repository = sp.GetRequiredService<IAIUsageRecordRepository>();
                 await repository.SaveAsync(record, token);
             });
 

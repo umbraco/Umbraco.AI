@@ -5,11 +5,11 @@ using Umbraco.AI.Core.Providers;
 namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
-/// Fake implementation of <see cref="IAiProvider"/> for use in tests.
+/// Fake implementation of <see cref="IAIProvider"/> for use in tests.
 /// </summary>
-public class FakeAiProvider : IAiProvider
+public class FakeAiProvider : IAIProvider
 {
-    private readonly Dictionary<Type, IAiCapability> _capabilities = new();
+    private readonly Dictionary<Type, IAICapability> _capabilities = new();
 
     public FakeAiProvider(string id = "fake-provider", string name = "Fake Provider")
     {
@@ -43,21 +43,21 @@ public class FakeAiProvider : IAiProvider
             }
         });
 
-    public FakeAiProvider WithCapability<TCapability>(TCapability capability) where TCapability : IAiCapability
+    public FakeAiProvider WithCapability<TCapability>(TCapability capability) where TCapability : IAICapability
     {
         _capabilities[typeof(TCapability)] = capability;
         return this;
     }
 
-    public FakeAiProvider WithChatCapability(IAiChatCapability? capability = null)
+    public FakeAiProvider WithChatCapability(IAIChatCapability? capability = null)
     {
-        _capabilities[typeof(IAiChatCapability)] = capability ?? new FakeChatCapability();
+        _capabilities[typeof(IAIChatCapability)] = capability ?? new FakeChatCapability();
         return this;
     }
 
-    public FakeAiProvider WithEmbeddingCapability(IAiEmbeddingCapability? capability = null)
+    public FakeAiProvider WithEmbeddingCapability(IAIEmbeddingCapability? capability = null)
     {
-        _capabilities[typeof(IAiEmbeddingCapability)] = capability ?? new FakeEmbeddingCapability();
+        _capabilities[typeof(IAIEmbeddingCapability)] = capability ?? new FakeEmbeddingCapability();
         return this;
     }
 
@@ -75,9 +75,9 @@ public class FakeAiProvider : IAiProvider
 
     public AIEditableModelSchema? GetSettingsSchema() => SettingsSchema;
 
-    public IReadOnlyCollection<IAiCapability> GetCapabilities() => _capabilities.Values.ToList();
+    public IReadOnlyCollection<IAICapability> GetCapabilities() => _capabilities.Values.ToList();
 
-    public bool TryGetCapability<TCapability>(out TCapability? capability) where TCapability : class, IAiCapability
+    public bool TryGetCapability<TCapability>(out TCapability? capability) where TCapability : class, IAICapability
     {
         if (_capabilities.TryGetValue(typeof(TCapability), out var cap) && cap is TCapability typed)
         {
@@ -89,12 +89,12 @@ public class FakeAiProvider : IAiProvider
         return false;
     }
 
-    public TCapability? GetCapability<TCapability>() where TCapability : class, IAiCapability
+    public TCapability? GetCapability<TCapability>() where TCapability : class, IAICapability
     {
         return _capabilities.TryGetValue(typeof(TCapability), out var cap) ? cap as TCapability : null;
     }
 
-    public bool HasCapability<TCapability>() where TCapability : class, IAiCapability
+    public bool HasCapability<TCapability>() where TCapability : class, IAICapability
     {
         return _capabilities.ContainsKey(typeof(TCapability));
     }

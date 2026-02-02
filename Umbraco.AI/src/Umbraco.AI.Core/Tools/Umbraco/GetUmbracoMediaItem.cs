@@ -23,7 +23,7 @@ public sealed record GetUmbracoMediaItemArgs(
 /// <param name="runtimeContextAccessor"></param>
 /// <param name="mediaResolver"></param>
 [AITool("get_umbraco_media", "Retrieves a media item from Umbraco")]
-public class GetUmbracoMediaItem(IAiRuntimeContextAccessor runtimeContextAccessor, IAiUmbracoMediaResolver mediaResolver) : AIToolBase<GetUmbracoMediaItemArgs>
+public class GetUmbracoMediaItem(IAIRuntimeContextAccessor runtimeContextAccessor, IAIUmbracoMediaResolver mediaResolver) : AIToolBase<GetUmbracoMediaItemArgs>
 {
     /// <inheritdoc />
     public override string Description =>

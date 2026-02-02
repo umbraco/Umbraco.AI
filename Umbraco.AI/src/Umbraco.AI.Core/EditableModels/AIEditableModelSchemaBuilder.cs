@@ -6,7 +6,7 @@ using Umbraco.Cms.Core.Serialization;
 
 namespace Umbraco.AI.Core.EditableModels;
 
-internal sealed class AIEditableModelSchemaBuilder : IAiEditableModelSchemaBuilder
+internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuilder
 {
     public AIEditableModelSchema BuildForType<TModel>(string modelId)
         where TModel : class

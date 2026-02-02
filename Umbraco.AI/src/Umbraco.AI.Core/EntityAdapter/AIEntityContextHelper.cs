@@ -3,9 +3,9 @@ using System.Text;
 namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
-/// Default implementation of <see cref="IAiEntityContextHelper"/>.
+/// Default implementation of <see cref="IAIEntityContextHelper"/>.
 /// </summary>
-internal sealed class AIEntityContextHelper : IAiEntityContextHelper
+internal sealed class AIEntityContextHelper : IAIEntityContextHelper
 {
     /// <inheritdoc />
     public Dictionary<string, object?> BuildContextDictionary(AISerializedEntity entity)

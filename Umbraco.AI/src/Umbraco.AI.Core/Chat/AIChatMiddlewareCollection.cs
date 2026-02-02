@@ -11,13 +11,13 @@ namespace Umbraco.AI.Core.Chat;
 /// <see cref="AIChatMiddlewareCollectionBuilder"/> using <c>Append</c>, <c>InsertBefore</c>,
 /// and <c>InsertAfter</c> methods.
 /// </remarks>
-public sealed class AIChatMiddlewareCollection : BuilderCollectionBase<IAiChatMiddleware>
+public sealed class AIChatMiddlewareCollection : BuilderCollectionBase<IAIChatMiddleware>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AIChatMiddlewareCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the middleware instances.</param>
-    public AIChatMiddlewareCollection(Func<IEnumerable<IAiChatMiddleware>> items)
+    public AIChatMiddlewareCollection(Func<IEnumerable<IAIChatMiddleware>> items)
         : base(items)
     { }
 }

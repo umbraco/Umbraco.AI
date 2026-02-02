@@ -11,13 +11,13 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
 public class ByIdOrAliasProfileControllerTests
 {
-    private readonly Mock<IAiProfileService> _profileServiceMock;
+    private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
     private readonly ByIdOrAliasProfileController _controller;
 
     public ByIdOrAliasProfileControllerTests()
     {
-        _profileServiceMock = new Mock<IAiProfileService>();
+        _profileServiceMock = new Mock<IAIProfileService>();
         _mapperMock = new Mock<IUmbracoMapper>();
 
         _controller = new ByIdOrAliasProfileController(_profileServiceMock.Object, _mapperMock.Object);

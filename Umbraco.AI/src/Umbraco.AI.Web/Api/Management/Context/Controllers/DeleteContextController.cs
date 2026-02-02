@@ -18,12 +18,12 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class DeleteContextController : ContextControllerBase
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteContextController"/> class.
     /// </summary>
-    public DeleteContextController(IAiContextService contextService)
+    public DeleteContextController(IAIContextService contextService)
     {
         _contextService = contextService;
     }

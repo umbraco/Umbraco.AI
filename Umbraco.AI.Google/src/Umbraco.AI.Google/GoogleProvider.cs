@@ -20,7 +20,7 @@ public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
     /// </summary>
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
-    public GoogleProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public GoogleProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         _cache = cache;

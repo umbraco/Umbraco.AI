@@ -17,7 +17,7 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 /// is effectively a no-op passthrough.
 /// </para>
 /// </remarks>
-public sealed class AIFunctionInvokingChatMiddleware : IAiChatMiddleware
+public sealed class AIFunctionInvokingChatMiddleware : IAIChatMiddleware
 {
     private readonly ILoggerFactory? _loggerFactory;
 

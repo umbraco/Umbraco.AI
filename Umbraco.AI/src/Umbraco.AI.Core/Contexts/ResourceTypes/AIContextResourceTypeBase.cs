@@ -7,10 +7,10 @@ namespace Umbraco.AI.Core.Contexts.ResourceTypes;
 /// Base class for AI context resource types with strongly-typed data.
 /// </summary>
 /// <typeparam name="TData">The data model type for the resource.</typeparam>
-public abstract class AIContextResourceTypeBase<TData> : IAiContextResourceType
+public abstract class AIContextResourceTypeBase<TData> : IAIContextResourceType
     where TData : class, new()
 {
-    private readonly IAiContextResourceTypeInfrastructure _infrastructure;
+    private readonly IAIContextResourceTypeInfrastructure _infrastructure;
 
     /// <inheritdoc />
     public string Id { get; }
@@ -30,7 +30,7 @@ public abstract class AIContextResourceTypeBase<TData> : IAiContextResourceType
     public Type DataType => typeof(TData);
 
     /// <inheritdoc />
-    Type? IAiContextResourceType.DataType => DataType;
+    Type? IAIContextResourceType.DataType => DataType;
 
     /// <inheritdoc />
     public AIEditableModelSchema? GetDataSchema()
@@ -41,7 +41,7 @@ public abstract class AIContextResourceTypeBase<TData> : IAiContextResourceType
     /// </summary>
     /// <param name="infrastructure">The infrastructure dependencies.</param>
     /// <exception cref="InvalidOperationException">Thrown when the resource type is missing the required attribute.</exception>
-    protected AIContextResourceTypeBase(IAiContextResourceTypeInfrastructure infrastructure)
+    protected AIContextResourceTypeBase(IAIContextResourceTypeInfrastructure infrastructure)
     {
         _infrastructure = infrastructure;
 

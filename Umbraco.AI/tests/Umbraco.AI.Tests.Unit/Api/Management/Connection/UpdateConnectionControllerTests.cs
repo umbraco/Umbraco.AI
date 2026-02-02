@@ -10,13 +10,13 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class UpdateConnectionControllerTests
 {
-    private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIConnectionService> _connectionServiceMock;
     private readonly Mock<IUmbracoMapper> _umbracoMapperMock;
     private readonly UpdateConnectionController _controller;
 
     public UpdateConnectionControllerTests()
     {
-        _connectionServiceMock = new Mock<IAiConnectionService>();
+        _connectionServiceMock = new Mock<IAIConnectionService>();
         _umbracoMapperMock = new Mock<IUmbracoMapper>();
 
         // Setup mapper to simulate Map(source, target) behavior

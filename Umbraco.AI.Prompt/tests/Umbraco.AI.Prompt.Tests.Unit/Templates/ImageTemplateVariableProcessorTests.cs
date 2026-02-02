@@ -14,7 +14,7 @@ public class ImageTemplateVariableProcessorTests
 {
     private readonly Mock<IMediaService> _mockMediaService;
     private readonly Mock<IContentService> _mockContentService;
-    private readonly Mock<IAiUmbracoMediaResolver> _mockResolver;
+    private readonly Mock<IAIUmbracoMediaResolver> _mockResolver;
     private readonly Mock<ILogger<ImageTemplateVariableProcessor>> _mockLogger;
     private readonly ImageTemplateVariableProcessor _processor;
 
@@ -22,7 +22,7 @@ public class ImageTemplateVariableProcessorTests
     {
         _mockMediaService = new Mock<IMediaService>();
         _mockContentService = new Mock<IContentService>();
-        _mockResolver = new Mock<IAiUmbracoMediaResolver>();
+        _mockResolver = new Mock<IAIUmbracoMediaResolver>();
         _mockLogger = new Mock<ILogger<ImageTemplateVariableProcessor>>();
         _processor = new ImageTemplateVariableProcessor(
             _mockMediaService.Object,

@@ -19,12 +19,12 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class DeleteConnectionController : ConnectionControllerBase
 {
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteConnectionController"/> class.
     /// </summary>
-    public DeleteConnectionController(IAiConnectionService connectionService)
+    public DeleteConnectionController(IAIConnectionService connectionService)
     {
         _connectionService = connectionService;
     }

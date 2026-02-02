@@ -10,15 +10,15 @@ namespace Umbraco.AI.Core.Tools.Context;
 /// It lists resources that the LLM can retrieve using the GetContextResource tool.
 /// </remarks>
 [AITool("list_context_resources", "List Context Resources", Category = "Context")]
-public class ListContextResourcesTool : AIToolBase, IAiSystemTool
+public class ListContextResourcesTool : AIToolBase, IAISystemTool
 {
-    private readonly IAiContextAccessor _contextAccessor;
+    private readonly IAIContextAccessor _contextAccessor;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ListContextResourcesTool"/>.
     /// </summary>
     /// <param name="contextAccessor">The context accessor.</param>
-    public ListContextResourcesTool(IAiContextAccessor contextAccessor)
+    public ListContextResourcesTool(IAIContextAccessor contextAccessor)
     {
         _contextAccessor = contextAccessor;
     }

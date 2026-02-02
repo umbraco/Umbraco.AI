@@ -6,19 +6,19 @@ using Umbraco.AI.Core.RuntimeContext;
 
 namespace Umbraco.AI.Core.Chat;
 
-internal sealed class AIChatClientFactory : IAiChatClientFactory
+internal sealed class AIChatClientFactory : IAIChatClientFactory
 {
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
     private readonly AIChatMiddlewareCollection _middleware;
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiRuntimeContextScopeProvider _scopeProvider;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
 
     public AIChatClientFactory(
-        IAiConnectionService connectionService,
+        IAIConnectionService connectionService,
         AIChatMiddlewareCollection middleware,
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiRuntimeContextScopeProvider scopeProvider,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)
     {
         _connectionService = connectionService;
@@ -65,7 +65,7 @@ internal sealed class AIChatClientFactory : IAiChatClientFactory
         return client;
     }
 
-    private async Task<IAiConfiguredChatCapability> GetConfiguredChatCapabilityAsync(
+    private async Task<IAIConfiguredChatCapability> GetConfiguredChatCapabilityAsync(
         AIProfile profile,
         CancellationToken cancellationToken)
     {
@@ -108,7 +108,7 @@ internal sealed class AIChatClientFactory : IAiChatClientFactory
                 $"but profile '{profile.Name}' requires provider '{profile.Model.ProviderId}'.");
         }
 
-        var chatCapability = configured.GetCapability<IAiConfiguredChatCapability>();
+        var chatCapability = configured.GetCapability<IAIConfiguredChatCapability>();
         if (chatCapability is null)
         {
             throw new InvalidOperationException(

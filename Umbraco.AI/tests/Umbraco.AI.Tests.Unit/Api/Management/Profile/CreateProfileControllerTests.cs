@@ -14,15 +14,15 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
 public class CreateProfileControllerTests
 {
-    private readonly Mock<IAiProfileService> _profileServiceMock;
-    private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIProfileService> _profileServiceMock;
+    private readonly Mock<IAIConnectionService> _connectionServiceMock;
     private readonly Mock<IUmbracoMapper> _umbracoMapperMock;
-    private List<IAiProvider> _providers = new();
+    private List<IAIProvider> _providers = new();
 
     public CreateProfileControllerTests()
     {
-        _profileServiceMock = new Mock<IAiProfileService>();
-        _connectionServiceMock = new Mock<IAiConnectionService>();
+        _profileServiceMock = new Mock<IAIProfileService>();
+        _connectionServiceMock = new Mock<IAIConnectionService>();
         _umbracoMapperMock = new Mock<IUmbracoMapper>();
 
         // Setup mapper to use real mapping logic
@@ -47,7 +47,7 @@ public class CreateProfileControllerTests
             });
     }
 
-    private static IAiProfileSettings? MapSettingsFromRequest(AICapability capability, ProfileSettingsModel? settings)
+    private static IAIProfileSettings? MapSettingsFromRequest(AICapability capability, ProfileSettingsModel? settings)
     {
         return capability switch
         {

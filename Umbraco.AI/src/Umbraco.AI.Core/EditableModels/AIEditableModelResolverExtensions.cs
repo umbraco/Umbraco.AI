@@ -12,7 +12,7 @@ public static class AIEditableModelResolverExtensions
     /// <param name="provider">The provider to resolve settings for.</param>
     /// <param name="settings">The settings object to resolve.</param>
     /// <returns>Typed settings instance as object, or null if settings parameter was null.</returns>
-    public static object? ResolveSettingsForProvider(this IAiEditableModelResolver resolver, IAiProvider provider, object? settings)
+    public static object? ResolveSettingsForProvider(this IAIEditableModelResolver resolver, IAIProvider provider, object? settings)
     {
         if (settings is null)
         {

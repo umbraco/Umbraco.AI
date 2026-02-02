@@ -13,4 +13,4 @@ namespace Umbraco.AI.Core.Tools;
 ///     <item>Skip approval workflows</item>
 /// </list>
 /// </remarks>
-internal interface IAISystemTool : IAiTool { }
+internal interface IAISystemTool : IAITool { }

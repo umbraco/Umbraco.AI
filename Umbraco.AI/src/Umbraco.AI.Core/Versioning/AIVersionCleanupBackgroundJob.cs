@@ -81,7 +81,7 @@ internal sealed class AIVersionCleanupBackgroundJob : RecurringHostedServiceBase
 
         // Perform cleanup
         using var scope = _serviceProvider.CreateScope();
-        var versionService = scope.ServiceProvider.GetRequiredService<IAiEntityVersionService>();
+        var versionService = scope.ServiceProvider.GetRequiredService<IAIEntityVersionService>();
 
         try
         {

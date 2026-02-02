@@ -5,9 +5,9 @@ using Umbraco.AI.Core.Providers;
 namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
-/// Fake implementation of <see cref="IAiEmbeddingCapability"/> for use in tests.
+/// Fake implementation of <see cref="IAIEmbeddingCapability"/> for use in tests.
 /// </summary>
-public class FakeEmbeddingCapability : IAiEmbeddingCapability
+public class FakeEmbeddingCapability : IAIEmbeddingCapability
 {
     private readonly IEmbeddingGenerator<string, Embedding<float>> _generator;
     private readonly IReadOnlyList<AIModelDescriptor> _models;

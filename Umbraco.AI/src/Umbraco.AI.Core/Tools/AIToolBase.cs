@@ -63,7 +63,7 @@ public abstract class AIToolBasic
 /// <summary>
 /// Base class for AI tools that don't require arguments.
 /// </summary>
-public abstract class AIToolBase : AIToolBasic, IAiTool
+public abstract class AIToolBase : AIToolBasic, IAITool
 {
     /// <summary>
     /// Executes the tool. Override this method to implement the tool's logic.
@@ -75,7 +75,7 @@ public abstract class AIToolBase : AIToolBasic, IAiTool
     /// <summary>
     /// Explicit interface implementation - delegates to the parameterless abstract method.
     /// </summary>
-    Task<object> IAiTool.ExecuteAsync(object? args, CancellationToken cancellationToken)
+    Task<object> IAITool.ExecuteAsync(object? args, CancellationToken cancellationToken)
         => ExecuteAsync(cancellationToken);
 }
 
@@ -83,7 +83,7 @@ public abstract class AIToolBase : AIToolBasic, IAiTool
 /// Base class for AI tools with strongly-typed arguments.
 /// </summary>
 /// <typeparam name="TArgs">The arguments model type. Use records with [Description] attributes on properties.</typeparam>
-public abstract class AIToolBase<TArgs> : AIToolBasic, IAiTool
+public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
     where TArgs : class
 {
     /// <inheritdoc />
@@ -101,7 +101,7 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAiTool
     /// <summary>
     /// Explicit interface implementation - casts args and delegates to typed method.
     /// </summary>
-    Task<object> IAiTool.ExecuteAsync(object? args, CancellationToken cancellationToken)
+    Task<object> IAITool.ExecuteAsync(object? args, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(args);
         return ExecuteAsync((TArgs)args, cancellationToken);

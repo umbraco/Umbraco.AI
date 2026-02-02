@@ -16,12 +16,12 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class DeletePromptController : PromptControllerBase
 {
-    private readonly IAiPromptService _aiPromptService;
+    private readonly IAIPromptService _aiPromptService;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public DeletePromptController(IAiPromptService aiPromptService)
+    public DeletePromptController(IAIPromptService aiPromptService)
     {
         _aiPromptService = aiPromptService;
     }

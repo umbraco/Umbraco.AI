@@ -8,12 +8,12 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
 public class DeleteProfileControllerTests
 {
-    private readonly Mock<IAiProfileService> _profileServiceMock;
+    private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly DeleteProfileController _controller;
 
     public DeleteProfileControllerTests()
     {
-        _profileServiceMock = new Mock<IAiProfileService>();
+        _profileServiceMock = new Mock<IAIProfileService>();
         _controller = new DeleteProfileController(_profileServiceMock.Object);
     }
 

@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Connections;
 /// <summary>
 /// Represents a connection to an AI provider with credentials and settings.
 /// </summary>
-public class AIConnection : IAiVersionableEntity
+public class AIConnection : IAIVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the connection.

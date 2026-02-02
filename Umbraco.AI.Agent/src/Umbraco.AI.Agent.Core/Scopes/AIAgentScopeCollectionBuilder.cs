@@ -20,7 +20,7 @@ namespace Umbraco.AI.Agent.Core.Scopes;
 /// </code>
 /// </example>
 public class AIAgentScopeCollectionBuilder
-    : LazyCollectionBuilderBase<AIAgentScopeCollectionBuilder, AIAgentScopeCollection, IAiAgentScope>
+    : LazyCollectionBuilderBase<AIAgentScopeCollectionBuilder, AIAgentScopeCollection, IAIAgentScope>
 {
     /// <inheritdoc />
     protected override AIAgentScopeCollectionBuilder This => this;

@@ -10,15 +10,15 @@ namespace Umbraco.AI.Tests.Unit.Services;
 
 public class AIEmbeddingServiceTests
 {
-    private readonly Mock<IAiEmbeddingGeneratorFactory> _generatorFactoryMock;
-    private readonly Mock<IAiProfileService> _profileServiceMock;
+    private readonly Mock<IAIEmbeddingGeneratorFactory> _generatorFactoryMock;
+    private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
     private readonly AIEmbeddingService _service;
 
     public AIEmbeddingServiceTests()
     {
-        _generatorFactoryMock = new Mock<IAiEmbeddingGeneratorFactory>();
-        _profileServiceMock = new Mock<IAiProfileService>();
+        _generatorFactoryMock = new Mock<IAIEmbeddingGeneratorFactory>();
+        _profileServiceMock = new Mock<IAIProfileService>();
         _optionsMock = new Mock<IOptionsMonitor<AIOptions>>();
         _optionsMock.Setup(x => x.CurrentValue).Returns(new AIOptions
         {

@@ -10,10 +10,10 @@ public interface IAIProviderInfrastructure
     /// <summary>
     /// Factory for creating AI capability instances.
     /// </summary>
-    IAiCapabilityFactory CapabilityFactory { get; }
+    IAICapabilityFactory CapabilityFactory { get; }
 
     /// <summary>
     /// Builder for editable model schemas.
     /// </summary>
-    IAiEditableModelSchemaBuilder SchemaBuilder { get; }
+    IAIEditableModelSchemaBuilder SchemaBuilder { get; }
 }

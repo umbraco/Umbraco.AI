@@ -9,13 +9,13 @@ namespace Umbraco.AI.Core.Profiles;
 /// </summary>
 internal sealed class AIProfileVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIProfile>
 {
-    private readonly IAiProfileService _profileService;
+    private readonly IAIProfileService _profileService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIProfileVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="profileService">The profile service for rollback operations.</param>
-    public AIProfileVersionableEntityAdapter(IAiProfileService profileService)
+    public AIProfileVersionableEntityAdapter(IAIProfileService profileService)
     {
         _profileService = profileService;
     }
@@ -70,7 +70,7 @@ internal sealed class AIProfileVersionableEntityAdapter : AIVersionableEntityAda
                 }
             }
 
-            IAiProfileSettings? settings = null;
+            IAIProfileSettings? settings = null;
             if (root.TryGetProperty("settings", out var settingsElement) &&
                 settingsElement.ValueKind == JsonValueKind.String)
             {
@@ -161,7 +161,7 @@ internal sealed class AIProfileVersionableEntityAdapter : AIVersionableEntityAda
     /// <summary>
     /// Compares profile settings with deep inspection for known types.
     /// </summary>
-    private static void CompareSettings(IAiProfileSettings? from, IAiProfileSettings? to, List<AIPropertyChange> changes)
+    private static void CompareSettings(IAIProfileSettings? from, IAIProfileSettings? to, List<AIPropertyChange> changes)
     {
         // Handle null cases
         if (from == null && to == null)

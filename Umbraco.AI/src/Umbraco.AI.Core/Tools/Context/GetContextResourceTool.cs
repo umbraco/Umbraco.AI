@@ -19,10 +19,10 @@ public record GetContextResourceArgs(
 /// Use list_context_resources first to see what's available.
 /// </remarks>
 [AITool("get_context_resource", "Get Context Resource", Category = "Context")]
-public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAiSystemTool
+public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISystemTool
 {
-    private readonly IAiContextAccessor _contextAccessor;
-    private readonly IAiContextFormatter _formatter;
+    private readonly IAIContextAccessor _contextAccessor;
+    private readonly IAIContextFormatter _formatter;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContextResourceTool"/>.
@@ -30,8 +30,8 @@ public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAiSys
     /// <param name="contextAccessor">The context accessor.</param>
     /// <param name="formatter">The context formatter.</param>
     public GetContextResourceTool(
-        IAiContextAccessor contextAccessor,
-        IAiContextFormatter formatter)
+        IAIContextAccessor contextAccessor,
+        IAIContextFormatter formatter)
     {
         _contextAccessor = contextAccessor;
         _formatter = formatter;

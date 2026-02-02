@@ -13,15 +13,15 @@
 //
 // public class CompleteChatControllerTests
 // {
-//     private readonly Mock<IAiChatService> _chatServiceMock;
-//     private readonly Mock<IAiProfileService> _profileServiceMock;
+//     private readonly Mock<IAIChatService> _chatServiceMock;
+//     private readonly Mock<IAIProfileService> _profileServiceMock;
 //     private readonly Mock<IUmbracoMapper> _mapperMock;
 //     private readonly CompleteChatController _controller;
 //
 //     public CompleteChatControllerTests()
 //     {
-//         _chatServiceMock = new Mock<IAiChatService>();
-//         _profileServiceMock = new Mock<IAiProfileService>();
+//         _chatServiceMock = new Mock<IAIChatService>();
+//         _profileServiceMock = new Mock<IAIProfileService>();
 //         _mapperMock = new Mock<IUmbracoMapper>();
 //
 //         _controller = new CompleteChatController(

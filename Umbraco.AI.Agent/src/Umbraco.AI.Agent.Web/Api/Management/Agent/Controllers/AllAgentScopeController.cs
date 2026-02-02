@@ -41,7 +41,7 @@ public class AllAgentScopeController : AgentControllerBase
     public IActionResult GetAgentScopes()
     {
         var scopes = _scopeCollection.ToList();
-        var models = _umbracoMapper.MapEnumerable<IAiAgentScope, AgentScopeItemResponseModel>(scopes);
+        var models = _umbracoMapper.MapEnumerable<IAIAgentScope, AgentScopeItemResponseModel>(scopes);
         return Ok(models);
     }
 }

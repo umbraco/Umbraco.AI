@@ -6,9 +6,9 @@ using Umbraco.Cms.Persistence.EFCore.Scoping;
 namespace Umbraco.AI.Agent.Persistence.Agents;
 
 /// <summary>
-/// EF Core implementation of <see cref="IAiAgentRepository"/>.
+/// EF Core implementation of <see cref="IAIAgentRepository"/>.
 /// </summary>
-internal sealed class EfCoreAiAgentRepository : IAiAgentRepository
+internal sealed class EfCoreAiAgentRepository : IAIAgentRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIAgentDbContext> _scopeProvider;
 

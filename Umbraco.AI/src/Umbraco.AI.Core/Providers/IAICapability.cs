@@ -19,7 +19,7 @@ internal static class CapabilityGuards
         {
             throw new InvalidOperationException(
                 $"Settings must be resolved before calling {methodName}. " +
-                "Use IAiConfiguredProvider from IAiConnectionService.GetConfiguredProviderAsync().");
+                "Use IAIConfiguredProvider from IAIConnectionService.GetConfiguredProviderAsync().");
         }
     }
 }
@@ -47,14 +47,14 @@ public interface IAICapability
 /// Defines an AI capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings"></typeparam>
-public interface IAICapability<TSettings> : IAiCapability
+public interface IAICapability<TSettings> : IAICapability
     where TSettings : class
 { }
 
 /// <summary>
 /// Defines an AI capability for chat completions.
 /// </summary>
-public interface IAIChatCapability : IAiCapability
+public interface IAIChatCapability : IAICapability
 {
     /// <summary>
     /// Creates a chat client with the provided settings.
@@ -68,7 +68,7 @@ public interface IAIChatCapability : IAiCapability
 /// <summary>
 /// Defines an AI capability for generating embeddings.
 /// </summary>
-public interface IAIEmbeddingCapability : IAiCapability
+public interface IAIEmbeddingCapability : IAICapability
 {
     /// <summary>
     /// Creates an embedding generator with the provided settings.
@@ -82,12 +82,12 @@ public interface IAIEmbeddingCapability : IAiCapability
 /// <summary>
 /// Base implementation of an AI capability.
 /// </summary>
-public abstract class AICapabilityBase(IAiProvider provider) : IAiCapability
+public abstract class AICapabilityBase(IAIProvider provider) : IAICapability
 {
     /// <summary>
     /// Gets or sets the AI provider this capability belongs to.
     /// </summary>
-    protected IAiProvider Provider { get; set; } = provider;
+    protected IAIProvider Provider { get; set; } = provider;
     
     /// <summary>
     /// Gets the kind of AI capability.
@@ -101,20 +101,20 @@ public abstract class AICapabilityBase(IAiProvider provider) : IAiCapability
     /// <returns></returns>
     protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default);
     
-    Task<IReadOnlyList<AIModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
+    Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
         => GetModelsAsync(cancellationToken);
 }
 
 /// <summary>
 /// Base implementation of an AI capability with specific settings.
 /// </summary>
-public abstract class AICapabilityBase<TSettings>(IAiProvider provider) : IAiCapability
+public abstract class AICapabilityBase<TSettings>(IAIProvider provider) : IAICapability
     where TSettings : class
 {
     /// <summary>
     /// Gets or sets the AI provider this capability belongs to.
     /// </summary>
-    protected IAiProvider Provider { get; set; } = provider;
+    protected IAIProvider Provider { get; set; } = provider;
     
     /// <summary>
     /// Gets the kind of AI capability.
@@ -129,7 +129,7 @@ public abstract class AICapabilityBase<TSettings>(IAiProvider provider) : IAiCap
     /// <returns></returns>
     protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(TSettings settings, CancellationToken cancellationToken = default);
     
-    Task<IReadOnlyList<AIModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
+    Task<IReadOnlyList<AIModelDescriptor>> IAICapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(GetModelsAsync));
@@ -140,7 +140,7 @@ public abstract class AICapabilityBase<TSettings>(IAiProvider provider) : IAiCap
 /// <summary>
 /// Base implementation of an AI chat capability.
 /// </summary>
-public abstract class AIChatCapabilityBase(IAiProvider provider) : AICapabilityBase(provider), IAiChatCapability
+public abstract class AIChatCapabilityBase(IAIProvider provider) : AICapabilityBase(provider), IAIChatCapability
 {
     /// <inheritdoc />
     public override AICapability Kind => AICapability.Chat;
@@ -152,7 +152,7 @@ public abstract class AIChatCapabilityBase(IAiProvider provider) : AICapabilityB
     /// <returns>A configured chat client.</returns>
     protected abstract IChatClient CreateClient(string? modelId);
 
-    IChatClient IAiChatCapability.CreateClient(object? settings, string? modelId)
+    IChatClient IAIChatCapability.CreateClient(object? settings, string? modelId)
         => CreateClient(modelId);
 }
 
@@ -160,7 +160,7 @@ public abstract class AIChatCapabilityBase(IAiProvider provider) : AICapabilityB
 /// Base implementation of an AI chat capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
-public abstract class AIChatCapabilityBase<TSettings>(IAiProvider provider) : AICapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiChatCapability
+public abstract class AIChatCapabilityBase<TSettings>(IAIProvider provider) : AICapabilityBase<TSettings>(provider), IAICapability<TSettings>, IAIChatCapability
     where TSettings : class
 {
     /// <inheritdoc />
@@ -175,7 +175,7 @@ public abstract class AIChatCapabilityBase<TSettings>(IAiProvider provider) : AI
     protected abstract IChatClient CreateClient(TSettings settings, string? modelId);
 
     /// <inheritdoc />
-    IChatClient IAiChatCapability.CreateClient(object? settings, string? modelId)
+    IChatClient IAIChatCapability.CreateClient(object? settings, string? modelId)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
@@ -186,7 +186,7 @@ public abstract class AIChatCapabilityBase<TSettings>(IAiProvider provider) : AI
 /// <summary>
 /// Base implementation of an AI embedding capability.
 /// </summary>
-public abstract class AIEmbeddingCapabilityBase(IAiProvider provider) : AICapabilityBase(provider), IAiEmbeddingCapability
+public abstract class AIEmbeddingCapabilityBase(IAIProvider provider) : AICapabilityBase(provider), IAIEmbeddingCapability
 {
     /// <inheritdoc />
     public override AICapability Kind => AICapability.Embedding;
@@ -199,7 +199,7 @@ public abstract class AIEmbeddingCapabilityBase(IAiProvider provider) : AICapabi
     protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(string? modelId);
 
     /// <inheritdoc />
-    IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
+    IEmbeddingGenerator<string, Embedding<float>> IAIEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
         => CreateGenerator(modelId);
 }
 
@@ -207,7 +207,7 @@ public abstract class AIEmbeddingCapabilityBase(IAiProvider provider) : AICapabi
 /// Base implementation of an AI embedding capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
-public abstract class AIEmbeddingCapabilityBase<TSettings>(IAiProvider provider) : AICapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiEmbeddingCapability
+public abstract class AIEmbeddingCapabilityBase<TSettings>(IAIProvider provider) : AICapabilityBase<TSettings>(provider), IAICapability<TSettings>, IAIEmbeddingCapability
     where TSettings : class
 {
     /// <inheritdoc />
@@ -222,7 +222,7 @@ public abstract class AIEmbeddingCapabilityBase<TSettings>(IAiProvider provider)
     protected abstract IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(TSettings settings, string? modelId);
 
     /// <inheritdoc />
-    IEmbeddingGenerator<string, Embedding<float>> IAiEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
+    IEmbeddingGenerator<string, Embedding<float>> IAIEmbeddingCapability.CreateGenerator(object? settings, string? modelId)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateGenerator));

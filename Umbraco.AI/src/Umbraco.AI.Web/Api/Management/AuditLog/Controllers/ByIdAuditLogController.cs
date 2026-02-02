@@ -20,13 +20,13 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ByIdAuditLogController : AuditLogControllerBase
 {
-    private readonly IAiAuditLogService _auditLogService;
+    private readonly IAIAuditLogService _auditLogService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ByIdAuditLogController"/> class.
     /// </summary>
-    public ByIdAuditLogController(IAiAuditLogService auditLogService, IUmbracoMapper umbracoMapper)
+    public ByIdAuditLogController(IAIAuditLogService auditLogService, IUmbracoMapper umbracoMapper)
     {
         _auditLogService = auditLogService;
         _umbracoMapper = umbracoMapper;

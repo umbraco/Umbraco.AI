@@ -18,7 +18,7 @@ public class AIToolCollectionTests
         _tool3 = new FakeTool("tool-3", "Tool Three", category: "CategoryB", tags: ["tag3"]);
         _destructiveTool = new FakeTool("destructive-tool", "Destructive Tool", category: "CategoryB", isDestructive: true);
 
-        _collection = new AIToolCollection(() => new IAiTool[] { _tool1, _tool2, _tool3, _destructiveTool });
+        _collection = new AIToolCollection(() => new IAITool[] { _tool1, _tool2, _tool3, _destructiveTool });
     }
 
     #region GetById

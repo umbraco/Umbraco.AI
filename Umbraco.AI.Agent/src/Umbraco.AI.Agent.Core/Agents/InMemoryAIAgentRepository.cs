@@ -6,9 +6,9 @@ using Umbraco.Cms.Core.Models;
 namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
-/// In-memory implementation of <see cref="IAiAgentRepository"/> for testing and fallback scenarios.
+/// In-memory implementation of <see cref="IAIAgentRepository"/> for testing and fallback scenarios.
 /// </summary>
-internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
+internal sealed class InMemoryAiAgentRepository : IAIAgentRepository
 {
     private readonly ConcurrentDictionary<Guid, AIAgent> _agents = new();
 

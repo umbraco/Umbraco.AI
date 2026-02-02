@@ -4,9 +4,9 @@ using Umbraco.AI.Core.Tools;
 namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
-/// Fake implementation of <see cref="IAiTool"/> for use in tests.
+/// Fake implementation of <see cref="IAITool"/> for use in tests.
 /// </summary>
-public class FakeTool : IAiTool
+public class FakeTool : IAITool
 {
     public FakeTool(
         string id = "fake-tool",
@@ -52,10 +52,10 @@ public class FakeTool : IAiTool
 }
 
 /// <summary>
-/// Fake implementation of a typed <see cref="IAiTool"/> for use in tests.
+/// Fake implementation of a typed <see cref="IAITool"/> for use in tests.
 /// </summary>
 /// <typeparam name="TArgs">The arguments type.</typeparam>
-public class FakeTypedTool<TArgs> : IAiTool where TArgs : class
+public class FakeTypedTool<TArgs> : IAITool where TArgs : class
 {
     public FakeTypedTool(
         string id = "fake-typed-tool",
@@ -110,9 +110,9 @@ public record FakeToolArgs(
     [property: Description("A test count")] int Count = 1);
 
 /// <summary>
-/// Fake implementation of <see cref="IAiSystemTool"/> for use in tests.
+/// Fake implementation of <see cref="IAISystemTool"/> for use in tests.
 /// </summary>
-public class FakeSystemTool : IAiTool, IAiSystemTool
+public class FakeSystemTool : IAITool, IAISystemTool
 {
     public FakeSystemTool(
         string id = "fake-system-tool",

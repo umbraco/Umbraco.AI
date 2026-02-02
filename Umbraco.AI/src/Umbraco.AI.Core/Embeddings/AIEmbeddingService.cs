@@ -5,15 +5,15 @@ using Umbraco.AI.Core.Profiles;
 
 namespace Umbraco.AI.Core.Embeddings;
 
-internal sealed class AIEmbeddingService : IAiEmbeddingService
+internal sealed class AIEmbeddingService : IAIEmbeddingService
 {
-    private readonly IAiEmbeddingGeneratorFactory _generatorFactory;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIEmbeddingGeneratorFactory _generatorFactory;
+    private readonly IAIProfileService _profileService;
     private readonly AIOptions _options;
 
     public AIEmbeddingService(
-        IAiEmbeddingGeneratorFactory generatorFactory,
-        IAiProfileService profileService,
+        IAIEmbeddingGeneratorFactory generatorFactory,
+        IAIProfileService profileService,
         IOptionsMonitor<AIOptions> options)
     {
         _generatorFactory = generatorFactory;

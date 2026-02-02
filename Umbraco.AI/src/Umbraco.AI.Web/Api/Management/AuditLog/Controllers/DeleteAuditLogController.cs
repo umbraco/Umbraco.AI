@@ -14,12 +14,12 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class DeleteAuditLogController : AuditLogControllerBase
 {
-    private readonly IAiAuditLogService _auditLogService;
+    private readonly IAIAuditLogService _auditLogService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteAuditLogController"/> class.
     /// </summary>
-    public DeleteAuditLogController(IAiAuditLogService auditLogService)
+    public DeleteAuditLogController(IAIAuditLogService auditLogService)
     {
         _auditLogService = auditLogService;
     }

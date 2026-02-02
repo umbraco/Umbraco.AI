@@ -5,9 +5,9 @@ using Umbraco.AI.Core.Providers;
 namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
-/// Fake implementation of <see cref="IAiChatCapability"/> for use in tests.
+/// Fake implementation of <see cref="IAIChatCapability"/> for use in tests.
 /// </summary>
-public class FakeChatCapability : IAiChatCapability
+public class FakeChatCapability : IAIChatCapability
 {
     private readonly IChatClient _chatClient;
     private readonly IReadOnlyList<AIModelDescriptor> _models;

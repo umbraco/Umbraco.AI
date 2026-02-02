@@ -10,7 +10,7 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Provider;
 public class ByIdProviderControllerTests
 {
     private readonly Mock<IUmbracoMapper> _mapperMock;
-    private List<IAiProvider> _providers = new();
+    private List<IAIProvider> _providers = new();
 
     public ByIdProviderControllerTests()
     {
@@ -91,7 +91,7 @@ public class ByIdProviderControllerTests
         _providers.Add(provider);
 
         _mapperMock
-            .Setup(x => x.Map<ProviderResponseModel>(It.IsAny<IAiProvider>()))
+            .Setup(x => x.Map<ProviderResponseModel>(It.IsAny<IAIProvider>()))
             .Returns(new ProviderResponseModel());
 
         var controller = CreateController();
@@ -101,7 +101,7 @@ public class ByIdProviderControllerTests
 
         // Assert
         _mapperMock.Verify(x => x.Map<ProviderResponseModel>(
-            It.Is<IAiProvider>(p => p.Id == providerId)), Times.Once);
+            It.Is<IAIProvider>(p => p.Id == providerId)), Times.Once);
     }
 
     #endregion

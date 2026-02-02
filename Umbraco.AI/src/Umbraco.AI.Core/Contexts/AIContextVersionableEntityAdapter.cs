@@ -8,13 +8,13 @@ namespace Umbraco.AI.Core.Contexts;
 /// </summary>
 internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIContext>
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="contextService">The context service for rollback operations.</param>
-    public AIContextVersionableEntityAdapter(IAiContextService contextService)
+    public AIContextVersionableEntityAdapter(IAIContextService contextService)
     {
         _contextService = contextService;
     }

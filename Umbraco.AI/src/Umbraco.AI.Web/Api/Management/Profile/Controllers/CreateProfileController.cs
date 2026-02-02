@@ -22,8 +22,8 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class CreateProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileService _profileService;
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIProfileService _profileService;
+    private readonly IAIConnectionService _connectionService;
     private readonly AIProviderCollection _providers;
     private readonly IUmbracoMapper _umbracoMapper;
 
@@ -31,8 +31,8 @@ public class CreateProfileController : ProfileControllerBase
     /// Initializes a new instance of the <see cref="CreateProfileController"/> class.
     /// </summary>
     public CreateProfileController(
-        IAiProfileService profileService,
-        IAiConnectionService connectionService,
+        IAIProfileService profileService,
+        IAIConnectionService connectionService,
         AIProviderCollection providers,
         IUmbracoMapper umbracoMapper)
     {

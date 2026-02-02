@@ -7,16 +7,16 @@ namespace Umbraco.AI.Tests.Unit.Providers;
 
 public class AIProviderBaseTests
 {
-    private readonly Mock<IAiProviderInfrastructure> _infrastructureMock;
-    private readonly Mock<IAiCapabilityFactory> _capabilityFactoryMock;
-    private readonly Mock<IAiEditableModelSchemaBuilder> _schemaBuilderMock;
+    private readonly Mock<IAIProviderInfrastructure> _infrastructureMock;
+    private readonly Mock<IAICapabilityFactory> _capabilityFactoryMock;
+    private readonly Mock<IAIEditableModelSchemaBuilder> _schemaBuilderMock;
 
     public AIProviderBaseTests()
     {
-        _capabilityFactoryMock = new Mock<IAiCapabilityFactory>();
-        _schemaBuilderMock = new Mock<IAiEditableModelSchemaBuilder>();
+        _capabilityFactoryMock = new Mock<IAICapabilityFactory>();
+        _schemaBuilderMock = new Mock<IAIEditableModelSchemaBuilder>();
 
-        _infrastructureMock = new Mock<IAiProviderInfrastructure>();
+        _infrastructureMock = new Mock<IAIProviderInfrastructure>();
         _infrastructureMock.Setup(x => x.CapabilityFactory).Returns(_capabilityFactoryMock.Object);
         _infrastructureMock.Setup(x => x.SchemaBuilder).Returns(_schemaBuilderMock.Object);
     }
@@ -57,11 +57,11 @@ public class AIProviderBaseTests
         var embeddingCapability = new FakeEmbeddingCapability();
 
         _capabilityFactoryMock
-            .Setup(x => x.Create<IAiChatCapability>(It.IsAny<IAiProvider>()))
+            .Setup(x => x.Create<IAIChatCapability>(It.IsAny<IAIProvider>()))
             .Returns(chatCapability);
 
         _capabilityFactoryMock
-            .Setup(x => x.Create<IAiEmbeddingCapability>(It.IsAny<IAiProvider>()))
+            .Setup(x => x.Create<IAIEmbeddingCapability>(It.IsAny<IAIProvider>()))
             .Returns(embeddingCapability);
 
         var provider = new ProviderWithMultipleCapabilities(_infrastructureMock.Object);
@@ -99,13 +99,13 @@ public class AIProviderBaseTests
         var chatCapability = new FakeChatCapability();
 
         _capabilityFactoryMock
-            .Setup(x => x.Create<IAiChatCapability>(It.IsAny<IAiProvider>()))
+            .Setup(x => x.Create<IAIChatCapability>(It.IsAny<IAIProvider>()))
             .Returns(chatCapability);
 
         var provider = new ProviderWithChatCapability(_infrastructureMock.Object);
 
         // Act
-        var result = provider.GetCapability<IAiChatCapability>();
+        var result = provider.GetCapability<IAIChatCapability>();
 
         // Assert
         result.ShouldBe(chatCapability);
@@ -118,7 +118,7 @@ public class AIProviderBaseTests
         var provider = new TestProvider(_infrastructureMock.Object); // No capabilities
 
         // Act
-        var act = () => provider.GetCapability<IAiChatCapability>();
+        var act = () => provider.GetCapability<IAIChatCapability>();
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
@@ -136,13 +136,13 @@ public class AIProviderBaseTests
         var chatCapability = new FakeChatCapability();
 
         _capabilityFactoryMock
-            .Setup(x => x.Create<IAiChatCapability>(It.IsAny<IAiProvider>()))
+            .Setup(x => x.Create<IAIChatCapability>(It.IsAny<IAIProvider>()))
             .Returns(chatCapability);
 
         var provider = new ProviderWithChatCapability(_infrastructureMock.Object);
 
         // Act
-        var result = provider.TryGetCapability<IAiChatCapability>(out var capability);
+        var result = provider.TryGetCapability<IAIChatCapability>(out var capability);
 
         // Assert
         result.ShouldBeTrue();
@@ -156,7 +156,7 @@ public class AIProviderBaseTests
         var provider = new TestProvider(_infrastructureMock.Object);
 
         // Act
-        var result = provider.TryGetCapability<IAiChatCapability>(out var capability);
+        var result = provider.TryGetCapability<IAIChatCapability>(out var capability);
 
         // Assert
         result.ShouldBeFalse();
@@ -174,13 +174,13 @@ public class AIProviderBaseTests
         var chatCapability = new FakeChatCapability();
 
         _capabilityFactoryMock
-            .Setup(x => x.Create<IAiChatCapability>(It.IsAny<IAiProvider>()))
+            .Setup(x => x.Create<IAIChatCapability>(It.IsAny<IAIProvider>()))
             .Returns(chatCapability);
 
         var provider = new ProviderWithChatCapability(_infrastructureMock.Object);
 
         // Act
-        var result = provider.HasCapability<IAiChatCapability>();
+        var result = provider.HasCapability<IAIChatCapability>();
 
         // Assert
         result.ShouldBeTrue();
@@ -193,7 +193,7 @@ public class AIProviderBaseTests
         var provider = new TestProvider(_infrastructureMock.Object);
 
         // Act
-        var result = provider.HasCapability<IAiChatCapability>();
+        var result = provider.HasCapability<IAIChatCapability>();
 
         // Assert
         result.ShouldBeFalse();
@@ -274,7 +274,7 @@ public class AIProviderBaseTests
     [AIProvider("test-provider", "Test Provider")]
     private class TestProvider : AIProviderBase
     {
-        public TestProvider(IAiProviderInfrastructure infrastructure)
+        public TestProvider(IAIProviderInfrastructure infrastructure)
             : base(infrastructure)
         { }
     }
@@ -282,7 +282,7 @@ public class AIProviderBaseTests
     // Intentionally missing the AIProviderAttribute
     private class ProviderWithoutAttribute : AIProviderBase
     {
-        public ProviderWithoutAttribute(IAiProviderInfrastructure infrastructure)
+        public ProviderWithoutAttribute(IAIProviderInfrastructure infrastructure)
             : base(infrastructure)
         { }
     }
@@ -290,28 +290,28 @@ public class AIProviderBaseTests
     [AIProvider("chat-provider", "Chat Provider")]
     private class ProviderWithChatCapability : AIProviderBase
     {
-        public ProviderWithChatCapability(IAiProviderInfrastructure infrastructure)
+        public ProviderWithChatCapability(IAIProviderInfrastructure infrastructure)
             : base(infrastructure)
         {
-            WithCapability<IAiChatCapability>();
+            WithCapability<IAIChatCapability>();
         }
     }
 
     [AIProvider("multi-provider", "Multi Provider")]
     private class ProviderWithMultipleCapabilities : AIProviderBase
     {
-        public ProviderWithMultipleCapabilities(IAiProviderInfrastructure infrastructure)
+        public ProviderWithMultipleCapabilities(IAIProviderInfrastructure infrastructure)
             : base(infrastructure)
         {
-            WithCapability<IAiChatCapability>();
-            WithCapability<IAiEmbeddingCapability>();
+            WithCapability<IAIChatCapability>();
+            WithCapability<IAIEmbeddingCapability>();
         }
     }
 
     [AIProvider("typed-provider", "Typed Provider")]
     private class TypedSettingsProvider : AIProviderBase<FakeProviderSettings>
     {
-        public TypedSettingsProvider(IAiProviderInfrastructure infrastructure)
+        public TypedSettingsProvider(IAIProviderInfrastructure infrastructure)
             : base(infrastructure)
         { }
     }

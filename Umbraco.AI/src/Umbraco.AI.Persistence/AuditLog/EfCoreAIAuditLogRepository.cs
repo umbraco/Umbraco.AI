@@ -7,7 +7,7 @@ namespace Umbraco.AI.Persistence.AuditLog;
 /// <summary>
 /// EF Core implementation of the AI audit-log repository.
 /// </summary>
-internal class EfCoreAiAuditLogRepository : IAiAuditLogRepository
+internal class EfCoreAiAuditLogRepository : IAIAuditLogRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 

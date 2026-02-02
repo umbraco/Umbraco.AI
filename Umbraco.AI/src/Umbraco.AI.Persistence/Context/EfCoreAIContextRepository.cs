@@ -8,7 +8,7 @@ namespace Umbraco.AI.Persistence.Context;
 /// <summary>
 /// EF Core implementation of the AI context repository.
 /// </summary>
-internal class EfCoreAiContextRepository : IAiContextRepository
+internal class EfCoreAiContextRepository : IAIContextRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 

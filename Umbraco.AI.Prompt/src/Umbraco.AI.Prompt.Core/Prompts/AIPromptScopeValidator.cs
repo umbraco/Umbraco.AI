@@ -8,7 +8,7 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// <summary>
 /// Validates whether a prompt execution is allowed based on its scope configuration.
 /// </summary>
-internal sealed class AIPromptScopeValidator : IAiPromptScopeValidator
+internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
 {
     private readonly IEntityService _entityService;
     private readonly IContentTypeService _contentTypeService;

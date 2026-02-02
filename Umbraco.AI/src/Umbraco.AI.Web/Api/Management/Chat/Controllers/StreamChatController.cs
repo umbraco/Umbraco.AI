@@ -24,15 +24,15 @@
 // [ApiVersion("1.0")]
 // public class StreamChatController : ChatControllerBase
 // {
-//     private readonly IAiChatService _chatService;
-//     private readonly IAiProfileService _profileService;
+//     private readonly IAIChatService _chatService;
+//     private readonly IAIProfileService _profileService;
 //
 //     /// <summary>
 //     /// Initializes a new instance of the <see cref="StreamChatController"/> class.
 //     /// </summary>
 //     public StreamChatController(
-//         IAiChatService chatService,
-//         IAiProfileService profileService)
+//         IAIChatService chatService,
+//         IAIProfileService profileService)
 //     {
 //         _chatService = chatService;
 //         _profileService = profileService;

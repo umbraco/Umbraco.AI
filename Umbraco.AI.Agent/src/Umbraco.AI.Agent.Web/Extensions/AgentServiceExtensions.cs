@@ -4,7 +4,7 @@ using Umbraco.AI.Web.Api.Common.Models;
 namespace Umbraco.AI.Agent.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="IAiAgentService"/> to support IdOrAlias lookups.
+/// Extension methods for <see cref="IAIAgentService"/> to support IdOrAlias lookups.
 /// </summary>
 internal static class AgentServiceExtensions
 {
@@ -16,7 +16,7 @@ internal static class AgentServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent if found, otherwise null.</returns>
     public static async Task<Core.Agents.AIAgent?> GetAgentAsync(
-        this IAiAgentService service,
+        this IAIAgentService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -42,7 +42,7 @@ internal static class AgentServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent ID if found, otherwise null.</returns>
     public static async Task<Guid?> TryGetAgentIdAsync(
-        this IAiAgentService service,
+        this IAIAgentService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -71,7 +71,7 @@ internal static class AgentServiceExtensions
     /// <returns>The agent ID.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the agent is not found.</exception>
     public static async Task<Guid> GetAgentIdAsync(
-        this IAiAgentService service,
+        this IAIAgentService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {

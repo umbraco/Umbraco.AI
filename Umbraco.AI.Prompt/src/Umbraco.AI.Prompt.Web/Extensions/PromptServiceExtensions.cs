@@ -4,7 +4,7 @@ using Umbraco.AI.Web.Api.Common.Models;
 namespace Umbraco.AI.Prompt.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="IAiPromptService"/> to support IdOrAlias lookups.
+/// Extension methods for <see cref="IAIPromptService"/> to support IdOrAlias lookups.
 /// </summary>
 internal static class PromptServiceExtensions
 {
@@ -16,7 +16,7 @@ internal static class PromptServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The prompt if found, otherwise null.</returns>
     public static async Task<Core.Prompts.AIPrompt?> GetPromptAsync(
-        this IAiPromptService service,
+        this IAIPromptService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -42,7 +42,7 @@ internal static class PromptServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The prompt ID if found, otherwise null.</returns>
     public static async Task<Guid?> TryGetPromptIdAsync(
-        this IAiPromptService service,
+        this IAIPromptService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -71,7 +71,7 @@ internal static class PromptServiceExtensions
     /// <returns>The prompt ID.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the prompt is not found.</exception>
     public static async Task<Guid> GetPromptIdAsync(
-        this IAiPromptService service,
+        this IAIPromptService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {

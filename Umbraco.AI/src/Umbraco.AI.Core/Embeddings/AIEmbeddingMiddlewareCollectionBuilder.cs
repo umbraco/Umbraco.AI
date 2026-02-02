@@ -16,7 +16,7 @@ namespace Umbraco.AI.Core.Embeddings;
 /// Middleware is applied in collection order when wrapping the underlying embedding generator.
 /// </remarks>
 public class AIEmbeddingMiddlewareCollectionBuilder
-    : OrderedCollectionBuilderBase<AIEmbeddingMiddlewareCollectionBuilder, AIEmbeddingMiddlewareCollection, IAiEmbeddingMiddleware>
+    : OrderedCollectionBuilderBase<AIEmbeddingMiddlewareCollectionBuilder, AIEmbeddingMiddlewareCollection, IAIEmbeddingMiddleware>
 {
     /// <inheritdoc />
     protected override AIEmbeddingMiddlewareCollectionBuilder This => this;

@@ -14,13 +14,13 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 [ApiVersion("1.0")]
 public class AllAgentController : AgentControllerBase
 {
-    private readonly IAiAgentService _AiAgentService;
+    private readonly IAIAgentService _AiAgentService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public AllAgentController(IAiAgentService AIAgentService, IUmbracoMapper umbracoMapper)
+    public AllAgentController(IAIAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
         _AiAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;

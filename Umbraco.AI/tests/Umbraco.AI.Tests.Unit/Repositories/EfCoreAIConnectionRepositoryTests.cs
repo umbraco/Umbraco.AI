@@ -12,12 +12,12 @@ namespace Umbraco.AI.Tests.Unit.Repositories;
 public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
-    private readonly Mock<IAiConnectionFactory> _connectionFactoryMock;
+    private readonly Mock<IAIConnectionFactory> _connectionFactoryMock;
 
     public EfCoreAiConnectionRepositoryTests(EfCoreTestFixture fixture)
     {
         _fixture = fixture;
-        _connectionFactoryMock = new Mock<IAiConnectionFactory>();
+        _connectionFactoryMock = new Mock<IAIConnectionFactory>();
 
         // Setup mock to pass through values without encryption for testing
         _connectionFactoryMock

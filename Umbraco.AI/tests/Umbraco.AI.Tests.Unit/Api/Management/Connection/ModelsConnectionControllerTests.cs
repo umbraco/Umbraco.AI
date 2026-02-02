@@ -13,12 +13,12 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class ModelsConnectionControllerTests
 {
-    private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIConnectionService> _connectionServiceMock;
     private readonly Mock<IUmbracoMapper> _mapperMock;
 
     public ModelsConnectionControllerTests()
     {
-        _connectionServiceMock = new Mock<IAiConnectionService>();
+        _connectionServiceMock = new Mock<IAIConnectionService>();
         _mapperMock = new Mock<IUmbracoMapper>();
     }
 
@@ -29,22 +29,22 @@ public class ModelsConnectionControllerTests
             _mapperMock.Object);
     }
 
-    private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(
+    private static Mock<IAIConfiguredProvider> CreateConfiguredProviderMock(
         AIConnection connection,
-        IAiProvider provider,
-        params IAiConfiguredCapability[] capabilities)
+        IAIProvider provider,
+        params IAIConfiguredCapability[] capabilities)
     {
-        var mock = new Mock<IAiConfiguredProvider>();
+        var mock = new Mock<IAIConfiguredProvider>();
         mock.Setup(x => x.Provider).Returns(provider);
         mock.Setup(x => x.GetCapabilities()).Returns(capabilities);
         return mock;
     }
 
-    private static Mock<IAiConfiguredCapability> CreateConfiguredCapabilityMock(
+    private static Mock<IAIConfiguredCapability> CreateConfiguredCapabilityMock(
         AICapability kind,
         IReadOnlyList<AIModelDescriptor> models)
     {
-        var mock = new Mock<IAiConfiguredCapability>();
+        var mock = new Mock<IAIConfiguredCapability>();
         mock.Setup(x => x.Kind).Returns(kind);
         mock.Setup(x => x.GetModelsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(models);
         return mock;
@@ -104,7 +104,7 @@ public class ModelsConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IAiConfiguredProvider?)null);
+            .ReturnsAsync((IAIConfiguredProvider?)null);
 
         var controller = CreateController();
 

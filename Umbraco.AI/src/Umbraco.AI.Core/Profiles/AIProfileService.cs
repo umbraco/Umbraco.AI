@@ -6,19 +6,19 @@ using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Core.Profiles;
 
-internal sealed class AIProfileService : IAiProfileService
+internal sealed class AIProfileService : IAIProfileService
 {
-    private readonly IAiProfileRepository _repository;
-    private readonly IAiSettingsService _settingsService;
+    private readonly IAIProfileRepository _repository;
+    private readonly IAISettingsService _settingsService;
     private readonly AIOptions _options;
-    private readonly IAiEntityVersionService _versionService;
+    private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AIProfileService(
-        IAiProfileRepository repository,
-        IAiSettingsService settingsService,
+        IAIProfileRepository repository,
+        IAISettingsService settingsService,
         IOptions<AIOptions> options,
-        IAiEntityVersionService versionService,
+        IAIEntityVersionService versionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;

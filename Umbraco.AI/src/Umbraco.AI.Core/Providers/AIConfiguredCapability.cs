@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Providers;
 /// <summary>
 /// Decorator that wraps a chat capability with resolved settings.
 /// </summary>
-internal sealed class AIConfiguredChatCapability(IAiChatCapability inner, object settings) : IAiConfiguredChatCapability
+internal sealed class AIConfiguredChatCapability(IAIChatCapability inner, object settings) : IAIConfiguredChatCapability
 {
     /// <inheritdoc />
     public AICapability Kind => inner.Kind;
@@ -22,8 +22,8 @@ internal sealed class AIConfiguredChatCapability(IAiChatCapability inner, object
 /// <summary>
 /// Decorator that wraps an embedding capability with resolved settings.
 /// </summary>
-internal sealed class AIConfiguredEmbeddingCapability(IAiEmbeddingCapability inner, object settings)
-    : IAiConfiguredEmbeddingCapability
+internal sealed class AIConfiguredEmbeddingCapability(IAIEmbeddingCapability inner, object settings)
+    : IAIConfiguredEmbeddingCapability
 {
     /// <inheritdoc />
     public AICapability Kind => inner.Kind;

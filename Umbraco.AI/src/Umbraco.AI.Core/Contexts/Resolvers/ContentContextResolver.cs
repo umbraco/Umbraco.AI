@@ -10,7 +10,7 @@ namespace Umbraco.AI.Core.Contexts.Resolvers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This resolver reads the content ID from <see cref="IAiRuntimeContextAccessor"/>, preferring
+/// This resolver reads the content ID from <see cref="IAIRuntimeContextAccessor"/>, preferring
 /// <see cref="AIRuntimeContextKeys.ParentEntityId"/> (for new entities) over
 /// <see cref="AIRuntimeContextKeys.EntityId"/>. It then walks up the content tree
 /// (current node + ancestors) to find the nearest property using the AI Context
@@ -21,10 +21,10 @@ namespace Umbraco.AI.Core.Contexts.Resolvers;
 /// This allows content to inherit context from parent/ancestor nodes.
 /// </para>
 /// </remarks>
-internal sealed class ContentContextResolver : IAiContextResolver
+internal sealed class ContentContextResolver : IAIContextResolver
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiContextService _contextService;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIContextService _contextService;
     private readonly IUmbracoContextAccessor _umbracoContextAccessor;
 
     /// <summary>
@@ -34,8 +34,8 @@ internal sealed class ContentContextResolver : IAiContextResolver
     /// <param name="contextService">The context service.</param>
     /// <param name="umbracoContextAccessor">The Umbraco context accessor.</param>
     public ContentContextResolver(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiContextService contextService,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIContextService contextService,
         IUmbracoContextAccessor umbracoContextAccessor)
     {
         _runtimeContextAccessor = runtimeContextAccessor;

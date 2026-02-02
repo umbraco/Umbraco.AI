@@ -10,18 +10,18 @@ namespace Umbraco.AI.Tests.Unit.Services;
 
 public class AIConnectionServiceTests
 {
-    private readonly Mock<IAiConnectionRepository> _repositoryMock;
-    private readonly Mock<IAiEditableModelResolver> _settingsResolverMock;
-    private readonly Mock<IAiEntityVersionService> _versionServiceMock;
+    private readonly Mock<IAIConnectionRepository> _repositoryMock;
+    private readonly Mock<IAIEditableModelResolver> _settingsResolverMock;
+    private readonly Mock<IAIEntityVersionService> _versionServiceMock;
 
     public AIConnectionServiceTests()
     {
-        _repositoryMock = new Mock<IAiConnectionRepository>();
-        _settingsResolverMock = new Mock<IAiEditableModelResolver>();
-        _versionServiceMock = new Mock<IAiEntityVersionService>();
+        _repositoryMock = new Mock<IAIConnectionRepository>();
+        _settingsResolverMock = new Mock<IAIEditableModelResolver>();
+        _versionServiceMock = new Mock<IAIEntityVersionService>();
     }
 
-    private AIConnectionService CreateService(params IAiProvider[] providers)
+    private AIConnectionService CreateService(params IAIProvider[] providers)
     {
         var collection = new AIProviderCollection(() => providers);
         return new AIConnectionService(
@@ -558,7 +558,7 @@ public class AIConnectionServiceTests
             .WithSettings(settings)
             .Build();
 
-        var failingCapability = new Mock<IAiChatCapability>();
+        var failingCapability = new Mock<IAIChatCapability>();
         failingCapability
             .Setup(c => c.GetModelsAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Authentication failed"));
@@ -729,10 +729,10 @@ public class AIConnectionServiceTests
         // Assert
         result.ShouldNotBeNull();
         result!.GetCapabilities().Count.ShouldBe(2);
-        result.HasCapability<IAiConfiguredChatCapability>().ShouldBeTrue();
-        result.HasCapability<IAiConfiguredEmbeddingCapability>().ShouldBeTrue();
-        result.GetCapability<IAiConfiguredChatCapability>().ShouldNotBeNull();
-        result.GetCapability<IAiConfiguredEmbeddingCapability>().ShouldNotBeNull();
+        result.HasCapability<IAIConfiguredChatCapability>().ShouldBeTrue();
+        result.HasCapability<IAIConfiguredEmbeddingCapability>().ShouldBeTrue();
+        result.GetCapability<IAIConfiguredChatCapability>().ShouldNotBeNull();
+        result.GetCapability<IAIConfiguredEmbeddingCapability>().ShouldNotBeNull();
     }
 
     [Fact]
@@ -764,7 +764,7 @@ public class AIConnectionServiceTests
 
         // Act
         var result = await service.GetConfiguredProviderAsync(connectionId);
-        var chatCapability = result!.GetCapability<IAiConfiguredChatCapability>();
+        var chatCapability = result!.GetCapability<IAIConfiguredChatCapability>();
 
         // Assert - CreateClient() has no settings parameter, settings are baked in
         var client = chatCapability!.CreateClient();

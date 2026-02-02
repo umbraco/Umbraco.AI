@@ -21,7 +21,7 @@ namespace Umbraco.AI.Web.Api.Management.Versioning.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class EntityVersionHistoryController : VersioningControllerBase
 {
-    private readonly IAiEntityVersionService _versionService;
+    private readonly IAIEntityVersionService _versionService;
     private readonly AIVersionableEntityAdapterCollection _entityTypes;
     private readonly IUmbracoMapper _umbracoMapper;
 
@@ -29,7 +29,7 @@ public class EntityVersionHistoryController : VersioningControllerBase
     /// Initializes a new instance of the <see cref="EntityVersionHistoryController"/> class.
     /// </summary>
     public EntityVersionHistoryController(
-        IAiEntityVersionService versionService,
+        IAIEntityVersionService versionService,
         AIVersionableEntityAdapterCollection entityTypes,
         IUmbracoMapper umbracoMapper)
     {
@@ -68,9 +68,9 @@ public class EntityVersionHistoryController : VersioningControllerBase
 
         // Get the current entity to include as the current version
         var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
-        if (currentEntity is not IAiAuditableEntity auditable)
+        if (currentEntity is not IAIAuditableEntity auditable)
         {
-            // Entity not found or doesn't implement IAiAuditableEntity
+            // Entity not found or doesn't implement IAIAuditableEntity
             return NotFound(CreateProblemDetails(
                 "Entity not found",
                 $"The {entityType} with ID {entityId} was not found."));
@@ -81,7 +81,7 @@ public class EntityVersionHistoryController : VersioningControllerBase
         {
             Id = auditable.Id,
             EntityId = entityId,
-            Version = auditable is IAiVersionableEntity versionable ? versionable.Version : 1,
+            Version = auditable is IAIVersionableEntity versionable ? versionable.Version : 1,
             DateCreated = auditable.DateModified,
             CreatedByUserId = auditable.ModifiedByUserId
         };

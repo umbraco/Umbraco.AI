@@ -5,9 +5,9 @@ using Umbraco.AI.Core.Versioning;
 namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
-/// Fake in-memory implementation of <see cref="IAiContextRepository"/> for use in tests.
+/// Fake in-memory implementation of <see cref="IAIContextRepository"/> for use in tests.
 /// </summary>
-public class FakeAiContextRepository : IAiContextRepository
+public class FakeAiContextRepository : IAIContextRepository
 {
     private readonly Dictionary<Guid, AIContext> _contexts = new();
 

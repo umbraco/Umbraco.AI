@@ -41,7 +41,7 @@ public class AllContextResourceTypeController : ContextResourceTypeControllerBas
     public Task<ActionResult<IEnumerable<ContextResourceTypeResponseModel>>> GetAllContextResourceTypes(
         CancellationToken cancellationToken = default)
     {
-        var contextResourceTypes = _umbracoMapper.MapEnumerable<IAiContextResourceType, ContextResourceTypeResponseModel>(_contextResourceTypes);
+        var contextResourceTypes = _umbracoMapper.MapEnumerable<IAIContextResourceType, ContextResourceTypeResponseModel>(_contextResourceTypes);
         return Task.FromResult<ActionResult<IEnumerable<ContextResourceTypeResponseModel>>>(Ok(contextResourceTypes));
     }
 }

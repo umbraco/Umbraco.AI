@@ -17,7 +17,7 @@ namespace Umbraco.AI.Core.Versioning;
 /// </code>
 /// </remarks>
 public class AIVersionableEntityAdapterCollectionBuilder
-    : LazyCollectionBuilderBase<AIVersionableEntityAdapterCollectionBuilder, AIVersionableEntityAdapterCollection, IAiVersionableEntityAdapter>
+    : LazyCollectionBuilderBase<AIVersionableEntityAdapterCollectionBuilder, AIVersionableEntityAdapterCollection, IAIVersionableEntityAdapter>
 {
     /// <inheritdoc />
     protected override AIVersionableEntityAdapterCollectionBuilder This => this;

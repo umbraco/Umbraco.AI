@@ -20,13 +20,13 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class AllProfileController : ProfileControllerBase
 {
-    private readonly IAiProfileService _profileService;
+    private readonly IAIProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AllProfileController"/> class.
     /// </summary>
-    public AllProfileController(IAiProfileService profileService, IUmbracoMapper umbracoMapper)
+    public AllProfileController(IAIProfileService profileService, IUmbracoMapper umbracoMapper)
     {
         _profileService = profileService;
         _umbracoMapper = umbracoMapper;

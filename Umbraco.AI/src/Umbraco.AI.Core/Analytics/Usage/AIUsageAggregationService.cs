@@ -5,15 +5,15 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// <summary>
 /// Service for aggregating raw usage records into hourly and daily statistics.
 /// </summary>
-internal sealed class AIUsageAggregationService : IAiUsageAggregationService
+internal sealed class AIUsageAggregationService : IAIUsageAggregationService
 {
-    private readonly IAiUsageRecordRepository _recordRepository;
-    private readonly IAiUsageStatisticsRepository _statisticsRepository;
+    private readonly IAIUsageRecordRepository _recordRepository;
+    private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly ILogger<AIUsageAggregationService> _logger;
 
     public AIUsageAggregationService(
-        IAiUsageRecordRepository recordRepository,
-        IAiUsageStatisticsRepository statisticsRepository,
+        IAIUsageRecordRepository recordRepository,
+        IAIUsageStatisticsRepository statisticsRepository,
         ILogger<AIUsageAggregationService> logger)
     {
         _recordRepository = recordRepository;

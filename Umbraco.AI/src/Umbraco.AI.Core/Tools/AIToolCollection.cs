@@ -5,13 +5,13 @@ namespace Umbraco.AI.Core.Tools;
 /// <summary>
 /// A collection of AI tools.
 /// </summary>
-public sealed class AIToolCollection : BuilderCollectionBase<IAiTool>
+public sealed class AIToolCollection : BuilderCollectionBase<IAITool>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AIToolCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the tools.</param>
-    public AIToolCollection(Func<IEnumerable<IAiTool>> items)
+    public AIToolCollection(Func<IEnumerable<IAITool>> items)
         : base(items)
     { }
 
@@ -20,7 +20,7 @@ public sealed class AIToolCollection : BuilderCollectionBase<IAiTool>
     /// </summary>
     /// <param name="toolId">The tool identifier.</param>
     /// <returns>The tool, or <c>null</c> if not found.</returns>
-    public IAiTool? GetById(string toolId)
+    public IAITool? GetById(string toolId)
         => this.FirstOrDefault(t => t.Id.Equals(toolId, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
@@ -28,7 +28,7 @@ public sealed class AIToolCollection : BuilderCollectionBase<IAiTool>
     /// </summary>
     /// <param name="category">The category to filter by.</param>
     /// <returns>Tools in the specified category.</returns>
-    public IEnumerable<IAiTool> GetByCategory(string category)
+    public IEnumerable<IAITool> GetByCategory(string category)
         => this.Where(t => t.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
@@ -36,34 +36,34 @@ public sealed class AIToolCollection : BuilderCollectionBase<IAiTool>
     /// </summary>
     /// <param name="tag">The tag to filter by.</param>
     /// <returns>Tools with the specified tag.</returns>
-    public IEnumerable<IAiTool> GetWithTag(string tag)
+    public IEnumerable<IAITool> GetWithTag(string tag)
         => this.Where(t => t.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase));
 
     /// <summary>
     /// Gets all destructive tools.
     /// </summary>
     /// <returns>Tools marked as destructive.</returns>
-    public IEnumerable<IAiTool> GetDestructive()
+    public IEnumerable<IAITool> GetDestructive()
         => this.Where(t => t.IsDestructive);
 
     /// <summary>
     /// Gets all non-destructive tools.
     /// </summary>
     /// <returns>Tools not marked as destructive.</returns>
-    public IEnumerable<IAiTool> GetNonDestructive()
+    public IEnumerable<IAITool> GetNonDestructive()
         => this.Where(t => !t.IsDestructive);
 
     /// <summary>
     /// Gets all system tools (tools that are always included in agent requests).
     /// </summary>
     /// <returns>System tools that cannot be removed or configured.</returns>
-    public IEnumerable<IAiTool> GetSystemTools()
-        => this.Where(t => t is IAiSystemTool);
+    public IEnumerable<IAITool> GetSystemTools()
+        => this.Where(t => t is IAISystemTool);
 
     /// <summary>
     /// Gets all user tools (non-system tools that can be configured).
     /// </summary>
     /// <returns>User-configurable tools.</returns>
-    public IEnumerable<IAiTool> GetUserTools()
-        => this.Where(t => t is not IAiSystemTool);
+    public IEnumerable<IAITool> GetUserTools()
+        => this.Where(t => t is not IAISystemTool);
 }

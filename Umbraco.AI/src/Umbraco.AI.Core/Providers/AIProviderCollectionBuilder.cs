@@ -11,7 +11,7 @@ namespace Umbraco.AI.Core.Providers;
 /// or <see cref="LazyCollectionBuilderBase{TBuilder,TCollection,TItem}.Exclude{T}"/> to exclude auto-discovered providers.
 /// </remarks>
 public class AIProviderCollectionBuilder
-    : LazyCollectionBuilderBase<AIProviderCollectionBuilder, AIProviderCollection, IAiProvider>
+    : LazyCollectionBuilderBase<AIProviderCollectionBuilder, AIProviderCollection, IAIProvider>
 {
     /// <inheritdoc />
     protected override AIProviderCollectionBuilder This => this;

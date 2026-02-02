@@ -10,7 +10,7 @@ namespace Umbraco.AI.Tests.Unit.Settings;
 public class AIEditableModelResolverTests
 {
     private readonly IConfiguration _configuration;
-    private List<IAiProvider> _providers = new();
+    private List<IAIProvider> _providers = new();
 
     public AIEditableModelResolverTests()
     {

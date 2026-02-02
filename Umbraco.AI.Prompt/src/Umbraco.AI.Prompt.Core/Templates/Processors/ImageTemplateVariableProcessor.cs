@@ -13,17 +13,17 @@ namespace Umbraco.AI.Prompt.Core.Templates.Processors;
 /// Fetches the property value from the current entity using Umbraco's content/media services.
 /// Returns the image followed by a reference name that the AI can use to identify it.
 /// </summary>
-internal sealed class ImageTemplateVariableProcessor : IAiTemplateVariableProcessor
+internal sealed class ImageTemplateVariableProcessor : IAITemplateVariableProcessor
 {
     private readonly IMediaService _mediaService;
     private readonly IContentService _contentService;
-    private readonly IAiUmbracoMediaResolver _mediaResolver;
+    private readonly IAIUmbracoMediaResolver _mediaResolver;
     private readonly ILogger<ImageTemplateVariableProcessor> _logger;
 
     public ImageTemplateVariableProcessor(
         IMediaService mediaService,
         IContentService contentService,
-        IAiUmbracoMediaResolver mediaResolver,
+        IAIUmbracoMediaResolver mediaResolver,
         ILogger<ImageTemplateVariableProcessor> logger)
     {
         _mediaService = mediaService;

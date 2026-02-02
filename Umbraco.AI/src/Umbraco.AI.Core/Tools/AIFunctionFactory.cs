@@ -6,10 +6,10 @@ namespace Umbraco.AI.Core.Tools;
 /// <summary>
 /// Default factory for creating MEAI AIFunction instances from AI tools.
 /// </summary>
-internal sealed class AIFunctionFactory : IAiFunctionFactory
+internal sealed class AIFunctionFactory : IAIFunctionFactory
 {
     /// <inheritdoc />
-    public AIFunction Create(IAiTool tool)
+    public AIFunction Create(IAITool tool)
     {
         // For typed tools, we need to create a delegate with the proper signature
         // The interface's ExecuteAsync provides a common API
@@ -27,10 +27,10 @@ internal sealed class AIFunctionFactory : IAiFunctionFactory
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<AIFunction> Create(IEnumerable<IAiTool> tools)
+    public IReadOnlyList<AIFunction> Create(IEnumerable<IAITool> tools)
         => tools.Select(Create).ToList();
 
-    private static AIFunction CreateTypedFunction(IAiTool tool)
+    private static AIFunction CreateTypedFunction(IAITool tool)
     {
         // Use the generic AIFunctionFactory.Create with typed delegate
         // This allows MEAI to infer schema from TArgs [Description] attributes
@@ -41,7 +41,7 @@ internal sealed class AIFunctionFactory : IAiFunctionFactory
         return (AIFunction)method.Invoke(null, [tool])!;
     }
 
-    private static AIFunction CreateTypedFunctionCore<TArgs>(IAiTool tool) where TArgs : class
+    private static AIFunction CreateTypedFunctionCore<TArgs>(IAITool tool) where TArgs : class
     {
         // Create a typed delegate that MEAI can use to infer schema from TArgs
         Func<TArgs, CancellationToken, Task<object>> execute =

@@ -8,13 +8,13 @@ namespace Umbraco.AI.Core.Versioning;
 /// <remarks>
 /// This collection provides lookup methods to find the appropriate adapter for a given entity type.
 /// </remarks>
-public sealed class AIVersionableEntityAdapterCollection : BuilderCollectionBase<IAiVersionableEntityAdapter>
+public sealed class AIVersionableEntityAdapterCollection : BuilderCollectionBase<IAIVersionableEntityAdapter>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AIVersionableEntityAdapterCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the entity adapters.</param>
-    public AIVersionableEntityAdapterCollection(Func<IEnumerable<IAiVersionableEntityAdapter>> items)
+    public AIVersionableEntityAdapterCollection(Func<IEnumerable<IAIVersionableEntityAdapter>> items)
         : base(items)
     { }
 
@@ -23,7 +23,7 @@ public sealed class AIVersionableEntityAdapterCollection : BuilderCollectionBase
     /// </summary>
     /// <param name="entityTypeName">The entity type name (e.g., "Connection", "Profile").</param>
     /// <returns>The adapter, or <c>null</c> if not found.</returns>
-    public IAiVersionableEntityAdapter? GetByTypeName(string entityTypeName)
+    public IAIVersionableEntityAdapter? GetByTypeName(string entityTypeName)
         => this.FirstOrDefault(t => t.EntityTypeName.Equals(entityTypeName, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
@@ -31,7 +31,7 @@ public sealed class AIVersionableEntityAdapterCollection : BuilderCollectionBase
     /// </summary>
     /// <param name="entityType">The CLR type of the entity.</param>
     /// <returns>The adapter, or <c>null</c> if not found.</returns>
-    public IAiVersionableEntityAdapter? GetByType(Type entityType)
+    public IAIVersionableEntityAdapter? GetByType(Type entityType)
         => this.FirstOrDefault(t => t.EntityType == entityType);
 
     /// <summary>
@@ -39,7 +39,7 @@ public sealed class AIVersionableEntityAdapterCollection : BuilderCollectionBase
     /// </summary>
     /// <typeparam name="TEntity">The CLR type of the entity.</typeparam>
     /// <returns>The adapter, or <c>null</c> if not found.</returns>
-    public IAiVersionableEntityAdapter? GetByType<TEntity>()
+    public IAIVersionableEntityAdapter? GetByType<TEntity>()
         => GetByType(typeof(TEntity));
 
     /// <summary>

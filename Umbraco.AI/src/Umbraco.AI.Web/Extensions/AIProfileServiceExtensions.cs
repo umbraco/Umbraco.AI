@@ -4,7 +4,7 @@ using Umbraco.AI.Web.Api.Common.Models;
 namespace Umbraco.AI.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="IAiProfileService"/> to support IdOrAlias lookups.
+/// Extension methods for <see cref="IAIProfileService"/> to support IdOrAlias lookups.
 /// </summary>
 internal static class AIProfileServiceExtensions
 {
@@ -16,7 +16,7 @@ internal static class AIProfileServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile if found, otherwise null.</returns>
     public static async Task<AIProfile?> GetProfileAsync(
-        this IAiProfileService service,
+        this IAIProfileService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -42,7 +42,7 @@ internal static class AIProfileServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile ID if found, otherwise null.</returns>
     public static async Task<Guid?> TryGetProfileIdAsync(
-        this IAiProfileService service,
+        this IAIProfileService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -71,7 +71,7 @@ internal static class AIProfileServiceExtensions
     /// <returns>The profile ID.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the profile is not found.</exception>
     public static async Task<Guid> GetProfileIdAsync(
-        this IAiProfileService service,
+        this IAIProfileService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {

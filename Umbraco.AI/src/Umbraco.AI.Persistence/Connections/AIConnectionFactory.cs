@@ -10,13 +10,13 @@ namespace Umbraco.AI.Persistence.Connections;
 /// Factory for mapping between <see cref="AIConnection"/> domain models and <see cref="AIConnectionEntity"/> database entities.
 /// Handles encryption/decryption of sensitive settings fields during the mapping process.
 /// </summary>
-internal sealed class AIConnectionFactory : IAiConnectionFactory
+internal sealed class AIConnectionFactory : IAIConnectionFactory
 {
-    private readonly IAiEditableModelSerializer _serializer;
+    private readonly IAIEditableModelSerializer _serializer;
     private readonly AIProviderCollection _providers;
 
     public AIConnectionFactory(
-        IAiEditableModelSerializer serializer,
+        IAIEditableModelSerializer serializer,
         AIProviderCollection providers)
     {
         _serializer = serializer;

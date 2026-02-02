@@ -41,7 +41,7 @@ public class AllProviderController : ProviderControllerBase
     public Task<ActionResult<IEnumerable<ProviderItemResponseModel>>> GetAllProviders(
         CancellationToken cancellationToken = default)
     {
-        var providers = _umbracoMapper.MapEnumerable<IAiProvider, ProviderItemResponseModel>(_providers
+        var providers = _umbracoMapper.MapEnumerable<IAIProvider, ProviderItemResponseModel>(_providers
             .OrderBy(x => x.Name));
         return Task.FromResult<ActionResult<IEnumerable<ProviderItemResponseModel>>>(Ok(providers));
     }

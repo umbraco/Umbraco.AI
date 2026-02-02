@@ -8,7 +8,7 @@ namespace Umbraco.AI.Persistence.Profiles;
 /// <summary>
 /// EF Core implementation of the AI profile repository.
 /// </summary>
-internal class EfCoreAiProfileRepository : IAiProfileRepository
+internal class EfCoreAiProfileRepository : IAIProfileRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 

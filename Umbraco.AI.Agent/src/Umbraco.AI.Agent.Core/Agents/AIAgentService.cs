@@ -17,20 +17,20 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <summary>
 /// Service implementation for agent management operations.
 /// </summary>
-internal sealed class AIAgentService : IAiAgentService
+internal sealed class AIAgentService : IAIAgentService
 {
-    private readonly IAiAgentRepository _repository;
-    private readonly IAiEntityVersionService _versionService;
-    private readonly IAiAgentFactory _agentFactory;
+    private readonly IAIAgentRepository _repository;
+    private readonly IAIEntityVersionService _versionService;
+    private readonly IAIAgentFactory _agentFactory;
     private readonly IAguiStreamingService _streamingService;
     private readonly IAguiToolConverter _toolConverter;
     private readonly IAguiContextConverter _contextConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AIAgentService(
-        IAiAgentRepository repository,
-        IAiEntityVersionService versionService,
-        IAiAgentFactory agentFactory,
+        IAIAgentRepository repository,
+        IAIEntityVersionService versionService,
+        IAIAgentFactory agentFactory,
         IAguiStreamingService streamingService,
         IAguiToolConverter toolConverter,
         IAguiContextConverter contextConverter,

@@ -70,7 +70,7 @@ public class AIToolBaseTests
         var tool = new TestTool();
 
         // Act
-        var result = await ((IAiTool)tool).ExecuteAsync(null, CancellationToken.None);
+        var result = await ((IAITool)tool).ExecuteAsync(null, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -85,7 +85,7 @@ public class AIToolBaseTests
         var tool = new TestTool();
 
         // Act - passing args to untyped tool should be ignored
-        var result = await ((IAiTool)tool).ExecuteAsync(new { SomeArg = "value" }, CancellationToken.None);
+        var result = await ((IAITool)tool).ExecuteAsync(new { SomeArg = "value" }, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();

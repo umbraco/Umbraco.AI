@@ -23,7 +23,7 @@ public interface IAIConfiguredCapability
 /// <summary>
 /// Chat capability with resolved settings.
 /// </summary>
-public interface IAIConfiguredChatCapability : IAiConfiguredCapability
+public interface IAIConfiguredChatCapability : IAIConfiguredCapability
 {
     /// <summary>
     /// Creates a chat client with the baked-in settings.
@@ -36,7 +36,7 @@ public interface IAIConfiguredChatCapability : IAiConfiguredCapability
 /// <summary>
 /// Embedding capability with resolved settings.
 /// </summary>
-public interface IAIConfiguredEmbeddingCapability : IAiConfiguredCapability
+public interface IAIConfiguredEmbeddingCapability : IAIConfiguredCapability
 {
     /// <summary>
     /// Creates an embedding generator with the baked-in settings.

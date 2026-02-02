@@ -24,19 +24,19 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 ///   <item>Custom AG-UI context item handling</item>
 /// </list>
 /// <para>
-/// The controller delegates to <see cref="IAiAgentService.StreamAgentAsync"/> which
+/// The controller delegates to <see cref="IAIAgentService.StreamAgentAsync"/> which
 /// orchestrates the complete agent lifecycle including runtime context scope creation.
 /// </para>
 /// </remarks>
 [ApiVersion("1.0")]
 public class RunAgentController : AgentControllerBase
 {
-    private readonly IAiAgentService _agentService;
+    private readonly IAIAgentService _agentService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RunAgentController"/> class.
     /// </summary>
-    public RunAgentController(IAiAgentService agentService)
+    public RunAgentController(IAIAgentService agentService)
     {
         _agentService = agentService;
     }
@@ -51,7 +51,7 @@ public class RunAgentController : AgentControllerBase
     /// <remarks>
     /// <para>
     /// This endpoint resolves the agent by ID or alias and delegates to
-    /// <see cref="IAiAgentService.StreamAgentAsync"/> which handles the full lifecycle:
+    /// <see cref="IAIAgentService.StreamAgentAsync"/> which handles the full lifecycle:
     /// runtime context creation, MAF agent creation, and AG-UI event streaming.
     /// </para>
     /// <para>

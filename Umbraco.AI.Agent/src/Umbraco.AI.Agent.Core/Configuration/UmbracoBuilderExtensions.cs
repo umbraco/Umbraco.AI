@@ -25,7 +25,7 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAiAgentCore(this IUmbracoBuilder builder)
     {
         // Prevent multiple registrations
-        if (builder.Services.Any(x => x.ServiceType == typeof(IAiAgentService)))
+        if (builder.Services.Any(x => x.ServiceType == typeof(IAIAgentService)))
         {
             return builder;
         }
@@ -35,13 +35,13 @@ public static class UmbracoBuilderExtensions
             builder.Config.GetSection(AIAgentOptions.SectionName));
 
         // Register in-memory repository as fallback (replaced by persistence layer)
-        builder.Services.AddSingleton<IAiAgentRepository, InMemoryAiAgentRepository>();
+        builder.Services.AddSingleton<IAIAgentRepository, InMemoryAiAgentRepository>();
 
         // Register service
-        builder.Services.AddSingleton<IAiAgentService, AIAgentService>();
+        builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
 
-        // Register agent factory (scoped - depends on scoped IAiChatService)
-        builder.Services.AddSingleton<IAiAgentFactory, AIAgentFactory>();
+        // Register agent factory (scoped - depends on scoped IAIChatService)
+        builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
 
         // Register AG-UI services
         builder.Services.AddSingleton<IAguiMessageConverter, AguiMessageConverter>();
@@ -61,7 +61,7 @@ public static class UmbracoBuilderExtensions
 
         // Auto-discover agent scopes via [AIAgentScope] attribute
         builder.AIAgentScopes()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiAgentScope, AIAgentScopeAttribute>(cache: true));
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentScope, AIAgentScopeAttribute>(cache: true));
 
         return builder;
     }

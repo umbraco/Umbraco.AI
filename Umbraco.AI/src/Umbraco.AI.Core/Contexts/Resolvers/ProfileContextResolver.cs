@@ -10,11 +10,11 @@ namespace Umbraco.AI.Core.Contexts.Resolvers;
 /// This resolver reads the profile ID from <see cref="Constants.ContextKeys.ProfileId"/> in the request properties,
 /// then resolves any context IDs configured on the profile's chat settings.
 /// </remarks>
-internal sealed class ProfileContextResolver : IAiContextResolver
+internal sealed class ProfileContextResolver : IAIContextResolver
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiContextService _contextService;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIContextService _contextService;
+    private readonly IAIProfileService _profileService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfileContextResolver"/> class.
@@ -23,9 +23,9 @@ internal sealed class ProfileContextResolver : IAiContextResolver
     /// <param name="contextService">The context service.</param>
     /// <param name="profileService">The profile service.</param>
     public ProfileContextResolver(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiContextService contextService,
-        IAiProfileService profileService)
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIContextService contextService,
+        IAIProfileService profileService)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;

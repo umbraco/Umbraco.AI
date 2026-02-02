@@ -17,13 +17,13 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class UsageSummaryController : AnalyticsControllerBase
 {
-    private readonly IAiUsageAnalyticsService _analyticsService;
+    private readonly IAIUsageAnalyticsService _analyticsService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UsageSummaryController"/> class.
     /// </summary>
-    public UsageSummaryController(IAiUsageAnalyticsService analyticsService, IUmbracoMapper umbracoMapper)
+    public UsageSummaryController(IAIUsageAnalyticsService analyticsService, IUmbracoMapper umbracoMapper)
     {
         _analyticsService = analyticsService;
         _umbracoMapper = umbracoMapper;

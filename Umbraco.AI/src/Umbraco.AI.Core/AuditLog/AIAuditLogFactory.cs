@@ -10,7 +10,7 @@ namespace Umbraco.AI.Core.AuditLog;
 /// <summary>
 /// Factory implementation for creating AIAuditLog instances.
 /// </summary>
-internal sealed class AIAuditLogFactory : IAiAuditLogFactory
+internal sealed class AIAuditLogFactory : IAIAuditLogFactory
 {
     private readonly IOptionsMonitor<AIAuditLogOptions> _options;
     private readonly IBackOfficeSecurityAccessor _securityAccessor;

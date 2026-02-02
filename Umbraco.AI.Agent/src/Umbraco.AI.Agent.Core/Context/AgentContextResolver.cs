@@ -12,11 +12,11 @@ namespace Umbraco.AI.Agent.Core.Context;
 /// This resolver reads the agent ID from <see cref="Constants.MetadataKeys.AgentId"/> in the request properties,
 /// then resolves any context IDs configured on the agent.
 /// </remarks>
-internal sealed class AgentContextResolver : IAiContextResolver
+internal sealed class AgentContextResolver : IAIContextResolver
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiContextService _contextService;
-    private readonly IAiAgentService _agentService;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIContextService _contextService;
+    private readonly IAIAgentService _agentService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentContextResolver"/> class.
@@ -25,9 +25,9 @@ internal sealed class AgentContextResolver : IAiContextResolver
     /// <param name="contextService">The context service.</param>
     /// <param name="agentService">The agent service.</param>
     public AgentContextResolver(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiContextService contextService,
-        IAiAgentService agentService)
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIContextService contextService,
+        IAIAgentService agentService)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;

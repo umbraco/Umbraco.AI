@@ -20,7 +20,7 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
     /// </summary>
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
-    public AnthropicProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public AnthropicProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         _cache = cache;

@@ -20,7 +20,7 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAiAgent(this IUmbracoBuilder builder)
     {
         // Prevent multiple registrations
-        if (builder.Services.Any(x => x.ServiceType == typeof(IAiAgentService)))
+        if (builder.Services.Any(x => x.ServiceType == typeof(IAIAgentService)))
         {
             return builder;
         }

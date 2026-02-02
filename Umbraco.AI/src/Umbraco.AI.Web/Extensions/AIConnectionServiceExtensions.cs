@@ -4,7 +4,7 @@ using Umbraco.AI.Web.Api.Common.Models;
 namespace Umbraco.AI.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="IAiConnectionService"/> to support IdOrAlias lookups.
+/// Extension methods for <see cref="IAIConnectionService"/> to support IdOrAlias lookups.
 /// </summary>
 internal static class AIConnectionServiceExtensions
 {
@@ -16,7 +16,7 @@ internal static class AIConnectionServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The connection if found, otherwise null.</returns>
     public static async Task<AIConnection?> GetConnectionAsync(
-        this IAiConnectionService service,
+        this IAIConnectionService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -42,7 +42,7 @@ internal static class AIConnectionServiceExtensions
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The connection ID if found, otherwise null.</returns>
     public static async Task<Guid?> TryGetConnectionIdAsync(
-        this IAiConnectionService service,
+        this IAIConnectionService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -71,7 +71,7 @@ internal static class AIConnectionServiceExtensions
     /// <returns>The connection ID.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the connection is not found.</exception>
     public static async Task<Guid> GetConnectionIdAsync(
-        this IAiConnectionService service,
+        this IAIConnectionService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {

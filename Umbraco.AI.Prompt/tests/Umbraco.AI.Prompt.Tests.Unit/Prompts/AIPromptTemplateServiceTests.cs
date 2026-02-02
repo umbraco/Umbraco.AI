@@ -15,14 +15,14 @@ public class AIPromptTemplateServiceTests
 {
     private readonly Mock<IMediaService> _mockMediaService;
     private readonly Mock<IContentService> _mockContentService;
-    private readonly Mock<IAiUmbracoMediaResolver> _mockImageResolver;
+    private readonly Mock<IAIUmbracoMediaResolver> _mockImageResolver;
     private readonly AIPromptTemplateService _service;
 
     public AIPromptTemplateServiceTests()
     {
         _mockMediaService = new Mock<IMediaService>();
         _mockContentService = new Mock<IContentService>();
-        _mockImageResolver = new Mock<IAiUmbracoMediaResolver>();
+        _mockImageResolver = new Mock<IAIUmbracoMediaResolver>();
 
         var textProcessor = new TextTemplateVariableProcessor();
         var imageProcessor = new ImageTemplateVariableProcessor(

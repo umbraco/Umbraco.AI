@@ -8,7 +8,7 @@ namespace Umbraco.AI.Core.Security;
 /// Implements field protection using ASP.NET Core Data Protection API.
 /// Uses a marker-based approach with <c>ENC:</c> prefix for encrypted values.
 /// </summary>
-internal sealed class AISensitiveFieldProtector : IAiSensitiveFieldProtector
+internal sealed class AISensitiveFieldProtector : IAISensitiveFieldProtector
 {
     private const string EncryptedPrefix = "ENC:";
     private const string Purpose = "Umbraco.Ai.SensitiveFields.v1";

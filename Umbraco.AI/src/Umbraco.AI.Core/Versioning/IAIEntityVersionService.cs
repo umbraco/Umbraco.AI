@@ -9,10 +9,10 @@ namespace Umbraco.AI.Core.Versioning;
 /// <para>
 /// This service provides a single entry point for all version operations across all entity types.
 /// It delegates entity-specific logic (snapshot creation, restoration, comparison) to the
-/// appropriate <see cref="IAiVersionableEntityAdapter"/> handler.
+/// appropriate <see cref="IAIVersionableEntityAdapter"/> handler.
 /// </para>
 /// <para>
-/// Entity services (IAiConnectionService, IAiProfileService, etc.) can either:
+/// Entity services (IAIConnectionService, IAIProfileService, etc.) can either:
 /// </para>
 /// <list type="bullet">
 ///   <item>Call this service directly for version operations</item>
@@ -65,7 +65,7 @@ public interface IAIEntityVersionService
         Guid entityId,
         int version,
         CancellationToken cancellationToken = default)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
     /// <summary>
     /// Saves a version snapshot for an entity.
@@ -76,14 +76,14 @@ public interface IAIEntityVersionService
     /// <param name="changeDescription">Optional description of what changed.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <remarks>
-    /// The snapshot is created using the registered <see cref="IAiVersionableEntityAdapter"/> handler.
+    /// The snapshot is created using the registered <see cref="IAIVersionableEntityAdapter"/> handler.
     /// </remarks>
     Task SaveVersionAsync<TEntity>(
         TEntity entity,
         Guid? userId,
         string? changeDescription = null,
         CancellationToken cancellationToken = default)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
     /// <summary>
     /// Saves a version snapshot for an entity using raw snapshot data.
@@ -145,7 +145,7 @@ public interface IAIEntityVersionService
     /// This is useful for repositories that need to create snapshots during save operations.
     /// </remarks>
     string CreateSnapshot<TEntity>(TEntity entity)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
     /// <summary>
     /// Restores an entity from a snapshot without querying the database.
@@ -154,7 +154,7 @@ public interface IAIEntityVersionService
     /// <param name="snapshot">The JSON snapshot.</param>
     /// <returns>The restored entity, or null if restoration fails.</returns>
     TEntity? RestoreFromSnapshot<TEntity>(string snapshot)
-        where TEntity : class, IAiVersionableEntity;
+        where TEntity : class, IAIVersionableEntity;
 
     /// <summary>
     /// Cleans up old version records based on the configured policy.

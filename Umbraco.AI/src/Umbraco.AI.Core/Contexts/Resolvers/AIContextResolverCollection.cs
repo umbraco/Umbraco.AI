@@ -11,13 +11,13 @@ namespace Umbraco.AI.Core.Contexts.Resolvers;
 /// and <c>InsertAfter</c> methods. Later resolvers can override resources from earlier
 /// resolvers when duplicate IDs are encountered.
 /// </remarks>
-public sealed class AIContextResolverCollection : BuilderCollectionBase<IAiContextResolver>
+public sealed class AIContextResolverCollection : BuilderCollectionBase<IAIContextResolver>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextResolverCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the resolver instances.</param>
-    public AIContextResolverCollection(Func<IEnumerable<IAiContextResolver>> items)
+    public AIContextResolverCollection(Func<IEnumerable<IAIContextResolver>> items)
         : base(items)
     { }
 }

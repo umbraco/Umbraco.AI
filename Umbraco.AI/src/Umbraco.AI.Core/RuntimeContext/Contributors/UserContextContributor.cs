@@ -8,7 +8,7 @@ namespace Umbraco.AI.Core.RuntimeContext.Contributors;
 /// This is an ambient contributor that adds user context to the system message
 /// regardless of request context items.
 /// </summary>
-internal sealed class UserContextContributor : IAiRuntimeContextContributor
+internal sealed class UserContextContributor : IAIRuntimeContextContributor
 {
     private readonly IBackOfficeSecurityAccessor _securityAccessor;
 

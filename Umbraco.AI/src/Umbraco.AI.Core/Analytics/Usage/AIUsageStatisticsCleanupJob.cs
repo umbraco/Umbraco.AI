@@ -13,7 +13,7 @@ namespace Umbraco.AI.Core.Analytics.Usage;
 /// </summary>
 internal sealed class AIUsageStatisticsCleanupJob : RecurringHostedServiceBase
 {
-    private readonly IAiUsageStatisticsRepository _statisticsRepository;
+    private readonly IAIUsageStatisticsRepository _statisticsRepository;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
@@ -25,7 +25,7 @@ internal sealed class AIUsageStatisticsCleanupJob : RecurringHostedServiceBase
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(5);
 
     public AIUsageStatisticsCleanupJob(
-        IAiUsageStatisticsRepository statisticsRepository,
+        IAIUsageStatisticsRepository statisticsRepository,
         IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,

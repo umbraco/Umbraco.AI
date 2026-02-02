@@ -12,11 +12,11 @@ namespace Umbraco.AI.Prompt.Core.Context;
 /// This resolver reads the prompt ID from <see cref="Constants.MetadataKeys.PromptId"/> in the request properties,
 /// then resolves any context IDs configured on the prompt.
 /// </remarks>
-internal sealed class PromptContextResolver : IAiContextResolver
+internal sealed class PromptContextResolver : IAIContextResolver
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiContextService _contextService;
-    private readonly IAiPromptService _promptService;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIContextService _contextService;
+    private readonly IAIPromptService _promptService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptContextResolver"/> class.
@@ -25,9 +25,9 @@ internal sealed class PromptContextResolver : IAiContextResolver
     /// <param name="contextService">The context service.</param>
     /// <param name="promptService">The prompt service.</param>
     public PromptContextResolver(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiContextService contextService,
-        IAiPromptService promptService)
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIContextService contextService,
+        IAIPromptService promptService)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;

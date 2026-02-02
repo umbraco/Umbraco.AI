@@ -9,18 +9,18 @@ namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 /// <summary>
 /// Middleware that records AI embedding usage to the analytics system.
 /// </summary>
-internal sealed class AIUsageRecordingEmbeddingMiddleware : IAiEmbeddingMiddleware
+internal sealed class AIUsageRecordingEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
-    private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
-    private readonly IAiUsageRecordingService _usageRecordingService;
-    private readonly IAiUsageRecordFactory _factory;
+    private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
+    private readonly IAIUsageRecordingService _usageRecordingService;
+    private readonly IAIUsageRecordFactory _factory;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly ILoggerFactory _loggerFactory;
 
     public AIUsageRecordingEmbeddingMiddleware(
-        IAiRuntimeContextAccessor runtimeContextAccessor,
-        IAiUsageRecordingService usageRecordingService,
-        IAiUsageRecordFactory factory,
+        IAIRuntimeContextAccessor runtimeContextAccessor,
+        IAIUsageRecordingService usageRecordingService,
+        IAIUsageRecordFactory factory,
         IOptionsMonitor<AIAnalyticsOptions> options,
         ILoggerFactory loggerFactory)
     {

@@ -12,19 +12,19 @@ namespace Umbraco.AI.Tests.Unit.Factories;
 
 public class AIChatClientFactoryTests
 {
-    private readonly Mock<IAiConnectionService> _connectionServiceMock;
-    private readonly Mock<IAiRuntimeContextAccessor> _runtimeContextAccessorMock;
-    private readonly Mock<IAiRuntimeContextScopeProvider> _scopeProviderMock;
+    private readonly Mock<IAIConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIRuntimeContextAccessor> _runtimeContextAccessorMock;
+    private readonly Mock<IAIRuntimeContextScopeProvider> _scopeProviderMock;
     private readonly AIRuntimeContextContributorCollection _contributors;
     private readonly AIChatMiddlewareCollection _middleware;
 
     public AIChatClientFactoryTests()
     {
-        _connectionServiceMock = new Mock<IAiConnectionService>();
-        _runtimeContextAccessorMock = new Mock<IAiRuntimeContextAccessor>();
-        _scopeProviderMock = new Mock<IAiRuntimeContextScopeProvider>();
-        _contributors = new AIRuntimeContextContributorCollection(() => Enumerable.Empty<IAiRuntimeContextContributor>());
-        _middleware = new AIChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
+        _connectionServiceMock = new Mock<IAIConnectionService>();
+        _runtimeContextAccessorMock = new Mock<IAIRuntimeContextAccessor>();
+        _scopeProviderMock = new Mock<IAIRuntimeContextScopeProvider>();
+        _contributors = new AIRuntimeContextContributorCollection(() => Enumerable.Empty<IAIRuntimeContextContributor>());
+        _middleware = new AIChatMiddlewareCollection(() => Enumerable.Empty<IAIChatMiddleware>());
     }
 
     private AIChatClientFactory CreateFactory()
@@ -47,22 +47,22 @@ public class AIChatClientFactoryTests
             _contributors);
     }
 
-    private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(
-        IAiProvider provider,
-        IAiConfiguredChatCapability? chatCapability = null)
+    private static Mock<IAIConfiguredProvider> CreateConfiguredProviderMock(
+        IAIProvider provider,
+        IAIConfiguredChatCapability? chatCapability = null)
     {
-        var mock = new Mock<IAiConfiguredProvider>();
+        var mock = new Mock<IAIConfiguredProvider>();
         mock.Setup(x => x.Provider).Returns(provider);
 
         if (chatCapability is not null)
         {
-            mock.Setup(x => x.GetCapability<IAiConfiguredChatCapability>()).Returns(chatCapability);
+            mock.Setup(x => x.GetCapability<IAIConfiguredChatCapability>()).Returns(chatCapability);
             mock.Setup(x => x.GetCapabilities()).Returns(new[] { chatCapability });
         }
         else
         {
-            mock.Setup(x => x.GetCapability<IAiConfiguredChatCapability>()).Returns((IAiConfiguredChatCapability?)null);
-            mock.Setup(x => x.GetCapabilities()).Returns(Array.Empty<IAiConfiguredCapability>());
+            mock.Setup(x => x.GetCapability<IAIConfiguredChatCapability>()).Returns((IAIConfiguredChatCapability?)null);
+            mock.Setup(x => x.GetCapabilities()).Returns(Array.Empty<IAIConfiguredCapability>());
         }
 
         return mock;
@@ -89,7 +89,7 @@ public class AIChatClientFactoryTests
             .Build();
 
         var fakeChatClient = new FakeChatClient();
-        var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
+        var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
@@ -276,7 +276,7 @@ public class AIChatClientFactoryTests
             .Build();
 
         var fakeProvider = new FakeAiProvider("embedding-only-provider", "Embedding Only Provider");
-        // No chat capability - configured provider mock will return null for GetCapability<IAiConfiguredChatCapability>()
+        // No chat capability - configured provider mock will return null for GetCapability<IAIConfiguredChatCapability>()
         var configuredProviderMock = CreateConfiguredProviderMock(fakeProvider, chatCapability: null);
 
         var factory = CreateFactory();
@@ -327,13 +327,13 @@ public class AIChatClientFactoryTests
         // Track middleware application order
         var applicationOrder = new List<string>();
 
-        var middleware1Mock = new Mock<IAiChatMiddleware>();
+        var middleware1Mock = new Mock<IAIChatMiddleware>();
         middleware1Mock
             .Setup(m => m.Apply(It.IsAny<IChatClient>()))
             .Callback(() => applicationOrder.Add("middleware1"))
             .Returns(wrappedClient1);
 
-        var middleware2Mock = new Mock<IAiChatMiddleware>();
+        var middleware2Mock = new Mock<IAIChatMiddleware>();
         middleware2Mock
             .Setup(m => m.Apply(It.IsAny<IChatClient>()))
             .Callback(() => applicationOrder.Add("middleware2"))
@@ -345,7 +345,7 @@ public class AIChatClientFactoryTests
             middleware2Mock.Object
         });
 
-        var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
+        var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
@@ -392,7 +392,7 @@ public class AIChatClientFactoryTests
             .Build();
 
         var baseChatClient = new FakeChatClient();
-        var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
+        var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
@@ -440,7 +440,7 @@ public class AIChatClientFactoryTests
             .Build();
 
         var fakeChatClient = new FakeChatClient();
-        var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
+        var configuredCapabilityMock = new Mock<IAIConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 

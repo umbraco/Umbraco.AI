@@ -39,7 +39,7 @@ public interface IAIProvider : IDiscoverable
     /// Gets all capabilities supported by this provider.
     /// </summary>
     /// <returns></returns>
-    IReadOnlyCollection<IAiCapability> GetCapabilities();
+    IReadOnlyCollection<IAICapability> GetCapabilities();
 
     /// <summary>
     /// Tries to get the capability supported by this provider.
@@ -47,19 +47,19 @@ public interface IAIProvider : IDiscoverable
     /// <param name="capability"></param>
     /// <typeparam name="TCapability"></typeparam>
     /// <returns></returns>
-    public bool TryGetCapability<TCapability>(out TCapability? capability) where TCapability : class, IAiCapability;
+    public bool TryGetCapability<TCapability>(out TCapability? capability) where TCapability : class, IAICapability;
 
     /// <summary>
     /// Gets the capabilities supported by this provider.
     /// </summary>
     /// <typeparam name="TCapability"></typeparam>
     /// <returns></returns>
-    public TCapability? GetCapability<TCapability>() where TCapability : class, IAiCapability;
+    public TCapability? GetCapability<TCapability>() where TCapability : class, IAICapability;
 
     /// <summary>
     /// Determines if the provider has a specific capability.
     /// </summary>
     /// <typeparam name="TCapability"></typeparam>
     /// <returns></returns>
-    public bool HasCapability<TCapability>() where TCapability : class, IAiCapability;
+    public bool HasCapability<TCapability>() where TCapability : class, IAICapability;
 }

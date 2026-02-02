@@ -17,13 +17,13 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class UsageBreakdownController : AnalyticsControllerBase
 {
-    private readonly IAiUsageAnalyticsService _analyticsService;
+    private readonly IAIUsageAnalyticsService _analyticsService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UsageBreakdownController"/> class.
     /// </summary>
-    public UsageBreakdownController(IAiUsageAnalyticsService analyticsService, IUmbracoMapper umbracoMapper)
+    public UsageBreakdownController(IAIUsageAnalyticsService analyticsService, IUmbracoMapper umbracoMapper)
     {
         _analyticsService = analyticsService;
         _umbracoMapper = umbracoMapper;

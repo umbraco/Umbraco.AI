@@ -14,7 +14,7 @@ public class AIProfileBuilder
     private AICapability _capability = AICapability.Chat;
     private AIModelRef _model = new("test-provider", "test-model");
     private Guid _connectionId = Guid.NewGuid();
-    private IAiProfileSettings? _settings;
+    private IAIProfileSettings? _settings;
     private IReadOnlyList<string> _tags = Array.Empty<string>();
 
     public AIProfileBuilder WithId(Guid id)
@@ -59,7 +59,7 @@ public class AIProfileBuilder
         return this;
     }
 
-    public AIProfileBuilder WithSettings(IAiProfileSettings? settings)
+    public AIProfileBuilder WithSettings(IAIProfileSettings? settings)
     {
         _settings = settings;
         return this;

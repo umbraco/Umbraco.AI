@@ -18,13 +18,13 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class UpdateAgentController : AgentControllerBase
 {
-    private readonly IAiAgentService _AiAgentService;
+    private readonly IAIAgentService _AiAgentService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public UpdateAgentController(IAiAgentService AIAgentService, IUmbracoMapper umbracoMapper)
+    public UpdateAgentController(IAIAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
         _AiAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;

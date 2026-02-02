@@ -10,15 +10,15 @@ namespace Umbraco.AI.Core.AuditLog;
 /// <summary>
 /// Service implementation for AI governance tracing operations.
 /// </summary>
-internal sealed class AIAuditLogService : IAiAuditLogService
+internal sealed class AIAuditLogService : IAIAuditLogService
 {
-    private readonly IAiAuditLogRepository _auditLogRepository;
+    private readonly IAIAuditLogRepository _auditLogRepository;
     private readonly IOptionsMonitor<AIAuditLogOptions> _options;
     private readonly IBackgroundTaskQueue _backgroundTaskQueue;
     private readonly ILogger<AIAuditLogService> _logger;
 
     public AIAuditLogService(
-        IAiAuditLogRepository auditLogRepository,
+        IAIAuditLogRepository auditLogRepository,
         IOptionsMonitor<AIAuditLogOptions> options,
         IBackgroundTaskQueue backgroundTaskQueue,
         ILoggerFactory loggerFactory)
@@ -156,7 +156,7 @@ internal sealed class AIAuditLogService : IAiAuditLogService
             CorrelationId: auditLog.Id.ToString(),
             RunAsync: async (sp, token) =>
             {
-                var repository = sp.GetRequiredService<IAiAuditLogRepository>();
+                var repository = sp.GetRequiredService<IAIAuditLogRepository>();
                 await repository.SaveAsync(auditLog, token);
             });
 
@@ -204,7 +204,7 @@ internal sealed class AIAuditLogService : IAiAuditLogService
             CorrelationId: audit.Id.ToString(),
             RunAsync: async (sp, token) =>
             {
-                var repository = sp.GetRequiredService<IAiAuditLogRepository>();
+                var repository = sp.GetRequiredService<IAIAuditLogRepository>();
                 await repository.SaveAsync(audit, token);
             });
 
@@ -246,7 +246,7 @@ internal sealed class AIAuditLogService : IAiAuditLogService
             CorrelationId: audit.Id.ToString(),
             RunAsync: async (sp, token) =>
             {
-                var repository = sp.GetRequiredService<IAiAuditLogRepository>();
+                var repository = sp.GetRequiredService<IAIAuditLogRepository>();
                 await repository.SaveAsync(audit, token);
             });
 

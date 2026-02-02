@@ -7,7 +7,7 @@ namespace Umbraco.AI.Core.Connections;
 /// In-memory implementation of connection repository (for prototyping).
 /// TODO: Replace with database-backed implementation.
 /// </summary>
-internal sealed class InMemoryAiConnectionRepository : IAiConnectionRepository
+internal sealed class InMemoryAiConnectionRepository : IAIConnectionRepository
 {
     private readonly ConcurrentDictionary<Guid, AIConnection> _connections = new();
 

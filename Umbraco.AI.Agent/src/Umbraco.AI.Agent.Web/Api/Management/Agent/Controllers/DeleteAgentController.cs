@@ -16,12 +16,12 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class DeleteAgentController : AgentControllerBase
 {
-    private readonly IAiAgentService _AiAgentService;
+    private readonly IAIAgentService _AiAgentService;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public DeleteAgentController(IAiAgentService AIAgentService)
+    public DeleteAgentController(IAIAgentService AIAgentService)
     {
         _AiAgentService = AIAgentService;
     }

@@ -11,7 +11,7 @@ namespace Umbraco.AI.Core.Contexts;
 /// Contexts are standalone, reusable entities that can be assigned to content nodes (via property editor),
 /// profiles, prompts, and agents. They are not owned by these entities but referenced by them.
 /// </remarks>
-public sealed class AIContext : IAiVersionableEntity
+public sealed class AIContext : IAIVersionableEntity
 {
     /// <summary>
     /// The unique identifier of the AI context.

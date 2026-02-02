@@ -56,17 +56,17 @@ public static partial class UmbracoBuilderExtensions
         services.Configure<AIAnalyticsOptions>(config.GetSection("Umbraco:Ai:Analytics"));
 
         // Security infrastructure
-        services.AddSingleton<IAiSensitiveFieldProtector, AISensitiveFieldProtector>();
+        services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();
 
         // Provider infrastructure
-        services.AddSingleton<IAiCapabilityFactory, AICapabilityFactory>();
-        services.AddSingleton<IAiEditableModelSchemaBuilder, AIEditableModelSchemaBuilder>();
-        services.AddSingleton<IAiEditableModelSerializer, AIEditableModelSerializer>();
-        services.AddSingleton<IAiProviderInfrastructure, AIProviderInfrastructure>();
+        services.AddSingleton<IAICapabilityFactory, AICapabilityFactory>();
+        services.AddSingleton<IAIEditableModelSchemaBuilder, AIEditableModelSchemaBuilder>();
+        services.AddSingleton<IAIEditableModelSerializer, AIEditableModelSerializer>();
+        services.AddSingleton<IAIProviderInfrastructure, AIProviderInfrastructure>();
 
         // Auto-discover providers using TypeLoader (uses Umbraco's cached, efficient type discovery)
         builder.AIProviders()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiProvider, AIProviderAttribute>(cache: true));
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIProvider, AIProviderAttribute>(cache: true));
 
         // Initialize middleware collection builders with default middleware
         // Use AIChatMiddleware() and AIEmbeddingMiddleware() extension methods to add/remove middleware in Composers
@@ -86,7 +86,7 @@ public static partial class UmbracoBuilderExtensions
 
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiTool, AIToolAttribute>(cache: true));
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITool, AIToolAttribute>(cache: true));
 
         // Web fetch tool services
         services.AddSingleton<IUrlValidator, UrlValidator>();
@@ -120,26 +120,26 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<BackgroundTaskQueueWorker>();
 
         // Function factory for creating MEAI AIFunction instances
-        services.AddSingleton<IAiFunctionFactory, AIFunctionFactory>();
+        services.AddSingleton<IAIFunctionFactory, AIFunctionFactory>();
 
         // Editable model resolution
-        services.AddSingleton<IAiEditableModelResolver, AIEditableModelResolver>();
+        services.AddSingleton<IAIEditableModelResolver, AIEditableModelResolver>();
 
         // Connection system
-        services.AddSingleton<IAiConnectionRepository, InMemoryAiConnectionRepository>();
-        services.AddSingleton<IAiConnectionService, AIConnectionService>();
+        services.AddSingleton<IAIConnectionRepository, InMemoryAiConnectionRepository>();
+        services.AddSingleton<IAIConnectionService, AIConnectionService>();
 
         // Profile resolution
-        services.AddSingleton<IAiProfileRepository, InMemoryAiProfileRepository>();
-        services.AddSingleton<IAiProfileService, AIProfileService>();
+        services.AddSingleton<IAIProfileRepository, InMemoryAiProfileRepository>();
+        services.AddSingleton<IAIProfileService, AIProfileService>();
 
         // Settings
-        services.AddSingleton<IAiSettingsRepository, InMemoryAiSettingsRepository>();
-        services.AddSingleton<IAiSettingsService, AISettingsService>();
+        services.AddSingleton<IAISettingsRepository, InMemoryAiSettingsRepository>();
+        services.AddSingleton<IAISettingsService, AISettingsService>();
 
         // Unified versioning service
         services.Configure<AIVersionCleanupPolicy>(config.GetSection("Umbraco:Ai:VersionCleanupPolicy"));
-        services.AddSingleton<IAiEntityVersionService, AIEntityVersionService>();
+        services.AddSingleton<IAIEntityVersionService, AIEntityVersionService>();
         services.AddHostedService<AIVersionCleanupBackgroundJob>();
 
         // Versionable entity adapters for core entities
@@ -149,40 +149,40 @@ public static partial class UmbracoBuilderExtensions
             .Add<AIContextVersionableEntityAdapter>();
 
         // Client factories
-        services.AddSingleton<IAiChatClientFactory, AIChatClientFactory>();
-        services.AddSingleton<IAiEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
+        services.AddSingleton<IAIChatClientFactory, AIChatClientFactory>();
+        services.AddSingleton<IAIEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
 
         // High-level services
-        services.AddSingleton<IAiChatService, AIChatService>();
-        services.AddSingleton<IAiEmbeddingService, AIEmbeddingService>();
-        // TODO: services.AddSingleton<IAiToolService, AIToolService>();
+        services.AddSingleton<IAIChatService, AIChatService>();
+        services.AddSingleton<IAIEmbeddingService, AIEmbeddingService>();
+        // TODO: services.AddSingleton<IAIToolService, AIToolService>();
 
         // Context resource type infrastructure - auto-discover via [AIContextResourceType] attribute
-        services.AddSingleton<IAiContextResourceTypeInfrastructure, AIContextResourceTypeInfrastructure>();
+        services.AddSingleton<IAIContextResourceTypeInfrastructure, AIContextResourceTypeInfrastructure>();
         builder.AIContextResourceTypes()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiContextResourceType, AIContextResourceTypeAttribute>(cache: true));
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true));
 
         // Context system
-        services.AddSingleton<IAiContextRepository, InMemoryAiContextRepository>();
-        services.AddSingleton<IAiContextService, AIContextService>();
-        services.AddSingleton<IAiContextFormatter, AIContextFormatter>();
-        services.AddSingleton<IAiContextAccessor, AIContextAccessor>();
+        services.AddSingleton<IAIContextRepository, InMemoryAiContextRepository>();
+        services.AddSingleton<IAIContextService, AIContextService>();
+        services.AddSingleton<IAIContextFormatter, AIContextFormatter>();
+        services.AddSingleton<IAIContextAccessor, AIContextAccessor>();
 
         // Context resolution - pluggable resolver system
         // Order: Profile -> Content (content can override profile-level context)
         builder.AIContextResolvers()
             .Append<ProfileContextResolver>()
             .Append<ContentContextResolver>();
-        services.AddSingleton<IAiContextResolutionService, AIContextResolutionService>();
+        services.AddSingleton<IAIContextResolutionService, AIContextResolutionService>();
 
         // Entity adapter infrastructure
-        services.AddSingleton<IAiEntityContextHelper, AIEntityContextHelper>();
+        services.AddSingleton<IAIEntityContextHelper, AIEntityContextHelper>();
 
         // Runtime context infrastructure
         // Single instance implements both accessor (for reading) and scope provider (for creating)
         services.AddSingleton<AIRuntimeContextScopeProvider>();
-        services.AddSingleton<IAiRuntimeContextAccessor>(sp => sp.GetRequiredService<AIRuntimeContextScopeProvider>());
-        services.AddSingleton<IAiRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AIRuntimeContextScopeProvider>());
+        services.AddSingleton<IAIRuntimeContextAccessor>(sp => sp.GetRequiredService<AIRuntimeContextScopeProvider>());
+        services.AddSingleton<IAIRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AIRuntimeContextScopeProvider>());
 
         // Runtime context contributors - executed in order
         builder.AIRuntimeContextContributors()
@@ -191,22 +191,22 @@ public static partial class UmbracoBuilderExtensions
             .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items
 
         // Register media image resolver
-        builder.Services.AddSingleton<IAiUmbracoMediaResolver, AIUmbracoMediaResolver>();
+        builder.Services.AddSingleton<IAIUmbracoMediaResolver, AIUmbracoMediaResolver>();
         
         // AuditLog infrastructure
-        // Note: IAiAuditLogRepository is registered by persistence layer
-        services.AddSingleton<IAiAuditLogFactory, AIAuditLogFactory>();
-        services.AddSingleton<IAiAuditLogService, AIAuditLogService>();
+        // Note: IAIAuditLogRepository is registered by persistence layer
+        services.AddSingleton<IAIAuditLogFactory, AIAuditLogFactory>();
+        services.AddSingleton<IAIAuditLogService, AIAuditLogService>();
 
         // Background job for audit-log cleanup
         services.AddHostedService<AIAuditLogCleanupBackgroundJob>();
 
         // Analytics infrastructure
-        // Note: IAiUsageRecordRepository and IAiUsageStatisticsRepository are registered by persistence layer
-        services.AddSingleton<IAiUsageRecordFactory, AIUsageRecordFactory>();
-        services.AddSingleton<IAiUsageRecordingService, AIUsageRecordingService>();
-        services.AddSingleton<IAiUsageAggregationService, AIUsageAggregationService>();
-        services.AddSingleton<IAiUsageAnalyticsService, AIUsageAnalyticsService>();
+        // Note: IAIUsageRecordRepository and IAIUsageStatisticsRepository are registered by persistence layer
+        services.AddSingleton<IAIUsageRecordFactory, AIUsageRecordFactory>();
+        services.AddSingleton<IAIUsageRecordingService, AIUsageRecordingService>();
+        services.AddSingleton<IAIUsageAggregationService, AIUsageAggregationService>();
+        services.AddSingleton<IAIUsageAnalyticsService, AIUsageAnalyticsService>();
 
         // Background jobs for analytics aggregation and cleanup
         services.AddHostedService<AIUsageHourlyAggregationJob>();

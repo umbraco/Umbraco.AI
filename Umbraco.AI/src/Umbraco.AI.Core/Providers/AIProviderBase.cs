@@ -29,17 +29,17 @@ public class AIProviderAttribute(string id, string name) : Attribute
 /// <summary>
 /// Base class for AI providers.
 /// </summary>
-public abstract class AIProviderBase : IAiProvider
+public abstract class AIProviderBase : IAIProvider
 {
     /// <summary>
     /// The infrastructure services for AI providers.
     /// </summary>
-    protected readonly IAiProviderInfrastructure Infrastructure;
+    protected readonly IAIProviderInfrastructure Infrastructure;
     
     /// <summary>
     /// The capabilities supported by this provider.
     /// </summary>
-    protected readonly List<IAiCapability> Capabilities = [];
+    protected readonly List<IAICapability> Capabilities = [];
     
     /// <inheritdoc />
     public string Id { get; }
@@ -54,7 +54,7 @@ public abstract class AIProviderBase : IAiProvider
     /// Initializes a new instance of the <see cref="AIProviderBase"/> class.
     /// </summary>
     /// <exception cref="InvalidOperationException"></exception>
-    protected AIProviderBase(IAiProviderInfrastructure infrastructure)
+    protected AIProviderBase(IAIProviderInfrastructure infrastructure)
     {
         Infrastructure = infrastructure;
         
@@ -72,12 +72,12 @@ public abstract class AIProviderBase : IAiProvider
     /// Gets all capabilities supported by this provider.
     /// </summary>
     /// <returns></returns>
-    public IReadOnlyCollection<IAiCapability> GetCapabilities()
+    public IReadOnlyCollection<IAICapability> GetCapabilities()
         => Capabilities.AsReadOnly();
 
     /// <inheritdoc />
     public bool TryGetCapability<TCapability>(out TCapability? capability)
-        where TCapability : class, IAiCapability
+        where TCapability : class, IAICapability
     {
         capability = Capabilities.OfType<TCapability>().FirstOrDefault();
         return capability != null;
@@ -85,14 +85,14 @@ public abstract class AIProviderBase : IAiProvider
 
     /// <inheritdoc />
     public TCapability GetCapability<TCapability>()
-        where TCapability : class, IAiCapability
+        where TCapability : class, IAICapability
         => TryGetCapability<TCapability>(out var capability) 
             ? capability! 
             : throw new InvalidOperationException($"The AI provider '{Id}' does not support the capability '{typeof(TCapability).FullName}'.");
 
     /// <inheritdoc />
     public bool HasCapability<TCapability>()
-        where TCapability : class, IAiCapability
+        where TCapability : class, IAICapability
         => TryGetCapability<TCapability>(out _);
 
     /// <inheritdoc />
@@ -107,7 +107,7 @@ public abstract class AIProviderBase : IAiProvider
     /// </summary>
     /// <typeparam name="TCapability"></typeparam>
     protected void WithCapability<TCapability>()
-        where TCapability : class, IAiCapability
+        where TCapability : class, IAICapability
     {
         Capabilities.Add(Infrastructure.CapabilityFactory.Create<TCapability>(this));
     }
@@ -127,7 +127,7 @@ public abstract class AIProviderBase<TSettings> : AIProviderBase
     /// Initializes a new instance of the <see cref="AIProviderBase{TSettings}"/> class.
     /// </summary>
     /// <param name="infrastructure"></param>
-    protected AIProviderBase(IAiProviderInfrastructure infrastructure)
+    protected AIProviderBase(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     { }
 
@@ -140,7 +140,7 @@ public abstract class AIProviderBase<TSettings> : AIProviderBase
     /// </summary>
     /// <typeparam name="TCapability"></typeparam>
     protected new void WithCapability<TCapability>()
-        where TCapability : class, IAiCapability<TSettings>
+        where TCapability : class, IAICapability<TSettings>
     {
         Capabilities.Add(Infrastructure.CapabilityFactory.Create<TCapability>(this));
     }

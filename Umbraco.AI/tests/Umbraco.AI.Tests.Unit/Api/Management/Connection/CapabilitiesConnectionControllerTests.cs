@@ -11,11 +11,11 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class CapabilitiesConnectionControllerTests
 {
-    private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIConnectionService> _connectionServiceMock;
 
     public CapabilitiesConnectionControllerTests()
     {
-        _connectionServiceMock = new Mock<IAiConnectionService>();
+        _connectionServiceMock = new Mock<IAIConnectionService>();
     }
 
     private CapabilitiesConnectionController CreateController()
@@ -23,19 +23,19 @@ public class CapabilitiesConnectionControllerTests
         return new CapabilitiesConnectionController(_connectionServiceMock.Object);
     }
 
-    private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(
-        IAiProvider provider,
-        params IAiConfiguredCapability[] capabilities)
+    private static Mock<IAIConfiguredProvider> CreateConfiguredProviderMock(
+        IAIProvider provider,
+        params IAIConfiguredCapability[] capabilities)
     {
-        var mock = new Mock<IAiConfiguredProvider>();
+        var mock = new Mock<IAIConfiguredProvider>();
         mock.Setup(x => x.Provider).Returns(provider);
         mock.Setup(x => x.GetCapabilities()).Returns(capabilities);
         return mock;
     }
 
-    private static Mock<IAiConfiguredCapability> CreateConfiguredCapabilityMock(AICapability kind)
+    private static Mock<IAIConfiguredCapability> CreateConfiguredCapabilityMock(AICapability kind)
     {
-        var mock = new Mock<IAiConfiguredCapability>();
+        var mock = new Mock<IAIConfiguredCapability>();
         mock.Setup(x => x.Kind).Returns(kind);
         return mock;
     }
@@ -75,7 +75,7 @@ public class CapabilitiesConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IAiConfiguredProvider?)null);
+            .ReturnsAsync((IAIConfiguredProvider?)null);
 
         var controller = CreateController();
 

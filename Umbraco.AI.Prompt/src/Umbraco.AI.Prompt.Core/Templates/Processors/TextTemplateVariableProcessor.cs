@@ -7,7 +7,7 @@ namespace Umbraco.AI.Prompt.Core.Templates.Processors;
 /// Default template variable processor that resolves paths to text content.
 /// Handles unprefixed variables like {{propertyAlias}} or {{entity.name}}.
 /// </summary>
-internal sealed class TextTemplateVariableProcessor : IAiTemplateVariableProcessor
+internal sealed class TextTemplateVariableProcessor : IAITemplateVariableProcessor
 {
     /// <inheritdoc />
     /// <remarks>

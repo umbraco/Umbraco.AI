@@ -11,11 +11,11 @@ namespace Umbraco.AI.Core.Versioning;
 /// Each save operation creates a new version, allowing for audit trails and potential rollback.
 /// </para>
 /// <para>
-/// This interface extends <see cref="IAiAuditableEntity"/> to ensure all versionable entities
+/// This interface extends <see cref="IAIAuditableEntity"/> to ensure all versionable entities
 /// also track audit information (creation/modification timestamps and user IDs).
 /// </para>
 /// </remarks>
-public interface IAIVersionableEntity : IAiAuditableEntity
+public interface IAIVersionableEntity : IAIAuditableEntity
 {
     /// <summary>
     /// The current version of the entity.

@@ -6,9 +6,9 @@ using Umbraco.Cms.Persistence.EFCore.Scoping;
 namespace Umbraco.AI.Persistence.Versioning;
 
 /// <summary>
-/// EF Core implementation of <see cref="IAiEntityVersionRepository"/>.
+/// EF Core implementation of <see cref="IAIEntityVersionRepository"/>.
 /// </summary>
-internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionRepository
+internal sealed class EfCoreAiEntityVersionRepository : IAIEntityVersionRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 

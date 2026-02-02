@@ -11,7 +11,7 @@ internal static class AIProfileSettingsSerializer
     /// <summary>
     /// Serializes profile settings to JSON.
     /// </summary>
-    public static string? Serialize(IAiProfileSettings? settings)
+    public static string? Serialize(IAIProfileSettings? settings)
     {
         if (settings is null)
         {
@@ -24,7 +24,7 @@ internal static class AIProfileSettingsSerializer
     /// <summary>
     /// Deserializes profile settings from JSON based on capability type.
     /// </summary>
-    public static IAiProfileSettings? Deserialize(AICapability capability, string? json)
+    public static IAIProfileSettings? Deserialize(AICapability capability, string? json)
     {
         if (string.IsNullOrEmpty(json))
         {

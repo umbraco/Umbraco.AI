@@ -10,14 +10,14 @@ namespace Umbraco.AI.Core.Contexts.Middleware;
 /// <remarks>
 /// This middleware is registered by default and resolves context from all registered
 /// resolvers (via ChatOptions.AdditionalProperties). It injects "Always" mode resources into
-/// the system prompt and makes the resolved context available via <see cref="IAiContextAccessor"/>
+/// the system prompt and makes the resolved context available via <see cref="IAIContextAccessor"/>
 /// for OnDemand tools.
 /// </remarks>
-public class AIContextInjectingChatMiddleware : IAiChatMiddleware
+public class AIContextInjectingChatMiddleware : IAIChatMiddleware
 {
-    private readonly IAiContextResolutionService _contextResolutionService;
-    private readonly IAiContextFormatter _contextFormatter;
-    private readonly IAiContextAccessor _contextAccessor;
+    private readonly IAIContextResolutionService _contextResolutionService;
+    private readonly IAIContextFormatter _contextFormatter;
+    private readonly IAIContextAccessor _contextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextInjectingChatMiddleware"/> class.
@@ -26,9 +26,9 @@ public class AIContextInjectingChatMiddleware : IAiChatMiddleware
     /// <param name="contextFormatter">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor.</param>
     public AIContextInjectingChatMiddleware(
-        IAiContextResolutionService contextResolutionService,
-        IAiContextFormatter contextFormatter,
-        IAiContextAccessor contextAccessor)
+        IAIContextResolutionService contextResolutionService,
+        IAIContextFormatter contextFormatter,
+        IAIContextAccessor contextAccessor)
     {
         _contextResolutionService = contextResolutionService;
         _contextFormatter = contextFormatter;

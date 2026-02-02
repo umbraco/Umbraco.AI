@@ -10,13 +10,13 @@ namespace Umbraco.AI.Core.Embeddings;
 /// <see cref="AIEmbeddingMiddlewareCollectionBuilder"/> using <c>Append</c>, <c>InsertBefore</c>,
 /// and <c>InsertAfter</c> methods.
 /// </remarks>
-public sealed class AIEmbeddingMiddlewareCollection : BuilderCollectionBase<IAiEmbeddingMiddleware>
+public sealed class AIEmbeddingMiddlewareCollection : BuilderCollectionBase<IAIEmbeddingMiddleware>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AIEmbeddingMiddlewareCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the middleware instances.</param>
-    public AIEmbeddingMiddlewareCollection(Func<IEnumerable<IAiEmbeddingMiddleware>> items)
+    public AIEmbeddingMiddlewareCollection(Func<IEnumerable<IAIEmbeddingMiddleware>> items)
         : base(items)
     { }
 }

@@ -22,14 +22,14 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ModelsConnectionController : ConnectionControllerBase
 {
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ModelsConnectionController"/> class.
     /// </summary>
     public ModelsConnectionController(
-        IAiConnectionService connectionService,
+        IAIConnectionService connectionService,
         IUmbracoMapper umbracoMapper)
     {
         _connectionService = connectionService;
@@ -65,7 +65,7 @@ public class ModelsConnectionController : ConnectionControllerBase
         }
 
         // Get capabilities filtered by requested capability
-        IEnumerable<IAiConfiguredCapability> capabilities = configured.GetCapabilities();
+        IEnumerable<IAIConfiguredCapability> capabilities = configured.GetCapabilities();
         if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AICapability>(capability, true, out var capFilter))
         {
             capabilities = capabilities.Where(c => c.Kind == capFilter);

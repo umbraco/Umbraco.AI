@@ -6,9 +6,9 @@ using Umbraco.Cms.Core.Models;
 namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
-/// In-memory implementation of <see cref="IAiPromptRepository"/> for testing and fallback scenarios.
+/// In-memory implementation of <see cref="IAIPromptRepository"/> for testing and fallback scenarios.
 /// </summary>
-internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
+internal sealed class InMemoryAiPromptRepository : IAIPromptRepository
 {
     private readonly ConcurrentDictionary<Guid, AIPrompt> _prompts = new();
 

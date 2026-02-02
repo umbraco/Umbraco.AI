@@ -50,7 +50,7 @@ public class MiddlewarePipelineTests
     public void EmptyMiddlewareCollection_ReturnsOriginalClient()
     {
         // Arrange
-        var collection = new AIChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
+        var collection = new AIChatMiddlewareCollection(() => Enumerable.Empty<IAIChatMiddleware>());
         var baseClient = new FakeChatClient();
 
         // Act
@@ -106,7 +106,7 @@ public class MiddlewarePipelineTests
     public async Task Middleware_CanInterceptAndModifyRequests()
     {
         // Arrange
-        var modifyingMiddleware = new Mock<IAiChatMiddleware>();
+        var modifyingMiddleware = new Mock<IAIChatMiddleware>();
         var wrappedClient = new FakeChatClient("Modified response");
 
         modifyingMiddleware
@@ -162,7 +162,7 @@ public class MiddlewarePipelineTests
 
     #region Test helpers
 
-    private class TestMiddleware : IAiChatMiddleware
+    private class TestMiddleware : IAIChatMiddleware
     {
         private readonly string _name;
         private readonly List<string> _applicationOrder;
@@ -180,7 +180,7 @@ public class MiddlewarePipelineTests
         }
     }
 
-    private class CapturingMiddleware : IAiChatMiddleware
+    private class CapturingMiddleware : IAIChatMiddleware
     {
         private readonly List<IChatClient> _capturedClients;
 

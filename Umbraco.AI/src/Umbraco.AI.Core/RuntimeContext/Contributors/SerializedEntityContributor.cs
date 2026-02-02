@@ -8,19 +8,19 @@ namespace Umbraco.AI.Core.RuntimeContext.Contributors;
 /// Contributes data from context items that contain serialized entity data.
 /// Extracts <see cref="AISerializedEntity"/> and populates template variables.
 /// </summary>
-internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
+internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
 {
     private readonly JsonSerializerOptions _jsonOptions = new(Constants.DefaultJsonSerializerOptions)
     {
         PropertyNameCaseInsensitive = true
     };
-    private readonly IAiEntityContextHelper _contextHelper;
+    private readonly IAIEntityContextHelper _contextHelper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SerializedEntityContributor"/> class.
     /// </summary>
     /// <param name="contextHelper">The entity context helper for formatting.</param>
-    public SerializedEntityContributor(IAiEntityContextHelper contextHelper)
+    public SerializedEntityContributor(IAIEntityContextHelper contextHelper)
     {
         _contextHelper = contextHelper;
     }

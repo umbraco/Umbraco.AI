@@ -5,7 +5,7 @@ namespace Umbraco.AI.Agent.Core.Scopes;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Apply this attribute to classes implementing <see cref="IAiAgentScope"/>
+/// Apply this attribute to classes implementing <see cref="IAIAgentScope"/>
 /// to enable automatic discovery and registration.
 /// </para>
 /// <para>

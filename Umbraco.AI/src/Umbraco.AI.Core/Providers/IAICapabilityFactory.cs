@@ -11,6 +11,6 @@ public interface IAICapabilityFactory
     /// <param name="provider"></param>
     /// <typeparam name="TCapability"></typeparam>
     /// <returns></returns>
-    TCapability Create<TCapability>(IAiProvider provider)
-        where TCapability : class, IAiCapability;
+    TCapability Create<TCapability>(IAIProvider provider)
+        where TCapability : class, IAICapability;
 }

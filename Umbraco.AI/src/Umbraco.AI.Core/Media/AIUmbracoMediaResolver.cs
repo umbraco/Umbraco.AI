@@ -8,7 +8,7 @@ namespace Umbraco.AI.Prompt.Core.Media;
 /// <summary>
 /// Resolves images from media references using Umbraco's media service and file storage.
 /// </summary>
-internal sealed class AIUmbracoMediaResolver : IAiUmbracoMediaResolver
+internal sealed class AIUmbracoMediaResolver : IAIUmbracoMediaResolver
 {
     private static readonly Dictionary<string, string> ExtensionToMediaType = new(StringComparer.OrdinalIgnoreCase)
     {

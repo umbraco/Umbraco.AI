@@ -24,7 +24,7 @@ public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
     /// </summary>
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
-    public AmazonProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public AmazonProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         _cache = cache;

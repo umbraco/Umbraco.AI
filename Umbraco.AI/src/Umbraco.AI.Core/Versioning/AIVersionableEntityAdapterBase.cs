@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Versioning;
 /// <typeparam name="TEntity">The entity type this handler manages.</typeparam>
 /// <remarks>
 /// <para>
-/// This base class simplifies implementing <see cref="IAiVersionableEntityAdapter"/> by:
+/// This base class simplifies implementing <see cref="IAIVersionableEntityAdapter"/> by:
 /// </para>
 /// <list type="bullet">
 ///   <item>Automatically deriving <see cref="EntityTypeName"/> from the generic type parameter</item>
@@ -14,8 +14,8 @@ namespace Umbraco.AI.Core.Versioning;
 ///   <item>Handling the object-to-typed casting in the interface implementation</item>
 /// </list>
 /// </remarks>
-public abstract class AIVersionableEntityAdapterBase<TEntity> : IAiVersionableEntityAdapter
-    where TEntity : class, IAiVersionableEntity
+public abstract class AIVersionableEntityAdapterBase<TEntity> : IAIVersionableEntityAdapter
+    where TEntity : class, IAIVersionableEntity
 {
     /// <inheritdoc />
     /// <remarks>
@@ -37,7 +37,7 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     public Type EntityType => typeof(TEntity);
 
     /// <inheritdoc />
-    string IAiVersionableEntityAdapter.CreateSnapshot(object entity)
+    string IAIVersionableEntityAdapter.CreateSnapshot(object entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         if (entity is not TEntity typed)
@@ -49,7 +49,7 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     }
 
     /// <inheritdoc />
-    object? IAiVersionableEntityAdapter.RestoreFromSnapshot(string json)
+    object? IAIVersionableEntityAdapter.RestoreFromSnapshot(string json)
         => RestoreFromSnapshot(json);
 
     /// <inheritdoc />
@@ -97,7 +97,7 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     public abstract Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default);
 
     /// <inheritdoc />
-    async Task<object?> IAiVersionableEntityAdapter.GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    async Task<object?> IAIVersionableEntityAdapter.GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
     {
         return await GetEntityAsync(entityId, cancellationToken);
     }

@@ -21,16 +21,16 @@ namespace Umbraco.AI.Web.Api.Management.Chat.Controllers;
 [ApiVersion("1.0")]
 public class CompleteChatController : ChatControllerBase
 {
-    private readonly IAiChatService _chatService;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIChatService _chatService;
+    private readonly IAIProfileService _profileService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CompleteChatController"/> class.
     /// </summary>
     public CompleteChatController(
-        IAiChatService chatService,
-        IAiProfileService profileService,
+        IAIChatService chatService,
+        IAIProfileService profileService,
         IUmbracoMapper umbracoMapper)
     {
         _chatService = chatService;

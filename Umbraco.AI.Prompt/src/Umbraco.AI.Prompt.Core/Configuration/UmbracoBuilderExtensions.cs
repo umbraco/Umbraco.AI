@@ -22,7 +22,7 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAiPromptCore(this IUmbracoBuilder builder)
     {
         // Prevent multiple registrations
-        if (builder.Services.Any(x => x.ServiceType == typeof(IAiPromptService)))
+        if (builder.Services.Any(x => x.ServiceType == typeof(IAIPromptService)))
         {
             return builder;
         }
@@ -32,20 +32,20 @@ public static class UmbracoBuilderExtensions
             builder.Config.GetSection(AIPromptOptions.SectionName));
 
         // Register in-memory repository as fallback (replaced by persistence layer)
-        builder.Services.AddSingleton<IAiPromptRepository, InMemoryAiPromptRepository>();
+        builder.Services.AddSingleton<IAIPromptRepository, InMemoryAiPromptRepository>();
 
         // Register template variable processors
         builder.Services.AddSingleton<TextTemplateVariableProcessor>();
         builder.Services.AddSingleton<ImageTemplateVariableProcessor>();
 
         // Register template service
-        builder.Services.AddSingleton<IAiPromptTemplateService, AIPromptTemplateService>();
+        builder.Services.AddSingleton<IAIPromptTemplateService, AIPromptTemplateService>();
 
         // Register scope validator
-        builder.Services.AddScoped<IAiPromptScopeValidator, AIPromptScopeValidator>();
+        builder.Services.AddScoped<IAIPromptScopeValidator, AIPromptScopeValidator>();
 
-        // Register service (Singleton to match IAiProfileService pattern and allow use in context resolvers)
-        builder.Services.AddSingleton<IAiPromptService, AIPromptService>();
+        // Register service (Singleton to match IAIProfileService pattern and allow use in context resolvers)
+        builder.Services.AddSingleton<IAIPromptService, AIPromptService>();
 
         // Register prompt context resolver
         builder.AIContextResolvers().Append<PromptContextResolver>();

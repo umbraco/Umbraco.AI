@@ -6,12 +6,12 @@ namespace Umbraco.AI.Tests.Unit.Security;
 
 public class AIEditableModelSerializerTests
 {
-    private readonly Mock<IAiSensitiveFieldProtector> _protectorMock;
+    private readonly Mock<IAISensitiveFieldProtector> _protectorMock;
     private readonly AIEditableModelSerializer _serializer;
 
     public AIEditableModelSerializerTests()
     {
-        _protectorMock = new Mock<IAiSensitiveFieldProtector>();
+        _protectorMock = new Mock<IAISensitiveFieldProtector>();
         _serializer = new AIEditableModelSerializer(_protectorMock.Object);
 
         // Default setup: protect returns ENC: prefix, unprotect removes it

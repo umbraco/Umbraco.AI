@@ -6,9 +6,9 @@ using Umbraco.Cms.Persistence.EFCore.Scoping;
 namespace Umbraco.AI.Prompt.Persistence.Prompts;
 
 /// <summary>
-/// EF Core implementation of <see cref="IAiPromptRepository"/>.
+/// EF Core implementation of <see cref="IAIPromptRepository"/>.
 /// </summary>
-internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
+internal sealed class EfCoreAiPromptRepository : IAIPromptRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIPromptDbContext> _scopeProvider;
 

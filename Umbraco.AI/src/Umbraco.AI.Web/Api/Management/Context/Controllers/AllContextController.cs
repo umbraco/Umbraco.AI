@@ -19,13 +19,13 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class AllContextController : ContextControllerBase
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AllContextController"/> class.
     /// </summary>
-    public AllContextController(IAiContextService contextService, IUmbracoMapper umbracoMapper)
+    public AllContextController(IAIContextService contextService, IUmbracoMapper umbracoMapper)
     {
         _contextService = contextService;
         _umbracoMapper = umbracoMapper;

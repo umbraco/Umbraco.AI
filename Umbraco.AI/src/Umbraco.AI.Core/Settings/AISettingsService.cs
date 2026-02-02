@@ -7,16 +7,16 @@ namespace Umbraco.AI.Core.Settings;
 /// <summary>
 /// Service for managing AI settings.
 /// </summary>
-internal sealed class AISettingsService : IAiSettingsService
+internal sealed class AISettingsService : IAISettingsService
 {
-    private readonly IAiSettingsRepository _repository;
+    private readonly IAISettingsRepository _repository;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly IAppPolicyCache _cache;
     
     private const string SettingsCacheKey = "Umbraco.Ai.Settings";
 
     public AISettingsService(
-        IAiSettingsRepository repository,
+        IAISettingsRepository repository,
         IAppPolicyCache cache,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {

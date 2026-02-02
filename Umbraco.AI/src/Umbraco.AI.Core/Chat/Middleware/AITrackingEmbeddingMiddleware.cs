@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Chat.Middleware;
 /// <summary>
 /// Chat middleware that tracks AI chat usage.
 /// </summary>
-public sealed class AITrackingEmbeddingMiddleware : IAiEmbeddingMiddleware
+public sealed class AITrackingEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
     /// <inheritdoc />
     public IEmbeddingGenerator<string, Embedding<float>> Apply(IEmbeddingGenerator<string, Embedding<float>> generator)

@@ -23,7 +23,7 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// using the key <see cref="Constants.ContextKeys.FrontendToolNames"/>.
 /// </para>
 /// </remarks>
-public sealed class AIToolReorderingChatMiddleware(IAiRuntimeContextAccessor runtimeContextAccessor) : IAiChatMiddleware
+public sealed class AIToolReorderingChatMiddleware(IAIRuntimeContextAccessor runtimeContextAccessor) : IAIChatMiddleware
 {
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)

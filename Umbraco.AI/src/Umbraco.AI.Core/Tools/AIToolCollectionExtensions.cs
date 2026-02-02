@@ -18,7 +18,7 @@ public static class AIToolCollectionExtensions
     public static IReadOnlyList<AIFunction> ToAIFunctions(
         this AIToolCollection tools,
         IEnumerable<string> toolIds,
-        IAiFunctionFactory factory)
+        IAIFunctionFactory factory)
     {
         var selectedTools = toolIds
             .Select(tools.GetById)
@@ -37,8 +37,8 @@ public static class AIToolCollectionExtensions
     /// <returns>A list of AIFunctions for matching tools.</returns>
     public static IReadOnlyList<AIFunction> ToAIFunctions(
         this AIToolCollection tools,
-        Func<IAiTool, bool> predicate,
-        IAiFunctionFactory factory)
+        Func<IAITool, bool> predicate,
+        IAIFunctionFactory factory)
     {
         return factory.Create(tools.Where(predicate));
     }
@@ -51,7 +51,7 @@ public static class AIToolCollectionExtensions
     /// <returns>A list of AIFunctions for all tools.</returns>
     public static IReadOnlyList<AIFunction> ToAIFunctions(
         this AIToolCollection tools,
-        IAiFunctionFactory factory)
+        IAIFunctionFactory factory)
     {
         return factory.Create(tools);
     }
@@ -65,7 +65,7 @@ public static class AIToolCollectionExtensions
     /// <returns>A list of AIFunctions for system tools.</returns>
     public static IReadOnlyList<AIFunction> ToSystemToolFunctions(
         this AIToolCollection tools,
-        IAiFunctionFactory factory)
+        IAIFunctionFactory factory)
     {
         return factory.Create(tools.GetSystemTools());
     }
@@ -79,7 +79,7 @@ public static class AIToolCollectionExtensions
     /// <returns>A list of AIFunctions for user tools.</returns>
     public static IReadOnlyList<AIFunction> ToUserToolFunctions(
         this AIToolCollection tools,
-        IAiFunctionFactory factory)
+        IAIFunctionFactory factory)
     {
         return factory.Create(tools.GetUserTools());
     }

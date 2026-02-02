@@ -10,15 +10,15 @@ namespace Umbraco.AI.Tests.Unit.Services;
 
 public class AIChatServiceTests
 {
-    private readonly Mock<IAiChatClientFactory> _clientFactoryMock;
-    private readonly Mock<IAiProfileService> _profileServiceMock;
+    private readonly Mock<IAIChatClientFactory> _clientFactoryMock;
+    private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
     private readonly AIChatService _service;
 
     public AIChatServiceTests()
     {
-        _clientFactoryMock = new Mock<IAiChatClientFactory>();
-        _profileServiceMock = new Mock<IAiProfileService>();
+        _clientFactoryMock = new Mock<IAIChatClientFactory>();
+        _profileServiceMock = new Mock<IAIProfileService>();
         _optionsMock = new Mock<IOptionsMonitor<AIOptions>>();
         _optionsMock.Setup(x => x.CurrentValue).Returns(new AIOptions
         {

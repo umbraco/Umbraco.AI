@@ -6,7 +6,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <summary>
 /// Represents a stored agent definition that can be linked to AI profiles.
 /// </summary>
-public sealed class AIAgent : IAiVersionableEntity
+public sealed class AIAgent : IAIVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the agent.

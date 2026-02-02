@@ -6,15 +6,15 @@ using Umbraco.AI.Core.Profiles;
 
 namespace Umbraco.AI.Core.Chat;
 
-internal sealed class AIChatService : IAiChatService
+internal sealed class AIChatService : IAIChatService
 {
-    private readonly IAiChatClientFactory _clientFactory;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIChatClientFactory _clientFactory;
+    private readonly IAIProfileService _profileService;
     private readonly AIOptions _options;
 
     public AIChatService(
-        IAiChatClientFactory clientFactory,
-        IAiProfileService profileService,
+        IAIChatClientFactory clientFactory,
+        IAIProfileService profileService,
         IOptionsMonitor<AIOptions> options)
     {
         _clientFactory = clientFactory;

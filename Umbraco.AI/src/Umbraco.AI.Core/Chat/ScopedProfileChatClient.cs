@@ -16,7 +16,7 @@ namespace Umbraco.AI.Core.Chat;
 /// is executed.
 /// </para>
 /// <para>
-/// This decorator is used by <see cref="IAiChatClientFactory"/> to ensure profile metadata is
+/// This decorator is used by <see cref="IAIChatClientFactory"/> to ensure profile metadata is
 /// available in the runtime context for middleware, logging, and telemetry purposes.
 /// </para>
 /// <para>
@@ -32,8 +32,8 @@ namespace Umbraco.AI.Core.Chat;
 internal sealed class ScopedProfileChatClient : DelegatingChatClient
 {
     private readonly AIProfile _profile;
-    private readonly IAiRuntimeContextAccessor _contextAccessor;
-    private readonly IAiRuntimeContextScopeProvider _scopeProvider;
+    private readonly IAIRuntimeContextAccessor _contextAccessor;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
 
     /// <summary>
@@ -47,8 +47,8 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
     public ScopedProfileChatClient(
         IChatClient innerClient,
         AIProfile profile,
-        IAiRuntimeContextAccessor contextAccessor,
-        IAiRuntimeContextScopeProvider scopeProvider,
+        IAIRuntimeContextAccessor contextAccessor,
+        IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors)
         : base(innerClient)
     {
@@ -65,7 +65,7 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
         CancellationToken cancellationToken = default)
     {
         var scopeExisted = _contextAccessor.Context != null;
-        IAiRuntimeContextScope? createdScope = null;
+        IAIRuntimeContextScope? createdScope = null;
 
         try
         {
@@ -93,7 +93,7 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var scopeExisted = _contextAccessor.Context != null;
-        IAiRuntimeContextScope? createdScope = null;
+        IAIRuntimeContextScope? createdScope = null;
 
         try
         {

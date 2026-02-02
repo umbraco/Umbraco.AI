@@ -20,7 +20,7 @@ namespace Umbraco.AI.Core.Chat.Middleware.Examples;
 /// }
 /// </code>
 /// </remarks>
-public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAiChatMiddleware
+public class LoggingChatMiddleware(ILoggerFactory loggerFactory) : IAIChatMiddleware
 {
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)

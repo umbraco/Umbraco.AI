@@ -8,12 +8,12 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class DeleteConnectionControllerTests
 {
-    private readonly Mock<IAiConnectionService> _connectionServiceMock;
+    private readonly Mock<IAIConnectionService> _connectionServiceMock;
     private readonly DeleteConnectionController _controller;
 
     public DeleteConnectionControllerTests()
     {
-        _connectionServiceMock = new Mock<IAiConnectionService>();
+        _connectionServiceMock = new Mock<IAIConnectionService>();
         _controller = new DeleteConnectionController(_connectionServiceMock.Object);
     }
 

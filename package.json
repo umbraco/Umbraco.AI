@@ -4,10 +4,10 @@
   "private": true,
   "description": "Root package for Umbraco.Ai frontend development",
   "workspaces": [
-    "Umbraco.AI/src/Umbraco.Ai.Web.StaticAssets/Client",
-    "Umbraco.AI.Prompt/src/Umbraco.Ai.Prompt.Web.StaticAssets/Client",
-    "Umbraco.AI.Agent/src/Umbraco.Ai.Agent.Web.StaticAssets/Client",
-    "Umbraco.AI.Agent.Copilot/src/Umbraco.Ai.Agent.Copilot/Client"
+    "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client",
+    "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client",
+    "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client",
+    "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Client"
   ],
   "scripts": {
     "build": "npm run build:core && npm run build:prompt && npm run build:agent && npm run build:copilot",

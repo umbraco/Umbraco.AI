@@ -9,16 +9,11 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.Ai.Core" />
-    </ItemGroup>
-
-    <!-- Umbraco.Ai.Agui is always a ProjectReference (internal component of Agent package) -->
-    <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Agui.csproj" />
+        <PackageReference Include="Umbraco.AI.Core" />
     </ItemGroup>
 
     <ItemGroup>
@@ -28,19 +23,19 @@
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Persistence</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Persistence</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Web</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Web</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Startup</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Startup</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Tests.Unit</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Tests.Unit</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Tests.Integration</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Tests.Integration</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
 </Project>

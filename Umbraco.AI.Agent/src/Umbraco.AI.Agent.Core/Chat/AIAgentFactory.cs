@@ -8,6 +8,8 @@ using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Extensions;
 using CoreConstants = Umbraco.AI.Core.Constants;
+using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Chat;
 
@@ -43,8 +45,8 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     }
 
     /// <inheritdoc />
-    public async Task<AIAgent> CreateAgentAsync(
-        AIAgent agent,
+    public async Task<MsAIAgent> CreateAgentAsync(
+        UmbracoAIAgent agent,
         IEnumerable<AIRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
         IReadOnlyDictionary<string, object?>? additionalProperties = null,

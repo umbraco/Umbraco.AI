@@ -2,6 +2,8 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.RuntimeContext;
+using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Chat;
 
@@ -41,7 +43,7 @@ public interface IAIAgentFactory
     /// <param name="additionalProperties">Optional additional properties to set in the runtime context
     ///  (e.g., RunId, ThreadId for telemetry/logging).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An <see cref="AIAgent"/> ready for use with MAF's RunAsync/RunStreamingAsync methods.</returns>
+    /// <returns>An <see cref="MsAIAgent"/> ready for use with MAF's RunAsync/RunStreamingAsync methods.</returns>
     /// <remarks>
     /// <para>
     /// The returned agent automatically manages runtime context per-execution:
@@ -72,8 +74,8 @@ public interface IAIAgentFactory
     /// // No manual scope management needed - all automatic
     /// </code>
     /// </remarks>
-    Task<AIAgent> CreateAgentAsync(
-        AIAgent agent,
+    Task<MsAIAgent> CreateAgentAsync(
+        UmbracoAIAgent agent,
         IEnumerable<AIRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
         IReadOnlyDictionary<string, object?>? additionalProperties = null,

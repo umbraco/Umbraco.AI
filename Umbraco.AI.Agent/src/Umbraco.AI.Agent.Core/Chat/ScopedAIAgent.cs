@@ -5,6 +5,8 @@ using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.RuntimeContext;
 using CoreConstants = Umbraco.AI.Core.Constants;
+using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
+using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Chat;
 
@@ -44,10 +46,10 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// // Scopes are automatically disposed after each execution - no manual cleanup needed
 /// </code>
 /// </remarks>
-internal sealed class ScopedAIAgent : AIAgent
+internal sealed class ScopedAIAgent : MsAIAgent
 {
-    private readonly AIAgent _innerAgent;
-    private readonly AIAgent _definition;
+    private readonly MsAIAgent _innerAgent;
+    private readonly UmbracoAIAgent _definition;
     private readonly IReadOnlyList<AIRequestContextItem> _contextItems;
     private readonly IReadOnlyList<AITool> _frontendTools;
     private readonly IReadOnlyDictionary<string, object?>? _additionalProperties;
@@ -65,8 +67,8 @@ internal sealed class ScopedAIAgent : AIAgent
     /// <param name="scopeProvider">Provider for creating runtime context scopes.</param>
     /// <param name="contributors">Collection of context contributors to populate the scope.</param>
     internal ScopedAIAgent(
-        AIAgent innerAgent,
-        AIAgent definition,
+        MsAIAgent innerAgent,
+        UmbracoAIAgent definition,
         IEnumerable<AIRequestContextItem> contextItems,
         IEnumerable<AITool> frontendTools,
         IReadOnlyDictionary<string, object?>? additionalProperties,
@@ -85,7 +87,7 @@ internal sealed class ScopedAIAgent : AIAgent
     /// <summary>
     /// Gets the Umbraco agent definition this instance was created from.
     /// </summary>
-    public AIAgent Definition => _definition;
+    public UmbracoAIAgent Definition => _definition;
 
     /// <summary>
     /// Gets the human-readable name of the agent.

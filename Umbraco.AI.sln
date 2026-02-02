@@ -35,7 +35,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Startup", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Core", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj", "{CDF8114E-6264-4695-8CCD-3AD894F8BF6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agui", "Umbraco.AI.Agent\src\Umbraco.AI.Agui\Umbraco.AI.Agui.csproj", "{3B4417A2-240D-44C5-ACA6-640A4BD39E05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.AGUI", "Umbraco.AI.Agent\src\Umbraco.AI.AGUI\Umbraco.AI.AGUI.csproj", "{3B4417A2-240D-44C5-ACA6-640A4BD39E05}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Persistence", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj", "{13BE91C6-3C9D-45DB-87E9-D4796D838804}"
 EndProject

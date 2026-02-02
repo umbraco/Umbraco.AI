@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Web.Static
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{AD53D7F3-BAC3-47C0-997B-49D39918D00F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agui", "src\Umbraco.AI.Agui\Umbraco.AI.Agui.csproj", "{E3B74D50-3361-4660-B688-437A64A9D617}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.AGUI", "src\Umbraco.AI.AGUI\Umbraco.AI.AGUI.csproj", "{E3B74D50-3361-4660-B688-437A64A9D617}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Tests.Unit", "tests\Umbraco.AI.Agent.Tests.Unit\Umbraco.AI.Agent.Tests.Unit.csproj", "{AB4582F0-2F60-4A07-9B80-B4AC3AEBD87C}"
 EndProject

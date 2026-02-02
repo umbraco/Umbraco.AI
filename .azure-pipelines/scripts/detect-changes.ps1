@@ -376,6 +376,9 @@ function Get-ChangedProducts {
 
     Write-Host "  Comparison: $comparisonBase..HEAD" -ForegroundColor Gray
 
+    # Filter out ErrorRecord objects (git warnings/errors) and keep only strings (file paths)
+    $changedFiles = $changedFiles | Where-Object { $_ -is [string] }
+
     # Check product folders
     foreach ($file in $changedFiles) {
         foreach ($productKey in $Products.Keys) {

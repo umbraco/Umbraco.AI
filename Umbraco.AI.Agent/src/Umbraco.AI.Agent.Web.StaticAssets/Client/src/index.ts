@@ -1,2 +1,1 @@
-// Re-export the public API
-export * from './exports.js';
+export * from './scope/index.js';

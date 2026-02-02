@@ -205,9 +205,9 @@ If your service has an existing M.E.AI embedding generator:
 using Microsoft.Extensions.AI;
 using OpenAI;
 
-public class MyOpenAiCompatibleEmbeddingCapability : AIEmbeddingCapabilityBase<MyProviderSettings>
+public class MyOpenAICompatibleEmbeddingCapability : AIEmbeddingCapabilityBase<MyProviderSettings>
 {
-    public MyOpenAiCompatibleEmbeddingCapability(IAIProvider provider) : base(provider) { }
+    public MyOpenAICompatibleEmbeddingCapability(IAIProvider provider) : base(provider) { }
 
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(
         MyProviderSettings settings,

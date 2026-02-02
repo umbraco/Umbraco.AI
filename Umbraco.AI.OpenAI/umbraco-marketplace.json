@@ -8,7 +8,7 @@
   },
   "Category": "Artificial Intelligence",
   "LicenseTypes": ["Free"],
-  "DocumentationUrl": "https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.OpenAi",
+  "DocumentationUrl": "https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.OpenAI",
   "IssueTrackerUrl": "https://github.com/umbraco/Umbraco.AI/issues",
   "PackageType": "Package",
   "PackagesByAuthor": [

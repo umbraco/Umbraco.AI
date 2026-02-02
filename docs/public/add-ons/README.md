@@ -59,7 +59,7 @@ Add-ons are installed via NuGet alongside the core package:
 Install-Package Umbraco.AI
 
 # Install a provider (at least one required)
-Install-Package Umbraco.AI.OpenAi
+Install-Package Umbraco.AI.OpenAI
 
 # Install add-ons (optional)
 Install-Package Umbraco.AI.Prompt

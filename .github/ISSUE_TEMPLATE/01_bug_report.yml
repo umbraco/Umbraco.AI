@@ -10,7 +10,7 @@ body:
     description: "Select the product/add-on type that is experiencing this issue"
     options:
       - Umbraco.AI (Core)
-      - Umbraco.AI.OpenAi
+      - Umbraco.AI.OpenAI
       - Umbraco.AI.Anthropic
       - Umbraco.AI.Prompt
       - Umbraco.AI.Agent

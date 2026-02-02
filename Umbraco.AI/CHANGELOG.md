@@ -1,4 +1,4 @@
-# Changelog - Umbraco.Ai
+# Changelog - Umbraco.AI
 
 All notable changes to Umbraco.AI will be documented in this file.
 

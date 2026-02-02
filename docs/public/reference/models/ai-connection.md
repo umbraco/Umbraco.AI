@@ -52,7 +52,7 @@ Settings are provider-specific. Each provider defines its own settings class.
 
 {% code title="OpenAI Settings" %}
 ```csharp
-public class OpenAiProviderSettings
+public class OpenAIProviderSettings
 {
     public required string ApiKey { get; set; }
     public string? OrganizationId { get; set; }

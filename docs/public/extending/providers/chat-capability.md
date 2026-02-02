@@ -279,9 +279,9 @@ If your AI service already has an M.E.AI client, use it directly:
 using Microsoft.Extensions.AI;
 using OpenAI;
 
-public class MyOpenAiCompatibleCapability : AIChatCapabilityBase<MyProviderSettings>
+public class MyOpenAICompatibleCapability : AIChatCapabilityBase<MyProviderSettings>
 {
-    public MyOpenAiCompatibleCapability(IAIProvider provider) : base(provider) { }
+    public MyOpenAICompatibleCapability(IAIProvider provider) : base(provider) { }
 
     protected override IChatClient CreateClient(MyProviderSettings settings, string? modelId)
     {

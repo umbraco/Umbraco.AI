@@ -33,7 +33,7 @@ Umbraco.AI requires at least one provider to connect to AI services. Install the
 
 {% code title=".NET CLI" %}
 ```bash
-dotnet add package Umbraco.AI.OpenAi
+dotnet add package Umbraco.AI.OpenAI
 ```
 {% endcode %}
 
@@ -48,7 +48,7 @@ The packages install the following components:
 | Package | Contents |
 |---------|----------|
 | `Umbraco.AI` | Core services, backoffice UI, Management API, database migrations |
-| `Umbraco.AI.OpenAi` | OpenAI provider with chat and embedding capabilities |
+| `Umbraco.AI.OpenAI` | OpenAI provider with chat and embedding capabilities |
 
 ## Verify Installation
 

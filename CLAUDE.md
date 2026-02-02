@@ -12,7 +12,7 @@ This is a monorepo containing Umbraco.AI and its add-on packages:
 | **Umbraco.AI.Prompt** | Prompt template management add-on | `Umbraco.AI.Prompt/` |
 | **Umbraco.AI.Agent** | AI agent management add-on | `Umbraco.AI.Agent/` |
 | **Umbraco.AI.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/` |
-| **Umbraco.AI.OpenAi** | OpenAI provider plugin | `Umbraco.AI.OpenAi/` |
+| **Umbraco.AI.OpenAI** | OpenAI provider plugin | `Umbraco.AI.OpenAI/` |
 | **Umbraco.AI.Anthropic** | Anthropic provider plugin | `Umbraco.AI.Anthropic/` |
 | **Umbraco.AI.Amazon** | Amazon Bedrock provider plugin | `Umbraco.AI.Amazon/` |
 | **Umbraco.AI.Google** | Google Gemini provider plugin | `Umbraco.AI.Google/` |
@@ -98,7 +98,7 @@ dotnet build Umbraco.AI.local.sln
 
 # Build individual product
 dotnet build Umbraco.AI/Umbraco.AI.sln
-dotnet build Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.sln
+dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.sln
 dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
 dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
 dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
@@ -148,7 +148,7 @@ npm run watch:agent
 
 ```
 Umbraco.AI (Core)
-    ├── Umbraco.AI.OpenAi (Provider - depends on Core)
+    ├── Umbraco.AI.OpenAI (Provider - depends on Core)
     ├── Umbraco.AI.Anthropic (Provider - depends on Core)
     ├── Umbraco.AI.Amazon (Provider - depends on Core)
     ├── Umbraco.AI.Google (Provider - depends on Core)
@@ -181,7 +181,7 @@ ProductName/
 └── CLAUDE.md                       # Product-specific guidance
 ```
 
-**Provider packages** (Umbraco.AI.OpenAi, Umbraco.AI.Anthropic, Umbraco.AI.Amazon, Umbraco.AI.Google, Umbraco.AI.MicrosoftFoundry) use a simplified structure:
+**Provider packages** (Umbraco.AI.OpenAI, Umbraco.AI.Anthropic, Umbraco.AI.Amazon, Umbraco.AI.Google, Umbraco.AI.MicrosoftFoundry) use a simplified structure:
 
 ```
 ProviderName/
@@ -254,7 +254,7 @@ On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
 ```json
 [
   "Umbraco.AI",
-  "Umbraco.AI.OpenAi"
+  "Umbraco.AI.OpenAI"
 ]
 ```
 
@@ -296,7 +296,7 @@ The Azure DevOps release pipeline:
 2. Deploys packages to package feeds (MyGet for pre-release, NuGet.org/npm for production)
 3. Tags the git repository with `[Product_Name]@[Version]` for each deployed package
 
-**Example tags:** `Umbraco.AI@1.1.0`, `Umbraco.AI.OpenAi@1.2.0`
+**Example tags:** `Umbraco.AI@1.1.0`, `Umbraco.AI.OpenAI@1.2.0`
 
 For detailed release workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 

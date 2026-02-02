@@ -2,7 +2,7 @@
 # Uses pre-built outputs from the Build stage
 #
 # Parameters:
-#   product: Product name (e.g., "Umbraco.AI", "Umbraco.AI.OpenAi")
+#   product: Product name (e.g., "Umbraco.AI", "Umbraco.AI.OpenAI")
 #   condition: Optional condition for all steps (default: true)
 #
 # Prerequisites:

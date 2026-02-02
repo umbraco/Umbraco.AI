@@ -28,7 +28,7 @@ Providers are discovered automatically when you install their NuGet package. The
 
 | Provider | Package | Capabilities |
 |----------|---------|--------------|
-| OpenAI | `Umbraco.AI.OpenAi` | Chat, Embedding |
+| OpenAI | `Umbraco.AI.OpenAI` | Chat, Embedding |
 | Anthropic | `Umbraco.AI.Anthropic` | Chat |
 | Google Gemini | `Umbraco.AI.Google` | Chat |
 | Amazon Bedrock | `Umbraco.AI.Amazon` | Chat, Embedding |
@@ -42,16 +42,16 @@ For detailed configuration instructions for each provider, see the [Providers](.
 
 Providers are discovered at application startup through assembly scanning. Any class with the `[AIProvider]` attribute that implements `IAIProvider` is automatically registered.
 
-{% code title="OpenAiProvider.cs" %}
+{% code title="OpenAIProvider.cs" %}
 ```csharp
 [AIProvider("openai", "OpenAI")]
-public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
+public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
 {
-    public OpenAiProvider(IAIProviderInfrastructure infrastructure)
+    public OpenAIProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
-        WithCapability<OpenAiChatCapability>();
-        WithCapability<OpenAiEmbeddingCapability>();
+        WithCapability<OpenAIChatCapability>();
+        WithCapability<OpenAIEmbeddingCapability>();
     }
 }
 ```
@@ -69,9 +69,9 @@ Each provider defines its own settings class. Common settings include:
 
 Settings are defined using the `[AISetting]` attribute:
 
-{% code title="OpenAiProviderSettings.cs" %}
+{% code title="OpenAIProviderSettings.cs" %}
 ```csharp
-public class OpenAiProviderSettings
+public class OpenAIProviderSettings
 {
     [AISetting(Label = "API Key", Description = "Your OpenAI API key")]
     public required string ApiKey { get; set; }

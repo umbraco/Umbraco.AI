@@ -2,21 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Note:** This is the Umbraco.AI.OpenAi provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
+> **Note:** This is the Umbraco.AI.OpenAI provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
 
 ## Build Commands
 
 ```bash
 # Build the solution
-dotnet build Umbraco.AI.OpenAi.sln
+dotnet build Umbraco.AI.OpenAI.sln
 
 # Run tests
-dotnet test Umbraco.AI.OpenAi.sln
+dotnet test Umbraco.AI.OpenAI.sln
 ```
 
 ## Architecture Overview
 
-Umbraco.AI.OpenAi is a provider plugin for Umbraco.AI that enables integration with OpenAI and Azure OpenAI Service. It follows the provider plugin architecture defined by Umbraco.AI.Core.
+Umbraco.AI.OpenAI is a provider plugin for Umbraco.AI that enables integration with OpenAI and Azure OpenAI Service. It follows the provider plugin architecture defined by Umbraco.AI.Core.
 
 ### Project Structure
 
@@ -24,7 +24,7 @@ This provider uses a simplified structure (single project):
 
 | Project | Purpose |
 |---------|---------|
-| `Umbraco.AI.OpenAi` | Provider implementation, capabilities, and settings |
+| `Umbraco.AI.OpenAI` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
 
@@ -32,27 +32,27 @@ The provider is implemented using the `AiProviderBase<TSettings>` pattern:
 
 ```csharp
 [AiProvider("openai", "OpenAI")]
-public class OpenAiProvider : AiProviderBase<OpenAiSettings>
+public class OpenAIProvider : AiProviderBase<OpenAISettings>
 {
-    public OpenAiProvider(IAiProviderInfrastructure infrastructure)
+    public OpenAIProvider(IAiProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
-        WithCapability<OpenAiChatCapability>();
-        WithCapability<OpenAiEmbeddingCapability>();
+        WithCapability<OpenAIChatCapability>();
+        WithCapability<OpenAIEmbeddingCapability>();
     }
 }
 ```
 
 ### Capabilities
 
-**Chat Capability** (`OpenAiChatCapability`):
-- Extends `AiChatCapabilityBase<OpenAiSettings>`
+**Chat Capability** (`OpenAIChatCapability`):
+- Extends `AiChatCapabilityBase<OpenAISettings>`
 - Creates `IChatClient` instances using Microsoft.Extensions.AI.OpenAI
 - Supports both OpenAI API and Azure OpenAI endpoints
 - Handles model configuration (GPT-4, GPT-3.5-turbo, etc.)
 
-**Embedding Capability** (`OpenAiEmbeddingCapability`):
-- Extends `AiEmbeddingCapabilityBase<OpenAiSettings>`
+**Embedding Capability** (`OpenAIEmbeddingCapability`):
+- Extends `AiEmbeddingCapabilityBase<OpenAISettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
 - Supports text-embedding-3-large, text-embedding-3-small, text-embedding-ada-002
 
@@ -61,7 +61,7 @@ public class OpenAiProvider : AiProviderBase<OpenAiSettings>
 Settings use the `[AiField]` attribute for UI generation:
 
 ```csharp
-public class OpenAiSettings
+public class OpenAISettings
 {
     [AiField("provider-type", "Provider Type", AiFieldType.Select)]
     public string ProviderType { get; set; } = "openai"; // or "azure"
@@ -93,9 +93,9 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 
 ## Key Namespaces
 
-- `Umbraco.AI.OpenAi` - Root namespace for provider, capabilities, and settings
-- `Umbraco.AI.OpenAi.Chat` - Chat capability implementation
-- `Umbraco.AI.OpenAi.Embeddings` - Embedding capability implementation
+- `Umbraco.AI.OpenAI` - Root namespace for provider, capabilities, and settings
+- `Umbraco.AI.OpenAI.Chat` - Chat capability implementation
+- `Umbraco.AI.OpenAI.Embeddings` - Embedding capability implementation
 
 ## Configuration Examples
 

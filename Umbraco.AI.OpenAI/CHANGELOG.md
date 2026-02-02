@@ -1,11 +1,11 @@
-# Changelog - Umbraco.AI.OpenAi
+# Changelog - Umbraco.AI.OpenAI
 
-All notable changes to Umbraco.AI.OpenAi will be documented in this file.
+All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0](https://github.com/umbraco/Umbraco.AI/compare/...Umbraco.AI.OpenAi@1.0.0) (2026-01-28)
+## [1.0.0](https://github.com/umbraco/Umbraco.AI/compare/...Umbraco.AI.OpenAI@1.0.0) (2026-01-28)
 
 * Disable NBGV build number updates ([0a91e46](https://github.com/umbraco/Umbraco.AI/commit/0a91e46ab8c51b2022244d8f0a5839890ab76a39))
 * Align NBGV release refs to shared branches ([d85d468](https://github.com/umbraco/Umbraco.AI/commit/d85d468900fb2321102cc9589a7783efe0e2b0f6))

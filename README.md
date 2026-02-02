@@ -20,7 +20,7 @@ This is a monorepo containing multiple Umbraco.AI packages:
 | [**Umbraco.AI.Agent**](Umbraco.AI.Agent/) | AI agent management and runtime | 1.x | `Umbraco.AI.Agent/` |
 | [**Umbraco.AI.Agent.Copilot**](Umbraco.AI.Agent.Copilot/) | Copilot chat UI for agents (frontend-only) | 1.x | `Umbraco.AI.Agent.Copilot/` |
 | [**Umbraco.AI.Prompt**](Umbraco.AI.Prompt/) | Prompt template management | 1.x | `Umbraco.AI.Prompt/` |
-| [**Umbraco.AI.OpenAi**](Umbraco.AI.OpenAi/) | OpenAI provider | 1.x | `Umbraco.AI.OpenAi/` |
+| [**Umbraco.AI.OpenAI**](Umbraco.AI.OpenAI/) | OpenAI provider | 1.x | `Umbraco.AI.OpenAI/` |
 | [**Umbraco.AI.Anthropic**](Umbraco.AI.Anthropic/) | Anthropic provider | 1.x | `Umbraco.AI.Anthropic/` |
 | [**Umbraco.AI.Amazon**](Umbraco.AI.Amazon/) | Amazon Bedrock provider | 1.x | `Umbraco.AI.Amazon/` |
 | [**Umbraco.AI.Google**](Umbraco.AI.Google/) | Google Gemini provider | 1.x | `Umbraco.AI.Google/` |
@@ -72,7 +72,7 @@ Each product has its own solution file and can be built independently:
 dotnet build Umbraco.AI/Umbraco.AI.sln
 dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
 dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
-dotnet build Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.sln
+dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.sln
 dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
 dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
 dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
@@ -109,7 +109,7 @@ npm run watch:agent
 
 ```
 Umbraco.AI (Core)
-    ├── Umbraco.AI.OpenAi (Provider - depends on Core)
+    ├── Umbraco.AI.OpenAI (Provider - depends on Core)
     ├── Umbraco.AI.Anthropic (Provider - depends on Core)
     ├── Umbraco.AI.Amazon (Provider - depends on Core)
     ├── Umbraco.AI.Google (Provider - depends on Core)

@@ -46,7 +46,7 @@ Umbraco.AI follows a **thin wrapper** philosophy over Microsoft.Extensions.AI (M
 Umbraco.AI/
 ├── src/
 │   ├── Umbraco.AI.Core/           # Core abstractions and services
-│   ├── Umbraco.AI.OpenAi/         # OpenAI provider implementation
+│   ├── Umbraco.AI.OpenAI/         # OpenAI provider implementation
 │   ├── Umbraco.AI.Web/            # Management API layer
 │   ├── Umbraco.AI.Startup/        # Composition and DI setup
 │   ├── Umbraco.AI/                # Meta-package for distribution
@@ -66,7 +66,7 @@ Umbraco.AI (meta-package)
             └── Umbraco.AI.Web
                     └── Umbraco.Cms.Api.Management
 
-Umbraco.AI.OpenAi
+Umbraco.AI.OpenAI
     ├── Umbraco.AI.Core
     └── Microsoft.Extensions.AI.OpenAI
 ```
@@ -92,14 +92,14 @@ The core library containing all abstractions, services, and models:
 | `Umbraco.AI.Core.Settings` | Settings resolution and validation |
 | `Umbraco.AI.Extensions` | DI registration extensions |
 
-### Umbraco.AI.OpenAi
+### Umbraco.AI.OpenAI
 
 Reference implementation of an AI provider for OpenAI:
 
-- `OpenAiProvider` - Provider class with `[AIProvider]` attribute
-- `OpenAiProviderSettings` - Typed settings with `[AIField]` attributes
-- `OpenAiChatCapability` - Chat completion capability
-- `OpenAiEmbeddingCapability` - Text embedding capability
+- `OpenAIProvider` - Provider class with `[AIProvider]` attribute
+- `OpenAIProviderSettings` - Typed settings with `[AIField]` attributes
+- `OpenAIChatCapability` - Chat completion capability
+- `OpenAIEmbeddingCapability` - Text embedding capability
 
 ### Umbraco.AI.Web
 
@@ -203,14 +203,14 @@ Generic base class for implementing providers with typed settings:
 
 ```csharp
 [AIProvider("openai", "OpenAI")]
-public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
+public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
 {
-    public OpenAiProvider(IAIProviderInfrastructure infrastructure)
+    public OpenAIProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
         // Register capabilities
-        WithCapability<OpenAiChatCapability>();
-        WithCapability<OpenAiEmbeddingCapability>();
+        WithCapability<OpenAIChatCapability>();
+        WithCapability<OpenAIEmbeddingCapability>();
     }
 }
 ```
@@ -336,11 +336,11 @@ Abstract base classes simplify capability implementation:
 ### Example: OpenAI Chat Capability
 
 ```csharp
-public class OpenAiChatCapability(OpenAiProvider provider)
-    : AIChatCapabilityBase<OpenAiProviderSettings>(provider)
+public class OpenAIChatCapability(OpenAIProvider provider)
+    : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
 {
     protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
-        OpenAiProviderSettings settings,
+        OpenAIProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         var models = new List<AIModelDescriptor>
@@ -352,7 +352,7 @@ public class OpenAiChatCapability(OpenAiProvider provider)
         return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(models);
     }
 
-    protected override IChatClient CreateClient(OpenAiProviderSettings settings)
+    protected override IChatClient CreateClient(OpenAIProviderSettings settings)
     {
         return new OpenAI.OpenAIClient(settings.ApiKey)
             .GetChatClient("gpt-4o")
@@ -761,7 +761,7 @@ public class AIFieldAttribute : Attribute
 ### Provider Settings Example
 
 ```csharp
-public class OpenAiProviderSettings
+public class OpenAIProviderSettings
 {
     [AIField(
         Label = "API Key",

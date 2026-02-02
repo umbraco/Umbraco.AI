@@ -1,4 +1,4 @@
-## Umbraco.AI.OpenAi
+## Umbraco.AI.OpenAI
 
 OpenAI provider for Umbraco.AI - connect to OpenAI API or Azure OpenAI Service with automatic model discovery.
 

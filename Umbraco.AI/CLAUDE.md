@@ -134,7 +134,7 @@ Umbraco.AI is a provider-agnostic AI integration layer for Umbraco CMS built on 
 | `Umbraco.AI.Startup` | Umbraco Composer for auto-discovery and DI registration |
 | `Umbraco.AI` | Meta-package that bundles all components |
 
-Provider packages are maintained separately (e.g., `Umbraco.AI.OpenAi`).
+Provider packages are maintained separately (e.g., `Umbraco.AI.OpenAI`).
 
 ### Solution File Organization
 

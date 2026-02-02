@@ -16,7 +16,7 @@ jobs:
 
             const componentMap = {
               "Umbraco.AI (Core)": "component/core",
-              "Umbraco.AI.OpenAi": "component/provider-openai",
+              "Umbraco.AI.OpenAI": "component/provider-openai",
               "Umbraco.AI.Anthropic": "component/provider-anthropic",
               "Umbraco.AI.Prompt": "component/prompt",
               "Umbraco.AI.Agent": "component/agent",

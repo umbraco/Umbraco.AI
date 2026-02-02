@@ -10,7 +10,7 @@ This document describes the testing strategy for Umbraco.AI, focusing on critica
 - **Test Framework**: xUnit
 - **Snapshot Testing**: Verify.Xunit (for web tests)
 - **Coverage**: Coverlet
-- **Real API Tests**: Deferred to provider-specific projects (e.g., Umbraco.AI.OpenAi will have its own integration tests later)
+- **Real API Tests**: Deferred to provider-specific projects (e.g., Umbraco.AI.OpenAI will have its own integration tests later)
 - **Frontend Tests**: JS services (when created) will mirror C# services and need Vitest coverage
 
 ## Testing Pyramid

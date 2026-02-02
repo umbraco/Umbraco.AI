@@ -24,7 +24,7 @@
       "Description": "Core AI integration layer for Umbraco CMS"
     },
     {
-      "PackageId": "Umbraco.AI.OpenAi",
+      "PackageId": "Umbraco.AI.OpenAI",
       "Description": "OpenAI provider for Umbraco.AI"
     },
     {

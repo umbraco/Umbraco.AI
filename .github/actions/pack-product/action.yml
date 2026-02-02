@@ -3,7 +3,7 @@ description: 'Packs a product using pre-built outputs with package references'
 
 inputs:
   product:
-    description: 'Product name (e.g., Umbraco.AI.OpenAi)'
+    description: 'Product name (e.g., Umbraco.AI.OpenAI)'
     required: true
 
 runs:

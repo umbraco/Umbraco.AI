@@ -1,4 +1,4 @@
-## Umbraco.Ai
+## Umbraco.AI
 
 The official AI integration layer for Umbraco CMS - connect to any AI provider through a unified, provider-agnostic interface.
 
@@ -18,4 +18,4 @@ The official AI integration layer for Umbraco CMS - connect to any AI provider t
 
 - Umbraco CMS 17.0.0+
 - .NET 10.0
-- At least one provider package (e.g., Umbraco.AI.OpenAi)
+- At least one provider package (e.g., Umbraco.AI.OpenAI)

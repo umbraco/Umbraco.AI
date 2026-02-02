@@ -1,6 +1,6 @@
-# Umbraco.AI.OpenAi
+# Umbraco.AI.OpenAI
 
-[![NuGet](https://img.shields.io/nuget/v/Umbraco.AI.OpenAi.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.AI.OpenAi/)
+[![NuGet](https://img.shields.io/nuget/v/Umbraco.AI.OpenAI.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.AI.OpenAI/)
 
 OpenAI provider plugin for Umbraco.AI, enabling integration with OpenAI's GPT models and Azure OpenAI Service.
 
@@ -20,7 +20,7 @@ This package is part of the [Umbraco.AI monorepo](../README.md). For local devel
 ## Installation
 
 ```bash
-dotnet add package Umbraco.AI.OpenAi
+dotnet add package Umbraco.AI.OpenAI
 ```
 
 ## Requirements

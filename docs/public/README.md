@@ -84,4 +84,4 @@ public class ChatController : UmbracoApiController
 
 * Umbraco CMS 17.0 or later
 * .NET 10.0 or later
-* At least one AI provider package (for example, `Umbraco.AI.OpenAi`)
+* At least one AI provider package (for example, `Umbraco.AI.OpenAI`)

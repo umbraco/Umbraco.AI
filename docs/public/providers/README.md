@@ -11,7 +11,7 @@ Umbraco.AI supports multiple AI providers through installable NuGet packages. Ea
 
 | Provider | Package | Capabilities | Best For |
 |----------|---------|--------------|----------|
-| [OpenAI](openai.md) | `Umbraco.AI.OpenAi` | Chat, Embedding | General purpose, most models |
+| [OpenAI](openai.md) | `Umbraco.AI.OpenAI` | Chat, Embedding | General purpose, most models |
 | [Anthropic](anthropic.md) | `Umbraco.AI.Anthropic` | Chat | Claude models, long context |
 | [Google Gemini](google.md) | `Umbraco.AI.Google` | Chat | Gemini models, multimodal |
 | [Amazon Bedrock](amazon.md) | `Umbraco.AI.Amazon` | Chat, Embedding | AWS integration, multiple models |
@@ -55,7 +55,7 @@ You can install multiple providers simultaneously. Each provider registers indep
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.AI.OpenAi
+Install-Package Umbraco.AI.OpenAI
 Install-Package Umbraco.AI.Anthropic
 Install-Package Umbraco.AI.Google
 ```
@@ -65,7 +65,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.AI.OpenAi
+dotnet add package Umbraco.AI.OpenAI
 dotnet add package Umbraco.AI.Anthropic
 dotnet add package Umbraco.AI.Google
 ```

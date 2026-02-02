@@ -110,7 +110,7 @@ Provider (which AI service)
 
 **Step by step:**
 
-1. **Install a Provider** - Add the NuGet package for your chosen AI service (e.g., `Umbraco.AI.OpenAi`)
+1. **Install a Provider** - Add the NuGet package for your chosen AI service (e.g., `Umbraco.AI.OpenAI`)
 
 2. **Create a Connection** - In the backoffice, create a connection to that provider with your API credentials
 

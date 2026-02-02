@@ -28,7 +28,7 @@
       "Description": "AI agent management add-on for Umbraco.AI"
     },
     {
-      "PackageId": "Umbraco.AI.OpenAi",
+      "PackageId": "Umbraco.AI.OpenAI",
       "Description": "OpenAI provider for Umbraco.AI"
     },
     {

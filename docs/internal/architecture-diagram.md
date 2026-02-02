@@ -160,7 +160,7 @@ The core architecture follows a clear hierarchy:
             │  Implementations                      │  Implementations
             ▼                                       ▼
 ┌───────────────────────────────┐   ┌───────────────────────────────┐
-│   OpenAiChatCapability        │   │  OpenAiEmbeddingCapability    │
+│   OpenAIChatCapability        │   │  OpenAIEmbeddingCapability    │
 │   AzureChatCapability         │   │  AzureEmbeddingCapability     │
 │   OllamaChatCapability        │   │  OllamaEmbeddingCapability    │
 │   ... (extensible)            │   │  ... (extensible)             │

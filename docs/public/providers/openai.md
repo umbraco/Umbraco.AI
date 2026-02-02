@@ -11,7 +11,7 @@ OpenAI provides access to GPT models for chat and text-embedding models for sema
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.AI.OpenAi
+Install-Package Umbraco.AI.OpenAI
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.AI.OpenAi
+dotnet add package Umbraco.AI.OpenAI
 ```
 {% endcode %}
 
@@ -91,7 +91,7 @@ var connection = new AIConnection
     Alias = "openai-production",
     Name = "OpenAI Production",
     ProviderId = "openai",
-    Settings = new OpenAiProviderSettings
+    Settings = new OpenAIProviderSettings
     {
         ApiKey = "sk-...",
         OrganizationId = "org-..."

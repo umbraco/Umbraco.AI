@@ -550,7 +550,7 @@ public record ToolApprovalResponse(
 - `src/Umbraco.AI.Core/Registry/AIRegistry.cs` - Pattern for tool registry
 - `src/Umbraco.AI.Core/Providers/AIProviderBase.cs` - Pattern for tool base class
 - `src/Umbraco.AI.Core/Middleware/IAIChatMiddleware.cs` - Pattern for middleware
-- `src/Umbraco.AI.OpenAi/OpenAiProvider.cs` - Pattern for attribute-based discovery
+- `src/Umbraco.AI.OpenAI/OpenAIProvider.cs` - Pattern for attribute-based discovery
 
 ---
 

@@ -67,7 +67,7 @@ npm run changelog -- --product=Umbraco.AI --unreleased
 
 Products are auto-discovered by scanning for `changelog.config.json` files:
 - Umbraco.AI (core)
-- Umbraco.AI.OpenAi
+- Umbraco.AI.OpenAI
 - Umbraco.AI.Anthropic
 - Umbraco.AI.Amazon
 - Umbraco.AI.Google

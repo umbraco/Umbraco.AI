@@ -1,6 +1,8 @@
 using System.ClientModel;
 using Microsoft.Extensions.Caching.Memory;
+using OpenAI;
 using Umbraco.AI.Core.Providers;
+
 
 namespace Umbraco.AI.OpenAI;
 
@@ -66,7 +68,7 @@ public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
     /// <summary>
     /// Creates an OpenAI client configured with the provided settings.
     /// </summary>
-    internal static OpenAI.OpenAIClient CreateOpenAIClient(OpenAIProviderSettings settings)
+    internal static OpenAIClient CreateOpenAIClient(OpenAIProviderSettings settings)
     {
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
         {
@@ -76,8 +78,8 @@ public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
         var credential = new ApiKeyCredential(settings.ApiKey);
 
         return string.IsNullOrWhiteSpace(settings.Endpoint)
-            ? new OpenAI.OpenAIClient(credential)
-            : new OpenAI.OpenAIClient(credential, new OpenAI.OpenAIClientOptions
+            ? new OpenAIClient(credential)
+            : new OpenAIClient(credential, new OpenAIClientOptions
             {
                 Endpoint = new Uri(settings.Endpoint)
             });

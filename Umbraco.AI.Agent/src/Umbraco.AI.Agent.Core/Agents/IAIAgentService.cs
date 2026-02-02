@@ -1,5 +1,5 @@
-using Umbraco.AI.Agui.Events;
-using Umbraco.AI.Agui.Models;
+using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Models;
 using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.AI.Agent.Core.Agents;
@@ -106,9 +106,9 @@ public interface IAIAgentService
     /// <param name="frontendToolDefinitions">Frontend tool definitions from the request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
-    IAsyncEnumerable<IAguiEvent> StreamAgentAsync(
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
-        AguiRunRequest request,
-        IEnumerable<AguiTool>? frontendToolDefinitions,
+        AGUIRunRequest request,
+        IEnumerable<AGUITool>? frontendToolDefinitions,
         CancellationToken cancellationToken = default);
 }

@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Umbraco.AI.Agent.Core.Agui;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
-using Umbraco.AI.Agui.Events;
-using Umbraco.AI.Agui.Models;
-using Umbraco.AI.Agui.Streaming;
+using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
@@ -22,18 +22,18 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAIAgentRepository _repository;
     private readonly IAIEntityVersionService _versionService;
     private readonly IAIAgentFactory _agentFactory;
-    private readonly IAguiStreamingService _streamingService;
-    private readonly IAguiToolConverter _toolConverter;
-    private readonly IAguiContextConverter _contextConverter;
+    private readonly IAGUIStreamingService _streamingService;
+    private readonly IAGUIToolConverter _toolConverter;
+    private readonly IAGUIContextConverter _contextConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AIAgentService(
         IAIAgentRepository repository,
         IAIEntityVersionService versionService,
         IAIAgentFactory agentFactory,
-        IAguiStreamingService streamingService,
-        IAguiToolConverter toolConverter,
-        IAguiContextConverter contextConverter,
+        IAGUIStreamingService streamingService,
+        IAGUIToolConverter toolConverter,
+        IAGUIContextConverter contextConverter,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -113,10 +113,10 @@ internal sealed class AIAgentService : IAIAgentService
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
-    public async IAsyncEnumerable<IAguiEvent> StreamAgentAsync(
+    public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
-        AguiRunRequest request,
-        IEnumerable<AguiTool>? frontendToolDefinitions,
+        AGUIRunRequest request,
+        IEnumerable<AGUITool>? frontendToolDefinitions,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // 1. Resolve agent
@@ -125,7 +125,7 @@ internal sealed class AIAgentService : IAIAgentService
         if (agent is null)
         {
             // Emit error event and finish
-            var errorEmitter = new AguiEventEmitter(request.ThreadId, request.RunId);
+            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
             yield return errorEmitter.EmitRunStarted();
             yield return errorEmitter.EmitError("Agent not found", "NOT_FOUND");
             yield return errorEmitter.EmitRunFinished(new InvalidOperationException("Agent not found"));
@@ -134,7 +134,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         if (!agent.IsActive)
         {
-            var errorEmitter = new AguiEventEmitter(request.ThreadId, request.RunId);
+            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
             yield return errorEmitter.EmitRunStarted();
             yield return errorEmitter.EmitError($"Agent '{agent.Name}' is not active", "AGENT_NOT_ACTIVE");
             yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent '{agent.Name}' is not active"));

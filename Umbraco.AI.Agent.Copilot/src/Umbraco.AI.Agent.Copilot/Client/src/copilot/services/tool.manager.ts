@@ -5,7 +5,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject } from "@umbraco-cms/backoffice/external/rxjs";
 import type { UaiToolCallInfo } from "../types.js";
 import { ManifestUaiAgentTool, UaiAgentToolApi, UaiAgentToolElement } from "../tools";
-import { type AguiTool } from "@umbraco-ai/agent";
+import { type AGUITool } from "@umbraco-ai/agent";
 
 /** Element constructor type for tool UI components */
 type UaiToolElementConstructor = new () => UaiAgentToolElement;
@@ -25,7 +25,7 @@ export class UaiToolManager extends UmbControllerBase {
   #toolManifests = new BehaviorSubject<Map<string, ManifestUaiAgentTool>>(new Map());
   #apiCache: Map<string, UaiAgentToolApi> = new Map();
   #elementCache: Map<string, UaiToolElementConstructor> = new Map();
-  #frontendTools = new BehaviorSubject<AguiTool[]>([]);
+  #frontendTools = new BehaviorSubject<AGUITool[]>([]);
 
   /**
    * Observable stream of frontend-executable tools.
@@ -38,7 +38,7 @@ export class UaiToolManager extends UmbControllerBase {
    * These are tools with an `api` property that can be executed in the browser.
    * @returns Array of AG-UI tool definitions for the LLM
    */
-  get frontendTools(): AguiTool[] {
+  get frontendTools(): AGUITool[] {
     return [...this.#frontendTools.value];
   }
 
@@ -58,7 +58,7 @@ export class UaiToolManager extends UmbControllerBase {
    */
   #updateTools(manifests: ManifestUaiAgentTool[]) {
     const manifestMap = new Map<string, ManifestUaiAgentTool>();
-    const frontendTools: AguiTool[] = [];
+    const frontendTools: AGUITool[] = [];
 
     for (const manifest of manifests) {
       // Store ALL manifests (for rendering and element lookup)

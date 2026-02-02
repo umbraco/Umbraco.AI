@@ -5,7 +5,7 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Inject this interface in orchestrators (like <c>AguiStreamingService</c>) that need to
+/// Inject this interface in orchestrators (like <c>AGUIStreamingService</c>) that need to
 /// create a scope for the duration of an AI operation. The context is available via
 /// <see cref="IAIRuntimeContextAccessor"/> until the scope is disposed.
 /// </para>

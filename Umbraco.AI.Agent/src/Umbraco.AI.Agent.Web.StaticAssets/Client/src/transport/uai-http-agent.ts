@@ -2,12 +2,12 @@ import { AbstractAgent, type RunAgentInput, type BaseEvent, type Message, type T
 import { Observable } from "rxjs";
 import {
   AgentsService,
-  type AguiRunRequestModel,
-  type AguiMessageModel,
-  type AguiToolModel,
-  type AguiToolCallModel,
-  type AguiMessageRoleModel,
-  type AguiContextItemModel,
+  type AGUIRunRequestModel,
+  type AGUIMessageModel,
+  type AGUIToolModel,
+  type AGUIToolCallModel,
+  type AGUIMessageRoleModel,
+  type AGUIContextItemModel,
 } from "../api/index.js";
 import type { AgentTransport } from "./types.js";
 
@@ -66,14 +66,14 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     },
     signal: AbortSignal
   ): Promise<void> {
-    // Convert AG-UI RunAgentInput to hey-api AguiRunRequestModel
-    const body: AguiRunRequestModel = {
+    // Convert AG-UI RunAgentInput to hey-api AGUIRunRequestModel
+    const body: AGUIRunRequestModel = {
       threadId: input.threadId,
       runId: input.runId,
-      messages: input.messages.map((msg) => this.#toAguiMessage(msg)),
-      tools: input.tools?.map((tool) => this.#toAguiTool(tool)),
+      messages: input.messages.map((msg) => this.#toAGUIMessage(msg)),
+      tools: input.tools?.map((tool) => this.#toAGUITool(tool)),
       state: input.state,
-      context: input.context?.map((ctx) => this.#toAguiContext(ctx)),
+      context: input.context?.map((ctx) => this.#toAGUIContext(ctx)),
       forwardedProps: input.forwardedProps,
     };
 
@@ -92,7 +92,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     subscriber.complete();
   }
 
-  #toAguiMessage(msg: Message): AguiMessageModel {
+  #toAGUIMessage(msg: Message): AGUIMessageModel {
     // Handle content which can be string or ContentPart[]
     let content: string | undefined;
     if (typeof msg.content === "string") {
@@ -106,7 +106,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     }
 
     // Convert toolCalls for assistant messages
-    let toolCalls: AguiToolCallModel[] | undefined;
+    let toolCalls: AGUIToolCallModel[] | undefined;
     if ("toolCalls" in msg && Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
       toolCalls = msg.toolCalls.map((tc: { id: string; type: string; function: { name: string; arguments: string } }) => ({
         id: tc.id,
@@ -127,11 +127,11 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     };
   }
 
-  #mapRole(role: string): AguiMessageRoleModel {
-    return role.toLowerCase() as AguiMessageRoleModel;
+  #mapRole(role: string): AGUIMessageRoleModel {
+    return role.toLowerCase() as AGUIMessageRoleModel;
   }
 
-  #toAguiTool(tool: Tool): AguiToolModel {
+  #toAGUITool(tool: Tool): AGUIToolModel {
     return {
       name: tool.name,
       description: tool.description,
@@ -139,7 +139,7 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
     };
   }
 
-  #toAguiContext(ctx: { description: string; value: string }): AguiContextItemModel {
+  #toAGUIContext(ctx: { description: string; value: string }): AGUIContextItemModel {
     return {
       description: ctx.description,
       value: ctx.value,

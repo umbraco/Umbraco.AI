@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Shouldly;
 using Umbraco.AI.Agent.Core.Chat;
-using Umbraco.AI.Agui.Models;
+using Umbraco.AI.AGUI.Models;
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Chat;
@@ -10,14 +10,14 @@ namespace Umbraco.AI.Agent.Tests.Unit.Chat;
 public class FrontendToolFunctionTests
 {
     [Fact]
-    public void Constructor_WithAguiTool_SetsNameAndDescription()
+    public void Constructor_WithAGUITool_SetsNameAndDescription()
     {
         // Arrange
-        var tool = new AguiTool
+        var tool = new AGUITool
         {
             Name = "test-tool",
             Description = "A test tool for testing",
-            Parameters = new AguiToolParameters
+            Parameters = new AGUIToolParameters
             {
                 Type = "object",
                 Properties = JsonSerializer.SerializeToElement(new
@@ -36,14 +36,14 @@ public class FrontendToolFunctionTests
     }
 
     [Fact]
-    public void Constructor_WithAguiTool_BuildsJsonSchema()
+    public void Constructor_WithAGUITool_BuildsJsonSchema()
     {
         // Arrange
-        var tool = new AguiTool
+        var tool = new AGUITool
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AguiToolParameters
+            Parameters = new AGUIToolParameters
             {
                 Type = "object",
                 Properties = JsonSerializer.SerializeToElement(new
@@ -122,11 +122,11 @@ public class FrontendToolFunctionTests
     public async Task InvokeAsync_ReturnsNull()
     {
         // Arrange
-        var tool = new AguiTool
+        var tool = new AGUITool
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AguiToolParameters
+            Parameters = new AGUIToolParameters
             {
                 Type = "object",
                 Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
@@ -149,11 +149,11 @@ public class FrontendToolFunctionTests
     public void Constructor_WithNoRequiredParams_OmitsRequiredFromSchema()
     {
         // Arrange
-        var tool = new AguiTool
+        var tool = new AGUITool
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AguiToolParameters
+            Parameters = new AGUIToolParameters
             {
                 Type = "object",
                 Properties = JsonSerializer.SerializeToElement(new
@@ -175,11 +175,11 @@ public class FrontendToolFunctionTests
     public void Constructor_WithEmptyRequiredParams_OmitsRequiredFromSchema()
     {
         // Arrange
-        var tool = new AguiTool
+        var tool = new AGUITool
         {
             Name = "test-tool",
             Description = "A test tool",
-            Parameters = new AguiToolParameters
+            Parameters = new AGUIToolParameters
             {
                 Type = "object",
                 Properties = JsonSerializer.SerializeToElement(new

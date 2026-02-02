@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
-using Umbraco.AI.Agui.Models;
+using Umbraco.AI.AGUI.Models;
 
 namespace Umbraco.AI.Agent.Core.Chat;
 
@@ -30,7 +30,7 @@ public sealed class AIFrontendToolFunction : AIFunction
     /// Initializes a new instance of the <see cref="AIFrontendToolFunction"/> class.
     /// </summary>
     /// <param name="tool">The AG-UI tool definition.</param>
-    public AIFrontendToolFunction(AguiTool tool)
+    public AIFrontendToolFunction(AGUITool tool)
     {
         ArgumentNullException.ThrowIfNull(tool);
 
@@ -79,7 +79,7 @@ public sealed class AIFrontendToolFunction : AIFunction
         return ValueTask.FromResult<object?>(null);
     }
 
-    private static JsonElement BuildJsonSchema(AguiToolParameters parameters)
+    private static JsonElement BuildJsonSchema(AGUIToolParameters parameters)
     {
         var schemaObj = new Dictionary<string, object?>
         {

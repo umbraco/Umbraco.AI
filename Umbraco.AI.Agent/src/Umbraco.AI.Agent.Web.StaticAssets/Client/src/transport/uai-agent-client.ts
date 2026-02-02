@@ -1,7 +1,7 @@
 import {
   type Message,
   type BaseEvent,
-  EventType as AguiEventType,
+  EventType as AGUIEventType,
   transformChunks,
 } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
@@ -10,7 +10,7 @@ import type {
   UaiToolCallInfo,
   UaiInterruptInfo,
   AgentClientCallbacks,
-  AguiTool,
+  AGUITool,
   AgentTransport,
   TextMessageStartEvent,
   TextMessageContentEvent,
@@ -18,7 +18,7 @@ import type {
   ToolCallArgsEvent,
   ToolCallEndEvent,
   ToolCallResultEvent,
-  RunFinishedAguiEvent,
+  RunFinishedAGUIEvent,
   RunErrorEvent,
   StateSnapshotEvent,
   StateDeltaEvent,
@@ -79,7 +79,7 @@ export class UaiAgentClient {
   /**
    * Convert UaiChatMessage to AG-UI Message format.
    */
-  static #toAguiMessage(m: UaiChatMessage): Message {
+  static #toAGUIMessage(m: UaiChatMessage): Message {
     if (m.role === "user") {
       return {
         id: m.id,
@@ -122,7 +122,7 @@ export class UaiAgentClient {
    */
   sendMessage(
     messages: UaiChatMessage[],
-    tools?: AguiTool[],
+    tools?: AGUITool[],
     context?: Array<{ description: string; value: string }>,
   ): void {
     const threadId = crypto.randomUUID();
@@ -132,7 +132,7 @@ export class UaiAgentClient {
     this.#pendingToolArgs.clear();
 
     // Convert and set messages on transport
-    const convertedMessages = messages.map((m) => UaiAgentClient.#toAguiMessage(m));
+    const convertedMessages = messages.map((m) => UaiAgentClient.#toAGUIMessage(m));
     this.#transport.setMessages(convertedMessages);
 
     // Subscribe to the transport's event stream
@@ -159,7 +159,7 @@ export class UaiAgentClient {
    */
   #handleEvent(event: BaseEvent) {
     switch (event.type) {
-      case AguiEventType.TEXT_MESSAGE_START: {
+      case AGUIEventType.TEXT_MESSAGE_START: {
         const messageId = (event as TextMessageStartEvent).messageId;
         if (messageId) {
           this.#callbacks.onTextStart?.(messageId);
@@ -167,50 +167,50 @@ export class UaiAgentClient {
         break;
       }
 
-      case AguiEventType.TEXT_MESSAGE_CONTENT:
+      case AGUIEventType.TEXT_MESSAGE_CONTENT:
         this.#callbacks.onTextDelta?.((event as TextMessageContentEvent).delta);
         break;
 
-      case AguiEventType.TEXT_MESSAGE_END:
+      case AGUIEventType.TEXT_MESSAGE_END:
         this.#callbacks.onTextEnd?.();
         break;
 
-      case AguiEventType.TOOL_CALL_START:
+      case AGUIEventType.TOOL_CALL_START:
         this.#handleToolCallStart(event as ToolCallStartEvent);
         break;
 
-      case AguiEventType.TOOL_CALL_ARGS:
+      case AGUIEventType.TOOL_CALL_ARGS:
         this.#handleToolCallArgs(event as ToolCallArgsEvent);
         break;
 
-      case AguiEventType.TOOL_CALL_END:
+      case AGUIEventType.TOOL_CALL_END:
         this.#handleToolCallEnd(event as ToolCallEndEvent);
         break;
 
-      case AguiEventType.TOOL_CALL_RESULT:
+      case AGUIEventType.TOOL_CALL_RESULT:
         this.#callbacks.onToolCallResult?.(
           (event as ToolCallResultEvent).toolCallId,
           (event as ToolCallResultEvent).content
         );
         break;
 
-      case AguiEventType.RUN_FINISHED:
-        this.#handleRunFinished(event as RunFinishedAguiEvent);
+      case AGUIEventType.RUN_FINISHED:
+        this.#handleRunFinished(event as RunFinishedAGUIEvent);
         break;
 
-      case AguiEventType.RUN_ERROR:
+      case AGUIEventType.RUN_ERROR:
         this.#callbacks.onError?.(new Error((event as RunErrorEvent).message));
         break;
 
-      case AguiEventType.STATE_SNAPSHOT:
+      case AGUIEventType.STATE_SNAPSHOT:
         this.#callbacks.onStateSnapshot?.((event as StateSnapshotEvent).state);
         break;
 
-      case AguiEventType.STATE_DELTA:
+      case AGUIEventType.STATE_DELTA:
         this.#callbacks.onStateDelta?.((event as StateDeltaEvent).delta);
         break;
 
-      case AguiEventType.MESSAGES_SNAPSHOT:
+      case AGUIEventType.MESSAGES_SNAPSHOT:
         this.#handleMessagesSnapshot(event as MessagesSnapshotEvent);
         break;
     }
@@ -240,7 +240,7 @@ export class UaiAgentClient {
     }
   }
 
-  #handleRunFinished(event: RunFinishedAguiEvent) {
+  #handleRunFinished(event: RunFinishedAGUIEvent) {
     // Normalize outcome to lowercase for case-insensitive comparison
     // Backend sends PascalCase (e.g., "Interrupt") but we use lowercase
     const outcome = (event.outcome ?? "").toLowerCase();

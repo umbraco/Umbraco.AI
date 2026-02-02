@@ -37,56 +37,56 @@ export type AgentScopeItemResponseModel = {
     icon: string;
 };
 
-export type AguiContextItemModel = {
+export type AGUIContextItemModel = {
     description: string;
     value?: string | null;
 };
 
-export type AguiFunctionCallModel = {
+export type AGUIFunctionCallModel = {
     name: string;
     arguments: string;
 };
 
-export type AguiMessageModel = {
+export type AGUIMessageModel = {
     id?: string | null;
-    role: AguiMessageRoleModel;
+    role: AGUIMessageRoleModel;
     content?: string | null;
     name?: string | null;
-    toolCalls?: Array<AguiToolCallModel> | null;
+    toolCalls?: Array<AGUIToolCallModel> | null;
     toolCallId?: string | null;
 };
 
-export type AguiMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
+export type AGUIMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
 
-export type AguiResumeInfoModel = {
+export type AGUIResumeInfoModel = {
     interruptId: string;
     payload?: unknown;
 };
 
-export type AguiRunRequestModel = {
+export type AGUIRunRequestModel = {
     threadId: string;
     runId: string;
-    messages: Array<AguiMessageModel>;
-    tools?: Array<AguiToolModel> | null;
+    messages: Array<AGUIMessageModel>;
+    tools?: Array<AGUIToolModel> | null;
     state?: unknown;
-    context?: Array<AguiContextItemModel> | null;
-    resume?: AguiResumeInfoModel | null;
+    context?: Array<AGUIContextItemModel> | null;
+    resume?: AGUIResumeInfoModel | null;
     forwardedProps?: unknown;
 };
 
-export type AguiToolCallModel = {
+export type AGUIToolCallModel = {
     id: string;
     type: string;
-    function: AguiFunctionCallModel;
+    function: AGUIFunctionCallModel;
 };
 
-export type AguiToolModel = {
+export type AGUIToolModel = {
     name: string;
     description: string;
-    parameters: AguiToolParametersModel;
+    parameters: AGUIToolParametersModel;
 };
 
-export type AguiToolParametersModel = {
+export type AGUIToolParametersModel = {
     type: string;
     properties: unknown;
     required?: Array<string> | null;
@@ -308,7 +308,7 @@ export type UpdateAgentResponses = {
 };
 
 export type RunAgentData = {
-    body?: AguiRunRequestModel;
+    body?: AGUIRunRequestModel;
     path: {
         agentIdOrAlias: string;
     };

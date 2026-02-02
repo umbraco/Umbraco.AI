@@ -38,7 +38,7 @@ This meta-package includes all required components. For more control, install in
 | `Umbraco.AI.Agent.Persistence` | EF Core persistence |
 | `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations |
 | `Umbraco.AI.Agent.Persistence.Sqlite` | SQLite migrations |
-| `Umbraco.AI.Agui` | AG-UI protocol SDK |
+| `Umbraco.AI.AGUI` | AG-UI protocol SDK |
 
 ## Requirements
 
@@ -95,13 +95,13 @@ Content-Type: application/json
 
 Response: `text/event-stream` with AG-UI events.
 
-## Umbraco.AI.Agui
+## Umbraco.AI.AGUI
 
-The `Umbraco.AI.Agui` package is a standalone AG-UI protocol SDK that provides:
+The `Umbraco.AI.AGUI` package is a standalone AG-UI protocol SDK that provides:
 
 - **Event Types** - All AG-UI event models (lifecycle, messages, tools, state)
-- **SSE Streaming** - `AguiEventStreamResult` for ASP.NET Core streaming
-- **Models** - `AguiRunRequest`, `AguiMessage`, `AguiTool`, etc.
+- **SSE Streaming** - `AGUIEventStreamResult` for ASP.NET Core streaming
+- **Models** - `AGUIRunRequest`, `AGUIMessage`, `AGUITool`, etc.
 
 This package can be used independently of the Agent add-on to build custom AG-UI endpoints.
 

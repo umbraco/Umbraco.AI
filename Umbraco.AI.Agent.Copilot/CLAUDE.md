@@ -152,7 +152,7 @@ None - this is a frontend-only package. The .csproj is a Razor Class Library tha
 ```typescript
 // Import API client and types from agent package
 import { AgentsService } from '@umbraco-ai/agent';
-import type { AguiRunRequestModel } from '@umbraco-ai/agent';
+import type { AGUIRunRequestModel } from '@umbraco-ai/agent';
 ```
 
 ### Importing from Core Package

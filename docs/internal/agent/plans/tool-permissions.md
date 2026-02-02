@@ -839,7 +839,7 @@ public AIAgentFactory(
 [HttpPost("{agentIdOrAlias}/run")]
 public async Task<IActionResult> RunAgent(
     string agentIdOrAlias,
-    [FromBody] AguiRunRequestModel request,
+    [FromBody] AGUIRunRequestModel request,
     CancellationToken ct)
 {
     // Resolve agent
@@ -858,7 +858,7 @@ public async Task<IActionResult> RunAgent(
     };
 
     // Convert frontend tools to AITool format
-    var frontendTools = ConvertAguiTools(request.Tools);
+    var frontendTools = ConvertAGUITools(request.Tools);
 
     // Create agent with tools and metadata
     var agentInstance = await _agentFactory.CreateAgentAsync(

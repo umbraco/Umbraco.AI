@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
@@ -22,9 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
-    <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
-    <ProjectReference Include="..\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
+    <ProjectReference Include="..\..\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+    <ProjectReference Include="..\..\src\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
     <ProjectReference Include="..\Umbraco.AI.Tests.Common\Umbraco.AI.Tests.Common.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- Not a test project - shared test utilities library -->
@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
-    <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+    <ProjectReference Include="..\..\src\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

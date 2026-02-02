@@ -10,7 +10,7 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
 
-using CoreConstants = Umbraco.Ai.Core.Constants;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 

@@ -4,7 +4,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.RuntimeContext;
-using CoreConstants = Umbraco.Ai.Core.Constants;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Core.Chat;
 

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Umbraco.AI.Core.Versioning;
 
-using CoreConstants = Umbraco.Ai.Core.Constants;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 

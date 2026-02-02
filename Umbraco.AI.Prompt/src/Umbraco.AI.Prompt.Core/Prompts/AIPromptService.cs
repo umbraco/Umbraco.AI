@@ -7,8 +7,8 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
-using AIPropertyChange = Umbraco.Ai.Core.EntityAdapter.AIPropertyChange;
-using CoreConstants = Umbraco.Ai.Core.Constants;
+using AIPropertyChange = Umbraco.AI.Core.EntityAdapter.AIPropertyChange;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Prompt.Core.Prompts;
 

@@ -1,4 +1,4 @@
-using UmbracoAIConstants = Umbraco.Ai.Web.Constants;
+using UmbracoAIConstants = Umbraco.AI.Web.Constants;
 
 namespace Umbraco.AI.Prompt.Web;
 

@@ -8,8 +8,8 @@
   },
   "Category": "Artificial Intelligence",
   "LicenseTypes": ["Free"],
-  "DocumentationUrl": "https://github.com/umbraco/Umbraco.Ai/tree/main/Umbraco.Ai.Agent",
-  "IssueTrackerUrl": "https://github.com/umbraco/Umbraco.Ai/issues",
+  "DocumentationUrl": "https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Agent",
+  "IssueTrackerUrl": "https://github.com/umbraco/Umbraco.AI/issues",
   "PackageType": "Package",
   "PackagesByAuthor": [
     "Umbraco.Forms",
@@ -20,16 +20,16 @@
   ],
   "RelatedPackages": [
     {
-      "PackageId": "Umbraco.Ai",
+      "PackageId": "Umbraco.AI",
       "Description": "Core AI integration layer for Umbraco CMS"
     },
     {
-      "PackageId": "Umbraco.Ai.Prompt",
-      "Description": "Prompt template management add-on for Umbraco.Ai"
+      "PackageId": "Umbraco.AI.Prompt",
+      "Description": "Prompt template management add-on for Umbraco.AI"
     },
     {
-      "PackageId": "Umbraco.Ai.OpenAi",
-      "Description": "OpenAI provider for Umbraco.Ai"
+      "PackageId": "Umbraco.AI.OpenAi",
+      "Description": "OpenAI provider for Umbraco.AI"
     }
   ],
   "Tags": ["umbraco", "ai", "agent", "ag-ui", "sse"]

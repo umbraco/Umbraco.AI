@@ -48,8 +48,8 @@ if [[ -z "$PRODUCT" ]]; then
   echo "❌ Error: --product is required"
   echo ""
   echo "Usage:"
-  echo "  ./scripts/generate-changelog.sh --product=Umbraco.Ai --version=17.1.0"
-  echo "  ./scripts/generate-changelog.sh --product=Umbraco.Ai --unreleased"
+  echo "  ./scripts/generate-changelog.sh --product=Umbraco.AI --version=17.1.0"
+  echo "  ./scripts/generate-changelog.sh --product=Umbraco.AI --unreleased"
   echo "  ./scripts/generate-changelog.sh --list  # List available products"
   echo ""
   node "$SCRIPT_DIR/generate-changelog.js" --list

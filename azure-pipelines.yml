@@ -12,33 +12,33 @@ parameters:
     type: object
     default:
       # Providers (no frontend)
-      - name: Umbraco.Ai.OpenAi
+      - name: Umbraco.AI.OpenAi
         changeVar: OpenaiChanged
         hasNpm: false
-      - name: Umbraco.Ai.Anthropic
+      - name: Umbraco.AI.Anthropic
         changeVar: AnthropicChanged
         hasNpm: false
-      - name: Umbraco.Ai.Amazon
+      - name: Umbraco.AI.Amazon
         changeVar: AmazonChanged
         hasNpm: false
-      - name: Umbraco.Ai.Google
+      - name: Umbraco.AI.Google
         changeVar: GoogleChanged
         hasNpm: false
-      - name: Umbraco.Ai.MicrosoftFoundry
+      - name: Umbraco.AI.MicrosoftFoundry
         changeVar: MicrosoftfoundryChanged
         hasNpm: false
       # Add-ons (have frontend but don't export types)
-      - name: Umbraco.Ai.Prompt
+      - name: Umbraco.AI.Prompt
         changeVar: PromptChanged
         hasNpm: false
-      - name: Umbraco.Ai.Agent
+      - name: Umbraco.AI.Agent
         changeVar: AgentChanged
         hasNpm: true
   - name: level2Products
     type: object
     default:
       # Copilot (depends on Agent - exports npm types)
-      - name: Umbraco.Ai.Agent.Copilot
+      - name: Umbraco.AI.Agent.Copilot
         changeVar: AgentCopilotChanged
         hasNpm: true
 
@@ -91,13 +91,13 @@ stages:
               npm run build
             displayName: Build frontend
 
-          - script: dotnet restore Umbraco.Ai.sln
+          - script: dotnet restore Umbraco.AI.sln
             displayName: Restore
 
-          - script: dotnet build Umbraco.Ai.sln --configuration Release --no-restore -p:DisableCloudBuildNumber=true
+          - script: dotnet build Umbraco.AI.sln --configuration Release --no-restore -p:DisableCloudBuildNumber=true
             displayName: Build
 
-          - script: dotnet test Umbraco.Ai.sln --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
+          - script: dotnet test Umbraco.AI.sln --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
             displayName: Test
 
           - task: PublishTestResults@2
@@ -233,9 +233,9 @@ stages:
                   trimmed="$(echo "$item" | xargs)"
                   if [ -n "$trimmed" ]; then
                     name="$trimmed"
-                    if [[ "$name" == Umbraco.Ai.* ]]; then
-                      name="${name#Umbraco.Ai.}"
-                    elif [[ "$name" == Umbraco.Ai ]]; then
+                    if [[ "$name" == Umbraco.AI.* ]]; then
+                      name="${name#Umbraco.AI.}"
+                    elif [[ "$name" == Umbraco.AI ]]; then
                       name="core"
                     fi
                     safe="$(echo "$name" | tr '[:upper:]' '[:lower:]' | tr '.' '-' | tr -cd 'a-z0-9-')"
@@ -297,7 +297,7 @@ stages:
           matrix:
             # Generated from parameters.level1Products
             ${{ each product in parameters.level1Products }}:
-              ${{ replace(replace(product.name, 'Umbraco.Ai.', ''), '.', '_') }}:
+              ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
                 product: ${{ product.name }}
                 changeVar: ${{ product.changeVar }}
           maxParallel: 10
@@ -349,7 +349,7 @@ stages:
           matrix:
             # Generated from parameters.level2Products
             ${{ each product in parameters.level2Products }}:
-              ${{ replace(replace(product.name, 'Umbraco.Ai.', ''), '.', '_') }}:
+              ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
                 product: ${{ product.name }}
                 changeVar: ${{ product.changeVar }}
           maxParallel: 10
@@ -414,7 +414,7 @@ stages:
 
           # Download Core NuGet packages (only if Core changed)
           - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai NuGet packages
+            displayName: Download Umbraco.AI NuGet packages
             condition: eq(variables.CoreChanged, 'true')
             inputs:
               artifact: 'Umbraco.Ai-packages'
@@ -422,7 +422,7 @@ stages:
 
           # Download Core npm packages (only if Core changed - Core always has npm packages)
           - task: DownloadPipelineArtifact@2
-            displayName: Download Umbraco.Ai npm packages
+            displayName: Download Umbraco.AI npm packages
             condition: eq(variables.CoreChanged, 'true')
             inputs:
               artifact: 'Umbraco.Ai-npm-packages'
@@ -519,7 +519,7 @@ stages:
                 }
 
                 if ("$(CoreChanged)" -eq "true") {
-                  Add-VersionByProduct "Umbraco.Ai"
+                  Add-VersionByProduct "Umbraco.AI"
                 }
 
                 $level1 = $env:LEVEL1_JSON | ConvertFrom-Json

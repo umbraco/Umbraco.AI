@@ -6,12 +6,12 @@ function loadScopes() {
   const scopes = new Set();
   const rootDir = __dirname;
 
-  // Find all Umbraco.Ai* directories
+  // Find all Umbraco.AI* directories
   const entries = fs.readdirSync(rootDir, { withFileTypes: true });
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-    if (!entry.name.startsWith('Umbraco.Ai')) continue;
+    if (!entry.name.startsWith('Umbraco.AI')) continue;
 
     const configPath = path.join(rootDir, entry.name, 'changelog.config.json');
 

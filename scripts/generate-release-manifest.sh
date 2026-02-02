@@ -4,11 +4,11 @@ set -e
 # Get repository root (parent of scripts folder)
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Find all Umbraco.Ai* folders at root
-mapfile -t PRODUCTS < <(find "$REPO_ROOT" -maxdepth 1 -type d -name "Umbraco.Ai*" -printf "%f\n" | sort)
+# Find all Umbraco.AI* folders at root
+mapfile -t PRODUCTS < <(find "$REPO_ROOT" -maxdepth 1 -type d -name "Umbraco.AI*" -printf "%f\n" | sort)
 
 if [ ${#PRODUCTS[@]} -eq 0 ]; then
-    echo "Error: No Umbraco.Ai* folders found in repository root" >&2
+    echo "Error: No Umbraco.AI* folders found in repository root" >&2
     exit 1
 fi
 

@@ -1,6 +1,6 @@
-## Umbraco.Ai.Amazon
+## Umbraco.AI.Amazon
 
-Amazon Bedrock provider for Umbraco.Ai - access multiple foundation models through a single AWS connection.
+Amazon Bedrock provider for Umbraco.AI - access multiple foundation models through a single AWS connection.
 
 ### Features
 
@@ -18,6 +18,6 @@ Amazon Bedrock provider for Umbraco.Ai - access multiple foundation models throu
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 - AWS account with Bedrock access

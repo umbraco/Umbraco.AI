@@ -1,30 +1,30 @@
-# Umbraco.Ai.Google
+# Umbraco.AI.Google
 
-[![NuGet](https://img.shields.io/nuget/v/Umbraco.Ai.Google.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.Ai.Google/)
+[![NuGet](https://img.shields.io/nuget/v/Umbraco.AI.Google.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.AI.Google/)
 
-Google provider plugin for Umbraco.Ai, enabling integration with Google's Gemini models.
+Google provider plugin for Umbraco.AI, enabling integration with Google's Gemini models.
 
 ## Features
 
 - **Google AI Support** - Connect to Google's AI API (Gemini 2.0, 1.5 Pro, 1.5 Flash, etc.)
 - **Chat Capabilities** - Full support for chat completions with streaming
 - **Model Configuration** - Configure temperature, max tokens, and other model parameters
-- **Middleware Support** - Compatible with Umbraco.Ai's middleware pipeline
+- **Middleware Support** - Compatible with Umbraco.AI's middleware pipeline
 
 ## Monorepo Context
 
-This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
+This package is part of the [Umbraco.AI monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
 
 ## Installation
 
 ```bash
-dotnet add package Umbraco.Ai.Google
+dotnet add package Umbraco.AI.Google
 ```
 
 ## Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 
 ## Configuration

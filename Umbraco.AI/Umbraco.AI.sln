@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Web", "src\Umbra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Web.StaticAssets", "src\Umbraco.AI.Web.StaticAssets\Umbraco.AI.Web.StaticAssets.csproj", "{1A43C221-727D-4510-9FD0-C0DA1435E2BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai", "src\Umbraco.AI/Umbraco.AI.csproj", "{9922ABBF-4ACA-4C59-BD10-7D4E30C3C30E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI", "src\Umbraco.AI/Umbraco.AI.csproj", "{9922ABBF-4ACA-4C59-BD10-7D4E30C3C30E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject

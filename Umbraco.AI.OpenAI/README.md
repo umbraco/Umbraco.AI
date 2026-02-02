@@ -1,8 +1,8 @@
-# Umbraco.Ai.OpenAi
+# Umbraco.AI.OpenAi
 
-[![NuGet](https://img.shields.io/nuget/v/Umbraco.Ai.OpenAi.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.Ai.OpenAi/)
+[![NuGet](https://img.shields.io/nuget/v/Umbraco.AI.OpenAi.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.AI.OpenAi/)
 
-OpenAI provider plugin for Umbraco.Ai, enabling integration with OpenAI's GPT models and Azure OpenAI Service.
+OpenAI provider plugin for Umbraco.AI, enabling integration with OpenAI's GPT models and Azure OpenAI Service.
 
 ## Features
 
@@ -11,22 +11,22 @@ OpenAI provider plugin for Umbraco.Ai, enabling integration with OpenAI's GPT mo
 - **Chat Capabilities** - Full support for chat completions with streaming
 - **Embedding Capabilities** - Generate text embeddings for semantic search
 - **Model Configuration** - Configure temperature, max tokens, and other model parameters
-- **Middleware Support** - Compatible with Umbraco.Ai's middleware pipeline
+- **Middleware Support** - Compatible with Umbraco.AI's middleware pipeline
 
 ## Monorepo Context
 
-This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
+This package is part of the [Umbraco.AI monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
 
 ## Installation
 
 ```bash
-dotnet add package Umbraco.Ai.OpenAi
+dotnet add package Umbraco.AI.OpenAi
 ```
 
 ## Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 
 ## Configuration

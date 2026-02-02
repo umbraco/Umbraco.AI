@@ -1,8 +1,8 @@
-# Umbraco.Ai.Amazon
+# Umbraco.AI.Amazon
 
-[![NuGet](https://img.shields.io/nuget/v/Umbraco.Ai.Amazon.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.Ai.Amazon/)
+[![NuGet](https://img.shields.io/nuget/v/Umbraco.AI.Amazon.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.AI.Amazon/)
 
-Amazon Bedrock provider plugin for Umbraco.Ai, enabling integration with AWS Bedrock foundation models.
+Amazon Bedrock provider plugin for Umbraco.AI, enabling integration with AWS Bedrock foundation models.
 
 ## Features
 
@@ -11,22 +11,22 @@ Amazon Bedrock provider plugin for Umbraco.Ai, enabling integration with AWS Bed
 - **Chat Capabilities** - Full support for chat completions with streaming
 - **Embedding Capabilities** - Generate text embeddings using Titan and Cohere models
 - **Model Configuration** - Configure temperature, max tokens, and other model parameters
-- **Middleware Support** - Compatible with Umbraco.Ai's middleware pipeline
+- **Middleware Support** - Compatible with Umbraco.AI's middleware pipeline
 
 ## Monorepo Context
 
-This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
+This package is part of the [Umbraco.AI monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
 
 ## Installation
 
 ```bash
-dotnet add package Umbraco.Ai.Amazon
+dotnet add package Umbraco.AI.Amazon
 ```
 
 ## Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 - AWS Account with Bedrock access
 

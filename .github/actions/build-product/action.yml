@@ -1,12 +1,12 @@
-name: 'Build Umbraco.Ai Product'
-description: 'Builds an Umbraco.Ai product with optional frontend assets and NuGet packaging'
+name: 'Build Umbraco.AI Product'
+description: 'Builds an Umbraco.AI product with optional frontend assets and NuGet packaging'
 
 inputs:
   name:
-    description: 'Product name (e.g., Umbraco.Ai)'
+    description: 'Product name (e.g., Umbraco.AI)'
     required: true
   path:
-    description: 'Product path (e.g., Umbraco.Ai)'
+    description: 'Product path (e.g., Umbraco.AI)'
     required: true
   has-frontend:
     description: 'Whether product has frontend assets (true/false)'

@@ -9,11 +9,11 @@ body:
     label: "Which component is this issue related to?"
     description: "Select the product/add-on type that is experiencing this issue"
     options:
-      - Umbraco.Ai (Core)
-      - Umbraco.Ai.OpenAi
-      - Umbraco.Ai.Anthropic
-      - Umbraco.Ai.Prompt
-      - Umbraco.Ai.Agent
+      - Umbraco.AI (Core)
+      - Umbraco.AI.OpenAi
+      - Umbraco.AI.Anthropic
+      - Umbraco.AI.Prompt
+      - Umbraco.AI.Agent
       - Other / Not sure
   validations:
     required: true

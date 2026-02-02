@@ -1,10 +1,10 @@
-# Umbraco.Ai.Agent.Copilot
+# Umbraco.AI.Agent.Copilot
 
 Copilot chat UI for Umbraco AI Agent. This package provides the backoffice sidebar interface for interacting with AI agents through a chat-based interface.
 
 ## Overview
 
-`Umbraco.Ai.Agent.Copilot` is a **frontend-only package** that provides the chat UI layer for AI agents:
+`Umbraco.AI.Agent.Copilot` is a **frontend-only package** that provides the chat UI layer for AI agents:
 
 - **Copilot Sidebar** - Chat interface that appears in the Umbraco backoffice
 - **Tool Execution System** - Framework for frontend-executable tools
@@ -13,20 +13,20 @@ Copilot chat UI for Umbraco AI Agent. This package provides the backoffice sideb
 
 ## Installation
 
-This package requires `Umbraco.Ai.Agent` to be installed first.
+This package requires `Umbraco.AI.Agent` to be installed first.
 
 ```bash
 # Install both packages
-dotnet add package Umbraco.Ai.Agent
-dotnet add package Umbraco.Ai.Agent.Copilot
+dotnet add package Umbraco.AI.Agent
+dotnet add package Umbraco.AI.Agent.Copilot
 ```
 
 ## Dependencies
 
 | Package | Description |
 |---------|-------------|
-| `Umbraco.Ai.Agent` | Agent definition management (required) |
-| `Umbraco.Ai` | Core AI infrastructure (transitive) |
+| `Umbraco.AI.Agent` | Agent definition management (required) |
+| `Umbraco.AI` | Core AI infrastructure (transitive) |
 
 ## Architecture
 
@@ -38,10 +38,10 @@ This is a **frontend-only package** containing:
 - AG-UI client for streaming communication
 
 ```
-Umbraco.Ai.Agent (Backend APIs, Agent Management UI)
+Umbraco.AI.Agent (Backend APIs, Agent Management UI)
          │
          ▼
-Umbraco.Ai.Agent.Copilot (Chat UI, Tool Execution)
+Umbraco.AI.Agent.Copilot (Chat UI, Tool Execution)
 ```
 
 ## Usage Scenarios
@@ -51,8 +51,8 @@ Umbraco.Ai.Agent.Copilot (Chat UI, Tool Execution)
 Install both packages for the complete AI agent experience with chat interface:
 
 ```xml
-<PackageReference Include="Umbraco.Ai.Agent" Version="1.0.0" />
-<PackageReference Include="Umbraco.Ai.Agent.Copilot" Version="1.0.0" />
+<PackageReference Include="Umbraco.AI.Agent" Version="1.0.0" />
+<PackageReference Include="Umbraco.AI.Agent.Copilot" Version="1.0.0" />
 ```
 
 ### Agent Only (Automation)
@@ -60,7 +60,7 @@ Install both packages for the complete AI agent experience with chat interface:
 Install only the Agent package for programmatic agent usage without the chat UI:
 
 ```xml
-<PackageReference Include="Umbraco.Ai.Agent" Version="1.0.0" />
+<PackageReference Include="Umbraco.AI.Agent" Version="1.0.0" />
 ```
 
 ## Frontend Development
@@ -78,9 +78,9 @@ npm run watch:copilot
 ### Package Structure
 
 ```
-Umbraco.Ai.Agent.Copilot/
+Umbraco.AI.Agent.Copilot/
 ├── src/
-│   └── Umbraco.Ai.Agent.Copilot/
+│   └── Umbraco.AI.Agent.Copilot/
 │       └── Client/
 │           ├── src/
 │           │   ├── copilot/          # Chat UI components
@@ -92,13 +92,13 @@ Umbraco.Ai.Agent.Copilot/
 │           │   └── lang/             # Localization
 │           └── public/
 │               └── umbraco-package.json
-├── Umbraco.Ai.Agent.Copilot.sln
+├── Umbraco.AI.Agent.Copilot.sln
 └── Directory.Build.props
 ```
 
 ## Documentation
 
-For detailed documentation, see the [Umbraco.Ai documentation](../docs/public/add-ons/agent-copilot/README.md).
+For detailed documentation, see the [Umbraco.AI documentation](../docs/public/add-ons/agent-copilot/README.md).
 
 ## License
 

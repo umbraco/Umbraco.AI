@@ -1,8 +1,8 @@
-# Umbraco.Ai.MicrosoftFoundry
+# Umbraco.AI.MicrosoftFoundry
 
-[![NuGet](https://img.shields.io/nuget/v/Umbraco.Ai.MicrosoftFoundry.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.Ai.MicrosoftFoundry/)
+[![NuGet](https://img.shields.io/nuget/v/Umbraco.AI.MicrosoftFoundry.svg?style=flat&label=nuget)](https://www.nuget.org/packages/Umbraco.AI.MicrosoftFoundry/)
 
-Microsoft AI Foundry provider plugin for Umbraco.Ai, enabling integration with models hosted through Microsoft AI Foundry (Azure AI Inference).
+Microsoft AI Foundry provider plugin for Umbraco.AI, enabling integration with models hosted through Microsoft AI Foundry (Azure AI Inference).
 
 ## Features
 
@@ -13,7 +13,7 @@ Microsoft AI Foundry provider plugin for Umbraco.Ai, enabling integration with m
 
 ## Monorepo Context
 
-This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
+This package is part of the [Umbraco.AI monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
 
 ## Prerequisites
 
@@ -87,7 +87,7 @@ Check [Microsoft AI Foundry model availability](https://learn.microsoft.com/en-u
 ## Installation
 
 ```bash
-dotnet add package Umbraco.Ai.MicrosoftFoundry
+dotnet add package Umbraco.AI.MicrosoftFoundry
 ```
 
 ## Configuration
@@ -182,7 +182,7 @@ Then in your connection settings, use:
 ## Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 
 ## Documentation

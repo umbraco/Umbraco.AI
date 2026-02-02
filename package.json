@@ -2,7 +2,7 @@
   "name": "umbraco-ai-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "Root package for Umbraco.Ai frontend development",
+  "description": "Root package for Umbraco.AI frontend development",
   "workspaces": [
     "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client",
     "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client",

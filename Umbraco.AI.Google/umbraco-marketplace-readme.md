@@ -1,6 +1,6 @@
-## Umbraco.Ai.Google
+## Umbraco.AI.Google
 
-Google provider for Umbraco.Ai - integrate Google's Gemini models with extended context windows up to 1M tokens.
+Google provider for Umbraco.AI - integrate Google's Gemini models with extended context windows up to 1M tokens.
 
 ### Features
 
@@ -12,6 +12,6 @@ Google provider for Umbraco.Ai - integrate Google's Gemini models with extended 
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 - Google AI API key

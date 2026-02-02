@@ -418,7 +418,7 @@ stages:
             displayName: Download Umbraco.AI NuGet packages
             condition: eq(variables.CoreChanged, 'true')
             inputs:
-              artifact: 'Umbraco.Ai-packages'
+              artifact: 'Umbraco.AI-packages'
               targetPath: '$(Pipeline.Workspace)/nuget'
 
           # Download Core npm packages (only if Core changed - Core always has npm packages)
@@ -426,7 +426,7 @@ stages:
             displayName: Download Umbraco.AI npm packages
             condition: eq(variables.CoreChanged, 'true')
             inputs:
-              artifact: 'Umbraco.Ai-npm-packages'
+              artifact: 'Umbraco.AI-npm-packages'
               targetPath: '$(Pipeline.Workspace)/npm'
 
           # Download Level 1 NuGet packages (only if product changed)

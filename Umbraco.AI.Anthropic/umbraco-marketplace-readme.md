@@ -1,6 +1,6 @@
-## Umbraco.Ai.Anthropic
+## Umbraco.AI.Anthropic
 
-Anthropic provider for Umbraco.Ai - integrate Claude models with extended context windows up to 200K tokens.
+Anthropic provider for Umbraco.AI - integrate Claude models with extended context windows up to 200K tokens.
 
 ### Features
 
@@ -13,6 +13,6 @@ Anthropic provider for Umbraco.Ai - integrate Claude models with extended contex
 ### Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 - Anthropic API key

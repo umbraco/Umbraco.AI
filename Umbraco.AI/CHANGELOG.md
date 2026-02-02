@@ -1,6 +1,6 @@
 # Changelog - Umbraco.Ai
 
-All notable changes to Umbraco.Ai will be documented in this file.
+All notable changes to Umbraco.AI will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -9,4 +9,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[1.0.0]: https://github.com/umbraco/Umbraco.Ai/releases/tag/Umbraco.Ai@1.0.0
+[1.0.0]: https://github.com/umbraco/Umbraco.AI/releases/tag/Umbraco.AI@1.0.0

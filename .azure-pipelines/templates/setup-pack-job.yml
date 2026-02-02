@@ -41,7 +41,7 @@ steps:
           eq(variables['CoreChanged'], 'true')
         )
       inputs:
-        artifact: Umbraco.Ai-packages
+        artifact: Umbraco.AI-packages
         path: $(Build.SourcesDirectory)/artifacts/nupkg
 
   # Download Level 1 packages as local feed (if any Level 1 was packed)

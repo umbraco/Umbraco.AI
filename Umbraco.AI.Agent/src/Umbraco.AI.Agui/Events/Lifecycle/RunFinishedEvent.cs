@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agui.Events.Lifecycle;
+namespace Umbraco.AI.Agui.Events.Lifecycle;
 
 /// <summary>
 /// Event emitted when an agent run finishes.

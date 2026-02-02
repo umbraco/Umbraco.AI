@@ -1,17 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Web.Api;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Web.Api.Management.Context.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 
 /// <summary>
 /// Base controller for Context management API endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Context.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Context.RouteSegment)]
-public abstract class ContextControllerBase : UmbracoAiCoreManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.Context.RouteSegment)]
+public abstract class ContextControllerBase : UmbracoAICoreManagementControllerBase
 {
     /// <summary>
     /// Maps a context operation status to an appropriate action result.

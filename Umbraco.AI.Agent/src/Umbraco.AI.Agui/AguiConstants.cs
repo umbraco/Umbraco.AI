@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Agui;
+namespace Umbraco.AI.Agui;
 
 /// <summary>
 /// Constants for AG-UI protocol.

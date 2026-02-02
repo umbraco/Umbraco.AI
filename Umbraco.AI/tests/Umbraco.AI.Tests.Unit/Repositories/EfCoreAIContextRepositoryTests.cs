@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Persistence;
-using Umbraco.Ai.Persistence.Context;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fixtures;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Persistence;
+using Umbraco.AI.Persistence.Context;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fixtures;
 
-namespace Umbraco.Ai.Tests.Unit.Repositories;
+namespace Umbraco.AI.Tests.Unit.Repositories;
 
 public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
@@ -16,7 +16,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         _fixture = fixture;
     }
 
-    private EfCoreAiContextRepository CreateRepository(UmbracoAiDbContext context)
+    private EfCoreAiContextRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
         return new EfCoreAiContextRepository(scopeProvider);
@@ -44,7 +44,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Arrange
         await using var context = _fixture.CreateContext();
         var contextId = Guid.NewGuid();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = contextId,
             Alias = "test-context",
@@ -73,14 +73,14 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var contextId = Guid.NewGuid();
         var resourceId = Guid.NewGuid();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = contextId,
             Alias = "context-with-resources",
             Name = "Context With Resources",
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow,
-            Resources = new List<AiContextResourceEntity>
+            Resources = new List<AIContextResourceEntity>
             {
                 new()
                 {
@@ -131,7 +131,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = Guid.NewGuid(),
             Alias = "my-context",
@@ -156,7 +156,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = Guid.NewGuid(),
             Alias = "CaseSensitive",
@@ -188,7 +188,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         context.Contexts.RemoveRange(context.Contexts);
         await context.SaveChangesAsync();
 
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = Guid.NewGuid(),
             Alias = "context-1",
@@ -196,7 +196,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow
         });
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = Guid.NewGuid(),
             Alias = "context-2",
@@ -229,7 +229,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
 
         for (int i = 0; i < 5; i++)
         {
-            context.Contexts.Add(new AiContextEntity
+            context.Contexts.Add(new AIContextEntity
             {
                 Id = Guid.NewGuid(),
                 Alias = $"paged-context-{i}",
@@ -258,7 +258,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         context.Contexts.RemoveRange(context.Contexts);
         await context.SaveChangesAsync();
 
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = Guid.NewGuid(),
             Alias = "brand-context",
@@ -266,7 +266,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow
         });
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = Guid.NewGuid(),
             Alias = "other-context",
@@ -297,7 +297,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Arrange
         await using var context = _fixture.CreateContext();
         var repository = CreateRepository(_fixture.CreateContext());
-        var aiContext = new AiContextBuilder()
+        var aiContext = new AIContextBuilder()
             .WithAlias("new-context")
             .WithName("New Context")
             .Build();
@@ -320,7 +320,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Arrange
         await using var context = _fixture.CreateContext();
         var contextId = Guid.NewGuid();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = contextId,
             Alias = "original-alias",
@@ -331,7 +331,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         await context.SaveChangesAsync();
 
         var repository = CreateRepository(_fixture.CreateContext());
-        var updated = new AiContext
+        var updated = new AIContext
         {
             Id = contextId,
             Alias = "updated-alias",
@@ -356,12 +356,12 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var repository = CreateRepository(_fixture.CreateContext());
 
-        var resource = new AiContextResourceBuilder()
+        var resource = new AIContextResourceBuilder()
             .WithName("Brand Voice")
             .AsBrandVoice()
             .Build();
 
-        var aiContext = new AiContextBuilder()
+        var aiContext = new AIContextBuilder()
             .WithAlias("context-with-resources")
             .WithName("Context with Resources")
             .WithResources(resource)
@@ -392,7 +392,7 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Arrange
         await using var context = _fixture.CreateContext();
         var contextId = Guid.NewGuid();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = contextId,
             Alias = "to-delete",
@@ -436,14 +436,14 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var contextId = Guid.NewGuid();
         var resourceId = Guid.NewGuid();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = contextId,
             Alias = "context-with-resource",
             Name = "Context with Resource",
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow,
-            Resources = new List<AiContextResourceEntity>
+            Resources = new List<AIContextResourceEntity>
             {
                 new()
                 {
@@ -482,14 +482,14 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Arrange
         await using var context = _fixture.CreateContext();
         var contextId = Guid.NewGuid();
-        context.Contexts.Add(new AiContextEntity
+        context.Contexts.Add(new AIContextEntity
         {
             Id = contextId,
             Alias = "injection-test",
             Name = "Injection Test",
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow,
-            Resources = new List<AiContextResourceEntity>
+            Resources = new List<AIContextResourceEntity>
             {
                 new()
                 {
@@ -525,10 +525,10 @@ public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
         result!.Resources.Count.ShouldBe(2);
 
         var alwaysResource = result.Resources.First(r => r.Name == "Always Resource");
-        alwaysResource.InjectionMode.ShouldBe(AiContextResourceInjectionMode.Always);
+        alwaysResource.InjectionMode.ShouldBe(AIContextResourceInjectionMode.Always);
 
         var onDemandResource = result.Resources.First(r => r.Name == "OnDemand Resource");
-        onDemandResource.InjectionMode.ShouldBe(AiContextResourceInjectionMode.OnDemand);
+        onDemandResource.InjectionMode.ShouldBe(AIContextResourceInjectionMode.OnDemand);
     }
 
     #endregion

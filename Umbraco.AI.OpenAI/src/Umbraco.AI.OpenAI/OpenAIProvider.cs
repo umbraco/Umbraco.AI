@@ -1,14 +1,14 @@
 using System.ClientModel;
 using Microsoft.Extensions.Caching.Memory;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.OpenAi;
+namespace Umbraco.AI.OpenAi;
 
 /// <summary>
 /// AI provider for OpenAI services.
 /// </summary>
-[AiProvider("openai", "OpenAI")]
-public class OpenAiProvider : AiProviderBase<OpenAiProviderSettings>
+[AIProvider("openai", "OpenAI")]
+public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
 {
     private const string CacheKeyPrefix = "OpenAi_Models_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);

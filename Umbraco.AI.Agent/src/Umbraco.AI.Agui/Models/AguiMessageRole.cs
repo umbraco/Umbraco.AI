@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Models;
+namespace Umbraco.AI.Agui.Models;
 
 /// <summary>
 /// Role of a message in the AG-UI protocol.

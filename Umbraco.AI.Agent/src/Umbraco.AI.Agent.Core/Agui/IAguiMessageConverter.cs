@@ -1,7 +1,7 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <summary>
 /// Converts between AG-UI messages and Microsoft.Extensions.AI chat messages.
@@ -14,7 +14,7 @@ public interface IAguiMessageConverter
     /// <param name="messages">The AG-UI messages to convert.</param>
     /// <returns>A list of chat messages suitable for the AI model.</returns>
     /// <remarks>
-    /// Agent instructions are NOT included here - they are handled by AiAgentBoundChatClient.
+    /// Agent instructions are NOT included here - they are handled by AIAgentBoundChatClient.
     /// Context is handled separately via <see cref="IAguiContextConverter"/>.
     /// </remarks>
     List<ChatMessage> ConvertToChatMessages(IEnumerable<AguiMessage>? messages);

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Agent.Core.Chat;
+namespace Umbraco.AI.Agent.Core.Chat;
 
 /// <summary>
 /// Middleware that reorders tool calls to ensure server-side tools execute before frontend tools.
@@ -14,7 +14,7 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// is processed first by <c>FunctionInvokingChatClient</c>, server-side tools never execute.
 /// </para>
 /// <para>
-/// By inserting this middleware before <c>AiFunctionInvokingChatMiddleware</c>, tool calls
+/// By inserting this middleware before <c>AIFunctionInvokingChatMiddleware</c>, tool calls
 /// are reordered so that server-side tools appear first and execute before any frontend
 /// tool triggers termination.
 /// </para>
@@ -23,11 +23,11 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// using the key <see cref="Constants.ContextKeys.FrontendToolNames"/>.
 /// </para>
 /// </remarks>
-public sealed class AiToolReorderingChatMiddleware(IAiRuntimeContextAccessor runtimeContextAccessor) : IAiChatMiddleware
+public sealed class AIToolReorderingChatMiddleware(IAiRuntimeContextAccessor runtimeContextAccessor) : IAiChatMiddleware
 {
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new AiToolReorderingChatClient(client, runtimeContextAccessor);
+        return new AIToolReorderingChatClient(client, runtimeContextAccessor);
     }
 }

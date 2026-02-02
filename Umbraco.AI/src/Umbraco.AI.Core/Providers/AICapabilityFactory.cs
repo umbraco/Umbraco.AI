@@ -1,19 +1,19 @@
 ﻿using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// Factory for creating AI capability instances.
 /// </summary>
-public sealed class AiCapabilityFactory : IAiCapabilityFactory
+public sealed class AICapabilityFactory : IAiCapabilityFactory
 {
     private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiCapabilityFactory"/> class.
+    /// Initializes a new instance of the <see cref="AICapabilityFactory"/> class.
     /// </summary>
     /// <param name="serviceProvider"></param>
-    public AiCapabilityFactory(IServiceProvider serviceProvider)
+    public AICapabilityFactory(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }

@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Tests.Common.Fakes;
-using Umbraco.Ai.Web.Api.Management.Provider.Controllers;
-using Umbraco.Ai.Web.Api.Management.Provider.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.AI.Web.Api.Management.Provider.Controllers;
+using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Provider;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Provider;
 
 public class AllProviderControllerTests
 {
@@ -19,7 +19,7 @@ public class AllProviderControllerTests
 
     private AllProviderController CreateController()
     {
-        var collection = new AiProviderCollection(() => _providers);
+        var collection = new AIProviderCollection(() => _providers);
         return new AllProviderController(collection, _mapperMock.Object);
     }
 

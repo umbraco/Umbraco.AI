@@ -2,12 +2,12 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Provides formatting utilities for <see cref="ChatMessage"/> objects in audit logs.
 /// </summary>
-internal static class AiChatMessageFormatter
+internal static class AIChatMessageFormatter
 {
     private const int MaxArgumentsLength = 500;
     private const int MaxResultLength = 1000;

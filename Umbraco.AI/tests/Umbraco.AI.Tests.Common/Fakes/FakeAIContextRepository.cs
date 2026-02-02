@@ -1,25 +1,25 @@
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Tests.Common.Fakes;
+namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
 /// Fake in-memory implementation of <see cref="IAiContextRepository"/> for use in tests.
 /// </summary>
 public class FakeAiContextRepository : IAiContextRepository
 {
-    private readonly Dictionary<Guid, AiContext> _contexts = new();
+    private readonly Dictionary<Guid, AIContext> _contexts = new();
 
     /// <summary>
     /// Gets all contexts stored in this fake repository.
     /// </summary>
-    public IReadOnlyDictionary<Guid, AiContext> Contexts => _contexts;
+    public IReadOnlyDictionary<Guid, AIContext> Contexts => _contexts;
 
     /// <summary>
     /// Seeds the repository with initial contexts.
     /// </summary>
-    public FakeAiContextRepository WithContexts(params AiContext[] contexts)
+    public FakeAiContextRepository WithContexts(params AIContext[] contexts)
     {
         foreach (var context in contexts)
         {
@@ -29,14 +29,14 @@ public class FakeAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public Task<AiContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _contexts.TryGetValue(id, out var context);
         return Task.FromResult(context);
     }
 
     /// <inheritdoc />
-    public Task<AiContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
         var context = _contexts.Values.FirstOrDefault(c =>
             c.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase));
@@ -44,13 +44,13 @@ public class FakeAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiContext>> GetAllAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIContext>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IEnumerable<AiContext>>(_contexts.Values.ToList());
+        return Task.FromResult<IEnumerable<AIContext>>(_contexts.Values.ToList());
     }
 
     /// <inheritdoc />
-    public Task<(IEnumerable<AiContext> Items, int Total)> GetPagedAsync(
+    public Task<(IEnumerable<AIContext> Items, int Total)> GetPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
@@ -68,11 +68,11 @@ public class FakeAiContextRepository : IAiContextRepository
         var total = query.Count();
         var items = query.Skip(skip).Take(take).ToList();
 
-        return Task.FromResult<(IEnumerable<AiContext> Items, int Total)>((items, total));
+        return Task.FromResult<(IEnumerable<AIContext> Items, int Total)>((items, total));
     }
 
     /// <inheritdoc />
-    public Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default)
+    public Task<AIContext> SaveAsync(AIContext context, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         // For fakes, we expect the context to already have an ID set by the builder
         // DateCreated is init-only and set at construction time
@@ -97,22 +97,22 @@ public class FakeAiContextRepository : IAiContextRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    public Task<IEnumerable<AIEntityVersion>> GetVersionHistoryAsync(
         Guid contextId,
         int? limit = null,
         CancellationToken cancellationToken = default)
     {
         // Fake repository doesn't track version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
+        return Task.FromResult<IEnumerable<AIEntityVersion>>([]);
     }
 
     /// <inheritdoc />
-    public Task<AiContext?> GetVersionSnapshotAsync(
+    public Task<AIContext?> GetVersionSnapshotAsync(
         Guid contextId,
         int version,
         CancellationToken cancellationToken = default)
     {
         // Fake repository doesn't track version history
-        return Task.FromResult<AiContext?>(null);
+        return Task.FromResult<AIContext?>(null);
     }
 }

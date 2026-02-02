@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Tools;
+namespace Umbraco.AI.Agui.Events.Tools;
 
 /// <summary>
 /// Event emitted when a tool call ends.

@@ -1,22 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Umbraco.Ai.Prompt.Persistence.Sqlite;
+namespace Umbraco.AI.Prompt.Persistence.Sqlite;
 
 /// <summary>
-/// Design-time factory for creating <see cref="UmbracoAiPromptDbContext"/> for EF Core CLI tools.
+/// Design-time factory for creating <see cref="UmbracoAIPromptDbContext"/> for EF Core CLI tools.
 /// </summary>
-public class UmbracoAiPromptDbContextFactory : IDesignTimeDbContextFactory<UmbracoAiPromptDbContext>
+public class UmbracoAIPromptDbContextFactory : IDesignTimeDbContextFactory<UmbracoAIPromptDbContext>
 {
     /// <inheritdoc />
-    public UmbracoAiPromptDbContext CreateDbContext(string[] args)
+    public UmbracoAIPromptDbContext CreateDbContext(string[] args)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<UmbracoAiPromptDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIPromptDbContext>();
 
         optionsBuilder.UseSqlite(
-            "Data Source=UmbracoAiPrompt_Design.db",
-            x => x.MigrationsAssembly(typeof(UmbracoAiPromptDbContextFactory).Assembly.FullName));
+            "Data Source=UmbracoAIPrompt_Design.db",
+            x => x.MigrationsAssembly(typeof(UmbracoAIPromptDbContextFactory).Assembly.FullName));
 
-        return new UmbracoAiPromptDbContext(optionsBuilder.Options);
+        return new UmbracoAIPromptDbContext(optionsBuilder.Options);
     }
 }

@@ -1,9 +1,9 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Chat.Models;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Chat.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.Chat.Mapping;
+namespace Umbraco.AI.Web.Api.Management.Chat.Mapping;
 
 /// <summary>
 /// Map definitions for Chat models.

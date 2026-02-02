@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Core.EntityAdapter;
+namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
 /// Helper service for processing entity context data.
 /// Provides utilities for building context dictionaries and formatting system messages.
 /// </summary>
-public interface IAiEntityContextHelper
+public interface IAIEntityContextHelper
 {
     /// <summary>
     /// Builds a context dictionary from a serialized entity.
@@ -12,12 +12,12 @@ public interface IAiEntityContextHelper
     /// </summary>
     /// <param name="entity">The serialized entity.</param>
     /// <returns>A dictionary with entity data suitable for template processing.</returns>
-    Dictionary<string, object?> BuildContextDictionary(AiSerializedEntity entity);
+    Dictionary<string, object?> BuildContextDictionary(AISerializedEntity entity);
 
     /// <summary>
     /// Formats a serialized entity as a system message for LLM context.
     /// </summary>
     /// <param name="entity">The serialized entity.</param>
     /// <returns>A formatted string describing the entity context.</returns>
-    string FormatForLlm(AiSerializedEntity entity);
+    string FormatForLlm(AISerializedEntity entity);
 }

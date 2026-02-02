@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Categorizes the type of error that occurred during an AI operation.
 /// </summary>
-public enum AiAuditLogErrorCategory
+public enum AIAuditLogErrorCategory
 {
     /// <summary>
     /// Authentication or authorization failure.

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Provider.Models;
+namespace Umbraco.AI.Web.Api.Management.Provider.Models;
 
 /// <summary>
 /// Full response model for a provider including settings schema.

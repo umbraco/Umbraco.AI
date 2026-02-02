@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Security;
+namespace Umbraco.AI.Core.Security;
 
 /// <summary>
 /// Provides encryption and decryption services for sensitive field values.
 /// </summary>
-public interface IAiSensitiveFieldProtector
+public interface IAISensitiveFieldProtector
 {
     /// <summary>
     /// Encrypts a sensitive value and returns it with the encrypted prefix.

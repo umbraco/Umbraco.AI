@@ -1,9 +1,9 @@
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Core.RuntimeContext.Contributors;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.RuntimeContext.Contributors;
 using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Tests.Unit.RuntimeContext.Contributors;
+namespace Umbraco.AI.Tests.Unit.RuntimeContext.Contributors;
 
 public class UserContextContributorTests
 {
@@ -30,7 +30,7 @@ public class UserContextContributorTests
     {
         // Arrange
         SetupAuthenticatedUser();
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -46,7 +46,7 @@ public class UserContextContributorTests
         // Arrange
         var userKey = Guid.NewGuid();
         SetupAuthenticatedUser(key: userKey);
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -60,7 +60,7 @@ public class UserContextContributorTests
     {
         // Arrange
         SetupAuthenticatedUser(name: "John Smith");
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -74,7 +74,7 @@ public class UserContextContributorTests
     {
         // Arrange
         SetupAuthenticatedUser(username: "john.smith@example.com");
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -89,7 +89,7 @@ public class UserContextContributorTests
     {
         // Arrange
         SetupAuthenticatedUser(username: "adminuser");
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -103,7 +103,7 @@ public class UserContextContributorTests
     {
         // Arrange
         SetupAuthenticatedUser(language: "en-US");
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -117,7 +117,7 @@ public class UserContextContributorTests
     {
         // Arrange
         SetupAuthenticatedUser(language: null);
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -132,7 +132,7 @@ public class UserContextContributorTests
         // Arrange
         var groups = new[] { "Administrators", "Editors" };
         SetupAuthenticatedUser(groupNames: groups);
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -146,7 +146,7 @@ public class UserContextContributorTests
     {
         // Arrange
         SetupAuthenticatedUser(groupNames: []);
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -163,7 +163,7 @@ public class UserContextContributorTests
             .Setup(x => x.CurrentUser)
             .Returns((IUser?)null);
 
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -180,7 +180,7 @@ public class UserContextContributorTests
             .Setup(x => x.BackOfficeSecurity)
             .Returns((IBackOfficeSecurity?)null);
 
-        var context = new AiRuntimeContext([]);
+        var context = new AIRuntimeContext([]);
 
         // Act
         _contributor.Contribute(context);
@@ -196,9 +196,9 @@ public class UserContextContributorTests
         SetupAuthenticatedUser();
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Test Item", Value = "test" }
+            new AIRequestContextItem { Description = "Test Item", Value = "test" }
         };
-        var context = new AiRuntimeContext(items);
+        var context = new AIRuntimeContext(items);
 
         // Act
         _contributor.Contribute(context);

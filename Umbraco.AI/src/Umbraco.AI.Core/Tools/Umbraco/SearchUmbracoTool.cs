@@ -5,7 +5,7 @@ using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.Tools.Umbraco;
+namespace Umbraco.AI.Core.Tools.Umbraco;
 
 /// <summary>
 /// Arguments for the SearchUmbraco tool.
@@ -30,8 +30,8 @@ public record SearchUmbracoArgs(
 /// <summary>
 /// Tool that searches Umbraco content and media using Examine.
 /// </summary>
-[AiTool("search_umbraco", "Search Umbraco", Category = "Umbraco")]
-public class SearchUmbracoTool : AiToolBase<SearchUmbracoArgs>
+[AITool("search_umbraco", "Search Umbraco", Category = "Umbraco")]
+public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 {
     private const string ExternalIndexName = "ExternalIndex";
 

@@ -1,8 +1,8 @@
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 
-namespace Umbraco.Ai.Tests.Unit.Tools;
+namespace Umbraco.AI.Tests.Unit.Tools;
 
-public class AiToolBaseTests
+public class AIToolBaseTests
 {
     #region Constructor and attribute validation
 
@@ -42,7 +42,7 @@ public class AiToolBaseTests
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
-        exception.Message.ShouldContain("missing required [AiTool] attribute");
+        exception.Message.ShouldContain("missing required [AITool] attribute");
     }
 
     #endregion
@@ -95,8 +95,8 @@ public class AiToolBaseTests
 
     #region Test tools
 
-    [AiTool("test-tool", "Test Tool", Category = "Testing", IsDestructive = true, Tags = ["test", "fake"])]
-    private class TestTool : AiToolBase
+    [AITool("test-tool", "Test Tool", Category = "Testing", IsDestructive = true, Tags = ["test", "fake"])]
+    private class TestTool : AIToolBase
     {
         public override string Description => "A test tool";
 
@@ -106,8 +106,8 @@ public class AiToolBaseTests
         }
     }
 
-    [AiTool("minimal-tool", "Minimal Tool")]
-    private class MinimalTool : AiToolBase
+    [AITool("minimal-tool", "Minimal Tool")]
+    private class MinimalTool : AIToolBase
     {
         public override string Description => "A minimal test tool";
 
@@ -117,8 +117,8 @@ public class AiToolBaseTests
         }
     }
 
-    // Intentionally missing the AiToolAttribute
-    private class ToolWithoutAttribute : AiToolBase
+    // Intentionally missing the AIToolAttribute
+    private class ToolWithoutAttribute : AIToolBase
     {
         public override string Description => "Should fail";
 

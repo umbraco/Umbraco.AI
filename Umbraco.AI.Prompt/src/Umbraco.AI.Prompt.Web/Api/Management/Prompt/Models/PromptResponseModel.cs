@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 
 /// <summary>
 /// Response model for a prompt.

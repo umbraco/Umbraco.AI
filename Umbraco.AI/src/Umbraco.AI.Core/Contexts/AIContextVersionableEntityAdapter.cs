@@ -1,26 +1,26 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Versionable entity adapter for AI contexts.
 /// </summary>
-internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAdapterBase<AiContext>
+internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIContext>
 {
     private readonly IAiContextService _contextService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextVersionableEntityAdapter"/> class.
+    /// Initializes a new instance of the <see cref="AIContextVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="contextService">The context service for rollback operations.</param>
-    public AiContextVersionableEntityAdapter(IAiContextService contextService)
+    public AIContextVersionableEntityAdapter(IAiContextService contextService)
     {
         _contextService = contextService;
     }
 
     /// <inheritdoc />
-    protected override string CreateSnapshot(AiContext entity)
+    protected override string CreateSnapshot(AIContext entity)
     {
         var snapshot = new
         {
@@ -48,7 +48,7 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
     }
 
     /// <inheritdoc />
-    protected override AiContext? RestoreFromSnapshot(string json)
+    protected override AIContext? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -60,7 +60,7 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            var resources = new List<AiContextResource>();
+            var resources = new List<AIContextResource>();
             if (root.TryGetProperty("resources", out var resourcesElement) &&
                 resourcesElement.ValueKind == JsonValueKind.Array)
             {
@@ -77,7 +77,7 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
                         }
                     }
 
-                    resources.Add(new AiContextResource
+                    resources.Add(new AIContextResource
                     {
                         Id = resourceElement.GetProperty("id").GetGuid(),
                         ResourceTypeId = resourceElement.GetProperty("resourceTypeId").GetString()!,
@@ -87,12 +87,12 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
                             ? descEl.GetString() : null,
                         SortOrder = resourceElement.GetProperty("sortOrder").GetInt32(),
                         Data = data,
-                        InjectionMode = (AiContextResourceInjectionMode)resourceElement.GetProperty("injectionMode").GetInt32()
+                        InjectionMode = (AIContextResourceInjectionMode)resourceElement.GetProperty("injectionMode").GetInt32()
                     });
                 }
             }
 
-            return new AiContext
+            return new AIContext
             {
                 Id = root.GetProperty("id").GetGuid(),
                 Alias = root.GetProperty("alias").GetString()!,
@@ -115,24 +115,24 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AiPropertyChange> CompareVersions(AiContext from, AiContext to)
+    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIContext from, AIContext to)
     {
-        var changes = new List<AiPropertyChange>();
+        var changes = new List<AIPropertyChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AiPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AiPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
         }
 
         // Compare resources count
         if (from.Resources.Count != to.Resources.Count)
         {
-            changes.Add(new AiPropertyChange("Resources.Count", from.Resources.Count.ToString(), to.Resources.Count.ToString()));
+            changes.Add(new AIPropertyChange("Resources.Count", from.Resources.Count.ToString(), to.Resources.Count.ToString()));
         }
 
         // Track added resources
@@ -145,13 +145,13 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
         foreach (var addedId in addedIds)
         {
             var resource = to.Resources.First(r => r.Id == addedId);
-            changes.Add(new AiPropertyChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", null, "Added"));
+            changes.Add(new AIPropertyChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", null, "Added"));
         }
 
         foreach (var removedId in removedIds)
         {
             var resource = from.Resources.First(r => r.Id == removedId);
-            changes.Add(new AiPropertyChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", "Removed", null));
+            changes.Add(new AIPropertyChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", "Removed", null));
         }
 
         // Compare existing resources
@@ -168,43 +168,43 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
         return changes;
     }
 
-    private static IReadOnlyList<AiPropertyChange> CompareResources(AiContextResource from, AiContextResource to)
+    private static IReadOnlyList<AIPropertyChange> CompareResources(AIContextResource from, AIContextResource to)
     {
-        var changes = new List<AiPropertyChange>();
+        var changes = new List<AIPropertyChange>();
         var prefix = $"Resources[{from.Name ?? from.ResourceTypeId}]";
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AiPropertyChange($"{prefix}.Name", from.Name, to.Name));
+            changes.Add(new AIPropertyChange($"{prefix}.Name", from.Name, to.Name));
         }
 
         if (from.Description != to.Description)
         {
-            changes.Add(new AiPropertyChange($"{prefix}.Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
+            changes.Add(new AIPropertyChange($"{prefix}.Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
         }
 
         if (from.ResourceTypeId != to.ResourceTypeId)
         {
-            changes.Add(new AiPropertyChange($"{prefix}.ResourceTypeId", from.ResourceTypeId, to.ResourceTypeId));
+            changes.Add(new AIPropertyChange($"{prefix}.ResourceTypeId", from.ResourceTypeId, to.ResourceTypeId));
         }
 
         if (from.SortOrder != to.SortOrder)
         {
-            changes.Add(new AiPropertyChange($"{prefix}.SortOrder", from.SortOrder.ToString(), to.SortOrder.ToString()));
+            changes.Add(new AIPropertyChange($"{prefix}.SortOrder", from.SortOrder.ToString(), to.SortOrder.ToString()));
         }
 
         if (from.InjectionMode != to.InjectionMode)
         {
-            changes.Add(new AiPropertyChange($"{prefix}.InjectionMode", from.InjectionMode.ToString(), to.InjectionMode.ToString()));
+            changes.Add(new AIPropertyChange($"{prefix}.InjectionMode", from.InjectionMode.ToString(), to.InjectionMode.ToString()));
         }
 
         // Compare data with deep inspection using shared utility
-        var success = AiJsonComparer.CompareObjects(from.Data, to.Data, $"{prefix}.Data", changes);
+        var success = AIJsonComparer.CompareObjects(from.Data, to.Data, $"{prefix}.Data", changes);
 
         if (!success && !Equals(from.Data, to.Data))
         {
             // Fallback if comparison failed
-            changes.Add(new AiPropertyChange($"{prefix}.Data", "(modified)", "(modified)"));
+            changes.Add(new AIPropertyChange($"{prefix}.Data", "(modified)", "(modified)"));
         }
 
         return changes;
@@ -215,6 +215,6 @@ internal sealed class AiContextVersionableEntityAdapter : AiVersionableEntityAda
         => _contextService.RollbackContextAsync(entityId, version, cancellationToken);
 
     /// <inheritdoc />
-    protected override Task<AiContext?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AIContext?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _contextService.GetContextAsync(entityId, cancellationToken);
 }

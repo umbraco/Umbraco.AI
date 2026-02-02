@@ -1,7 +1,7 @@
-using Umbraco.Ai.Core.EditableModels;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Contexts.ResourceTypes;
+namespace Umbraco.AI.Core.Contexts.ResourceTypes;
 
 /// <summary>
 /// Defines a pluggable AI context resource type.
@@ -9,9 +9,9 @@ namespace Umbraco.Ai.Core.Contexts.ResourceTypes;
 /// <remarks>
 /// Resource types define how specific kinds of context resources (e.g., brand voice, text)
 /// are formatted for injection into AI operations.
-/// Implementations should use the <see cref="AiContextResourceTypeAttribute"/> for auto-discovery.
+/// Implementations should use the <see cref="AIContextResourceTypeAttribute"/> for auto-discovery.
 /// </remarks>
-public interface IAiContextResourceType : IDiscoverable
+public interface IAIContextResourceType : IDiscoverable
 {
     /// <summary>
     /// The immutable unique identifier of the resource type (e.g., "brand-voice", "text").
@@ -43,7 +43,7 @@ public interface IAiContextResourceType : IDiscoverable
     /// Used by the UI to render resource data forms.
     /// </summary>
     /// <returns>The data schema, or null if the resource type has no data model.</returns>
-    AiEditableModelSchema? GetDataSchema();
+    AIEditableModelSchema? GetDataSchema();
 
     /// <summary>
     /// Formats the resource data for injection into the LLM system prompt.

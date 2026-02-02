@@ -1,10 +1,10 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat.Middleware;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Middleware;
+namespace Umbraco.AI.Tests.Unit.Middleware;
 
-public class AiTrackingChatClientTests
+public class AITrackingChatClientTests
 {
     #region GetResponseAsync
 
@@ -16,7 +16,7 @@ public class AiTrackingChatClientTests
         var fakeClient = new FakeChatClient((_, _, _) =>
             Task.FromResult(new ChatResponse(responseMessage)));
 
-        var trackingClient = new AiTrackingChatClient(fakeClient);
+        var trackingClient = new AITrackingChatClient(fakeClient);
 
         // Act
         await trackingClient.GetResponseAsync(new List<ChatMessage>
@@ -49,7 +49,7 @@ public class AiTrackingChatClientTests
         var fakeClient = new FakeChatClient((_, _, _) =>
             Task.FromResult(new ChatResponse(responseMessage)));
 
-        var trackingClient = new AiTrackingChatClient(fakeClient);
+        var trackingClient = new AITrackingChatClient(fakeClient);
 
         // Act
         await trackingClient.GetResponseAsync(new List<ChatMessage>
@@ -101,7 +101,7 @@ public class AiTrackingChatClientTests
         var fakeClient = new FakeChatClient((_, _, _) =>
             Task.FromResult(new ChatResponse(responseMessage)));
 
-        var trackingClient = new AiTrackingChatClient(fakeClient);
+        var trackingClient = new AITrackingChatClient(fakeClient);
 
         // Act
         await trackingClient.GetResponseAsync(new List<ChatMessage>
@@ -137,7 +137,7 @@ public class AiTrackingChatClientTests
         var fakeClient = new FakeChatClient((_, _, _) =>
             Task.FromResult(new ChatResponse(responseMessage) { Usage = usage }));
 
-        var trackingClient = new AiTrackingChatClient(fakeClient);
+        var trackingClient = new AITrackingChatClient(fakeClient);
 
         // Act
         await trackingClient.GetResponseAsync(new List<ChatMessage>
@@ -161,7 +161,7 @@ public class AiTrackingChatClientTests
     {
         // Arrange
         var fakeClient = new FakeChatClient("Hello world");
-        var trackingClient = new AiTrackingChatClient(fakeClient);
+        var trackingClient = new AITrackingChatClient(fakeClient);
 
         // Act
         var updates = new List<ChatResponseUpdate>();
@@ -188,7 +188,7 @@ public class AiTrackingChatClientTests
         // Arrange
         var yieldTimes = new List<DateTime>();
         var fakeClient = new FakeChatClient("Word1 Word2 Word3");
-        var trackingClient = new AiTrackingChatClient(fakeClient);
+        var trackingClient = new AITrackingChatClient(fakeClient);
 
         // Act
         await foreach (var update in trackingClient.GetStreamingResponseAsync(new List<ChatMessage>
@@ -217,10 +217,10 @@ public class AiTrackingChatClientTests
     {
         // Arrange
         var fakeClient = new FakeChatClient();
-        var trackingClient = new AiTrackingChatClient(fakeClient);
+        var trackingClient = new AITrackingChatClient(fakeClient);
 
         // Act
-        var service = trackingClient.GetService<AiTrackingChatClient>();
+        var service = trackingClient.GetService<AITrackingChatClient>();
 
         // Assert
         service.ShouldBe(trackingClient);

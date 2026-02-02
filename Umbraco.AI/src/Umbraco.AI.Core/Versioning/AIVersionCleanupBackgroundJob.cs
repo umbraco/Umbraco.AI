@@ -7,31 +7,31 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.HostedServices;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Background service that periodically cleans up old entity version records
 /// based on the configured cleanup policy.
 /// </summary>
-internal sealed class AiVersionCleanupBackgroundJob : RecurringHostedServiceBase
+internal sealed class AIVersionCleanupBackgroundJob : RecurringHostedServiceBase
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IOptionsMonitor<AiVersionCleanupPolicy> _options;
+    private readonly IOptionsMonitor<AIVersionCleanupPolicy> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
     private readonly IMainDom _mainDom;
-    private readonly ILogger<AiVersionCleanupBackgroundJob> _logger;
+    private readonly ILogger<AIVersionCleanupBackgroundJob> _logger;
 
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromHours(12);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(10);
 
-    public AiVersionCleanupBackgroundJob(
+    public AIVersionCleanupBackgroundJob(
         IServiceProvider serviceProvider,
-        IOptionsMonitor<AiVersionCleanupPolicy> options,
+        IOptionsMonitor<AIVersionCleanupPolicy> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
         IMainDom mainDom,
-        ILogger<AiVersionCleanupBackgroundJob> logger)
+        ILogger<AIVersionCleanupBackgroundJob> logger)
         : base(logger, CleanupInterval, StartupDelay)
     {
         _serviceProvider = serviceProvider;

@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <summary>
 /// Default implementation of <see cref="IAguiMessageConverter"/>.

@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
-using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
-using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Management.Connection.Controllers;
+using Umbraco.AI.Web.Api.Management.Connection.Mapping;
+using Umbraco.AI.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class CreateConnectionControllerTests
 {
@@ -21,8 +21,8 @@ public class CreateConnectionControllerTests
 
         // Setup mapper to use real mapping logic
         _umbracoMapperMock
-            .Setup(m => m.Map<AiConnection>(It.IsAny<CreateConnectionRequestModel>()))
-            .Returns((CreateConnectionRequestModel request) => new AiConnection
+            .Setup(m => m.Map<AIConnection>(It.IsAny<CreateConnectionRequestModel>()))
+            .Returns((CreateConnectionRequestModel request) => new AIConnection
             {
                 Id = Guid.Empty,
                 Alias = request.Alias,
@@ -51,14 +51,14 @@ public class CreateConnectionControllerTests
         };
 
         var createdId = Guid.NewGuid();
-        var createdConnection = new AiConnectionBuilder()
+        var createdConnection = new AIConnectionBuilder()
             .WithId(createdId)
             .WithName("New Connection")
             .WithProviderId("openai")
             .Build();
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(createdConnection);
 
         // Act
@@ -83,7 +83,7 @@ public class CreateConnectionControllerTests
         };
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Provider 'unknown-provider' not found in registry"));
 
         // Act
@@ -109,7 +109,7 @@ public class CreateConnectionControllerTests
         };
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Settings validation failed: API Key is required"));
 
         // Act
@@ -133,11 +133,11 @@ public class CreateConnectionControllerTests
             IsActive = true
         };
 
-        AiConnection? capturedConnection = null;
+        AIConnection? capturedConnection = null;
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .Callback<AiConnection, CancellationToken>((conn, _) => capturedConnection = conn)
-            .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
+            .Callback<AIConnection, CancellationToken>((conn, _) => capturedConnection = conn)
+            .ReturnsAsync((AIConnection conn, CancellationToken _) => conn);
 
         // Act
         await _controller.CreateConnection(requestModel);
@@ -161,11 +161,11 @@ public class CreateConnectionControllerTests
             IsActive = false
         };
 
-        AiConnection? capturedConnection = null;
+        AIConnection? capturedConnection = null;
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .Callback<AiConnection, CancellationToken>((conn, _) => capturedConnection = conn)
-            .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
+            .Callback<AIConnection, CancellationToken>((conn, _) => capturedConnection = conn)
+            .ReturnsAsync((AIConnection conn, CancellationToken _) => conn);
 
         // Act
         await _controller.CreateConnection(requestModel);

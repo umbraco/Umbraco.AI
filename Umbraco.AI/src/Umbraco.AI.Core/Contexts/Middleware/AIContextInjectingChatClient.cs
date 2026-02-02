@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Contexts.Middleware;
+namespace Umbraco.AI.Core.Contexts.Middleware;
 
 /// <summary>
 /// A delegating chat client that injects AI context into chat requests.
@@ -13,20 +13,20 @@ namespace Umbraco.Ai.Core.Contexts.Middleware;
 /// - Injects "Always" mode resources into the system prompt
 /// - Makes the resolved context available via <see cref="IAiContextAccessor"/> for OnDemand tools
 /// </remarks>
-internal sealed class AiContextInjectingChatClient : DelegatingChatClient
+internal sealed class AIContextInjectingChatClient : DelegatingChatClient
 {
     private readonly IAiContextResolutionService _contextResolutionService;
     private readonly IAiContextFormatter _contextFormatter;
     private readonly IAiContextAccessor _contextAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextInjectingChatClient"/> class.
+    /// Initializes a new instance of the <see cref="AIContextInjectingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
     /// <param name="contextResolutionService">The context resolution service.</param>
     /// <param name="contextFormatter">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor for tool access.</param>
-    public AiContextInjectingChatClient(
+    public AIContextInjectingChatClient(
         IChatClient innerClient,
         IAiContextResolutionService contextResolutionService,
         IAiContextFormatter contextFormatter,

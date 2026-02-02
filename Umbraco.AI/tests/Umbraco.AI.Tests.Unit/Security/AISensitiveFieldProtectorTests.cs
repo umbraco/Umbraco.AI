@@ -1,21 +1,21 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
-using Umbraco.Ai.Core.Security;
+using Umbraco.AI.Core.Security;
 
-namespace Umbraco.Ai.Tests.Unit.Security;
+namespace Umbraco.AI.Tests.Unit.Security;
 
-public class AiSensitiveFieldProtectorTests
+public class AISensitiveFieldProtectorTests
 {
     private readonly IDataProtectionProvider _dataProtectionProvider;
-    private readonly Mock<ILogger<AiSensitiveFieldProtector>> _loggerMock;
-    private readonly AiSensitiveFieldProtector _protector;
+    private readonly Mock<ILogger<AISensitiveFieldProtector>> _loggerMock;
+    private readonly AISensitiveFieldProtector _protector;
 
-    public AiSensitiveFieldProtectorTests()
+    public AISensitiveFieldProtectorTests()
     {
         // Use ephemeral data protection for tests (keys not persisted)
         _dataProtectionProvider = DataProtectionProvider.Create("TestApp");
-        _loggerMock = new Mock<ILogger<AiSensitiveFieldProtector>>();
-        _protector = new AiSensitiveFieldProtector(_dataProtectionProvider, _loggerMock.Object);
+        _loggerMock = new Mock<ILogger<AISensitiveFieldProtector>>();
+        _protector = new AISensitiveFieldProtector(_dataProtectionProvider, _loggerMock.Object);
     }
 
     #region Protect

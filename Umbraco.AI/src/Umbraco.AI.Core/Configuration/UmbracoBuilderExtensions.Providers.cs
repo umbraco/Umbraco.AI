@@ -1,7 +1,7 @@
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IUmbracoBuilder"/> for AI provider collection configuration.
@@ -16,11 +16,11 @@ public static partial class UmbracoBuilderExtensions
     /// <remarks>
     /// Use this to add or exclude providers from the collection. Example:
     /// <code>
-    /// builder.AiProviders()
+    /// builder.AIProviders()
     ///     .Add&lt;MyCustomProvider&gt;()
     ///     .Exclude&lt;SomeUnwantedProvider&gt;();
     /// </code>
     /// </remarks>
-    public static AiProviderCollectionBuilder AiProviders(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiProviderCollectionBuilder>();
+    public static AIProviderCollectionBuilder AIProviders(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIProviderCollectionBuilder>();
 }

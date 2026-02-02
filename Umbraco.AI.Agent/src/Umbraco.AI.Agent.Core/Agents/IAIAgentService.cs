@@ -1,13 +1,13 @@
-using Umbraco.Ai.Agui.Events;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Events;
+using Umbraco.AI.Agui.Models;
 using Umbraco.Cms.Core.Models;
 
-namespace Umbraco.Ai.Agent.Core.Agents;
+namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
 /// Service interface for agent management operations.
 /// </summary>
-public interface IAiAgentService
+public interface IAIAgentService
 {
     /// <summary>
     /// Gets a agent by its unique identifier.
@@ -15,7 +15,7 @@ public interface IAiAgentService
     /// <param name="id">The agent ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent if found, null otherwise.</returns>
-    Task<AiAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a agent by its alias.
@@ -23,14 +23,14 @@ public interface IAiAgentService
     /// <param name="alias">The agent alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent if found, null otherwise.</returns>
-    Task<AiAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all Agents.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>All Agents.</returns>
-    Task<IEnumerable<AiAgent>> GetAgentsAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIAgent>> GetAgentsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paged list of Agents with optional filtering.
@@ -43,7 +43,7 @@ public interface IAiAgentService
     /// <param name="isActive">Optional active status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged result containing Agents and total count.</returns>
-    Task<PagedModel<AiAgent>> GetAgentsPagedAsync(
+    Task<PagedModel<AIAgent>> GetAgentsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -58,7 +58,7 @@ public interface IAiAgentService
     /// <param name="scopeId">The scope ID to filter by.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Agents that have the specified scope ID in their ScopeIds.</returns>
-    Task<IEnumerable<AiAgent>> GetAgentsByScopeAsync(string scopeId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIAgent>> GetAgentsByScopeAsync(string scopeId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Save a agent (insert if new, update if exists) with validation.
@@ -67,7 +67,7 @@ public interface IAiAgentService
     /// <param name="agent">The agent to save.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved agent.</returns>
-    Task<AiAgent> SaveAgentAsync(AiAgent agent, CancellationToken cancellationToken = default);
+    Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a agent.

@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Persistence.Context;
+namespace Umbraco.AI.Persistence.Context;
 
 /// <summary>
 /// EF Core entity representing a resource within an AI context.
 /// </summary>
-internal class AiContextResourceEntity
+internal class AIContextResourceEntity
 {
     /// <summary>
     /// Unique identifier for the resource.
@@ -48,5 +48,5 @@ internal class AiContextResourceEntity
     /// <summary>
     /// Navigation property to the parent context.
     /// </summary>
-    public AiContextEntity? Context { get; set; }
+    public AIContextEntity? Context { get; set; }
 }

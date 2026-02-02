@@ -1,12 +1,12 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Result details for an AI usage record.
 /// Encapsulates metrics and status from an AI operation.
 /// </summary>
-public sealed class AiUsageRecordResult
+public sealed class AIUsageRecordResult
 {
     /// <summary>
     /// Gets the duration of the operation in milliseconds.

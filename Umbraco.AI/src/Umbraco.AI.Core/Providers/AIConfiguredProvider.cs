@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// Wraps a provider with resolved settings, exposing configured capabilities.
 /// </summary>
-internal sealed class AiConfiguredProvider(IAiProvider provider, object resolvedSettings) : IAiConfiguredProvider
+internal sealed class AIConfiguredProvider(IAiProvider provider, object resolvedSettings) : IAiConfiguredProvider
 {
     private readonly IReadOnlyList<IAiConfiguredCapability> _capabilities = WrapCapabilities(provider.GetCapabilities(), resolvedSettings);
 
@@ -30,8 +30,8 @@ internal sealed class AiConfiguredProvider(IAiProvider provider, object resolved
         {
             IAiConfiguredCapability? wrapped = cap switch
             {
-                IAiChatCapability chat => new AiConfiguredChatCapability(chat, settings),
-                IAiEmbeddingCapability embedding => new AiConfiguredEmbeddingCapability(embedding, settings),
+                IAiChatCapability chat => new AIConfiguredChatCapability(chat, settings),
+                IAiEmbeddingCapability embedding => new AIConfiguredEmbeddingCapability(embedding, settings),
                 _ => null
             };
             if (wrapped is not null)

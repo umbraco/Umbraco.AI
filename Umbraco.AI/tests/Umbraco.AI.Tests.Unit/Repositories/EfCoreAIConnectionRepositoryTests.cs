@@ -1,13 +1,13 @@
 using System.Text.Json;
-using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Persistence;
-using Umbraco.Ai.Persistence.Connections;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fixtures;
+using Umbraco.AI.Core;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Persistence;
+using Umbraco.AI.Persistence.Connections;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fixtures;
 
-namespace Umbraco.Ai.Tests.Unit.Repositories;
+namespace Umbraco.AI.Tests.Unit.Repositories;
 
 public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
@@ -21,8 +21,8 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
 
         // Setup mock to pass through values without encryption for testing
         _connectionFactoryMock
-            .Setup(f => f.BuildDomain(It.IsAny<AiConnectionEntity>()))
-            .Returns<AiConnectionEntity>(entity => new AiConnection
+            .Setup(f => f.BuildDomain(It.IsAny<AIConnectionEntity>()))
+            .Returns<AIConnectionEntity>(entity => new AIConnection
             {
                 Id = entity.Id,
                 Alias = entity.Alias,
@@ -40,8 +40,8 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             });
 
         _connectionFactoryMock
-            .Setup(f => f.BuildEntity(It.IsAny<AiConnection>()))
-            .Returns<AiConnection>(conn => new AiConnectionEntity
+            .Setup(f => f.BuildEntity(It.IsAny<AIConnection>()))
+            .Returns<AIConnection>(conn => new AIConnectionEntity
             {
                 Id = conn.Id,
                 Alias = conn.Alias,
@@ -59,8 +59,8 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             });
 
         _connectionFactoryMock
-            .Setup(f => f.UpdateEntity(It.IsAny<AiConnectionEntity>(), It.IsAny<AiConnection>()))
-            .Callback<AiConnectionEntity, AiConnection>((entity, conn) =>
+            .Setup(f => f.UpdateEntity(It.IsAny<AIConnectionEntity>(), It.IsAny<AIConnection>()))
+            .Callback<AIConnectionEntity, AIConnection>((entity, conn) =>
             {
                 entity.Alias = conn.Alias;
                 entity.Name = conn.Name;
@@ -75,7 +75,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             });
     }
 
-    private EfCoreAiConnectionRepository CreateRepository(UmbracoAiDbContext context)
+    private EfCoreAiConnectionRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
         return new EfCoreAiConnectionRepository(scopeProvider, _connectionFactoryMock.Object);
@@ -103,7 +103,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = connectionId,
             Alias = $"test-connection-{connectionId:N}",
@@ -158,7 +158,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         context.Connections.RemoveRange(context.Connections);
         var conn1Id = Guid.NewGuid();
         var conn2Id = Guid.NewGuid();
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = conn1Id,
             Alias = $"connection-1-{conn1Id:N}",
@@ -168,7 +168,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow
         });
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = conn2Id,
             Alias = $"connection-2-{conn2Id:N}",
@@ -202,7 +202,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         context.Connections.RemoveRange(context.Connections);
         var openaiId = Guid.NewGuid();
         var azureId = Guid.NewGuid();
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = openaiId,
             Alias = $"openai-connection-{openaiId:N}",
@@ -212,7 +212,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             DateCreated = DateTime.UtcNow,
             DateModified = DateTime.UtcNow
         });
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = azureId,
             Alias = $"azure-connection-{azureId:N}",
@@ -244,7 +244,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var repository = CreateRepository(context);
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithName("New Connection")
             .WithProviderId("openai")
             .Build();
@@ -268,7 +268,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = connectionId,
             Alias = "original-connection",
@@ -282,7 +282,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
 
         // Create repository with fresh context
         var repository = CreateRepository(_fixture.CreateContext());
-        var updated = new AiConnection
+        var updated = new AIConnection
         {
             Id = connectionId,
             Alias = "updated-connection",
@@ -310,7 +310,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var repository = CreateRepository(context);
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithName("Connection With Settings")
             .WithProviderId("openai")
             .WithSettings(new { ApiKey = "test-key", Endpoint = "https://api.openai.com" })
@@ -338,7 +338,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = connectionId,
             Alias = $"to-delete-{connectionId:N}",
@@ -387,7 +387,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = connectionId,
             Alias = $"existing-{connectionId:N}",

@@ -3,15 +3,15 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAiAgent_AddVersioning : Migration
+    public partial class UmbracoAIAgent_AddVersioning : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Add Version, DateCreated, DateModified columns to UmbracoAiAgent
+            // Add Version, DateCreated, DateModified columns to UmbracoAIAgent
             migrationBuilder.AddColumn<int>(
                 name: "Version",
                 table: "umbracoAIAgent",

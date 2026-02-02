@@ -1,30 +1,30 @@
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Services;
+namespace Umbraco.AI.Tests.Unit.Services;
 
-public class AiConnectionServiceTests
+public class AIConnectionServiceTests
 {
     private readonly Mock<IAiConnectionRepository> _repositoryMock;
     private readonly Mock<IAiEditableModelResolver> _settingsResolverMock;
     private readonly Mock<IAiEntityVersionService> _versionServiceMock;
 
-    public AiConnectionServiceTests()
+    public AIConnectionServiceTests()
     {
         _repositoryMock = new Mock<IAiConnectionRepository>();
         _settingsResolverMock = new Mock<IAiEditableModelResolver>();
         _versionServiceMock = new Mock<IAiEntityVersionService>();
     }
 
-    private AiConnectionService CreateService(params IAiProvider[] providers)
+    private AIConnectionService CreateService(params IAiProvider[] providers)
     {
-        var collection = new AiProviderCollection(() => providers);
-        return new AiConnectionService(
+        var collection = new AIProviderCollection(() => providers);
+        return new AIConnectionService(
             _repositoryMock.Object,
             collection,
             _settingsResolverMock.Object,
@@ -38,7 +38,7 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithName("Test Connection")
             .WithProviderId("fake-provider")
@@ -68,7 +68,7 @@ public class AiConnectionServiceTests
 
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await service.GetConnectionAsync(connectionId);
@@ -85,10 +85,10 @@ public class AiConnectionServiceTests
     public async Task GetConnectionsAsync_WithNoFilter_ReturnsAllConnections()
     {
         // Arrange
-        var connections = new List<AiConnection>
+        var connections = new List<AIConnection>
         {
-            new AiConnectionBuilder().WithName("Connection 1").Build(),
-            new AiConnectionBuilder().WithName("Connection 2").Build()
+            new AIConnectionBuilder().WithName("Connection 1").Build(),
+            new AIConnectionBuilder().WithName("Connection 2").Build()
         };
 
         var service = CreateService();
@@ -108,10 +108,10 @@ public class AiConnectionServiceTests
     public async Task GetConnectionsAsync_WithProviderFilter_ReturnsFilteredConnections()
     {
         // Arrange
-        var openAiConnections = new List<AiConnection>
+        var openAiConnections = new List<AIConnection>
         {
-            new AiConnectionBuilder().WithName("OpenAI 1").WithProviderId("openai").Build(),
-            new AiConnectionBuilder().WithName("OpenAI 2").WithProviderId("openai").Build()
+            new AIConnectionBuilder().WithName("OpenAI 1").WithProviderId("openai").Build(),
+            new AIConnectionBuilder().WithName("OpenAI 2").WithProviderId("openai").Build()
         };
 
         var service = CreateService();
@@ -132,9 +132,9 @@ public class AiConnectionServiceTests
     public async Task GetConnectionsAsync_WithEmptyProviderFilter_ReturnsAllConnections()
     {
         // Arrange
-        var connections = new List<AiConnection>
+        var connections = new List<AIConnection>
         {
-            new AiConnectionBuilder().WithName("Connection 1").Build()
+            new AIConnectionBuilder().WithName("Connection 1").Build()
         };
 
         var service = CreateService();
@@ -160,9 +160,9 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connections = new List<AiConnection>
+        var connections = new List<AIConnection>
         {
-            new AiConnectionBuilder()
+            new AIConnectionBuilder()
                 .WithId(connectionId)
                 .WithName("OpenAI Connection")
                 .WithProviderId("openai")
@@ -193,7 +193,7 @@ public class AiConnectionServiceTests
     public async Task SaveConnectionAsync_WithNewConnection_GeneratesIdAndSaves()
     {
         // Arrange
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(Guid.Empty)
             .WithName("New Connection")
             .WithProviderId("fake-provider")
@@ -208,8 +208,8 @@ public class AiConnectionServiceTests
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, Guid? _, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AIConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection c, Guid? _, CancellationToken _) => c);
 
         // Act
         var result = await service.SaveConnectionAsync(connection);
@@ -218,7 +218,7 @@ public class AiConnectionServiceTests
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(Guid.Empty);
         result.Name.ShouldBe("New Connection");
-        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id != Guid.Empty), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AIConnection>(c => c.Id != Guid.Empty), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -226,7 +226,7 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var existingId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(existingId)
             .WithName("Existing Connection")
             .WithProviderId("fake-provider")
@@ -241,22 +241,22 @@ public class AiConnectionServiceTests
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, Guid? _, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AIConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection c, Guid? _, CancellationToken _) => c);
 
         // Act
         var result = await service.SaveConnectionAsync(connection);
 
         // Assert
         result.Id.ShouldBe(existingId);
-        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AiConnection>(c => c.Id == existingId), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.SaveAsync(It.Is<AIConnection>(c => c.Id == existingId), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task SaveConnectionAsync_WithUnknownProvider_ThrowsInvalidOperationException()
     {
         // Arrange
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithProviderId("unknown-provider")
             .Build();
 
@@ -276,7 +276,7 @@ public class AiConnectionServiceTests
     public async Task SaveConnectionAsync_WithSettings_ValidatesSettings()
     {
         // Arrange
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithProviderId("fake-provider")
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .Build();
@@ -289,8 +289,8 @@ public class AiConnectionServiceTests
             .Returns((FakeProviderSettings?)connection.Settings);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, Guid? _, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AIConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection c, Guid? _, CancellationToken _) => c);
 
         // Act
         await service.SaveConnectionAsync(connection);
@@ -305,7 +305,7 @@ public class AiConnectionServiceTests
     public async Task SaveConnectionAsync_UpdatesDateModified()
     {
         // Arrange
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithProviderId("fake-provider")
             .WithDateModified(DateTime.UtcNow.AddDays(-1))
             .Build();
@@ -314,8 +314,8 @@ public class AiConnectionServiceTests
         var service = CreateService(fakeProvider);
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection c, Guid? _, CancellationToken _) => c);
+            .Setup(x => x.SaveAsync(It.IsAny<AIConnection>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection c, Guid? _, CancellationToken _) => c);
 
         var beforeSave = DateTime.UtcNow;
 
@@ -440,7 +440,7 @@ public class AiConnectionServiceTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(settings)
@@ -476,7 +476,7 @@ public class AiConnectionServiceTests
 
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var act = () => service.TestConnectionAsync(connectionId);
@@ -491,7 +491,7 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("unknown-provider")
             .Build();
@@ -517,7 +517,7 @@ public class AiConnectionServiceTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("empty-provider")
             .WithSettings(settings)
@@ -552,7 +552,7 @@ public class AiConnectionServiceTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var settings = new FakeProviderSettings { ApiKey = "invalid-key" };
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(settings)
@@ -564,7 +564,7 @@ public class AiConnectionServiceTests
             .ThrowsAsync(new Exception("Authentication failed"));
         failingCapability
             .Setup(c => c.Kind)
-            .Returns(AiCapability.Chat);
+            .Returns(AICapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
             .WithCapability(failingCapability.Object);
@@ -596,7 +596,7 @@ public class AiConnectionServiceTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(settings)
@@ -633,7 +633,7 @@ public class AiConnectionServiceTests
 
         _repositoryMock
             .Setup(x => x.GetAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await service.GetConfiguredProviderAsync(connectionId);
@@ -647,7 +647,7 @@ public class AiConnectionServiceTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("unknown-provider")
             .Build();
@@ -671,7 +671,7 @@ public class AiConnectionServiceTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(settings)
@@ -701,7 +701,7 @@ public class AiConnectionServiceTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(settings)
@@ -741,7 +741,7 @@ public class AiConnectionServiceTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var settings = new FakeProviderSettings { ApiKey = "test-key" };
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(settings)

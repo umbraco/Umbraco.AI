@@ -4,15 +4,15 @@ using Amazon.Bedrock.Model;
 using Amazon.BedrockRuntime;
 using Amazon.Runtime;
 using Microsoft.Extensions.Caching.Memory;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Amazon;
+namespace Umbraco.AI.Amazon;
 
 /// <summary>
 /// AI provider for Amazon Bedrock services.
 /// </summary>
-[AiProvider("amazon", "Amazon Bedrock")]
-public class AmazonProvider : AiProviderBase<AmazonProviderSettings>
+[AIProvider("amazon", "Amazon Bedrock")]
+public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
 {
     private const string CacheKeyPrefix = "Amazon_Models_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);

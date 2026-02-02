@@ -1,7 +1,7 @@
-using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Contexts.Resolvers;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Aggregates AI context from all registered resolvers and merges them into a single resolved context.
@@ -12,15 +12,15 @@ namespace Umbraco.Ai.Core.Contexts;
 /// Resources from later resolvers take precedence over earlier resolvers when duplicates exist.
 /// </para>
 /// <para>
-/// Resolvers are registered via <see cref="AiContextResolverCollectionBuilder"/>:
+/// Resolvers are registered via <see cref="AIContextResolverCollectionBuilder"/>:
 /// </para>
 /// <code>
-/// builder.AiContextResolvers()
+/// builder.AIContextResolvers()
 ///     .Append&lt;ProfileContextResolver&gt;()
 ///     .InsertAfter&lt;ProfileContextResolver, AgentContextResolver&gt;();
 /// </code>
 /// </remarks>
-public interface IAiContextResolutionService
+public interface IAIContextResolutionService
 {
     /// <summary>
     /// Resolves context from all registered resolvers.
@@ -31,5 +31,5 @@ public interface IAiContextResolutionService
     /// </remarks>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The merged resolved context.</returns>
-    Task<AiResolvedContext> ResolveContextAsync(CancellationToken cancellationToken = default);
+    Task<AIResolvedContext> ResolveContextAsync(CancellationToken cancellationToken = default);
 }

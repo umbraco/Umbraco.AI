@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Connection.Controllers;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class DeleteConnectionControllerTests
 {
@@ -103,7 +103,7 @@ public class DeleteConnectionControllerTests
         // Arrange
         var alias = "my-connection";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder().WithId(connectionId).WithAlias(alias).Build();
+        var connection = new AIConnectionBuilder().WithId(connectionId).WithAlias(alias).Build();
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
@@ -128,7 +128,7 @@ public class DeleteConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await _controller.DeleteConnection(new IdOrAlias(alias));

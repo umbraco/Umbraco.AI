@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Profile.Controllers;
-using Umbraco.Ai.Web.Api.Management.Profile.Models;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Profile.Controllers;
+using Umbraco.AI.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
 public class ByIdOrAliasProfileControllerTests
 {
@@ -30,7 +30,7 @@ public class ByIdOrAliasProfileControllerTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
             .WithAlias("test-profile")
             .WithName("Test Profile")
@@ -73,7 +73,7 @@ public class ByIdOrAliasProfileControllerTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         var idOrAlias = new IdOrAlias(profileId);
 
@@ -91,14 +91,14 @@ public class ByIdOrAliasProfileControllerTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var profile = new AiProfileBuilder().WithId(profileId).Build();
+        var profile = new AIProfileBuilder().WithId(profileId).Build();
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _mapperMock
-            .Setup(x => x.Map<ProfileResponseModel>(It.IsAny<AiProfile>()))
+            .Setup(x => x.Map<ProfileResponseModel>(It.IsAny<AIProfile>()))
             .Returns(new ProfileResponseModel());
 
         var idOrAlias = new IdOrAlias(profileId);
@@ -119,7 +119,7 @@ public class ByIdOrAliasProfileControllerTests
     {
         // Arrange
         var alias = "my-chat-profile";
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithAlias(alias)
             .WithName("My Chat Profile")
             .Build();
@@ -161,7 +161,7 @@ public class ByIdOrAliasProfileControllerTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         var idOrAlias = new IdOrAlias(alias);
 
@@ -179,14 +179,14 @@ public class ByIdOrAliasProfileControllerTests
     {
         // Arrange
         var alias = "my-chat-profile";
-        var profile = new AiProfileBuilder().WithAlias(alias).Build();
+        var profile = new AIProfileBuilder().WithAlias(alias).Build();
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _mapperMock
-            .Setup(x => x.Map<ProfileResponseModel>(It.IsAny<AiProfile>()))
+            .Setup(x => x.Map<ProfileResponseModel>(It.IsAny<AIProfile>()))
             .Returns(new ProfileResponseModel());
 
         var idOrAlias = new IdOrAlias(alias);

@@ -2,14 +2,14 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Extensions;
-using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Extensions;
+using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 
 /// <summary>
 /// Controller for updating prompts.
@@ -47,13 +47,13 @@ public class UpdatePromptController : PromptControllerBase
         [FromBody] UpdatePromptRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AiPrompt? existing = await _aiPromptService.GetPromptAsync(promptIdOrAlias, cancellationToken);
+        AIPrompt? existing = await _aiPromptService.GetPromptAsync(promptIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return PromptNotFound();
         }
 
-        AiPrompt prompt = _umbracoMapper.Map(model, existing);
+        AIPrompt prompt = _umbracoMapper.Map(model, existing);
 
         await _aiPromptService.SavePromptAsync(prompt, cancellationToken);
         return Ok();

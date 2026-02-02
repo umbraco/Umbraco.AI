@@ -1,6 +1,6 @@
 using Umbraco.Cms.Core;
 
-namespace Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
+namespace Umbraco.AI.Web.Api.Management.Common.OperationStatus;
 
 /// <summary>
 /// Defines operation status codes for context operations.

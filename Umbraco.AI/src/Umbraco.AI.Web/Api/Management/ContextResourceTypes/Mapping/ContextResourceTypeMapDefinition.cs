@@ -1,9 +1,9 @@
-using Umbraco.Ai.Core.Contexts.ResourceTypes;
-using Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Models;
-using Umbraco.Ai.Web.Api.Management.Provider.Models;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Web.Api.Management.ContextResourceTypes.Models;
+using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Mapping;
+namespace Umbraco.AI.Web.Api.Management.ContextResourceTypes.Mapping;
 
 /// <summary>
 /// Map definitions for Context models.

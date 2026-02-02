@@ -1,7 +1,7 @@
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Agent.Extensions;
+namespace Umbraco.AI.Agent.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IAiAgentService"/> to support IdOrAlias lookups.
@@ -15,7 +15,7 @@ internal static class AgentServiceExtensions
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent if found, otherwise null.</returns>
-    public static async Task<Core.Agents.AiAgent?> GetAgentAsync(
+    public static async Task<Core.Agents.AIAgent?> GetAgentAsync(
         this IAiAgentService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)

@@ -1,25 +1,25 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Core.Embeddings;
+namespace Umbraco.AI.Core.Embeddings;
 
-internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
+internal sealed class AIEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
 {
     private readonly IAiConnectionService _connectionService;
-    private readonly AiEmbeddingMiddlewareCollection _middleware;
+    private readonly AIEmbeddingMiddlewareCollection _middleware;
 
-    public AiEmbeddingGeneratorFactory(
+    public AIEmbeddingGeneratorFactory(
         IAiConnectionService connectionService,
-        AiEmbeddingMiddlewareCollection middleware)
+        AIEmbeddingMiddlewareCollection middleware)
     {
         _connectionService = connectionService;
         _middleware = middleware;
     }
 
     public async Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(
-        AiProfile profile,
+        AIProfile profile,
         CancellationToken cancellationToken = default)
     {
         // Get configured provider with resolved settings
@@ -37,7 +37,7 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
     private IEmbeddingGenerator<string, Embedding<float>> ApplyMiddleware(
         IEmbeddingGenerator<string, Embedding<float>> generator)
     {
-        // Apply middleware in collection order (controlled by AiEmbeddingMiddlewareCollectionBuilder)
+        // Apply middleware in collection order (controlled by AIEmbeddingMiddlewareCollectionBuilder)
         foreach (var middleware in _middleware)
         {
             generator = middleware.Apply(generator);
@@ -47,7 +47,7 @@ internal sealed class AiEmbeddingGeneratorFactory : IAiEmbeddingGeneratorFactory
     }
 
     private async Task<IAiConfiguredEmbeddingCapability> GetConfiguredEmbeddingCapabilityAsync(
-        AiProfile profile,
+        AIProfile profile,
         CancellationToken cancellationToken)
     {
         if (profile.ConnectionId == Guid.Empty)

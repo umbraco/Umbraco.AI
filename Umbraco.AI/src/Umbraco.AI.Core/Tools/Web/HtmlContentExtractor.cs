@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using SmartReader;
 
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Extracts main content from HTML using SmartReader for article extraction

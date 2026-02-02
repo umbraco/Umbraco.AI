@@ -1,8 +1,8 @@
-using Umbraco.Ai.Core.EditableModels;
+using Umbraco.AI.Core.EditableModels;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
-internal sealed class AiProviderInfrastructure(
+internal sealed class AIProviderInfrastructure(
     IAiCapabilityFactory capabilityFactory,
     IAiEditableModelSchemaBuilder schemaBuilder)
     : IAiProviderInfrastructure

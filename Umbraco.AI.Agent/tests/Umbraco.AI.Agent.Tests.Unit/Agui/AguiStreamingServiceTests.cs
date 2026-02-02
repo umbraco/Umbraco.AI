@@ -6,15 +6,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
-using Umbraco.Ai.Agent.Core.Agui;
-using Umbraco.Ai.Agui.Events;
-using Umbraco.Ai.Agui.Events.Lifecycle;
-using Umbraco.Ai.Agui.Events.Messages;
-using Umbraco.Ai.Agui.Events.Tools;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agent.Core.Agui;
+using Umbraco.AI.Agui.Events;
+using Umbraco.AI.Agui.Events.Lifecycle;
+using Umbraco.AI.Agui.Events.Messages;
+using Umbraco.AI.Agui.Events.Tools;
+using Umbraco.AI.Agui.Models;
 using Xunit;
 
-namespace Umbraco.Ai.Agent.Tests.Unit.Agui;
+namespace Umbraco.AI.Agent.Tests.Unit.Agui;
 
 public class AguiStreamingServiceTests
 {

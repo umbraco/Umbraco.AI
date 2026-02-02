@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
 using Umbraco.Cms.Api.Common.Attributes;
 using Umbraco.Cms.Api.Common.Filters;
 
-namespace Umbraco.Ai.Web.Api.Management.Common.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Common.Controllers;
 
 /// <summary>
 /// Base controller for Umbraco AI Management API controllers.
 /// </summary>
 [MapToApi(Constants.ManagementApi.ApiName)]
 [JsonOptionsName(Constants.ManagementApi.ApiName)]
-public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagementControllerBase
+public abstract class UmbracoAICoreManagementControllerBase : UmbracoAIManagementControllerBase
 {
     /// <summary>
     /// Returns a 404 Not Found response for a connection.

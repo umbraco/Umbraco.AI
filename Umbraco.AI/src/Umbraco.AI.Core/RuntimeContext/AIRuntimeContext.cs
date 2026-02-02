@@ -1,17 +1,17 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.RuntimeContext;
+namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
 /// Mutable runtime context that accumulates state during an AI request.
 /// Contributors populate from request items, and tools can add multimodal content.
 /// </summary>
-public sealed class AiRuntimeContext
+public sealed class AIRuntimeContext
 {
     /// <summary>
     /// The raw context items from the request with support for handling tracking.
     /// </summary>
-    public AiRequestContextItemCollection RequestContextItems { get; }
+    public AIRequestContextItemCollection RequestContextItems { get; }
 
     /// <summary>
     /// System message parts to inject (aggregated from contributors).
@@ -42,10 +42,10 @@ public sealed class AiRuntimeContext
     /// Creates a new runtime context from a collection of context items.
     /// </summary>
     /// <param name="requestContextItems">The raw context items from the request.</param>
-    public AiRuntimeContext(IEnumerable<AiRequestContextItem> requestContextItems)
+    public AIRuntimeContext(IEnumerable<AIRequestContextItem> requestContextItems)
     {
         ArgumentNullException.ThrowIfNull(requestContextItems);
-        RequestContextItems = new AiRequestContextItemCollection(requestContextItems);
+        RequestContextItems = new AIRequestContextItemCollection(requestContextItems);
     }
 
     /// <summary>

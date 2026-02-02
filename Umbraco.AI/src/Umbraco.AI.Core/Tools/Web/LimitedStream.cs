@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// A stream wrapper that enforces a maximum number of bytes that can be read.

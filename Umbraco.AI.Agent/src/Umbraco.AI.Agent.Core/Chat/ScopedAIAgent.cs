@@ -2,11 +2,11 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Core.RuntimeContext;
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
-namespace Umbraco.Ai.Agent.Core.Chat;
+namespace Umbraco.AI.Agent.Core.Chat;
 
 /// <summary>
 /// An AIAgent decorator that creates a runtime context scope per-execution
@@ -47,12 +47,12 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 internal sealed class ScopedAIAgent : AIAgent
 {
     private readonly AIAgent _innerAgent;
-    private readonly AiAgent _definition;
-    private readonly IReadOnlyList<AiRequestContextItem> _contextItems;
+    private readonly AIAgent _definition;
+    private readonly IReadOnlyList<AIRequestContextItem> _contextItems;
     private readonly IReadOnlyList<AITool> _frontendTools;
     private readonly IReadOnlyDictionary<string, object?>? _additionalProperties;
     private readonly IAiRuntimeContextScopeProvider _scopeProvider;
-    private readonly AiRuntimeContextContributorCollection _contributors;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScopedAIAgent"/> class.
@@ -66,12 +66,12 @@ internal sealed class ScopedAIAgent : AIAgent
     /// <param name="contributors">Collection of context contributors to populate the scope.</param>
     internal ScopedAIAgent(
         AIAgent innerAgent,
-        AiAgent definition,
-        IEnumerable<AiRequestContextItem> contextItems,
+        AIAgent definition,
+        IEnumerable<AIRequestContextItem> contextItems,
         IEnumerable<AITool> frontendTools,
         IReadOnlyDictionary<string, object?>? additionalProperties,
         IAiRuntimeContextScopeProvider scopeProvider,
-        AiRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors)
     {
         _innerAgent = innerAgent ?? throw new ArgumentNullException(nameof(innerAgent));
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
@@ -85,7 +85,7 @@ internal sealed class ScopedAIAgent : AIAgent
     /// <summary>
     /// Gets the Umbraco agent definition this instance was created from.
     /// </summary>
-    public AiAgent Definition => _definition;
+    public AIAgent Definition => _definition;
 
     /// <summary>
     /// Gets the human-readable name of the agent.
@@ -173,7 +173,7 @@ internal sealed class ScopedAIAgent : AIAgent
     /// Populates the runtime context scope with contributors and sets agent metadata.
     /// </summary>
     /// <param name="context">The runtime context to populate.</param>
-    private void PopulateScopeContext(AiRuntimeContext context)
+    private void PopulateScopeContext(AIRuntimeContext context)
     {
         // Populate scope via contributors
         _contributors.Populate(context);
@@ -210,7 +210,7 @@ internal sealed class ScopedAIAgent : AIAgent
     /// <param name="messages">The original message list.</param>
     /// <returns>A new message list with system messages injected.</returns>
     private static IEnumerable<ChatMessage> InjectSystemMessageParts(
-        AiRuntimeContext context,
+        AIRuntimeContext context,
         IEnumerable<ChatMessage> messages)
     {
         var messagesList = messages.ToList();

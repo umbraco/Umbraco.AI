@@ -1,7 +1,7 @@
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Prompt.Extensions;
+namespace Umbraco.AI.Prompt.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IAiPromptService"/> to support IdOrAlias lookups.
@@ -15,7 +15,7 @@ internal static class PromptServiceExtensions
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The prompt if found, otherwise null.</returns>
-    public static async Task<Core.Prompts.AiPrompt?> GetPromptAsync(
+    public static async Task<Core.Prompts.AIPrompt?> GetPromptAsync(
         this IAiPromptService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)

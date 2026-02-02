@@ -1,14 +1,14 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Embeddings;
+using Umbraco.AI.Core.Embeddings;
 
-namespace Umbraco.Ai.Core.Chat.Middleware;
+namespace Umbraco.AI.Core.Chat.Middleware;
 
 /// <summary>
 /// Chat middleware that tracks AI chat usage.
 /// </summary>
-public sealed class AiTrackingEmbeddingMiddleware : IAiEmbeddingMiddleware
+public sealed class AITrackingEmbeddingMiddleware : IAiEmbeddingMiddleware
 {
     /// <inheritdoc />
     public IEmbeddingGenerator<string, Embedding<float>> Apply(IEmbeddingGenerator<string, Embedding<float>> generator)
-        => new AiTrackingEmbeddingGenerator<string, Embedding<float>>(generator);
+        => new AITrackingEmbeddingGenerator<string, Embedding<float>>(generator);
 }

@@ -1,9 +1,9 @@
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.Resolvers;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Agent.Core.Context;
+namespace Umbraco.AI.Agent.Core.Context;
 
 /// <summary>
 /// Resolves context from agent-level context assignments.
@@ -35,30 +35,30 @@ internal sealed class AgentContextResolver : IAiContextResolver
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
+    public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
         var agentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.AgentId);
         if (!agentId.HasValue)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
         if (agent is null || agent.ContextIds.Count == 0)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         return await ResolveContextIdsAsync(agent.ContextIds, agent.Name, cancellationToken);
     }
 
-    private async Task<AiContextResolverResult> ResolveContextIdsAsync(
+    private async Task<AIContextResolverResult> ResolveContextIdsAsync(
         IEnumerable<Guid> contextIds,
         string? entityName,
         CancellationToken cancellationToken)
     {
-        var resources = new List<AiContextResolverResource>();
-        var sources = new List<AiContextResolverSource>();
+        var resources = new List<AIContextResolverResource>();
+        var sources = new List<AIContextResolverSource>();
 
         foreach (var contextId in contextIds)
         {
@@ -68,11 +68,11 @@ internal sealed class AgentContextResolver : IAiContextResolver
                 continue;
             }
 
-            sources.Add(new AiContextResolverSource(entityName, context.Name));
+            sources.Add(new AIContextResolverSource(entityName, context.Name));
 
             foreach (var resource in context.Resources.OrderBy(r => r.SortOrder))
             {
-                resources.Add(new AiContextResolverResource
+                resources.Add(new AIContextResolverResource
                 {
                     Id = resource.Id,
                     ResourceTypeId = resource.ResourceTypeId,
@@ -85,7 +85,7 @@ internal sealed class AgentContextResolver : IAiContextResolver
             }
         }
 
-        return new AiContextResolverResult
+        return new AIContextResolverResult
         {
             Resources = resources,
             Sources = sources

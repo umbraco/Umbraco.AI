@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Embedding.Models;
+namespace Umbraco.AI.Web.Api.Management.Embedding.Models;
 
 /// <summary>
 /// Response model for generated embeddings.

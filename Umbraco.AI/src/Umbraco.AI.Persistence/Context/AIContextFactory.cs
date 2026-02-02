@@ -1,22 +1,22 @@
 using System.Text.Json;
-using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core;
+using Umbraco.AI.Core.Contexts;
 
-namespace Umbraco.Ai.Persistence.Context;
+namespace Umbraco.AI.Persistence.Context;
 
 /// <summary>
-/// Factory for mapping between <see cref="AiContext"/> domain models and <see cref="AiContextEntity"/> database entities.
+/// Factory for mapping between <see cref="AIContext"/> domain models and <see cref="AIContextEntity"/> database entities.
 /// </summary>
-internal static class AiContextFactory
+internal static class AIContextFactory
 {
     /// <summary>
-    /// Creates an <see cref="AiContext"/> domain model from a database entity.
+    /// Creates an <see cref="AIContext"/> domain model from a database entity.
     /// </summary>
     /// <param name="entity">The database entity.</param>
     /// <returns>The domain model.</returns>
-    public static AiContext BuildDomain(AiContextEntity entity)
+    public static AIContext BuildDomain(AIContextEntity entity)
     {
-        return new AiContext
+        return new AIContext
         {
             Id = entity.Id,
             Alias = entity.Alias,
@@ -34,11 +34,11 @@ internal static class AiContextFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="AiContextResource"/> domain model from a database entity.
+    /// Creates an <see cref="AIContextResource"/> domain model from a database entity.
     /// </summary>
     /// <param name="entity">The database entity.</param>
     /// <returns>The domain model.</returns>
-    public static AiContextResource BuildResourceDomain(AiContextResourceEntity entity)
+    public static AIContextResource BuildResourceDomain(AIContextResourceEntity entity)
     {
         object? data = null;
         if (!string.IsNullOrEmpty(entity.Data))
@@ -48,7 +48,7 @@ internal static class AiContextFactory
             data = JsonSerializer.Deserialize<JsonElement>(entity.Data, Constants.DefaultJsonSerializerOptions);
         }
 
-        return new AiContextResource
+        return new AIContextResource
         {
             Id = entity.Id,
             ResourceTypeId = entity.ResourceTypeId,
@@ -56,18 +56,18 @@ internal static class AiContextFactory
             Description = entity.Description,
             SortOrder = entity.SortOrder,
             Data = data,
-            InjectionMode = (AiContextResourceInjectionMode)entity.InjectionMode
+            InjectionMode = (AIContextResourceInjectionMode)entity.InjectionMode
         };
     }
 
     /// <summary>
-    /// Creates an <see cref="AiContextEntity"/> database entity from a domain model.
+    /// Creates an <see cref="AIContextEntity"/> database entity from a domain model.
     /// </summary>
     /// <param name="context">The domain model.</param>
     /// <returns>The database entity.</returns>
-    public static AiContextEntity BuildEntity(AiContext context)
+    public static AIContextEntity BuildEntity(AIContext context)
     {
-        return new AiContextEntity
+        return new AIContextEntity
         {
             Id = context.Id,
             Alias = context.Alias,
@@ -84,14 +84,14 @@ internal static class AiContextFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="AiContextResourceEntity"/> database entity from a domain model.
+    /// Creates an <see cref="AIContextResourceEntity"/> database entity from a domain model.
     /// </summary>
     /// <param name="resource">The domain model.</param>
     /// <param name="contextId">The parent context ID.</param>
     /// <returns>The database entity.</returns>
-    public static AiContextResourceEntity BuildResourceEntity(AiContextResource resource, Guid contextId)
+    public static AIContextResourceEntity BuildResourceEntity(AIContextResource resource, Guid contextId)
     {
-        return new AiContextResourceEntity
+        return new AIContextResourceEntity
         {
             Id = resource.Id,
             ContextId = contextId,
@@ -105,11 +105,11 @@ internal static class AiContextFactory
     }
 
     /// <summary>
-    /// Updates an existing <see cref="AiContextEntity"/> with values from a domain model.
+    /// Updates an existing <see cref="AIContextEntity"/> with values from a domain model.
     /// </summary>
     /// <param name="entity">The entity to update.</param>
     /// <param name="context">The domain model with updated values.</param>
-    public static void UpdateEntity(AiContextEntity entity, AiContext context)
+    public static void UpdateEntity(AIContextEntity entity, AIContext context)
     {
         entity.Alias = context.Alias;
         entity.Name = context.Name;
@@ -121,11 +121,11 @@ internal static class AiContextFactory
     }
 
     /// <summary>
-    /// Updates an existing <see cref="AiContextResourceEntity"/> with values from a domain model.
+    /// Updates an existing <see cref="AIContextResourceEntity"/> with values from a domain model.
     /// </summary>
     /// <param name="entity">The entity to update.</param>
     /// <param name="resource">The domain model with updated values.</param>
-    public static void UpdateResourceEntity(AiContextResourceEntity entity, AiContextResource resource)
+    public static void UpdateResourceEntity(AIContextResourceEntity entity, AIContextResource resource)
     {
         entity.ResourceTypeId = resource.ResourceTypeId;
         entity.Name = resource.Name;

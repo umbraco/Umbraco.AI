@@ -1,9 +1,9 @@
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.Contexts.Resolvers;
+namespace Umbraco.AI.Core.Contexts.Resolvers;
 
 /// <summary>
 /// Resolves context from content nodes by finding the nearest context picker property value.
@@ -11,8 +11,8 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// <remarks>
 /// <para>
 /// This resolver reads the content ID from <see cref="IAiRuntimeContextAccessor"/>, preferring
-/// <see cref="AiRuntimeContextKeys.ParentEntityId"/> (for new entities) over
-/// <see cref="AiRuntimeContextKeys.EntityId"/>. It then walks up the content tree
+/// <see cref="AIRuntimeContextKeys.ParentEntityId"/> (for new entities) over
+/// <see cref="AIRuntimeContextKeys.EntityId"/>. It then walks up the content tree
 /// (current node + ancestors) to find the nearest property using the AI Context
 /// Picker editor (<c>Uai.ContextPicker</c>).
 /// </para>
@@ -44,34 +44,34 @@ internal sealed class ContentContextResolver : IAiContextResolver
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
+    public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
         // Get content ID from RuntimeContext (set by orchestrators like AguiStreamingService)
         var contentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ParentEntityId)
             ?? _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.EntityId);
         if (!contentId.HasValue)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         // Try to get the Umbraco context
         if (!_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         // Get the published content
         var content = umbracoContext.Content?.GetById(contentId.Value);
         if (content is null)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         // Walk up the tree to find the nearest context picker property with a value
         var (contexts, source) = FindNearestContexts(content);
         if (contexts is null || contexts.Count == 0)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
         
         // Use the source content's key and name for tracking
@@ -84,7 +84,7 @@ internal sealed class ContentContextResolver : IAiContextResolver
     /// <summary>
     /// Walks up the content tree to find the nearest context picker property with a value.
     /// </summary>
-    private static (IReadOnlyCollection<AiContext>? Contexts, IPublishedContent? Source) FindNearestContexts(IPublishedContent content)
+    private static (IReadOnlyCollection<AIContext>? Contexts, IPublishedContent? Source) FindNearestContexts(IPublishedContent content)
     {
         // Check current node and ancestors (from closest to root)
         IPublishedContent? node = content;
@@ -99,7 +99,7 @@ internal sealed class ContentContextResolver : IAiContextResolver
                     continue;
                 }
 
-                // Get the property value - could be single AiContext or IEnumerable<AiContext>
+                // Get the property value - could be single AIContext or IEnumerable<AIContext>
                 var value = property.GetValue();
                 var contexts = ExtractContexts(value)?.ToList();
 
@@ -117,26 +117,26 @@ internal sealed class ContentContextResolver : IAiContextResolver
     }
 
     /// <summary>
-    /// Extracts AiContext instances from a property value.
+    /// Extracts AIContext instances from a property value.
     /// </summary>
-    private static IEnumerable<AiContext>? ExtractContexts(object? value)
+    private static IEnumerable<AIContext>? ExtractContexts(object? value)
     {
         return value switch
         {
-            IEnumerable<AiContext> contexts => contexts,
-            AiContext context => [context],
+            IEnumerable<AIContext> contexts => contexts,
+            AIContext context => [context],
             _ => null
         };
     }
 
-    private async Task<AiContextResolverResult> ResolveContextsAsync(
-        IEnumerable<AiContext> contexts,
+    private async Task<AIContextResolverResult> ResolveContextsAsync(
+        IEnumerable<AIContext> contexts,
         Guid? contentKey,
         string? contentName,
         CancellationToken cancellationToken)
     {
-        var resources = new List<AiContextResolverResource>();
-        var sources = new List<AiContextResolverSource>();
+        var resources = new List<AIContextResolverResource>();
+        var sources = new List<AIContextResolverSource>();
 
         // Use content name and key for tracking
         var entityName = $"{contentName ?? "Unknown"} ({contentKey ?? Guid.Empty})";
@@ -150,11 +150,11 @@ internal sealed class ContentContextResolver : IAiContextResolver
                 continue;
             }
 
-            sources.Add(new AiContextResolverSource(entityName, freshContext.Name));
+            sources.Add(new AIContextResolverSource(entityName, freshContext.Name));
 
             foreach (var resource in freshContext.Resources.OrderBy(r => r.SortOrder))
             {
-                resources.Add(new AiContextResolverResource
+                resources.Add(new AIContextResolverResource
                 {
                     Id = resource.Id,
                     ResourceTypeId = resource.ResourceTypeId,
@@ -167,7 +167,7 @@ internal sealed class ContentContextResolver : IAiContextResolver
             }
         }
 
-        return new AiContextResolverResult
+        return new AIContextResolverResult
         {
             Resources = resources,
             Sources = sources

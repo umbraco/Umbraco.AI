@@ -2,13 +2,13 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Analytics.Usage;
-using Umbraco.Ai.Web.Api.Management.Analytics.Controllers;
-using Umbraco.Ai.Web.Api.Management.Analytics.Usage.Models;
+using Umbraco.AI.Core.Analytics.Usage;
+using Umbraco.AI.Web.Api.Management.Analytics.Controllers;
+using Umbraco.AI.Web.Api.Management.Analytics.Usage.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Analytics.Usage.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 
 /// <summary>
 /// Controller to get usage summary statistics.
@@ -53,10 +53,10 @@ public class UsageSummaryController : AnalyticsControllerBase
         }
 
         // Parse granularity if provided
-        AiUsagePeriod? requestedGranularity = null;
+        AIUsagePeriod? requestedGranularity = null;
         if (!string.IsNullOrEmpty(granularity))
         {
-            if (Enum.TryParse<AiUsagePeriod>(granularity, true, out var parsed))
+            if (Enum.TryParse<AIUsagePeriod>(granularity, true, out var parsed))
             {
                 requestedGranularity = parsed;
             }

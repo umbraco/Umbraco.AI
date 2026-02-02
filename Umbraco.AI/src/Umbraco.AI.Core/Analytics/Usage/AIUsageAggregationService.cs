@@ -1,20 +1,20 @@
 using Microsoft.Extensions.Logging;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for aggregating raw usage records into hourly and daily statistics.
 /// </summary>
-internal sealed class AiUsageAggregationService : IAiUsageAggregationService
+internal sealed class AIUsageAggregationService : IAiUsageAggregationService
 {
     private readonly IAiUsageRecordRepository _recordRepository;
     private readonly IAiUsageStatisticsRepository _statisticsRepository;
-    private readonly ILogger<AiUsageAggregationService> _logger;
+    private readonly ILogger<AIUsageAggregationService> _logger;
 
-    public AiUsageAggregationService(
+    public AIUsageAggregationService(
         IAiUsageRecordRepository recordRepository,
         IAiUsageStatisticsRepository statisticsRepository,
-        ILogger<AiUsageAggregationService> logger)
+        ILogger<AIUsageAggregationService> logger)
     {
         _recordRepository = recordRepository;
         _statisticsRepository = statisticsRepository;
@@ -79,7 +79,7 @@ internal sealed class AiUsageAggregationService : IAiUsageAggregationService
                     // Find first record with non-null/non-empty ProfileAlias and UserName
                     var recordWithNames = g.FirstOrDefault(r => !string.IsNullOrEmpty(r.ProfileAlias)) ?? g.First();
 
-                    return new AiUsageStatistics
+                    return new AIUsageStatistics
                     {
                         Id = Guid.NewGuid(),
                         Period = hourStart,
@@ -191,7 +191,7 @@ internal sealed class AiUsageAggregationService : IAiUsageAggregationService
                     // Find first record with non-null/non-empty ProfileAlias and UserName
                     var statsWithNames = g.FirstOrDefault(s => !string.IsNullOrEmpty(s.ProfileAlias)) ?? g.First();
 
-                    return new AiUsageStatistics
+                    return new AIUsageStatistics
                     {
                         Id = Guid.NewGuid(),
                         Period = day,

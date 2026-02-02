@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-namespace Umbraco.Ai.Prompt.Core.Utils;
+namespace Umbraco.AI.Prompt.Core.Utils;
 
 internal sealed class PathResolverOptions
 {

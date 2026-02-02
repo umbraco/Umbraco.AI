@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Web.Api.Management.Embedding.Models;
+using Umbraco.AI.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.Embedding.Mapping;
+namespace Umbraco.AI.Web.Api.Management.Embedding.Mapping;
 
 /// <summary>
 /// Map definitions for Embedding models.

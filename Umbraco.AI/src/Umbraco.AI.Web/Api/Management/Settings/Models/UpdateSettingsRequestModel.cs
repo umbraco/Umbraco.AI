@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Web.Api.Management.Settings.Models;
+namespace Umbraco.AI.Web.Api.Management.Settings.Models;
 
 /// <summary>
 /// Request model for updating AI settings.

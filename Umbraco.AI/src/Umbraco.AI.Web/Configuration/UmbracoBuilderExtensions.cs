@@ -2,27 +2,27 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Umbraco.Ai.Web;
-using Umbraco.Ai.Web.Api;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Analytics.Usage.Mapping;
-using Umbraco.Ai.Web.Api.Management.AuditLog.Mapping;
-using Umbraco.Ai.Web.Api.Management.Chat.Mapping;
-using Umbraco.Ai.Web.Api.Management.Common.Mapping;
-using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.Connection.Mapping;
-using Umbraco.Ai.Web.Api.Management.Context.Mapping;
-using Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Mapping;
-using Umbraco.Ai.Web.Api.Management.Embedding.Mapping;
-using Umbraco.Ai.Web.Api.Management.Profile.Mapping;
-using Umbraco.Ai.Web.Api.Management.Provider.Mapping;
-using Umbraco.Ai.Web.Api.Management.Settings.Mapping;
+using Umbraco.AI.Web;
+using Umbraco.AI.Web.Api;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Analytics.Usage.Mapping;
+using Umbraco.AI.Web.Api.Management.AuditLog.Mapping;
+using Umbraco.AI.Web.Api.Management.Chat.Mapping;
+using Umbraco.AI.Web.Api.Management.Common.Mapping;
+using Umbraco.AI.Web.Api.Management.Configuration;
+using Umbraco.AI.Web.Api.Management.Connection.Mapping;
+using Umbraco.AI.Web.Api.Management.Context.Mapping;
+using Umbraco.AI.Web.Api.Management.ContextResourceTypes.Mapping;
+using Umbraco.AI.Web.Api.Management.Embedding.Mapping;
+using Umbraco.AI.Web.Api.Management.Profile.Mapping;
+using Umbraco.AI.Web.Api.Management.Provider.Mapping;
+using Umbraco.AI.Web.Api.Management.Settings.Mapping;
 using Umbraco.Cms.Api.Common.OpenApi;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Umbraco AI web services.
@@ -99,7 +99,7 @@ public static class UmbracoBuilderExtensions
                 configureSwagger(options);
                 
                 options.DocumentFilter<MimeTypeDocumentFilter>(apiName);
-                options.OperationFilter<UmbracoAiManagementApiBackOfficeSecurityRequirementsOperationFilter>(apiName);
+                options.OperationFilter<UmbracoAIManagementApiBackOfficeSecurityRequirementsOperationFilter>(apiName);
                 options.OperationFilter<SwaggerOperationFilter>(apiName);
                 options.OperationFilter<SseResponseOperationFilter>(apiName);
                 
@@ -117,8 +117,8 @@ public static class UmbracoBuilderExtensions
             });
         }
 
-        builder.Services.AddSingleton<IOperationIdHandler, UmbracoAiApiOperationIdHandler>();
-        builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAiApiSchemaIdHandler>();
+        builder.Services.AddSingleton<IOperationIdHandler, UmbracoAIApiOperationIdHandler>();
+        builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAIApiSchemaIdHandler>();
         
         builder.AddJsonOptions(apiName, configureJson);
         

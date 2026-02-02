@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.RuntimeContext;
+namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
 /// Contributes context to an AI runtime context.
@@ -8,18 +8,18 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// <remarks>
 /// <para>
 /// Contributors are executed in registration order. Use
-/// <see cref="AiRequestContextItemCollection.Handle"/> or
-/// <see cref="AiRequestContextItemCollection.HandleAll"/> to process
+/// <see cref="AIRequestContextItemCollection.Handle"/> or
+/// <see cref="AIRequestContextItemCollection.HandleAll"/> to process
 /// specific request context items. Use
-/// <see cref="AiRequestContextItemCollection.HandleUnhandled"/> for
+/// <see cref="AIRequestContextItemCollection.HandleUnhandled"/> for
 /// fallback processing of remaining items.
 /// </para>
 /// </remarks>
-public interface IAiRuntimeContextContributor
+public interface IAIRuntimeContextContributor
 {
     /// <summary>
     /// Contributes to the runtime context.
     /// </summary>
     /// <param name="context">The runtime context to contribute to.</param>
-    void Contribute(AiRuntimeContext context);
+    void Contribute(AIRuntimeContext context);
 }

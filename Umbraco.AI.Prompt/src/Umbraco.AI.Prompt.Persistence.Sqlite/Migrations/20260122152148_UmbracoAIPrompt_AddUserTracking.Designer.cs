@@ -4,15 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.Ai.Prompt.Persistence;
+using Umbraco.AI.Prompt.Persistence;
 
 #nullable disable
 
-namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
 {
-    [DbContext(typeof(UmbracoAiPromptDbContext))]
+    [DbContext(typeof(UmbracoAIPromptDbContext))]
     [Migration("20260122152148_UmbracoAiPrompt_AddUserTracking")]
-    partial class UmbracoAiPrompt_AddUserTracking
+    partial class UmbracoAIPrompt_AddUserTracking
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,7 +20,7 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AIPromptEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

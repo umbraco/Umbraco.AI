@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 
 /// <summary>
 /// Request model for updating a prompt.

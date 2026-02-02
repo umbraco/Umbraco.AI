@@ -2,11 +2,11 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Web.Api.Management.Configuration;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 
 /// <summary>
 /// Controller to get available capabilities from configured connections.

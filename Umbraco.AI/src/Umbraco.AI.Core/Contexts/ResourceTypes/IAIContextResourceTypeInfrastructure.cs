@@ -1,11 +1,11 @@
-using Umbraco.Ai.Core.EditableModels;
+using Umbraco.AI.Core.EditableModels;
 
-namespace Umbraco.Ai.Core.Contexts.ResourceTypes;
+namespace Umbraco.AI.Core.Contexts.ResourceTypes;
 
 /// <summary>
 /// Defines the infrastructure components required by AI context resource types.
 /// </summary>
-public interface IAiContextResourceTypeInfrastructure
+public interface IAIContextResourceTypeInfrastructure
 {
     /// <summary>
     /// Builder for editable model schemas.

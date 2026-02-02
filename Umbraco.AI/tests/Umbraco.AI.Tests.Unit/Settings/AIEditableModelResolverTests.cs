@@ -1,18 +1,18 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Settings;
+namespace Umbraco.AI.Tests.Unit.Settings;
 
-public class AiEditableModelResolverTests
+public class AIEditableModelResolverTests
 {
     private readonly IConfiguration _configuration;
     private List<IAiProvider> _providers = new();
 
-    public AiEditableModelResolverTests()
+    public AIEditableModelResolverTests()
     {
         var configData = new Dictionary<string, string?>
         {
@@ -27,10 +27,10 @@ public class AiEditableModelResolverTests
             .Build();
     }
 
-    private AiEditableModelResolver CreateResolver()
+    private AIEditableModelResolver CreateResolver()
     {
-        var collection = new AiProviderCollection(() => _providers);
-        return new AiEditableModelResolver(collection, _configuration);
+        var collection = new AIProviderCollection(() => _providers);
+        return new AIEditableModelResolver(collection, _configuration);
     }
 
     #region ResolveModel<TModel> - Null handling
@@ -91,7 +91,7 @@ public class AiEditableModelResolverTests
     [Fact]
     public void ResolveModel_WithJsonElement_DeserializesCorrectly()
     {
-        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
+        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
         var json = """{"apiKey": "direct-key", "baseUrl": "https://custom.api.com", "maxRetries": 10}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
@@ -110,7 +110,7 @@ public class AiEditableModelResolverTests
     [Fact]
     public void ResolveModel_WithJsonElement_ResolvesConfigurationVariables()
     {
-        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
+        // Arrange - JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
         var json = """{"apiKey": "$OpenAI:ApiKey", "baseUrl": "$OpenAI:BaseUrl"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider");
@@ -130,7 +130,7 @@ public class AiEditableModelResolverTests
     {
         // Arrange - Config vars in JsonElement for non-string properties fail at JSON parse time
         // because "$TestSettings:MaxRetries" (a string) cannot be parsed as int
-        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
+        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
         var json = """{"apiKey": "test-key", "maxRetries": "$TestSettings:MaxRetries"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
         SetupProviderWithValidation("fake-provider", requireApiKey: false);
@@ -310,7 +310,7 @@ public class AiEditableModelResolverTests
         SetupProviderWithValidation("test-provider");
         var resolver = CreateResolver();
 
-        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AiEditableModelResolver
+        // JSON uses camelCase to match the JsonNamingPolicy.CamelCase in AIEditableModelResolver
         var json = """{"apiKey": "provider-key"}""";
         var jsonElement = JsonDocument.Parse(json).RootElement;
 
@@ -332,11 +332,11 @@ public class AiEditableModelResolverTests
         var provider = new FakeAiProvider(providerId, "Test Provider");
         provider.SettingsType = typeof(FakeProviderSettings);
 
-        var fields = new List<AiEditableModelField>();
+        var fields = new List<AIEditableModelField>();
 
         if (requireApiKey)
         {
-            fields.Add(new AiEditableModelField
+            fields.Add(new AIEditableModelField
             {
                 PropertyName = "ApiKey",
                 Key = "api-key",
@@ -346,7 +346,7 @@ public class AiEditableModelResolverTests
             });
         }
 
-        provider.SettingsSchema = new AiEditableModelSchema(typeof(FakeProviderSettings), fields);
+        provider.SettingsSchema = new AIEditableModelSchema(typeof(FakeProviderSettings), fields);
         _providers.Add(provider);
     }
 

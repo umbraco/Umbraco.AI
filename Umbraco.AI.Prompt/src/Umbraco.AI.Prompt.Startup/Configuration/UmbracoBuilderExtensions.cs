@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Prompt.Core.Configuration;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Persistence.Configuration;
-using Umbraco.Ai.Prompt.Web.Configuration;
+using Umbraco.AI.Prompt.Core.Configuration;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Persistence.Configuration;
+using Umbraco.AI.Prompt.Web.Configuration;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Prompt.Extensions;
+namespace Umbraco.AI.Prompt.Extensions;
 
 /// <summary>
 /// Extension methods for adding all Umbraco.Ai.Prompt services.

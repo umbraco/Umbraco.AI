@@ -2,14 +2,14 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.Provider.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Management.Configuration;
+using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Provider.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Provider.Controllers;
 
 /// <summary>
 /// Controller to get a provider by ID.
@@ -18,13 +18,13 @@ namespace Umbraco.Ai.Web.Api.Management.Provider.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class ByIdProviderController : ProviderControllerBase
 {
-    private readonly AiProviderCollection _providers;
+    private readonly AIProviderCollection _providers;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ByIdProviderController"/> class.
     /// </summary>
-    public ByIdProviderController(AiProviderCollection providers, IUmbracoMapper umbracoMapper)
+    public ByIdProviderController(AIProviderCollection providers, IUmbracoMapper umbracoMapper)
     {
         _providers = providers;
         _umbracoMapper = umbracoMapper;

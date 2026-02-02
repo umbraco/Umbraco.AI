@@ -1,28 +1,28 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
+namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 
 /// <summary>
 /// Middleware that records AI chat usage to the analytics system.
 /// </summary>
-internal sealed class AiUsageRecordingChatMiddleware : IAiChatMiddleware
+internal sealed class AIUsageRecordingChatMiddleware : IAiChatMiddleware
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiUsageRecordingService _usageRecordingService;
     private readonly IAiUsageRecordFactory _factory;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
-    private readonly ILogger<AiUsageRecordingChatClient> _logger;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
+    private readonly ILogger<AIUsageRecordingChatClient> _logger;
 
-    public AiUsageRecordingChatMiddleware(
+    public AIUsageRecordingChatMiddleware(
         IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiUsageRecordingService usageRecordingService,
         IAiUsageRecordFactory factory,
-        IOptionsMonitor<AiAnalyticsOptions> options,
-        ILogger<AiUsageRecordingChatClient> logger)
+        IOptionsMonitor<AIAnalyticsOptions> options,
+        ILogger<AIUsageRecordingChatClient> logger)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _usageRecordingService = usageRecordingService;
@@ -34,7 +34,7 @@ internal sealed class AiUsageRecordingChatMiddleware : IAiChatMiddleware
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new AiUsageRecordingChatClient(
+        return new AIUsageRecordingChatClient(
             client,
             _runtimeContextAccessor,
             _usageRecordingService,

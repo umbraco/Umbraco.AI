@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api;
-using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
+using Umbraco.AI.Web.Api;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
 using Umbraco.Cms.Api.Common.Attributes;
 using Umbraco.Cms.Api.Common.Builders;
 using Umbraco.Cms.Api.Common.Filters;
 using Umbraco.Cms.Web.Common.Authorization;
 using Umbraco.Cms.Web.Common.Filters;
 
-namespace Umbraco.Ai.Web.Api.Management.Common.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Common.Controllers;
 
 /// <summary>
 /// Base controller for Umbraco AI Management API controllers.
@@ -18,7 +18,7 @@ namespace Umbraco.Ai.Web.Api.Management.Common.Controllers;
 [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
 [DisableBrowserCache]
 [Produces("application/json")]
-public abstract class UmbracoAiManagementControllerBase : ControllerBase
+public abstract class UmbracoAIManagementControllerBase : ControllerBase
 {
     /// <summary>
     /// Creates an operation status result for the given status using a problem details builder.

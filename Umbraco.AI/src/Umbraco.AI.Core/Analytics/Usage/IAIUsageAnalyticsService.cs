@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for querying aggregated AI usage statistics.
 /// Public interface - exposed to Management API controllers.
 /// </summary>
-public interface IAiUsageAnalyticsService
+public interface IAIUsageAnalyticsService
 {
     /// <summary>
     /// Gets a summary of usage statistics within a time range.
@@ -16,11 +16,11 @@ public interface IAiUsageAnalyticsService
     /// <param name="filter">Optional filter criteria.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Summary statistics for the period.</returns>
-    Task<AiUsageSummary> GetSummaryAsync(
+    Task<AIUsageSummary> GetSummaryAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
-        AiUsageFilter? filter = null,
+        AIUsagePeriod? requestedGranularity = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -33,11 +33,11 @@ public interface IAiUsageAnalyticsService
     /// <param name="filter">Optional filter criteria.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Time series data points.</returns>
-    Task<IEnumerable<AiUsageTimeSeriesPoint>> GetTimeSeriesAsync(
+    Task<IEnumerable<AIUsageTimeSeriesPoint>> GetTimeSeriesAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
-        AiUsageFilter? filter = null,
+        AIUsagePeriod? requestedGranularity = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -48,10 +48,10 @@ public interface IAiUsageAnalyticsService
     /// <param name="requestedGranularity">Optional granularity override. If null, auto-selects based on date range.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Usage breakdown by provider.</returns>
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByProviderAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByProviderAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -62,10 +62,10 @@ public interface IAiUsageAnalyticsService
     /// <param name="requestedGranularity">Optional granularity override. If null, auto-selects based on date range.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Usage breakdown by model.</returns>
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByModelAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByModelAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -76,10 +76,10 @@ public interface IAiUsageAnalyticsService
     /// <param name="requestedGranularity">Optional granularity override. If null, auto-selects based on date range.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Usage breakdown by profile.</returns>
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByProfileAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByProfileAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -90,17 +90,17 @@ public interface IAiUsageAnalyticsService
     /// <param name="requestedGranularity">Optional granularity override. If null, auto-selects based on date range.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Usage breakdown by user.</returns>
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByUserAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByUserAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default);
 }
 
 /// <summary>
 /// Summary of usage statistics for a time period.
 /// </summary>
-public sealed class AiUsageSummary
+public sealed class AIUsageSummary
 {
     /// <summary>
     /// Gets the total number of AI requests.
@@ -146,7 +146,7 @@ public sealed class AiUsageSummary
 /// <summary>
 /// A single point in a usage time series.
 /// </summary>
-public sealed class AiUsageTimeSeriesPoint
+public sealed class AIUsageTimeSeriesPoint
 {
     /// <summary>
     /// Gets the timestamp for this data point (hour or day start).
@@ -187,7 +187,7 @@ public sealed class AiUsageTimeSeriesPoint
 /// <summary>
 /// Usage breakdown by a specific dimension (provider, model, profile, etc.).
 /// </summary>
-public sealed class AiUsageBreakdownItem
+public sealed class AIUsageBreakdownItem
 {
     /// <summary>
     /// Gets the dimension value (e.g., provider name, model ID, profile alias).

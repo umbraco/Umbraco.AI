@@ -1,16 +1,16 @@
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
 /// <summary>
 /// Represents the schema of an editable model, including its type and field definitions.
 /// </summary>
-public class AiEditableModelSchema
+public class AIEditableModelSchema
 {
     /// <summary>
-    /// Creates a new instance of <see cref="AiEditableModelSchema"/>.
+    /// Creates a new instance of <see cref="AIEditableModelSchema"/>.
     /// </summary>
     /// <param name="type">The type of the model.</param>
     /// <param name="fields">The field definitions for the model.</param>
-    public AiEditableModelSchema(Type type, IReadOnlyList<AiEditableModelField> fields)
+    public AIEditableModelSchema(Type type, IReadOnlyList<AIEditableModelField> fields)
     {
         Type = type;
         Fields = fields;
@@ -24,5 +24,5 @@ public class AiEditableModelSchema
     /// <summary>
     /// The field definitions for the editable model.
     /// </summary>
-    public IReadOnlyList<AiEditableModelField> Fields { get; }
+    public IReadOnlyList<AIEditableModelField> Fields { get; }
 }

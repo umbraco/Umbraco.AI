@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.Ai.Agent.Persistence;
+using Umbraco.AI.Agent.Persistence;
 
 #nullable disable
 
-namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
 {
-    [DbContext(typeof(UmbracoAiAgentDbContext))]
+    [DbContext(typeof(UmbracoAIAgentDbContext))]
     [Migration("20260109000000_UmbracoAiAgent_AddContextIds")]
-    partial class UmbracoAiAgent_AddContextIds
+    partial class UmbracoAIAgent_AddContextIds
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

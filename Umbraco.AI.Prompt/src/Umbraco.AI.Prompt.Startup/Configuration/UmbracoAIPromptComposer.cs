@@ -1,15 +1,15 @@
-using Umbraco.Ai.Prompt.Extensions;
-using Umbraco.Ai.Startup.Configuration;
+using Umbraco.AI.Prompt.Extensions;
+using Umbraco.AI.Startup.Configuration;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Prompt.Startup.Configuration;
+namespace Umbraco.AI.Prompt.Startup.Configuration;
 
 /// <summary>
 /// Umbraco Composer for auto-discovery and registration of Umbraco.Ai.Prompt services.
 /// </summary>
-[ComposeAfter(typeof(UmbracoAiComposer))]
-public class UmbracoAiPromptComposer : IComposer
+[ComposeAfter(typeof(UmbracoAIComposer))]
+public class UmbracoAIPromptComposer : IComposer
 {
     /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)

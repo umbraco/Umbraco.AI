@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Umbraco.Ai.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
     /// <inheritdoc />
     public partial class UmbracoAi_AddConnectionVersioning : Migration

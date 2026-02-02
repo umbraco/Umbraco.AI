@@ -1,16 +1,16 @@
 using System.Text.RegularExpressions;
 using Amazon.BedrockRuntime;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Extensions;
 
-namespace Umbraco.Ai.Amazon;
+namespace Umbraco.AI.Amazon;
 
 /// <summary>
 /// AI chat capability for Amazon Bedrock provider.
 /// </summary>
-public class AmazonChatCapability(AmazonProvider provider) : AiChatCapabilityBase<AmazonProviderSettings>(provider)
+public class AmazonChatCapability(AmazonProvider provider) : AIChatCapabilityBase<AmazonProviderSettings>(provider)
 {
     /// <summary>
     /// Optional region prefix pattern for inference profile IDs (e.g., "eu.", "us.", "apac.").
@@ -39,7 +39,7 @@ public class AmazonChatCapability(AmazonProvider provider) : AiChatCapabilityBas
     ];
 
     /// <inheritdoc />
-    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         AmazonProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
@@ -47,8 +47,8 @@ public class AmazonChatCapability(AmazonProvider provider) : AiChatCapabilityBas
 
         return allModels
             .Where(IsChatModel)
-            .Select(id => new AiModelDescriptor(
-                new AiModelRef(Provider.Id, id),
+            .Select(id => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, id),
                 AmazonModelUtilities.FormatDisplayName(id)))
             .ToList();
     }

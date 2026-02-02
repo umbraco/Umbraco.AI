@@ -1,14 +1,14 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Extensions;
 
-namespace Umbraco.Ai.Google;
+namespace Umbraco.AI.Google;
 
 /// <summary>
 /// AI chat capability for Google provider.
 /// </summary>
-public class GoogleChatCapability(GoogleProvider provider) : AiChatCapabilityBase<GoogleProviderSettings>(provider)
+public class GoogleChatCapability(GoogleProvider provider) : AIChatCapabilityBase<GoogleProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gemini-2.0-flash";
 
@@ -27,7 +27,7 @@ public class GoogleChatCapability(GoogleProvider provider) : AiChatCapabilityBas
     ];
 
     /// <inheritdoc />
-    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         GoogleProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
@@ -44,8 +44,8 @@ public class GoogleChatCapability(GoogleProvider provider) : AiChatCapabilityBas
             if (availableModels.Count > 0)
             {
                 return availableModels
-                    .Select(id => new AiModelDescriptor(
-                        new AiModelRef(Provider.Id, id),
+                    .Select(id => new AIModelDescriptor(
+                        new AIModelRef(Provider.Id, id),
                         GoogleModelUtilities.FormatDisplayName(id)))
                     .ToList();
             }
@@ -57,8 +57,8 @@ public class GoogleChatCapability(GoogleProvider provider) : AiChatCapabilityBas
 
         // Return hardcoded list of known chat models as fallback
         return KnownChatModels
-            .Select(id => new AiModelDescriptor(
-                new AiModelRef(Provider.Id, id),
+            .Select(id => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, id),
                 GoogleModelUtilities.FormatDisplayName(id)))
             .ToList();
     }

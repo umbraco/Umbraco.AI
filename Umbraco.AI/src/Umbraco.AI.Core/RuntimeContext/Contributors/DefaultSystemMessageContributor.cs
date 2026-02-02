@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.RuntimeContext.Contributors;
+namespace Umbraco.AI.Core.RuntimeContext.Contributors;
 
 /// <summary>
 /// Default fallback contributor that adds context item descriptions to system messages.
@@ -7,7 +7,7 @@ namespace Umbraco.Ai.Core.RuntimeContext.Contributors;
 internal sealed class DefaultSystemMessageContributor : IAiRuntimeContextContributor
 {
     /// <inheritdoc />
-    public void Contribute(AiRuntimeContext context)
+    public void Contribute(AIRuntimeContext context)
     {
         context.RequestContextItems.HandleUnhandled(item =>
         {

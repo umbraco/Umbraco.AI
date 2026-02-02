@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Connection.Models;
+namespace Umbraco.AI.Web.Api.Management.Connection.Models;
 
 /// <summary>
 /// Lightweight response model for a connection item (used in lists).

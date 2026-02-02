@@ -1,20 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Umbraco.Ai.Core.Analytics.Usage;
+using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Persistence.Analytics.Usage;
+namespace Umbraco.AI.Persistence.Analytics.Usage;
 
 /// <summary>
 /// EF Core repository for managing aggregated AI usage statistics.
 /// </summary>
 internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
     private readonly ILogger<EfCoreAiUsageStatisticsRepository> _logger;
 
     public EfCoreAiUsageStatisticsRepository(
-        IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider,
+        IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider,
         ILogger<EfCoreAiUsageStatisticsRepository> logger)
     {
         _scopeProvider = scopeProvider;
@@ -22,13 +22,13 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageStatistics>> GetHourlyByPeriodAsync(
+    public async Task<IEnumerable<AIUsageStatistics>> GetHourlyByPeriodAsync(
         DateTime from,
         DateTime to,
-        AiUsageFilter? filter = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -49,17 +49,17 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
             to);
 
         scope.Complete();
-        return entities.Select(AiUsageRecordFactory.BuildStatisticsDomain);
+        return entities.Select(AIUsageRecordFactory.BuildStatisticsDomain);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageStatistics>> GetDailyByPeriodAsync(
+    public async Task<IEnumerable<AIUsageStatistics>> GetDailyByPeriodAsync(
         DateTime from,
         DateTime to,
-        AiUsageFilter? filter = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -80,16 +80,16 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
             to);
 
         scope.Complete();
-        return entities.Select(AiUsageRecordFactory.BuildStatisticsDomain);
+        return entities.Select(AIUsageRecordFactory.BuildStatisticsDomain);
     }
 
     /// <inheritdoc />
     public async Task SaveHourlyBatchAsync(
-        IEnumerable<AiUsageStatistics> statistics,
+        IEnumerable<AIUsageStatistics> statistics,
         CancellationToken ct = default)
     {
         var entities = statistics
-            .Select(AiUsageRecordFactory.BuildHourlyStatisticsEntity)
+            .Select(AIUsageRecordFactory.BuildHourlyStatisticsEntity)
             .ToList();
 
         if (entities.Count == 0)
@@ -98,7 +98,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
             return;
         }
 
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -116,11 +116,11 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
 
     /// <inheritdoc />
     public async Task SaveDailyBatchAsync(
-        IEnumerable<AiUsageStatistics> statistics,
+        IEnumerable<AIUsageStatistics> statistics,
         CancellationToken ct = default)
     {
         var entities = statistics
-            .Select(AiUsageRecordFactory.BuildDailyStatisticsEntity)
+            .Select(AIUsageRecordFactory.BuildDailyStatisticsEntity)
             .ToList();
 
         if (entities.Count == 0)
@@ -129,7 +129,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
             return;
         }
 
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -148,7 +148,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <inheritdoc />
     public async Task<DateTime?> GetLastAggregatedHourlyPeriodAsync(CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var lastPeriod = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageStatisticsHourly.MaxAsync(s => (DateTime?)s.Period, ct));
@@ -162,7 +162,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <inheritdoc />
     public async Task<DateTime?> GetLastAggregatedDailyPeriodAsync(CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var lastPeriod = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageStatisticsDaily.MaxAsync(s => (DateTime?)s.Period, ct));
@@ -176,7 +176,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteHourlyForPeriodAsync(DateTime period, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -207,7 +207,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteDailyForPeriodAsync(DateTime period, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -238,7 +238,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteHourlyOlderThanAsync(DateTime olderThan, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -269,7 +269,7 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <inheritdoc />
     public async Task DeleteDailyOlderThanAsync(DateTime olderThan, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -300,9 +300,9 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <summary>
     /// Applies filter criteria to hourly statistics query.
     /// </summary>
-    private static IQueryable<AiUsageStatisticsHourlyEntity> ApplyFilter(
-        IQueryable<AiUsageStatisticsHourlyEntity> query,
-        AiUsageFilter? filter)
+    private static IQueryable<AIUsageStatisticsHourlyEntity> ApplyFilter(
+        IQueryable<AIUsageStatisticsHourlyEntity> query,
+        AIUsageFilter? filter)
     {
         if (filter == null)
             return query;
@@ -334,9 +334,9 @@ internal sealed class EfCoreAiUsageStatisticsRepository : IAiUsageStatisticsRepo
     /// <summary>
     /// Applies filter criteria to daily statistics query.
     /// </summary>
-    private static IQueryable<AiUsageStatisticsDailyEntity> ApplyFilter(
-        IQueryable<AiUsageStatisticsDailyEntity> query,
-        AiUsageFilter? filter)
+    private static IQueryable<AIUsageStatisticsDailyEntity> ApplyFilter(
+        IQueryable<AIUsageStatisticsDailyEntity> query,
+        AIUsageFilter? filter)
     {
         if (filter == null)
             return query;

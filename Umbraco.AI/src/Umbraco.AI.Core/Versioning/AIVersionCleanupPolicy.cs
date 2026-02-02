@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Configuration options for automated version history cleanup.
@@ -13,7 +13,7 @@ namespace Umbraco.Ai.Core.Versioning;
 /// that specific cleanup type.
 /// </para>
 /// </remarks>
-public sealed class AiVersionCleanupPolicy
+public sealed class AIVersionCleanupPolicy
 {
     /// <summary>
     /// Gets or sets a value indicating whether version cleanup is enabled.

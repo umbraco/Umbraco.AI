@@ -1,14 +1,14 @@
 using Google.GenAI;
 using Microsoft.Extensions.Caching.Memory;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Google;
+namespace Umbraco.AI.Google;
 
 /// <summary>
 /// AI provider for Google AI services.
 /// </summary>
-[AiProvider("google", "Google")]
-public class GoogleProvider : AiProviderBase<GoogleProviderSettings>
+[AIProvider("google", "Google")]
+public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
 {
     private const string CacheKeyPrefix = "Google_Models_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);

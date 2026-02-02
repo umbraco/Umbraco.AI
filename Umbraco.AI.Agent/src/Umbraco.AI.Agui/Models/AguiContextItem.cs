@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Models;
+namespace Umbraco.AI.Agui.Models;
 
 /// <summary>
 /// Represents a context item in the AG-UI protocol.

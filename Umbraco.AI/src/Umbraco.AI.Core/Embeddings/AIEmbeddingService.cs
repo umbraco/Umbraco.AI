@@ -1,20 +1,20 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 
-namespace Umbraco.Ai.Core.Embeddings;
+namespace Umbraco.AI.Core.Embeddings;
 
-internal sealed class AiEmbeddingService : IAiEmbeddingService
+internal sealed class AIEmbeddingService : IAiEmbeddingService
 {
     private readonly IAiEmbeddingGeneratorFactory _generatorFactory;
     private readonly IAiProfileService _profileService;
-    private readonly AiOptions _options;
+    private readonly AIOptions _options;
 
-    public AiEmbeddingService(
+    public AIEmbeddingService(
         IAiEmbeddingGeneratorFactory generatorFactory,
         IAiProfileService profileService,
-        IOptionsMonitor<AiOptions> options)
+        IOptionsMonitor<AIOptions> options)
     {
         _generatorFactory = generatorFactory;
         _profileService = profileService;
@@ -26,7 +26,7 @@ internal sealed class AiEmbeddingService : IAiEmbeddingService
         EmbeddingGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Embedding, cancellationToken);
+        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Embedding, cancellationToken);
         return await GenerateEmbeddingInternalAsync(profile, value, options, cancellationToken);
     }
 
@@ -48,7 +48,7 @@ internal sealed class AiEmbeddingService : IAiEmbeddingService
     }
 
     private async Task<Embedding<float>> GenerateEmbeddingInternalAsync(
-        AiProfile profile,
+        AIProfile profile,
         string value,
         EmbeddingGenerationOptions? options,
         CancellationToken cancellationToken)
@@ -65,7 +65,7 @@ internal sealed class AiEmbeddingService : IAiEmbeddingService
         EmbeddingGenerationOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Embedding, cancellationToken);
+        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Embedding, cancellationToken);
         return await GenerateEmbeddingsInternalAsync(profile, values, options, cancellationToken);
     }
 
@@ -87,7 +87,7 @@ internal sealed class AiEmbeddingService : IAiEmbeddingService
     }
 
     private async Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsInternalAsync(
-        AiProfile profile,
+        AIProfile profile,
         IEnumerable<string> values,
         EmbeddingGenerationOptions? options,
         CancellationToken cancellationToken)
@@ -104,7 +104,7 @@ internal sealed class AiEmbeddingService : IAiEmbeddingService
     {
         var profile = profileId.HasValue
             ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
-            : await _profileService.GetDefaultProfileAsync(AiCapability.Embedding, cancellationToken);
+            : await _profileService.GetDefaultProfileAsync(AICapability.Embedding, cancellationToken);
 
         if (profile is null)
         {
@@ -116,7 +116,7 @@ internal sealed class AiEmbeddingService : IAiEmbeddingService
         return await _generatorFactory.CreateGeneratorAsync(profile, cancellationToken);
     }
 
-    private static EmbeddingGenerationOptions? MergeOptions(AiProfile profile, EmbeddingGenerationOptions? callerOptions)
+    private static EmbeddingGenerationOptions? MergeOptions(AIProfile profile, EmbeddingGenerationOptions? callerOptions)
     {
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings
@@ -137,9 +137,9 @@ internal sealed class AiEmbeddingService : IAiEmbeddingService
         };
     }
 
-    private static void EnsureProfileSupportsEmbedding(AiProfile profile)
+    private static void EnsureProfileSupportsEmbedding(AIProfile profile)
     {
-        if (profile.Capability != AiCapability.Embedding)
+        if (profile.Capability != AICapability.Embedding)
         {
             throw new InvalidOperationException($"The profile '{profile.Name}' does not support embedding capability.");
         }

@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAiPrompt_AddVersioning : Migration
+    public partial class UmbracoAIPrompt_AddVersioning : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

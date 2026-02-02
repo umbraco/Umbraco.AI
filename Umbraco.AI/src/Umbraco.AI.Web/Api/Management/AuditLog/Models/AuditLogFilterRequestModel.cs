@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Web.Api.Management.AuditLog.Models;
+namespace Umbraco.AI.Web.Api.Management.AuditLog.Models;
 
 /// <summary>
 /// Request model for filtering audits.

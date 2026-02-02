@@ -1,9 +1,9 @@
-﻿namespace Umbraco.Ai.Core.Models;
+﻿namespace Umbraco.AI.Core.Models;
 
 /// <summary>
 /// Configuration options for AI services.
 /// </summary>
-public class AiOptions
+public class AIOptions
 {
     /// <summary>
     /// The default chat profile alias to use when none is specified.

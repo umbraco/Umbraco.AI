@@ -2,33 +2,33 @@ using System.Diagnostics;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Chat.Middleware;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
+namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 
 /// <summary>
 /// Embedding generator that records usage data to the analytics system.
-/// Reads tracking data from the inner <see cref="AiTrackingEmbeddingGenerator{TInput,TEmbedding}"/> if available.
+/// Reads tracking data from the inner <see cref="AITrackingEmbeddingGenerator{TInput,TEmbedding}"/> if available.
 /// </summary>
-internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : AiBoundEmbeddingGeneratorBase<TInput, TEmbedding>
+internal sealed class AIUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : AIBoundEmbeddingGeneratorBase<TInput, TEmbedding>
     where TEmbedding : Embedding
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiUsageRecordingService _usageRecordingService;
     private readonly IAiUsageRecordFactory _factory;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
-    private readonly ILogger<AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> _logger;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
+    private readonly ILogger<AIUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> _logger;
 
-    public AiUsageRecordingEmbeddingGenerator(
+    public AIUsageRecordingEmbeddingGenerator(
         IEmbeddingGenerator<TInput, TEmbedding> innerGenerator,
         IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiUsageRecordingService usageRecordingService,
         IAiUsageRecordFactory factory,
-        IOptionsMonitor<AiAnalyticsOptions> options,
-        ILogger<AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> logger)
+        IOptionsMonitor<AIAnalyticsOptions> options,
+        ILogger<AIUsageRecordingEmbeddingGenerator<TInput, TEmbedding>> logger)
         : base(innerGenerator)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
@@ -96,10 +96,10 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
             }
             
             // Extract context from options
-            var usageContext = AiUsageContext.ExtractFromRuntimeContext(AiCapability.Embedding, _runtimeContextAccessor.Context);
+            var usageContext = AIUsageContext.ExtractFromRuntimeContext(AICapability.Embedding, _runtimeContextAccessor.Context);
 
             // Try to get tracking data from inner generator
-            var trackingGenerator = InnerGenerator.GetService<AiTrackingEmbeddingGenerator<TInput, TEmbedding>>();
+            var trackingGenerator = InnerGenerator.GetService<AITrackingEmbeddingGenerator<TInput, TEmbedding>>();
             var usageDetails = trackingGenerator?.LastUsageDetails;
 
             // If we don't have usage details, we can't record (no token counts available)
@@ -110,10 +110,10 @@ internal sealed class AiUsageRecordingEmbeddingGenerator<TInput, TEmbedding> : A
             }
 
             // Convert to factory context
-            var context = AiUsageRecordContext.FromUsageContext(usageContext);
+            var context = AIUsageRecordContext.FromUsageContext(usageContext);
 
             // Create result object
-            var result = new AiUsageRecordResult
+            var result = new AIUsageRecordResult
             {
                 Usage = usageDetails,
                 DurationMs = durationMs,

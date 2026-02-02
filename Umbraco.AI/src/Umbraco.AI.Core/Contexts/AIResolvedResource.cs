@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Represents a resource after context resolution, including the source level it came from.
 /// </summary>
-public sealed class AiResolvedResource
+public sealed class AIResolvedResource
 {
     /// <summary>
     /// The unique identifier of the resource.
@@ -33,7 +33,7 @@ public sealed class AiResolvedResource
     /// <summary>
     /// Determines how and when this resource is included in AI operations.
     /// </summary>
-    public AiContextResourceInjectionMode InjectionMode { get; init; }
+    public AIContextResourceInjectionMode InjectionMode { get; init; }
 
     /// <summary>
     /// The source from which this resource was resolved.

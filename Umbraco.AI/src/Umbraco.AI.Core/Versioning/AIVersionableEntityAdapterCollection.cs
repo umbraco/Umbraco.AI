@@ -1,6 +1,6 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// A collection of versionable entity adapters.
@@ -8,13 +8,13 @@ namespace Umbraco.Ai.Core.Versioning;
 /// <remarks>
 /// This collection provides lookup methods to find the appropriate adapter for a given entity type.
 /// </remarks>
-public sealed class AiVersionableEntityAdapterCollection : BuilderCollectionBase<IAiVersionableEntityAdapter>
+public sealed class AIVersionableEntityAdapterCollection : BuilderCollectionBase<IAiVersionableEntityAdapter>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiVersionableEntityAdapterCollection"/> class.
+    /// Initializes a new instance of the <see cref="AIVersionableEntityAdapterCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the entity adapters.</param>
-    public AiVersionableEntityAdapterCollection(Func<IEnumerable<IAiVersionableEntityAdapter>> items)
+    public AIVersionableEntityAdapterCollection(Func<IEnumerable<IAiVersionableEntityAdapter>> items)
         : base(items)
     { }
 

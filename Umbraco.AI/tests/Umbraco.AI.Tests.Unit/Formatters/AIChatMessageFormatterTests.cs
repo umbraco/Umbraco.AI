@@ -1,9 +1,9 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.AuditLog;
+using Umbraco.AI.Core.AuditLog;
 
-namespace Umbraco.Ai.Tests.Unit.Formatters;
+namespace Umbraco.AI.Tests.Unit.Formatters;
 
-public class AiChatMessageFormatterTests
+public class AIChatMessageFormatterTests
 {
     #region Single Message Formatting
 
@@ -14,7 +14,7 @@ public class AiChatMessageFormatterTests
         var message = new ChatMessage(ChatRole.Assistant, "Hello, world!");
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessage(message);
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
         result.ShouldBe("[assistant] Hello, world!");
@@ -36,7 +36,7 @@ public class AiChatMessageFormatterTests
         });
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessage(message);
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
         result.ShouldContain("[assistant] Let me check the weather.");
@@ -55,7 +55,7 @@ public class AiChatMessageFormatterTests
         var message = new ChatMessage(ChatRole.Assistant, new List<AIContent> { functionCall });
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessage(message);
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
         result.ShouldContain("[tool_call:tc_001] ping({})");
@@ -83,7 +83,7 @@ public class AiChatMessageFormatterTests
         });
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessage(message);
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
         result.ShouldContain("[tool_call:tc_001] get_weather");
@@ -97,7 +97,7 @@ public class AiChatMessageFormatterTests
         var message = new ChatMessage(ChatRole.Assistant, new List<AIContent>());
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessage(message);
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
         result.ShouldBe("[assistant]");
@@ -119,7 +119,7 @@ public class AiChatMessageFormatterTests
         };
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessages(messages);
+        var result = AIChatMessageFormatter.FormatChatMessages(messages);
 
         // Assert
         result.ShouldContain("[system] You are a helpful assistant.");
@@ -156,7 +156,7 @@ public class AiChatMessageFormatterTests
         };
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessages(messages);
+        var result = AIChatMessageFormatter.FormatChatMessages(messages);
 
         // Assert
         result.ShouldContain("[user] What's the weather in London?");
@@ -183,7 +183,7 @@ public class AiChatMessageFormatterTests
         var message = new ChatMessage(ChatRole.Assistant, new List<AIContent> { functionCall });
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessage(message);
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
         result.ShouldContain("(truncated,");
@@ -202,7 +202,7 @@ public class AiChatMessageFormatterTests
         var message = new ChatMessage(ChatRole.Tool, new List<AIContent> { functionResult });
 
         // Act
-        var result = AiChatMessageFormatter.FormatChatMessage(message);
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
 
         // Assert
         result.ShouldContain("(truncated,");

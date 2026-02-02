@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Umbraco.Ai.Agui.Streaming;
+namespace Umbraco.AI.Agui.Streaming;
 
 /// <summary>
 /// Options for AG-UI streaming.

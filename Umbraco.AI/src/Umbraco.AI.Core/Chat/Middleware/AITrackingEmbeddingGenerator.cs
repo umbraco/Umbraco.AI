@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Chat.Middleware;
+namespace Umbraco.AI.Core.Chat.Middleware;
 
-internal sealed class AiTrackingEmbeddingGenerator<TInput, TEmbedding>(
+internal sealed class AITrackingEmbeddingGenerator<TInput, TEmbedding>(
     IEmbeddingGenerator<TInput, TEmbedding> innerGenerator)
-    : AiBoundEmbeddingGeneratorBase<TInput, TEmbedding>(innerGenerator)
+    : AIBoundEmbeddingGeneratorBase<TInput, TEmbedding>(innerGenerator)
     where TEmbedding : Embedding
 {
     /// <summary>

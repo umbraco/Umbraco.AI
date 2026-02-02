@@ -1,25 +1,25 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Persistence.Connections;
+namespace Umbraco.AI.Persistence.Connections;
 
 /// <summary>
 /// EF Core implementation of the AI connection repository.
 /// </summary>
 internal class EfCoreAiConnectionRepository : IAiConnectionRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
     private readonly IAiConnectionFactory _connectionFactory;
 
     /// <summary>
     /// Initializes a new instance of <see cref="EfCoreAiConnectionRepository"/>.
     /// </summary>
     public EfCoreAiConnectionRepository(
-        IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider,
+        IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider,
         IAiConnectionFactory connectionFactory)
     {
         _scopeProvider = scopeProvider;
@@ -27,11 +27,11 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiConnection?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<AIConnection?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiConnectionEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+        AIConnectionEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
 
         scope.Complete();
@@ -39,11 +39,11 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiConnection?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public async Task<AIConnection?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiConnectionEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+        AIConnectionEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.FirstOrDefaultAsync(
                 c => c.Alias.ToLower() == alias.ToLower(),
                 cancellationToken));
@@ -53,11 +53,11 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiConnection>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AIConnection>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        List<AiConnectionEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+        List<AIConnectionEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.ToListAsync(cancellationToken));
 
         scope.Complete();
@@ -65,11 +65,11 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiConnection>> GetByProviderAsync(string providerId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AIConnection>> GetByProviderAsync(string providerId, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        List<AiConnectionEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+        List<AIConnectionEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections
                 .Where(c => c.ProviderId == providerId)
                 .ToListAsync(cancellationToken));
@@ -79,18 +79,18 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<AiConnection> Items, int Total)> GetPagedAsync(
+    public async Task<(IEnumerable<AIConnection> Items, int Total)> GetPagedAsync(
         string? filter = null,
         string? providerId = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AiConnectionEntity> query = db.Connections;
+            IQueryable<AIConnectionEntity> query = db.Connections;
 
             // Apply provider filter
             if (!string.IsNullOrEmpty(providerId))
@@ -108,7 +108,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
             int total = await query.CountAsync(cancellationToken);
 
             // Apply pagination and get items
-            List<AiConnectionEntity> items = await query
+            List<AIConnectionEntity> items = await query
                 .OrderBy(c => c.Name)
                 .Skip(skip)
                 .Take(take)
@@ -122,13 +122,13 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     }
 
     /// <inheritdoc />
-    public async Task<AiConnection> SaveAsync(AiConnection connection, Guid? userId = null, CancellationToken cancellationToken = default)
+    public async Task<AIConnection> SaveAsync(AIConnection connection, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var savedConnection = await scope.ExecuteWithContextAsync(async db =>
         {
-            AiConnectionEntity? existing = await db.Connections.FindAsync([connection.Id], cancellationToken);
+            AIConnectionEntity? existing = await db.Connections.FindAsync([connection.Id], cancellationToken);
 
             if (existing is null)
             {
@@ -138,7 +138,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
                 connection.CreatedByUserId = userId;
                 connection.ModifiedByUserId = userId;
 
-                AiConnectionEntity newEntity = _connectionFactory.BuildEntity(connection);
+                AIConnectionEntity newEntity = _connectionFactory.BuildEntity(connection);
                 db.Connections.Add(newEntity);
             }
             else
@@ -163,11 +163,11 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {
-            AiConnectionEntity? entity = await db.Connections.FindAsync([id], cancellationToken);
+            AIConnectionEntity? entity = await db.Connections.FindAsync([id], cancellationToken);
             if (entity is null)
             {
                 return false;
@@ -185,7 +185,7 @@ internal class EfCoreAiConnectionRepository : IAiConnectionRepository
     /// <inheritdoc />
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool exists = await scope.ExecuteWithContextAsync(async db =>
             await db.Connections.AnyAsync(c => c.Id == id, cancellationToken));

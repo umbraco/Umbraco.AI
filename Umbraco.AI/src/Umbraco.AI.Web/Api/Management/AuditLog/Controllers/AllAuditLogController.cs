@@ -2,15 +2,15 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.AuditLog;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.AuditLog.Models;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Management.Configuration;
+using Umbraco.AI.Web.Api.Management.AuditLog.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.AuditLog.Controllers;
+namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 
 /// <summary>
 /// Controller to get all audit-log logs with filtering and pagination.
@@ -74,13 +74,13 @@ public class AllAuditLogController : AuditLogControllerBase
             SearchText = searchText
         };
 
-        var filter = _umbracoMapper.Map<AiAuditLogFilter>(filterRequest) ?? new AiAuditLogFilter();
+        var filter = _umbracoMapper.Map<AIAuditLogFilter>(filterRequest) ?? new AIAuditLogFilter();
         var (auditLogs, total) = await _auditLogService.GetAuditLogsPagedAsync(filter, skip, take, cancellationToken);
 
         var viewModel = new PagedViewModel<AuditLogItemResponseModel>
         {
             Total = total,
-            Items = _umbracoMapper.MapEnumerable<AiAuditLog, AuditLogItemResponseModel>(auditLogs)
+            Items = _umbracoMapper.MapEnumerable<AIAuditLog, AuditLogItemResponseModel>(auditLogs)
         };
 
         return Ok(viewModel);

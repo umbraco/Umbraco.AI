@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Connection.Models;
+namespace Umbraco.AI.Web.Api.Management.Connection.Models;
 
 /// <summary>
 /// Response model for a connection test result.

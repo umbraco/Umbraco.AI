@@ -1,26 +1,26 @@
 using System.Collections.Concurrent;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
-namespace Umbraco.Ai.Agent.Core.Agents;
+namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
 /// In-memory implementation of <see cref="IAiAgentRepository"/> for testing and fallback scenarios.
 /// </summary>
 internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
 {
-    private readonly ConcurrentDictionary<Guid, AiAgent> _agents = new();
+    private readonly ConcurrentDictionary<Guid, AIAgent> _agents = new();
 
     /// <inheritdoc />
-    public Task<AiAgent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIAgent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _agents.TryGetValue(id, out var agent);
         return Task.FromResult(agent);
     }
 
     /// <inheritdoc />
-    public Task<AiAgent?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIAgent?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
         var agent = _agents.Values.FirstOrDefault(p =>
             p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase));
@@ -28,20 +28,20 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiAgent>> GetAllAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult<IEnumerable<AiAgent>>(_agents.Values.ToList());
+    public Task<IEnumerable<AIAgent>> GetAllAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IEnumerable<AIAgent>>(_agents.Values.ToList());
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiAgent>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIAgent>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         var agents = _agents.Values
             .Where(p => p.ProfileId == profileId)
             .ToList();
-        return Task.FromResult<IEnumerable<AiAgent>>(agents);
+        return Task.FromResult<IEnumerable<AIAgent>>(agents);
     }
 
     /// <inheritdoc />
-    public Task<PagedModel<AiAgent>> GetPagedAsync(
+    public Task<PagedModel<AIAgent>> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -81,20 +81,20 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
             .Take(take)
             .ToList();
 
-        return Task.FromResult(new PagedModel<AiAgent>(total, items));
+        return Task.FromResult(new PagedModel<AIAgent>(total, items));
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiAgent>> GetByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIAgent>> GetByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
     {
         var agents = _agents.Values
             .Where(p => p.ScopeIds.Contains(scopeId, StringComparer.OrdinalIgnoreCase))
             .ToList();
-        return Task.FromResult<IEnumerable<AiAgent>>(agents);
+        return Task.FromResult<IEnumerable<AIAgent>>(agents);
     }
 
     /// <inheritdoc />
-    public Task<AiAgent> SaveAsync(AiAgent agent, Guid? userId = null, CancellationToken cancellationToken = default)
+    public Task<AIAgent> SaveAsync(AIAgent agent, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _agents[agent.Id] = agent;
         return Task.FromResult(agent);
@@ -118,22 +118,22 @@ internal sealed class InMemoryAiAgentRepository : IAiAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    public Task<IEnumerable<AIEntityVersion>> GetVersionHistoryAsync(
         Guid agentId,
         int? limit = null,
         CancellationToken cancellationToken = default)
     {
         // In-memory repository doesn't track version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
+        return Task.FromResult<IEnumerable<AIEntityVersion>>([]);
     }
 
     /// <inheritdoc />
-    public Task<AiAgent?> GetVersionSnapshotAsync(
+    public Task<AIAgent?> GetVersionSnapshotAsync(
         Guid agentId,
         int version,
         CancellationToken cancellationToken = default)
     {
         // In-memory repository doesn't track version history
-        return Task.FromResult<AiAgent?>(null);
+        return Task.FromResult<AIAgent?>(null);
     }
 }

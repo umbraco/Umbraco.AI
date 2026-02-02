@@ -1,34 +1,34 @@
-using Umbraco.Ai.Core.Connections;
+using Umbraco.AI.Core.Connections;
 
-namespace Umbraco.Ai.Persistence.Connections;
+namespace Umbraco.AI.Persistence.Connections;
 
 /// <summary>
-/// Factory for mapping between <see cref="AiConnection"/> domain models and <see cref="AiConnectionEntity"/> database entities.
+/// Factory for mapping between <see cref="AIConnection"/> domain models and <see cref="AIConnectionEntity"/> database entities.
 /// Handles encryption/decryption of sensitive settings fields during the mapping process.
 /// </summary>
-internal interface IAiConnectionFactory
+internal interface IAIConnectionFactory
 {
     /// <summary>
-    /// Creates an <see cref="AiConnection"/> domain model from a database entity.
+    /// Creates an <see cref="AIConnection"/> domain model from a database entity.
     /// Sensitive settings values are automatically decrypted.
     /// </summary>
     /// <param name="entity">The database entity.</param>
     /// <returns>The domain model with decrypted settings.</returns>
-    AiConnection BuildDomain(AiConnectionEntity entity);
+    AIConnection BuildDomain(AIConnectionEntity entity);
 
     /// <summary>
-    /// Creates an <see cref="AiConnectionEntity"/> database entity from a domain model.
+    /// Creates an <see cref="AIConnectionEntity"/> database entity from a domain model.
     /// Sensitive settings values are automatically encrypted based on the provider schema.
     /// </summary>
     /// <param name="connection">The domain model.</param>
     /// <returns>The database entity with encrypted settings.</returns>
-    AiConnectionEntity BuildEntity(AiConnection connection);
+    AIConnectionEntity BuildEntity(AIConnection connection);
 
     /// <summary>
-    /// Updates an existing <see cref="AiConnectionEntity"/> with values from a domain model.
+    /// Updates an existing <see cref="AIConnectionEntity"/> with values from a domain model.
     /// Sensitive settings values are automatically encrypted based on the provider schema.
     /// </summary>
     /// <param name="entity">The entity to update.</param>
     /// <param name="connection">The domain model with updated values.</param>
-    void UpdateEntity(AiConnectionEntity entity, AiConnection connection);
+    void UpdateEntity(AIConnectionEntity entity, AIConnection connection);
 }

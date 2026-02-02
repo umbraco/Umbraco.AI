@@ -3,18 +3,18 @@ using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
 
-namespace Umbraco.Ai.Prompt.Persistence.Notifications;
+namespace Umbraco.AI.Prompt.Persistence.Notifications;
 
 /// <summary>
 /// Notification handler that runs database migrations on application startup.
 /// </summary>
 internal sealed class RunPromptMigrationNotificationHandler : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
-    private readonly IDbContextFactory<UmbracoAiPromptDbContext> _dbContextFactory;
+    private readonly IDbContextFactory<UmbracoAIPromptDbContext> _dbContextFactory;
     private readonly ILogger<RunPromptMigrationNotificationHandler> _logger;
 
     public RunPromptMigrationNotificationHandler(
-        IDbContextFactory<UmbracoAiPromptDbContext> dbContextFactory,
+        IDbContextFactory<UmbracoAIPromptDbContext> dbContextFactory,
         ILogger<RunPromptMigrationNotificationHandler> logger)
     {
         _dbContextFactory = dbContextFactory;

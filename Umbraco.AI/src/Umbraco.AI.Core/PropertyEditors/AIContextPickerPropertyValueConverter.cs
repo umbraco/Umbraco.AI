@@ -1,12 +1,12 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core.Contexts;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.PropertyEditors;
 
-namespace Umbraco.Ai.Core.PropertyEditors;
+namespace Umbraco.AI.Core.PropertyEditors;
 
 /// <summary>
-/// Converts AI Context Picker property values to strongly typed <see cref="AiContext"/> instances.
+/// Converts AI Context Picker property values to strongly typed <see cref="AIContext"/> instances.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -17,19 +17,19 @@ namespace Umbraco.Ai.Core.PropertyEditors;
 /// </list>
 /// </para>
 /// <para>
-/// When "Allow Multiple" is enabled, returns <see cref="IEnumerable{AiContext}"/>.
-/// When disabled, returns a single <see cref="AiContext"/> or null.
+/// When "Allow Multiple" is enabled, returns <see cref="IEnumerable{AIContext}"/>.
+/// When disabled, returns a single <see cref="AIContext"/> or null.
 /// </para>
 /// </remarks>
-public class AiContextPickerPropertyValueConverter : PropertyValueConverterBase
+public class AIContextPickerPropertyValueConverter : PropertyValueConverterBase
 {
     private readonly IAiContextService _contextService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextPickerPropertyValueConverter"/> class.
+    /// Initializes a new instance of the <see cref="AIContextPickerPropertyValueConverter"/> class.
     /// </summary>
     /// <param name="contextService">The AI context service.</param>
-    public AiContextPickerPropertyValueConverter(IAiContextService contextService)
+    public AIContextPickerPropertyValueConverter(IAiContextService contextService)
     {
         _contextService = contextService;
     }
@@ -43,8 +43,8 @@ public class AiContextPickerPropertyValueConverter : PropertyValueConverterBase
     {
         var isMultiple = IsMultipleSelection(propertyType);
         return isMultiple
-            ? typeof(IEnumerable<AiContext>)
-            : typeof(AiContext);
+            ? typeof(IEnumerable<AIContext>)
+            : typeof(AIContext);
     }
 
     /// <inheritdoc />
@@ -116,14 +116,14 @@ public class AiContextPickerPropertyValueConverter : PropertyValueConverterBase
         if (inter is not Guid[] ids || ids.Length == 0)
         {
             return IsMultipleSelection(propertyType)
-                ? Enumerable.Empty<AiContext>()
+                ? Enumerable.Empty<AIContext>()
                 : null;
         }
 
         var isMultiple = IsMultipleSelection(propertyType);
 
         // Look up contexts synchronously (required by IPropertyValueConverter interface)
-        var contexts = new List<AiContext>();
+        var contexts = new List<AIContext>();
         foreach (var id in ids)
         {
             var context = _contextService.GetContextAsync(id).GetAwaiter().GetResult();

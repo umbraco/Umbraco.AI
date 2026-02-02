@@ -1,23 +1,23 @@
 using System.Reflection;
 
-namespace Umbraco.Ai.Agent.Core.Scopes;
+namespace Umbraco.AI.Agent.Core.Scopes;
 
 /// <summary>
 /// Base class for AI agent scope implementations.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Extend this class and apply the <see cref="AiAgentScopeAttribute"/> to define a scope.
+/// Extend this class and apply the <see cref="AIAgentScopeAttribute"/> to define a scope.
 /// The base class reads metadata from the attribute automatically.
 /// </para>
 /// </remarks>
 /// <example>
 /// <code>
-/// [AiAgentScope("copilot", Icon = "icon-chat")]
-/// public class CopilotScope : AiAgentScopeBase { }
+/// [AIAgentScope("copilot", Icon = "icon-chat")]
+/// public class CopilotScope : AIAgentScopeBase { }
 /// </code>
 /// </example>
-public abstract class AiAgentScopeBase : IAiAgentScope
+public abstract class AIAgentScopeBase : IAiAgentScope
 {
     /// <inheritdoc />
     public string Id { get; }
@@ -26,16 +26,16 @@ public abstract class AiAgentScopeBase : IAiAgentScope
     public string Icon { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiAgentScopeBase"/> class.
+    /// Initializes a new instance of the <see cref="AIAgentScopeBase"/> class.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the derived class is missing the <see cref="AiAgentScopeAttribute"/>.
+    /// Thrown when the derived class is missing the <see cref="AIAgentScopeAttribute"/>.
     /// </exception>
-    protected AiAgentScopeBase()
+    protected AIAgentScopeBase()
     {
-        var attribute = GetType().GetCustomAttribute<AiAgentScopeAttribute>(inherit: false)
+        var attribute = GetType().GetCustomAttribute<AIAgentScopeAttribute>(inherit: false)
             ?? throw new InvalidOperationException(
-                $"The AI agent scope '{GetType().FullName}' is missing the required {nameof(AiAgentScopeAttribute)}.");
+                $"The AI agent scope '{GetType().FullName}' is missing the required {nameof(AIAgentScopeAttribute)}.");
 
         Id = attribute.Id;
         Icon = attribute.Icon;

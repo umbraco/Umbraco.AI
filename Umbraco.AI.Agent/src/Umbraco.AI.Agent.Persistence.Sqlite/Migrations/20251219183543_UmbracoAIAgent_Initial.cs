@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAiAgent_Initial : Migration
+    public partial class UmbracoAIAgent_Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

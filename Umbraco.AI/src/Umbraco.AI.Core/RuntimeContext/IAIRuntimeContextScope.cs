@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.RuntimeContext;
+namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
 /// Represents an active runtime context scope.
@@ -12,17 +12,17 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// and disposing a nested scope restores the parent context.
 /// </para>
 /// </remarks>
-public interface IAiRuntimeContextScope : IDisposable
+public interface IAIRuntimeContextScope : IDisposable
 {
     /// <summary>
     /// Gets the runtime context for this scope.
     /// </summary>
-    AiRuntimeContext Context { get; }
+    AIRuntimeContext Context { get; }
 
     /// <summary>
     /// Gets the parent context, or <c>null</c> if this is the root scope.
     /// </summary>
-    AiRuntimeContext? ParentContext { get; }
+    AIRuntimeContext? ParentContext { get; }
 
     /// <summary>
     /// Gets the nesting depth of this scope (1 for root scope, 2 for first nested, etc.).

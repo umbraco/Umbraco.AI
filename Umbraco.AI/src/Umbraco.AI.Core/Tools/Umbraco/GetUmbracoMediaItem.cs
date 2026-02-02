@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Prompt.Core.Media;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Prompt.Core.Media;
 
-namespace Umbraco.Ai.Core.Tools.Umbraco;
+namespace Umbraco.AI.Core.Tools.Umbraco;
 
 
 /// <summary>
@@ -22,8 +22,8 @@ public sealed record GetUmbracoMediaItemArgs(
 /// </summary>
 /// <param name="runtimeContextAccessor"></param>
 /// <param name="mediaResolver"></param>
-[AiTool("get_umbraco_media", "Retrieves a media item from Umbraco")]
-public class GetUmbracoMediaItem(IAiRuntimeContextAccessor runtimeContextAccessor, IAiUmbracoMediaResolver mediaResolver) : AiToolBase<GetUmbracoMediaItemArgs>
+[AITool("get_umbraco_media", "Retrieves a media item from Umbraco")]
+public class GetUmbracoMediaItem(IAiRuntimeContextAccessor runtimeContextAccessor, IAiUmbracoMediaResolver mediaResolver) : AIToolBase<GetUmbracoMediaItemArgs>
 {
     /// <inheritdoc />
     public override string Description =>

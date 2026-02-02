@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Default implementation of <see cref="IAiContextAccessor"/> using HttpContext.Items.
@@ -10,16 +10,16 @@ namespace Umbraco.Ai.Core.Contexts;
 /// the async boundaries created by MEAI's FunctionInvokingChatClient during tool execution.
 /// HttpContext.Items is preserved across all async calls within an HTTP request.
 /// </remarks>
-internal sealed class AiContextAccessor(IHttpContextAccessor httpContextAccessor) : IAiContextAccessor
+internal sealed class AIContextAccessor(IHttpContextAccessor httpContextAccessor) : IAiContextAccessor
 {
     private const string ContextKey = "Umbraco.Ai.ResolvedContext";
 
     /// <inheritdoc />
-    public AiResolvedContext? Context =>
-        httpContextAccessor.HttpContext?.Items[ContextKey] as AiResolvedContext;
+    public AIResolvedContext? Context =>
+        httpContextAccessor.HttpContext?.Items[ContextKey] as AIResolvedContext;
 
     /// <inheritdoc />
-    public IDisposable SetContext(AiResolvedContext context)
+    public IDisposable SetContext(AIResolvedContext context)
     {
         if (httpContextAccessor.HttpContext != null)
         {

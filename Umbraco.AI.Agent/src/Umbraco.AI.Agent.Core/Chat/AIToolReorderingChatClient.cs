@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Agent.Core.Chat;
+namespace Umbraco.AI.Agent.Core.Chat;
 
 /// <summary>
 /// A chat client that reorders tool calls in responses to ensure server-side tools
@@ -24,21 +24,21 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// </list>
 /// </para>
 /// <para>
-/// Frontend tool names are read from <see cref="AiRuntimeContext"/>
+/// Frontend tool names are read from <see cref="AIRuntimeContext"/>
 /// using the key <see cref="Constants.ContextKeys.FrontendToolNames"/>. This allows
 /// the middleware to be stateless and frontend tools to be specified per-request.
 /// </para>
 /// </remarks>
-internal sealed class AiToolReorderingChatClient : DelegatingChatClient
+internal sealed class AIToolReorderingChatClient : DelegatingChatClient
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiToolReorderingChatClient"/> class.
+    /// Initializes a new instance of the <see cref="AIToolReorderingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client (typically the provider).</param>
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
-    public AiToolReorderingChatClient(IChatClient innerClient, IAiRuntimeContextAccessor runtimeContextAccessor)
+    public AIToolReorderingChatClient(IChatClient innerClient, IAiRuntimeContextAccessor runtimeContextAccessor)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor ?? throw new ArgumentNullException(nameof(runtimeContextAccessor));

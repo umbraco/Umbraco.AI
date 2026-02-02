@@ -1,9 +1,9 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Agent.Core.Chat;
+namespace Umbraco.AI.Agent.Core.Chat;
 
 /// <summary>
 /// Factory for creating MAF AIAgent instances from agent definitions.
@@ -30,7 +30,7 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// await foreach (var update in agent.RunStreamingAsync("Do something")) { }
 /// </code>
 /// </remarks>
-public interface IAiAgentFactory
+public interface IAIAgentFactory
 {
     /// <summary>
     /// Creates an AIAgent from an agent definition with automatic runtime context management.
@@ -60,7 +60,7 @@ public interface IAiAgentFactory
     /// // Create agent once
     /// var agent = await _agentFactory.CreateAgentAsync(
     ///     agentDefinition,
-    ///     contextItems: new[] { new AiRequestContextItem { Description = "userId", Value = userId } },
+    ///     contextItems: new[] { new AIRequestContextItem { Description = "userId", Value = userId } },
     ///     additionalTools: frontendTools,
     ///     additionalProperties: new Dictionary&lt;string, object?&gt; { ["RunId"] = runId },
     ///     cancellationToken);
@@ -73,8 +73,8 @@ public interface IAiAgentFactory
     /// </code>
     /// </remarks>
     Task<AIAgent> CreateAgentAsync(
-        AiAgent agent,
-        IEnumerable<AiRequestContextItem>? contextItems = null,
+        AIAgent agent,
+        IEnumerable<AIRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
         IReadOnlyDictionary<string, object?>? additionalProperties = null,
         CancellationToken cancellationToken = default);

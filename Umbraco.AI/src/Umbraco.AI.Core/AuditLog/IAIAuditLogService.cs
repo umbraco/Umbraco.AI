@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Service interface for AI governance tracing operations.
 /// Provides methods for recording, retrieving, and managing AI execution traces.
 /// </summary>
-public interface IAiAuditLogService
+public interface IAIAuditLogService
 {
     /// <summary>
     /// Starts a new AI audit-log record. Completely independent of OpenTelemetry Activity.
@@ -13,8 +13,8 @@ public interface IAiAuditLogService
     /// <param name="auditLog">The audit-log record to start.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The newly created audit-log record.</returns>
-    Task<AiAuditLog> StartAuditLogAsync(
-        AiAuditLog auditLog,
+    Task<AIAuditLog> StartAuditLogAsync(
+        AIAuditLog auditLog,
         CancellationToken ct = default);
 
     /// <summary>
@@ -24,8 +24,8 @@ public interface IAiAuditLogService
     /// <param name="response">The response object from the AI operation.</param>
     /// <param name="ct">Cancellation token.</param>
     Task CompleteAuditLogAsync(
-        AiAuditLog audit,
-        AiAuditResponse? response,
+        AIAuditLog audit,
+        AIAuditResponse? response,
         CancellationToken ct = default);
 
     /// <summary>
@@ -35,7 +35,7 @@ public interface IAiAuditLogService
     /// <param name="exception">The exception that caused the failure.</param>
     /// <param name="ct">Cancellation token.</param>
     Task RecordAuditLogFailureAsync(
-        AiAuditLog audit,
+        AIAuditLog audit,
         Exception exception,
         CancellationToken ct = default);
 
@@ -47,7 +47,7 @@ public interface IAiAuditLogService
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
     ValueTask QueueStartAuditLogAsync(
-        AiAuditLog auditLog,
+        AIAuditLog auditLog,
         CancellationToken ct = default);
 
     /// <summary>
@@ -59,8 +59,8 @@ public interface IAiAuditLogService
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
     ValueTask QueueCompleteAuditLogAsync(
-        AiAuditLog audit,
-        AiAuditResponse? response,
+        AIAuditLog audit,
+        AIAuditResponse? response,
         CancellationToken ct = default);
 
     /// <summary>
@@ -72,7 +72,7 @@ public interface IAiAuditLogService
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes when the work item is queued (not when it completes).</returns>
     ValueTask QueueRecordAuditLogFailureAsync(
-        AiAuditLog audit,
+        AIAuditLog audit,
         Exception exception,
         CancellationToken ct = default);
 
@@ -82,7 +82,7 @@ public interface IAiAuditLogService
     /// <param name="id">The unique identifier of the audit-log.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The audit-log if found; otherwise, null.</returns>
-    Task<AiAuditLog?> GetAuditLogAsync(Guid id, CancellationToken ct = default);
+    Task<AIAuditLog?> GetAuditLogAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>
     /// Retrieves a paginated collection of audit-log logs matching the specified filter.
@@ -92,8 +92,8 @@ public interface IAiAuditLogService
     /// <param name="take">The number of records to take.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A tuple containing the filtered audit-log logs and the total count.</returns>
-    Task<(IEnumerable<AiAuditLog>, int Total)> GetAuditLogsPagedAsync(
-        AiAuditLogFilter filter,
+    Task<(IEnumerable<AIAuditLog>, int Total)> GetAuditLogsPagedAsync(
+        AIAuditLogFilter filter,
         int skip,
         int take,
         CancellationToken ct = default);
@@ -106,7 +106,7 @@ public interface IAiAuditLogService
     /// <param name="limit">The maximum number of audit-log logs to retrieve.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A collection of recent audit-log logs for the entity.</returns>
-    Task<IEnumerable<AiAuditLog>> GetEntityHistoryAsync(
+    Task<IEnumerable<AIAuditLog>> GetEntityHistoryAsync(
         string entityId,
         string entityType,
         int limit,

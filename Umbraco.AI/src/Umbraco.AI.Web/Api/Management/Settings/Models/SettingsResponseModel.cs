@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Web.Api.Management.Settings.Models;
+namespace Umbraco.AI.Web.Api.Management.Settings.Models;
 
 /// <summary>
 /// Response model for AI settings.

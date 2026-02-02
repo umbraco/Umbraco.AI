@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Response details for an AI audit log entry.
 /// </summary>
-public sealed class AiAuditResponse
+public sealed class AIAuditResponse
 {
     /// <summary>
     /// Gets or sets the generated data.

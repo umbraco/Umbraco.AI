@@ -1,8 +1,8 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Persistence;
+using Umbraco.AI.Persistence;
 
-namespace Umbraco.Ai.Tests.Common.Fixtures;
+namespace Umbraco.AI.Tests.Common.Fixtures;
 
 /// <summary>
 /// Test fixture that provides in-memory SQLite database for EF Core repository tests.
@@ -12,15 +12,15 @@ public class EfCoreTestFixture : IDisposable
     private readonly SqliteConnection _connection;
 
     /// <summary>
-    /// Creates a new <see cref="UmbracoAiDbContext"/> instance for testing.
+    /// Creates a new <see cref="UmbracoAIDbContext"/> instance for testing.
     /// </summary>
-    public UmbracoAiDbContext CreateContext()
+    public UmbracoAIDbContext CreateContext()
     {
-        var options = new DbContextOptionsBuilder<UmbracoAiDbContext>()
+        var options = new DbContextOptionsBuilder<UmbracoAIDbContext>()
             .UseSqlite(_connection)
             .Options;
 
-        return new UmbracoAiDbContext(options);
+        return new UmbracoAIDbContext(options);
     }
 
     /// <summary>

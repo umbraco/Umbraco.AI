@@ -1,27 +1,27 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Embeddings;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
+namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 
 /// <summary>
 /// Middleware that records AI embedding usage to the analytics system.
 /// </summary>
-internal sealed class AiUsageRecordingEmbeddingMiddleware : IAiEmbeddingMiddleware
+internal sealed class AIUsageRecordingEmbeddingMiddleware : IAiEmbeddingMiddleware
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiUsageRecordingService _usageRecordingService;
     private readonly IAiUsageRecordFactory _factory;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly ILoggerFactory _loggerFactory;
 
-    public AiUsageRecordingEmbeddingMiddleware(
+    public AIUsageRecordingEmbeddingMiddleware(
         IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiUsageRecordingService usageRecordingService,
         IAiUsageRecordFactory factory,
-        IOptionsMonitor<AiAnalyticsOptions> options,
+        IOptionsMonitor<AIAnalyticsOptions> options,
         ILoggerFactory loggerFactory)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
@@ -34,12 +34,12 @@ internal sealed class AiUsageRecordingEmbeddingMiddleware : IAiEmbeddingMiddlewa
     /// <inheritdoc />
     public IEmbeddingGenerator<string, Embedding<float>> Apply(IEmbeddingGenerator<string, Embedding<float>> generator)
     {
-        return new AiUsageRecordingEmbeddingGenerator<string, Embedding<float>>(
+        return new AIUsageRecordingEmbeddingGenerator<string, Embedding<float>>(
             generator,
             _runtimeContextAccessor,
             _usageRecordingService,
             _factory,
             _options,
-            _loggerFactory.CreateLogger<AiUsageRecordingEmbeddingGenerator<string, Embedding<float>>>());
+            _loggerFactory.CreateLogger<AIUsageRecordingEmbeddingGenerator<string, Embedding<float>>>());
     }
 }

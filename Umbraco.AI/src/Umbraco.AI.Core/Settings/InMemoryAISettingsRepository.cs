@@ -1,19 +1,19 @@
-namespace Umbraco.Ai.Core.Settings;
+namespace Umbraco.AI.Core.Settings;
 
 /// <summary>
 /// In-memory implementation of the settings repository for development/testing.
 /// </summary>
 internal sealed class InMemoryAiSettingsRepository : IAiSettingsRepository
 {
-    private AiSettings _settings = new();
+    private AISettings _settings = new();
 
     /// <inheritdoc />
-    public Task<AiSettings> GetAsync(CancellationToken cancellationToken = default)
+    public Task<AISettings> GetAsync(CancellationToken cancellationToken = default)
         => Task.FromResult(_settings);
 
     /// <inheritdoc />
-    public Task<AiSettings> SaveAsync(
-        AiSettings settings,
+    public Task<AISettings> SaveAsync(
+        AISettings settings,
         Guid? userId = null,
         CancellationToken cancellationToken = default)
     {

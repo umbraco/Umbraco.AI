@@ -1,27 +1,27 @@
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Default implementation of <see cref="IAiEntityVersionService"/>.
 /// </summary>
-internal sealed class AiEntityVersionService : IAiEntityVersionService
+internal sealed class AIEntityVersionService : IAiEntityVersionService
 {
     private readonly IAiEntityVersionRepository _repository;
-    private readonly AiVersionableEntityAdapterCollection _entityTypes;
-    private readonly IOptionsMonitor<AiVersionCleanupPolicy> _cleanupPolicy;
+    private readonly AIVersionableEntityAdapterCollection _entityTypes;
+    private readonly IOptionsMonitor<AIVersionCleanupPolicy> _cleanupPolicy;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiEntityVersionService"/> class.
+    /// Initializes a new instance of the <see cref="AIEntityVersionService"/> class.
     /// </summary>
     /// <param name="repository">The version repository.</param>
     /// <param name="entityTypes">The collection of versionable entity type handlers.</param>
     /// <param name="cleanupPolicy">The version cleanup policy options.</param>
-    public AiEntityVersionService(
+    public AIEntityVersionService(
         IAiEntityVersionRepository repository,
-        AiVersionableEntityAdapterCollection entityTypes,
-        IOptionsMonitor<AiVersionCleanupPolicy> cleanupPolicy)
+        AIVersionableEntityAdapterCollection entityTypes,
+        IOptionsMonitor<AIVersionCleanupPolicy> cleanupPolicy)
     {
         _repository = repository;
         _entityTypes = entityTypes;
@@ -29,7 +29,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     }
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetVersionHistoryAsync(
+    public async Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
         int skip,
@@ -45,7 +45,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     }
 
     /// <inheritdoc />
-    public async Task<AiEntityVersion?> GetVersionAsync(
+    public async Task<AIEntityVersion?> GetVersionAsync(
         Guid entityId,
         string entityType,
         int version,
@@ -69,7 +69,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
         if (currentEntity is IAiVersionableEntity versionable && versionable.Version == version)
         {
             // Return a synthetic version record for the current state
-            return new AiEntityVersion
+            return new AIEntityVersion
             {
                 Id = Guid.Empty, // Synthetic - no DB record exists
                 EntityId = entityId,
@@ -174,7 +174,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     }
 
     /// <inheritdoc />
-    public async Task<AiVersionComparison?> CompareVersionsAsync(
+    public async Task<AIVersionComparison?> CompareVersionsAsync(
         Guid entityId,
         string entityType,
         int fromVersion,
@@ -222,7 +222,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
 
         var changes = handler.CompareVersions(fromEntity, toEntity);
 
-        return new AiVersionComparison(entityId, entityType, fromVersion, toVersion, changes);
+        return new AIVersionComparison(entityId, entityType, fromVersion, toVersion, changes);
     }
 
     /// <inheritdoc />
@@ -242,14 +242,14 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
     }
 
     /// <inheritdoc />
-    public async Task<AiVersionCleanupResult> CleanupVersionsAsync(CancellationToken cancellationToken = default)
+    public async Task<AIVersionCleanupResult> CleanupVersionsAsync(CancellationToken cancellationToken = default)
     {
         var policy = _cleanupPolicy.CurrentValue;
 
         // Check if cleanup is enabled
         if (!policy.Enabled)
         {
-            return new AiVersionCleanupResult
+            return new AIVersionCleanupResult
             {
                 WasSkipped = true,
                 SkipReason = "Version cleanup is disabled",
@@ -260,7 +260,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
         // Check if any cleanup is configured
         if (policy is { RetentionDays: <= 0, MaxVersionsPerEntity: <= 0 })
         {
-            return new AiVersionCleanupResult
+            return new AIVersionCleanupResult
             {
                 WasSkipped = true,
                 SkipReason = "No cleanup policy configured (both RetentionDays and MaxVersionsPerEntity are 0 or less)",
@@ -286,7 +286,7 @@ internal sealed class AiEntityVersionService : IAiEntityVersionService
 
         var remainingCount = await _repository.GetVersionCountAsync(cancellationToken);
 
-        return new AiVersionCleanupResult
+        return new AIVersionCleanupResult
         {
             DeletedByAge = deletedByAge,
             DeletedByCount = deletedByCount,

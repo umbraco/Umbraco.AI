@@ -1,76 +1,76 @@
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core.Contexts;
 
-namespace Umbraco.Ai.Tests.Common.Builders;
+namespace Umbraco.AI.Tests.Common.Builders;
 
 /// <summary>
-/// Fluent builder for creating <see cref="AiContext"/> instances in tests.
+/// Fluent builder for creating <see cref="AIContext"/> instances in tests.
 /// </summary>
-public class AiContextBuilder
+public class AIContextBuilder
 {
     private Guid _id = Guid.NewGuid();
     private string _alias = "test-context";
     private string _name = "Test Context";
     private DateTime _dateCreated = DateTime.UtcNow;
     private DateTime _dateModified = DateTime.UtcNow;
-    private IList<AiContextResource> _resources = new List<AiContextResource>();
+    private IList<AIContextResource> _resources = new List<AIContextResource>();
 
-    public AiContextBuilder WithId(Guid id)
+    public AIContextBuilder WithId(Guid id)
     {
         _id = id;
         return this;
     }
 
-    public AiContextBuilder WithAlias(string alias)
+    public AIContextBuilder WithAlias(string alias)
     {
         _alias = alias;
         return this;
     }
 
-    public AiContextBuilder WithName(string name)
+    public AIContextBuilder WithName(string name)
     {
         _name = name;
         return this;
     }
 
-    public AiContextBuilder WithDateCreated(DateTime dateCreated)
+    public AIContextBuilder WithDateCreated(DateTime dateCreated)
     {
         _dateCreated = dateCreated;
         return this;
     }
 
-    public AiContextBuilder WithDateModified(DateTime dateModified)
+    public AIContextBuilder WithDateModified(DateTime dateModified)
     {
         _dateModified = dateModified;
         return this;
     }
 
-    public AiContextBuilder WithResources(params AiContextResource[] resources)
+    public AIContextBuilder WithResources(params AIContextResource[] resources)
     {
         _resources = resources.ToList();
         return this;
     }
 
-    public AiContextBuilder WithResources(IEnumerable<AiContextResource> resources)
+    public AIContextBuilder WithResources(IEnumerable<AIContextResource> resources)
     {
         _resources = resources.ToList();
         return this;
     }
 
-    public AiContextBuilder AddResource(AiContextResource resource)
+    public AIContextBuilder AddResource(AIContextResource resource)
     {
         _resources.Add(resource);
         return this;
     }
 
-    public AiContextBuilder AddResource(AiContextResourceBuilder resourceBuilder)
+    public AIContextBuilder AddResource(AIContextResourceBuilder resourceBuilder)
     {
         _resources.Add(resourceBuilder.Build());
         return this;
     }
 
-    public AiContext Build()
+    public AIContext Build()
     {
-        return new AiContext
+        return new AIContext
         {
             Id = _id,
             Alias = _alias,
@@ -81,5 +81,5 @@ public class AiContextBuilder
         };
     }
 
-    public static implicit operator AiContext(AiContextBuilder builder) => builder.Build();
+    public static implicit operator AIContext(AIContextBuilder builder) => builder.Build();
 }

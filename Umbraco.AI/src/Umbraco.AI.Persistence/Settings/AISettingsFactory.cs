@@ -1,32 +1,32 @@
 using System.Reflection;
 using System.Text.Json;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.AI.Core.Settings;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Persistence.Settings;
+namespace Umbraco.AI.Persistence.Settings;
 
 /// <summary>
-/// Factory for converting between <see cref="AiSettingsEntity"/> and <see cref="AiSettings"/>.
+/// Factory for converting between <see cref="AISettingsEntity"/> and <see cref="AISettings"/>.
 /// </summary>
-internal static class AiSettingsFactory
+internal static class AISettingsFactory
 {
-    private static readonly PropertyInfo[] SettingProperties = typeof(AiSettings)
+    private static readonly PropertyInfo[] SettingProperties = typeof(AISettings)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(p => p.GetCustomAttribute<AiSettingAttribute>() != null)
+        .Where(p => p.GetCustomAttribute<AISettingAttribute>() != null)
         .ToArray();
     
     /// <summary>
     /// Builds a domain model from a collection of setting entities.
     /// </summary>
-    public static AiSettings BuildDomain(IEnumerable<AiSettingsEntity> entities)
+    public static AISettings BuildDomain(IEnumerable<AISettingsEntity> entities)
     {
-        var settings = new AiSettings();
+        var settings = new AISettings();
         
         var entityDict = entities.ToDictionary(e => e.Key);
         
         foreach (var prop in SettingProperties)
         {
-            var key = prop.GetCustomAttribute<AiSettingAttribute>()?.Key ?? prop.Name;
+            var key = prop.GetCustomAttribute<AISettingAttribute>()?.Key ?? prop.Name;
             if (entityDict.TryGetValue(key, out var entity))
             {
                 var value = ConvertFromString(entity.Value, prop.PropertyType);
@@ -48,9 +48,9 @@ internal static class AiSettingsFactory
     /// <summary>
     /// Creates or updates entities from a domain model.
     /// </summary>
-    public static IEnumerable<AiSettingsEntity> BuildEntities(
-        AiSettings settings,
-        IEnumerable<AiSettingsEntity> existingEntities,
+    public static IEnumerable<AISettingsEntity> BuildEntities(
+        AISettings settings,
+        IEnumerable<AISettingsEntity> existingEntities,
         Guid? userId)
     {
         var existing = existingEntities.ToDictionary(e => e.Key, e => e);
@@ -58,16 +58,16 @@ internal static class AiSettingsFactory
 
         foreach (var prop in SettingProperties)
         {
-            var key = prop.GetCustomAttribute<AiSettingAttribute>()?.Key ?? prop.Name;
+            var key = prop.GetCustomAttribute<AISettingAttribute>()?.Key ?? prop.Name;
             var value = ConvertToString(prop.GetValue(settings));
             yield return CreateOrUpdateEntity(key, value, existing, now, userId);
         }
     }
 
-    private static AiSettingsEntity CreateOrUpdateEntity(
+    private static AISettingsEntity CreateOrUpdateEntity(
         string key,
         string? value,
-        Dictionary<string, AiSettingsEntity> existing,
+        Dictionary<string, AISettingsEntity> existing,
         DateTime now,
         Guid? userId)
     {
@@ -87,7 +87,7 @@ internal static class AiSettingsFactory
         }
 
         // Create new
-        return new AiSettingsEntity
+        return new AISettingsEntity
         {
             Id = Guid.NewGuid(),
             Key = key,

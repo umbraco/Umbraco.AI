@@ -1,30 +1,30 @@
-using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Contexts.Resolvers;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Default implementation of <see cref="IAiContextResolutionService"/> that aggregates
 /// context from all registered resolvers.
 /// </summary>
-internal sealed class AiContextResolutionService : IAiContextResolutionService
+internal sealed class AIContextResolutionService : IAiContextResolutionService
 {
-    private readonly AiContextResolverCollection _resolvers;
+    private readonly AIContextResolverCollection _resolvers;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextResolutionService"/> class.
+    /// Initializes a new instance of the <see cref="AIContextResolutionService"/> class.
     /// </summary>
     /// <param name="resolvers">The collection of registered context resolvers.</param>
-    public AiContextResolutionService(AiContextResolverCollection resolvers)
+    public AIContextResolutionService(AIContextResolverCollection resolvers)
     {
         _resolvers = resolvers;
     }
 
     /// <inheritdoc />
-    public async Task<AiResolvedContext> ResolveContextAsync(CancellationToken cancellationToken = default)
+    public async Task<AIResolvedContext> ResolveContextAsync(CancellationToken cancellationToken = default)
     {
-        var allSources = new List<AiContextSource>();
-        var allResources = new List<AiResolvedResource>();
+        var allSources = new List<AIContextSource>();
+        var allResources = new List<AIResolvedResource>();
         var seenResourceIds = new HashSet<Guid>();
 
         // Execute each resolver in order
@@ -36,7 +36,7 @@ internal sealed class AiContextResolutionService : IAiContextResolutionService
             // Add sources
             foreach (var source in result.Sources)
             {
-                allSources.Add(new AiContextSource(resolverTypeName, source.EntityName, source.ContextName));
+                allSources.Add(new AIContextSource(resolverTypeName, source.EntityName, source.ContextName));
             }
 
             // Process resources
@@ -50,8 +50,8 @@ internal sealed class AiContextResolutionService : IAiContextResolutionService
 
                 seenResourceIds.Add(resource.Id);
 
-                // Convert to AiResolvedResource with SourceLevel set
-                allResources.Add(new AiResolvedResource
+                // Convert to AIResolvedResource with SourceLevel set
+                allResources.Add(new AIResolvedResource
                 {
                     Id = resource.Id,
                     ResourceTypeId = resource.ResourceTypeId,
@@ -65,15 +65,15 @@ internal sealed class AiContextResolutionService : IAiContextResolutionService
             }
         }
 
-        return new AiResolvedContext
+        return new AIResolvedContext
         {
             Sources = allSources,
             AllResources = allResources,
             InjectedResources = allResources
-                .Where(r => r.InjectionMode == AiContextResourceInjectionMode.Always)
+                .Where(r => r.InjectionMode == AIContextResourceInjectionMode.Always)
                 .ToList(),
             OnDemandResources = allResources
-                .Where(r => r.InjectionMode == AiContextResourceInjectionMode.OnDemand)
+                .Where(r => r.InjectionMode == AIContextResourceInjectionMode.OnDemand)
                 .ToList()
         };
     }

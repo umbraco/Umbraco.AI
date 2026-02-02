@@ -1,11 +1,11 @@
 using Umbraco.Cms.Core.Models;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Service interface for prompt management operations.
 /// </summary>
-public interface IAiPromptService
+public interface IAIPromptService
 {
     /// <summary>
     /// Gets a prompt by its unique identifier.
@@ -13,7 +13,7 @@ public interface IAiPromptService
     /// <param name="id">The prompt ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The prompt if found, null otherwise.</returns>
-    Task<AiPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a prompt by its alias.
@@ -21,14 +21,14 @@ public interface IAiPromptService
     /// <param name="alias">The prompt alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The prompt if found, null otherwise.</returns>
-    Task<AiPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all prompts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>All prompts.</returns>
-    Task<IEnumerable<AiPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paged list of prompts with optional filtering.
@@ -39,7 +39,7 @@ public interface IAiPromptService
     /// <param name="profileId">Optional profile ID filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged result containing prompts and total count.</returns>
-    Task<PagedModel<AiPrompt>> GetPromptsPagedAsync(
+    Task<PagedModel<AIPrompt>> GetPromptsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -53,7 +53,7 @@ public interface IAiPromptService
     /// <param name="prompt">The prompt to save.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved prompt.</returns>
-    Task<AiPrompt> SavePromptAsync(AiPrompt prompt, CancellationToken cancellationToken = default);
+    Task<AIPrompt> SavePromptAsync(AIPrompt prompt, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a prompt.
@@ -79,8 +79,8 @@ public interface IAiPromptService
     /// <param name="request">The execution request containing context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The execution result containing the AI response.</returns>
-    Task<AiPromptExecutionResult> ExecutePromptAsync(
+    Task<AIPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
-        AiPromptExecutionRequest request,
+        AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default);
 }

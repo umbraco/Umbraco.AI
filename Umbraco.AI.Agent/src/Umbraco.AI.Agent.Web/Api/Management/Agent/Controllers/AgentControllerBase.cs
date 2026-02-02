@@ -1,23 +1,23 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Agent.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Base controller for agent-specific endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Agent.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Agent.RouteSegment)]
-public abstract class AgentControllerBase : UmbracoAiAgentManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.Agent.RouteSegment)]
+public abstract class AgentControllerBase : UmbracoAIAgentManagementControllerBase
 {
     /// <summary>
     /// Returns a 404 Not Found response for a agent.
     /// </summary>
     protected IActionResult AgentNotFound() => NotFound(new ProblemDetails
     {
-        Title = "AiAgent not found",
+        Title = "AIAgent not found",
         Detail = "The specified agent could not be found.",
         Status = StatusCodes.Status404NotFound
     });

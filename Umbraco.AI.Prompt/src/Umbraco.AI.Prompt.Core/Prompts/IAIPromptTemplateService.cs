@@ -1,12 +1,12 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Service for processing prompt templates with variable replacement.
 /// Supports multimodal content through prefixed variables (e.g., {{image:propertyAlias}}).
 /// </summary>
-public interface IAiPromptTemplateService
+public interface IAIPromptTemplateService
 {
     /// <summary>
     /// Processes a template and returns a list of content items.

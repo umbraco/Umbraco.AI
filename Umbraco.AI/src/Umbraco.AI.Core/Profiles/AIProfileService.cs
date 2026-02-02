@@ -1,23 +1,23 @@
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Settings;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Core.Profiles;
+namespace Umbraco.AI.Core.Profiles;
 
-internal sealed class AiProfileService : IAiProfileService
+internal sealed class AIProfileService : IAiProfileService
 {
     private readonly IAiProfileRepository _repository;
     private readonly IAiSettingsService _settingsService;
-    private readonly AiOptions _options;
+    private readonly AIOptions _options;
     private readonly IAiEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
-    public AiProfileService(
+    public AIProfileService(
         IAiProfileRepository repository,
         IAiSettingsService settingsService,
-        IOptions<AiOptions> options,
+        IOptions<AIOptions> options,
         IAiEntityVersionService versionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
@@ -28,43 +28,43 @@ internal sealed class AiProfileService : IAiProfileService
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
-    public async Task<AiProfile?> GetProfileAsync(
+    public async Task<AIProfile?> GetProfileAsync(
         Guid id,
         CancellationToken cancellationToken = default)
         => await _repository.GetByIdAsync(id, cancellationToken);
 
-    public async Task<AiProfile?> GetProfileByAliasAsync(
+    public async Task<AIProfile?> GetProfileByAliasAsync(
         string alias,
         CancellationToken cancellationToken = default)
         => await _repository.GetByAliasAsync(alias, cancellationToken);
 
-    public async Task<IEnumerable<AiProfile>> GetAllProfilesAsync(
+    public async Task<IEnumerable<AIProfile>> GetAllProfilesAsync(
         CancellationToken cancellationToken = default)
         => await _repository.GetAllAsync(cancellationToken);
 
-    public async Task<IEnumerable<AiProfile>> GetProfilesAsync(
-        AiCapability capability,
+    public async Task<IEnumerable<AIProfile>> GetProfilesAsync(
+        AICapability capability,
         CancellationToken cancellationToken = default)
         => await _repository.GetByCapability(capability, cancellationToken);
 
-    public Task<(IEnumerable<AiProfile> Items, int Total)> GetProfilesPagedAsync(
+    public Task<(IEnumerable<AIProfile> Items, int Total)> GetProfilesPagedAsync(
         string? filter = null,
-        AiCapability? capability = null,
+        AICapability? capability = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
         => _repository.GetPagedAsync(filter, capability, skip, take, cancellationToken);
 
-    public async Task<AiProfile> GetDefaultProfileAsync(
-        AiCapability capability,
+    public async Task<AIProfile> GetDefaultProfileAsync(
+        AICapability capability,
         CancellationToken cancellationToken = default)
     {
         // 1. Try database settings first
         var settings = await _settingsService.GetSettingsAsync(cancellationToken);
         var profileId = capability switch
         {
-            AiCapability.Chat => settings.DefaultChatProfileId,
-            AiCapability.Embedding => settings.DefaultEmbeddingProfileId,
+            AICapability.Chat => settings.DefaultChatProfileId,
+            AICapability.Embedding => settings.DefaultEmbeddingProfileId,
             _ => throw new NotSupportedException($"AI capability '{capability}' is not supported.")
         };
 
@@ -80,8 +80,8 @@ internal sealed class AiProfileService : IAiProfileService
         // 2. Fall back to config-based alias
         var defaultProfileAlias = capability switch
         {
-            AiCapability.Chat => _options.DefaultChatProfileAlias,
-            AiCapability.Embedding => _options.DefaultEmbeddingProfileAlias,
+            AICapability.Chat => _options.DefaultChatProfileAlias,
+            AICapability.Embedding => _options.DefaultEmbeddingProfileAlias,
             _ => null
         };
 
@@ -99,8 +99,8 @@ internal sealed class AiProfileService : IAiProfileService
         return profileByAlias;
     }
 
-    public async Task<AiProfile> SaveProfileAsync(
-        AiProfile profile,
+    public async Task<AIProfile> SaveProfileAsync(
+        AIProfile profile,
         CancellationToken cancellationToken = default)
     {
         // Generate new ID if needed
@@ -138,20 +138,20 @@ internal sealed class AiProfileService : IAiProfileService
         return await _repository.DeleteAsync(id, cancellationToken);
     }
 
-    public Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetProfileVersionHistoryAsync(
+    public Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetProfileVersionHistoryAsync(
         Guid profileId,
         int skip,
         int take,
         CancellationToken cancellationToken = default)
         => _versionService.GetVersionHistoryAsync(profileId, "Profile", skip, take, cancellationToken);
 
-    public Task<AiProfile?> GetProfileVersionSnapshotAsync(
+    public Task<AIProfile?> GetProfileVersionSnapshotAsync(
         Guid profileId,
         int version,
         CancellationToken cancellationToken = default)
-        => _versionService.GetVersionSnapshotAsync<AiProfile>(profileId, version, cancellationToken);
+        => _versionService.GetVersionSnapshotAsync<AIProfile>(profileId, version, cancellationToken);
 
-    public async Task<AiProfile> RollbackProfileAsync(
+    public async Task<AIProfile> RollbackProfileAsync(
         Guid profileId,
         int targetVersion,
         CancellationToken cancellationToken = default)
@@ -164,7 +164,7 @@ internal sealed class AiProfileService : IAiProfileService
         }
 
         // Get the snapshot at the target version
-        var snapshot = await _versionService.GetVersionSnapshotAsync<AiProfile>(profileId, targetVersion, cancellationToken);
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AIProfile>(profileId, targetVersion, cancellationToken);
         if (snapshot is null)
         {
             throw new InvalidOperationException($"Version {targetVersion} not found for profile '{profileId}'.");
@@ -177,7 +177,7 @@ internal sealed class AiProfileService : IAiProfileService
 
         // Create a new version by saving the snapshot data
         // We need to preserve the ID and update the dates appropriately
-        var rolledBackProfile = new AiProfile
+        var rolledBackProfile = new AIProfile
         {
             Id = profileId,
             Alias = snapshot.Alias,

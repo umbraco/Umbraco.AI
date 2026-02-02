@@ -1,4 +1,4 @@
-// namespace Umbraco.Ai.Web.Api.Management.Chat.Models;
+// namespace Umbraco.AI.Web.Api.Management.Chat.Models;
 //
 // /// <summary>
 // /// Represents a chunk of streamed chat response.

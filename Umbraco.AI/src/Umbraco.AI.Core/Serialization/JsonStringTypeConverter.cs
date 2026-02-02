@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Core.Serialization;
+namespace Umbraco.AI.Core.Serialization;
 
 /// <summary>
 /// JSON converter that serializes a <see cref="Type"/> to its assembly-qualified name

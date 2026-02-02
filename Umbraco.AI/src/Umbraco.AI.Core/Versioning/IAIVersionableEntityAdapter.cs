@@ -1,6 +1,6 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Defines how a specific entity type participates in the unified versioning system.
@@ -11,11 +11,11 @@ namespace Umbraco.Ai.Core.Versioning;
 /// to provide entity-specific snapshot creation, restoration, and comparison logic.
 /// </para>
 /// <para>
-/// Implementations are registered via the <see cref="AiVersionableEntityAdapterCollectionBuilder"/> and
+/// Implementations are registered via the <see cref="AIVersionableEntityAdapterCollectionBuilder"/> and
 /// discovered at runtime by the <see cref="IAiEntityVersionService"/>.
 /// </para>
 /// </remarks>
-public interface IAiVersionableEntityAdapter
+public interface IAIVersionableEntityAdapter
 {
     /// <summary>
     /// Gets the entity type name used as a discriminator in the unified version table.
@@ -55,7 +55,7 @@ public interface IAiVersionableEntityAdapter
     /// <param name="from">The older entity version.</param>
     /// <param name="to">The newer entity version.</param>
     /// <returns>A list of property changes between the versions.</returns>
-    IReadOnlyList<AiPropertyChange> CompareVersions(object from, object to);
+    IReadOnlyList<AIPropertyChange> CompareVersions(object from, object to);
 
     /// <summary>
     /// Rolls back an entity to a previous version.

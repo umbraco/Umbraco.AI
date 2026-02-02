@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Umbraco.Ai.Web.Api.Common.Configuration;
+namespace Umbraco.AI.Web.Api.Common.Configuration;
 
 /// <summary>
 /// Swashbuckle operation filter that applies <see cref="SwaggerOperationAttribute"/> metadata to OpenAPI operations.

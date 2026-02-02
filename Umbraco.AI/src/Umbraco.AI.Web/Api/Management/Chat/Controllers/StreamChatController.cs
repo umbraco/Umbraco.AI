@@ -4,19 +4,19 @@
 // using Microsoft.AspNetCore.Http;
 // using Microsoft.AspNetCore.Mvc;
 // using Microsoft.Extensions.AI;
-// using Umbraco.Ai.Agui.Events;
-// using Umbraco.Ai.Agui.Events.Lifecycle;
-// using Umbraco.Ai.Agui.Events.Messages;
-// using Umbraco.Ai.Agui.Models;
-// using Umbraco.Ai.Agui.Streaming;
-// using Umbraco.Ai.Core.Chat;
-// using Umbraco.Ai.Core.Profiles;
-// using Umbraco.Ai.Extensions;
-// using Umbraco.Ai.Web.Api.Common.Models;
-// using Umbraco.Ai.Web.Api.Management.Chat.Models;
-// using Umbraco.Ai.Web.Api.Management.Configuration;
+// using Umbraco.AI.Agui.Events;
+// using Umbraco.AI.Agui.Events.Lifecycle;
+// using Umbraco.AI.Agui.Events.Messages;
+// using Umbraco.AI.Agui.Models;
+// using Umbraco.AI.Agui.Streaming;
+// using Umbraco.AI.Core.Chat;
+// using Umbraco.AI.Core.Profiles;
+// using Umbraco.AI.Extensions;
+// using Umbraco.AI.Web.Api.Common.Models;
+// using Umbraco.AI.Web.Api.Management.Chat.Models;
+// using Umbraco.AI.Web.Api.Management.Configuration;
 //
-// namespace Umbraco.Ai.Web.Api.Management.Chat.Controllers;
+// namespace Umbraco.AI.Web.Api.Management.Chat.Controllers;
 //
 // /// <summary>
 // /// Controller for streaming chat completion using AG-UI protocol over Server-Sent Events (SSE).

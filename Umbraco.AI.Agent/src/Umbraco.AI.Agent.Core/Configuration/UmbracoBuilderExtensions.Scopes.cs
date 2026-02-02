@@ -1,7 +1,7 @@
-using Umbraco.Ai.Agent.Core.Scopes;
+using Umbraco.AI.Agent.Core.Scopes;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Agent.Extensions;
+namespace Umbraco.AI.Agent.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IUmbracoBuilder"/> for AI agent scope collection configuration.
@@ -16,11 +16,11 @@ public static partial class UmbracoBuilderExtensions
     /// <remarks>
     /// Use this to add or exclude scopes from the collection. Example:
     /// <code>
-    /// builder.AiAgentScopes()
+    /// builder.AIAgentScopes()
     ///     .Add&lt;MyCopilotScope&gt;()
     ///     .Exclude&lt;SomeUnwantedScope&gt;();
     /// </code>
     /// </remarks>
-    public static AiAgentScopeCollectionBuilder AiAgentScopes(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiAgentScopeCollectionBuilder>();
+    public static AIAgentScopeCollectionBuilder AIAgentScopes(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIAgentScopeCollectionBuilder>();
 }

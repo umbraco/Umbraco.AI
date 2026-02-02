@@ -1,13 +1,13 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Profiles;
+using Umbraco.AI.Core.Profiles;
 
-namespace Umbraco.Ai.Core.Embeddings;
+namespace Umbraco.AI.Core.Embeddings;
 
 /// <summary>
 /// Factory for creating configured IEmbeddingGenerator instances.
 /// Handles generator creation from providers and middleware application.
 /// </summary>
-public interface IAiEmbeddingGeneratorFactory
+public interface IAIEmbeddingGeneratorFactory
 {
     /// <summary>
     /// Creates a fully configured embedding generator for the given profile.
@@ -16,6 +16,6 @@ public interface IAiEmbeddingGeneratorFactory
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A configured IEmbeddingGenerator with all middleware applied.</returns>
     Task<IEmbeddingGenerator<string, Embedding<float>>> CreateGeneratorAsync(
-        AiProfile profile,
+        AIProfile profile,
         CancellationToken cancellationToken = default);
 }

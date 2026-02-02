@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace Umbraco.Ai.Core.TaskQueue;
+namespace Umbraco.AI.Core.TaskQueue;
 
 internal interface IBackgroundTaskQueue
 {

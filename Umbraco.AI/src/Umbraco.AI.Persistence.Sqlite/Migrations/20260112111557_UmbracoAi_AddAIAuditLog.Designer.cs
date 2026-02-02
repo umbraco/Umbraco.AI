@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.Ai.Persistence;
+using Umbraco.AI.Persistence;
 
 #nullable disable
 
-namespace Umbraco.Ai.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
-    [DbContext(typeof(UmbracoAiDbContext))]
+    [DbContext(typeof(UmbracoAIDbContext))]
     [Migration("20260112111557_UmbracoAi_AddAiAuditLog")]
     partial class UmbracoAi_AddAiAuditLog
     {
@@ -20,7 +20,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Connections.AIConnectionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,7 +63,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIConnection", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AIContextEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -93,7 +93,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIContext", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AIContextResourceEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -135,7 +135,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIContextResource", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.AuditLog.AiAuditLogEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.AuditLog.AIAuditLogEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -248,7 +248,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIAuditLog", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AIProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -299,9 +299,9 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIProfile", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AIContextResourceEntity", b =>
                 {
-                    b.HasOne("Umbraco.Ai.Persistence.Context.AiContextEntity", "Context")
+                    b.HasOne("Umbraco.Ai.Persistence.Context.AIContextEntity", "Context")
                         .WithMany("Resources")
                         .HasForeignKey("ContextId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -310,16 +310,16 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.Navigation("Context");
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AIProfileEntity", b =>
                 {
-                    b.HasOne("Umbraco.Ai.Persistence.Connections.AiConnectionEntity", null)
+                    b.HasOne("Umbraco.Ai.Persistence.Connections.AIConnectionEntity", null)
                         .WithMany()
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AIContextEntity", b =>
                 {
                     b.Navigation("Resources");
                 });

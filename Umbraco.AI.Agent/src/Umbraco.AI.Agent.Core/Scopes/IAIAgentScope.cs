@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Agent.Core.Scopes;
+namespace Umbraco.AI.Agent.Core.Scopes;
 
 /// <summary>
 /// Interface for agent scope definitions.
@@ -9,8 +9,8 @@ namespace Umbraco.Ai.Agent.Core.Scopes;
 /// For example, a "Copilot" scope might filter agents that should appear in a chat UI.
 /// </para>
 /// <para>
-/// Scopes are discovered via the <see cref="AiAgentScopeAttribute"/> and registered
-/// in the <see cref="AiAgentScopeCollection"/>.
+/// Scopes are discovered via the <see cref="AIAgentScopeAttribute"/> and registered
+/// in the <see cref="AIAgentScopeCollection"/>.
 /// </para>
 /// <para>
 /// Localization is handled by the frontend using the convention:
@@ -20,7 +20,7 @@ namespace Umbraco.Ai.Agent.Core.Scopes;
 /// </list>
 /// </para>
 /// </remarks>
-public interface IAiAgentScope
+public interface IAIAgentScope
 {
     /// <summary>
     /// Gets the unique identifier for this scope.

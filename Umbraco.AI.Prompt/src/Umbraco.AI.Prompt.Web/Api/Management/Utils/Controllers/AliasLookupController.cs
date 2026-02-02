@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Utils.Controllers;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Utils.Controllers;
 
 /// <summary>
 /// Controller for retrieving content type and property aliases.

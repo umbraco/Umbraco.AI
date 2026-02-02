@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// Marker interface for system tools that are always included in agent requests.
@@ -13,4 +13,4 @@ namespace Umbraco.Ai.Core.Tools;
 ///     <item>Skip approval workflows</item>
 /// </list>
 /// </remarks>
-internal interface IAiSystemTool : IAiTool { }
+internal interface IAISystemTool : IAiTool { }

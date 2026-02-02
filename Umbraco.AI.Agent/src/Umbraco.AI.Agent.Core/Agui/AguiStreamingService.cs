@@ -3,11 +3,11 @@ using System.Text.Json;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Umbraco.Ai.Agui.Events;
-using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Agui.Streaming;
+using Umbraco.AI.Agui.Events;
+using Umbraco.AI.Agui.Models;
+using Umbraco.AI.Agui.Streaming;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <summary>
 /// Default implementation of <see cref="IAguiStreamingService"/>.

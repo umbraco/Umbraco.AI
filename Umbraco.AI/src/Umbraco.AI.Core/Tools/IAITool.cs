@@ -1,11 +1,11 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// Defines an AI tool that can be invoked by AI models.
 /// </summary>
-public interface IAiTool : IDiscoverable
+public interface IAITool : IDiscoverable
 {
     /// <summary>
     /// Gets the unique identifier of the tool.

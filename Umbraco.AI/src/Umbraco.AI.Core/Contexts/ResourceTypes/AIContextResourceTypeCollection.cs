@@ -1,17 +1,17 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Contexts.ResourceTypes;
+namespace Umbraco.AI.Core.Contexts.ResourceTypes;
 
 /// <summary>
 /// A collection of AI context resource types.
 /// </summary>
-public sealed class AiContextResourceTypeCollection : BuilderCollectionBase<IAiContextResourceType>
+public sealed class AIContextResourceTypeCollection : BuilderCollectionBase<IAiContextResourceType>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextResourceTypeCollection"/> class.
+    /// Initializes a new instance of the <see cref="AIContextResourceTypeCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the resource types.</param>
-    public AiContextResourceTypeCollection(Func<IEnumerable<IAiContextResourceType>> items)
+    public AIContextResourceTypeCollection(Func<IEnumerable<IAiContextResourceType>> items)
         : base(items)
     { }
 

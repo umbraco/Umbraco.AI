@@ -1,12 +1,12 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for retrieving all Agents.
@@ -20,9 +20,9 @@ public class AllAgentController : AgentControllerBase
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public AllAgentController(IAiAgentService AiAgentService, IUmbracoMapper umbracoMapper)
+    public AllAgentController(IAiAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AiAgentService;
+        _AiAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -54,7 +54,7 @@ public class AllAgentController : AgentControllerBase
         var viewModel = new PagedViewModel<AgentItemResponseModel>
         {
             Total = result.Total,
-            Items = _umbracoMapper.MapEnumerable<Core.Agents.AiAgent, AgentItemResponseModel>(result.Items)
+            Items = _umbracoMapper.MapEnumerable<Core.Agents.AIAgent, AgentItemResponseModel>(result.Items)
         };
 
         return Ok(viewModel);

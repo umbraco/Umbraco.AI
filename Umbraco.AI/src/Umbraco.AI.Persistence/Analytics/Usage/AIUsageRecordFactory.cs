@@ -1,25 +1,25 @@
-using Umbraco.Ai.Core.Analytics.Usage;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Analytics.Usage;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Persistence.Analytics.Usage;
+namespace Umbraco.AI.Persistence.Analytics.Usage;
 
 /// <summary>
 /// Factory for mapping between usage analytics domain models and database entities.
 /// </summary>
-internal static class AiUsageRecordFactory
+internal static class AIUsageRecordFactory
 {
     /// <summary>
-    /// Creates an <see cref="AiUsageRecord"/> domain model from a database entity.
+    /// Creates an <see cref="AIUsageRecord"/> domain model from a database entity.
     /// </summary>
     /// <param name="entity">The database entity.</param>
     /// <returns>The domain model.</returns>
-    public static AiUsageRecord BuildUsageRecordDomain(AiUsageRecordEntity entity)
+    public static AIUsageRecord BuildUsageRecordDomain(AIUsageRecordEntity entity)
     {
-        return new AiUsageRecord
+        return new AIUsageRecord
         {
             Id = entity.Id,
             Timestamp = entity.Timestamp,
-            Capability = (AiCapability)entity.Capability,
+            Capability = (AICapability)entity.Capability,
             UserId = entity.UserId,
             UserName = entity.UserName,
             ProfileId = entity.ProfileId,
@@ -41,13 +41,13 @@ internal static class AiUsageRecordFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="AiUsageRecordEntity"/> database entity from a domain model.
+    /// Creates an <see cref="AIUsageRecordEntity"/> database entity from a domain model.
     /// </summary>
     /// <param name="record">The domain model.</param>
     /// <returns>The database entity.</returns>
-    public static AiUsageRecordEntity BuildUsageRecordEntity(AiUsageRecord record)
+    public static AIUsageRecordEntity BuildUsageRecordEntity(AIUsageRecord record)
     {
-        return new AiUsageRecordEntity
+        return new AIUsageRecordEntity
         {
             Id = record.Id,
             Timestamp = record.Timestamp,
@@ -73,13 +73,13 @@ internal static class AiUsageRecordFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="AiUsageStatistics"/> domain model from a hourly database entity.
+    /// Creates an <see cref="AIUsageStatistics"/> domain model from a hourly database entity.
     /// </summary>
     /// <param name="entity">The database entity.</param>
     /// <returns>The domain model.</returns>
-    public static AiUsageStatistics BuildStatisticsDomain(AiUsageStatisticsHourlyEntity entity)
+    public static AIUsageStatistics BuildStatisticsDomain(AIUsageStatisticsHourlyEntity entity)
     {
-        return new AiUsageStatistics
+        return new AIUsageStatistics
         {
             Id = entity.Id,
             Period = entity.Period,
@@ -87,7 +87,7 @@ internal static class AiUsageRecordFactory
             ModelId = entity.ModelId,
             ProfileId = entity.ProfileId,
             ProfileAlias = entity.ProfileAlias,
-            Capability = (AiCapability)entity.Capability,
+            Capability = (AICapability)entity.Capability,
             UserId = entity.UserId,
             UserName = entity.UserName,
             EntityType = entity.EntityType,
@@ -104,13 +104,13 @@ internal static class AiUsageRecordFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="AiUsageStatistics"/> domain model from a daily database entity.
+    /// Creates an <see cref="AIUsageStatistics"/> domain model from a daily database entity.
     /// </summary>
     /// <param name="entity">The database entity.</param>
     /// <returns>The domain model.</returns>
-    public static AiUsageStatistics BuildStatisticsDomain(AiUsageStatisticsDailyEntity entity)
+    public static AIUsageStatistics BuildStatisticsDomain(AIUsageStatisticsDailyEntity entity)
     {
-        return new AiUsageStatistics
+        return new AIUsageStatistics
         {
             Id = entity.Id,
             Period = entity.Period,
@@ -118,7 +118,7 @@ internal static class AiUsageRecordFactory
             ModelId = entity.ModelId,
             ProfileId = entity.ProfileId,
             ProfileAlias = entity.ProfileAlias,
-            Capability = (AiCapability)entity.Capability,
+            Capability = (AICapability)entity.Capability,
             UserId = entity.UserId,
             UserName = entity.UserName,
             EntityType = entity.EntityType,
@@ -135,13 +135,13 @@ internal static class AiUsageRecordFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="AiUsageStatisticsHourlyEntity"/> database entity from a domain model.
+    /// Creates an <see cref="AIUsageStatisticsHourlyEntity"/> database entity from a domain model.
     /// </summary>
     /// <param name="statistics">The domain model.</param>
     /// <returns>The database entity.</returns>
-    public static AiUsageStatisticsHourlyEntity BuildHourlyStatisticsEntity(AiUsageStatistics statistics)
+    public static AIUsageStatisticsHourlyEntity BuildHourlyStatisticsEntity(AIUsageStatistics statistics)
     {
-        return new AiUsageStatisticsHourlyEntity
+        return new AIUsageStatisticsHourlyEntity
         {
             Id = statistics.Id,
             Period = statistics.Period,
@@ -166,13 +166,13 @@ internal static class AiUsageRecordFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="AiUsageStatisticsDailyEntity"/> database entity from a domain model.
+    /// Creates an <see cref="AIUsageStatisticsDailyEntity"/> database entity from a domain model.
     /// </summary>
     /// <param name="statistics">The domain model.</param>
     /// <returns>The database entity.</returns>
-    public static AiUsageStatisticsDailyEntity BuildDailyStatisticsEntity(AiUsageStatistics statistics)
+    public static AIUsageStatisticsDailyEntity BuildDailyStatisticsEntity(AIUsageStatistics statistics)
     {
-        return new AiUsageStatisticsDailyEntity
+        return new AIUsageStatisticsDailyEntity
         {
             Id = statistics.Id,
             Period = statistics.Period,

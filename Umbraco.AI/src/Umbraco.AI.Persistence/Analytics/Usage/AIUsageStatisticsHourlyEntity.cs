@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Persistence.Analytics.Usage;
+namespace Umbraco.AI.Persistence.Analytics.Usage;
 
 /// <summary>
 /// EF Core entity for hourly aggregated AI usage statistics.
 /// </summary>
-internal class AiUsageStatisticsHourlyEntity
+internal class AIUsageStatisticsHourlyEntity
 {
     /// <summary>
     /// Gets or sets the unique identifier for this statistics record.

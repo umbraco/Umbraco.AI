@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Ai.Agent.Core;
+﻿namespace Umbraco.AI.Agent.Core;
 
 /// <summary>
 /// Constants for Umbraco AI Agent.
@@ -12,7 +12,7 @@ public static class Constants
     {
         /// <summary>
         /// Key for frontend tool names in RuntimeContext.
-        /// Used by <see cref="Chat.AiToolReorderingChatClient"/> to identify which tools
+        /// Used by <see cref="Chat.AIToolReorderingChatClient"/> to identify which tools
         /// are frontend tools that should be processed last.
         /// </summary>
         public const string FrontendToolNames = "Umbraco.Ai.Agent.FrontendToolNames";

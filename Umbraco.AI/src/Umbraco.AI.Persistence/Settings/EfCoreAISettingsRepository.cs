@@ -1,40 +1,40 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core.Settings;
+using Umbraco.AI.Core.Settings;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Persistence.Settings;
+namespace Umbraco.AI.Persistence.Settings;
 
 /// <summary>
 /// EF Core implementation of the settings repository.
 /// </summary>
 internal sealed class EfCoreAiSettingsRepository : IAiSettingsRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAiSettingsRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
+    public EfCoreAiSettingsRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
 
     /// <inheritdoc />
-    public async Task<AiSettings> GetAsync(CancellationToken cancellationToken = default)
+    public async Task<AISettings> GetAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Settings.ToListAsync(cancellationToken));
 
         scope.Complete();
-        return AiSettingsFactory.BuildDomain(entities);
+        return AISettingsFactory.BuildDomain(entities);
     }
 
     /// <inheritdoc />
-    public async Task<AiSettings> SaveAsync(
-        AiSettings settings,
+    public async Task<AISettings> SaveAsync(
+        AISettings settings,
         Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var updatedEntities = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -43,7 +43,7 @@ internal sealed class EfCoreAiSettingsRepository : IAiSettingsRepository
             var existingDict = existingEntities.ToDictionary(e => e.Key, e => e);
 
             // Build updated entities
-            var updatedEntities = AiSettingsFactory.BuildEntities(settings, existingEntities, userId).ToList();
+            var updatedEntities = AISettingsFactory.BuildEntities(settings, existingEntities, userId).ToList();
 
             foreach (var entity in updatedEntities)
             {
@@ -64,6 +64,6 @@ internal sealed class EfCoreAiSettingsRepository : IAiSettingsRepository
         });
 
         scope.Complete();
-        return AiSettingsFactory.BuildDomain(updatedEntities);
+        return AISettingsFactory.BuildDomain(updatedEntities);
     }
 }

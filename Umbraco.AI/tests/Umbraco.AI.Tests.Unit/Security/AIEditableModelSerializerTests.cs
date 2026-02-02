@@ -1,18 +1,18 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Security;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Security;
 
-namespace Umbraco.Ai.Tests.Unit.Security;
+namespace Umbraco.AI.Tests.Unit.Security;
 
-public class AiEditableModelSerializerTests
+public class AIEditableModelSerializerTests
 {
     private readonly Mock<IAiSensitiveFieldProtector> _protectorMock;
-    private readonly AiEditableModelSerializer _serializer;
+    private readonly AIEditableModelSerializer _serializer;
 
-    public AiEditableModelSerializerTests()
+    public AIEditableModelSerializerTests()
     {
         _protectorMock = new Mock<IAiSensitiveFieldProtector>();
-        _serializer = new AiEditableModelSerializer(_protectorMock.Object);
+        _serializer = new AIEditableModelSerializer(_protectorMock.Object);
 
         // Default setup: protect returns ENC: prefix, unprotect removes it
         _protectorMock
@@ -65,12 +65,12 @@ public class AiEditableModelSerializerTests
     {
         // Arrange
         var model = new TestModel { ApiKey = "secret-key", Endpoint = "https://api.example.com" };
-        var schema = CreateSchema(new AiEditableModelField
+        var schema = CreateSchema(new AIEditableModelField
         {
             Key = "apiKey",
             Label = "API Key",
             IsSensitive = false
-        }, new AiEditableModelField
+        }, new AIEditableModelField
         {
             Key = "endpoint",
             Label = "Endpoint",
@@ -91,12 +91,12 @@ public class AiEditableModelSerializerTests
     {
         // Arrange
         var model = new TestModel { ApiKey = "secret-key", Endpoint = "https://api.example.com" };
-        var schema = CreateSchema(new AiEditableModelField
+        var schema = CreateSchema(new AIEditableModelField
         {
             Key = "apiKey",
             Label = "API Key",
             IsSensitive = true
-        }, new AiEditableModelField
+        }, new AIEditableModelField
         {
             Key = "endpoint",
             Label = "Endpoint",
@@ -122,17 +122,17 @@ public class AiEditableModelSerializerTests
             SecretAccessKey = "secret-key",
             Region = "us-east-1"
         };
-        var schema = CreateSchema(new AiEditableModelField
+        var schema = CreateSchema(new AIEditableModelField
         {
             Key = "accessKeyId",
             Label = "Access Key ID",
             IsSensitive = true
-        }, new AiEditableModelField
+        }, new AIEditableModelField
         {
             Key = "secretAccessKey",
             Label = "Secret Access Key",
             IsSensitive = true
-        }, new AiEditableModelField
+        }, new AIEditableModelField
         {
             Key = "region",
             Label = "Region",
@@ -155,7 +155,7 @@ public class AiEditableModelSerializerTests
     {
         // Arrange
         var model = new TestModel { ApiKey = null, Endpoint = "https://api.example.com" };
-        var schema = CreateSchema(new AiEditableModelField
+        var schema = CreateSchema(new AIEditableModelField
         {
             Key = "apiKey",
             Label = "API Key",
@@ -262,12 +262,12 @@ public class AiEditableModelSerializerTests
     {
         // Arrange
         var model = new TestModel { ApiKey = "my-secret-api-key", Endpoint = "https://api.example.com" };
-        var schema = CreateSchema(new AiEditableModelField
+        var schema = CreateSchema(new AIEditableModelField
         {
             Key = "apiKey",
             Label = "API Key",
             IsSensitive = true
-        }, new AiEditableModelField
+        }, new AIEditableModelField
         {
             Key = "endpoint",
             Label = "Endpoint",
@@ -287,9 +287,9 @@ public class AiEditableModelSerializerTests
 
     #region Helpers
 
-    private static AiEditableModelSchema CreateSchema(params AiEditableModelField[] fields)
+    private static AIEditableModelSchema CreateSchema(params AIEditableModelField[] fields)
     {
-        return new AiEditableModelSchema(typeof(object), fields.ToList());
+        return new AIEditableModelSchema(typeof(object), fields.ToList());
     }
 
     private class TestModel

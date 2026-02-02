@@ -1,31 +1,31 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Versioning;
 
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
-namespace Umbraco.Ai.Agent.Core.Agents;
+namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
 /// Versionable entity adapter for AI agents.
 /// </summary>
-internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapterBase<AiAgent>
+internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIAgent>
 {
     private readonly IAiAgentService _agentService;
     private readonly IAiEntityVersionService _versionService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiAgentVersionableEntityAdapter"/> class.
+    /// Initializes a new instance of the <see cref="AIAgentVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="agentService">The agent service for save operations.</param>
     /// <param name="versionService">The entity version service for retrieving snapshots.</param>
-    public AiAgentVersionableEntityAdapter(IAiAgentService agentService, IAiEntityVersionService versionService)
+    public AIAgentVersionableEntityAdapter(IAiAgentService agentService, IAiEntityVersionService versionService)
     {
         _agentService = agentService;
         _versionService = versionService;
     }
 
     /// <inheritdoc />
-    protected override string CreateSnapshot(AiAgent entity)
+    protected override string CreateSnapshot(AIAgent entity)
     {
         var snapshot = new
         {
@@ -49,7 +49,7 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    protected override AiAgent? RestoreFromSnapshot(string json)
+    protected override AIAgent? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -88,7 +88,7 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
                 }
             }
 
-            return new AiAgent
+            return new AIAgent
             {
                 Id = root.GetProperty("id").GetGuid(),
                 Alias = root.GetProperty("alias").GetString()!,
@@ -118,28 +118,28 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AiPropertyChange> CompareVersions(AiAgent from, AiAgent to)
+    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIAgent from, AIAgent to)
     {
-        var changes = new List<AiPropertyChange>();
+        var changes = new List<AIPropertyChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AiPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AiPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
         }
 
         if (from.Description != to.Description)
         {
-            changes.Add(new AiPropertyChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
+            changes.Add(new AIPropertyChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
         }
 
         if (from.ProfileId != to.ProfileId)
         {
-            changes.Add(new AiPropertyChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
+            changes.Add(new AIPropertyChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
         }
 
         // Compare context IDs
@@ -147,7 +147,7 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
         var toContextIds = string.Join(",", to.ContextIds);
         if (fromContextIds != toContextIds)
         {
-            changes.Add(new AiPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
+            changes.Add(new AIPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
         }
 
         // Compare scope IDs
@@ -155,17 +155,17 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
         var toScopeIds = string.Join(",", to.ScopeIds);
         if (fromScopeIds != toScopeIds)
         {
-            changes.Add(new AiPropertyChange("ScopeIds", fromScopeIds.Length > 0 ? fromScopeIds : "(none)", toScopeIds.Length > 0 ? toScopeIds : "(none)"));
+            changes.Add(new AIPropertyChange("ScopeIds", fromScopeIds.Length > 0 ? fromScopeIds : "(none)", toScopeIds.Length > 0 ? toScopeIds : "(none)"));
         }
 
         if (from.Instructions != to.Instructions)
         {
-            changes.Add(new AiPropertyChange("Instructions", "(modified)", "(modified)"));
+            changes.Add(new AIPropertyChange("Instructions", "(modified)", "(modified)"));
         }
 
         if (from.IsActive != to.IsActive)
         {
-            changes.Add(new AiPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
+            changes.Add(new AIPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
         return changes;
@@ -174,7 +174,7 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     /// <inheritdoc />
     public override async Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
     {
-        var snapshot = await _versionService.GetVersionSnapshotAsync<AiAgent>(entityId, version, cancellationToken)
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AIAgent>(entityId, version, cancellationToken)
             ?? throw new InvalidOperationException($"Agent version {version} not found for agent {entityId}");
 
         // Save the snapshot as the current version (this will create a new version)
@@ -182,6 +182,6 @@ internal sealed class AiAgentVersionableEntityAdapter : AiVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    protected override Task<AiAgent?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AIAgent?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _agentService.GetAgentAsync(entityId, cancellationToken);
 }

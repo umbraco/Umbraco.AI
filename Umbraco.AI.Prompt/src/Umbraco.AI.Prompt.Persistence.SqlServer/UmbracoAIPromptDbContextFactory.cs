@@ -1,22 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Umbraco.Ai.Prompt.Persistence.SqlServer;
+namespace Umbraco.AI.Prompt.Persistence.SqlServer;
 
 /// <summary>
-/// Design-time factory for creating <see cref="UmbracoAiPromptDbContext"/> for EF Core CLI tools.
+/// Design-time factory for creating <see cref="UmbracoAIPromptDbContext"/> for EF Core CLI tools.
 /// </summary>
-public class UmbracoAiPromptDbContextFactory : IDesignTimeDbContextFactory<UmbracoAiPromptDbContext>
+public class UmbracoAIPromptDbContextFactory : IDesignTimeDbContextFactory<UmbracoAIPromptDbContext>
 {
     /// <inheritdoc />
-    public UmbracoAiPromptDbContext CreateDbContext(string[] args)
+    public UmbracoAIPromptDbContext CreateDbContext(string[] args)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<UmbracoAiPromptDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIPromptDbContext>();
 
         optionsBuilder.UseSqlServer(
-            "Server=.;Database=UmbracoAiPrompt_Design;Integrated Security=true;TrustServerCertificate=true",
-            x => x.MigrationsAssembly(typeof(UmbracoAiPromptDbContextFactory).Assembly.FullName));
+            "Server=.;Database=UmbracoAIPrompt_Design;Integrated Security=true;TrustServerCertificate=true",
+            x => x.MigrationsAssembly(typeof(UmbracoAIPromptDbContextFactory).Assembly.FullName));
 
-        return new UmbracoAiPromptDbContext(optionsBuilder.Options);
+        return new UmbracoAIPromptDbContext(optionsBuilder.Options);
     }
 }

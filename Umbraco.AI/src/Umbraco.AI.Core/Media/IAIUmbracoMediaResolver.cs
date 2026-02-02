@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Prompt.Core.Media;
+namespace Umbraco.AI.Prompt.Core.Media;
 
 /// <summary>
 /// Interface for resolving Umbraco media from various value formats (GUIDs, paths, JSON).
 /// </summary>
-public interface IAiUmbracoMediaResolver
+public interface IAIUmbracoMediaResolver
 {
     /// <summary>
     /// Attempts to resolve an media from the given value.
@@ -22,5 +22,5 @@ public interface IAiUmbracoMediaResolver
     /// <returns>
     /// The resolved media content, or <c>null</c> if the value cannot be resolved to media.
     /// </returns>
-    Task<AiMediaContent?> ResolveAsync(object? value, CancellationToken cancellationToken = default);
+    Task<AIMediaContent?> ResolveAsync(object? value, CancellationToken cancellationToken = default);
 }

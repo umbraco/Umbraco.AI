@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agui.Events.Messages;
+namespace Umbraco.AI.Agui.Events.Messages;
 
 /// <summary>
 /// Event emitted when a text message starts streaming.

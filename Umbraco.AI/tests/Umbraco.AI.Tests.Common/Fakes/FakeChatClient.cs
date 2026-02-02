@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Tests.Common.Fakes;
+namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
 /// Fake implementation of <see cref="IChatClient"/> for use in tests.

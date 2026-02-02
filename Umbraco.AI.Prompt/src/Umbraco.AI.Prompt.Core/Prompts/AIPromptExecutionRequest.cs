@@ -1,11 +1,11 @@
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Request model for prompt execution.
 /// </summary>
-public class AiPromptExecutionRequest
+public class AIPromptExecutionRequest
 {
     /// <summary>
     /// The entity ID (document, media, etc.) for context.
@@ -37,8 +37,8 @@ public class AiPromptExecutionRequest
 
     /// <summary>
     /// Flexible context items array for passing frontend context to contributor.
-    /// These items are processed by <see cref="AiRuntimeContextContributorCollection"/>
+    /// These items are processed by <see cref="AIRuntimeContextContributorCollection"/>
     /// to extract entity data, template variables, and system messages.
     /// </summary>
-    public IReadOnlyList<AiRequestContextItem>? Context { get; init; }
+    public IReadOnlyList<AIRequestContextItem>? Context { get; init; }
 }

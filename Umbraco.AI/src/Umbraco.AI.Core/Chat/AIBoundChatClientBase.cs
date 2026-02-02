@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Chat;
+namespace Umbraco.AI.Core.Chat;
 
 /// <summary>
 /// Base class for chat client decorators that bind context (e.g., profile or agent) to requests.
@@ -11,7 +11,7 @@ namespace Umbraco.Ai.Core.Chat;
 /// Subclasses override <see cref="TransformMessages"/> and/or <see cref="TransformOptions"/>
 /// to customize behavior.
 /// </remarks>
-public abstract class AiBoundChatClientBase : IChatClient
+public abstract class AIBoundChatClientBase : IChatClient
 {
     /// <summary>
     /// Gets the inner chat client that this decorator delegates to.
@@ -19,10 +19,10 @@ public abstract class AiBoundChatClientBase : IChatClient
     protected IChatClient InnerClient { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiBoundChatClientBase"/> class.
+    /// Initializes a new instance of the <see cref="AIBoundChatClientBase"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client to delegate to.</param>
-    protected AiBoundChatClientBase(IChatClient innerClient)
+    protected AIBoundChatClientBase(IChatClient innerClient)
     {
         InnerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
     }

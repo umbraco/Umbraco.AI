@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Provides access to the current AI context during tool execution.
@@ -7,17 +7,17 @@ namespace Umbraco.Ai.Core.Contexts;
 /// This is set by the context injection middleware before tool execution
 /// and cleared afterward. Uses AsyncLocal for thread-safety.
 /// </remarks>
-public interface IAiContextAccessor
+public interface IAIContextAccessor
 {
     /// <summary>
     /// Gets the current resolved context, if any.
     /// </summary>
-    AiResolvedContext? Context { get; }
+    AIResolvedContext? Context { get; }
 
     /// <summary>
     /// Sets the current resolved context.
     /// </summary>
     /// <param name="context">The resolved context to set.</param>
     /// <returns>A disposable that clears the context when disposed.</returns>
-    IDisposable SetContext(AiResolvedContext context);
+    IDisposable SetContext(AIResolvedContext context);
 }

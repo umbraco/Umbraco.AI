@@ -2,12 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 
 /// <summary>
 /// Controller for creating prompts.
@@ -43,11 +43,11 @@ public class CreatePromptController : PromptControllerBase
         [FromBody] CreatePromptRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AiPrompt prompt = _umbracoMapper.Map<AiPrompt>(model)!;
+        AIPrompt prompt = _umbracoMapper.Map<AIPrompt>(model)!;
 
         try
         {
-            AiPrompt created = await _aiPromptService.SavePromptAsync(prompt, cancellationToken);
+            AIPrompt created = await _aiPromptService.SavePromptAsync(prompt, cancellationToken);
 
             return CreatedAtAction(
                 nameof(ByIdOrAliasPromptController.GetPromptByIdOrAlias),

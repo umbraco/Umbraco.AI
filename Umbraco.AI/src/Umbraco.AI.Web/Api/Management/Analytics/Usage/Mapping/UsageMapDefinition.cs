@@ -1,8 +1,8 @@
-using Umbraco.Ai.Core.Analytics.Usage;
-using Umbraco.Ai.Web.Api.Management.Analytics.Usage.Models;
+using Umbraco.AI.Core.Analytics.Usage;
+using Umbraco.AI.Web.Api.Management.Analytics.Usage.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.Analytics.Usage.Mapping;
+namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Mapping;
 
 /// <summary>
 /// Map definitions for Analytics models.
@@ -13,13 +13,13 @@ public class UsageMapDefinition : IMapDefinition
     public void DefineMaps(IUmbracoMapper mapper)
     {
         // Response mappings (domain -> response)
-        mapper.Define<AiUsageSummary, UsageSummaryResponseModel>((_, _) => new UsageSummaryResponseModel(), MapToSummaryResponse);
-        mapper.Define<AiUsageTimeSeriesPoint, UsageTimeSeriesPointModel>((_, _) => new UsageTimeSeriesPointModel(), MapToTimeSeriesPoint);
-        mapper.Define<AiUsageBreakdownItem, UsageBreakdownItemModel>((_, _) => new UsageBreakdownItemModel(), MapToBreakdownItem);
+        mapper.Define<AIUsageSummary, UsageSummaryResponseModel>((_, _) => new UsageSummaryResponseModel(), MapToSummaryResponse);
+        mapper.Define<AIUsageTimeSeriesPoint, UsageTimeSeriesPointModel>((_, _) => new UsageTimeSeriesPointModel(), MapToTimeSeriesPoint);
+        mapper.Define<AIUsageBreakdownItem, UsageBreakdownItemModel>((_, _) => new UsageBreakdownItemModel(), MapToBreakdownItem);
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToSummaryResponse(AiUsageSummary source, UsageSummaryResponseModel target, MapperContext context)
+    private static void MapToSummaryResponse(AIUsageSummary source, UsageSummaryResponseModel target, MapperContext context)
     {
         target.TotalRequests = source.TotalRequests;
         target.InputTokens = source.InputTokens;
@@ -32,7 +32,7 @@ public class UsageMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToTimeSeriesPoint(AiUsageTimeSeriesPoint source, UsageTimeSeriesPointModel target, MapperContext context)
+    private static void MapToTimeSeriesPoint(AIUsageTimeSeriesPoint source, UsageTimeSeriesPointModel target, MapperContext context)
     {
         target.Timestamp = source.Timestamp;
         target.RequestCount = source.RequestCount;
@@ -44,7 +44,7 @@ public class UsageMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToBreakdownItem(AiUsageBreakdownItem source, UsageBreakdownItemModel target, MapperContext context)
+    private static void MapToBreakdownItem(AIUsageBreakdownItem source, UsageBreakdownItemModel target, MapperContext context)
     {
         target.Dimension = source.Dimension;
         target.DimensionName = source.DimensionName;

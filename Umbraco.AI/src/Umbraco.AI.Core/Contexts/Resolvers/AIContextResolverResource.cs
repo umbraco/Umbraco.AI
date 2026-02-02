@@ -1,13 +1,13 @@
-namespace Umbraco.Ai.Core.Contexts.Resolvers;
+namespace Umbraco.AI.Core.Contexts.Resolvers;
 
 /// <summary>
 /// Represents a resource returned by a context resolver before aggregation.
 /// </summary>
 /// <remarks>
-/// This is similar to <see cref="AiResolvedResource"/> but without <c>Source</c>,
+/// This is similar to <see cref="AIResolvedResource"/> but without <c>Source</c>,
 /// which is added automatically by the aggregator using the resolver's type name.
 /// </remarks>
-public sealed class AiContextResolverResource
+public sealed class AIContextResolverResource
 {
     /// <summary>
     /// The unique identifier of the resource.
@@ -37,7 +37,7 @@ public sealed class AiContextResolverResource
     /// <summary>
     /// Determines how and when this resource is included in AI operations.
     /// </summary>
-    public AiContextResourceInjectionMode InjectionMode { get; init; }
+    public AIContextResourceInjectionMode InjectionMode { get; init; }
 
     /// <summary>
     /// The name of the context this resource came from.

@@ -2,12 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Contexts.ResourceTypes;
-using Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Models;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Web.Api.Management.ContextResourceTypes.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Controllers;
+namespace Umbraco.AI.Web.Api.Management.ContextResourceTypes.Controllers;
 
 /// <summary>
 /// Controller to get all registered context resource types.
@@ -16,14 +16,14 @@ namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class AllContextResourceTypeController : ContextResourceTypeControllerBase
 {
-    private readonly AiContextResourceTypeCollection _contextResourceTypes;
+    private readonly AIContextResourceTypeCollection _contextResourceTypes;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AllContextResourceTypeController"/> class.
     /// </summary>
     public AllContextResourceTypeController(
-        AiContextResourceTypeCollection contextResourceTypes,
+        AIContextResourceTypeCollection contextResourceTypes,
         IUmbracoMapper umbracoMapper)
     {
         _contextResourceTypes = contextResourceTypes;

@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Persistence.Settings;
+namespace Umbraco.AI.Persistence.Settings;
 
 /// <summary>
 /// EF Core entity for storing AI settings as key-value pairs.
 /// </summary>
-internal class AiSettingsEntity
+internal class AISettingsEntity
 {
     /// <summary>
     /// Unique identifier for the setting.

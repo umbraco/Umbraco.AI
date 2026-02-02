@@ -1,22 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Umbraco.Ai.Agent.Persistence.Sqlite;
+namespace Umbraco.AI.Agent.Persistence.Sqlite;
 
 /// <summary>
-/// Design-time factory for creating <see cref="UmbracoAiAgentDbContext"/> for EF Core CLI tools.
+/// Design-time factory for creating <see cref="UmbracoAIAgentDbContext"/> for EF Core CLI tools.
 /// </summary>
-public class UmbracoAiAgentDbContextFactory : IDesignTimeDbContextFactory<UmbracoAiAgentDbContext>
+public class UmbracoAIAgentDbContextFactory : IDesignTimeDbContextFactory<UmbracoAIAgentDbContext>
 {
     /// <inheritdoc />
-    public UmbracoAiAgentDbContext CreateDbContext(string[] args)
+    public UmbracoAIAgentDbContext CreateDbContext(string[] args)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<UmbracoAiAgentDbContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<UmbracoAIAgentDbContext>();
 
         optionsBuilder.UseSqlite(
-            "Data Source=UmbracoAiAgent_Design.db",
-            x => x.MigrationsAssembly(typeof(UmbracoAiAgentDbContextFactory).Assembly.FullName));
+            "Data Source=UmbracoAIAgent_Design.db",
+            x => x.MigrationsAssembly(typeof(UmbracoAIAgentDbContextFactory).Assembly.FullName));
 
-        return new UmbracoAiAgentDbContext(optionsBuilder.Options);
+        return new UmbracoAIAgentDbContext(optionsBuilder.Options);
     }
 }

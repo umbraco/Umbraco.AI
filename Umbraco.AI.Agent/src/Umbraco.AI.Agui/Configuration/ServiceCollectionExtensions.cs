@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Agui.Streaming;
+using Umbraco.AI.Agui.Streaming;
 
-namespace Umbraco.Ai.Agui.Configuration;
+namespace Umbraco.AI.Agui.Configuration;
 
 /// <summary>
 /// Extension methods for configuring AG-UI services.

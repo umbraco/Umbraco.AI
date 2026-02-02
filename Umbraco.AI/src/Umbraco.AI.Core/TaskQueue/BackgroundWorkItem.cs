@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Ai.Core.TaskQueue;
+﻿namespace Umbraco.AI.Core.TaskQueue;
 
 internal sealed record BackgroundWorkItem(
     string Name,

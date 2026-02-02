@@ -2,16 +2,16 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.Context.Models;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Configuration;
+using Umbraco.AI.Web.Api.Management.Context.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Context.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 
 /// <summary>
 /// Controller to get a context by ID or alias.

@@ -1,6 +1,6 @@
-namespace Umbraco.Ai.Core.Connections;
+namespace Umbraco.AI.Core.Connections;
 
 /// <summary>
 /// Lightweight reference to a connection (for use in profiles, lists, etc.).
 /// </summary>
-public record AiConnectionRef(Guid Id, string Name);
+public record AIConnectionRef(Guid Id, string Name);

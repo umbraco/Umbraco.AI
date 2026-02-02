@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Lifecycle;
+namespace Umbraco.AI.Agui.Events.Lifecycle;
 
 /// <summary>
 /// Event emitted when a step within an agent run starts.

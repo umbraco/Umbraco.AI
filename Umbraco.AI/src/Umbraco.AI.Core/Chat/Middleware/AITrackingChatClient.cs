@@ -1,13 +1,13 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Chat.Middleware;
+namespace Umbraco.AI.Core.Chat.Middleware;
 
 /// <summary>
 /// A chat client that tracks the last usage details and response message.
 /// </summary>
 /// <param name="innerClient">The inner chat client to wrap.</param>
-internal sealed class AiTrackingChatClient(IChatClient innerClient) : AiBoundChatClientBase(innerClient)
+internal sealed class AITrackingChatClient(IChatClient innerClient) : AIBoundChatClientBase(innerClient)
 {
     /// <summary>
     /// The last usage details received from the chat client.

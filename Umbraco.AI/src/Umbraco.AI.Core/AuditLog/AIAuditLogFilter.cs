@@ -1,16 +1,16 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Filter criteria for querying AI traces.
 /// </summary>
-public class AiAuditLogFilter
+public class AIAuditLogFilter
 {
     /// <summary>
     /// Gets or sets the status to filter by.
     /// </summary>
-    public AiAuditLogStatus? Status { get; init; }
+    public AIAuditLogStatus? Status { get; init; }
 
     /// <summary>
     /// Gets or sets the user ID to filter by.
@@ -30,7 +30,7 @@ public class AiAuditLogFilter
     /// <summary>
     /// Gets or sets the AI capability to filter by (Chat, Embedding, etc.).
     /// </summary>
-    public AiCapability? Capability { get; init; }
+    public AICapability? Capability { get; init; }
 
     /// <summary>
     /// Gets or sets the feature type to filter by (e.g., "prompt", "agent").

@@ -1,7 +1,7 @@
 using System.Text;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Core.RuntimeContext.Contributors;
+namespace Umbraco.AI.Core.RuntimeContext.Contributors;
 
 /// <summary>
 /// Contributes current backoffice user information to the runtime context.
@@ -22,7 +22,7 @@ internal sealed class UserContextContributor : IAiRuntimeContextContributor
     }
 
     /// <inheritdoc />
-    public void Contribute(AiRuntimeContext context)
+    public void Contribute(AIRuntimeContext context)
     {
         var user = _securityAccessor.BackOfficeSecurity?.CurrentUser;
         if (user is null)

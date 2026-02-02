@@ -2,13 +2,13 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
-using Umbraco.Ai.Prompt.Core.Media;
-using Umbraco.Ai.Prompt.Core.Templates.Processors;
+using Umbraco.AI.Prompt.Core.Media;
+using Umbraco.AI.Prompt.Core.Templates.Processors;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 using Xunit;
 
-namespace Umbraco.Ai.Prompt.Tests.Unit.Templates;
+namespace Umbraco.AI.Prompt.Tests.Unit.Templates;
 
 public class ImageTemplateVariableProcessorTests
 {
@@ -54,7 +54,7 @@ public class ImageTemplateVariableProcessorTests
 
         _mockResolver
             .Setup(r => r.ResolveAsync("/media/12345/image.png", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = imageData, MediaType = "image/png" });
+            .ReturnsAsync(new AIMediaContent { Data = imageData, MediaType = "image/png" });
 
         // Act
         var result = (await _processor.ProcessAsync("umbracoFile", context)).ToList();
@@ -83,7 +83,7 @@ public class ImageTemplateVariableProcessorTests
 
         _mockResolver
             .Setup(r => r.ResolveAsync("/media/uploads/photo.jpg", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = imageData, MediaType = "image/jpeg" });
+            .ReturnsAsync(new AIMediaContent { Data = imageData, MediaType = "image/jpeg" });
 
         // Act
         var result = (await _processor.ProcessAsync("heroImage", context)).ToList();
@@ -177,7 +177,7 @@ public class ImageTemplateVariableProcessorTests
 
         _mockResolver
             .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiMediaContent?)null);
+            .ReturnsAsync((AIMediaContent?)null);
 
         // Act
         var result = (await _processor.ProcessAsync("umbracoFile", context)).ToList();
@@ -202,7 +202,7 @@ public class ImageTemplateVariableProcessorTests
 
         _mockResolver
             .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
+            .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
         var result = (await _processor.ProcessAsync("umbracoFile", context)).ToList();
@@ -228,7 +228,7 @@ public class ImageTemplateVariableProcessorTests
 
         _mockResolver
             .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
+            .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
         var result = (await _processor.ProcessAsync("umbracoFile", context)).ToList();
@@ -252,7 +252,7 @@ public class ImageTemplateVariableProcessorTests
 
         _mockResolver
             .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
+            .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
         var result = (await _processor.ProcessAsync("umbracoFile", context)).ToList();
@@ -291,7 +291,7 @@ public class ImageTemplateVariableProcessorTests
 
         _mockResolver
             .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
+            .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
         var result = (await _processor.ProcessAsync("umbracoFile", context)).ToList();

@@ -1,7 +1,7 @@
 using System.Text.Json;
-using Umbraco.Ai.Agui.Events;
+using Umbraco.AI.Agui.Events;
 
-namespace Umbraco.Ai.Agui.Streaming;
+namespace Umbraco.AI.Agui.Streaming;
 
 /// <summary>
 /// Serializer for AG-UI events to SSE format.

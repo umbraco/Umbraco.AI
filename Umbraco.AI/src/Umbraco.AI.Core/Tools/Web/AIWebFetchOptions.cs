@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Configuration options for web fetching.
 /// </summary>
-public class AiWebFetchOptions
+public class AIWebFetchOptions
 {
     /// <summary>
     /// Gets or sets a value indicating whether the web fetch tool is enabled.

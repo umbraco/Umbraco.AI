@@ -2,12 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Settings;
-using Umbraco.Ai.Web.Api.Management.Settings.Models;
+using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Web.Api.Management.Settings.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Settings.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Settings.Controllers;
 
 /// <summary>
 /// Controller to update the AI settings.
@@ -41,7 +41,7 @@ public class UpdateSettingsController : SettingsControllerBase
         UpdateSettingsRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var settings = _umbracoMapper.Map<AiSettings>(requestModel)!;
+        var settings = _umbracoMapper.Map<AISettings>(requestModel)!;
         var saved = await _settingsService.SaveSettingsAsync(settings, cancellationToken);
         return Ok(_umbracoMapper.Map<SettingsResponseModel>(saved));
     }

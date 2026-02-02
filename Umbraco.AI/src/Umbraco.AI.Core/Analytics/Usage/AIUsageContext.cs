@@ -1,19 +1,19 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Contains metadata for an AI usage operation.
 /// Extracted from ChatOptions/EmbeddingGenerationOptions AdditionalProperties.
 /// </summary>
-public sealed class AiUsageContext
+public sealed class AIUsageContext
 {
     /// <summary>
     /// Gets the AI capability being executed (Chat, Embedding, etc.).
     /// </summary>
-    public required AiCapability Capability { get; init; }
+    public required AICapability Capability { get; init; }
 
     /// <summary>
     /// Gets the profile ID used for this operation.
@@ -61,13 +61,13 @@ public sealed class AiUsageContext
     /// <param name="capability">The AI capability being used.</param>
     /// <param name="runtimeContext">The runtime context containing additional properties.</param>
     /// <param name="modelId">Optional model ID to override runtime context value.</param>
-    /// <returns>An AiUsageContext populated with available metadata.</returns>
-    public static AiUsageContext ExtractFromRuntimeContext(
-        AiCapability capability,
-        AiRuntimeContext runtimeContext,
+    /// <returns>An AIUsageContext populated with available metadata.</returns>
+    public static AIUsageContext ExtractFromRuntimeContext(
+        AICapability capability,
+        AIRuntimeContext runtimeContext,
         string? modelId = null)
     {
-        return new AiUsageContext
+        return new AIUsageContext
         {
             Capability = capability,
             ProfileId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.ProfileId),

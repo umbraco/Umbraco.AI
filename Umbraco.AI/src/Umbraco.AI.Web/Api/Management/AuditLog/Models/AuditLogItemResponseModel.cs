@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.AuditLog.Models;
+namespace Umbraco.AI.Web.Api.Management.AuditLog.Models;
 
 /// <summary>
 /// Lightweight response model for a audit-log item (used in lists).

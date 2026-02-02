@@ -3,22 +3,22 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Serialization;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Serialization;
 
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
 /// <summary>
 /// Service for resolving editable models from various storage formats.
 /// </summary>
-internal sealed class AiEditableModelResolver : IAiEditableModelResolver
+internal sealed class AIEditableModelResolver : IAiEditableModelResolver
 {
     private const string ConfigPrefix = "$";
 
-    private readonly AiProviderCollection _providers;
+    private readonly AIProviderCollection _providers;
     private readonly IConfiguration _configuration;
 
-    public AiEditableModelResolver(AiProviderCollection providers, IConfiguration configuration)
+    public AIEditableModelResolver(AIProviderCollection providers, IConfiguration configuration)
     {
         _providers = providers;
         _configuration = configuration;

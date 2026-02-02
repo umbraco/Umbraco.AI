@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IAiConnectionService"/> to support IdOrAlias lookups.
 /// </summary>
-internal static class AiConnectionServiceExtensions
+internal static class AIConnectionServiceExtensions
 {
     /// <summary>
     /// Gets a connection by ID or alias.
@@ -15,7 +15,7 @@ internal static class AiConnectionServiceExtensions
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The connection if found, otherwise null.</returns>
-    public static async Task<AiConnection?> GetConnectionAsync(
+    public static async Task<AIConnection?> GetConnectionAsync(
         this IAiConnectionService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)

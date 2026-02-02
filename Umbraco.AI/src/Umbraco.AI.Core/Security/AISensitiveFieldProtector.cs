@@ -2,23 +2,23 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 
-namespace Umbraco.Ai.Core.Security;
+namespace Umbraco.AI.Core.Security;
 
 /// <summary>
 /// Implements field protection using ASP.NET Core Data Protection API.
 /// Uses a marker-based approach with <c>ENC:</c> prefix for encrypted values.
 /// </summary>
-internal sealed class AiSensitiveFieldProtector : IAiSensitiveFieldProtector
+internal sealed class AISensitiveFieldProtector : IAiSensitiveFieldProtector
 {
     private const string EncryptedPrefix = "ENC:";
     private const string Purpose = "Umbraco.Ai.SensitiveFields.v1";
 
     private readonly IDataProtector _protector;
-    private readonly ILogger<AiSensitiveFieldProtector> _logger;
+    private readonly ILogger<AISensitiveFieldProtector> _logger;
 
-    public AiSensitiveFieldProtector(
+    public AISensitiveFieldProtector(
         IDataProtectionProvider dataProtectionProvider,
-        ILogger<AiSensitiveFieldProtector> logger)
+        ILogger<AISensitiveFieldProtector> logger)
     {
         _protector = dataProtectionProvider.CreateProtector(Purpose);
         _logger = logger;

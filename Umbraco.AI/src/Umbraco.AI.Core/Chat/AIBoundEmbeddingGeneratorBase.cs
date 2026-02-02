@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Chat;
+namespace Umbraco.AI.Core.Chat;
 
 /// <summary>
 /// Base class for generator decorators that bind context to requests.
@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Core.Chat;
 /// Subclasses override <see cref="TransformValues"/> and/or <see cref="TransformOptions"/>
 /// to customize behavior.
 /// </remarks>
-public class AiBoundEmbeddingGeneratorBase<TInput, TEmbedding> : IEmbeddingGenerator<TInput, TEmbedding>
+public class AIBoundEmbeddingGeneratorBase<TInput, TEmbedding> : IEmbeddingGenerator<TInput, TEmbedding>
     where TEmbedding : Embedding
 {
     /// <summary>
@@ -21,11 +21,11 @@ public class AiBoundEmbeddingGeneratorBase<TInput, TEmbedding> : IEmbeddingGener
     protected IEmbeddingGenerator<TInput, TEmbedding> InnerGenerator { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiBoundEmbeddingGeneratorBase{TInput,TEmbedding}"/> class.
+    /// Initializes a new instance of the <see cref="AIBoundEmbeddingGeneratorBase{TInput,TEmbedding}"/> class.
     /// </summary>
     /// <param name="innerGenerator"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    protected AiBoundEmbeddingGeneratorBase(IEmbeddingGenerator<TInput, TEmbedding> innerGenerator)
+    protected AIBoundEmbeddingGeneratorBase(IEmbeddingGenerator<TInput, TEmbedding> innerGenerator)
     {
         InnerGenerator = innerGenerator ?? throw new ArgumentNullException(nameof(innerGenerator));
     }

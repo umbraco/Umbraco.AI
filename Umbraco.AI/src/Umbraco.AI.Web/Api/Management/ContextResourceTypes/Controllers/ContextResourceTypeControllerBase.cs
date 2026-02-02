@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Controllers;
+namespace Umbraco.AI.Web.Api.Management.ContextResourceTypes.Controllers;
 
 /// <summary>
 /// Base controller for Context management API endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.ContextResourceTypes.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.ContextResourceTypes.RouteSegment)]
-public abstract class ContextResourceTypeControllerBase : UmbracoAiCoreManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.ContextResourceTypes.RouteSegment)]
+public abstract class ContextResourceTypeControllerBase : UmbracoAICoreManagementControllerBase
 { }

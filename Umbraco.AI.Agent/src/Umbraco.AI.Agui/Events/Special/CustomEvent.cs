@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Special;
+namespace Umbraco.AI.Agui.Events.Special;
 
 /// <summary>
 /// Custom event for application-specific data.

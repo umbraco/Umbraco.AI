@@ -1,11 +1,11 @@
 using Examine;
 using Moq;
 using Shouldly;
-using Umbraco.Ai.Core.Tools;
-using Umbraco.Ai.Core.Tools.Umbraco;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core.Web;
 
-namespace Umbraco.Ai.Tests.Unit.Tools.Umbraco;
+namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 
 public class SearchUmbracoToolTests
 {

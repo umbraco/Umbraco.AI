@@ -1,7 +1,7 @@
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Provides extension methods for configuring Umbraco AI services on the Umbraco builder.
@@ -16,7 +16,7 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAi(this IUmbracoBuilder builder)
     {
         // Prevent multiple registrations
-        if (builder.Services.Any(x => x.ServiceType == typeof(AiProviderCollection)))
+        if (builder.Services.Any(x => x.ServiceType == typeof(AIProviderCollection)))
             return builder;
 
         builder.AddUmbracoAiCore();

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.AuditLog.Models;
+namespace Umbraco.AI.Web.Api.Management.AuditLog.Models;
 
 /// <summary>
 /// Detailed response model for a audit-log (used in detail views).

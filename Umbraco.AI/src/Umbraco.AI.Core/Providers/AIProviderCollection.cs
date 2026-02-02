@@ -1,17 +1,17 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// A collection of AI providers.
 /// </summary>
-public sealed class AiProviderCollection : BuilderCollectionBase<IAiProvider>
+public sealed class AIProviderCollection : BuilderCollectionBase<IAiProvider>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiProviderCollection"/> class.
+    /// Initializes a new instance of the <see cref="AIProviderCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the providers.</param>
-    public AiProviderCollection(Func<IEnumerable<IAiProvider>> items)
+    public AIProviderCollection(Func<IEnumerable<IAiProvider>> items)
         : base(items)
     { }
 

@@ -1,6 +1,6 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Interface for entities that support versioning with snapshot history.
@@ -15,7 +15,7 @@ namespace Umbraco.Ai.Core.Versioning;
 /// also track audit information (creation/modification timestamps and user IDs).
 /// </para>
 /// </remarks>
-public interface IAiVersionableEntity : IAiAuditableEntity
+public interface IAIVersionableEntity : IAiAuditableEntity
 {
     /// <summary>
     /// The current version of the entity.

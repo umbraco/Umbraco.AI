@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Connections;
+using Umbraco.AI.Core.Connections;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// A provider with resolved settings. Mirrors IAiProvider API but
 /// returns configured capabilities with settings baked in.
 /// </summary>
-public interface IAiConfiguredProvider
+public interface IAIConfiguredProvider
 {
     /// <summary>
     /// The underlying provider.

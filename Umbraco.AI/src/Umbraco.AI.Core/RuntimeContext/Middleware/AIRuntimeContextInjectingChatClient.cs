@@ -1,6 +1,6 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.RuntimeContext.Middleware;
+namespace Umbraco.AI.Core.RuntimeContext.Middleware;
 
 /// <summary>
 /// A chat client that injects multimodal content from the runtime context.
@@ -10,16 +10,16 @@ namespace Umbraco.Ai.Core.RuntimeContext.Middleware;
 /// added by tools. When content is found, it injects it into the message list
 /// before passing to the inner client.
 /// </remarks>
-internal sealed class AiRuntimeContextInjectingChatClient : DelegatingChatClient
+internal sealed class AIRuntimeContextInjectingChatClient : DelegatingChatClient
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiRuntimeContextInjectingChatClient"/> class.
+    /// Initializes a new instance of the <see cref="AIRuntimeContextInjectingChatClient"/> class.
     /// </summary>
     /// <param name="innerClient">The inner chat client.</param>
     /// <param name="runtimeContextAccessor">The runtime context accessor.</param>
-    public AiRuntimeContextInjectingChatClient(
+    public AIRuntimeContextInjectingChatClient(
         IChatClient innerClient,
         IAiRuntimeContextAccessor runtimeContextAccessor)
         : base(innerClient)
@@ -79,7 +79,7 @@ internal sealed class AiRuntimeContextInjectingChatClient : DelegatingChatClient
     /// <summary>
     /// Injects multimodal content into the message list.
     /// </summary>
-    private static List<ChatMessage> InjectMultimodalContent(List<ChatMessage> messages, AiRuntimeContext context)
+    private static List<ChatMessage> InjectMultimodalContent(List<ChatMessage> messages, AIRuntimeContext context)
     {
         if (context.MultimodalContents.Count == 0)
         {

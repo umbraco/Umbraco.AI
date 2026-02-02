@@ -1,15 +1,15 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Extensions;
 
-namespace Umbraco.Ai.Anthropic;
+namespace Umbraco.AI.Anthropic;
 
 /// <summary>
 /// AI chat capability for Anthropic provider.
 /// </summary>
-public class AnthropicChatCapability(AnthropicProvider provider) : AiChatCapabilityBase<AnthropicProviderSettings>(provider)
+public class AnthropicChatCapability(AnthropicProvider provider) : AIChatCapabilityBase<AnthropicProviderSettings>(provider)
 {
     private const string DefaultChatModel = "claude-sonnet-4-20250514";
     
@@ -24,7 +24,7 @@ public class AnthropicChatCapability(AnthropicProvider provider) : AiChatCapabil
     ];
 
     /// <inheritdoc />
-    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         AnthropicProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
@@ -32,8 +32,8 @@ public class AnthropicChatCapability(AnthropicProvider provider) : AiChatCapabil
 
         return allModels
             .Where(IsChatModel)
-            .Select(id => new AiModelDescriptor(
-                new AiModelRef(Provider.Id, id),
+            .Select(id => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, id),
                 AnthropicModelUtilities.FormatDisplayName(id)))
             .ToList();
     }

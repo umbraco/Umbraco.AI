@@ -1,29 +1,29 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// Base interface for capabilities with resolved settings.
 /// Settings are baked in - no settings parameters needed.
 /// </summary>
-public interface IAiConfiguredCapability
+public interface IAIConfiguredCapability
 {
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
-    AiCapability Kind { get; }
+    AICapability Kind { get; }
 
     /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
-    Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
 /// Chat capability with resolved settings.
 /// </summary>
-public interface IAiConfiguredChatCapability : IAiConfiguredCapability
+public interface IAIConfiguredChatCapability : IAiConfiguredCapability
 {
     /// <summary>
     /// Creates a chat client with the baked-in settings.
@@ -36,7 +36,7 @@ public interface IAiConfiguredChatCapability : IAiConfiguredCapability
 /// <summary>
 /// Embedding capability with resolved settings.
 /// </summary>
-public interface IAiConfiguredEmbeddingCapability : IAiConfiguredCapability
+public interface IAIConfiguredEmbeddingCapability : IAiConfiguredCapability
 {
     /// <summary>
     /// Creates an embedding generator with the baked-in settings.

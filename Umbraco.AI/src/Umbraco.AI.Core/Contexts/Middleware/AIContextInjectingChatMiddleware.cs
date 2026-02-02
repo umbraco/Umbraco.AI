@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Contexts.Middleware;
+namespace Umbraco.AI.Core.Contexts.Middleware;
 
 /// <summary>
 /// Chat middleware that injects AI context into chat requests.
@@ -13,19 +13,19 @@ namespace Umbraco.Ai.Core.Contexts.Middleware;
 /// the system prompt and makes the resolved context available via <see cref="IAiContextAccessor"/>
 /// for OnDemand tools.
 /// </remarks>
-public class AiContextInjectingChatMiddleware : IAiChatMiddleware
+public class AIContextInjectingChatMiddleware : IAiChatMiddleware
 {
     private readonly IAiContextResolutionService _contextResolutionService;
     private readonly IAiContextFormatter _contextFormatter;
     private readonly IAiContextAccessor _contextAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextInjectingChatMiddleware"/> class.
+    /// Initializes a new instance of the <see cref="AIContextInjectingChatMiddleware"/> class.
     /// </summary>
     /// <param name="contextResolutionService">The context resolution service.</param>
     /// <param name="contextFormatter">The context formatter.</param>
     /// <param name="contextAccessor">The context accessor.</param>
-    public AiContextInjectingChatMiddleware(
+    public AIContextInjectingChatMiddleware(
         IAiContextResolutionService contextResolutionService,
         IAiContextFormatter contextFormatter,
         IAiContextAccessor contextAccessor)
@@ -38,7 +38,7 @@ public class AiContextInjectingChatMiddleware : IAiChatMiddleware
     /// <inheritdoc />
     public IChatClient Apply(IChatClient client)
     {
-        return new AiContextInjectingChatClient(
+        return new AIContextInjectingChatClient(
             client,
             _contextResolutionService,
             _contextFormatter,

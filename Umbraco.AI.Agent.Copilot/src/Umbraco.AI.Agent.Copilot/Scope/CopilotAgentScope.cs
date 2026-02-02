@@ -1,9 +1,9 @@
-﻿using Umbraco.Ai.Agent.Core.Scopes;
+﻿using Umbraco.AI.Agent.Core.Scopes;
 
-namespace Umbraco.Ai.Agent.Copilot.Scope;
+namespace Umbraco.AI.Agent.Copilot.Scope;
 
-[AiAgentScope(ScopeId, Icon = "icon-chat")]
-public class CopilotAgentScope : AiAgentScopeBase
+[AIAgentScope(ScopeId, Icon = "icon-chat")]
+public class CopilotAgentScope : AIAgentScopeBase
 {
     /// <summary>
     /// The identifier for the Copilot agent scope.

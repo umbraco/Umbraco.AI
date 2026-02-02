@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Base class for versionable entity type handlers that provides strongly-typed methods.
@@ -14,13 +14,13 @@ namespace Umbraco.Ai.Core.Versioning;
 ///   <item>Handling the object-to-typed casting in the interface implementation</item>
 /// </list>
 /// </remarks>
-public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEntityAdapter
+public abstract class AIVersionableEntityAdapterBase<TEntity> : IAiVersionableEntityAdapter
     where TEntity : class, IAiVersionableEntity
 {
     /// <inheritdoc />
     /// <remarks>
     /// Derived from the generic type parameter by removing the "Ai" prefix.
-    /// For example: <c>AiConnection</c> becomes <c>Connection</c>.
+    /// For example: <c>AIConnection</c> becomes <c>Connection</c>.
     /// </remarks>
     public virtual string EntityTypeName
     {
@@ -53,7 +53,7 @@ public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
         => RestoreFromSnapshot(json);
 
     /// <inheritdoc />
-    public IReadOnlyList<AiPropertyChange> CompareVersions(object from, object to)
+    public IReadOnlyList<AIPropertyChange> CompareVersions(object from, object to)
     {
         ArgumentNullException.ThrowIfNull(from);
         ArgumentNullException.ThrowIfNull(to);
@@ -91,7 +91,7 @@ public abstract class AiVersionableEntityAdapterBase<TEntity> : IAiVersionableEn
     /// <param name="from">The older entity version.</param>
     /// <param name="to">The newer entity version.</param>
     /// <returns>A list of property changes between the versions.</returns>
-    protected abstract IReadOnlyList<AiPropertyChange> CompareVersions(TEntity from, TEntity to);
+    protected abstract IReadOnlyList<AIPropertyChange> CompareVersions(TEntity from, TEntity to);
 
     /// <inheritdoc />
     public abstract Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default);

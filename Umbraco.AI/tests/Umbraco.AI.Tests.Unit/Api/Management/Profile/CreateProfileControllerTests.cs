@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fakes;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Profile.Controllers;
-using Umbraco.Ai.Web.Api.Management.Profile.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.AI.Web.Api.Management.Common.Models;
+using Umbraco.AI.Web.Api.Management.Profile.Controllers;
+using Umbraco.AI.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
 public class CreateProfileControllerTests
 {
@@ -27,19 +27,19 @@ public class CreateProfileControllerTests
 
         // Setup mapper to use real mapping logic
         _umbracoMapperMock
-            .Setup(m => m.Map<AiProfile>(It.IsAny<CreateProfileRequestModel>()))
+            .Setup(m => m.Map<AIProfile>(It.IsAny<CreateProfileRequestModel>()))
             .Returns((CreateProfileRequestModel request) =>
             {
-                var capability = Enum.TryParse<AiCapability>(request.Capability, true, out var cap)
+                var capability = Enum.TryParse<AICapability>(request.Capability, true, out var cap)
                     ? cap
-                    : AiCapability.Chat;
-                return new AiProfile
+                    : AICapability.Chat;
+                return new AIProfile
                 {
                     Id = Guid.Empty,
                     Alias = request.Alias,
                     Name = request.Name,
                     Capability = capability,
-                    Model = new AiModelRef(request.Model.ProviderId, request.Model.ModelId),
+                    Model = new AIModelRef(request.Model.ProviderId, request.Model.ModelId),
                     ConnectionId = request.ConnectionId,
                     Settings = MapSettingsFromRequest(capability, request.Settings),
                     Tags = request.Tags
@@ -47,25 +47,25 @@ public class CreateProfileControllerTests
             });
     }
 
-    private static IAiProfileSettings? MapSettingsFromRequest(AiCapability capability, ProfileSettingsModel? settings)
+    private static IAiProfileSettings? MapSettingsFromRequest(AICapability capability, ProfileSettingsModel? settings)
     {
         return capability switch
         {
-            AiCapability.Chat when settings is ChatProfileSettingsModel chat => new AiChatProfileSettings
+            AICapability.Chat when settings is ChatProfileSettingsModel chat => new AIChatProfileSettings
             {
                 Temperature = chat.Temperature,
                 MaxTokens = chat.MaxTokens,
                 SystemPromptTemplate = chat.SystemPromptTemplate
             },
-            AiCapability.Chat => new AiChatProfileSettings(),
-            AiCapability.Embedding => new AiEmbeddingProfileSettings(),
+            AICapability.Chat => new AIChatProfileSettings(),
+            AICapability.Embedding => new AIEmbeddingProfileSettings(),
             _ => null
         };
     }
 
     private CreateProfileController CreateController()
     {
-        var collection = new AiProviderCollection(() => _providers);
+        var collection = new AIProviderCollection(() => _providers);
         return new CreateProfileController(
             _profileServiceMock.Object,
             _connectionServiceMock.Object,
@@ -80,7 +80,7 @@ public class CreateProfileControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder().WithId(connectionId).Build();
+        var connection = new AIConnectionBuilder().WithId(connectionId).Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
         _providers.Add(provider);
 
@@ -97,15 +97,15 @@ public class CreateProfileControllerTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
         _profileServiceMock
-            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile p, CancellationToken _) => p);
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AIProfile>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIProfile p, CancellationToken _) => p);
 
         var controller = CreateController();
 
@@ -121,7 +121,7 @@ public class CreateProfileControllerTests
     public async Task CreateProfile_WithDuplicateAlias_Returns400BadRequest()
     {
         // Arrange
-        var existingProfile = new AiProfileBuilder().WithAlias("existing-alias").Build();
+        var existingProfile = new AIProfileBuilder().WithAlias("existing-alias").Build();
         var requestModel = new CreateProfileRequestModel
         {
             Alias = "existing-alias",
@@ -186,11 +186,11 @@ public class CreateProfileControllerTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         var controller = CreateController();
 
@@ -208,7 +208,7 @@ public class CreateProfileControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder().WithId(connectionId).Build();
+        var connection = new AIConnectionBuilder().WithId(connectionId).Build();
         var requestModel = new CreateProfileRequestModel
         {
             Alias = "new-profile",
@@ -220,7 +220,7 @@ public class CreateProfileControllerTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
@@ -244,7 +244,7 @@ public class CreateProfileControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder().WithId(connectionId).Build();
+        var connection = new AIConnectionBuilder().WithId(connectionId).Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
         _providers.Add(provider);
 
@@ -264,19 +264,19 @@ public class CreateProfileControllerTests
             Tags = new List<string> { "tag1", "tag2" }
         };
 
-        AiProfile? capturedProfile = null;
+        AIProfile? capturedProfile = null;
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(requestModel.Alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
         _profileServiceMock
-            .Setup(x => x.SaveProfileAsync(It.IsAny<AiProfile>(), It.IsAny<CancellationToken>()))
-            .Callback<AiProfile, CancellationToken>((p, _) => capturedProfile = p)
-            .ReturnsAsync((AiProfile p, CancellationToken _) => p);
+            .Setup(x => x.SaveProfileAsync(It.IsAny<AIProfile>(), It.IsAny<CancellationToken>()))
+            .Callback<AIProfile, CancellationToken>((p, _) => capturedProfile = p)
+            .ReturnsAsync((AIProfile p, CancellationToken _) => p);
 
         var controller = CreateController();
 
@@ -288,13 +288,13 @@ public class CreateProfileControllerTests
         capturedProfile!.Id.ShouldBe(Guid.Empty);
         capturedProfile.Alias.ShouldBe("test-alias");
         capturedProfile.Name.ShouldBe("Test Name");
-        capturedProfile.Capability.ShouldBe(AiCapability.Chat);
+        capturedProfile.Capability.ShouldBe(AICapability.Chat);
         capturedProfile.Model.ProviderId.ShouldBe("openai");
         capturedProfile.Model.ModelId.ShouldBe("gpt-4");
         capturedProfile.ConnectionId.ShouldBe(connectionId);
         capturedProfile.Settings.ShouldNotBeNull();
         
-        var chatSettings = capturedProfile.Settings as AiChatProfileSettings;
+        var chatSettings = capturedProfile.Settings as AIChatProfileSettings;
         chatSettings.ShouldNotBeNull();
         chatSettings!.Temperature.ShouldBe(0.5f);
         chatSettings.MaxTokens.ShouldBe(500);

@@ -1,74 +1,74 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Persistence.Connections;
-using Umbraco.Ai.Persistence.Context;
-using Umbraco.Ai.Persistence.AuditLog;
-using Umbraco.Ai.Persistence.Profiles;
-using Umbraco.Ai.Persistence.Analytics;
-using Umbraco.Ai.Persistence.Analytics.Usage;
-using Umbraco.Ai.Persistence.Settings;
-using Umbraco.Ai.Persistence.Versioning;
+using Umbraco.AI.Persistence.Connections;
+using Umbraco.AI.Persistence.Context;
+using Umbraco.AI.Persistence.AuditLog;
+using Umbraco.AI.Persistence.Profiles;
+using Umbraco.AI.Persistence.Analytics;
+using Umbraco.AI.Persistence.Analytics.Usage;
+using Umbraco.AI.Persistence.Settings;
+using Umbraco.AI.Persistence.Versioning;
 
-namespace Umbraco.Ai.Persistence;
+namespace Umbraco.AI.Persistence;
 
 /// <summary>
 /// EF Core DbContext for Umbraco AI persistence.
 /// </summary>
-public class UmbracoAiDbContext : DbContext
+public class UmbracoAIDbContext : DbContext
 {
     /// <summary>
     /// AI provider connections.
     /// </summary>
-    internal DbSet<AiConnectionEntity> Connections { get; set; } = null!;
+    internal DbSet<AIConnectionEntity> Connections { get; set; } = null!;
 
     /// <summary>
     /// AI profile configurations.
     /// </summary>
-    internal DbSet<AiProfileEntity> Profiles { get; set; } = null!;
+    internal DbSet<AIProfileEntity> Profiles { get; set; } = null!;
 
     /// <summary>
     /// AI contexts containing resources.
     /// </summary>
-    internal DbSet<AiContextEntity> Contexts { get; set; } = null!;
+    internal DbSet<AIContextEntity> Contexts { get; set; } = null!;
 
     /// <summary>
     /// AI context resources.
     /// </summary>
-    internal DbSet<AiContextResourceEntity> ContextResources { get; set; } = null!;
+    internal DbSet<AIContextResourceEntity> ContextResources { get; set; } = null!;
 
     /// <summary>
     /// AI audit-log records.
     /// </summary>
-    internal DbSet<AiAuditLogEntity> AuditLogs { get; set; } = null!;
+    internal DbSet<AIAuditLogEntity> AuditLogs { get; set; } = null!;
 
     /// <summary>
     /// AI usage records (raw, ephemeral).
     /// </summary>
-    internal DbSet<AiUsageRecordEntity> UsageRecords { get; set; } = null!;
+    internal DbSet<AIUsageRecordEntity> UsageRecords { get; set; } = null!;
 
     /// <summary>
     /// AI usage statistics (hourly aggregation).
     /// </summary>
-    internal DbSet<AiUsageStatisticsHourlyEntity> UsageStatisticsHourly { get; set; } = null!;
+    internal DbSet<AIUsageStatisticsHourlyEntity> UsageStatisticsHourly { get; set; } = null!;
 
     /// <summary>
     /// AI usage statistics (daily aggregation).
     /// </summary>
-    internal DbSet<AiUsageStatisticsDailyEntity> UsageStatisticsDaily { get; set; } = null!;
+    internal DbSet<AIUsageStatisticsDailyEntity> UsageStatisticsDaily { get; set; } = null!;
 
     /// <summary>
     /// Unified entity version history.
     /// </summary>
-    internal DbSet<AiEntityVersionEntity> EntityVersions { get; set; } = null!;
+    internal DbSet<AIEntityVersionEntity> EntityVersions { get; set; } = null!;
 
     /// <summary>
     /// AI settings (key-value store).
     /// </summary>
-    internal DbSet<AiSettingsEntity> Settings { get; set; } = null!;
+    internal DbSet<AISettingsEntity> Settings { get; set; } = null!;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="UmbracoAiDbContext"/>.
+    /// Initializes a new instance of <see cref="UmbracoAIDbContext"/>.
     /// </summary>
-    public UmbracoAiDbContext(DbContextOptions<UmbracoAiDbContext> options)
+    public UmbracoAIDbContext(DbContextOptions<UmbracoAIDbContext> options)
         : base(options)
     {
     }
@@ -78,7 +78,7 @@ public class UmbracoAiDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<AiConnectionEntity>(entity =>
+        modelBuilder.Entity<AIConnectionEntity>(entity =>
         {
             entity.ToTable("umbracoAIConnection");
             entity.HasKey(e => e.Id);
@@ -120,7 +120,7 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.ProviderId);
         });
 
-        modelBuilder.Entity<AiProfileEntity>(entity =>
+        modelBuilder.Entity<AIProfileEntity>(entity =>
         {
             entity.ToTable("umbracoAIProfile");
             entity.HasKey(e => e.Id);
@@ -167,13 +167,13 @@ public class UmbracoAiDbContext : DbContext
 
             entity.HasIndex(e => e.Capability);
 
-            entity.HasOne<AiConnectionEntity>()
+            entity.HasOne<AIConnectionEntity>()
                 .WithMany()
                 .HasForeignKey(e => e.ConnectionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<AiContextEntity>(entity =>
+        modelBuilder.Entity<AIContextEntity>(entity =>
         {
             entity.ToTable("umbracoAIContext");
             entity.HasKey(e => e.Id);
@@ -205,7 +205,7 @@ public class UmbracoAiDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<AiContextResourceEntity>(entity =>
+        modelBuilder.Entity<AIContextResourceEntity>(entity =>
         {
             entity.ToTable("umbracoAIContextResource");
             entity.HasKey(e => e.Id);
@@ -237,7 +237,7 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.ResourceTypeId);
         });
 
-        modelBuilder.Entity<AiAuditLogEntity>(entity =>
+        modelBuilder.Entity<AIAuditLogEntity>(entity =>
         {
             entity.ToTable("umbracoAIAuditLog");
             entity.HasKey(e => e.Id);
@@ -320,7 +320,7 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => e.ParentAuditLogId);
         });
 
-        modelBuilder.Entity<AiUsageRecordEntity>(entity =>
+        modelBuilder.Entity<AIUsageRecordEntity>(entity =>
         {
             entity.ToTable("umbracoAIUsageRecord");
             entity.HasKey(e => e.Id);
@@ -390,7 +390,7 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => new { e.Timestamp, e.Status });
         });
 
-        modelBuilder.Entity<AiUsageStatisticsHourlyEntity>(entity =>
+        modelBuilder.Entity<AIUsageStatisticsHourlyEntity>(entity =>
         {
             entity.ToTable("umbracoAIUsageStatisticsHourly");
             entity.HasKey(e => e.Id);
@@ -456,7 +456,7 @@ public class UmbracoAiDbContext : DbContext
                 .IsUnique();
         });
 
-        modelBuilder.Entity<AiUsageStatisticsDailyEntity>(entity =>
+        modelBuilder.Entity<AIUsageStatisticsDailyEntity>(entity =>
         {
             entity.ToTable("umbracoAIUsageStatisticsDaily");
             entity.HasKey(e => e.Id);
@@ -522,7 +522,7 @@ public class UmbracoAiDbContext : DbContext
                 .IsUnique();
         });
 
-        modelBuilder.Entity<AiEntityVersionEntity>(entity =>
+        modelBuilder.Entity<AIEntityVersionEntity>(entity =>
         {
             entity.ToTable("umbracoAIEntityVersion");
             entity.HasKey(e => e.Id);
@@ -554,7 +554,7 @@ public class UmbracoAiDbContext : DbContext
             entity.HasIndex(e => new { e.EntityType, e.EntityId });
         });
 
-        modelBuilder.Entity<AiSettingsEntity>(entity =>
+        modelBuilder.Entity<AISettingsEntity>(entity =>
         {
             entity.ToTable("umbracoAISettings");
             entity.HasKey(e => e.Id);

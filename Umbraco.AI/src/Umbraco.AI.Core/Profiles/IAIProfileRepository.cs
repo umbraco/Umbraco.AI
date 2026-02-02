@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Profiles;
+namespace Umbraco.AI.Core.Profiles;
 
 /// <summary>
 /// Defines a repository for managing AI profiles.
 /// Internal implementation detail - use <see cref="IAiProfileService"/> for external access.
 /// </summary>
-internal interface IAiProfileRepository
+internal interface IAIProfileRepository
 {
     /// <summary>
     /// Gets an AI profile by its unique identifier.
@@ -14,7 +14,7 @@ internal interface IAiProfileRepository
     /// <param name="id"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<AiProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Gets an AI profile by its alias.
@@ -22,14 +22,14 @@ internal interface IAiProfileRepository
     /// <param name="alias"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<AiProfile?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIProfile?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Gets all AI profiles.
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<IEnumerable<AiProfile>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIProfile>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all AI profiles for a specific capability.
@@ -37,7 +37,7 @@ internal interface IAiProfileRepository
     /// <param name="capability"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<IEnumerable<AiProfile>> GetByCapability(AiCapability capability, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIProfile>> GetByCapability(AICapability capability, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets AI profiles with pagination and optional filtering.
@@ -48,9 +48,9 @@ internal interface IAiProfileRepository
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated profiles and the total count.</returns>
-    Task<(IEnumerable<AiProfile> Items, int Total)> GetPagedAsync(
+    Task<(IEnumerable<AIProfile> Items, int Total)> GetPagedAsync(
         string? filter = null,
-        AiCapability? capability = null,
+        AICapability? capability = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);
@@ -62,7 +62,7 @@ internal interface IAiProfileRepository
     /// <param name="userId">Optional user key (GUID) for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved profile.</returns>
-    Task<AiProfile> SaveAsync(AiProfile profile, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<AIProfile> SaveAsync(AIProfile profile, Guid? userId = null, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Deletes an AI profile by its unique identifier.

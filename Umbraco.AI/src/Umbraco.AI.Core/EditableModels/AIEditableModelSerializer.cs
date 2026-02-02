@@ -1,23 +1,23 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Umbraco.Ai.Core.Security;
+using Umbraco.AI.Core.Security;
 
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
 /// <summary>
 /// Serializes and deserializes editable model objects with automatic encryption of sensitive fields.
 /// </summary>
-internal sealed class AiEditableModelSerializer : IAiEditableModelSerializer
+internal sealed class AIEditableModelSerializer : IAiEditableModelSerializer
 {
     private readonly IAiSensitiveFieldProtector _protector;
 
-    public AiEditableModelSerializer(IAiSensitiveFieldProtector protector)
+    public AIEditableModelSerializer(IAiSensitiveFieldProtector protector)
     {
         _protector = protector;
     }
 
     /// <inheritdoc />
-    public string? Serialize(object? model, AiEditableModelSchema? schema)
+    public string? Serialize(object? model, AIEditableModelSchema? schema)
     {
         if (model is null)
         {
@@ -64,7 +64,7 @@ internal sealed class AiEditableModelSerializer : IAiEditableModelSerializer
         return JsonSerializer.Deserialize<JsonElement>(json, Constants.DefaultJsonSerializerOptions);
     }
 
-    private void EncryptSensitiveFields(JsonObject jsonObject, AiEditableModelSchema schema)
+    private void EncryptSensitiveFields(JsonObject jsonObject, AIEditableModelSchema schema)
     {
         var sensitiveKeys = schema.Fields
             .Where(f => f.IsSensitive)

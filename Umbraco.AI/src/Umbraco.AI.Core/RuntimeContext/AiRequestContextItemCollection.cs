@@ -1,21 +1,21 @@
 using System.Collections;
 
-namespace Umbraco.Ai.Core.RuntimeContext;
+namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
 /// A collection of request context items with support for tracking handled items.
 /// Provides methods to process items while automatically tracking which have been handled.
 /// </summary>
-public sealed class AiRequestContextItemCollection : IReadOnlyList<AiRequestContextItem>
+public sealed class AIRequestContextItemCollection : IReadOnlyList<AIRequestContextItem>
 {
-    private readonly List<AiRequestContextItem> _items;
-    private readonly HashSet<AiRequestContextItem> _handledItems = [];
+    private readonly List<AIRequestContextItem> _items;
+    private readonly HashSet<AIRequestContextItem> _handledItems = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiRequestContextItemCollection"/> class.
+    /// Initializes a new instance of the <see cref="AIRequestContextItemCollection"/> class.
     /// </summary>
     /// <param name="items">The request context items.</param>
-    public AiRequestContextItemCollection(IEnumerable<AiRequestContextItem> items)
+    public AIRequestContextItemCollection(IEnumerable<AIRequestContextItem> items)
     {
         _items = items.ToList();
     }
@@ -24,10 +24,10 @@ public sealed class AiRequestContextItemCollection : IReadOnlyList<AiRequestCont
     public int Count => _items.Count;
 
     /// <inheritdoc />
-    public AiRequestContextItem this[int index] => _items[index];
+    public AIRequestContextItem this[int index] => _items[index];
 
     /// <inheritdoc />
-    public IEnumerator<AiRequestContextItem> GetEnumerator() => _items.GetEnumerator();
+    public IEnumerator<AIRequestContextItem> GetEnumerator() => _items.GetEnumerator();
 
     /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -42,7 +42,7 @@ public sealed class AiRequestContextItemCollection : IReadOnlyList<AiRequestCont
     /// </summary>
     /// <param name="item">The item to check.</param>
     /// <returns>True if the item has been handled; otherwise false.</returns>
-    public bool IsHandled(AiRequestContextItem item) => _handledItems.Contains(item);
+    public bool IsHandled(AIRequestContextItem item) => _handledItems.Contains(item);
 
     /// <summary>
     /// Handles the first unhandled item matching the predicate.
@@ -52,8 +52,8 @@ public sealed class AiRequestContextItemCollection : IReadOnlyList<AiRequestCont
     /// <param name="handler">Action to process the matched item.</param>
     /// <returns>True if an item was found and handled; otherwise false.</returns>
     public bool Handle(
-        Func<AiRequestContextItem, bool> predicate,
-        Action<AiRequestContextItem> handler)
+        Func<AIRequestContextItem, bool> predicate,
+        Action<AIRequestContextItem> handler)
     {
         ArgumentNullException.ThrowIfNull(predicate);
         ArgumentNullException.ThrowIfNull(handler);
@@ -77,8 +77,8 @@ public sealed class AiRequestContextItemCollection : IReadOnlyList<AiRequestCont
     /// <param name="predicate">Predicate to find matching items.</param>
     /// <param name="handler">Action to process each matched item.</param>
     public void HandleAll(
-        Func<AiRequestContextItem, bool> predicate,
-        Action<AiRequestContextItem> handler)
+        Func<AIRequestContextItem, bool> predicate,
+        Action<AIRequestContextItem> handler)
     {
         ArgumentNullException.ThrowIfNull(predicate);
         ArgumentNullException.ThrowIfNull(handler);
@@ -101,7 +101,7 @@ public sealed class AiRequestContextItemCollection : IReadOnlyList<AiRequestCont
     /// Typically used by fallback contributors that process any remaining items.
     /// </summary>
     /// <param name="handler">Action to process each unhandled item.</param>
-    public void HandleUnhandled(Action<AiRequestContextItem> handler)
+    public void HandleUnhandled(Action<AIRequestContextItem> handler)
     {
         ArgumentNullException.ThrowIfNull(handler);
 

@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Validates URLs for security concerns.

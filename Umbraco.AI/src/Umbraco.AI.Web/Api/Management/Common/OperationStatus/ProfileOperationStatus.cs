@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
+namespace Umbraco.AI.Web.Api.Management.Common.OperationStatus;
 
 /// <summary>
 /// Operation status codes for profile operations.

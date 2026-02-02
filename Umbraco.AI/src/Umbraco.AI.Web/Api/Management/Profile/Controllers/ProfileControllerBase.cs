@@ -1,17 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Web.Api;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 
 /// <summary>
 /// Base controller for Profile management API endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Profile.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Profile.RouteSegment)]
-public abstract class ProfileControllerBase : UmbracoAiCoreManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.Profile.RouteSegment)]
+public abstract class ProfileControllerBase : UmbracoAICoreManagementControllerBase
 {
     /// <summary>
     /// Maps a profile operation status to an appropriate action result.

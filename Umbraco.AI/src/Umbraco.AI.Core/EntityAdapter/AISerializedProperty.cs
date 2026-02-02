@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.EntityAdapter;
+namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
 /// Represents a serialized property for LLM context.
 /// </summary>
-public sealed class AiSerializedProperty
+public sealed class AISerializedProperty
 {
     /// <summary>
     /// The property alias.

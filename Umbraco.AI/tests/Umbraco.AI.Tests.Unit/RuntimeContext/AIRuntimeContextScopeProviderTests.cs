@@ -1,20 +1,20 @@
 using Microsoft.AspNetCore.Http;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Tests.Unit.RuntimeContext;
+namespace Umbraco.AI.Tests.Unit.RuntimeContext;
 
-public class AiRuntimeContextScopeProviderTests
+public class AIRuntimeContextScopeProviderTests
 {
     private readonly DefaultHttpContext _httpContext;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
-    private readonly AiRuntimeContextScopeProvider _provider;
+    private readonly AIRuntimeContextScopeProvider _provider;
 
-    public AiRuntimeContextScopeProviderTests()
+    public AIRuntimeContextScopeProviderTests()
     {
         _httpContext = new DefaultHttpContext();
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(_httpContext);
-        _provider = new AiRuntimeContextScopeProvider(_httpContextAccessorMock.Object);
+        _provider = new AIRuntimeContextScopeProvider(_httpContextAccessorMock.Object);
     }
 
     [Fact]
@@ -143,8 +143,8 @@ public class AiRuntimeContextScopeProviderTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Description 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Description 2", Value = "value2" }
+            new AIRequestContextItem { Description = "Description 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Description 2", Value = "value2" }
         };
 
         // Act

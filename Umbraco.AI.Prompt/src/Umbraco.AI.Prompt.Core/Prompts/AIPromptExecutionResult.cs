@@ -1,12 +1,12 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.AI.Core.EntityAdapter;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Result of prompt execution.
 /// </summary>
-public class AiPromptExecutionResult
+public class AIPromptExecutionResult
 {
     /// <summary>
     /// The generated response content.
@@ -22,5 +22,5 @@ public class AiPromptExecutionResult
     /// Optional property changes to be applied to the entity.
     /// Returned when the prompt generates structured output for property updates.
     /// </summary>
-    public IReadOnlyList<AiPropertyChange>? PropertyChanges { get; init; }
+    public IReadOnlyList<AIPropertyChange>? PropertyChanges { get; init; }
 }

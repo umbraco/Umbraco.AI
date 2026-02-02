@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Web.Api.Common.Json;
+using Umbraco.AI.Web.Api.Common.Json;
 
-namespace Umbraco.Ai.Web.Api.Common.Models;
+namespace Umbraco.AI.Web.Api.Common.Models;
 
 /// <summary>
 /// Represents a value that can be either a local database GUID or an OpenTelemetry TraceId string.

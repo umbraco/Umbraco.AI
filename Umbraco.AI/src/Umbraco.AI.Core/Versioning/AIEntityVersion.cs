@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Represents a historical version of a versionable entity.
@@ -7,7 +7,7 @@ namespace Umbraco.Ai.Core.Versioning;
 /// Version snapshots are created automatically on each save operation.
 /// The snapshot contains a JSON serialization of the entity state at that version.
 /// </remarks>
-public sealed class AiEntityVersion
+public sealed class AIEntityVersion
 {
     /// <summary>
     /// The unique identifier of this version record.

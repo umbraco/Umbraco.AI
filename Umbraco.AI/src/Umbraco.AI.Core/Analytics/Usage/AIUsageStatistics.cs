@@ -1,11 +1,11 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Represents aggregated AI usage statistics for a specific time period and dimension combination.
 /// </summary>
-public sealed class AiUsageStatistics
+public sealed class AIUsageStatistics
 {
     /// <summary>
     /// Gets the unique identifier for this statistics record.
@@ -35,7 +35,7 @@ public sealed class AiUsageStatistics
     /// <summary>
     /// Gets the AI capability (Chat, Embedding, etc.).
     /// </summary>
-    public required AiCapability Capability { get; init; }
+    public required AICapability Capability { get; init; }
 
     /// <summary>
     /// Gets the user ID dimension, if included in aggregation.

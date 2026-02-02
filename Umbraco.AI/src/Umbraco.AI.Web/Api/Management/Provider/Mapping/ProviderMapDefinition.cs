@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Web.Api.Management.Provider.Models;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.Provider.Mapping;
+namespace Umbraco.AI.Web.Api.Management.Provider.Mapping;
 
 /// <summary>
 /// Map definitions for Provider models.

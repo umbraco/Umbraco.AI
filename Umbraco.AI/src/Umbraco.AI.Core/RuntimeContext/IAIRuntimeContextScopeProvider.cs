@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.RuntimeContext;
+namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
 /// Creates runtime context scopes for AI operations.
@@ -16,7 +16,7 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// gets its own isolated context without polluting the other.
 /// </para>
 /// </remarks>
-public interface IAiRuntimeContextScopeProvider
+public interface IAIRuntimeContextScopeProvider
 {
     /// <summary>
     /// Creates a new runtime context scope. The context is available via
@@ -38,5 +38,5 @@ public interface IAiRuntimeContextScopeProvider
     /// If called within an existing scope, creates a new nested scope with its own
     /// isolated context. Disposing the nested scope restores the parent context.
     /// </remarks>
-    IAiRuntimeContextScope CreateScope(IEnumerable<AiRequestContextItem> items);
+    IAiRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items);
 }

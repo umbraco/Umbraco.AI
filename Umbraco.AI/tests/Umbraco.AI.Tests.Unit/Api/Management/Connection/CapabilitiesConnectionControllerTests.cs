@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fakes;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Connection.Controllers;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class CapabilitiesConnectionControllerTests
 {
@@ -33,7 +33,7 @@ public class CapabilitiesConnectionControllerTests
         return mock;
     }
 
-    private static Mock<IAiConfiguredCapability> CreateConfiguredCapabilityMock(AiCapability kind)
+    private static Mock<IAiConfiguredCapability> CreateConfiguredCapabilityMock(AICapability kind)
     {
         var mock = new Mock<IAiConfiguredCapability>();
         mock.Setup(x => x.Kind).Returns(kind);
@@ -49,7 +49,7 @@ public class CapabilitiesConnectionControllerTests
         var connectionId = Guid.NewGuid();
         var provider = new FakeAiProvider("openai", "OpenAI");
 
-        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat);
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat);
         var configuredProviderMock = CreateConfiguredProviderMock(provider, chatCapabilityMock.Object);
 
         _connectionServiceMock
@@ -95,8 +95,8 @@ public class CapabilitiesConnectionControllerTests
         var connectionId = Guid.NewGuid();
         var provider = new FakeAiProvider("openai", "OpenAI");
 
-        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat);
-        var embeddingCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Embedding);
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat);
+        var embeddingCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Embedding);
         var configuredProviderMock = CreateConfiguredProviderMock(
             provider,
             chatCapabilityMock.Object,
@@ -153,13 +153,13 @@ public class CapabilitiesConnectionControllerTests
         // Arrange
         var alias = "my-connection";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithAlias(alias)
             .Build();
         var provider = new FakeAiProvider("openai", "OpenAI");
 
-        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat);
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat);
         var configuredProviderMock = CreateConfiguredProviderMock(provider, chatCapabilityMock.Object);
 
         _connectionServiceMock
@@ -189,7 +189,7 @@ public class CapabilitiesConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         var controller = CreateController();
 

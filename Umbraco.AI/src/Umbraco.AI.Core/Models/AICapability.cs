@@ -1,9 +1,9 @@
-﻿namespace Umbraco.Ai.Core.Models;
+﻿namespace Umbraco.AI.Core.Models;
 
 /// <summary>
 /// AI Capability Enum
 /// </summary>
-public enum AiCapability
+public enum AICapability
 {
     /// <summary>
     /// Chat capability

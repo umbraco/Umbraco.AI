@@ -1,11 +1,11 @@
 using System.Reflection;
 
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// Base class for AI tools, providing common metadata.
 /// </summary>
-public abstract class AiToolBasic
+public abstract class AIToolBasic
 {
     /// <summary>
     /// Gets the unique identifier of the tool.
@@ -43,14 +43,14 @@ public abstract class AiToolBasic
     public virtual Type? ArgsType => null;
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiToolBase"/> class.
+    /// Initializes a new instance of the <see cref="AIToolBase"/> class.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when the tool is missing the required attribute.</exception>
-    protected AiToolBasic()
+    protected AIToolBasic()
     {
-        var attribute = GetType().GetCustomAttribute<AiToolAttribute>(inherit: false)
+        var attribute = GetType().GetCustomAttribute<AIToolAttribute>(inherit: false)
             ?? throw new InvalidOperationException(
-                $"Tool '{GetType().FullName}' is missing required [AiTool] attribute.");
+                $"Tool '{GetType().FullName}' is missing required [AITool] attribute.");
 
         Id = attribute.Id;
         Name = attribute.Name;
@@ -63,7 +63,7 @@ public abstract class AiToolBasic
 /// <summary>
 /// Base class for AI tools that don't require arguments.
 /// </summary>
-public abstract class AiToolBase : AiToolBasic, IAiTool
+public abstract class AIToolBase : AIToolBasic, IAiTool
 {
     /// <summary>
     /// Executes the tool. Override this method to implement the tool's logic.
@@ -83,7 +83,7 @@ public abstract class AiToolBase : AiToolBasic, IAiTool
 /// Base class for AI tools with strongly-typed arguments.
 /// </summary>
 /// <typeparam name="TArgs">The arguments model type. Use records with [Description] attributes on properties.</typeparam>
-public abstract class AiToolBase<TArgs> : AiToolBasic, IAiTool
+public abstract class AIToolBase<TArgs> : AIToolBasic, IAiTool
     where TArgs : class
 {
     /// <inheritdoc />

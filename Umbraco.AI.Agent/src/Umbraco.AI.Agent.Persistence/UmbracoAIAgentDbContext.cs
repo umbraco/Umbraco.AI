@@ -1,22 +1,22 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Agent.Persistence.Agents;
+using Umbraco.AI.Agent.Persistence.Agents;
 
-namespace Umbraco.Ai.Agent.Persistence;
+namespace Umbraco.AI.Agent.Persistence;
 
 /// <summary>
-/// EF Core DbContext for Umbraco AI AiAgent persistence.
+/// EF Core DbContext for Umbraco AI AIAgent persistence.
 /// </summary>
-public class UmbracoAiAgentDbContext : DbContext
+public class UmbracoAIAgentDbContext : DbContext
 {
     /// <summary>
     /// Agents table.
     /// </summary>
-    internal DbSet<AiAgentEntity> Agents { get; set; } = null!;
+    internal DbSet<AIAgentEntity> Agents { get; set; } = null!;
 
     /// <summary>
     /// Creates a new instance of the DbContext.
     /// </summary>
-    public UmbracoAiAgentDbContext(DbContextOptions<UmbracoAiAgentDbContext> options)
+    public UmbracoAIAgentDbContext(DbContextOptions<UmbracoAIAgentDbContext> options)
         : base(options)
     {
     }
@@ -26,7 +26,7 @@ public class UmbracoAiAgentDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<AiAgentEntity>(entity =>
+        modelBuilder.Entity<AIAgentEntity>(entity =>
         {
             entity.ToTable("umbracoAIAgent");
             entity.HasKey(e => e.Id);

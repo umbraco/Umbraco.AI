@@ -3,21 +3,21 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.Ai.Agent.Persistence;
+using Umbraco.AI.Agent.Persistence;
 
 #nullable disable
 
-namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
-    [DbContext(typeof(UmbracoAiAgentDbContext))]
-    partial class UmbracoAiAgentDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(UmbracoAIAgentDbContext))]
+    partial class UmbracoAIAgentDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

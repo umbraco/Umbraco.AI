@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for aggregating raw usage records into statistics.
 /// Internal - only called by background aggregation jobs.
 /// </summary>
-internal interface IAiUsageAggregationService
+internal interface IAIUsageAggregationService
 {
     /// <summary>
     /// Aggregates raw usage records for a specific hour into hourly statistics.

@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
-using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Management.Connection.Controllers;
+using Umbraco.AI.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class AllConnectionControllerTests
 {
@@ -29,10 +29,10 @@ public class AllConnectionControllerTests
     public async Task GetAllConnections_WithNoFilter_ReturnsAllConnections()
     {
         // Arrange
-        var connections = new List<AiConnection>
+        var connections = new List<AIConnection>
         {
-            new AiConnectionBuilder().WithName("Connection 1").Build(),
-            new AiConnectionBuilder().WithName("Connection 2").Build()
+            new AIConnectionBuilder().WithName("Connection 1").Build(),
+            new AIConnectionBuilder().WithName("Connection 2").Build()
         };
 
         var responseModels = connections.Select(c => new ConnectionItemResponseModel
@@ -49,7 +49,7 @@ public class AllConnectionControllerTests
             .ReturnsAsync((connections.AsEnumerable(), connections.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))
+            .Setup(x => x.MapEnumerable<AIConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AIConnection>>()))
             .Returns(responseModels);
 
         // Act
@@ -66,9 +66,9 @@ public class AllConnectionControllerTests
     public async Task GetAllConnections_WithProviderFilter_ReturnsFilteredConnections()
     {
         // Arrange
-        var connections = new List<AiConnection>
+        var connections = new List<AIConnection>
         {
-            new AiConnectionBuilder().WithName("OpenAI 1").WithProviderId("openai").Build()
+            new AIConnectionBuilder().WithName("OpenAI 1").WithProviderId("openai").Build()
         };
 
         var responseModels = connections.Select(c => new ConnectionItemResponseModel
@@ -85,7 +85,7 @@ public class AllConnectionControllerTests
             .ReturnsAsync((connections.AsEnumerable(), connections.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))
+            .Setup(x => x.MapEnumerable<AIConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AIConnection>>()))
             .Returns(responseModels);
 
         // Act
@@ -101,14 +101,14 @@ public class AllConnectionControllerTests
     public async Task GetAllConnections_WithEmptyList_ReturnsEmptyPagedViewModel()
     {
         // Arrange
-        var connections = new List<AiConnection>();
+        var connections = new List<AIConnection>();
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionsPagedAsync(null, null, 0, 100, It.IsAny<CancellationToken>()))
             .ReturnsAsync((connections.AsEnumerable(), 0));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))
+            .Setup(x => x.MapEnumerable<AIConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AIConnection>>()))
             .Returns(new List<ConnectionItemResponseModel>());
 
         // Act
@@ -126,7 +126,7 @@ public class AllConnectionControllerTests
     {
         // Arrange
         var allConnections = Enumerable.Range(1, 10)
-            .Select(i => new AiConnectionBuilder().WithName($"Connection {i}").Build())
+            .Select(i => new AIConnectionBuilder().WithName($"Connection {i}").Build())
             .ToList();
 
         // The service returns the paginated subset but the total count of all items
@@ -137,8 +137,8 @@ public class AllConnectionControllerTests
             .ReturnsAsync((pagedConnections.AsEnumerable(), allConnections.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AiConnection>>()))
-            .Returns((IEnumerable<AiConnection> items) => items.Select(c => new ConnectionItemResponseModel
+            .Setup(x => x.MapEnumerable<AIConnection, ConnectionItemResponseModel>(It.IsAny<IEnumerable<AIConnection>>()))
+            .Returns((IEnumerable<AIConnection> items) => items.Select(c => new ConnectionItemResponseModel
             {
                 Id = c.Id,
                 Alias = c.Alias,

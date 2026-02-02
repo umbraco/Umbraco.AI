@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Persistence.Connections;
+namespace Umbraco.AI.Persistence.Connections;
 
 /// <summary>
 /// EF Core entity representing an AI provider connection.
 /// </summary>
-internal class AiConnectionEntity
+internal class AIConnectionEntity
 {
     /// <summary>
     /// Unique identifier for the connection.

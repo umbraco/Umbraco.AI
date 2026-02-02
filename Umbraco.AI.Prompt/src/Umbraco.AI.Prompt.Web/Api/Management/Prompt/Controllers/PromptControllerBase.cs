@@ -1,25 +1,25 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Prompt.Web.Api;
-using Umbraco.Ai.Prompt.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Prompt.Web.Api;
+using Umbraco.AI.Prompt.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 
 /// <summary>
 /// Base controller for prompt-specific endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Prompt.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Prompt.RouteSegment)]
-public abstract class PromptControllerBase : UmbracoAiPromptManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.Prompt.RouteSegment)]
+public abstract class PromptControllerBase : UmbracoAIPromptManagementControllerBase
 {
     /// <summary>
     /// Returns a 404 Not Found response for a prompt.
     /// </summary>
     protected IActionResult PromptNotFound() => NotFound(new ProblemDetails
     {
-        Title = "AiPrompt not found",
+        Title = "AIPrompt not found",
         Detail = "The specified prompt could not be found.",
         Status = StatusCodes.Status404NotFound
     });

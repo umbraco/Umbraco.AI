@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Prompt.Persistence.Prompts;
+namespace Umbraco.AI.Prompt.Persistence.Prompts;
 
 /// <summary>
 /// EF Core entity for prompt storage.
 /// </summary>
-internal class AiPromptEntity
+internal class AIPromptEntity
 {
     /// <summary>
     /// Unique identifier.
@@ -26,7 +26,7 @@ internal class AiPromptEntity
     public string? Description { get; set; }
 
     /// <summary>
-    /// AiPrompt instructions template.
+    /// AIPrompt instructions template.
     /// </summary>
     public string Instructions { get; set; } = string.Empty;
 

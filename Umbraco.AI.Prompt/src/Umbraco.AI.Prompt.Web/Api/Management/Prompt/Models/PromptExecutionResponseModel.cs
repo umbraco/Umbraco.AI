@@ -1,6 +1,6 @@
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 
 /// <summary>
 /// Response model for prompt execution.

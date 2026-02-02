@@ -1,23 +1,23 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agent.Core.Agui;
-using Umbraco.Ai.Agent.Core.Chat;
-using Umbraco.Ai.Agui.Events;
-using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Agui.Streaming;
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Agent.Core.Agui;
+using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agui.Events;
+using Umbraco.AI.Agui.Models;
+using Umbraco.AI.Agui.Streaming;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
 
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
-namespace Umbraco.Ai.Agent.Core.Agents;
+namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
 /// Service implementation for agent management operations.
 /// </summary>
-internal sealed class AiAgentService : IAiAgentService
+internal sealed class AIAgentService : IAiAgentService
 {
     private readonly IAiAgentRepository _repository;
     private readonly IAiEntityVersionService _versionService;
@@ -27,7 +27,7 @@ internal sealed class AiAgentService : IAiAgentService
     private readonly IAguiContextConverter _contextConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
-    public AiAgentService(
+    public AIAgentService(
         IAiAgentRepository repository,
         IAiEntityVersionService versionService,
         IAiAgentFactory agentFactory,
@@ -46,19 +46,19 @@ internal sealed class AiAgentService : IAiAgentService
     }
 
     /// <inheritdoc />
-    public Task<AiAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.GetByIdAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AiAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default)
         => _repository.GetByAliasAsync(alias, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiAgent>> GetAgentsAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIAgent>> GetAgentsAsync(CancellationToken cancellationToken = default)
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AiAgent>> GetAgentsPagedAsync(
+    public Task<PagedModel<AIAgent>> GetAgentsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -69,11 +69,11 @@ internal sealed class AiAgentService : IAiAgentService
         => _repository.GetPagedAsync(skip, take, filter, profileId, scopeId, isActive, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiAgent>> GetAgentsByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIAgent>> GetAgentsByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
         => _repository.GetByScopeAsync(scopeId, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AiAgent> SaveAgentAsync(AiAgent agent, CancellationToken cancellationToken = default)
+    public async Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(agent);
         ArgumentException.ThrowIfNullOrWhiteSpace(agent.Alias);

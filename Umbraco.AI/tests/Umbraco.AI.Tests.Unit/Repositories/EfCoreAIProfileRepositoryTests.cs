@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Persistence;
-using Umbraco.Ai.Persistence.Connections;
-using Umbraco.Ai.Persistence.Profiles;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fixtures;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Persistence;
+using Umbraco.AI.Persistence.Connections;
+using Umbraco.AI.Persistence.Profiles;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fixtures;
 
-namespace Umbraco.Ai.Tests.Unit.Repositories;
+namespace Umbraco.AI.Tests.Unit.Repositories;
 
 public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
@@ -17,16 +17,16 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         _fixture = fixture;
     }
 
-    private EfCoreAiProfileRepository CreateRepository(UmbracoAiDbContext context)
+    private EfCoreAiProfileRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
         return new EfCoreAiProfileRepository(scopeProvider);
     }
 
-    private async Task<Guid> EnsureConnectionExists(UmbracoAiDbContext context)
+    private async Task<Guid> EnsureConnectionExists(UmbracoAIDbContext context)
     {
         var connectionId = Guid.NewGuid();
-        context.Connections.Add(new AiConnectionEntity
+        context.Connections.Add(new AIConnectionEntity
         {
             Id = connectionId,
             Alias = $"test-connection-{connectionId:N}",
@@ -63,12 +63,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var connectionId = await EnsureConnectionExists(context);
         var profileId = Guid.NewGuid();
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = profileId,
             Alias = "test-profile",
             Name = "Test Profile",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4",
             ConnectionId = connectionId
@@ -111,12 +111,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = await EnsureConnectionExists(context);
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = Guid.NewGuid(),
             Alias = "my-profile",
             Name = "My Profile",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4",
             ConnectionId = connectionId
@@ -139,12 +139,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Arrange
         await using var context = _fixture.CreateContext();
         var connectionId = await EnsureConnectionExists(context);
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = Guid.NewGuid(),
             Alias = "CaseSensitive",
             Name = "Case Test",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4",
             ConnectionId = connectionId
@@ -172,22 +172,22 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         // Clear existing profiles
         context.Profiles.RemoveRange(context.Profiles);
         var connectionId = await EnsureConnectionExists(context);
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = Guid.NewGuid(),
             Alias = "profile-1",
             Name = "Profile 1",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4",
             ConnectionId = connectionId
         });
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = Guid.NewGuid(),
             Alias = "profile-2",
             Name = "Profile 2",
-            Capability = (int)AiCapability.Embedding,
+            Capability = (int)AICapability.Embedding,
             ProviderId = "openai",
             ModelId = "text-embedding-ada",
             ConnectionId = connectionId
@@ -214,22 +214,22 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         context.Profiles.RemoveRange(context.Profiles);
         var connectionId = await EnsureConnectionExists(context);
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = Guid.NewGuid(),
             Alias = "chat-profile",
             Name = "Chat Profile",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4",
             ConnectionId = connectionId
         });
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = Guid.NewGuid(),
             Alias = "embedding-profile",
             Name = "Embedding Profile",
-            Capability = (int)AiCapability.Embedding,
+            Capability = (int)AICapability.Embedding,
             ProviderId = "openai",
             ModelId = "text-embedding-ada",
             ConnectionId = connectionId
@@ -239,11 +239,11 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         var repository = CreateRepository(_fixture.CreateContext());
 
         // Act
-        var result = await repository.GetByCapability(AiCapability.Chat);
+        var result = await repository.GetByCapability(AICapability.Chat);
 
         // Assert
         result.Count().ShouldBe(1);
-        result.First().Capability.ShouldBe(AiCapability.Chat);
+        result.First().Capability.ShouldBe(AICapability.Chat);
     }
 
     #endregion
@@ -258,10 +258,10 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         var connectionId = await EnsureConnectionExists(context);
 
         var repository = CreateRepository(_fixture.CreateContext());
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithAlias("new-profile")
             .WithName("New Profile")
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithConnectionId(connectionId)
             .Build();
 
@@ -284,12 +284,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var connectionId = await EnsureConnectionExists(context);
         var profileId = Guid.NewGuid();
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = profileId,
             Alias = "original-alias",
             Name = "Original Name",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4",
             ConnectionId = connectionId
@@ -297,13 +297,13 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await context.SaveChangesAsync();
 
         var repository = CreateRepository(_fixture.CreateContext());
-        var updated = new AiProfile
+        var updated = new AIProfile
         {
             Id = profileId,
             Alias = "updated-alias",
             Name = "Updated Name",
-            Capability = AiCapability.Chat,
-            Model = new AiModelRef("openai", "gpt-4-turbo"),
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-4-turbo"),
             ConnectionId = connectionId
         };
 
@@ -327,13 +327,13 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         var connectionId = await EnsureConnectionExists(context);
 
         var repository = CreateRepository(_fixture.CreateContext());
-        var profile = new AiProfile
+        var profile = new AIProfile
         {
             Id = Guid.NewGuid(),
             Alias = "tagged-profile",
             Name = "Tagged Profile",
-            Capability = AiCapability.Chat,
-            Model = new AiModelRef("openai", "gpt-4"),
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-4"),
             ConnectionId = connectionId,
             Tags = new List<string> { "tag1", "tag2", "tag3" }
         };
@@ -358,15 +358,15 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         var connectionId = await EnsureConnectionExists(context);
 
         var repository = CreateRepository(_fixture.CreateContext());
-        var profile = new AiProfile
+        var profile = new AIProfile
         {
             Id = Guid.NewGuid(),
             Alias = "full-profile",
             Name = "Full Profile",
-            Capability = AiCapability.Chat,
-            Model = new AiModelRef("openai", "gpt-4"),
+            Capability = AICapability.Chat,
+            Model = new AIModelRef("openai", "gpt-4"),
             ConnectionId = connectionId,
-            Settings = new AiChatProfileSettings
+            Settings = new AIChatProfileSettings
             {
                 Temperature = 0.7f,
                 MaxTokens = 2000,
@@ -398,12 +398,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var connectionId = await EnsureConnectionExists(context);
         var profileId = Guid.NewGuid();
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = profileId,
             Alias = "to-delete",
             Name = "To Delete",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4",
             ConnectionId = connectionId
@@ -448,12 +448,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var connectionId = await EnsureConnectionExists(context);
         var profileId = Guid.NewGuid();
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = profileId,
             Alias = "model-test",
             Name = "Model Test",
-            Capability = (int)AiCapability.Chat,
+            Capability = (int)AICapability.Chat,
             ProviderId = "openai",
             ModelId = "gpt-4-turbo",
             ConnectionId = connectionId
@@ -478,12 +478,12 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
         await using var context = _fixture.CreateContext();
         var connectionId = await EnsureConnectionExists(context);
         var profileId = Guid.NewGuid();
-        context.Profiles.Add(new AiProfileEntity
+        context.Profiles.Add(new AIProfileEntity
         {
             Id = profileId,
             Alias = "embedding-test",
             Name = "Embedding Test",
-            Capability = (int)AiCapability.Embedding,
+            Capability = (int)AICapability.Embedding,
             ProviderId = "openai",
             ModelId = "text-embedding-ada",
             ConnectionId = connectionId
@@ -497,7 +497,7 @@ public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
 
         // Assert
         result.ShouldNotBeNull();
-        result!.Capability.ShouldBe(AiCapability.Embedding);
+        result!.Capability.ShouldBe(AICapability.Embedding);
     }
 
     #endregion

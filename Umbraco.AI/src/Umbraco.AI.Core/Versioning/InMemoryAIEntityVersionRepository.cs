@@ -1,20 +1,20 @@
 using System.Collections.Concurrent;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// In-memory implementation of <see cref="IAiEntityVersionRepository"/> for testing.
 /// </summary>
 internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionRepository
 {
-    private readonly ConcurrentDictionary<string, AiEntityVersion> _versions = new();
+    private readonly ConcurrentDictionary<string, AIEntityVersion> _versions = new();
 
     private static string GetKey(Guid entityId, string entityType, int version)
         => $"{entityType}:{entityId}:{version}";
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    public Task<IEnumerable<AIEntityVersion>> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
         int skip,
@@ -28,7 +28,7 @@ internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionReposi
             .Take(take)
             .ToList();
 
-        return Task.FromResult<IEnumerable<AiEntityVersion>>(versions);
+        return Task.FromResult<IEnumerable<AIEntityVersion>>(versions);
     }
 
     /// <inheritdoc />
@@ -44,7 +44,7 @@ internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionReposi
     }
 
     /// <inheritdoc />
-    public Task<AiEntityVersion?> GetVersionAsync(
+    public Task<AIEntityVersion?> GetVersionAsync(
         Guid entityId,
         string entityType,
         int version,
@@ -66,7 +66,7 @@ internal sealed class InMemoryAiEntityVersionRepository : IAiEntityVersionReposi
         CancellationToken cancellationToken = default)
     {
         var key = GetKey(entityId, entityType, version);
-        var versionEntity = new AiEntityVersion
+        var versionEntity = new AIEntityVersion
         {
             Id = Guid.NewGuid(),
             EntityId = entityId,

@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Web.Api.Common.Models;
+namespace Umbraco.AI.Web.Api.Common.Models;
 
 /// <summary>
 /// Usage statistics for an AI request.

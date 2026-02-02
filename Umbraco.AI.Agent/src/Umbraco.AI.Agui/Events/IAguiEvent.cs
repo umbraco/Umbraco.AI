@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Agui.Events;
+namespace Umbraco.AI.Agui.Events;
 
 /// <summary>
 /// Marker interface for all AG-UI events.

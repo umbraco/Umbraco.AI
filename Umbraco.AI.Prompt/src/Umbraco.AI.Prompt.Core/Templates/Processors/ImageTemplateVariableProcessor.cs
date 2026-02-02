@@ -1,11 +1,11 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Umbraco.Ai.Prompt.Core.Media;
+using Umbraco.AI.Prompt.Core.Media;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 
-namespace Umbraco.Ai.Prompt.Core.Templates.Processors;
+namespace Umbraco.AI.Prompt.Core.Templates.Processors;
 
 /// <summary>
 /// Template variable processor that handles image content.

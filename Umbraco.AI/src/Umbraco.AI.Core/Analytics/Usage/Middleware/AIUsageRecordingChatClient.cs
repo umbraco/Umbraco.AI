@@ -3,32 +3,32 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Chat.Middleware;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Analytics.Usage.Middleware;
+namespace Umbraco.AI.Core.Analytics.Usage.Middleware;
 
 /// <summary>
 /// Chat client that records usage data to the analytics system.
-/// Reads tracking data from the inner <see cref="AiTrackingChatClient"/> if available.
+/// Reads tracking data from the inner <see cref="AITrackingChatClient"/> if available.
 /// </summary>
-internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
+internal sealed class AIUsageRecordingChatClient : AIBoundChatClientBase
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiUsageRecordingService _usageRecordingService;
     private readonly IAiUsageRecordFactory _factory;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
-    private readonly ILogger<AiUsageRecordingChatClient> _logger;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
+    private readonly ILogger<AIUsageRecordingChatClient> _logger;
 
-    public AiUsageRecordingChatClient(
+    public AIUsageRecordingChatClient(
         IChatClient innerClient,
         IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiUsageRecordingService usageRecordingService,
         IAiUsageRecordFactory factory,
-        IOptionsMonitor<AiAnalyticsOptions> options,
-        ILogger<AiUsageRecordingChatClient> logger)
+        IOptionsMonitor<AIAnalyticsOptions> options,
+        ILogger<AIUsageRecordingChatClient> logger)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
@@ -161,10 +161,10 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
             }
             
             // Extract context from options
-            var usageContext = AiUsageContext.ExtractFromRuntimeContext(AiCapability.Chat, _runtimeContextAccessor.Context);
+            var usageContext = AIUsageContext.ExtractFromRuntimeContext(AICapability.Chat, _runtimeContextAccessor.Context);
 
             // Try to get tracking data from inner client
-            var trackingClient = InnerClient.GetService<AiTrackingChatClient>();
+            var trackingClient = InnerClient.GetService<AITrackingChatClient>();
             var usageDetails = trackingClient?.LastUsageDetails;
 
             // If we don't have usage details, we can't record (no token counts available)
@@ -175,10 +175,10 @@ internal sealed class AiUsageRecordingChatClient : AiBoundChatClientBase
             }
 
             // Convert to factory context
-            var context = AiUsageRecordContext.FromUsageContext(usageContext);
+            var context = AIUsageRecordContext.FromUsageContext(usageContext);
 
             // Create result object
-            var result = new AiUsageRecordResult
+            var result = new AIUsageRecordResult
             {
                 Usage = usageDetails,
                 DurationMs = durationMs,

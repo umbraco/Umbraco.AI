@@ -1,11 +1,11 @@
 using System.Text.Json;
-using Umbraco.Ai.Agui.Events;
-using Umbraco.Ai.Agui.Events.Lifecycle;
-using Umbraco.Ai.Agui.Events.Messages;
-using Umbraco.Ai.Agui.Events.Tools;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Events;
+using Umbraco.AI.Agui.Events.Lifecycle;
+using Umbraco.AI.Agui.Events.Messages;
+using Umbraco.AI.Agui.Events.Tools;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agui.Streaming;
+namespace Umbraco.AI.Agui.Streaming;
 
 /// <summary>
 /// Helper class for emitting AG-UI events with consistent ID management.

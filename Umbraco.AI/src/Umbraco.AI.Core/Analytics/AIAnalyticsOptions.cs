@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Analytics;
+namespace Umbraco.AI.Core.Analytics;
 
 /// <summary>
 /// Configuration options for AI usage analytics.
 /// </summary>
-public sealed class AiAnalyticsOptions
+public sealed class AIAnalyticsOptions
 {
     /// <summary>
     /// Gets or sets whether usage analytics is enabled.

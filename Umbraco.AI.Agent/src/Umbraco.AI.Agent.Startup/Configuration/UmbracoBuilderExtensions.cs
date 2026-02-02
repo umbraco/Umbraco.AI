@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Agent.Core.Configuration;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Persistence.Configuration;
-using Umbraco.Ai.Agent.Web.Configuration;
+using Umbraco.AI.Agent.Core.Configuration;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Persistence.Configuration;
+using Umbraco.AI.Agent.Web.Configuration;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Agent.Extensions;
+namespace Umbraco.AI.Agent.Extensions;
 
 /// <summary>
 /// Extension methods for adding all Umbraco.Ai.Agent services.

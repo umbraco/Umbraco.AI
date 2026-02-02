@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.State;
+namespace Umbraco.AI.Agui.Events.State;
 
 /// <summary>
 /// Event emitted with a full state snapshot.

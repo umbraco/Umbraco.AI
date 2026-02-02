@@ -2,7 +2,7 @@
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Umbraco.Ai.Web.Api.Common.Configuration;
+namespace Umbraco.AI.Web.Api.Common.Configuration;
 
 /// <summary>
 /// Operation filter to document Server-Sent Events (SSE) responses in OpenAPI.

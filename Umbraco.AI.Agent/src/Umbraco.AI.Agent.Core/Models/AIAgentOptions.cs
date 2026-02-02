@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Agent.Core.Models;
+namespace Umbraco.AI.Agent.Core.Models;
 
 /// <summary>
 /// Configuration options for Umbraco.Ai.Agent.
 /// </summary>
-public class AiAgentOptions
+public class AIAgentOptions
 {
     /// <summary>
     /// The configuration section name.

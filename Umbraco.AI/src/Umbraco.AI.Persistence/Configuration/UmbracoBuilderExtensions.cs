@@ -1,29 +1,29 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Core.Analytics;
-using Umbraco.Ai.Core.Analytics.Usage;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Core.AuditLog;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Settings;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Persistence;
-using Umbraco.Ai.Persistence.Analytics;
-using Umbraco.Ai.Persistence.Analytics.Usage;
-using Umbraco.Ai.Persistence.Connections;
-using Umbraco.Ai.Persistence.Context;
-using Umbraco.Ai.Persistence.AuditLog;
-using Umbraco.Ai.Persistence.Notifications;
-using Umbraco.Ai.Persistence.Profiles;
-using Umbraco.Ai.Persistence.Settings;
-using Umbraco.Ai.Persistence.Versioning;
+using Umbraco.AI.Core.Analytics;
+using Umbraco.AI.Core.Analytics.Usage;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Persistence;
+using Umbraco.AI.Persistence.Analytics;
+using Umbraco.AI.Persistence.Analytics.Usage;
+using Umbraco.AI.Persistence.Connections;
+using Umbraco.AI.Persistence.Context;
+using Umbraco.AI.Persistence.AuditLog;
+using Umbraco.AI.Persistence.Notifications;
+using Umbraco.AI.Persistence.Profiles;
+using Umbraco.AI.Persistence.Settings;
+using Umbraco.AI.Persistence.Versioning;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Umbraco AI persistence.
@@ -38,13 +38,13 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAiPersistence(this IUmbracoBuilder builder)
     {
         // Register DbContext using Umbraco's database provider detection with migrations assembly config
-        builder.Services.AddUmbracoDbContext<UmbracoAiDbContext>((options, connectionString, providerName, serviceProvider) =>
+        builder.Services.AddUmbracoDbContext<UmbracoAIDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });
 
         // Connection factory for entity/domain mapping with encryption support
-        builder.Services.AddSingleton<IAiConnectionFactory, AiConnectionFactory>();
+        builder.Services.AddSingleton<IAiConnectionFactory, AIConnectionFactory>();
 
         // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
         builder.Services.AddSingleton<IAiConnectionRepository, EfCoreAiConnectionRepository>();

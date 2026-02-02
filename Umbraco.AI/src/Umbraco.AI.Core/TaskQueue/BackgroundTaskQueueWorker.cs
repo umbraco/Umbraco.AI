@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Umbraco.Ai.Core.TaskQueue;
+namespace Umbraco.AI.Core.TaskQueue;
 
 internal sealed class BackgroundTaskQueueWorker : BackgroundService
 {

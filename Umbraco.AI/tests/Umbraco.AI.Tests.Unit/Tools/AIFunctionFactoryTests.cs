@@ -1,15 +1,15 @@
-using Umbraco.Ai.Core.Tools;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Tools;
+namespace Umbraco.AI.Tests.Unit.Tools;
 
-public class AiFunctionFactoryTests
+public class AIFunctionFactoryTests
 {
-    private readonly AiFunctionFactory _factory;
+    private readonly AIFunctionFactory _factory;
 
-    public AiFunctionFactoryTests()
+    public AIFunctionFactoryTests()
     {
-        _factory = new AiFunctionFactory();
+        _factory = new AIFunctionFactory();
     }
 
     #region Create (single tool)

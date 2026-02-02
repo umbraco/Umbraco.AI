@@ -1,6 +1,6 @@
-using Umbraco.Ai.Web.Api.Management.Provider.Models;
+using Umbraco.AI.Web.Api.Management.Provider.Models;
 
-namespace Umbraco.Ai.Web.Api.Management.ContextResourceTypes.Models;
+namespace Umbraco.AI.Web.Api.Management.ContextResourceTypes.Models;
 
 /// <summary>
 /// Response model for a context resource type.

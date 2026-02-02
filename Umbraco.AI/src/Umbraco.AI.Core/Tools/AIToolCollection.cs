@@ -1,17 +1,17 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// A collection of AI tools.
 /// </summary>
-public sealed class AiToolCollection : BuilderCollectionBase<IAiTool>
+public sealed class AIToolCollection : BuilderCollectionBase<IAiTool>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiToolCollection"/> class.
+    /// Initializes a new instance of the <see cref="AIToolCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the tools.</param>
-    public AiToolCollection(Func<IEnumerable<IAiTool>> items)
+    public AIToolCollection(Func<IEnumerable<IAiTool>> items)
         : base(items)
     { }
 

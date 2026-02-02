@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Profile.Controllers;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Profile.Controllers;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
 public class DeleteProfileControllerTests
 {
@@ -84,7 +84,7 @@ public class DeleteProfileControllerTests
         // Arrange
         var alias = "my-profile";
         var profileId = Guid.NewGuid();
-        var profile = new AiProfileBuilder().WithId(profileId).WithAlias(alias).Build();
+        var profile = new AIProfileBuilder().WithId(profileId).WithAlias(alias).Build();
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
@@ -109,7 +109,7 @@ public class DeleteProfileControllerTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileByAliasAsync(alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var result = await _controller.DeleteProfile(new IdOrAlias(alias));

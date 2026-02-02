@@ -1,9 +1,9 @@
-using Umbraco.Ai.Core.AuditLog;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Web.Api.Management.AuditLog.Models;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Web.Api.Management.AuditLog.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.AuditLog.Mapping;
+namespace Umbraco.AI.Web.Api.Management.AuditLog.Mapping;
 
 /// <summary>
 /// Map definitions for AuditLog models.
@@ -14,32 +14,32 @@ public class AuditLogMapDefinition : IMapDefinition
     public void DefineMaps(IUmbracoMapper mapper)
     {
         // Response mappings (domain -> response)
-        mapper.Define<AiAuditLog, AuditLogItemResponseModel>((_, _) => new AuditLogItemResponseModel(), MapToItemResponse);
-        mapper.Define<AiAuditLog, AuditLogDetailResponseModel>((_, _) => new AuditLogDetailResponseModel(), MapToDetailResponse);
+        mapper.Define<AIAuditLog, AuditLogItemResponseModel>((_, _) => new AuditLogItemResponseModel(), MapToItemResponse);
+        mapper.Define<AIAuditLog, AuditLogDetailResponseModel>((_, _) => new AuditLogDetailResponseModel(), MapToDetailResponse);
 
         // Request mappings (request -> domain)
-        mapper.Define<AuditLogFilterRequestModel, AiAuditLogFilter>(CreateFilterFactory, (_, _, _) => { });
+        mapper.Define<AuditLogFilterRequestModel, AIAuditLogFilter>(CreateFilterFactory, (_, _, _) => { });
     }
 
-    private static AiAuditLogFilter CreateFilterFactory(AuditLogFilterRequestModel source, MapperContext context)
+    private static AIAuditLogFilter CreateFilterFactory(AuditLogFilterRequestModel source, MapperContext context)
     {
         // Parse status enum if provided
-        AiAuditLogStatus? status = null;
+        AIAuditLogStatus? status = null;
         if (!string.IsNullOrEmpty(source.Status))
         {
-            Enum.TryParse<AiAuditLogStatus>(source.Status, true, out var parsedStatus);
+            Enum.TryParse<AIAuditLogStatus>(source.Status, true, out var parsedStatus);
             status = parsedStatus;
         }
 
         // Parse capability enum if provided
-        AiCapability? capability = null;
+        AICapability? capability = null;
         if (!string.IsNullOrEmpty(source.Capability))
         {
-            Enum.TryParse<AiCapability>(source.Capability, true, out var parsedCapability);
+            Enum.TryParse<AICapability>(source.Capability, true, out var parsedCapability);
             capability = parsedCapability;
         }
 
-        return new AiAuditLogFilter
+        return new AIAuditLogFilter
         {
             Status = status,
             UserId = source.UserId,
@@ -58,7 +58,7 @@ public class AuditLogMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToItemResponse(AiAuditLog source, AuditLogItemResponseModel target, MapperContext context)
+    private static void MapToItemResponse(AIAuditLog source, AuditLogItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.StartTime = source.StartTime;
@@ -83,7 +83,7 @@ public class AuditLogMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll -Id -AuditLogId -StartTime -DurationMs -Status -UserId -UserName -EntityId -Capability -ModelId -ProviderId -FeatureType -FeatureId -FeatureVersion -ParentAuditLogId -Metadata -InputTokens -OutputTokens -ErrorMessage
-    private static void MapToDetailResponse(AiAuditLog source, AuditLogDetailResponseModel target, MapperContext context)
+    private static void MapToDetailResponse(AIAuditLog source, AuditLogDetailResponseModel target, MapperContext context)
     {
         // First map all base properties from AuditLogItemResponseModel (mapped via MapToItemResponse)
         MapToItemResponse(source, target, context);

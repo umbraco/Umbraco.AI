@@ -1,13 +1,13 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Extensions;
-using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for retrieving a agent by ID or alias.
@@ -21,9 +21,9 @@ public class ByIdOrAliasAgentController : AgentControllerBase
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public ByIdOrAliasAgentController(IAiAgentService AiAgentService, IUmbracoMapper umbracoMapper)
+    public ByIdOrAliasAgentController(IAiAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AiAgentService;
+        _AiAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 

@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Defines a repository for managing AI contexts.
 /// Internal implementation detail - use <see cref="IAiContextService"/> for external access.
 /// </summary>
-internal interface IAiContextRepository
+internal interface IAIContextRepository
 {
     /// <summary>
     /// Gets an AI context by its unique identifier.
@@ -14,7 +14,7 @@ internal interface IAiContextRepository
     /// <param name="id">The context ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context if found, otherwise null.</returns>
-    Task<AiContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets an AI context by its alias.
@@ -22,14 +22,14 @@ internal interface IAiContextRepository
     /// <param name="alias">The context alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context if found, otherwise null.</returns>
-    Task<AiContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all AI contexts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>All contexts.</returns>
-    Task<IEnumerable<AiContext>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIContext>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets AI contexts with pagination and optional filtering.
@@ -39,7 +39,7 @@ internal interface IAiContextRepository
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated contexts and the total count.</returns>
-    Task<(IEnumerable<AiContext> Items, int Total)> GetPagedAsync(
+    Task<(IEnumerable<AIContext> Items, int Total)> GetPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
@@ -52,7 +52,7 @@ internal interface IAiContextRepository
     /// <param name="userId">Optional user key (GUID) for version tracking.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved context.</returns>
-    Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<AIContext> SaveAsync(AIContext context, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes an AI context by its unique identifier.

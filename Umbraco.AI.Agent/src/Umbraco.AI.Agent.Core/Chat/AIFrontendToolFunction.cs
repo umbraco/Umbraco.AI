@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agent.Core.Chat;
+namespace Umbraco.AI.Agent.Core.Chat;
 
 /// <summary>
 /// A frontend tool function that exposes the tool's parameter schema to the LLM
@@ -20,17 +20,17 @@ namespace Umbraco.Ai.Agent.Core.Chat;
 /// and the client can resume with tool results.
 /// </para>
 /// </remarks>
-public sealed class AiFrontendToolFunction : AIFunction
+public sealed class AIFrontendToolFunction : AIFunction
 {
     private readonly string _name;
     private readonly string _description;
     private readonly JsonElement _jsonSchema;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiFrontendToolFunction"/> class.
+    /// Initializes a new instance of the <see cref="AIFrontendToolFunction"/> class.
     /// </summary>
     /// <param name="tool">The AG-UI tool definition.</param>
-    public AiFrontendToolFunction(AguiTool tool)
+    public AIFrontendToolFunction(AguiTool tool)
     {
         ArgumentNullException.ThrowIfNull(tool);
 
@@ -40,12 +40,12 @@ public sealed class AiFrontendToolFunction : AIFunction
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiFrontendToolFunction"/> class.
+    /// Initializes a new instance of the <see cref="AIFrontendToolFunction"/> class.
     /// </summary>
     /// <param name="name">The tool name.</param>
     /// <param name="description">The tool description.</param>
     /// <param name="jsonSchema">The JSON schema for the tool parameters.</param>
-    public AiFrontendToolFunction(string name, string description, JsonElement jsonSchema)
+    public AIFrontendToolFunction(string name, string description, JsonElement jsonSchema)
     {
         ArgumentNullException.ThrowIfNull(name);
 

@@ -1,11 +1,11 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Core.Scopes;
-using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Agent.Core.Scopes;
+using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for retrieving all agent scopes.
@@ -13,13 +13,13 @@ namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
 [ApiVersion("1.0")]
 public class AllAgentScopeController : AgentControllerBase
 {
-    private readonly AiAgentScopeCollection _scopeCollection;
+    private readonly AIAgentScopeCollection _scopeCollection;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public AllAgentScopeController(AiAgentScopeCollection scopeCollection, IUmbracoMapper umbracoMapper)
+    public AllAgentScopeController(AIAgentScopeCollection scopeCollection, IUmbracoMapper umbracoMapper)
     {
         _scopeCollection = scopeCollection;
         _umbracoMapper = umbracoMapper;

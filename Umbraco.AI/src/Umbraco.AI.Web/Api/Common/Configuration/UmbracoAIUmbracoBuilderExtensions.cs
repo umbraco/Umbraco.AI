@@ -2,17 +2,17 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Core.Serialization;
-using Umbraco.Ai.Web.Api.Common.Json;
+using Umbraco.AI.Core.Serialization;
+using Umbraco.AI.Web.Api.Common.Json;
 using Umbraco.Cms.Api.Common.DependencyInjection;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Umbraco AI web services.
 /// </summary>
-public static class UmbracoAiUmbracoBuilderExtensions
+public static class UmbracoAIUmbracoBuilderExtensions
 {
     /// <summary>
     /// Adds JSON options for the Umbraco AI application.

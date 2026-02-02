@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Prompt.Core.Media;
+namespace Umbraco.AI.Prompt.Core.Media;
 
 /// <summary>
 /// Represents resolved media content with binary data and media type.
 /// </summary>
-public sealed class AiMediaContent
+public sealed class AIMediaContent
 {
     /// <summary>
     /// Gets or sets the media binary data.

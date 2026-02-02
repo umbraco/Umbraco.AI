@@ -4,9 +4,9 @@ using Azure.AI.Inference;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Microsoft.Extensions.Caching.Memory;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.MicrosoftFoundry;
+namespace Umbraco.AI.MicrosoftFoundry;
 
 /// <summary>
 /// AI provider for Microsoft AI Foundry (Azure AI Inference).
@@ -16,8 +16,8 @@ namespace Umbraco.Ai.MicrosoftFoundry;
 /// including OpenAI models (GPT-4, GPT-4o), Mistral, Llama, Cohere, Phi, and more.
 /// One endpoint and API key provides access to all deployed models.
 /// </remarks>
-[AiProvider("microsoft-foundry", "Microsoft AI Foundry")]
-public class MicrosoftFoundryProvider : AiProviderBase<MicrosoftFoundryProviderSettings>
+[AIProvider("microsoft-foundry", "Microsoft AI Foundry")]
+public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderSettings>
 {
     private const string CacheKeyPrefix = "MicrosoftFoundry_Models_";
     private const string ApiVersion = "2024-10-21";

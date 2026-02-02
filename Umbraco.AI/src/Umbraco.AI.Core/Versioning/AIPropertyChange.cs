@@ -1,17 +1,17 @@
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Represents a single property change between two versions of an entity.
 /// </summary>
-public sealed class AiPropertyChange
+public sealed class AIPropertyChange
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiPropertyChange"/> class.
+    /// Initializes a new instance of the <see cref="AIPropertyChange"/> class.
     /// </summary>
     /// <param name="propertyName">The name of the changed property.</param>
     /// <param name="oldValue">The old value (before the change).</param>
     /// <param name="newValue">The new value (after the change).</param>
-    public AiPropertyChange(string propertyName, string? oldValue, string? newValue)
+    public AIPropertyChange(string propertyName, string? oldValue, string? newValue)
     {
         PropertyName = propertyName;
         OldValue = oldValue;

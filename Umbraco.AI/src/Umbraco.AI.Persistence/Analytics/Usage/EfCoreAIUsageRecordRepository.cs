@@ -1,20 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Umbraco.Ai.Core.Analytics.Usage;
+using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Persistence.Analytics.Usage;
+namespace Umbraco.AI.Persistence.Analytics.Usage;
 
 /// <summary>
 /// EF Core repository for managing raw AI usage records.
 /// </summary>
 internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
     private readonly ILogger<EfCoreAiUsageRecordRepository> _logger;
 
     public EfCoreAiUsageRecordRepository(
-        IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider,
+        IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider,
         ILogger<EfCoreAiUsageRecordRepository> logger)
     {
         _scopeProvider = scopeProvider;
@@ -22,13 +22,13 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
     }
 
     /// <inheritdoc />
-    public async Task SaveAsync(AiUsageRecord record, CancellationToken ct = default)
+    public async Task SaveAsync(AIUsageRecord record, CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
-            var entity = AiUsageRecordFactory.BuildUsageRecordEntity(record);
+            var entity = AIUsageRecordFactory.BuildUsageRecordEntity(record);
             await db.UsageRecords.AddAsync(entity, ct);
             await db.SaveChangesAsync(ct);
 
@@ -45,12 +45,12 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageRecord>> GetRecordsByPeriodAsync(
+    public async Task<IEnumerable<AIUsageRecord>> GetRecordsByPeriodAsync(
         DateTime from,
         DateTime to,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageRecords
@@ -65,7 +65,7 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
             to);
 
         scope.Complete();
-        return entities.Select(AiUsageRecordFactory.BuildUsageRecordDomain);
+        return entities.Select(AIUsageRecordFactory.BuildUsageRecordDomain);
     }
 
     /// <inheritdoc />
@@ -74,7 +74,7 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
         DateTime to,
         CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
@@ -109,7 +109,7 @@ internal sealed class EfCoreAiUsageRecordRepository : IAiUsageRecordRepository
     /// <inheritdoc />
     public async Task<DateTime?> GetLastRecordTimestampAsync(CancellationToken ct = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var lastTimestamp = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageRecords.MaxAsync(r => (DateTime?)r.Timestamp, ct));

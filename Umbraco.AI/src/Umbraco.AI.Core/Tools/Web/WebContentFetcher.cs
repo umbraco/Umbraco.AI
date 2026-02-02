@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Fetches and extracts content from web pages with caching.
@@ -20,7 +20,7 @@ public class WebContentFetcher : IWebContentFetcher
     private readonly IUrlValidator _urlValidator;
     private readonly IHtmlContentExtractor _htmlExtractor;
     private readonly IMemoryCache _cache;
-    private readonly AiWebFetchOptions _options;
+    private readonly AIWebFetchOptions _options;
     private readonly ILogger<WebContentFetcher> _logger;
 
     /// <summary>
@@ -31,7 +31,7 @@ public class WebContentFetcher : IWebContentFetcher
         IUrlValidator urlValidator,
         IHtmlContentExtractor htmlExtractor,
         IMemoryCache cache,
-        IOptions<AiWebFetchOptions> options,
+        IOptions<AIWebFetchOptions> options,
         ILogger<WebContentFetcher> logger)
     {
         _httpClientFactory = httpClientFactory;

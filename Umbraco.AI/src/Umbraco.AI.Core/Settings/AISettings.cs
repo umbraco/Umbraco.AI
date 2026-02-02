@@ -1,11 +1,11 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Settings;
+namespace Umbraco.AI.Core.Settings;
 
 /// <summary>
 /// Represents AI settings configurable via the backoffice.
 /// </summary>
-public sealed class AiSettings : IAiAuditableEntity
+public sealed class AISettings : IAiAuditableEntity
 {
     /// <summary>
     /// The fixed ID for the AI settings entity.
@@ -18,13 +18,13 @@ public sealed class AiSettings : IAiAuditableEntity
     /// <summary>
     /// The ID of the default profile to use for chat operations.
     /// </summary>
-    [AiSetting]
+    [AISetting]
     public Guid? DefaultChatProfileId { get; set; }
 
     /// <summary>
     /// The ID of the default profile to use for embedding operations.
     /// </summary>
-    [AiSetting]
+    [AISetting]
     public Guid? DefaultEmbeddingProfileId { get; set; }
 
     /// <inheritdoc />

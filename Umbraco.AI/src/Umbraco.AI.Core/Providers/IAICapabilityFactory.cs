@@ -1,9 +1,9 @@
-﻿namespace Umbraco.Ai.Core.Providers;
+﻿namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// Factory for creating AI capability instances.
 /// </summary>
-public interface IAiCapabilityFactory
+public interface IAICapabilityFactory
 {
     /// <summary>
     /// Creates an AI capability instance for the specified provider.

@@ -1,31 +1,31 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Versioning;
 
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Versionable entity adapter for AI prompts.
 /// </summary>
-internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdapterBase<AiPrompt>
+internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIPrompt>
 {
     private readonly IAiPromptService _promptService;
     private readonly IAiEntityVersionService _versionService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiPromptVersionableEntityAdapter"/> class.
+    /// Initializes a new instance of the <see cref="AIPromptVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="promptService">The prompt service for save operations.</param>
     /// <param name="versionService">The entity version service for retrieving snapshots.</param>
-    public AiPromptVersionableEntityAdapter(IAiPromptService promptService, IAiEntityVersionService versionService)
+    public AIPromptVersionableEntityAdapter(IAiPromptService promptService, IAiEntityVersionService versionService)
     {
         _promptService = promptService;
         _versionService = versionService;
     }
 
     /// <inheritdoc />
-    protected override string CreateSnapshot(AiPrompt entity)
+    protected override string CreateSnapshot(AIPrompt entity)
     {
         var snapshot = new
         {
@@ -51,7 +51,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    protected override AiPrompt? RestoreFromSnapshot(string json)
+    protected override AIPrompt? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -88,7 +88,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
                 }
             }
 
-            AiPromptScope? scope = null;
+            AIPromptScope? scope = null;
             if (root.TryGetProperty("scope", out var scopeElement) &&
                 scopeElement.ValueKind == JsonValueKind.String)
             {
@@ -99,7 +99,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
                 }
             }
 
-            return new AiPrompt
+            return new AIPrompt
             {
                 Id = root.GetProperty("id").GetGuid(),
                 Alias = root.GetProperty("alias").GetString()!,
@@ -132,33 +132,33 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AiPropertyChange> CompareVersions(AiPrompt from, AiPrompt to)
+    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIPrompt from, AIPrompt to)
     {
-        var changes = new List<AiPropertyChange>();
+        var changes = new List<AIPropertyChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AiPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AiPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
         }
 
         if (from.Description != to.Description)
         {
-            changes.Add(new AiPropertyChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
+            changes.Add(new AIPropertyChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
         }
 
         if (from.Instructions != to.Instructions)
         {
-            changes.Add(new AiPropertyChange("Instructions", from.Instructions, to.Instructions));
+            changes.Add(new AIPropertyChange("Instructions", from.Instructions, to.Instructions));
         }
 
         if (from.ProfileId != to.ProfileId)
         {
-            changes.Add(new AiPropertyChange("ProfileId", from.ProfileId?.ToString() ?? "(none)", to.ProfileId?.ToString() ?? "(none)"));
+            changes.Add(new AIPropertyChange("ProfileId", from.ProfileId?.ToString() ?? "(none)", to.ProfileId?.ToString() ?? "(none)"));
         }
 
         // Compare context IDs
@@ -166,7 +166,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
         var toContextIds = string.Join(",", to.ContextIds);
         if (fromContextIds != toContextIds)
         {
-            changes.Add(new AiPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
+            changes.Add(new AIPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
         }
 
         // Compare tags
@@ -174,17 +174,17 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
         var toTags = string.Join(",", to.Tags);
         if (fromTags != toTags)
         {
-            changes.Add(new AiPropertyChange("Tags", fromTags.Length > 0 ? fromTags : "(none)", toTags.Length > 0 ? toTags : "(none)"));
+            changes.Add(new AIPropertyChange("Tags", fromTags.Length > 0 ? fromTags : "(none)", toTags.Length > 0 ? toTags : "(none)"));
         }
 
         if (from.IsActive != to.IsActive)
         {
-            changes.Add(new AiPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
+            changes.Add(new AIPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
         if (from.IncludeEntityContext != to.IncludeEntityContext)
         {
-            changes.Add(new AiPropertyChange("IncludeEntityContext", from.IncludeEntityContext.ToString(), to.IncludeEntityContext.ToString()));
+            changes.Add(new AIPropertyChange("IncludeEntityContext", from.IncludeEntityContext.ToString(), to.IncludeEntityContext.ToString()));
         }
 
         // Compare scope
@@ -192,7 +192,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
         var toScopeJson = to.Scope is not null ? SerializeScope(to.Scope) : null;
         if (fromScopeJson != toScopeJson)
         {
-            changes.Add(new AiPropertyChange("Scope", fromScopeJson, toScopeJson));
+            changes.Add(new AIPropertyChange("Scope", fromScopeJson, toScopeJson));
         }
 
         return changes;
@@ -201,7 +201,7 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     /// <inheritdoc />
     public override async Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default)
     {
-        var snapshot = await _versionService.GetVersionSnapshotAsync<AiPrompt>(entityId, version, cancellationToken)
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AIPrompt>(entityId, version, cancellationToken)
             ?? throw new InvalidOperationException($"Prompt version {version} not found for prompt {entityId}");
 
         // Save the snapshot as the current version (this will create a new version)
@@ -209,19 +209,19 @@ internal sealed class AiPromptVersionableEntityAdapter : AiVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    protected override Task<AiPrompt?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AIPrompt?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _promptService.GetPromptAsync(entityId, cancellationToken);
 
-    private static string SerializeScope(AiPromptScope scope)
+    private static string SerializeScope(AIPromptScope scope)
     {
         return JsonSerializer.Serialize(scope, CoreConstants.DefaultJsonSerializerOptions);
     }
 
-    private static AiPromptScope? DeserializeScope(string json)
+    private static AIPromptScope? DeserializeScope(string json)
     {
         try
         {
-            return JsonSerializer.Deserialize<AiPromptScope>(json, CoreConstants.DefaultJsonSerializerOptions);
+            return JsonSerializer.Deserialize<AIPromptScope>(json, CoreConstants.DefaultJsonSerializerOptions);
         }
         catch
         {

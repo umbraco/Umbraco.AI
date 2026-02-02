@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Ai.Prompt.Core;
+﻿namespace Umbraco.AI.Prompt.Core;
 
 /// <summary>
 /// Constants for Umbraco AI Prompt.

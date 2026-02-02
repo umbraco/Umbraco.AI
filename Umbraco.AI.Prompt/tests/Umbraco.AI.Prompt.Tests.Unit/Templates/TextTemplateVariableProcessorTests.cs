@@ -1,9 +1,9 @@
 using Microsoft.Extensions.AI;
 using Shouldly;
-using Umbraco.Ai.Prompt.Core.Templates.Processors;
+using Umbraco.AI.Prompt.Core.Templates.Processors;
 using Xunit;
 
-namespace Umbraco.Ai.Prompt.Tests.Unit.Templates;
+namespace Umbraco.AI.Prompt.Tests.Unit.Templates;
 
 public class TextTemplateVariableProcessorTests
 {

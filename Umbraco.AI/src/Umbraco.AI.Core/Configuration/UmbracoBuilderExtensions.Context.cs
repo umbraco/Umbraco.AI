@@ -1,8 +1,8 @@
-using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Core.Contexts.Resolvers;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IUmbracoBuilder"/> for AI Context services registration.
@@ -18,19 +18,19 @@ public static partial class UmbracoBuilderExtensions
     /// Use this to add, remove, or reorder context resolvers. Resolvers are executed in order,
     /// and later resolvers can override resources from earlier resolvers when duplicate IDs exist.
     /// <code>
-    /// builder.AiContextResolvers()
+    /// builder.AIContextResolvers()
     ///     .Append&lt;ProfileContextResolver&gt;()
     ///     .InsertAfter&lt;ProfileContextResolver, AgentContextResolver&gt;();
     /// </code>
     /// </remarks>
-    public static AiContextResolverCollectionBuilder AiContextResolvers(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiContextResolverCollectionBuilder>();
+    public static AIContextResolverCollectionBuilder AIContextResolvers(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIContextResolverCollectionBuilder>();
 
     /// <summary>
     /// Gets the AI context resource type collection builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The resource type collection builder.</returns>
-    public static AiContextResourceTypeCollectionBuilder AiContextResourceTypes(this IUmbracoBuilder builder)
-        => builder.WithCollectionBuilder<AiContextResourceTypeCollectionBuilder>();
+    public static AIContextResourceTypeCollectionBuilder AIContextResourceTypes(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIContextResourceTypeCollectionBuilder>();
 }

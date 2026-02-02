@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Represents a raw AI usage record captured from a single AI operation.
 /// These records are ephemeral - they're aggregated into statistics and then deleted.
 /// </summary>
-public sealed class AiUsageRecord
+public sealed class AIUsageRecord
 {
     /// <summary>
     /// Gets the unique identifier for this usage record.
@@ -22,7 +22,7 @@ public sealed class AiUsageRecord
     /// <summary>
     /// Gets the AI capability used (Chat, Embedding, etc.).
     /// </summary>
-    public required AiCapability Capability { get; init; }
+    public required AICapability Capability { get; init; }
 
     /// <summary>
     /// Gets the user ID who initiated the operation, if available.

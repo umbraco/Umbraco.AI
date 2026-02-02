@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Persistence.Notifications;
-using Umbraco.Ai.Prompt.Persistence.Prompts;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Persistence.Notifications;
+using Umbraco.AI.Prompt.Persistence.Prompts;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Prompt.Persistence.Configuration;
+namespace Umbraco.AI.Prompt.Persistence.Configuration;
 
 /// <summary>
 /// Extension methods for configuring Umbraco.Ai.Prompt.Persistence services.
@@ -23,7 +23,7 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAiPromptPersistence(this IUmbracoBuilder builder)
     {
         // Register DbContext with provider-specific migrations assembly
-        builder.Services.AddUmbracoDbContext<UmbracoAiPromptDbContext>((options, connectionString, providerName, serviceProvider) =>
+        builder.Services.AddUmbracoDbContext<UmbracoAIPromptDbContext>((options, connectionString, providerName, serviceProvider) =>
         {
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });

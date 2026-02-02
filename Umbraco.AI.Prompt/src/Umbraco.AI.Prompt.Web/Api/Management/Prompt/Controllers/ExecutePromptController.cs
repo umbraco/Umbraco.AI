@@ -1,13 +1,13 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Extensions;
-using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Extensions;
+using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 
 /// <summary>
 /// Controller for executing prompts.
@@ -53,7 +53,7 @@ public class ExecutePromptController : PromptControllerBase
 
         try
         {
-            var request = _mapper.Map<AiPromptExecutionRequest>(requestModel)!;
+            var request = _mapper.Map<AIPromptExecutionRequest>(requestModel)!;
             var result = await _promptService.ExecutePromptAsync(promptId.Value, request, cancellationToken);
             return Ok(_mapper.Map<PromptExecutionResponseModel>(result));
         }

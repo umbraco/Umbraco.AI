@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Context.Models;
+namespace Umbraco.AI.Web.Api.Management.Context.Models;
 
 /// <summary>
 /// Request model for updating an existing context.

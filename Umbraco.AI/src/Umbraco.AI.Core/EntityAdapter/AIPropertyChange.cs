@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Core.EntityAdapter;
+namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
 /// Represents a request to change a property value.
 /// Changes are staged in the workspace - user must save to persist.
 /// </summary>
-public sealed class AiPropertyChange
+public sealed class AIPropertyChange
 {
     /// <summary>
     /// The property alias.

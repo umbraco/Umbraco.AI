@@ -1,24 +1,24 @@
-using Umbraco.Ai.Core.Tools;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Tools;
+namespace Umbraco.AI.Tests.Unit.Tools;
 
-public class AiToolCollectionTests
+public class AIToolCollectionTests
 {
-    private readonly AiToolCollection _collection;
+    private readonly AIToolCollection _collection;
     private readonly FakeTool _tool1;
     private readonly FakeTool _tool2;
     private readonly FakeTool _tool3;
     private readonly FakeTool _destructiveTool;
 
-    public AiToolCollectionTests()
+    public AIToolCollectionTests()
     {
         _tool1 = new FakeTool("tool-1", "Tool One", category: "CategoryA", tags: ["tag1", "common"]);
         _tool2 = new FakeTool("tool-2", "Tool Two", category: "CategoryA", tags: ["tag2", "common"]);
         _tool3 = new FakeTool("tool-3", "Tool Three", category: "CategoryB", tags: ["tag3"]);
         _destructiveTool = new FakeTool("destructive-tool", "Destructive Tool", category: "CategoryB", isDestructive: true);
 
-        _collection = new AiToolCollection(() => new IAiTool[] { _tool1, _tool2, _tool3, _destructiveTool });
+        _collection = new AIToolCollection(() => new IAiTool[] { _tool1, _tool2, _tool3, _destructiveTool });
     }
 
     #region GetById
@@ -177,7 +177,7 @@ public class AiToolCollectionTests
         var systemTool1 = new FakeSystemTool("system-1", "System Tool One");
         var systemTool2 = new FakeSystemTool("system-2", "System Tool Two");
         var userTool = new FakeTool("user-1", "User Tool");
-        var collection = new AiToolCollection(() => [systemTool1, systemTool2, userTool]);
+        var collection = new AIToolCollection(() => [systemTool1, systemTool2, userTool]);
 
         // Act
         var results = collection.GetSystemTools().ToList();
@@ -196,7 +196,7 @@ public class AiToolCollectionTests
         var systemTool = new FakeSystemTool("system-1", "System Tool");
         var userTool1 = new FakeTool("user-1", "User Tool One");
         var userTool2 = new FakeTool("user-2", "User Tool Two");
-        var collection = new AiToolCollection(() => [systemTool, userTool1, userTool2]);
+        var collection = new AIToolCollection(() => [systemTool, userTool1, userTool2]);
 
         // Act
         var results = collection.GetUserTools().ToList();
@@ -226,7 +226,7 @@ public class AiToolCollectionTests
         // Arrange
         var systemTool1 = new FakeSystemTool("system-1", "System Tool One");
         var systemTool2 = new FakeSystemTool("system-2", "System Tool Two");
-        var collection = new AiToolCollection(() => [systemTool1, systemTool2]);
+        var collection = new AIToolCollection(() => [systemTool1, systemTool2]);
 
         // Act
         var results = collection.GetUserTools().ToList();
@@ -241,7 +241,7 @@ public class AiToolCollectionTests
         // Arrange - use the default collection which has only user tools
         // and add system tools to test mixed scenario
         var systemTool = new FakeSystemTool("system-1", "System Tool");
-        var collection = new AiToolCollection(() => [_tool1, _tool2, systemTool]);
+        var collection = new AIToolCollection(() => [_tool1, _tool2, systemTool]);
 
         // Act
         var systemResults = collection.GetSystemTools().ToList();

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Umbraco.Ai.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
     public partial class UmbracoAi_ChangeUserIdToGuid : Migration

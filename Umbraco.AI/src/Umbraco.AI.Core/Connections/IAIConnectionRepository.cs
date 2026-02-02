@@ -1,27 +1,27 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Connections;
+namespace Umbraco.AI.Core.Connections;
 
 /// <summary>
 /// Repository for managing AI provider connections.
 /// Internal implementation detail - use <see cref="IAiConnectionService"/> for external access.
 /// </summary>
-internal interface IAiConnectionRepository
+internal interface IAIConnectionRepository
 {
     /// <summary>
     /// Get a connection by its ID.
     /// </summary>
-    Task<AiConnection?> GetAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIConnection?> GetAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a connection by its alias (case-insensitive).
     /// </summary>
-    Task<AiConnection?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIConnection?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get all connections.
     /// </summary>
-    Task<IEnumerable<AiConnection>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnection>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get connections with pagination and optional filtering.
@@ -32,7 +32,7 @@ internal interface IAiConnectionRepository
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated connections and the total count.</returns>
-    Task<(IEnumerable<AiConnection> Items, int Total)> GetPagedAsync(
+    Task<(IEnumerable<AIConnection> Items, int Total)> GetPagedAsync(
         string? filter = null,
         string? providerId = null,
         int skip = 0,
@@ -42,7 +42,7 @@ internal interface IAiConnectionRepository
     /// <summary>
     /// Get all connections for a specific provider.
     /// </summary>
-    Task<IEnumerable<AiConnection>> GetByProviderAsync(string providerId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnection>> GetByProviderAsync(string providerId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Save a connection (insert if new, update if exists).
@@ -50,7 +50,7 @@ internal interface IAiConnectionRepository
     /// <param name="connection">The connection to save.</param>
     /// <param name="userId">The key (GUID) of the user performing the operation.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task<AiConnection> SaveAsync(AiConnection connection, Guid? userId = null, CancellationToken cancellationToken = default);
+    Task<AIConnection> SaveAsync(AIConnection connection, Guid? userId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Delete a connection by ID.

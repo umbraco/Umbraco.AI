@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 
 /// <summary>
 /// API model for a scope rule that determines where a prompt can run.

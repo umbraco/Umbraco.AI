@@ -1,30 +1,30 @@
 using System.Text.Json;
-using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Persistence.Connections;
+namespace Umbraco.AI.Persistence.Connections;
 
 /// <summary>
-/// Factory for mapping between <see cref="AiConnection"/> domain models and <see cref="AiConnectionEntity"/> database entities.
+/// Factory for mapping between <see cref="AIConnection"/> domain models and <see cref="AIConnectionEntity"/> database entities.
 /// Handles encryption/decryption of sensitive settings fields during the mapping process.
 /// </summary>
-internal sealed class AiConnectionFactory : IAiConnectionFactory
+internal sealed class AIConnectionFactory : IAiConnectionFactory
 {
     private readonly IAiEditableModelSerializer _serializer;
-    private readonly AiProviderCollection _providers;
+    private readonly AIProviderCollection _providers;
 
-    public AiConnectionFactory(
+    public AIConnectionFactory(
         IAiEditableModelSerializer serializer,
-        AiProviderCollection providers)
+        AIProviderCollection providers)
     {
         _serializer = serializer;
         _providers = providers;
     }
 
     /// <inheritdoc />
-    public AiConnection BuildDomain(AiConnectionEntity entity)
+    public AIConnection BuildDomain(AIConnectionEntity entity)
     {
         object? settings = null;
         if (!string.IsNullOrEmpty(entity.Settings))
@@ -33,7 +33,7 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
             settings = _serializer.Deserialize(entity.Settings);
         }
 
-        var connection = new AiConnection
+        var connection = new AIConnection
         {
             Id = entity.Id,
             Alias = entity.Alias,
@@ -49,18 +49,18 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
         };
 
         // Set version using internal setter
-        typeof(AiConnection).GetProperty(nameof(AiConnection.Version))!
+        typeof(AIConnection).GetProperty(nameof(AIConnection.Version))!
             .SetValue(connection, entity.Version);
 
         return connection;
     }
 
     /// <inheritdoc />
-    public AiConnectionEntity BuildEntity(AiConnection connection)
+    public AIConnectionEntity BuildEntity(AIConnection connection)
     {
         var schema = GetSchemaForProvider(connection.ProviderId);
 
-        return new AiConnectionEntity
+        return new AIConnectionEntity
         {
             Id = connection.Id,
             Alias = connection.Alias,
@@ -77,7 +77,7 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
     }
 
     /// <inheritdoc />
-    public void UpdateEntity(AiConnectionEntity entity, AiConnection connection)
+    public void UpdateEntity(AIConnectionEntity entity, AIConnection connection)
     {
         var schema = GetSchemaForProvider(connection.ProviderId);
 
@@ -92,7 +92,7 @@ internal sealed class AiConnectionFactory : IAiConnectionFactory
         // CreatedByUserId and DateCreated are intentionally not updated
     }
 
-    private AiEditableModelSchema? GetSchemaForProvider(string providerId)
+    private AIEditableModelSchema? GetSchemaForProvider(string providerId)
     {
         var provider = _providers.GetById(providerId);
         return provider?.GetSettingsSchema();

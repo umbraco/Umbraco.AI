@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agent.Core.Chat;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <inheritdoc />
 internal sealed class AguiToolConverter : IAguiToolConverter
@@ -15,6 +15,6 @@ internal sealed class AguiToolConverter : IAguiToolConverter
             return null;
         }
 
-        return tools.Select(t => (AITool)new AiFrontendToolFunction(t)).ToList();
+        return tools.Select(t => (AITool)new AIFrontendToolFunction(t)).ToList();
     }
 }

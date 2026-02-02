@@ -2,16 +2,16 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Management.Configuration;
+using Umbraco.AI.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 
 /// <summary>
 /// Controller to get all connections.
@@ -53,11 +53,11 @@ public class AllConnectionController : ConnectionControllerBase
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        IEnumerable<AiConnection> connections;
+        IEnumerable<AIConnection> connections;
         int total;
 
         // If capability filter is provided, use the capability-based query
-        if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AiCapability>(capability, ignoreCase: true, out var cap))
+        if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AICapability>(capability, ignoreCase: true, out var cap))
         {
             var capabilityConnections = await _connectionService.GetConnectionsByCapabilityAsync(cap, cancellationToken);
             var connectionsList = capabilityConnections.ToList();
@@ -84,7 +84,7 @@ public class AllConnectionController : ConnectionControllerBase
         var viewModel = new PagedViewModel<ConnectionItemResponseModel>
         {
             Total = total,
-            Items = _umbracoMapper.MapEnumerable<AiConnection, ConnectionItemResponseModel>(connections)
+            Items = _umbracoMapper.MapEnumerable<AIConnection, ConnectionItemResponseModel>(connections)
         };
 
         return Ok(viewModel);

@@ -1,31 +1,31 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Embeddings;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Services;
+namespace Umbraco.AI.Tests.Unit.Services;
 
-public class AiEmbeddingServiceTests
+public class AIEmbeddingServiceTests
 {
     private readonly Mock<IAiEmbeddingGeneratorFactory> _generatorFactoryMock;
     private readonly Mock<IAiProfileService> _profileServiceMock;
-    private readonly Mock<IOptionsMonitor<AiOptions>> _optionsMock;
-    private readonly AiEmbeddingService _service;
+    private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
+    private readonly AIEmbeddingService _service;
 
-    public AiEmbeddingServiceTests()
+    public AIEmbeddingServiceTests()
     {
         _generatorFactoryMock = new Mock<IAiEmbeddingGeneratorFactory>();
         _profileServiceMock = new Mock<IAiProfileService>();
-        _optionsMock = new Mock<IOptionsMonitor<AiOptions>>();
-        _optionsMock.Setup(x => x.CurrentValue).Returns(new AiOptions
+        _optionsMock = new Mock<IOptionsMonitor<AIOptions>>();
+        _optionsMock.Setup(x => x.CurrentValue).Returns(new AIOptions
         {
             DefaultEmbeddingProfileAlias = "default-embedding"
         });
 
-        _service = new AiEmbeddingService(
+        _service = new AIEmbeddingService(
             _generatorFactoryMock.Object,
             _profileServiceMock.Object,
             _optionsMock.Object);
@@ -39,16 +39,16 @@ public class AiEmbeddingServiceTests
         // Arrange
         var value = "Hello world";
 
-        var defaultProfile = new AiProfileBuilder()
+        var defaultProfile = new AIProfileBuilder()
             .WithAlias("default-embedding")
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
         var fakeGenerator = new FakeEmbeddingGenerator();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(defaultProfile);
 
         _generatorFactoryMock
@@ -62,7 +62,7 @@ public class AiEmbeddingServiceTests
         embedding.ShouldNotBeNull();
         embedding.Vector.ToArray().ShouldBe([0.1f, 0.2f, 0.3f]);
         _profileServiceMock.Verify(
-            x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()),
+            x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -77,9 +77,9 @@ public class AiEmbeddingServiceTests
         var profileId = Guid.NewGuid();
         var value = "Hello world";
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
@@ -113,7 +113,7 @@ public class AiEmbeddingServiceTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var act = () => _service.GenerateEmbeddingAsync(profileId, value);
@@ -130,9 +130,9 @@ public class AiEmbeddingServiceTests
         var profileId = Guid.NewGuid();
         var value = "Hello world";
 
-        var chatProfile = new AiProfileBuilder()
+        var chatProfile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithName("Chat Profile")
             .Build();
 
@@ -158,16 +158,16 @@ public class AiEmbeddingServiceTests
         // Arrange
         var values = new[] { "Hello", "World" };
 
-        var defaultProfile = new AiProfileBuilder()
+        var defaultProfile = new AIProfileBuilder()
             .WithAlias("default-embedding")
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
         var fakeGenerator = new FakeEmbeddingGenerator();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(defaultProfile);
 
         _generatorFactoryMock
@@ -181,7 +181,7 @@ public class AiEmbeddingServiceTests
         embeddings.ShouldNotBeNull();
         embeddings.Count.ShouldBe(2);
         _profileServiceMock.Verify(
-            x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()),
+            x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -191,15 +191,15 @@ public class AiEmbeddingServiceTests
         // Arrange
         var values = new[] { "One", "Two", "Three", "Four" };
 
-        var defaultProfile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Embedding)
+        var defaultProfile = new AIProfileBuilder()
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
         var fakeGenerator = new FakeEmbeddingGenerator();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(defaultProfile);
 
         _generatorFactoryMock
@@ -229,9 +229,9 @@ public class AiEmbeddingServiceTests
         var profileId = Guid.NewGuid();
         var values = new[] { "Hello", "World" };
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
@@ -265,7 +265,7 @@ public class AiEmbeddingServiceTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var act = () => _service.GenerateEmbeddingsAsync(profileId, values);
@@ -282,9 +282,9 @@ public class AiEmbeddingServiceTests
         var profileId = Guid.NewGuid();
         var values = new[] { "Hello", "World" };
 
-        var chatProfile = new AiProfileBuilder()
+        var chatProfile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithName("Chat Profile")
             .Build();
 
@@ -310,8 +310,8 @@ public class AiEmbeddingServiceTests
         // Arrange
         var values = new[] { "Hello" };
 
-        var profile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Embedding)
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
@@ -324,7 +324,7 @@ public class AiEmbeddingServiceTests
         var fakeGenerator = new FakeEmbeddingGenerator();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _generatorFactoryMock
@@ -348,15 +348,15 @@ public class AiEmbeddingServiceTests
         // Arrange
         var values = new[] { "Hello" };
 
-        var profile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Embedding)
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
         var fakeGenerator = new FakeEmbeddingGenerator();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _generatorFactoryMock
@@ -379,8 +379,8 @@ public class AiEmbeddingServiceTests
         // Arrange
         var values = new[] { "Hello" };
 
-        var profile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Embedding)
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
@@ -392,7 +392,7 @@ public class AiEmbeddingServiceTests
         var fakeGenerator = new FakeEmbeddingGenerator();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _generatorFactoryMock
@@ -415,15 +415,15 @@ public class AiEmbeddingServiceTests
     public async Task GetEmbeddingGeneratorAsync_WithNullProfileId_UsesDefaultProfile()
     {
         // Arrange
-        var defaultProfile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Embedding)
+        var defaultProfile = new AIProfileBuilder()
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
         var fakeGenerator = new FakeEmbeddingGenerator();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()))
             .ReturnsAsync(defaultProfile);
 
         _generatorFactoryMock
@@ -436,7 +436,7 @@ public class AiEmbeddingServiceTests
         // Assert
         generator.ShouldBe(fakeGenerator);
         _profileServiceMock.Verify(
-            x => x.GetDefaultProfileAsync(AiCapability.Embedding, It.IsAny<CancellationToken>()),
+            x => x.GetDefaultProfileAsync(AICapability.Embedding, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -445,9 +445,9 @@ public class AiEmbeddingServiceTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithModel("openai", "text-embedding-3-small")
             .Build();
 
@@ -479,7 +479,7 @@ public class AiEmbeddingServiceTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var act = () => _service.GetEmbeddingGeneratorAsync(profileId);
@@ -494,9 +494,9 @@ public class AiEmbeddingServiceTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var chatProfile = new AiProfileBuilder()
+        var chatProfile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithName("Chat Profile")
             .Build();
 

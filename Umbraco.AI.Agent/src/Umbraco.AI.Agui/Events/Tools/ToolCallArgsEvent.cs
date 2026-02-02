@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Tools;
+namespace Umbraco.AI.Agui.Events.Tools;
 
 /// <summary>
 /// Event emitted for tool call argument deltas.

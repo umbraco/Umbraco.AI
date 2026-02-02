@@ -2,23 +2,23 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
-using Umbraco.Ai.Prompt.Core.Media;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Core.Templates.Processors;
+using Umbraco.AI.Prompt.Core.Media;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Templates.Processors;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 using Xunit;
 
-namespace Umbraco.Ai.Prompt.Tests.Unit.Prompts;
+namespace Umbraco.AI.Prompt.Tests.Unit.Prompts;
 
-public class AiPromptTemplateServiceTests
+public class AIPromptTemplateServiceTests
 {
     private readonly Mock<IMediaService> _mockMediaService;
     private readonly Mock<IContentService> _mockContentService;
     private readonly Mock<IAiUmbracoMediaResolver> _mockImageResolver;
-    private readonly AiPromptTemplateService _service;
+    private readonly AIPromptTemplateService _service;
 
-    public AiPromptTemplateServiceTests()
+    public AIPromptTemplateServiceTests()
     {
         _mockMediaService = new Mock<IMediaService>();
         _mockContentService = new Mock<IContentService>();
@@ -31,7 +31,7 @@ public class AiPromptTemplateServiceTests
             _mockImageResolver.Object,
             Mock.Of<ILogger<ImageTemplateVariableProcessor>>());
 
-        _service = new AiPromptTemplateService(textProcessor, imageProcessor);
+        _service = new AIPromptTemplateService(textProcessor, imageProcessor);
     }
 
     #region Basic Text Processing
@@ -194,7 +194,7 @@ public class AiPromptTemplateServiceTests
 
         _mockImageResolver
             .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
+            .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = "image/png" });
 
         // Act
         var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
@@ -225,7 +225,7 @@ public class AiPromptTemplateServiceTests
 
         _mockImageResolver
             .Setup(r => r.ResolveAsync(It.IsAny<object?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiMediaContent?)null);
+            .ReturnsAsync((AIMediaContent?)null);
 
         // Act
         var result = (await _service.ProcessTemplateAsync(template, context)).ToList();
@@ -458,7 +458,7 @@ public class AiPromptTemplateServiceTests
 
         _mockImageResolver
             .Setup(r => r.ResolveAsync(imagePath, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = mediaType });
+            .ReturnsAsync(new AIMediaContent { Data = new byte[] { 1, 2, 3 }, MediaType = mediaType });
     }
 
     #endregion

@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
-using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Connection.Controllers;
+using Umbraco.AI.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class ByIdOrAliasConnectionControllerTests
 {
@@ -29,7 +29,7 @@ public class ByIdOrAliasConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithName("Test Connection")
             .WithProviderId("openai")
@@ -70,7 +70,7 @@ public class ByIdOrAliasConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await _controller.GetConnectionByIdOrAlias(new IdOrAlias(connectionId));
@@ -86,14 +86,14 @@ public class ByIdOrAliasConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder().WithId(connectionId).Build();
+        var connection = new AIConnectionBuilder().WithId(connectionId).Build();
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
         _mapperMock
-            .Setup(x => x.Map<ConnectionResponseModel>(It.IsAny<AiConnection>()))
+            .Setup(x => x.Map<ConnectionResponseModel>(It.IsAny<AIConnection>()))
             .Returns(new ConnectionResponseModel());
 
         // Act
@@ -112,7 +112,7 @@ public class ByIdOrAliasConnectionControllerTests
     {
         // Arrange
         var alias = "my-connection";
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithAlias(alias)
             .WithName("Test Connection")
             .WithProviderId("openai")
@@ -154,7 +154,7 @@ public class ByIdOrAliasConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await _controller.GetConnectionByIdOrAlias(new IdOrAlias(alias));
@@ -170,14 +170,14 @@ public class ByIdOrAliasConnectionControllerTests
     {
         // Arrange
         var alias = "my-connection";
-        var connection = new AiConnectionBuilder().WithAlias(alias).Build();
+        var connection = new AIConnectionBuilder().WithAlias(alias).Build();
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
         _mapperMock
-            .Setup(x => x.Map<ConnectionResponseModel>(It.IsAny<AiConnection>()))
+            .Setup(x => x.Map<ConnectionResponseModel>(It.IsAny<AIConnection>()))
             .Returns(new ConnectionResponseModel());
 
         // Act

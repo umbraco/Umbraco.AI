@@ -1,17 +1,17 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Providers;
+namespace Umbraco.AI.Tests.Unit.Providers;
 
-public class AiProviderBaseTests
+public class AIProviderBaseTests
 {
     private readonly Mock<IAiProviderInfrastructure> _infrastructureMock;
     private readonly Mock<IAiCapabilityFactory> _capabilityFactoryMock;
     private readonly Mock<IAiEditableModelSchemaBuilder> _schemaBuilderMock;
 
-    public AiProviderBaseTests()
+    public AIProviderBaseTests()
     {
         _capabilityFactoryMock = new Mock<IAiCapabilityFactory>();
         _schemaBuilderMock = new Mock<IAiEditableModelSchemaBuilder>();
@@ -42,7 +42,7 @@ public class AiProviderBaseTests
 
         // Assert
         var exception = Should.Throw<InvalidOperationException>(act);
-        exception.Message.ShouldContain("missing the required AiProviderAttribute");
+        exception.Message.ShouldContain("missing the required AIProviderAttribute");
     }
 
     #endregion
@@ -220,9 +220,9 @@ public class AiProviderBaseTests
     public void GetSettingsSchema_GenericProvider_BuildsFromSettingsType()
     {
         // Arrange
-        var expectedSchema = new AiEditableModelSchema(
+        var expectedSchema = new AIEditableModelSchema(
             typeof(FakeProviderSettings),
-            new List<AiEditableModelField>
+            new List<AIEditableModelField>
             {
                 new() { PropertyName = "ApiKey", Key = "api-key", Label = "API Key" }
             });
@@ -271,24 +271,24 @@ public class AiProviderBaseTests
 
     #region Test providers
 
-    [AiProvider("test-provider", "Test Provider")]
-    private class TestProvider : AiProviderBase
+    [AIProvider("test-provider", "Test Provider")]
+    private class TestProvider : AIProviderBase
     {
         public TestProvider(IAiProviderInfrastructure infrastructure)
             : base(infrastructure)
         { }
     }
 
-    // Intentionally missing the AiProviderAttribute
-    private class ProviderWithoutAttribute : AiProviderBase
+    // Intentionally missing the AIProviderAttribute
+    private class ProviderWithoutAttribute : AIProviderBase
     {
         public ProviderWithoutAttribute(IAiProviderInfrastructure infrastructure)
             : base(infrastructure)
         { }
     }
 
-    [AiProvider("chat-provider", "Chat Provider")]
-    private class ProviderWithChatCapability : AiProviderBase
+    [AIProvider("chat-provider", "Chat Provider")]
+    private class ProviderWithChatCapability : AIProviderBase
     {
         public ProviderWithChatCapability(IAiProviderInfrastructure infrastructure)
             : base(infrastructure)
@@ -297,8 +297,8 @@ public class AiProviderBaseTests
         }
     }
 
-    [AiProvider("multi-provider", "Multi Provider")]
-    private class ProviderWithMultipleCapabilities : AiProviderBase
+    [AIProvider("multi-provider", "Multi Provider")]
+    private class ProviderWithMultipleCapabilities : AIProviderBase
     {
         public ProviderWithMultipleCapabilities(IAiProviderInfrastructure infrastructure)
             : base(infrastructure)
@@ -308,8 +308,8 @@ public class AiProviderBaseTests
         }
     }
 
-    [AiProvider("typed-provider", "Typed Provider")]
-    private class TypedSettingsProvider : AiProviderBase<FakeProviderSettings>
+    [AIProvider("typed-provider", "Typed Provider")]
+    private class TypedSettingsProvider : AIProviderBase<FakeProviderSettings>
     {
         public TypedSettingsProvider(IAiProviderInfrastructure infrastructure)
             : base(infrastructure)

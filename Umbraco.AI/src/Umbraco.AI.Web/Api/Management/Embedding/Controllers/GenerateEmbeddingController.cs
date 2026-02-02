@@ -3,16 +3,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Embeddings;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.Embedding.Models;
+using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Management.Configuration;
+using Umbraco.AI.Web.Api.Management.Embedding.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Embedding.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Embedding.Controllers;
 
 /// <summary>
 /// Controller to generate embeddings.

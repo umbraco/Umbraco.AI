@@ -1,14 +1,14 @@
 using Anthropic;
 using Microsoft.Extensions.Caching.Memory;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Anthropic;
+namespace Umbraco.AI.Anthropic;
 
 /// <summary>
 /// AI provider for Anthropic services.
 /// </summary>
-[AiProvider("anthropic", "Anthropic")]
-public class AnthropicProvider : AiProviderBase<AnthropicProviderSettings>
+[AIProvider("anthropic", "Anthropic")]
+public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
 {
     private const string CacheKeyPrefix = "Anthropic_Models_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);

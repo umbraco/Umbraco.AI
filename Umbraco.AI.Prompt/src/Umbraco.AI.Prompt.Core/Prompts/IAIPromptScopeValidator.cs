@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Validates whether a prompt execution is allowed based on its scope configuration.
 /// </summary>
-public interface IAiPromptScopeValidator
+public interface IAIPromptScopeValidator
 {
     /// <summary>
     /// Validates whether the prompt execution is allowed for the given request context.
@@ -13,8 +13,8 @@ public interface IAiPromptScopeValidator
     /// <param name="request">The execution request with context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A validation result indicating if execution is allowed.</returns>
-    Task<AiPromptScopeValidationResult> ValidateAsync(
-        AiPrompt prompt,
-        AiPromptExecutionRequest request,
+    Task<AIPromptScopeValidationResult> ValidateAsync(
+        AIPrompt prompt,
+        AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default);
 }

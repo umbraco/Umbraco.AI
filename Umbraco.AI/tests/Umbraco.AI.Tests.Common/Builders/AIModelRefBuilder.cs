@@ -1,31 +1,31 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Tests.Common.Builders;
+namespace Umbraco.AI.Tests.Common.Builders;
 
 /// <summary>
-/// Fluent builder for creating <see cref="AiModelRef"/> instances in tests.
+/// Fluent builder for creating <see cref="AIModelRef"/> instances in tests.
 /// </summary>
-public class AiModelRefBuilder
+public class AIModelRefBuilder
 {
     private string _providerId = "test-provider";
     private string _modelId = "test-model";
 
-    public AiModelRefBuilder WithProviderId(string providerId)
+    public AIModelRefBuilder WithProviderId(string providerId)
     {
         _providerId = providerId;
         return this;
     }
 
-    public AiModelRefBuilder WithModelId(string modelId)
+    public AIModelRefBuilder WithModelId(string modelId)
     {
         _modelId = modelId;
         return this;
     }
 
-    public AiModelRef Build()
+    public AIModelRef Build()
     {
-        return new AiModelRef(_providerId, _modelId);
+        return new AIModelRef(_providerId, _modelId);
     }
 
-    public static implicit operator AiModelRef(AiModelRefBuilder builder) => builder.Build();
+    public static implicit operator AIModelRef(AIModelRefBuilder builder) => builder.Build();
 }

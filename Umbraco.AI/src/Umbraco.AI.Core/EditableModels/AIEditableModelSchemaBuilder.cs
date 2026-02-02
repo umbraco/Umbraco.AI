@@ -1,29 +1,29 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Serialization;
 
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
-internal sealed class AiEditableModelSchemaBuilder : IAiEditableModelSchemaBuilder
+internal sealed class AIEditableModelSchemaBuilder : IAiEditableModelSchemaBuilder
 {
-    public AiEditableModelSchema BuildForType<TModel>(string modelId)
+    public AIEditableModelSchema BuildForType<TModel>(string modelId)
         where TModel : class
     {
         var properties = typeof(TModel)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance);
         var fields = properties.Select(property => BuildFieldForProperty(property, modelId)).ToList();
-        return new AiEditableModelSchema(typeof(TModel), fields);
+        return new AIEditableModelSchema(typeof(TModel), fields);
     }
 
-    private AiEditableModelField BuildFieldForProperty(PropertyInfo property, string modelId)
+    private AIEditableModelField BuildFieldForProperty(PropertyInfo property, string modelId)
     {
-        var attr = property.GetCustomAttribute<AiEditableModelFieldAttribute>();
+        var attr = property.GetCustomAttribute<AIEditableModelFieldAttribute>();
         var key = property.Name.ToCamelCase();
         var modelKey = modelId.ToCamelCase();
 
-        return new AiEditableModelField
+        return new AIEditableModelField
         {
             Key = key,
             PropertyName = property.Name,

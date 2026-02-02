@@ -1,12 +1,12 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Models;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Controllers;
+namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 
 /// <summary>
 /// Controller for retrieving all prompts.
@@ -50,7 +50,7 @@ public class AllPromptController : PromptControllerBase
         var viewModel = new PagedViewModel<PromptItemResponseModel>
         {
             Total = result.Total,
-            Items = _umbracoMapper.MapEnumerable<Core.Prompts.AiPrompt, PromptItemResponseModel>(result.Items)
+            Items = _umbracoMapper.MapEnumerable<Core.Prompts.AIPrompt, PromptItemResponseModel>(result.Items)
         };
 
         return Ok(viewModel);

@@ -1,20 +1,20 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Contains all metadata for an AI audit-log operation.
 /// Completely independent of OpenTelemetry Activity.
 /// </summary>
-public sealed class AiAuditContext
+public sealed class AIAuditContext
 {
 
     /// <summary>
     /// Gets the AI capability being executed (Chat, Embedding, etc.).
     /// </summary>
-    public required AiCapability Capability { get; init; }
+    public required AICapability Capability { get; init; }
 
     /// <summary>
     /// Gets the profile ID used for this operation.
@@ -83,14 +83,14 @@ public sealed class AiAuditContext
     /// <param name="runtimeContext">The runtime context containing additional properties.</param>
     /// <param name="prompt">The prompt or input data.</param>
     /// <param name="modelId">Optional model ID to override runtime context value.</param>
-    /// <returns>An AiAuditLogContext populated with available metadata.</returns>
-    public static AiAuditContext ExtractFromRuntimeContext(
-        AiCapability capability,
-        AiRuntimeContext runtimeContext,
+    /// <returns>An AIAuditLogContext populated with available metadata.</returns>
+    public static AIAuditContext ExtractFromRuntimeContext(
+        AICapability capability,
+        AIRuntimeContext runtimeContext,
         object? prompt,
         string? modelId = null)
     {
-        return new AiAuditContext
+        return new AIAuditContext
         {
             Capability = capability,
             ProfileId = runtimeContext.GetValue<Guid>(Constants.ContextKeys.ProfileId),

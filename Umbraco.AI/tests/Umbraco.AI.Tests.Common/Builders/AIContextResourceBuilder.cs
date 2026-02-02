@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core;
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core;
+using Umbraco.AI.Core.Contexts;
 
-namespace Umbraco.Ai.Tests.Common.Builders;
+namespace Umbraco.AI.Tests.Common.Builders;
 
 /// <summary>
-/// Fluent builder for creating <see cref="AiContextResource"/> instances in tests.
+/// Fluent builder for creating <see cref="AIContextResource"/> instances in tests.
 /// </summary>
-public class AiContextResourceBuilder
+public class AIContextResourceBuilder
 {
     private Guid _id = Guid.NewGuid();
     private string _resourceTypeId = "text";
@@ -14,63 +14,63 @@ public class AiContextResourceBuilder
     private string? _description;
     private int _sortOrder;
     private string _data = "{}";
-    private AiContextResourceInjectionMode _injectionMode = AiContextResourceInjectionMode.Always;
+    private AIContextResourceInjectionMode _injectionMode = AIContextResourceInjectionMode.Always;
 
-    public AiContextResourceBuilder WithId(Guid id)
+    public AIContextResourceBuilder WithId(Guid id)
     {
         _id = id;
         return this;
     }
 
-    public AiContextResourceBuilder WithResourceTypeId(string resourceTypeId)
+    public AIContextResourceBuilder WithResourceTypeId(string resourceTypeId)
     {
         _resourceTypeId = resourceTypeId;
         return this;
     }
 
-    public AiContextResourceBuilder WithName(string name)
+    public AIContextResourceBuilder WithName(string name)
     {
         _name = name;
         return this;
     }
 
-    public AiContextResourceBuilder WithDescription(string? description)
+    public AIContextResourceBuilder WithDescription(string? description)
     {
         _description = description;
         return this;
     }
 
-    public AiContextResourceBuilder WithSortOrder(int sortOrder)
+    public AIContextResourceBuilder WithSortOrder(int sortOrder)
     {
         _sortOrder = sortOrder;
         return this;
     }
 
-    public AiContextResourceBuilder WithData(string data)
+    public AIContextResourceBuilder WithData(string data)
     {
         _data = data;
         return this;
     }
 
-    public AiContextResourceBuilder WithInjectionMode(AiContextResourceInjectionMode injectionMode)
+    public AIContextResourceBuilder WithInjectionMode(AIContextResourceInjectionMode injectionMode)
     {
         _injectionMode = injectionMode;
         return this;
     }
 
-    public AiContextResourceBuilder AsAlwaysInjected()
+    public AIContextResourceBuilder AsAlwaysInjected()
     {
-        _injectionMode = AiContextResourceInjectionMode.Always;
+        _injectionMode = AIContextResourceInjectionMode.Always;
         return this;
     }
 
-    public AiContextResourceBuilder AsOnDemand()
+    public AIContextResourceBuilder AsOnDemand()
     {
-        _injectionMode = AiContextResourceInjectionMode.OnDemand;
+        _injectionMode = AIContextResourceInjectionMode.OnDemand;
         return this;
     }
 
-    public AiContextResourceBuilder AsBrandVoice(string tone = "Professional", string targetAudience = "General")
+    public AIContextResourceBuilder AsBrandVoice(string tone = "Professional", string targetAudience = "General")
     {
         _resourceTypeId = "brand-voice";
         _data = System.Text.Json.JsonSerializer.Serialize(new
@@ -84,16 +84,16 @@ public class AiContextResourceBuilder
         return this;
     }
 
-    public AiContextResourceBuilder AsText(string content)
+    public AIContextResourceBuilder AsText(string content)
     {
         _resourceTypeId = "text";
         _data = System.Text.Json.JsonSerializer.Serialize(new { content }, Constants.DefaultJsonSerializerOptions);
         return this;
     }
 
-    public AiContextResource Build()
+    public AIContextResource Build()
     {
-        return new AiContextResource
+        return new AIContextResource
         {
             Id = _id,
             ResourceTypeId = _resourceTypeId,
@@ -105,5 +105,5 @@ public class AiContextResourceBuilder
         };
     }
 
-    public static implicit operator AiContextResource(AiContextResourceBuilder builder) => builder.Build();
+    public static implicit operator AIContextResource(AIContextResourceBuilder builder) => builder.Build();
 }

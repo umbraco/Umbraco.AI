@@ -2,13 +2,13 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Versioning.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Versioning.Controllers;
 
 /// <summary>
 /// Unified controller for entity version history operations.
@@ -22,7 +22,7 @@ namespace Umbraco.Ai.Web.Api.Management.Versioning.Controllers;
 public class EntityVersionHistoryController : VersioningControllerBase
 {
     private readonly IAiEntityVersionService _versionService;
-    private readonly AiVersionableEntityAdapterCollection _entityTypes;
+    private readonly AIVersionableEntityAdapterCollection _entityTypes;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -30,7 +30,7 @@ public class EntityVersionHistoryController : VersioningControllerBase
     /// </summary>
     public EntityVersionHistoryController(
         IAiEntityVersionService versionService,
-        AiVersionableEntityAdapterCollection entityTypes,
+        AIVersionableEntityAdapterCollection entityTypes,
         IUmbracoMapper umbracoMapper)
     {
         _versionService = versionService;

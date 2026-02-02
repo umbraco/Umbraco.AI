@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Options;
 
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Validates URLs for security concerns to prevent SSRF attacks.
@@ -18,13 +18,13 @@ public class UrlValidator : IUrlValidator
         "metadata.google.internal" // GCP metadata
     };
 
-    private readonly AiWebFetchOptions _options;
+    private readonly AIWebFetchOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UrlValidator"/> class.
     /// </summary>
     /// <param name="options">Web fetch options.</param>
-    public UrlValidator(IOptions<AiWebFetchOptions> options)
+    public UrlValidator(IOptions<AIWebFetchOptions> options)
     {
         _options = options.Value;
     }

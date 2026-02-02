@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Agent.Core.Scopes;
+namespace Umbraco.AI.Agent.Core.Scopes;
 
 /// <summary>
 /// Attribute to mark AI agent scope implementations for auto-discovery.
@@ -18,12 +18,12 @@ namespace Umbraco.Ai.Agent.Core.Scopes;
 /// </remarks>
 /// <example>
 /// <code>
-/// [AiAgentScope("copilot", Icon = "icon-chat")]
-/// public class CopilotScope : AiAgentScopeBase { }
+/// [AIAgentScope("copilot", Icon = "icon-chat")]
+/// public class CopilotScope : AIAgentScopeBase { }
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public sealed class AiAgentScopeAttribute : Attribute
+public sealed class AIAgentScopeAttribute : Attribute
 {
     /// <summary>
     /// Gets the unique identifier for this scope.
@@ -40,10 +40,10 @@ public sealed class AiAgentScopeAttribute : Attribute
     public string Icon { get; set; } = "icon-tag";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiAgentScopeAttribute"/> class.
+    /// Initializes a new instance of the <see cref="AIAgentScopeAttribute"/> class.
     /// </summary>
     /// <param name="id">The unique identifier for the scope.</param>
-    public AiAgentScopeAttribute(string id)
+    public AIAgentScopeAttribute(string id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         Id = id;

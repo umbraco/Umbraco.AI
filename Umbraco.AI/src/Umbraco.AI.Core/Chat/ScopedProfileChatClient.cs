@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Chat;
+namespace Umbraco.AI.Core.Chat;
 
 /// <summary>
 /// A chat client decorator that sets profile metadata in the runtime context per-execution.
@@ -31,10 +31,10 @@ namespace Umbraco.Ai.Core.Chat;
 /// </remarks>
 internal sealed class ScopedProfileChatClient : DelegatingChatClient
 {
-    private readonly AiProfile _profile;
+    private readonly AIProfile _profile;
     private readonly IAiRuntimeContextAccessor _contextAccessor;
     private readonly IAiRuntimeContextScopeProvider _scopeProvider;
-    private readonly AiRuntimeContextContributorCollection _contributors;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScopedProfileChatClient"/> class.
@@ -46,10 +46,10 @@ internal sealed class ScopedProfileChatClient : DelegatingChatClient
     /// <param name="contributors">Collection of context contributors to populate the scope.</param>
     public ScopedProfileChatClient(
         IChatClient innerClient,
-        AiProfile profile,
+        AIProfile profile,
         IAiRuntimeContextAccessor contextAccessor,
         IAiRuntimeContextScopeProvider scopeProvider,
-        AiRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors)
         : base(innerClient)
     {
         _profile = profile ?? throw new ArgumentNullException(nameof(profile));

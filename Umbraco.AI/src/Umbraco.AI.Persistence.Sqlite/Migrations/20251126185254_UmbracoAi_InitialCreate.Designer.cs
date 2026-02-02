@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.Ai.Persistence;
+using Umbraco.AI.Persistence;
 
 #nullable disable
 
-namespace Umbraco.Ai.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
-    [DbContext(typeof(UmbracoAiDbContext))]
+    [DbContext(typeof(UmbracoAIDbContext))]
     [Migration("20251126185254_UmbracoAi_InitialCreate")]
     partial class UmbracoAi_InitialCreate
     {
@@ -20,7 +20,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiConnectionEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AIConnectionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,7 +63,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIConnection", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AIProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,9 +120,9 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIProfile", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AIProfileEntity", b =>
                 {
-                    b.HasOne("Umbraco.Ai.Persistence.Entities.AiConnectionEntity", null)
+                    b.HasOne("Umbraco.Ai.Persistence.Entities.AIConnectionEntity", null)
                         .WithMany()
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)

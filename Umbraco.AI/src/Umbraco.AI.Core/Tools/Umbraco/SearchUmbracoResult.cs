@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Tools.Umbraco;
+namespace Umbraco.AI.Core.Tools.Umbraco;
 
 /// <summary>
 /// Result of the search Umbraco tool.

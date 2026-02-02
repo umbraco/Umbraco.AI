@@ -1,37 +1,37 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Core.Tools;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Extensions;
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
-namespace Umbraco.Ai.Agent.Core.Chat;
+namespace Umbraco.AI.Agent.Core.Chat;
 
 /// <summary>
 /// Factory for creating MAF AIAgent instances from agent definitions.
 /// </summary>
-internal sealed class AiAgentFactory : IAiAgentFactory
+internal sealed class AIAgentFactory : IAiAgentFactory
 {
     private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
-    private readonly AiRuntimeContextContributorCollection _contextContributors;
+    private readonly AIRuntimeContextContributorCollection _contextContributors;
     private readonly IAiProfileService _profileService;
     private readonly IAiChatClientFactory _chatClientFactory;
-    private readonly AiToolCollection _toolCollection;
+    private readonly AIToolCollection _toolCollection;
     private readonly IAiFunctionFactory _functionFactory;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiAgentFactory"/> class.
+    /// Initializes a new instance of the <see cref="AIAgentFactory"/> class.
     /// </summary>
-    public AiAgentFactory(
+    public AIAgentFactory(
         IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
-        AiRuntimeContextContributorCollection contextContributors,
+        AIRuntimeContextContributorCollection contextContributors,
         IAiProfileService profileService,
         IAiChatClientFactory chatClientFactory,
-        AiToolCollection toolCollection,
+        AIToolCollection toolCollection,
         IAiFunctionFactory functionFactory)
     {
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
@@ -44,8 +44,8 @@ internal sealed class AiAgentFactory : IAiAgentFactory
 
     /// <inheritdoc />
     public async Task<AIAgent> CreateAgentAsync(
-        AiAgent agent,
-        IEnumerable<AiRequestContextItem>? contextItems = null,
+        AIAgent agent,
+        IEnumerable<AIRequestContextItem>? contextItems = null,
         IEnumerable<AITool>? additionalTools = null,
         IReadOnlyDictionary<string, object?>? additionalProperties = null,
         CancellationToken cancellationToken = default)
@@ -64,7 +64,7 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         }
 
         // Get profile - use default Chat profile if not specified
-        AiProfile profile;
+        AIProfile profile;
         if (agent.ProfileId.HasValue)
         {
             profile = await _profileService.GetProfileAsync(agent.ProfileId.Value, cancellationToken)
@@ -72,7 +72,7 @@ internal sealed class AiAgentFactory : IAiAgentFactory
         }
         else
         {
-            profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+            profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
         }
 
         var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);

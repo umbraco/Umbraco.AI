@@ -2,10 +2,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAiPrompt_ChangeUserIdToGuid : Migration
+    public partial class UmbracoAIPrompt_ChangeUserIdToGuid : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,9 +1,9 @@
-using UmbracoAiConstants = Umbraco.Ai.Web.Constants;
+using UmbracoAIConstants = Umbraco.Ai.Web.Constants;
 
-namespace Umbraco.Ai.Agent.Web;
+namespace Umbraco.AI.Agent.Web;
 
 /// <summary>
-/// Constants for Umbraco AI AiAgent Management API.
+/// Constants for Umbraco AI AIAgent Management API.
 /// </summary>
 public class Constants
 {
@@ -25,7 +25,7 @@ public class Constants
         /// <summary>
         /// The backoffice API path - shared with Umbraco.Ai.
         /// </summary>
-        public const string BackofficePath = UmbracoAiConstants.ManagementApi.BackofficePath; // "/ai/management/api"
+        public const string BackofficePath = UmbracoAIConstants.ManagementApi.BackofficePath; // "/ai/management/api"
 
         /// <summary>
         /// Feature-specific constants.
@@ -33,7 +33,7 @@ public class Constants
         public static class Feature
         {
             /// <summary>
-            /// AiAgent feature constants.
+            /// AIAgent feature constants.
             /// </summary>
             public static class Agent
             {

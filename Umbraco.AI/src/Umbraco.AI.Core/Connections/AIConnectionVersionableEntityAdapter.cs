@@ -1,9 +1,9 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Connections;
+namespace Umbraco.AI.Core.Connections;
 
 /// <summary>
 /// Versionable entity adapter for AI connections.
@@ -11,21 +11,21 @@ namespace Umbraco.Ai.Core.Connections;
 /// <remarks>
 /// Handles encryption/decryption of sensitive settings during snapshot operations.
 /// </remarks>
-internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntityAdapterBase<AiConnection>
+internal sealed class AIConnectionVersionableEntityAdapter : AIVersionableEntityAdapterBase<AIConnection>
 {
     private readonly IAiEditableModelSerializer _serializer;
-    private readonly AiProviderCollection _providers;
+    private readonly AIProviderCollection _providers;
     private readonly IAiConnectionService _connectionService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiConnectionVersionableEntityAdapter"/> class.
+    /// Initializes a new instance of the <see cref="AIConnectionVersionableEntityAdapter"/> class.
     /// </summary>
     /// <param name="serializer">The serializer for handling encrypted settings.</param>
     /// <param name="providers">The provider collection for retrieving settings schemas.</param>
     /// <param name="connectionService">The connection service for rollback operations.</param>
-    public AiConnectionVersionableEntityAdapter(
+    public AIConnectionVersionableEntityAdapter(
         IAiEditableModelSerializer serializer,
-        AiProviderCollection providers,
+        AIProviderCollection providers,
         IAiConnectionService connectionService)
     {
         _serializer = serializer;
@@ -34,7 +34,7 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
     }
 
     /// <inheritdoc />
-    protected override string CreateSnapshot(AiConnection entity)
+    protected override string CreateSnapshot(AIConnection entity)
     {
         // Create a snapshot with encrypted settings
         var schema = GetSchemaForProvider(entity.ProviderId);
@@ -59,7 +59,7 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
     }
 
     /// <inheritdoc />
-    protected override AiConnection? RestoreFromSnapshot(string json)
+    protected override AIConnection? RestoreFromSnapshot(string json)
     {
         if (string.IsNullOrEmpty(json))
         {
@@ -84,7 +84,7 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
                 }
             }
 
-            return new AiConnection
+            return new AIConnection
             {
                 Id = root.GetProperty("id").GetGuid(),
                 Alias = root.GetProperty("alias").GetString()!,
@@ -109,28 +109,28 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AiPropertyChange> CompareVersions(AiConnection from, AiConnection to)
+    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIConnection from, AIConnection to)
     {
-        var changes = new List<AiPropertyChange>();
+        var changes = new List<AIPropertyChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AiPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AiPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
         }
 
         if (from.ProviderId != to.ProviderId)
         {
-            changes.Add(new AiPropertyChange("ProviderId", from.ProviderId, to.ProviderId));
+            changes.Add(new AIPropertyChange("ProviderId", from.ProviderId, to.ProviderId));
         }
 
         if (from.IsActive != to.IsActive)
         {
-            changes.Add(new AiPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
+            changes.Add(new AIPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
         // Compare settings with deep inspection
@@ -146,7 +146,7 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
     /// Since connection settings are untyped (object?), we use JSON serialization to compare
     /// the actual property values. Sensitive values are masked in the change output.
     /// </remarks>
-    private void CompareSettings(object? from, object? to, string providerId, List<AiPropertyChange> changes)
+    private void CompareSettings(object? from, object? to, string providerId, List<AIPropertyChange> changes)
     {
         // Get provider schema to identify sensitive fields
         var schema = GetSchemaForProvider(providerId);
@@ -162,12 +162,12 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
         }
 
         // Use shared JSON comparison utility
-        var success = AiJsonComparer.CompareObjects(from, to, "Settings", changes, IsSensitive);
+        var success = AIJsonComparer.CompareObjects(from, to, "Settings", changes, IsSensitive);
 
         if (!success && !Equals(from, to))
         {
             // Fallback if comparison failed
-            changes.Add(new AiPropertyChange("Settings", "(modified)", "(modified)"));
+            changes.Add(new AIPropertyChange("Settings", "(modified)", "(modified)"));
         }
     }
 
@@ -176,10 +176,10 @@ internal sealed class AiConnectionVersionableEntityAdapter : AiVersionableEntity
         => _connectionService.RollbackConnectionAsync(entityId, version, cancellationToken);
 
     /// <inheritdoc />
-    protected override Task<AiConnection?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    protected override Task<AIConnection?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
         => _connectionService.GetConnectionAsync(entityId, cancellationToken);
 
-    private AiEditableModelSchema? GetSchemaForProvider(string providerId)
+    private AIEditableModelSchema? GetSchemaForProvider(string providerId)
     {
         var provider = _providers.GetById(providerId);
         return provider?.GetSettingsSchema();

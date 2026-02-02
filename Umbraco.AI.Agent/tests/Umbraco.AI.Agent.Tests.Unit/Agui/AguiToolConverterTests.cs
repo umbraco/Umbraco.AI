@@ -1,11 +1,11 @@
 using System.Text.Json;
 using Shouldly;
-using Umbraco.Ai.Agent.Core.Agui;
-using Umbraco.Ai.Agent.Core.Chat;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agent.Core.Agui;
+using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agui.Models;
 using Xunit;
 
-namespace Umbraco.Ai.Agent.Tests.Unit.Agui;
+namespace Umbraco.AI.Agent.Tests.Unit.Agui;
 
 public class AguiToolConverterTests
 {
@@ -60,7 +60,7 @@ public class AguiToolConverterTests
         // Assert
         result.ShouldNotBeNull();
         result.Count.ShouldBe(1);
-        result[0].ShouldBeOfType<AiFrontendToolFunction>();
+        result[0].ShouldBeOfType<AIFrontendToolFunction>();
     }
 
     [Fact]
@@ -170,7 +170,7 @@ public class AguiToolConverterTests
 
         // Assert
         result.ShouldNotBeNull();
-        result.All(t => t is AiFrontendToolFunction).ShouldBeTrue();
+        result.All(t => t is AIFrontendToolFunction).ShouldBeTrue();
     }
 
     #endregion

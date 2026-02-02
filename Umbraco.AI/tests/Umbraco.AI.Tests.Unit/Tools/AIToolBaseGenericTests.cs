@@ -1,9 +1,9 @@
 using System.ComponentModel;
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 
-namespace Umbraco.Ai.Tests.Unit.Tools;
+namespace Umbraco.AI.Tests.Unit.Tools;
 
-public class AiToolBaseGenericTests
+public class AIToolBaseGenericTests
 {
     #region ArgsType
 
@@ -76,8 +76,8 @@ public class AiToolBaseGenericTests
 
     public record TestResult(string Echo, int Count);
 
-    [AiTool("typed-test-tool", "Typed Test Tool", Category = "Testing")]
-    private class TypedTestTool : AiToolBase<TestArgs>
+    [AITool("typed-test-tool", "Typed Test Tool", Category = "Testing")]
+    private class TypedTestTool : AIToolBase<TestArgs>
     {
         public override string Description => "A typed test tool";
 

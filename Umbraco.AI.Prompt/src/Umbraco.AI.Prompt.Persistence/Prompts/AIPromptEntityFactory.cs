@@ -1,12 +1,12 @@
 using System.Text.Json;
-using Umbraco.Ai.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Prompts;
 
-namespace Umbraco.Ai.Prompt.Persistence.Prompts;
+namespace Umbraco.AI.Prompt.Persistence.Prompts;
 
 /// <summary>
-/// Factory for converting between <see cref="AiPrompt"/> domain model and <see cref="AiPromptEntity"/>.
+/// Factory for converting between <see cref="AIPrompt"/> domain model and <see cref="AIPromptEntity"/>.
 /// </summary>
-internal static class AiPromptEntityFactory
+internal static class AIPromptEntityFactory
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -16,13 +16,13 @@ internal static class AiPromptEntityFactory
     /// <summary>
     /// Builds a domain model from an entity.
     /// </summary>
-    public static Core.Prompts.AiPrompt BuildDomain(AiPromptEntity entity)
+    public static Core.Prompts.AIPrompt BuildDomain(AIPromptEntity entity)
     {
         var tags = DeserializeTags(entity.Tags);
         var scope = DeserializeScope(entity.Scope);
         var contextIds = DeserializeContextIds(entity.ContextIds);
 
-        return new Core.Prompts.AiPrompt
+        return new Core.Prompts.AIPrompt
         {
             Id = entity.Id,
             Alias = entity.Alias,
@@ -46,9 +46,9 @@ internal static class AiPromptEntityFactory
     /// <summary>
     /// Builds an entity from a domain model.
     /// </summary>
-    public static AiPromptEntity BuildEntity(Core.Prompts.AiPrompt aiPrompt)
+    public static AIPromptEntity BuildEntity(Core.Prompts.AIPrompt aiPrompt)
     {
-        return new AiPromptEntity
+        return new AIPromptEntity
         {
             Id = aiPrompt.Id,
             Alias = aiPrompt.Alias,
@@ -72,7 +72,7 @@ internal static class AiPromptEntityFactory
     /// <summary>
     /// Updates an existing entity from a domain model.
     /// </summary>
-    public static void UpdateEntity(AiPromptEntity entity, Core.Prompts.AiPrompt aiPrompt)
+    public static void UpdateEntity(AIPromptEntity entity, Core.Prompts.AIPrompt aiPrompt)
     {
         entity.Alias = aiPrompt.Alias;
         entity.Name = aiPrompt.Name;
@@ -100,7 +100,7 @@ internal static class AiPromptEntityFactory
         return string.IsNullOrWhiteSpace(tags) ? [] : tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    private static string? SerializeScope(AiPromptScope? scope)
+    private static string? SerializeScope(AIPromptScope? scope)
     {
         if (scope is null)
         {
@@ -116,7 +116,7 @@ internal static class AiPromptEntityFactory
         return JsonSerializer.Serialize(scope, JsonOptions);
     }
 
-    private static AiPromptScope? DeserializeScope(string? json)
+    private static AIPromptScope? DeserializeScope(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -125,7 +125,7 @@ internal static class AiPromptEntityFactory
 
         try
         {
-            return JsonSerializer.Deserialize<AiPromptScope>(json, JsonOptions);
+            return JsonSerializer.Deserialize<AIPromptScope>(json, JsonOptions);
         }
         catch
         {

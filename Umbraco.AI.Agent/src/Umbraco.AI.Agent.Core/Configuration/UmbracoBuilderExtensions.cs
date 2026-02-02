@@ -1,16 +1,16 @@
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Core.Agui;
-using Umbraco.Ai.Agent.Core.Chat;
-using Umbraco.Ai.Agent.Core.Context;
-using Umbraco.Ai.Agent.Core.Models;
-using Umbraco.Ai.Agent.Core.Scopes;
-using Umbraco.Ai.Agent.Extensions;
-using Umbraco.Ai.Core.Chat.Middleware;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Agui;
+using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.Context;
+using Umbraco.AI.Agent.Core.Models;
+using Umbraco.AI.Agent.Core.Scopes;
+using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Agent.Core.Configuration;
+namespace Umbraco.AI.Agent.Core.Configuration;
 
 /// <summary>
 /// Extension methods for configuring Umbraco.Ai.Agent.Core services.
@@ -31,17 +31,17 @@ public static class UmbracoBuilderExtensions
         }
 
         // Bind configuration
-        builder.Services.Configure<AiAgentOptions>(
-            builder.Config.GetSection(AiAgentOptions.SectionName));
+        builder.Services.Configure<AIAgentOptions>(
+            builder.Config.GetSection(AIAgentOptions.SectionName));
 
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAiAgentRepository, InMemoryAiAgentRepository>();
 
         // Register service
-        builder.Services.AddSingleton<IAiAgentService, AiAgentService>();
+        builder.Services.AddSingleton<IAiAgentService, AIAgentService>();
 
         // Register agent factory (scoped - depends on scoped IAiChatService)
-        builder.Services.AddSingleton<IAiAgentFactory, AiAgentFactory>();
+        builder.Services.AddSingleton<IAiAgentFactory, AIAgentFactory>();
 
         // Register AG-UI services
         builder.Services.AddSingleton<IAguiMessageConverter, AguiMessageConverter>();
@@ -50,18 +50,18 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddTransient<IAguiStreamingService, AguiStreamingService>();
 
         // Register agent context resolver
-        builder.AiContextResolvers().Append<AgentContextResolver>();
+        builder.AIContextResolvers().Append<AgentContextResolver>();
 
         // Register tool reordering middleware before function invocation
         // This ensures server-side tools execute before frontend tools trigger termination
-        builder.AiChatMiddleware().InsertBefore<AiFunctionInvokingChatMiddleware, AiToolReorderingChatMiddleware>();
+        builder.AIChatMiddleware().InsertBefore<AIFunctionInvokingChatMiddleware, AIToolReorderingChatMiddleware>();
 
         // Register versionable entity adapter for agents
-        builder.AiVersionableEntityAdapters().Add<AiAgentVersionableEntityAdapter>();
+        builder.AIVersionableEntityAdapters().Add<AIAgentVersionableEntityAdapter>();
 
-        // Auto-discover agent scopes via [AiAgentScope] attribute
-        builder.AiAgentScopes()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiAgentScope, AiAgentScopeAttribute>(cache: true));
+        // Auto-discover agent scopes via [AIAgentScope] attribute
+        builder.AIAgentScopes()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiAgentScope, AIAgentScopeAttribute>(cache: true));
 
         return builder;
     }

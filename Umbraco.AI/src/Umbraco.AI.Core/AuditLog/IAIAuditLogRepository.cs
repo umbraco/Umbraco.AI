@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Internal repository interface for AI audit-log persistence operations.
 /// </summary>
-internal interface IAiAuditLogRepository
+internal interface IAIAuditLogRepository
 {
     /// <summary>
     /// Retrieves a audit-log by its local database ID.
@@ -11,7 +11,7 @@ internal interface IAiAuditLogRepository
     /// <param name="id">The unique identifier of the audit-log.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The audit-log if found; otherwise, null.</returns>
-    Task<AiAuditLog?> GetByIdAsync(Guid id, CancellationToken ct);
+    Task<AIAuditLog?> GetByIdAsync(Guid id, CancellationToken ct);
 
     /// <summary>
     /// Retrieves a paginated collection of traces matching the specified filter.
@@ -21,8 +21,8 @@ internal interface IAiAuditLogRepository
     /// <param name="take">The number of records to take.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A tuple containing the filtered traces and the total count.</returns>
-    Task<(IEnumerable<AiAuditLog>, int Total)> GetPagedAsync(
-        AiAuditLogFilter filter, int skip, int take, CancellationToken ct);
+    Task<(IEnumerable<AIAuditLog>, int Total)> GetPagedAsync(
+        AIAuditLogFilter filter, int skip, int take, CancellationToken ct);
 
     /// <summary>
     /// Retrieves traces associated with a specific entity.
@@ -32,7 +32,7 @@ internal interface IAiAuditLogRepository
     /// <param name="limit">The maximum number of traces to retrieve.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A collection of traces for the specified entity.</returns>
-    Task<IEnumerable<AiAuditLog>> GetByEntityIdAsync(
+    Task<IEnumerable<AIAuditLog>> GetByEntityIdAsync(
         string entityId, string entityType, int limit, CancellationToken ct);
 
     /// <summary>
@@ -41,7 +41,7 @@ internal interface IAiAuditLogRepository
     /// <param name="trace">The audit-log to save.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The saved audit-log with updated ID.</returns>
-    Task<AiAuditLog> SaveAsync(AiAuditLog trace, CancellationToken ct);
+    Task<AIAuditLog> SaveAsync(AIAuditLog trace, CancellationToken ct);
 
     /// <summary>
     /// Deletes a audit-log by its ID.

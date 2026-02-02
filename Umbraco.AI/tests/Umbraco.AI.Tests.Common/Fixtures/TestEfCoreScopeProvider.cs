@@ -1,29 +1,29 @@
-using Umbraco.Ai.Persistence;
+using Umbraco.AI.Persistence;
 using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Tests.Common.Fixtures;
+namespace Umbraco.AI.Tests.Common.Fixtures;
 
 /// <summary>
 /// Test implementation of <see cref="IEFCoreScopeProvider{TDbContext}"/> for unit testing.
 /// </summary>
-public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAiDbContext>
+public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAIDbContext>
 {
-    private readonly Func<UmbracoAiDbContext> _contextFactory;
+    private readonly Func<UmbracoAIDbContext> _contextFactory;
 
     /// <summary>
     /// Initializes a new test scope provider.
     /// </summary>
     /// <param name="contextFactory">Factory to create DbContext instances.</param>
-    public TestEfCoreScopeProvider(Func<UmbracoAiDbContext> contextFactory)
+    public TestEfCoreScopeProvider(Func<UmbracoAIDbContext> contextFactory)
     {
         _contextFactory = contextFactory;
     }
 
     /// <inheritdoc />
-    public IEfCoreScope<UmbracoAiDbContext> CreateScope(
+    public IEfCoreScope<UmbracoAIDbContext> CreateScope(
         RepositoryCacheMode repositoryCacheMode = RepositoryCacheMode.Unspecified,
         bool? scopeFileSystems = null)
     {
@@ -31,7 +31,7 @@ public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAiDbContext>
     }
 
     /// <inheritdoc />
-    public IEfCoreScope<UmbracoAiDbContext> CreateDetachedScope(
+    public IEfCoreScope<UmbracoAIDbContext> CreateDetachedScope(
         RepositoryCacheMode repositoryCacheMode = RepositoryCacheMode.Unspecified,
         bool? scopeFileSystems = null)
     {
@@ -39,13 +39,13 @@ public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAiDbContext>
     }
 
     /// <inheritdoc />
-    public void AttachScope(IEfCoreScope<UmbracoAiDbContext> other)
+    public void AttachScope(IEfCoreScope<UmbracoAIDbContext> other)
     {
         // No-op for tests
     }
 
     /// <inheritdoc />
-    public IEfCoreScope<UmbracoAiDbContext> DetachScope()
+    public IEfCoreScope<UmbracoAIDbContext> DetachScope()
     {
         throw new NotSupportedException("DetachScope is not supported in test scope provider.");
     }
@@ -57,22 +57,22 @@ public class TestEfCoreScopeProvider : IEFCoreScopeProvider<UmbracoAiDbContext>
 /// <summary>
 /// Test implementation of <see cref="IEfCoreScope{TDbContext}"/> for unit testing.
 /// </summary>
-public class TestEfCoreScope : IEfCoreScope<UmbracoAiDbContext>
+public class TestEfCoreScope : IEfCoreScope<UmbracoAIDbContext>
 {
-    private readonly UmbracoAiDbContext _context;
+    private readonly UmbracoAIDbContext _context;
     private bool _completed;
     private bool _disposed;
 
     /// <summary>
     /// Initializes a new test scope with the given context.
     /// </summary>
-    public TestEfCoreScope(UmbracoAiDbContext context)
+    public TestEfCoreScope(UmbracoAIDbContext context)
     {
         _context = context;
     }
 
     /// <inheritdoc />
-    public async Task<T> ExecuteWithContextAsync<T>(Func<UmbracoAiDbContext, Task<T>> method)
+    public async Task<T> ExecuteWithContextAsync<T>(Func<UmbracoAIDbContext, Task<T>> method)
     {
         if (_disposed)
         {
@@ -83,7 +83,7 @@ public class TestEfCoreScope : IEfCoreScope<UmbracoAiDbContext>
     }
 
     /// <inheritdoc />
-    public async Task ExecuteWithContextAsync<T>(Func<UmbracoAiDbContext, Task> method)
+    public async Task ExecuteWithContextAsync<T>(Func<UmbracoAIDbContext, Task> method)
     {
         if (_disposed)
         {

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Models;
+namespace Umbraco.AI.Agui.Models;
 
 /// <summary>
 /// Information about a human-in-the-loop interrupt.

@@ -1,27 +1,27 @@
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Settings;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Tests.Common.Builders;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Tests.Common.Builders;
 
-namespace Umbraco.Ai.Tests.Unit.Services;
+namespace Umbraco.AI.Tests.Unit.Services;
 
-public class AiProfileServiceTests
+public class AIProfileServiceTests
 {
     private readonly Mock<IAiProfileRepository> _repositoryMock;
     private readonly Mock<IAiSettingsService> _settingsServiceMock;
-    private readonly Mock<IOptions<AiOptions>> _optionsMock;
+    private readonly Mock<IOptions<AIOptions>> _optionsMock;
     private readonly Mock<IAiEntityVersionService> _versionServiceMock;
-    private readonly AiProfileService _service;
+    private readonly AIProfileService _service;
 
-    public AiProfileServiceTests()
+    public AIProfileServiceTests()
     {
         _repositoryMock = new Mock<IAiProfileRepository>();
         _settingsServiceMock = new Mock<IAiSettingsService>();
-        _optionsMock = new Mock<IOptions<AiOptions>>();
+        _optionsMock = new Mock<IOptions<AIOptions>>();
         _versionServiceMock = new Mock<IAiEntityVersionService>();
-        _optionsMock.Setup(x => x.Value).Returns(new AiOptions
+        _optionsMock.Setup(x => x.Value).Returns(new AIOptions
         {
             DefaultChatProfileAlias = "default-chat",
             DefaultEmbeddingProfileAlias = "default-embedding"
@@ -29,9 +29,9 @@ public class AiProfileServiceTests
 
         // Default settings service returns empty settings (falls back to config)
         _settingsServiceMock.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiSettings());
+            .ReturnsAsync(new AISettings());
 
-        _service = new AiProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object);
+        _service = new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object);
     }
 
     #region GetProfileAsync
@@ -41,7 +41,7 @@ public class AiProfileServiceTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
             .WithAlias("test-profile")
             .WithName("Test Profile")
@@ -68,7 +68,7 @@ public class AiProfileServiceTests
 
         _repositoryMock
             .Setup(x => x.GetByIdAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var result = await _service.GetProfileAsync(profileId);
@@ -85,28 +85,28 @@ public class AiProfileServiceTests
     public async Task GetProfilesAsync_WithCapability_ReturnsFilteredProfiles()
     {
         // Arrange
-        var chatProfiles = new List<AiProfile>
+        var chatProfiles = new List<AIProfile>
         {
-            new AiProfileBuilder()
+            new AIProfileBuilder()
                 .WithAlias("chat-1")
-                .WithCapability(AiCapability.Chat)
+                .WithCapability(AICapability.Chat)
                 .Build(),
-            new AiProfileBuilder()
+            new AIProfileBuilder()
                 .WithAlias("chat-2")
-                .WithCapability(AiCapability.Chat)
+                .WithCapability(AICapability.Chat)
                 .Build()
         };
 
         _repositoryMock
-            .Setup(x => x.GetByCapability(AiCapability.Chat, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByCapability(AICapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatProfiles);
 
         // Act
-        var result = await _service.GetProfilesAsync(AiCapability.Chat);
+        var result = await _service.GetProfilesAsync(AICapability.Chat);
 
         // Assert
         result.Count().ShouldBe(2);
-        result.ShouldAllBe(p => p.Capability == AiCapability.Chat);
+        result.ShouldAllBe(p => p.Capability == AICapability.Chat);
     }
 
     [Fact]
@@ -114,11 +114,11 @@ public class AiProfileServiceTests
     {
         // Arrange
         _repositoryMock
-            .Setup(x => x.GetByCapability(AiCapability.Embedding, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Enumerable.Empty<AiProfile>());
+            .Setup(x => x.GetByCapability(AICapability.Embedding, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Empty<AIProfile>());
 
         // Act
-        var result = await _service.GetProfilesAsync(AiCapability.Embedding);
+        var result = await _service.GetProfilesAsync(AICapability.Embedding);
 
         // Assert
         result.ShouldBeEmpty();
@@ -132,9 +132,9 @@ public class AiProfileServiceTests
     public async Task GetDefaultProfileAsync_ForChat_ReturnsDefaultChatProfile()
     {
         // Arrange
-        var defaultProfile = new AiProfileBuilder()
+        var defaultProfile = new AIProfileBuilder()
             .WithAlias("default-chat")
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .Build();
 
         _repositoryMock
@@ -142,7 +142,7 @@ public class AiProfileServiceTests
             .ReturnsAsync(defaultProfile);
 
         // Act
-        var result = await _service.GetDefaultProfileAsync(AiCapability.Chat);
+        var result = await _service.GetDefaultProfileAsync(AICapability.Chat);
 
         // Assert
         result.ShouldNotBeNull();
@@ -153,9 +153,9 @@ public class AiProfileServiceTests
     public async Task GetDefaultProfileAsync_ForEmbedding_ReturnsDefaultEmbeddingProfile()
     {
         // Arrange
-        var defaultProfile = new AiProfileBuilder()
+        var defaultProfile = new AIProfileBuilder()
             .WithAlias("default-embedding")
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .Build();
 
         _repositoryMock
@@ -163,7 +163,7 @@ public class AiProfileServiceTests
             .ReturnsAsync(defaultProfile);
 
         // Act
-        var result = await _service.GetDefaultProfileAsync(AiCapability.Embedding);
+        var result = await _service.GetDefaultProfileAsync(AICapability.Embedding);
 
         // Assert
         result.ShouldNotBeNull();
@@ -174,8 +174,8 @@ public class AiProfileServiceTests
     public async Task GetDefaultProfileAsync_WithNoConfiguredAlias_ThrowsInvalidOperationException()
     {
         // Arrange
-        var optionsWithNullAlias = new Mock<IOptions<AiOptions>>();
-        optionsWithNullAlias.Setup(x => x.Value).Returns(new AiOptions
+        var optionsWithNullAlias = new Mock<IOptions<AIOptions>>();
+        optionsWithNullAlias.Setup(x => x.Value).Returns(new AIOptions
         {
             DefaultChatProfileAlias = null,
             DefaultEmbeddingProfileAlias = null
@@ -183,16 +183,16 @@ public class AiProfileServiceTests
 
         var emptySettingsService = new Mock<IAiSettingsService>();
         emptySettingsService.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AiSettings());
+            .ReturnsAsync(new AISettings());
 
-        var serviceWithNullOptions = new AiProfileService(
+        var serviceWithNullOptions = new AIProfileService(
             _repositoryMock.Object,
             emptySettingsService.Object,
             optionsWithNullAlias.Object,
             _versionServiceMock.Object);
 
         // Act
-        var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AiCapability.Chat);
+        var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AICapability.Chat);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -205,10 +205,10 @@ public class AiProfileServiceTests
         // Arrange
         _repositoryMock
             .Setup(x => x.GetByAliasAsync("default-chat", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
-        var act = () => _service.GetDefaultProfileAsync(AiCapability.Chat);
+        var act = () => _service.GetDefaultProfileAsync(AICapability.Chat);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -219,7 +219,7 @@ public class AiProfileServiceTests
     public async Task GetDefaultProfileAsync_WithUnsupportedCapability_ThrowsNotSupportedException()
     {
         // Arrange
-        var unsupportedCapability = (AiCapability)999;
+        var unsupportedCapability = (AICapability)999;
 
         // Act
         var act = () => _service.GetDefaultProfileAsync(unsupportedCapability);
@@ -239,7 +239,7 @@ public class AiProfileServiceTests
     public async Task GetProfileByAliasAsync_WithExistingAlias_ReturnsProfile()
     {
         // Arrange
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithAlias("test-profile")
             .WithName("Test Profile")
             .Build();
@@ -262,7 +262,7 @@ public class AiProfileServiceTests
         // Arrange
         _repositoryMock
             .Setup(x => x.GetByAliasAsync("non-existent", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var result = await _service.GetProfileByAliasAsync("non-existent");
@@ -279,11 +279,11 @@ public class AiProfileServiceTests
     public async Task GetAllProfilesAsync_ReturnsAllProfiles()
     {
         // Arrange
-        var profiles = new List<AiProfile>
+        var profiles = new List<AIProfile>
         {
-            new AiProfileBuilder().WithAlias("profile-1").Build(),
-            new AiProfileBuilder().WithAlias("profile-2").Build(),
-            new AiProfileBuilder().WithAlias("profile-3").Build()
+            new AIProfileBuilder().WithAlias("profile-1").Build(),
+            new AIProfileBuilder().WithAlias("profile-2").Build(),
+            new AIProfileBuilder().WithAlias("profile-3").Build()
         };
 
         _repositoryMock
@@ -303,7 +303,7 @@ public class AiProfileServiceTests
         // Arrange
         _repositoryMock
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Enumerable.Empty<AiProfile>());
+            .ReturnsAsync(Enumerable.Empty<AIProfile>());
 
         // Act
         var result = await _service.GetAllProfilesAsync();
@@ -320,7 +320,7 @@ public class AiProfileServiceTests
     public async Task SaveProfileAsync_SavesAndReturnsProfile()
     {
         // Arrange
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithAlias("new-profile")
             .WithName("New Profile")
             .Build();

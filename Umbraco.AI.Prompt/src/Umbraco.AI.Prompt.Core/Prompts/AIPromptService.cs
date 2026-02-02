@@ -1,43 +1,43 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Core.Tools;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
-using AiPropertyChange = Umbraco.Ai.Core.EntityAdapter.AiPropertyChange;
+using AIPropertyChange = Umbraco.Ai.Core.EntityAdapter.AIPropertyChange;
 using CoreConstants = Umbraco.Ai.Core.Constants;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Service implementation for prompt management operations.
 /// </summary>
-internal sealed class AiPromptService : IAiPromptService
+internal sealed class AIPromptService : IAiPromptService
 {
     private readonly IAiPromptRepository _repository;
     private readonly IAiEntityVersionService _versionService;
     private readonly IAiChatService _chatService;
     private readonly IAiPromptTemplateService _templateService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly AiToolCollection _tools;
+    private readonly AIToolCollection _tools;
     private readonly IAiFunctionFactory _functionFactory;
     private readonly IAiRuntimeContextScopeProvider _runtimeContextScopeProvider;
-    private readonly AiRuntimeContextContributorCollection _contextContributors;
+    private readonly AIRuntimeContextContributorCollection _contextContributors;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
-    public AiPromptService(
+    public AIPromptService(
         IAiPromptRepository repository,
         IAiEntityVersionService versionService,
         IAiChatService chatService,
         IAiPromptTemplateService templateService,
         IServiceScopeFactory serviceScopeFactory,
-        AiToolCollection tools,
+        AIToolCollection tools,
         IAiFunctionFactory functionFactory,
         IAiRuntimeContextScopeProvider runtimeContextScopeProvider,
-        AiRuntimeContextContributorCollection contextContributors,
+        AIRuntimeContextContributorCollection contextContributors,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -53,19 +53,19 @@ internal sealed class AiPromptService : IAiPromptService
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.GetByIdAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AiPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default)
         => _repository.GetByAliasAsync(alias, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default)
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AiPrompt>> GetPromptsPagedAsync(
+    public Task<PagedModel<AIPrompt>> GetPromptsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -74,7 +74,7 @@ internal sealed class AiPromptService : IAiPromptService
         => _repository.GetPagedAsync(skip, take, filter, profileId, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AiPrompt> SavePromptAsync(AiPrompt prompt, CancellationToken cancellationToken = default)
+    public async Task<AIPrompt> SavePromptAsync(AIPrompt prompt, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Alias);
@@ -118,9 +118,9 @@ internal sealed class AiPromptService : IAiPromptService
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AiPromptExecutionResult> ExecutePromptAsync(
+    public async Task<AIPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
-        AiPromptExecutionRequest request,
+        AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -199,12 +199,12 @@ internal sealed class AiPromptService : IAiPromptService
             : await _chatService.GetChatResponseAsync(messages, chatOptions, cancellationToken);
 
         // 11. Map response
-        return new AiPromptExecutionResult
+        return new AIPromptExecutionResult
         {
             Content = response.Text ?? string.Empty,
             Usage = response.Usage,
             PropertyChanges = [
-                new AiPropertyChange
+                new AIPropertyChange
                 {
                     Alias = request.PropertyAlias,
                     Value = response.Text ?? string.Empty,
@@ -218,7 +218,7 @@ internal sealed class AiPromptService : IAiPromptService
     /// <summary>
     /// Builds the execution context dictionary from the request.
     /// </summary>
-    private static Dictionary<string, object?> BuildExecutionContext(AiPromptExecutionRequest request)
+    private static Dictionary<string, object?> BuildExecutionContext(AIPromptExecutionRequest request)
     {
         var context = new Dictionary<string, object?>
         {

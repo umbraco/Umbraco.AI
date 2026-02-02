@@ -2,14 +2,14 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Extensions;
-using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for updating Agents.
@@ -24,9 +24,9 @@ public class UpdateAgentController : AgentControllerBase
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public UpdateAgentController(IAiAgentService AiAgentService, IUmbracoMapper umbracoMapper)
+    public UpdateAgentController(IAiAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AiAgentService;
+        _AiAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -47,13 +47,13 @@ public class UpdateAgentController : AgentControllerBase
         [FromBody] UpdateAgentRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AiAgent? existing = await _AiAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
+        AIAgent? existing = await _AiAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return AgentNotFound();
         }
 
-        AiAgent agent = _umbracoMapper.Map(model, existing);
+        AIAgent agent = _umbracoMapper.Map(model, existing);
 
         await _AiAgentService.SaveAgentAsync(agent, cancellationToken);
         return Ok();

@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// Attribute to mark AI tool implementations.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public sealed class AiToolAttribute : Attribute
+public sealed class AIToolAttribute : Attribute
 {
     /// <summary>
     /// Gets the unique identifier of the AI tool.
@@ -32,11 +32,11 @@ public sealed class AiToolAttribute : Attribute
     public string[] Tags { get; set; } = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiToolAttribute"/> class.
+    /// Initializes a new instance of the <see cref="AIToolAttribute"/> class.
     /// </summary>
     /// <param name="id">The unique identifier of the tool.</param>
     /// <param name="name">The display name of the tool.</param>
-    public AiToolAttribute(string id, string name)
+    public AIToolAttribute(string id, string name)
     {
         Id = id;
         Name = name;

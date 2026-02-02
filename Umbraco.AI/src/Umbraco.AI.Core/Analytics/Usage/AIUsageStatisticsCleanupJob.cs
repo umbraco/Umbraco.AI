@@ -6,31 +6,31 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.HostedServices;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Background service that periodically cleans up old usage statistics based on retention policies.
 /// </summary>
-internal sealed class AiUsageStatisticsCleanupJob : RecurringHostedServiceBase
+internal sealed class AIUsageStatisticsCleanupJob : RecurringHostedServiceBase
 {
     private readonly IAiUsageStatisticsRepository _statisticsRepository;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
     private readonly IMainDom _mainDom;
-    private readonly ILogger<AiUsageStatisticsCleanupJob> _logger;
+    private readonly ILogger<AIUsageStatisticsCleanupJob> _logger;
 
     // Run once per day
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(24);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(5);
 
-    public AiUsageStatisticsCleanupJob(
+    public AIUsageStatisticsCleanupJob(
         IAiUsageStatisticsRepository statisticsRepository,
-        IOptionsMonitor<AiAnalyticsOptions> options,
+        IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
         IMainDom mainDom,
-        ILogger<AiUsageStatisticsCleanupJob> logger)
+        ILogger<AIUsageStatisticsCleanupJob> logger)
         : base(logger, CheckInterval, StartupDelay)
     {
         _statisticsRepository = statisticsRepository;

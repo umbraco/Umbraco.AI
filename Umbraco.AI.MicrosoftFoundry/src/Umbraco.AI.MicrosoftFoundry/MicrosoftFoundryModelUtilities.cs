@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.MicrosoftFoundry;
+namespace Umbraco.AI.MicrosoftFoundry;
 
 /// <summary>
 /// Utility methods for working with Microsoft AI Foundry models.

@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Represents a governance audit-log record for an AI operation, capturing execution details,
 /// user context, and outcomes for audit-log and observability purposes.
 /// </summary>
-public sealed class AiAuditLog
+public sealed class AIAuditLog
 {
     /// <summary>
     /// Gets the unique identifier for this audit-log in the local database.
@@ -31,12 +31,12 @@ public sealed class AiAuditLog
     /// <summary>
     /// Gets or sets the execution status of this audit-log.
     /// </summary>
-    public AiAuditLogStatus Status { get; set; }
+    public AIAuditLogStatus Status { get; set; }
 
     /// <summary>
     /// Gets or sets the error category, if the operation failed.
     /// </summary>
-    public AiAuditLogErrorCategory? ErrorCategory { get; set; }
+    public AIAuditLogErrorCategory? ErrorCategory { get; set; }
 
     /// <summary>
     /// Gets or sets the error message, if the operation failed.
@@ -66,7 +66,7 @@ public sealed class AiAuditLog
     /// <summary>
     /// Gets the AI capability being executed (Chat, Embedding, etc.).
     /// </summary>
-    public AiCapability Capability { get; init; }
+    public AICapability Capability { get; init; }
 
     /// <summary>
     /// Gets the profile ID used for this operation.
@@ -139,7 +139,7 @@ public sealed class AiAuditLog
     /// <summary>
     /// Gets the detail level configured for this audit-log.
     /// </summary>
-    public AiAuditLogDetailLevel DetailLevel { get; init; }
+    public AIAuditLogDetailLevel DetailLevel { get; init; }
 
     /// <summary>
     /// Gets the parent audit-log ID if this audit-log was triggered within another audit-log context (e.g., agent calling another agent).

@@ -1,43 +1,43 @@
 ﻿using System.Collections.Concurrent;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.Profiles;
+namespace Umbraco.AI.Core.Profiles;
 
 internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
 {
-    private readonly ConcurrentDictionary<Guid, AiProfile> _profiles = new();
+    private readonly ConcurrentDictionary<Guid, AIProfile> _profiles = new();
 
-    public Task<AiProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _profiles.TryGetValue(id, out var profile);
         return Task.FromResult(profile);
     }
     
-    public Task<AiProfile?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIProfile?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
         var profile = _profiles.Values.FirstOrDefault(x => x.Alias.InvariantEquals(alias));
         return Task.FromResult(profile);
     }
 
-    public Task<IEnumerable<AiProfile>> GetAllAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIProfile>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IEnumerable<AiProfile>>(_profiles.Values.ToList());
+        return Task.FromResult<IEnumerable<AIProfile>>(_profiles.Values.ToList());
     }
 
-    public Task<IEnumerable<AiProfile>> GetByCapability(AiCapability capability, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIProfile>> GetByCapability(AICapability capability, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IEnumerable<AiProfile>>(_profiles.Values.Where(x => x.Capability == capability).ToList());
+        return Task.FromResult<IEnumerable<AIProfile>>(_profiles.Values.Where(x => x.Capability == capability).ToList());
     }
 
-    public Task<(IEnumerable<AiProfile> Items, int Total)> GetPagedAsync(
+    public Task<(IEnumerable<AIProfile> Items, int Total)> GetPagedAsync(
         string? filter = null,
-        AiCapability? capability = null,
+        AICapability? capability = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        IEnumerable<AiProfile> query = _profiles.Values;
+        IEnumerable<AIProfile> query = _profiles.Values;
 
         if (capability.HasValue)
         {
@@ -53,10 +53,10 @@ internal sealed class InMemoryAiProfileRepository : IAiProfileRepository
         var total = items.Count;
         var pagedItems = items.Skip(skip).Take(take);
 
-        return Task.FromResult<(IEnumerable<AiProfile> Items, int Total)>((pagedItems, total));
+        return Task.FromResult<(IEnumerable<AIProfile> Items, int Total)>((pagedItems, total));
     }
 
-    public Task<AiProfile> SaveAsync(AiProfile profile, Guid? userId = null, CancellationToken cancellationToken = default)
+    public Task<AIProfile> SaveAsync(AIProfile profile, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _profiles[profile.Id] = profile;
         return Task.FromResult(profile);

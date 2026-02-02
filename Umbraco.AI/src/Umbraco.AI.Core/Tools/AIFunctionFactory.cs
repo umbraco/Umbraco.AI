@@ -1,12 +1,12 @@
 using System.Reflection;
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// Default factory for creating MEAI AIFunction instances from AI tools.
 /// </summary>
-internal sealed class AiFunctionFactory : IAiFunctionFactory
+internal sealed class AIFunctionFactory : IAiFunctionFactory
 {
     /// <inheritdoc />
     public AIFunction Create(IAiTool tool)
@@ -34,7 +34,7 @@ internal sealed class AiFunctionFactory : IAiFunctionFactory
     {
         // Use the generic AIFunctionFactory.Create with typed delegate
         // This allows MEAI to infer schema from TArgs [Description] attributes
-        var method = typeof(AiFunctionFactory)
+        var method = typeof(AIFunctionFactory)
             .GetMethod(nameof(CreateTypedFunctionCore), BindingFlags.NonPublic | BindingFlags.Static)!
             .MakeGenericMethod(tool.ArgsType!);
 

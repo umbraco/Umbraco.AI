@@ -1,13 +1,13 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Chat;
+namespace Umbraco.AI.Core.Chat;
 
 /// <summary>
 /// Defines an AI chat service that provides access to chat completion capabilities.
 /// This service acts as a thin layer over Microsoft.Extensions.AI, adding Umbraco-specific
 /// features like profiles, connections, and configurable middleware.
 /// </summary>
-public interface IAiChatService
+public interface IAIChatService
 {
     /// <summary>
     /// Gets a chat response using the default profile.

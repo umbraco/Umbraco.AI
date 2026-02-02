@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Provider.Models;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Web.Api.Management.Common.Models;
+using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.Common.Mapping;
+namespace Umbraco.AI.Web.Api.Management.Common.Mapping;
 
 /// <summary>
 /// Map definitions for shared models.
@@ -17,29 +17,29 @@ public class CommonMapDefinition : IMapDefinition
     public void DefineMaps(IUmbracoMapper mapper)
     {
         // Response mappings (domain -> response)
-        mapper.Define<AiModelRef, ModelRefModel>((_, _) => new ModelRefModel(), Map);
-        mapper.Define<AiModelDescriptor, ModelDescriptorResponseModel>((_, _) => new ModelDescriptorResponseModel(), Map);
+        mapper.Define<AIModelRef, ModelRefModel>((_, _) => new ModelRefModel(), Map);
+        mapper.Define<AIModelDescriptor, ModelDescriptorResponseModel>((_, _) => new ModelDescriptorResponseModel(), Map);
 
         // Request mappings (request -> domain)
-        mapper.Define<ModelRefModel, AiModelRef>((source, _) => new AiModelRef(source.ProviderId, source.ModelId));
+        mapper.Define<ModelRefModel, AIModelRef>((source, _) => new AIModelRef(source.ProviderId, source.ModelId));
         
         // Editable model mappings
-        mapper.Define<AiEditableModelSchema, EditableModelSchemaModel>((_, _) => new EditableModelSchemaModel(), Map);
-        mapper.Define<AiEditableModelField, EditableModelFieldModel>((_, _) => new EditableModelFieldModel(), Map);
+        mapper.Define<AIEditableModelSchema, EditableModelSchemaModel>((_, _) => new EditableModelSchemaModel(), Map);
+        mapper.Define<AIEditableModelField, EditableModelFieldModel>((_, _) => new EditableModelFieldModel(), Map);
 
         // Version history mappings
-        mapper.Define<AiEntityVersion, EntityVersionResponseModel>((_, _) => new EntityVersionResponseModel(), Map);
+        mapper.Define<AIEntityVersion, EntityVersionResponseModel>((_, _) => new EntityVersionResponseModel(), Map);
     }
 
     // Umbraco.Code.MapAll
-    private static void Map(AiModelRef source, ModelRefModel target, MapperContext context)
+    private static void Map(AIModelRef source, ModelRefModel target, MapperContext context)
     {
         target.ProviderId = source.ProviderId;
         target.ModelId = source.ModelId;
     }
 
     // Umbraco.Code.MapAll
-    private static void Map(AiModelDescriptor source, ModelDescriptorResponseModel target, MapperContext context)
+    private static void Map(AIModelDescriptor source, ModelDescriptorResponseModel target, MapperContext context)
     {
         target.Model = context.Map<ModelRefModel>(source.Model);
         target.Name = source.Name;
@@ -47,7 +47,7 @@ public class CommonMapDefinition : IMapDefinition
     }
     
     // Umbraco.Code.MapAll
-    private static void Map(AiEditableModelSchema source, EditableModelSchemaModel target, MapperContext context)
+    private static void Map(AIEditableModelSchema source, EditableModelSchemaModel target, MapperContext context)
     {
         target.Type = source.Type;
         target.Fields = source.Fields
@@ -56,7 +56,7 @@ public class CommonMapDefinition : IMapDefinition
     }
     
     // Umbraco.Code.MapAll
-    private static void Map(AiEditableModelField source, EditableModelFieldModel target, MapperContext context)
+    private static void Map(AIEditableModelField source, EditableModelFieldModel target, MapperContext context)
     {
         target.Key = source.Key;
         target.Label = source.Label;
@@ -69,7 +69,7 @@ public class CommonMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll -CreatedByUserName
-    private static void Map(AiEntityVersion source, EntityVersionResponseModel target, MapperContext context)
+    private static void Map(AIEntityVersion source, EntityVersionResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.EntityId = source.EntityId;

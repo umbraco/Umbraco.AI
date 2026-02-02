@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 
-namespace Umbraco.Ai.Tests.Common.Fakes;
+namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
 /// Fake implementation of <see cref="IAiTool"/> for use in tests.

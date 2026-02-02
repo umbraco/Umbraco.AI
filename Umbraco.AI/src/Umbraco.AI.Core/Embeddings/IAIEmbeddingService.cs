@@ -1,13 +1,13 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Embeddings;
+namespace Umbraco.AI.Core.Embeddings;
 
 /// <summary>
 /// Defines an AI embedding service that provides access to text embedding capabilities.
 /// This service acts as a thin layer over Microsoft.Extensions.AI, adding Umbraco-specific
 /// features like profiles, connections, and configurable middleware.
 /// </summary>
-public interface IAiEmbeddingService
+public interface IAIEmbeddingService
 {
     /// <summary>
     /// Generates an embedding for a single text value using the default embedding profile.

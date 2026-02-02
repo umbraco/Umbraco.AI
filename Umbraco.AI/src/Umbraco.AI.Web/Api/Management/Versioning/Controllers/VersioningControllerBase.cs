@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Web.Api.Management.Versioning.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Versioning.Controllers;
 
 /// <summary>
 /// Base controller for Version History management API endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Versioning.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Versioning.RouteSegment)]
-public abstract class VersioningControllerBase : UmbracoAiCoreManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.Versioning.RouteSegment)]
+public abstract class VersioningControllerBase : UmbracoAICoreManagementControllerBase
 {
     /// <summary>
     /// Returns a 404 Not Found response for a version.

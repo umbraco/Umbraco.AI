@@ -1,15 +1,15 @@
 using Microsoft.Extensions.Options;
 
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Tool that safely fetches and extracts text content from web pages.
 /// </summary>
-[AiTool("fetch_webpage", "Fetch Web Page", Category = "Web")]
-public class FetchWebPageTool : AiToolBase<FetchWebPageArgs>
+[AITool("fetch_webpage", "Fetch Web Page", Category = "Web")]
+public class FetchWebPageTool : AIToolBase<FetchWebPageArgs>
 {
     private readonly IWebContentFetcher _fetcher;
-    private readonly AiWebFetchOptions _options;
+    private readonly AIWebFetchOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FetchWebPageTool"/> class.
@@ -18,7 +18,7 @@ public class FetchWebPageTool : AiToolBase<FetchWebPageArgs>
     /// <param name="options">Web fetch options.</param>
     public FetchWebPageTool(
         IWebContentFetcher fetcher,
-        IOptions<AiWebFetchOptions> options)
+        IOptions<AIWebFetchOptions> options)
     {
         _fetcher = fetcher;
         _options = options.Value;

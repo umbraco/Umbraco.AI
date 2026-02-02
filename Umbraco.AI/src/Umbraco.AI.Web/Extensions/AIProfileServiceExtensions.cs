@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IAiProfileService"/> to support IdOrAlias lookups.
 /// </summary>
-internal static class AiProfileServiceExtensions
+internal static class AIProfileServiceExtensions
 {
     /// <summary>
     /// Gets a profile by ID or alias.
@@ -15,7 +15,7 @@ internal static class AiProfileServiceExtensions
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile if found, otherwise null.</returns>
-    public static async Task<AiProfile?> GetProfileAsync(
+    public static async Task<AIProfile?> GetProfileAsync(
         this IAiProfileService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)

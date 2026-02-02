@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Defines a contract for managing AI contexts.
 /// </summary>
-public interface IAiContextService
+public interface IAIContextService
 {
     /// <summary>
     /// Gets a specific context by its unique identifier.
@@ -14,7 +14,7 @@ public interface IAiContextService
     /// <param name="id">The context ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context if found, otherwise null.</returns>
-    Task<AiContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a specific context by its alias.
@@ -22,14 +22,14 @@ public interface IAiContextService
     /// <param name="alias">The context alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context if found, otherwise null.</returns>
-    Task<AiContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all contexts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>All contexts.</returns>
-    Task<IEnumerable<AiContext>> GetContextsAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIContext>> GetContextsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets contexts with pagination and optional filtering.
@@ -39,7 +39,7 @@ public interface IAiContextService
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated contexts and the total count.</returns>
-    Task<(IEnumerable<AiContext> Items, int Total)> GetContextsPagedAsync(
+    Task<(IEnumerable<AIContext> Items, int Total)> GetContextsPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
@@ -51,7 +51,7 @@ public interface IAiContextService
     /// <param name="context">The context to save.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved context.</returns>
-    Task<AiContext> SaveContextAsync(AiContext context, CancellationToken cancellationToken = default);
+    Task<AIContext> SaveContextAsync(AIContext context, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a context by its unique identifier.
@@ -69,7 +69,7 @@ public interface IAiContextService
     /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
-    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetContextVersionHistoryAsync(
+    Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetContextVersionHistoryAsync(
         Guid contextId,
         int skip,
         int take,
@@ -82,7 +82,7 @@ public interface IAiContextService
     /// <param name="version">The version to retrieve.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context at that version, or null if not found.</returns>
-    Task<AiContext?> GetContextVersionSnapshotAsync(
+    Task<AIContext?> GetContextVersionSnapshotAsync(
         Guid contextId,
         int version,
         CancellationToken cancellationToken = default);
@@ -95,7 +95,7 @@ public interface IAiContextService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated context at the new version.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the context or target version is not found.</exception>
-    Task<AiContext> RollbackContextAsync(
+    Task<AIContext> RollbackContextAsync(
         Guid contextId,
         int targetVersion,
         CancellationToken cancellationToken = default);

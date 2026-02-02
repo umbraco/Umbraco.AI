@@ -1,6 +1,6 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Contexts.Resolvers;
+namespace Umbraco.AI.Core.Contexts.Resolvers;
 
 /// <summary>
 /// An ordered collection builder for AI context resolvers.
@@ -10,7 +10,7 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// Use this builder to configure the order of context resolution:
 /// </para>
 /// <code>
-/// builder.AiContextResolvers()
+/// builder.AIContextResolvers()
 ///     .Append&lt;ProfileContextResolver&gt;()
 ///     .InsertAfter&lt;ProfileContextResolver, AgentContextResolver&gt;();
 /// </code>
@@ -19,9 +19,9 @@ namespace Umbraco.Ai.Core.Contexts.Resolvers;
 /// from earlier resolvers when duplicate resource IDs are encountered.
 /// </para>
 /// </remarks>
-public class AiContextResolverCollectionBuilder
-    : OrderedCollectionBuilderBase<AiContextResolverCollectionBuilder, AiContextResolverCollection, IAiContextResolver>
+public class AIContextResolverCollectionBuilder
+    : OrderedCollectionBuilderBase<AIContextResolverCollectionBuilder, AIContextResolverCollection, IAiContextResolver>
 {
     /// <inheritdoc />
-    protected override AiContextResolverCollectionBuilder This => this;
+    protected override AIContextResolverCollectionBuilder This => this;
 }

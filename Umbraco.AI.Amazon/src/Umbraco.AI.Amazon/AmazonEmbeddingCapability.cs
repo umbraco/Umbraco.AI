@@ -1,16 +1,16 @@
 using System.Text.RegularExpressions;
 using Amazon.BedrockRuntime;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Extensions;
 
-namespace Umbraco.Ai.Amazon;
+namespace Umbraco.AI.Amazon;
 
 /// <summary>
 /// AI embedding capability for Amazon Bedrock provider.
 /// </summary>
-public class AmazonEmbeddingCapability(AmazonProvider provider) : AiEmbeddingCapabilityBase<AmazonProviderSettings>(provider)
+public class AmazonEmbeddingCapability(AmazonProvider provider) : AIEmbeddingCapabilityBase<AmazonProviderSettings>(provider)
 {
     /// <summary>
     /// Optional region prefix pattern for inference profile IDs (e.g., "eu.", "us.", "apac.").
@@ -29,7 +29,7 @@ public class AmazonEmbeddingCapability(AmazonProvider provider) : AiEmbeddingCap
     ];
 
     /// <inheritdoc />
-    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         AmazonProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
@@ -37,8 +37,8 @@ public class AmazonEmbeddingCapability(AmazonProvider provider) : AiEmbeddingCap
 
         return allModels
             .Where(IsEmbeddingModel)
-            .Select(id => new AiModelDescriptor(
-                new AiModelRef(Provider.Id, id),
+            .Select(id => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, id),
                 AmazonModelUtilities.FormatDisplayName(id)))
             .ToList();
     }

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Common.Mapping;
+namespace Umbraco.AI.Web.Api.Common.Mapping;
 
 /// <summary>
 /// Map definitions for common models shared across API features.

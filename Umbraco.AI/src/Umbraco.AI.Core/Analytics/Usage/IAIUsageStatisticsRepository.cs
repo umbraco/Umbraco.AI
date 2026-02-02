@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Repository for managing aggregated AI usage statistics.
 /// Internal - only accessed by aggregation and analytics services.
 /// </summary>
-internal interface IAiUsageStatisticsRepository
+internal interface IAIUsageStatisticsRepository
 {
     /// <summary>
     /// Gets hourly statistics within a time period, optionally filtered.
@@ -14,10 +14,10 @@ internal interface IAiUsageStatisticsRepository
     /// <param name="filter">Optional filter criteria.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Collection of hourly statistics.</returns>
-    Task<IEnumerable<AiUsageStatistics>> GetHourlyByPeriodAsync(
+    Task<IEnumerable<AIUsageStatistics>> GetHourlyByPeriodAsync(
         DateTime from,
         DateTime to,
-        AiUsageFilter? filter = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -28,10 +28,10 @@ internal interface IAiUsageStatisticsRepository
     /// <param name="filter">Optional filter criteria.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Collection of daily statistics.</returns>
-    Task<IEnumerable<AiUsageStatistics>> GetDailyByPeriodAsync(
+    Task<IEnumerable<AIUsageStatistics>> GetDailyByPeriodAsync(
         DateTime from,
         DateTime to,
-        AiUsageFilter? filter = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default);
 
     /// <summary>
@@ -40,7 +40,7 @@ internal interface IAiUsageStatisticsRepository
     /// <param name="statistics">The statistics to save.</param>
     /// <param name="ct">Cancellation token.</param>
     Task SaveHourlyBatchAsync(
-        IEnumerable<AiUsageStatistics> statistics,
+        IEnumerable<AIUsageStatistics> statistics,
         CancellationToken ct = default);
 
     /// <summary>
@@ -49,7 +49,7 @@ internal interface IAiUsageStatisticsRepository
     /// <param name="statistics">The statistics to save.</param>
     /// <param name="ct">Cancellation token.</param>
     Task SaveDailyBatchAsync(
-        IEnumerable<AiUsageStatistics> statistics,
+        IEnumerable<AIUsageStatistics> statistics,
         CancellationToken ct = default);
 
     /// <summary>

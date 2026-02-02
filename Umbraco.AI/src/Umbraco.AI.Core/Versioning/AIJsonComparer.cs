@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Provides utilities for comparing JSON structures and reporting property-level changes.
@@ -9,7 +9,7 @@ namespace Umbraco.Ai.Core.Versioning;
 /// Used by versionable entity adapters to perform deep comparison of untyped objects
 /// by serializing them to JSON and comparing the resulting structures.
 /// </remarks>
-internal static class AiJsonComparer
+internal static class AIJsonComparer
 {
     /// <summary>
     /// Default maximum length for truncated string values in change output.
@@ -29,7 +29,7 @@ internal static class AiJsonComparer
         object? from,
         object? to,
         string basePath,
-        List<AiPropertyChange> changes,
+        List<AIPropertyChange> changes,
         Func<string, bool>? isSensitive = null)
     {
         // Handle null cases
@@ -40,13 +40,13 @@ internal static class AiJsonComparer
 
         if (from == null)
         {
-            changes.Add(new AiPropertyChange(basePath, null, "(configured)"));
+            changes.Add(new AIPropertyChange(basePath, null, "(configured)"));
             return true;
         }
 
         if (to == null)
         {
-            changes.Add(new AiPropertyChange(basePath, "(configured)", null));
+            changes.Add(new AIPropertyChange(basePath, "(configured)", null));
             return true;
         }
 
@@ -97,7 +97,7 @@ internal static class AiJsonComparer
         JsonElement from,
         JsonElement to,
         string path,
-        List<AiPropertyChange> changes,
+        List<AIPropertyChange> changes,
         Func<string, bool>? isSensitive = null)
     {
         // Handle different value kinds
@@ -135,7 +135,7 @@ internal static class AiJsonComparer
         JsonElement from,
         JsonElement to,
         string path,
-        List<AiPropertyChange> changes,
+        List<AIPropertyChange> changes,
         Func<string, bool>? isSensitive)
     {
         var fromProps = from.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
@@ -176,7 +176,7 @@ internal static class AiJsonComparer
         JsonElement from,
         JsonElement to,
         string path,
-        List<AiPropertyChange> changes)
+        List<AIPropertyChange> changes)
     {
         var fromArray = from.EnumerateArray().ToList();
         var toArray = to.EnumerateArray().ToList();
@@ -185,7 +185,7 @@ internal static class AiJsonComparer
         if (fromArray.Count != toArray.Count ||
             from.GetRawText() != to.GetRawText())
         {
-            changes.Add(new AiPropertyChange(
+            changes.Add(new AIPropertyChange(
                 path,
                 $"[{fromArray.Count} items]",
                 $"[{toArray.Count} items]"));
@@ -199,7 +199,7 @@ internal static class AiJsonComparer
         string path,
         JsonElement from,
         JsonElement to,
-        List<AiPropertyChange> changes,
+        List<AIPropertyChange> changes,
         Func<string, bool>? isSensitive)
     {
         var sensitive = isSensitive?.Invoke(path) ?? false;
@@ -222,7 +222,7 @@ internal static class AiJsonComparer
             toValue = FormatValue(to);
         }
 
-        changes.Add(new AiPropertyChange(path, fromValue, toValue));
+        changes.Add(new AIPropertyChange(path, fromValue, toValue));
     }
 
     /// <summary>

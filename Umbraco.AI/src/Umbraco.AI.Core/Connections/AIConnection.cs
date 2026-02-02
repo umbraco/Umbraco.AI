@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Connections;
+namespace Umbraco.AI.Core.Connections;
 
 /// <summary>
 /// Represents a connection to an AI provider with credentials and settings.
 /// </summary>
-public class AiConnection : IAiVersionableEntity
+public class AIConnection : IAiVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the connection.

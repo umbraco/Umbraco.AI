@@ -1,14 +1,14 @@
-namespace Umbraco.Ai.Persistence.Versioning;
+namespace Umbraco.AI.Persistence.Versioning;
 
 /// <summary>
 /// EF Core entity representing a version snapshot of any versionable AI entity.
 /// </summary>
 /// <remarks>
-/// This unified entity replaces the separate version entities (AiConnectionVersionEntity,
-/// AiProfileVersionEntity, AiContextVersionEntity) with a single table that uses
+/// This unified entity replaces the separate version entities (AIConnectionVersionEntity,
+/// AIProfileVersionEntity, AIContextVersionEntity) with a single table that uses
 /// <see cref="EntityType"/> as a discriminator.
 /// </remarks>
-internal class AiEntityVersionEntity
+internal class AIEntityVersionEntity
 {
     /// <summary>
     /// Unique identifier for the version record.

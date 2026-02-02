@@ -2,12 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.AuditLog;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Management.Configuration;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.AuditLog.Controllers;
+namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 
 /// <summary>
 /// Controller to clean up old audit-log logs based on retention policy.

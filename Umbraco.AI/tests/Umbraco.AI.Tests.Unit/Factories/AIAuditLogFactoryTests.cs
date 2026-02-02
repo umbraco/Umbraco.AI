@@ -1,26 +1,26 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.AuditLog;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Tests.Unit.Factories;
+namespace Umbraco.AI.Tests.Unit.Factories;
 
-public class AiAuditLogFactoryTests
+public class AIAuditLogFactoryTests
 {
-    private readonly Mock<IOptionsMonitor<AiAuditLogOptions>> _optionsMock;
+    private readonly Mock<IOptionsMonitor<AIAuditLogOptions>> _optionsMock;
     private readonly Mock<IBackOfficeSecurityAccessor> _securityAccessorMock;
-    private readonly Mock<ILogger<AiAuditLogFactory>> _loggerMock;
+    private readonly Mock<ILogger<AIAuditLogFactory>> _loggerMock;
 
-    public AiAuditLogFactoryTests()
+    public AIAuditLogFactoryTests()
     {
-        _optionsMock = new Mock<IOptionsMonitor<AiAuditLogOptions>>();
+        _optionsMock = new Mock<IOptionsMonitor<AIAuditLogOptions>>();
         _securityAccessorMock = new Mock<IBackOfficeSecurityAccessor>();
-        _loggerMock = new Mock<ILogger<AiAuditLogFactory>>();
+        _loggerMock = new Mock<ILogger<AIAuditLogFactory>>();
 
         // Default options with prompt persistence enabled
-        var options = new AiAuditLogOptions
+        var options = new AIAuditLogOptions
         {
             PersistPrompts = true,
             RedactionPatterns = new List<string>()
@@ -28,19 +28,19 @@ public class AiAuditLogFactoryTests
         _optionsMock.Setup(x => x.CurrentValue).Returns(options);
     }
 
-    private AiAuditLogFactory CreateFactory()
+    private AIAuditLogFactory CreateFactory()
     {
-        return new AiAuditLogFactory(
+        return new AIAuditLogFactory(
             _optionsMock.Object,
             _securityAccessorMock.Object,
             _loggerMock.Object);
     }
 
-    private static AiAuditContext CreateContext(
+    private static AIAuditContext CreateContext(
         object? prompt,
-        AiCapability capability = AiCapability.Chat)
+        AICapability capability = AICapability.Chat)
     {
-        return new AiAuditContext
+        return new AIAuditContext
         {
             Capability = capability,
             ProfileId = Guid.NewGuid(),
@@ -389,7 +389,7 @@ public class AiAuditLogFactoryTests
     public void Create_WithRedactionPattern_RedactsToolContent()
     {
         // Arrange
-        var options = new AiAuditLogOptions
+        var options = new AIAuditLogOptions
         {
             PersistPrompts = true,
             RedactionPatterns = new List<string> { "secret-\\w+" }
@@ -420,7 +420,7 @@ public class AiAuditLogFactoryTests
     public void Create_WithRedactionPattern_RedactsToolResults()
     {
         // Arrange
-        var options = new AiAuditLogOptions
+        var options = new AIAuditLogOptions
         {
             PersistPrompts = true,
             RedactionPatterns = new List<string> { "api_key_\\w+" }
@@ -454,7 +454,7 @@ public class AiAuditLogFactoryTests
     public void Create_WithPromptPersistenceDisabled_DoesNotCapturePrompt()
     {
         // Arrange
-        var options = new AiAuditLogOptions
+        var options = new AIAuditLogOptions
         {
             PersistPrompts = false,
             RedactionPatterns = new List<string>()
@@ -485,7 +485,7 @@ public class AiAuditLogFactoryTests
         // Arrange
         var factory = CreateFactory();
         var values = new List<string> { "First text", "Second text", "Third text" };
-        var context = CreateContext(values, AiCapability.Embedding);
+        var context = CreateContext(values, AICapability.Embedding);
 
         // Act
         var auditLog = factory.Create(context);

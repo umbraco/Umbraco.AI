@@ -1,13 +1,13 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Extensions;
-using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Agui.Streaming;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.Agui.Models;
+using Umbraco.AI.Agui.Streaming;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for running agents with AG-UI streaming support.
@@ -77,7 +77,7 @@ public class RunAgentController : AgentControllerBase
         {
             return Results.NotFound(new ProblemDetails
             {
-                Title = "AiAgent not found",
+                Title = "AIAgent not found",
                 Detail = "The specified agent could not be found.",
                 Status = StatusCodes.Status404NotFound
             });

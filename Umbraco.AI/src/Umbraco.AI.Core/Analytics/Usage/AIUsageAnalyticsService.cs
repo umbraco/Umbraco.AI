@@ -1,20 +1,20 @@
 using Microsoft.Extensions.Logging;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for querying aggregated AI usage statistics with hybrid live + historical data.
 /// </summary>
-internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
+internal sealed class AIUsageAnalyticsService : IAiUsageAnalyticsService
 {
     private readonly IAiUsageRecordRepository _recordRepository;
     private readonly IAiUsageStatisticsRepository _statisticsRepository;
-    private readonly ILogger<AiUsageAnalyticsService> _logger;
+    private readonly ILogger<AIUsageAnalyticsService> _logger;
 
-    public AiUsageAnalyticsService(
+    public AIUsageAnalyticsService(
         IAiUsageRecordRepository recordRepository,
         IAiUsageStatisticsRepository statisticsRepository,
-        ILogger<AiUsageAnalyticsService> logger)
+        ILogger<AIUsageAnalyticsService> logger)
     {
         _recordRepository = recordRepository;
         _statisticsRepository = statisticsRepository;
@@ -22,11 +22,11 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     }
 
     /// <inheritdoc />
-    public async Task<AiUsageSummary> GetSummaryAsync(
+    public async Task<AIUsageSummary> GetSummaryAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
-        AiUsageFilter? filter = null,
+        AIUsagePeriod? requestedGranularity = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default)
     {
         var granularity = DetermineGranularity(from, to, requestedGranularity);
@@ -36,7 +36,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
 
         if (statsList.Count == 0)
         {
-            return new AiUsageSummary
+            return new AIUsageSummary
             {
                 TotalRequests = 0,
                 InputTokens = 0,
@@ -54,7 +54,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         var failureCount = statsList.Sum(s => s.FailureCount);
         var totalDurationMs = statsList.Sum(s => s.TotalDurationMs);
 
-        return new AiUsageSummary
+        return new AIUsageSummary
         {
             TotalRequests = totalRequests,
             InputTokens = statsList.Sum(s => s.InputTokens),
@@ -68,11 +68,11 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageTimeSeriesPoint>> GetTimeSeriesAsync(
+    public async Task<IEnumerable<AIUsageTimeSeriesPoint>> GetTimeSeriesAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
-        AiUsageFilter? filter = null,
+        AIUsagePeriod? requestedGranularity = null,
+        AIUsageFilter? filter = null,
         CancellationToken ct = default)
     {
         var granularity = DetermineGranularity(from, to, requestedGranularity);
@@ -80,7 +80,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
 
         var timeSeries = statistics
             .GroupBy(s => s.Period)
-            .Select(g => new AiUsageTimeSeriesPoint
+            .Select(g => new AIUsageTimeSeriesPoint
             {
                 Timestamp = g.Key,
                 RequestCount = g.Sum(s => s.RequestCount),
@@ -97,10 +97,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByProviderAsync(
+    public async Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByProviderAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default)
     {
         var granularity = DetermineGranularity(from, to, requestedGranularity);
@@ -114,10 +114,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByModelAsync(
+    public async Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByModelAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default)
     {
         var granularity = DetermineGranularity(from, to, requestedGranularity);
@@ -131,10 +131,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByProfileAsync(
+    public async Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByProfileAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default)
     {
         var granularity = DetermineGranularity(from, to, requestedGranularity);
@@ -148,10 +148,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByUserAsync(
+    public async Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByUserAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requestedGranularity = null,
+        AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default)
     {
         var granularity = DetermineGranularity(from, to, requestedGranularity);
@@ -167,10 +167,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     /// <summary>
     /// Determines the appropriate granularity based on date range.
     /// </summary>
-    private AiUsagePeriod DetermineGranularity(
+    private AIUsagePeriod DetermineGranularity(
         DateTime from,
         DateTime to,
-        AiUsagePeriod? requested)
+        AIUsagePeriod? requested)
     {
         if (requested.HasValue)
             return requested.Value;
@@ -178,21 +178,21 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
         var daySpan = (to - from).TotalDays;
 
         // Use hourly for up to 7 days, daily for longer periods
-        return daySpan <= 7 ? AiUsagePeriod.Hourly : AiUsagePeriod.Daily;
+        return daySpan <= 7 ? AIUsagePeriod.Hourly : AIUsagePeriod.Daily;
     }
 
     /// <summary>
     /// Gets statistics with hybrid querying: aggregated stats + live current hour data.
     /// </summary>
-    private async Task<IEnumerable<AiUsageStatistics>> GetStatisticsAsync(
+    private async Task<IEnumerable<AIUsageStatistics>> GetStatisticsAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod granularity,
-        AiUsageFilter? filter,
+        AIUsagePeriod granularity,
+        AIUsageFilter? filter,
         CancellationToken ct)
     {
         var now = DateTime.UtcNow;
-        var currentPeriodStart = granularity == AiUsagePeriod.Hourly
+        var currentPeriodStart = granularity == AIUsagePeriod.Hourly
             ? GetHourStart(now)
             : GetDayStart(now);
 
@@ -235,17 +235,17 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     /// <summary>
     /// Gets aggregated statistics from hourly or daily tables.
     /// </summary>
-    private async Task<IEnumerable<AiUsageStatistics>> GetAggregatedStatisticsAsync(
+    private async Task<IEnumerable<AIUsageStatistics>> GetAggregatedStatisticsAsync(
         DateTime from,
         DateTime to,
-        AiUsagePeriod granularity,
-        AiUsageFilter? filter,
+        AIUsagePeriod granularity,
+        AIUsageFilter? filter,
         CancellationToken ct)
     {
         if (from >= to)
             return [];
 
-        if (granularity == AiUsagePeriod.Hourly)
+        if (granularity == AIUsagePeriod.Hourly)
         {
             return await _statisticsRepository.GetHourlyByPeriodAsync(from, to, filter, ct);
         }
@@ -259,11 +259,11 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     /// Gets live statistics from raw usage records for the current hour/day.
     /// Aggregates in-memory to match statistics format.
     /// </summary>
-    private async Task<IEnumerable<AiUsageStatistics>?> GetLiveStatisticsAsync(
+    private async Task<IEnumerable<AIUsageStatistics>?> GetLiveStatisticsAsync(
         DateTime from,
         DateTime to,
         DateTime currentPeriodStart,
-        AiUsageFilter? filter,
+        AIUsageFilter? filter,
         CancellationToken ct)
     {
         var records = await _recordRepository.GetRecordsByPeriodAsync(from, to, ct);
@@ -295,7 +295,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
                 r.EntityType,
                 r.FeatureType
             })
-            .Select(g => new AiUsageStatistics
+            .Select(g => new AIUsageStatistics
             {
                 Id = Guid.NewGuid(),
                 Period = currentPeriodStart,
@@ -330,9 +330,9 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     /// <summary>
     /// Applies filter to raw usage records.
     /// </summary>
-    private static List<AiUsageRecord> ApplyFilterToRecords(
-        List<AiUsageRecord> records,
-        AiUsageFilter filter)
+    private static List<AIUsageRecord> ApplyFilterToRecords(
+        List<AIUsageRecord> records,
+        AIUsageFilter filter)
     {
         var filtered = records.AsEnumerable();
 
@@ -363,10 +363,10 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
     /// <summary>
     /// Calculates breakdown by a specific dimension with percentages.
     /// </summary>
-    private static IEnumerable<AiUsageBreakdownItem> CalculateBreakdown(
-        IEnumerable<AiUsageStatistics> statistics,
-        Func<AiUsageStatistics, string> dimensionSelector,
-        Func<AiUsageStatistics, string?>? nameSelector,
+    private static IEnumerable<AIUsageBreakdownItem> CalculateBreakdown(
+        IEnumerable<AIUsageStatistics> statistics,
+        Func<AIUsageStatistics, string> dimensionSelector,
+        Func<AIUsageStatistics, string?>? nameSelector,
         string unknownLabel)
     {
         var statsList = statistics.ToList();
@@ -382,7 +382,7 @@ internal sealed class AiUsageAnalyticsService : IAiUsageAnalyticsService
                 Dimension = dimensionSelector(s),
                 Name = nameSelector?.Invoke(s)
             })
-            .Select(g => new AiUsageBreakdownItem
+            .Select(g => new AIUsageBreakdownItem
             {
                 Dimension = string.IsNullOrEmpty(g.Key.Dimension) ? unknownLabel : g.Key.Dimension,
                 DimensionName = g.Key.Name,

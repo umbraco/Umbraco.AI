@@ -1,25 +1,25 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Default implementation of <see cref="IAiContextService"/>.
 /// </summary>
-internal sealed class AiContextService : IAiContextService
+internal sealed class AIContextService : IAiContextService
 {
     private readonly IAiContextRepository _repository;
     private readonly IAiEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextService"/> class.
+    /// Initializes a new instance of the <see cref="AIContextService"/> class.
     /// </summary>
     /// <param name="repository">The context repository.</param>
     /// <param name="versionService">The unified versioning service.</param>
     /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user tracking.</param>
-    public AiContextService(
+    public AIContextService(
         IAiContextRepository repository,
         IAiEntityVersionService versionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
@@ -30,19 +30,19 @@ internal sealed class AiContextService : IAiContextService
     }
 
     /// <inheritdoc />
-    public Task<AiContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.GetByIdAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AiContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default)
         => _repository.GetByAliasAsync(alias, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiContext>> GetContextsAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIContext>> GetContextsAsync(CancellationToken cancellationToken = default)
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<(IEnumerable<AiContext> Items, int Total)> GetContextsPagedAsync(
+    public Task<(IEnumerable<AIContext> Items, int Total)> GetContextsPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
@@ -50,7 +50,7 @@ internal sealed class AiContextService : IAiContextService
         => _repository.GetPagedAsync(filter, skip, take, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AiContext> SaveContextAsync(AiContext context, CancellationToken cancellationToken = default)
+    public async Task<AIContext> SaveContextAsync(AIContext context, CancellationToken cancellationToken = default)
     {
         // Generate new ID if needed
         if (context.Id == Guid.Empty)
@@ -96,7 +96,7 @@ internal sealed class AiContextService : IAiContextService
     }
 
     /// <inheritdoc />
-    public Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetContextVersionHistoryAsync(
+    public Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetContextVersionHistoryAsync(
         Guid contextId,
         int skip,
         int take,
@@ -104,14 +104,14 @@ internal sealed class AiContextService : IAiContextService
         => _versionService.GetVersionHistoryAsync(contextId, "Context", skip, take, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AiContext?> GetContextVersionSnapshotAsync(
+    public Task<AIContext?> GetContextVersionSnapshotAsync(
         Guid contextId,
         int version,
         CancellationToken cancellationToken = default)
-        => _versionService.GetVersionSnapshotAsync<AiContext>(contextId, version, cancellationToken);
+        => _versionService.GetVersionSnapshotAsync<AIContext>(contextId, version, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AiContext> RollbackContextAsync(
+    public async Task<AIContext> RollbackContextAsync(
         Guid contextId,
         int targetVersion,
         CancellationToken cancellationToken = default)
@@ -124,7 +124,7 @@ internal sealed class AiContextService : IAiContextService
         }
 
         // Get the snapshot at the target version
-        var snapshot = await _versionService.GetVersionSnapshotAsync<AiContext>(contextId, targetVersion, cancellationToken);
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AIContext>(contextId, targetVersion, cancellationToken);
         if (snapshot is null)
         {
             throw new InvalidOperationException($"Version {targetVersion} not found for context '{contextId}'.");
@@ -136,12 +136,12 @@ internal sealed class AiContextService : IAiContextService
         await _versionService.SaveVersionAsync(currentContext, userId, null, cancellationToken);
 
         // Create a new version by saving the snapshot data
-        var rolledBackContext = new AiContext
+        var rolledBackContext = new AIContext
         {
             Id = contextId,
             Alias = snapshot.Alias,
             Name = snapshot.Name,
-            Resources = snapshot.Resources.Select(r => new AiContextResource
+            Resources = snapshot.Resources.Select(r => new AIContextResource
             {
                 ResourceTypeId = r.ResourceTypeId,
                 Name = r.Name,

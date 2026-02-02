@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Utility methods for working with Anthropic Claude models.

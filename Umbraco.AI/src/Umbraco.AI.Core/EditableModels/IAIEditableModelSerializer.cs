@@ -1,11 +1,11 @@
 using System.Text.Json;
 
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
 /// <summary>
 /// Serializes and deserializes editable model objects with automatic encryption of sensitive fields.
 /// </summary>
-public interface IAiEditableModelSerializer
+public interface IAIEditableModelSerializer
 {
     /// <summary>
     /// Serializes an editable model object to JSON, encrypting sensitive field values based on the schema.
@@ -13,7 +13,7 @@ public interface IAiEditableModelSerializer
     /// <param name="model">The model object to serialize.</param>
     /// <param name="schema">The schema describing which fields are sensitive. If null, no encryption is applied.</param>
     /// <returns>JSON string with sensitive values encrypted.</returns>
-    string? Serialize(object? model, AiEditableModelSchema? schema);
+    string? Serialize(object? model, AIEditableModelSchema? schema);
 
     /// <summary>
     /// Deserializes a JSON string, decrypting any encrypted field values.

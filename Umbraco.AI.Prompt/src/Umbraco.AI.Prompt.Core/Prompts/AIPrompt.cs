@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Represents a stored prompt template that can be linked to AI profiles.
 /// </summary>
-public sealed class AiPrompt : IAiVersionableEntity
+public sealed class AIPrompt : IAiVersionableEntity
 {
     /// <summary>
     /// Unique identifier for the prompt.
@@ -35,7 +35,7 @@ public sealed class AiPrompt : IAiVersionableEntity
 
     /// <summary>
     /// Optional ID of the AI profile this prompt is designed for.
-    /// References AiProfile.Id from Umbraco.Ai.Core.
+    /// References AIProfile.Id from Umbraco.Ai.Core.
     /// </summary>
     public Guid? ProfileId { get; set; }
 
@@ -67,7 +67,7 @@ public sealed class AiPrompt : IAiVersionableEntity
     /// Controls both UI display and server-side enforcement.
     /// If null, the prompt is not allowed anywhere (denied by default).
     /// </summary>
-    public AiPromptScope? Scope { get; set; }
+    public AIPromptScope? Scope { get; set; }
 
     /// <summary>
     /// When the prompt was created.

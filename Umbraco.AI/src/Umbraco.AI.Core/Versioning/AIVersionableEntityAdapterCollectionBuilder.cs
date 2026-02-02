@@ -1,6 +1,6 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// A collection builder for versionable entity adapters.
@@ -12,13 +12,13 @@ namespace Umbraco.Ai.Core.Versioning;
 /// </para>
 /// <code>
 /// // In a Composer
-/// builder.AiVersionableEntityAdapters()
+/// builder.AIVersionableEntityAdapters()
 ///     .Add&lt;PromptVersionableEntityAdapter&gt;();
 /// </code>
 /// </remarks>
-public class AiVersionableEntityAdapterCollectionBuilder
-    : LazyCollectionBuilderBase<AiVersionableEntityAdapterCollectionBuilder, AiVersionableEntityAdapterCollection, IAiVersionableEntityAdapter>
+public class AIVersionableEntityAdapterCollectionBuilder
+    : LazyCollectionBuilderBase<AIVersionableEntityAdapterCollectionBuilder, AIVersionableEntityAdapterCollection, IAiVersionableEntityAdapter>
 {
     /// <inheritdoc />
-    protected override AiVersionableEntityAdapterCollectionBuilder This => this;
+    protected override AIVersionableEntityAdapterCollectionBuilder This => this;
 }

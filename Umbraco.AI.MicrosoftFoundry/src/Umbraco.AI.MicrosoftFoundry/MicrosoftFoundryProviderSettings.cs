@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Core.EditableModels;
+using Umbraco.AI.Core.EditableModels;
 
-namespace Umbraco.Ai.MicrosoftFoundry;
+namespace Umbraco.AI.MicrosoftFoundry;
 
 /// <summary>
 /// Settings for the Microsoft AI Foundry provider.
@@ -14,14 +14,14 @@ public class MicrosoftFoundryProviderSettings
     /// <remarks>
     /// Example: https://your-resource.services.ai.azure.com/
     /// </remarks>
-    [AiField]
+    [AIField]
     [Required]
     public string? Endpoint { get; set; }
 
     /// <summary>
     /// The API key for authenticating with Microsoft AI Foundry services.
     /// </summary>
-    [AiField(IsSensitive = true)]
+    [AIField(IsSensitive = true)]
     [Required]
     public string? ApiKey { get; set; }
 }

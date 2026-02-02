@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
-using Umbraco.Ai.Web.Api.Management.Connection.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Connection.Controllers;
+using Umbraco.AI.Web.Api.Management.Connection.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class UpdateConnectionControllerTests
 {
@@ -21,8 +21,8 @@ public class UpdateConnectionControllerTests
 
         // Setup mapper to simulate Map(source, target) behavior
         _umbracoMapperMock
-            .Setup(m => m.Map(It.IsAny<UpdateConnectionRequestModel>(), It.IsAny<AiConnection>()))
-            .Returns((UpdateConnectionRequestModel request, AiConnection existing) =>
+            .Setup(m => m.Map(It.IsAny<UpdateConnectionRequestModel>(), It.IsAny<AIConnection>()))
+            .Returns((UpdateConnectionRequestModel request, AIConnection existing) =>
             {
                 // Simulate mapping: update mutable properties, preserve init-only properties
                 existing.Name = request.Name;
@@ -41,7 +41,7 @@ public class UpdateConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var existingConnection = new AiConnectionBuilder()
+        var existingConnection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithName("Old Name")
             .WithProviderId("openai")
@@ -60,8 +60,8 @@ public class UpdateConnectionControllerTests
             .ReturnsAsync(existingConnection);
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection conn, CancellationToken _) => conn);
 
         // Act
         var result = await _controller.UpdateConnection(new IdOrAlias(connectionId), requestModel);
@@ -84,7 +84,7 @@ public class UpdateConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await _controller.UpdateConnection(new IdOrAlias(connectionId), requestModel);
@@ -100,7 +100,7 @@ public class UpdateConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var existingConnection = new AiConnectionBuilder()
+        var existingConnection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("openai")
             .Build();
@@ -118,7 +118,7 @@ public class UpdateConnectionControllerTests
             .ReturnsAsync(existingConnection);
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Settings validation failed"));
 
         // Act
@@ -135,7 +135,7 @@ public class UpdateConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var existingConnection = new AiConnectionBuilder()
+        var existingConnection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("openai")
             .Build();
@@ -147,15 +147,15 @@ public class UpdateConnectionControllerTests
             IsActive = true
         };
 
-        AiConnection? capturedConnection = null;
+        AIConnection? capturedConnection = null;
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingConnection);
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .Callback<AiConnection, CancellationToken>((conn, _) => capturedConnection = conn)
-            .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
+            .Callback<AIConnection, CancellationToken>((conn, _) => capturedConnection = conn)
+            .ReturnsAsync((AIConnection conn, CancellationToken _) => conn);
 
         // Act
         await _controller.UpdateConnection(new IdOrAlias(connectionId), requestModel);
@@ -171,7 +171,7 @@ public class UpdateConnectionControllerTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var dateCreated = DateTime.UtcNow.AddDays(-5);
-        var existingConnection = new AiConnectionBuilder()
+        var existingConnection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithDateCreated(dateCreated)
             .Build();
@@ -183,15 +183,15 @@ public class UpdateConnectionControllerTests
             IsActive = true
         };
 
-        AiConnection? capturedConnection = null;
+        AIConnection? capturedConnection = null;
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingConnection);
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .Callback<AiConnection, CancellationToken>((conn, _) => capturedConnection = conn)
-            .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
+            .Callback<AIConnection, CancellationToken>((conn, _) => capturedConnection = conn)
+            .ReturnsAsync((AIConnection conn, CancellationToken _) => conn);
 
         // Act
         await _controller.UpdateConnection(new IdOrAlias(connectionId), requestModel);
@@ -210,7 +210,7 @@ public class UpdateConnectionControllerTests
     {
         // Arrange
         var alias = "my-connection";
-        var existingConnection = new AiConnectionBuilder()
+        var existingConnection = new AIConnectionBuilder()
             .WithAlias(alias)
             .WithName("Old Name")
             .WithProviderId("openai")
@@ -229,8 +229,8 @@ public class UpdateConnectionControllerTests
             .ReturnsAsync(existingConnection);
 
         _connectionServiceMock
-            .Setup(x => x.SaveConnectionAsync(It.IsAny<AiConnection>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection conn, CancellationToken _) => conn);
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection conn, CancellationToken _) => conn);
 
         // Act
         var result = await _controller.UpdateConnection(new IdOrAlias(alias), requestModel);
@@ -253,7 +253,7 @@ public class UpdateConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var result = await _controller.UpdateConnection(new IdOrAlias(alias), requestModel);

@@ -1,13 +1,13 @@
 using System.Reflection;
-using Umbraco.Ai.Core.EditableModels;
+using Umbraco.AI.Core.EditableModels;
 
-namespace Umbraco.Ai.Core.Contexts.ResourceTypes;
+namespace Umbraco.AI.Core.Contexts.ResourceTypes;
 
 /// <summary>
 /// Base class for AI context resource types with strongly-typed data.
 /// </summary>
 /// <typeparam name="TData">The data model type for the resource.</typeparam>
-public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
+public abstract class AIContextResourceTypeBase<TData> : IAiContextResourceType
     where TData : class, new()
 {
     private readonly IAiContextResourceTypeInfrastructure _infrastructure;
@@ -33,21 +33,21 @@ public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
     Type? IAiContextResourceType.DataType => DataType;
 
     /// <inheritdoc />
-    public AiEditableModelSchema? GetDataSchema()
+    public AIEditableModelSchema? GetDataSchema()
         => _infrastructure.SchemaBuilder.BuildForType<TData>(Id);
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextResourceTypeBase{TData}"/> class.
+    /// Initializes a new instance of the <see cref="AIContextResourceTypeBase{TData}"/> class.
     /// </summary>
     /// <param name="infrastructure">The infrastructure dependencies.</param>
     /// <exception cref="InvalidOperationException">Thrown when the resource type is missing the required attribute.</exception>
-    protected AiContextResourceTypeBase(IAiContextResourceTypeInfrastructure infrastructure)
+    protected AIContextResourceTypeBase(IAiContextResourceTypeInfrastructure infrastructure)
     {
         _infrastructure = infrastructure;
 
-        var attribute = GetType().GetCustomAttribute<AiContextResourceTypeAttribute>(inherit: false)
+        var attribute = GetType().GetCustomAttribute<AIContextResourceTypeAttribute>(inherit: false)
             ?? throw new InvalidOperationException(
-                $"Resource type '{GetType().FullName}' is missing required [AiContextResourceType] attribute.");
+                $"Resource type '{GetType().FullName}' is missing required [AIContextResourceType] attribute.");
 
         Id = attribute.Id;
         Name = attribute.Name;

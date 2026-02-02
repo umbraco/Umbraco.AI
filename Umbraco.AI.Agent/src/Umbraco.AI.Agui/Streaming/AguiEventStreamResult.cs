@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
-using Umbraco.Ai.Agui.Events;
+using Umbraco.AI.Agui.Events;
 
-namespace Umbraco.Ai.Agui.Streaming;
+namespace Umbraco.AI.Agui.Streaming;
 
 /// <summary>
 /// Concrete AG-UI streaming result that wraps an async enumerable of events.

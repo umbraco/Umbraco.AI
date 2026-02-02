@@ -1,35 +1,35 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Persistence.Versioning;
+namespace Umbraco.AI.Persistence.Versioning;
 
 /// <summary>
 /// EF Core implementation of <see cref="IAiEntityVersionRepository"/>.
 /// </summary>
 internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EfCoreAiEntityVersionRepository"/> class.
     /// </summary>
     /// <param name="scopeProvider">The EF Core scope provider.</param>
-    public EfCoreAiEntityVersionRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
+    public EfCoreAiEntityVersionRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    public async Task<IEnumerable<AIEntityVersion>> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
         int skip,
         int take,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -51,7 +51,7 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         string entityType,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var count = await scope.ExecuteWithContextAsync(async db =>
             await db.EntityVersions
@@ -62,13 +62,13 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
     }
 
     /// <inheritdoc />
-    public async Task<AiEntityVersion?> GetVersionAsync(
+    public async Task<AIEntityVersion?> GetVersionAsync(
         Guid entityId,
         string entityType,
         int version,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var entity = await scope.ExecuteWithContextAsync(async db =>
             await db.EntityVersions
@@ -90,11 +90,11 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         string? changeDescription,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
         {
-            var entity = new AiEntityVersionEntity
+            var entity = new AIEntityVersionEntity
             {
                 Id = Guid.NewGuid(),
                 EntityId = entityId,
@@ -120,7 +120,7 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         string entityType,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync(async db =>
             await db.EntityVersions
@@ -135,7 +135,7 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         DateTime threshold,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var deleted = await scope.ExecuteWithContextAsync(async db =>
             await db.EntityVersions
@@ -151,7 +151,7 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         int maxVersionsPerEntity,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -181,7 +181,7 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
     /// <inheritdoc />
     public async Task<int> GetVersionCountAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var count = await scope.ExecuteWithContextAsync(async db =>
             await db.EntityVersions.CountAsync(cancellationToken));
@@ -190,9 +190,9 @@ internal sealed class EfCoreAiEntityVersionRepository : IAiEntityVersionReposito
         return count;
     }
 
-    private static AiEntityVersion MapToDomain(AiEntityVersionEntity entity)
+    private static AIEntityVersion MapToDomain(AIEntityVersionEntity entity)
     {
-        return new AiEntityVersion
+        return new AIEntityVersion
         {
             Id = entity.Id,
             EntityId = entity.EntityId,

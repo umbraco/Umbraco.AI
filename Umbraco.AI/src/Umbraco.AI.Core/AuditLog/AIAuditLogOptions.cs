@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Configuration options for AI auditing.
 /// </summary>
-public class AiAuditLogOptions
+public class AIAuditLogOptions
 {
     /// <summary>
     /// Gets or sets a value indicating whether audit-log logging is enabled.
@@ -21,7 +21,7 @@ public class AiAuditLogOptions
     /// Gets or sets the detail level for capturing audit-log information.
     /// Default is FailuresOnly.
     /// </summary>
-    public AiAuditLogDetailLevel DetailLevel { get; set; } = AiAuditLogDetailLevel.FailuresOnly;
+    public AIAuditLogDetailLevel DetailLevel { get; set; } = AIAuditLogDetailLevel.FailuresOnly;
 
     /// <summary>
     /// Gets or sets a value indicating whether to persist prompt snapshots.

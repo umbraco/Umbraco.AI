@@ -2,21 +2,21 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
-/// Factory for creating AiUsageRecord instances with proper validation and user context capture.
+/// Factory for creating AIUsageRecord instances with proper validation and user context capture.
 /// </summary>
-internal sealed class AiUsageRecordFactory : IAiUsageRecordFactory
+internal sealed class AIUsageRecordFactory : IAiUsageRecordFactory
 {
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IBackOfficeSecurityAccessor _securityAccessor;
-    private readonly ILogger<AiUsageRecordFactory> _logger;
+    private readonly ILogger<AIUsageRecordFactory> _logger;
 
-    public AiUsageRecordFactory(
-        IOptionsMonitor<AiAnalyticsOptions> options,
+    public AIUsageRecordFactory(
+        IOptionsMonitor<AIAnalyticsOptions> options,
         IBackOfficeSecurityAccessor securityAccessor,
-        ILogger<AiUsageRecordFactory> logger)
+        ILogger<AIUsageRecordFactory> logger)
     {
         _options = options;
         _securityAccessor = securityAccessor;
@@ -25,9 +25,9 @@ internal sealed class AiUsageRecordFactory : IAiUsageRecordFactory
 
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     /// <inheritdoc />
-    public AiUsageRecord Create(
-        AiUsageRecordContext context,
-        AiUsageRecordResult result)
+    public AIUsageRecord Create(
+        AIUsageRecordContext context,
+        AIUsageRecordResult result)
     {
         // Validate required context fields
         if (context.ProfileId == Guid.Empty)
@@ -77,7 +77,7 @@ internal sealed class AiUsageRecordFactory : IAiUsageRecordFactory
 
         var timestamp = DateTime.UtcNow;
 
-        var record = new AiUsageRecord
+        var record = new AIUsageRecord
         {
             Id = Guid.NewGuid(),
             Timestamp = timestamp,

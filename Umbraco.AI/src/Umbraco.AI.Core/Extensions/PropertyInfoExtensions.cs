@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 internal static class PropertyInfoExtensions
 {

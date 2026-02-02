@@ -1,12 +1,12 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Prompt.Core.Templates;
+namespace Umbraco.AI.Prompt.Core.Templates;
 
 /// <summary>
 /// Interface for processing template variables with specific prefixes.
 /// Processors are responsible for resolving variables like {{prefix:path}} into <see cref="AIContent"/>.
 /// </summary>
-public interface IAiTemplateVariableProcessor
+public interface IAITemplateVariableProcessor
 {
     /// <summary>
     /// Gets the prefix this processor handles (e.g., "image" for {{image:propertyAlias}}).

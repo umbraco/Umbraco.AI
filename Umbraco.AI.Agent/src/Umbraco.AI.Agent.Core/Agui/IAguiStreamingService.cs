@@ -1,9 +1,9 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agui.Events;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Events;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <summary>
 /// Service for streaming AG-UI events from an AI agent.

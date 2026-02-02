@@ -2,12 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Extensions;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for deleting Agents.
@@ -21,9 +21,9 @@ public class DeleteAgentController : AgentControllerBase
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public DeleteAgentController(IAiAgentService AiAgentService)
+    public DeleteAgentController(IAiAgentService AIAgentService)
     {
-        _AiAgentService = AiAgentService;
+        _AiAgentService = AIAgentService;
     }
 
     /// <summary>

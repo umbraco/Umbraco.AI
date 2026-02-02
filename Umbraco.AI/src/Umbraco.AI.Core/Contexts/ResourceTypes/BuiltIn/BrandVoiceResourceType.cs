@@ -1,12 +1,12 @@
 using System.Text;
 
-namespace Umbraco.Ai.Core.Contexts.ResourceTypes.BuiltIn;
+namespace Umbraco.AI.Core.Contexts.ResourceTypes.BuiltIn;
 
 /// <summary>
 /// Resource type for brand voice definitions including tone, audience, style, and patterns to avoid.
 /// </summary>
-[AiContextResourceType("brand-voice", "Brand Voice")]
-public sealed class BrandVoiceResourceType : AiContextResourceTypeBase<BrandVoiceResourceData>
+[AIContextResourceType("brand-voice", "Brand Voice")]
+public sealed class BrandVoiceResourceType : AIContextResourceTypeBase<BrandVoiceResourceData>
 {
     /// <inheritdoc />
     public override string? Description => "Define tone, audience, style guidelines, and patterns to avoid";

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.MicrosoftFoundry;
+namespace Umbraco.AI.MicrosoftFoundry;
 
 /// <summary>
 /// AI chat capability for Microsoft AI Foundry provider.
@@ -11,14 +11,14 @@ namespace Umbraco.Ai.MicrosoftFoundry;
 /// Supports all chat models available through Microsoft AI Foundry, including
 /// OpenAI (GPT-4, GPT-4o), Mistral, Llama, Cohere, Phi, and more.
 /// </remarks>
-public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) : AiChatCapabilityBase<MicrosoftFoundryProviderSettings>(provider)
+public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) : AIChatCapabilityBase<MicrosoftFoundryProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
 
     private new MicrosoftFoundryProvider Provider => (MicrosoftFoundryProvider)base.Provider;
 
     /// <inheritdoc />
-    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         MicrosoftFoundryProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
@@ -26,8 +26,8 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider) :
 
         return allModels
             .Where(IsChatModel)
-            .Select(m => new AiModelDescriptor(
-                new AiModelRef(Provider.Id, m.Id),
+            .Select(m => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, m.Id),
                 MicrosoftFoundryModelUtilities.FormatDisplayName(m.Id)))
             .ToList();
     }

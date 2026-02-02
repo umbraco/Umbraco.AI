@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Profiles;
+namespace Umbraco.AI.Core.Profiles;
 
 /// <summary>
 /// Defines a contract for managing AI profiles.
 /// </summary>
-public interface IAiProfileService
+public interface IAIProfileService
 {
     /// <summary>
     /// Gets a specific profile by its unique identifier.
@@ -14,7 +14,7 @@ public interface IAiProfileService
     /// <param name="id">The profile ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile if found, otherwise null.</returns>
-    Task<AiProfile?> GetProfileAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a specific profile by its alias.
@@ -22,14 +22,14 @@ public interface IAiProfileService
     /// <param name="alias">The profile alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile if found, otherwise null.</returns>
-    Task<AiProfile?> GetProfileByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIProfile?> GetProfileByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all profiles.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>All profiles.</returns>
-    Task<IEnumerable<AiProfile>> GetAllProfilesAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIProfile>> GetAllProfilesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all profiles for the specified capability.
@@ -37,7 +37,7 @@ public interface IAiProfileService
     /// <param name="capability">The capability to filter by.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Profiles matching the capability.</returns>
-    Task<IEnumerable<AiProfile>> GetProfilesAsync(AiCapability capability, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIProfile>> GetProfilesAsync(AICapability capability, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets profiles with pagination and optional filtering.
@@ -48,9 +48,9 @@ public interface IAiProfileService
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated profiles and the total count.</returns>
-    Task<(IEnumerable<AiProfile> Items, int Total)> GetProfilesPagedAsync(
+    Task<(IEnumerable<AIProfile> Items, int Total)> GetProfilesPagedAsync(
         string? filter = null,
-        AiCapability? capability = null,
+        AICapability? capability = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);
@@ -62,7 +62,7 @@ public interface IAiProfileService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The default profile.</returns>
     /// <exception cref="InvalidOperationException">Thrown when no default profile is configured or found.</exception>
-    Task<AiProfile> GetDefaultProfileAsync(AiCapability capability, CancellationToken cancellationToken = default);
+    Task<AIProfile> GetDefaultProfileAsync(AICapability capability, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves (creates or updates) a profile.
@@ -70,7 +70,7 @@ public interface IAiProfileService
     /// <param name="profile">The profile to save.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The saved profile.</returns>
-    Task<AiProfile> SaveProfileAsync(AiProfile profile, CancellationToken cancellationToken = default);
+    Task<AIProfile> SaveProfileAsync(AIProfile profile, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a profile by its unique identifier.
@@ -88,7 +88,7 @@ public interface IAiProfileService
     /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
-    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetProfileVersionHistoryAsync(
+    Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetProfileVersionHistoryAsync(
         Guid profileId,
         int skip,
         int take,
@@ -101,7 +101,7 @@ public interface IAiProfileService
     /// <param name="version">The version to retrieve.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The profile at that version, or null if not found.</returns>
-    Task<AiProfile?> GetProfileVersionSnapshotAsync(
+    Task<AIProfile?> GetProfileVersionSnapshotAsync(
         Guid profileId,
         int version,
         CancellationToken cancellationToken = default);
@@ -114,7 +114,7 @@ public interface IAiProfileService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated profile at the new version.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the profile or target version is not found.</exception>
-    Task<AiProfile> RollbackProfileAsync(
+    Task<AIProfile> RollbackProfileAsync(
         Guid profileId,
         int targetVersion,
         CancellationToken cancellationToken = default);

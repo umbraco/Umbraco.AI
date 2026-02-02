@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="IAiContextService"/> to support IdOrAlias lookups.
 /// </summary>
-internal static class AiContextServiceExtensions
+internal static class AIContextServiceExtensions
 {
     /// <summary>
     /// Gets a context by ID or alias.
@@ -15,7 +15,7 @@ internal static class AiContextServiceExtensions
     /// <param name="idOrAlias">The ID or alias to look up.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The context if found, otherwise null.</returns>
-    public static async Task<AiContext?> GetContextAsync(
+    public static async Task<AIContext?> GetContextAsync(
         this IAiContextService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)

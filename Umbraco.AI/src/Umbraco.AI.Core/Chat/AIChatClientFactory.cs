@@ -1,25 +1,25 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Chat;
+namespace Umbraco.AI.Core.Chat;
 
-internal sealed class AiChatClientFactory : IAiChatClientFactory
+internal sealed class AIChatClientFactory : IAiChatClientFactory
 {
     private readonly IAiConnectionService _connectionService;
-    private readonly AiChatMiddlewareCollection _middleware;
+    private readonly AIChatMiddlewareCollection _middleware;
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiRuntimeContextScopeProvider _scopeProvider;
-    private readonly AiRuntimeContextContributorCollection _contributors;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
-    public AiChatClientFactory(
+    public AIChatClientFactory(
         IAiConnectionService connectionService,
-        AiChatMiddlewareCollection middleware,
+        AIChatMiddlewareCollection middleware,
         IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiRuntimeContextScopeProvider scopeProvider,
-        AiRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors)
     {
         _connectionService = connectionService;
         _middleware = middleware;
@@ -28,7 +28,7 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
         _contributors = contributors;
     }
 
-    public async Task<IChatClient> CreateClientAsync(AiProfile profile, CancellationToken cancellationToken = default)
+    public async Task<IChatClient> CreateClientAsync(AIProfile profile, CancellationToken cancellationToken = default)
     {
         // Get configured provider with resolved settings
         var chatCapability = await GetConfiguredChatCapabilityAsync(profile, cancellationToken);
@@ -54,8 +54,8 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
 
     private IChatClient ApplyMiddleware(IChatClient client)
     {
-        // Apply middleware in collection order (controlled by AiChatMiddlewareCollectionBuilder)
-        // Function invocation is now a middleware (AiFunctionInvokingChatMiddleware) and can be
+        // Apply middleware in collection order (controlled by AIChatMiddlewareCollectionBuilder)
+        // Function invocation is now a middleware (AIFunctionInvokingChatMiddleware) and can be
         // ordered relative to other middleware using InsertBefore/InsertAfter
         foreach (var middleware in _middleware)
         {
@@ -66,7 +66,7 @@ internal sealed class AiChatClientFactory : IAiChatClientFactory
     }
 
     private async Task<IAiConfiguredChatCapability> GetConfiguredChatCapabilityAsync(
-        AiProfile profile,
+        AIProfile profile,
         CancellationToken cancellationToken)
     {
         if (profile.ConnectionId == Guid.Empty)

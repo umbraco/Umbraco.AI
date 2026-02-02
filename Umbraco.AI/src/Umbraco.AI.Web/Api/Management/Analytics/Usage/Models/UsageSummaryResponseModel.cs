@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Analytics.Usage.Models;
+namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Models;
 
 /// <summary>
 /// Response model containing summary statistics for a time period.

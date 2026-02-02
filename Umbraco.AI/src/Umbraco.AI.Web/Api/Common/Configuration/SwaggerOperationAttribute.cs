@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Web.Api.Common.Configuration;
+namespace Umbraco.AI.Web.Api.Common.Configuration;
 
 /// <summary>
 /// Attribute to explicitly specify Swagger operation metadata including operation ID and tags.

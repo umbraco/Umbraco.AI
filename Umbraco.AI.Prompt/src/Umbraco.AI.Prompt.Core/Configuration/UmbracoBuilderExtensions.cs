@@ -1,13 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Prompt.Core.Context;
-using Umbraco.Ai.Prompt.Core.Media;
-using Umbraco.Ai.Prompt.Core.Models;
-using Umbraco.Ai.Prompt.Core.Prompts;
-using Umbraco.Ai.Prompt.Core.Templates.Processors;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Prompt.Core.Context;
+using Umbraco.AI.Prompt.Core.Media;
+using Umbraco.AI.Prompt.Core.Models;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Templates.Processors;
 using Umbraco.Cms.Core.DependencyInjection;
 
-namespace Umbraco.Ai.Prompt.Core.Configuration;
+namespace Umbraco.AI.Prompt.Core.Configuration;
 
 /// <summary>
 /// Extension methods for configuring Umbraco.Ai.Prompt.Core services.
@@ -28,8 +28,8 @@ public static class UmbracoBuilderExtensions
         }
 
         // Bind configuration
-        builder.Services.Configure<AiPromptOptions>(
-            builder.Config.GetSection(AiPromptOptions.SectionName));
+        builder.Services.Configure<AIPromptOptions>(
+            builder.Config.GetSection(AIPromptOptions.SectionName));
 
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAiPromptRepository, InMemoryAiPromptRepository>();
@@ -39,19 +39,19 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<ImageTemplateVariableProcessor>();
 
         // Register template service
-        builder.Services.AddSingleton<IAiPromptTemplateService, AiPromptTemplateService>();
+        builder.Services.AddSingleton<IAiPromptTemplateService, AIPromptTemplateService>();
 
         // Register scope validator
-        builder.Services.AddScoped<IAiPromptScopeValidator, AiPromptScopeValidator>();
+        builder.Services.AddScoped<IAiPromptScopeValidator, AIPromptScopeValidator>();
 
         // Register service (Singleton to match IAiProfileService pattern and allow use in context resolvers)
-        builder.Services.AddSingleton<IAiPromptService, AiPromptService>();
+        builder.Services.AddSingleton<IAiPromptService, AIPromptService>();
 
         // Register prompt context resolver
-        builder.AiContextResolvers().Append<PromptContextResolver>();
+        builder.AIContextResolvers().Append<PromptContextResolver>();
 
         // Register versionable entity adapter for prompts
-        builder.AiVersionableEntityAdapters().Add<AiPromptVersionableEntityAdapter>();
+        builder.AIVersionableEntityAdapters().Add<AIPromptVersionableEntityAdapter>();
 
         return builder;
     }

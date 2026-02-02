@@ -1,14 +1,14 @@
 using System.Text;
 
-namespace Umbraco.Ai.Core.EntityAdapter;
+namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
 /// Default implementation of <see cref="IAiEntityContextHelper"/>.
 /// </summary>
-internal sealed class AiEntityContextHelper : IAiEntityContextHelper
+internal sealed class AIEntityContextHelper : IAiEntityContextHelper
 {
     /// <inheritdoc />
-    public Dictionary<string, object?> BuildContextDictionary(AiSerializedEntity entity)
+    public Dictionary<string, object?> BuildContextDictionary(AISerializedEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
@@ -30,7 +30,7 @@ internal sealed class AiEntityContextHelper : IAiEntityContextHelper
     }
 
     /// <inheritdoc />
-    public string FormatForLlm(AiSerializedEntity entity)
+    public string FormatForLlm(AISerializedEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 

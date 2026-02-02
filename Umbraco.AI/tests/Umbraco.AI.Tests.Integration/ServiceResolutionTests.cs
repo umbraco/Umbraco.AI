@@ -1,19 +1,19 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Embeddings;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Core.Settings;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Cache;
 
-namespace Umbraco.Ai.Tests.Integration;
+namespace Umbraco.AI.Tests.Integration;
 
 /// <summary>
 /// Targeted DI tests that verify our custom registration logic works correctly.
@@ -65,7 +65,7 @@ public class ServiceResolutionTests : IDisposable
     [Fact]
     public void AiProviderCollection_CanBeResolved()
     {
-        var providers = _serviceProvider.GetService<AiProviderCollection>();
+        var providers = _serviceProvider.GetService<AIProviderCollection>();
 
         providers.ShouldNotBeNull();
     }
@@ -157,7 +157,7 @@ public class ServiceResolutionTests : IDisposable
     [Fact]
     public void AiProviderCollection_ContainsRegisteredProvider()
     {
-        var providers = _serviceProvider.GetRequiredService<AiProviderCollection>();
+        var providers = _serviceProvider.GetRequiredService<AIProviderCollection>();
 
         var provider = providers.GetById("fake-provider");
 
@@ -169,7 +169,7 @@ public class ServiceResolutionTests : IDisposable
     [Fact]
     public void AiProviderCollection_CanGetChatCapabilityFromProvider()
     {
-        var providers = _serviceProvider.GetRequiredService<AiProviderCollection>();
+        var providers = _serviceProvider.GetRequiredService<AIProviderCollection>();
 
         var capability = providers.GetCapability<IAiChatCapability>("fake-provider");
 
@@ -184,16 +184,16 @@ public class ServiceResolutionTests : IDisposable
     /// </summary>
     private static void RegisterAiServices(IServiceCollection services, IConfiguration configuration)
     {
-        // Register configuration (required by AiEditableModelResolver)
+        // Register configuration (required by AIEditableModelResolver)
         services.AddSingleton<IConfiguration>(configuration);
 
-        // Bind AiOptions
-        services.Configure<AiOptions>(configuration.GetSection("Umbraco:Ai"));
+        // Bind AIOptions
+        services.Configure<AIOptions>(configuration.GetSection("Umbraco:Ai"));
 
         // Provider infrastructure
-        services.AddSingleton<IAiCapabilityFactory, AiCapabilityFactory>();
-        services.AddSingleton<IAiEditableModelSchemaBuilder, AiEditableModelSchemaBuilder>();
-        services.AddSingleton<IAiProviderInfrastructure, AiProviderInfrastructure>();
+        services.AddSingleton<IAiCapabilityFactory, AICapabilityFactory>();
+        services.AddSingleton<IAiEditableModelSchemaBuilder, AIEditableModelSchemaBuilder>();
+        services.AddSingleton<IAiProviderInfrastructure, AIProviderInfrastructure>();
 
         // Register a fake provider (in real scenario, these are auto-discovered)
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
@@ -202,56 +202,56 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<IAiProvider>(fakeProvider);
 
         // Create provider collection from registered providers
-        services.AddSingleton<AiProviderCollection>(sp =>
+        services.AddSingleton<AIProviderCollection>(sp =>
         {
             var providers = sp.GetServices<IAiProvider>();
-            return new AiProviderCollection(() => providers);
+            return new AIProviderCollection(() => providers);
         });
 
         // Middleware collections (empty for tests)
-        services.AddSingleton<AiChatMiddlewareCollection>(
-            _ => new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>()));
-        services.AddSingleton<AiEmbeddingMiddlewareCollection>(
-            _ => new AiEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAiEmbeddingMiddleware>()));
+        services.AddSingleton<AIChatMiddlewareCollection>(
+            _ => new AIChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>()));
+        services.AddSingleton<AIEmbeddingMiddlewareCollection>(
+            _ => new AIEmbeddingMiddlewareCollection(() => Enumerable.Empty<IAiEmbeddingMiddleware>()));
 
         // Runtime context infrastructure
         services.AddHttpContextAccessor();
-        services.AddSingleton<AiRuntimeContextScopeProvider>();
-        services.AddSingleton<IAiRuntimeContextAccessor>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
-        services.AddSingleton<IAiRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AiRuntimeContextScopeProvider>());
+        services.AddSingleton<AIRuntimeContextScopeProvider>();
+        services.AddSingleton<IAiRuntimeContextAccessor>(sp => sp.GetRequiredService<AIRuntimeContextScopeProvider>());
+        services.AddSingleton<IAiRuntimeContextScopeProvider>(sp => sp.GetRequiredService<AIRuntimeContextScopeProvider>());
 
         // Runtime context contributors collection (empty for tests)
-        services.AddSingleton<AiRuntimeContextContributorCollection>(
-            _ => new AiRuntimeContextContributorCollection(() => Enumerable.Empty<IAiRuntimeContextContributor>()));
+        services.AddSingleton<AIRuntimeContextContributorCollection>(
+            _ => new AIRuntimeContextContributorCollection(() => Enumerable.Empty<IAiRuntimeContextContributor>()));
 
         // Settings resolution
-        services.AddSingleton<IAiEditableModelResolver, AiEditableModelResolver>();
+        services.AddSingleton<IAiEditableModelResolver, AIEditableModelResolver>();
 
-        // Settings service (required by AiProfileService)
+        // Settings service (required by AIProfileService)
         services.AddSingleton<IAppPolicyCache>(NoAppCache.Instance);
         services.AddSingleton<IAiSettingsRepository, InMemoryAiSettingsRepository>();
-        services.AddSingleton<IAiSettingsService, AiSettingsService>();
+        services.AddSingleton<IAiSettingsService, AISettingsService>();
 
         // Unified versioning service (stub implementation for tests)
-        services.AddSingleton<AiVersionableEntityAdapterCollection>(_ =>
-            new AiVersionableEntityAdapterCollection(() => Enumerable.Empty<IAiVersionableEntityAdapter>()));
+        services.AddSingleton<AIVersionableEntityAdapterCollection>(_ =>
+            new AIVersionableEntityAdapterCollection(() => Enumerable.Empty<IAiVersionableEntityAdapter>()));
         services.AddSingleton<IAiEntityVersionRepository, InMemoryAiEntityVersionRepository>();
-        services.AddSingleton<IAiEntityVersionService, AiEntityVersionService>();
+        services.AddSingleton<IAiEntityVersionService, AIEntityVersionService>();
 
         // Connection system
         services.AddSingleton<IAiConnectionRepository, InMemoryAiConnectionRepository>();
-        services.AddSingleton<IAiConnectionService, AiConnectionService>();
+        services.AddSingleton<IAiConnectionService, AIConnectionService>();
 
         // Profile resolution
         services.AddSingleton<IAiProfileRepository, InMemoryAiProfileRepository>();
-        services.AddSingleton<IAiProfileService, AiProfileService>();
+        services.AddSingleton<IAiProfileService, AIProfileService>();
 
         // Client factories
-        services.AddSingleton<IAiChatClientFactory, AiChatClientFactory>();
-        services.AddSingleton<IAiEmbeddingGeneratorFactory, AiEmbeddingGeneratorFactory>();
+        services.AddSingleton<IAiChatClientFactory, AIChatClientFactory>();
+        services.AddSingleton<IAiEmbeddingGeneratorFactory, AIEmbeddingGeneratorFactory>();
 
         // High-level services
-        services.AddSingleton<IAiChatService, AiChatService>();
+        services.AddSingleton<IAiChatService, AIChatService>();
 
         // Required for options
         services.AddLogging();

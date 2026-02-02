@@ -1,11 +1,11 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Filter for querying usage analytics statistics.
 /// </summary>
-public sealed class AiUsageFilter
+public sealed class AIUsageFilter
 {
     /// <summary>
     /// Gets or sets the provider ID to filter by.
@@ -25,7 +25,7 @@ public sealed class AiUsageFilter
     /// <summary>
     /// Gets or sets the capability to filter by.
     /// </summary>
-    public AiCapability? Capability { get; init; }
+    public AICapability? Capability { get; init; }
 
     /// <summary>
     /// Gets or sets the user ID to filter by.

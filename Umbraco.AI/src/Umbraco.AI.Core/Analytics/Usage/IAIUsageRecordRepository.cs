@@ -1,17 +1,17 @@
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Repository for managing raw AI usage records.
 /// Internal - only accessed by usage recording and aggregation services.
 /// </summary>
-internal interface IAiUsageRecordRepository
+internal interface IAIUsageRecordRepository
 {
     /// <summary>
     /// Saves a new usage record.
     /// </summary>
     /// <param name="record">The usage record to save.</param>
     /// <param name="ct">Cancellation token.</param>
-    Task SaveAsync(AiUsageRecord record, CancellationToken ct = default);
+    Task SaveAsync(AIUsageRecord record, CancellationToken ct = default);
 
     /// <summary>
     /// Gets all usage records within a specific time period.
@@ -21,7 +21,7 @@ internal interface IAiUsageRecordRepository
     /// <param name="to">End time (exclusive).</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Collection of usage records in the period.</returns>
-    Task<IEnumerable<AiUsageRecord>> GetRecordsByPeriodAsync(
+    Task<IEnumerable<AIUsageRecord>> GetRecordsByPeriodAsync(
         DateTime from,
         DateTime to,
         CancellationToken ct = default);

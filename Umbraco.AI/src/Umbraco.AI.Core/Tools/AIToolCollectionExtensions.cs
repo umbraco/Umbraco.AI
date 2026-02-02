@@ -1,12 +1,12 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 
-namespace Umbraco.Ai.Extensions;
+namespace Umbraco.AI.Extensions;
 
 /// <summary>
-/// Extension methods for <see cref="AiToolCollection"/>.
+/// Extension methods for <see cref="AIToolCollection"/>.
 /// </summary>
-public static class AiToolCollectionExtensions
+public static class AIToolCollectionExtensions
 {
     /// <summary>
     /// Converts specified tools to AIFunction instances for MEAI ChatOptions.
@@ -16,7 +16,7 @@ public static class AiToolCollectionExtensions
     /// <param name="factory">The function factory.</param>
     /// <returns>A list of AIFunctions for the specified tools.</returns>
     public static IReadOnlyList<AIFunction> ToAIFunctions(
-        this AiToolCollection tools,
+        this AIToolCollection tools,
         IEnumerable<string> toolIds,
         IAiFunctionFactory factory)
     {
@@ -36,7 +36,7 @@ public static class AiToolCollectionExtensions
     /// <param name="factory">The function factory.</param>
     /// <returns>A list of AIFunctions for matching tools.</returns>
     public static IReadOnlyList<AIFunction> ToAIFunctions(
-        this AiToolCollection tools,
+        this AIToolCollection tools,
         Func<IAiTool, bool> predicate,
         IAiFunctionFactory factory)
     {
@@ -50,7 +50,7 @@ public static class AiToolCollectionExtensions
     /// <param name="factory">The function factory.</param>
     /// <returns>A list of AIFunctions for all tools.</returns>
     public static IReadOnlyList<AIFunction> ToAIFunctions(
-        this AiToolCollection tools,
+        this AIToolCollection tools,
         IAiFunctionFactory factory)
     {
         return factory.Create(tools);
@@ -64,7 +64,7 @@ public static class AiToolCollectionExtensions
     /// <param name="factory">The function factory.</param>
     /// <returns>A list of AIFunctions for system tools.</returns>
     public static IReadOnlyList<AIFunction> ToSystemToolFunctions(
-        this AiToolCollection tools,
+        this AIToolCollection tools,
         IAiFunctionFactory factory)
     {
         return factory.Create(tools.GetSystemTools());
@@ -78,7 +78,7 @@ public static class AiToolCollectionExtensions
     /// <param name="factory">The function factory.</param>
     /// <returns>A list of AIFunctions for user tools.</returns>
     public static IReadOnlyList<AIFunction> ToUserToolFunctions(
-        this AiToolCollection tools,
+        this AIToolCollection tools,
         IAiFunctionFactory factory)
     {
         return factory.Create(tools.GetUserTools());

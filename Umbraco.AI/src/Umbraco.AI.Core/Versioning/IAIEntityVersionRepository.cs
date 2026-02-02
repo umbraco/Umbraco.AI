@@ -1,6 +1,6 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Repository interface for unified entity version storage.
@@ -9,7 +9,7 @@ namespace Umbraco.Ai.Core.Versioning;
 /// This repository handles all version CRUD operations for the unified <c>umbracoAiEntityVersion</c> table.
 /// It is an internal implementation detail of the <see cref="IAiEntityVersionService"/>.
 /// </remarks>
-internal interface IAiEntityVersionRepository
+internal interface IAIEntityVersionRepository
 {
     /// <summary>
     /// Gets the version history for an entity with pagination support.
@@ -20,7 +20,7 @@ internal interface IAiEntityVersionRepository
     /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The version history ordered by version descending (newest first).</returns>
-    Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    Task<IEnumerable<AIEntityVersion>> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
         int skip,
@@ -47,7 +47,7 @@ internal interface IAiEntityVersionRepository
     /// <param name="version">The version number.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The version record, or null if not found.</returns>
-    Task<AiEntityVersion?> GetVersionAsync(
+    Task<AIEntityVersion?> GetVersionAsync(
         Guid entityId,
         string entityType,
         int version,

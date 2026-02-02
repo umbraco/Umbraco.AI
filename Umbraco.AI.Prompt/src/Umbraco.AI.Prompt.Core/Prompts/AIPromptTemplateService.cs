@@ -1,23 +1,23 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Prompt.Core.Templates;
-using Umbraco.Ai.Prompt.Core.Templates.Processors;
+using Umbraco.AI.Prompt.Core.Templates;
+using Umbraco.AI.Prompt.Core.Templates.Processors;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Service implementation for processing prompt templates with variable replacement.
 /// Supports multimodal content through prefixed variables (e.g., {{image:propertyAlias}}).
 /// </summary>
-internal sealed partial class AiPromptTemplateService : IAiPromptTemplateService
+internal sealed partial class AIPromptTemplateService : IAiPromptTemplateService
 {
     [GeneratedRegex(@"\{\{([^}]+)\}\}", RegexOptions.Compiled)]
     private static partial Regex VariablePattern();
 
     private readonly Dictionary<string, IAiTemplateVariableProcessor> _processors;
 
-    public AiPromptTemplateService(
+    public AIPromptTemplateService(
         TextTemplateVariableProcessor textProcessor,
         ImageTemplateVariableProcessor imageProcessor)
     {

@@ -1,15 +1,15 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Extensions;
 
-namespace Umbraco.Ai.OpenAi;
+namespace Umbraco.AI.OpenAi;
 
 /// <summary>
 /// AI chat capability for OpenAI provider.
 /// </summary>
-public class OpenAiChatCapability(OpenAiProvider provider) : AiChatCapabilityBase<OpenAiProviderSettings>(provider)
+public class OpenAiChatCapability(OpenAiProvider provider) : AIChatCapabilityBase<OpenAiProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
     
@@ -37,7 +37,7 @@ public class OpenAiChatCapability(OpenAiProvider provider) : AiChatCapabilityBas
     ];
 
     /// <inheritdoc />
-    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         OpenAiProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
@@ -45,8 +45,8 @@ public class OpenAiChatCapability(OpenAiProvider provider) : AiChatCapabilityBas
 
         return allModels
             .Where(IsChatModel)
-            .Select(id => new AiModelDescriptor(
-                new AiModelRef(Provider.Id, id),
+            .Select(id => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, id),
                 OpenAiModelUtilities.FormatDisplayName(id)))
             .ToList();
     }

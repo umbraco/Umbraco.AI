@@ -1,17 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Web.Api;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 
 /// <summary>
 /// Base controller for Connection management API endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Connection.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Connection.RouteSegment)]
-public abstract class ConnectionControllerBase : UmbracoAiCoreManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.Connection.RouteSegment)]
+public abstract class ConnectionControllerBase : UmbracoAICoreManagementControllerBase
 {
     /// <summary>
     /// Maps a connection operation status to an appropriate action result.

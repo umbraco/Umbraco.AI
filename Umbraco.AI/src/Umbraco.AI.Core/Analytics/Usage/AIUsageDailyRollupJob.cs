@@ -6,34 +6,34 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.HostedServices;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Background service that periodically rolls up hourly statistics into daily statistics.
 /// Runs daily, processing completed days and catching up on any missed periods.
 /// </summary>
-internal sealed class AiUsageDailyRollupJob : RecurringHostedServiceBase
+internal sealed class AIUsageDailyRollupJob : RecurringHostedServiceBase
 {
     private readonly IAiUsageAggregationService _aggregationService;
     private readonly IAiUsageStatisticsRepository _statisticsRepository;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
     private readonly IMainDom _mainDom;
-    private readonly ILogger<AiUsageDailyRollupJob> _logger;
+    private readonly ILogger<AIUsageDailyRollupJob> _logger;
 
     // Run every hour (will process if needed)
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(1);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(1);
 
-    public AiUsageDailyRollupJob(
+    public AIUsageDailyRollupJob(
         IAiUsageAggregationService aggregationService,
         IAiUsageStatisticsRepository statisticsRepository,
-        IOptionsMonitor<AiAnalyticsOptions> options,
+        IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
         IMainDom mainDom,
-        ILogger<AiUsageDailyRollupJob> logger)
+        ILogger<AIUsageDailyRollupJob> logger)
         : base(logger, CheckInterval, StartupDelay)
     {
         _aggregationService = aggregationService;

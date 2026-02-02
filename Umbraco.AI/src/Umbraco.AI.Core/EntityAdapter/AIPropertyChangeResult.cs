@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.EntityAdapter;
+namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
 /// Represents the result of a property change operation.
 /// </summary>
-public sealed class AiPropertyChangeResult
+public sealed class AIPropertyChangeResult
 {
     /// <summary>
     /// Whether the change was applied successfully.
@@ -18,10 +18,10 @@ public sealed class AiPropertyChangeResult
     /// <summary>
     /// Creates a successful result.
     /// </summary>
-    public static AiPropertyChangeResult Succeeded() => new() { Success = true };
+    public static AIPropertyChangeResult Succeeded() => new() { Success = true };
 
     /// <summary>
     /// Creates a failed result with an error message.
     /// </summary>
-    public static AiPropertyChangeResult Failed(string error) => new() { Success = false, Error = error };
+    public static AIPropertyChangeResult Failed(string error) => new() { Success = false, Error = error };
 }

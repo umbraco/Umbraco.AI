@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.MicrosoftFoundry;
+namespace Umbraco.AI.MicrosoftFoundry;
 
 /// <summary>
 /// AI embedding capability for Microsoft AI Foundry provider.
@@ -11,14 +11,14 @@ namespace Umbraco.Ai.MicrosoftFoundry;
 /// Supports all embedding models available through Microsoft AI Foundry, including
 /// OpenAI (text-embedding-3-small, text-embedding-3-large) and other models.
 /// </remarks>
-public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provider) : AiEmbeddingCapabilityBase<MicrosoftFoundryProviderSettings>(provider)
+public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provider) : AIEmbeddingCapabilityBase<MicrosoftFoundryProviderSettings>(provider)
 {
     private const string DefaultEmbeddingModel = "text-embedding-3-small";
 
     private new MicrosoftFoundryProvider Provider => (MicrosoftFoundryProvider)base.Provider;
 
     /// <inheritdoc />
-    protected override async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         MicrosoftFoundryProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
@@ -26,8 +26,8 @@ public class MicrosoftFoundryEmbeddingCapability(MicrosoftFoundryProvider provid
 
         return allModels
             .Where(IsEmbeddingModel)
-            .Select(m => new AiModelDescriptor(
-                new AiModelRef(Provider.Id, m.Id),
+            .Select(m => new AIModelDescriptor(
+                new AIModelRef(Provider.Id, m.Id),
                 MicrosoftFoundryModelUtilities.FormatDisplayName(m.Id)))
             .ToList();
     }

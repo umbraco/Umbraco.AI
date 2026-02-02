@@ -1,6 +1,6 @@
 using Umbraco.Cms.Core.Composing;
 
-namespace Umbraco.Ai.Agent.Core.Scopes;
+namespace Umbraco.AI.Agent.Core.Scopes;
 
 /// <summary>
 /// A collection of AI agent scopes.
@@ -8,16 +8,16 @@ namespace Umbraco.Ai.Agent.Core.Scopes;
 /// <remarks>
 /// <para>
 /// This collection provides lookup methods to find scopes by ID.
-/// Scopes are auto-discovered via the <see cref="AiAgentScopeAttribute"/>.
+/// Scopes are auto-discovered via the <see cref="AIAgentScopeAttribute"/>.
 /// </para>
 /// </remarks>
-public sealed class AiAgentScopeCollection : BuilderCollectionBase<IAiAgentScope>
+public sealed class AIAgentScopeCollection : BuilderCollectionBase<IAiAgentScope>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiAgentScopeCollection"/> class.
+    /// Initializes a new instance of the <see cref="AIAgentScopeCollection"/> class.
     /// </summary>
     /// <param name="items">A factory function that returns the scopes.</param>
-    public AiAgentScopeCollection(Func<IEnumerable<IAiAgentScope>> items)
+    public AIAgentScopeCollection(Func<IEnumerable<IAiAgentScope>> items)
         : base(items)
     { }
 

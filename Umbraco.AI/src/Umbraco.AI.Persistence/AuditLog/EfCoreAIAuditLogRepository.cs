@@ -1,44 +1,44 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core.AuditLog;
+using Umbraco.AI.Core.AuditLog;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Persistence.AuditLog;
+namespace Umbraco.AI.Persistence.AuditLog;
 
 /// <summary>
 /// EF Core implementation of the AI audit-log repository.
 /// </summary>
 internal class EfCoreAiAuditLogRepository : IAiAuditLogRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
     /// <summary>
     /// Initializes a new instance of <see cref="EfCoreAiAuditLogRepository"/>.
     /// </summary>
-    public EfCoreAiAuditLogRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
+    public EfCoreAiAuditLogRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
         => _scopeProvider = scopeProvider;
 
     /// <inheritdoc />
-    public async Task<AiAuditLog?> GetByIdAsync(Guid id, CancellationToken ct)
+    public async Task<AIAuditLog?> GetByIdAsync(Guid id, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiAuditLogEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+        AIAuditLogEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.AuditLogs
                 .FirstOrDefaultAsync(t => t.Id == id, ct));
 
         scope.Complete();
-        return entity is null ? null : AiAuditLogFactory.BuildDomain(entity);
+        return entity is null ? null : AIAuditLogFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<AiAuditLog>, int Total)> GetPagedAsync(
-        AiAuditLogFilter filter, int skip, int take, CancellationToken ct)
+    public async Task<(IEnumerable<AIAuditLog>, int Total)> GetPagedAsync(
+        AIAuditLogFilter filter, int skip, int take, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AiAuditLogEntity> query = db.AuditLogs;
+            IQueryable<AIAuditLogEntity> query = db.AuditLogs;
 
             // Apply status filter
             if (filter.Status.HasValue)
@@ -126,7 +126,7 @@ internal class EfCoreAiAuditLogRepository : IAiAuditLogRepository
             int total = await query.CountAsync(ct);
 
             // Apply pagination and get items (ordered by most recent first)
-            List<AiAuditLogEntity> items = await query
+            List<AIAuditLogEntity> items = await query
                 .OrderByDescending(t => t.StartTime)
                 .Skip(skip)
                 .Take(take)
@@ -136,16 +136,16 @@ internal class EfCoreAiAuditLogRepository : IAiAuditLogRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AiAuditLogFactory.BuildDomain), result.total);
+        return (result.items.Select(AIAuditLogFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiAuditLog>> GetByEntityIdAsync(
+    public async Task<IEnumerable<AIAuditLog>> GetByEntityIdAsync(
         string entityId, string entityType, int limit, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        List<AiAuditLogEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+        List<AIAuditLogEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.AuditLogs
                 .Where(t => t.EntityId == entityId && t.EntityType == entityType)
                 .OrderByDescending(t => t.StartTime)
@@ -153,28 +153,28 @@ internal class EfCoreAiAuditLogRepository : IAiAuditLogRepository
                 .ToListAsync(ct));
 
         scope.Complete();
-        return entities.Select(AiAuditLogFactory.BuildDomain);
+        return entities.Select(AIAuditLogFactory.BuildDomain);
     }
 
     /// <inheritdoc />
-    public async Task<AiAuditLog> SaveAsync(AiAuditLog trace, CancellationToken ct)
+    public async Task<AIAuditLog> SaveAsync(AIAuditLog trace, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         await scope.ExecuteWithContextAsync<object?>(async db =>
         {
-            AiAuditLogEntity? existing = await db.AuditLogs.FindAsync([trace.Id], ct);
+            AIAuditLogEntity? existing = await db.AuditLogs.FindAsync([trace.Id], ct);
 
             if (existing is null)
             {
                 // Insert new audit-log
-                AiAuditLogEntity newEntity = AiAuditLogFactory.BuildEntity(trace);
+                AIAuditLogEntity newEntity = AIAuditLogFactory.BuildEntity(trace);
                 db.AuditLogs.Add(newEntity);
             }
             else
             {
                 // Update existing audit-log
-                AiAuditLogFactory.UpdateEntity(existing, trace);
+                AIAuditLogFactory.UpdateEntity(existing, trace);
             }
 
             await db.SaveChangesAsync(ct);
@@ -188,11 +188,11 @@ internal class EfCoreAiAuditLogRepository : IAiAuditLogRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {
-            AiAuditLogEntity? entity = await db.AuditLogs.FindAsync([id], ct);
+            AIAuditLogEntity? entity = await db.AuditLogs.FindAsync([id], ct);
             if (entity is null)
             {
                 return false;
@@ -210,11 +210,11 @@ internal class EfCoreAiAuditLogRepository : IAiAuditLogRepository
     /// <inheritdoc />
     public async Task<int> DeleteOlderThanAsync(DateTime threshold, CancellationToken ct)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         int deletedCount = await scope.ExecuteWithContextAsync(async db =>
         {
-            List<AiAuditLogEntity> oldAuditLogs = await db.AuditLogs
+            List<AIAuditLogEntity> oldAuditLogs = await db.AuditLogs
                 .Where(t => t.StartTime < threshold)
                 .ToListAsync(ct);
 

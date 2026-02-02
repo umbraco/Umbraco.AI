@@ -1,4 +1,4 @@
-namespace Umbraco.Ai.Core.Models;
+namespace Umbraco.AI.Core.Models;
 
 /// <summary>
 /// Interface for entities that track audit information (creation and modification metadata).
@@ -8,7 +8,7 @@ namespace Umbraco.Ai.Core.Models;
 /// For entities that also need version history with snapshots, implement <see cref="Versioning.IAiVersionableEntity"/> instead,
 /// which extends this interface.
 /// </remarks>
-public interface IAiAuditableEntity
+public interface IAIAuditableEntity
 {
     /// <summary>
     /// Unique identifier for the entity.

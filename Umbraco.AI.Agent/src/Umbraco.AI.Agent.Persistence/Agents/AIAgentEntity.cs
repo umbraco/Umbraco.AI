@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Agent.Persistence.Agents;
+namespace Umbraco.AI.Agent.Persistence.Agents;
 
 /// <summary>
 /// EF Core entity for agent storage.
 /// </summary>
-internal class AiAgentEntity
+internal class AIAgentEntity
 {
     /// <summary>
     /// Unique identifier.

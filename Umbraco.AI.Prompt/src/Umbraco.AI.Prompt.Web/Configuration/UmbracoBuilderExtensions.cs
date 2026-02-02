@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
-using Umbraco.Ai.Prompt.Web.Api.Management.Prompt.Mapping;
+using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 
-namespace Umbraco.Ai.Prompt.Web.Configuration;
+namespace Umbraco.AI.Prompt.Web.Configuration;
 
 /// <summary>
 /// Extension methods for configuring Umbraco.Ai.Prompt.Web services.

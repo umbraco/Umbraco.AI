@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Provider.Models;
+namespace Umbraco.AI.Web.Api.Management.Provider.Models;
 
 /// <summary>
 /// Lightweight response model for a provider (used in lists).

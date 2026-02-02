@@ -1,79 +1,79 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Persistence.Context;
+namespace Umbraco.AI.Persistence.Context;
 
 /// <summary>
 /// EF Core implementation of the AI context repository.
 /// </summary>
 internal class EfCoreAiContextRepository : IAiContextRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
     /// <summary>
     /// Initializes a new instance of <see cref="EfCoreAiContextRepository"/>.
     /// </summary>
-    public EfCoreAiContextRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
+    public EfCoreAiContextRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
 
     /// <inheritdoc />
-    public async Task<AiContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<AIContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+        AIContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Contexts
                 .Include(c => c.Resources)
                 .FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiContextFactory.BuildDomain(entity);
+        return entity is null ? null : AIContextFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
-    public async Task<AiContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public async Task<AIContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+        AIContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Contexts
                 .Include(c => c.Resources)
                 .FirstOrDefaultAsync(c => c.Alias.ToLower() == alias.ToLower(), cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiContextFactory.BuildDomain(entity);
+        return entity is null ? null : AIContextFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiContext>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AIContext>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        List<AiContextEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+        List<AIContextEntity> entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Contexts
                 .Include(c => c.Resources)
                 .ToListAsync(cancellationToken));
 
         scope.Complete();
-        return entities.Select(AiContextFactory.BuildDomain);
+        return entities.Select(AIContextFactory.BuildDomain);
     }
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<AiContext> Items, int Total)> GetPagedAsync(
+    public async Task<(IEnumerable<AIContext> Items, int Total)> GetPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AiContextEntity> query = db.Contexts.Include(c => c.Resources);
+            IQueryable<AIContextEntity> query = db.Contexts.Include(c => c.Resources);
 
             if (!string.IsNullOrEmpty(filter))
             {
@@ -84,7 +84,7 @@ internal class EfCoreAiContextRepository : IAiContextRepository
 
             int total = await query.CountAsync(cancellationToken);
 
-            List<AiContextEntity> items = await query
+            List<AIContextEntity> items = await query
                 .OrderBy(c => c.Name)
                 .Skip(skip)
                 .Take(take)
@@ -94,17 +94,17 @@ internal class EfCoreAiContextRepository : IAiContextRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AiContextFactory.BuildDomain), result.total);
+        return (result.items.Select(AIContextFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />
-    public async Task<AiContext> SaveAsync(AiContext context, Guid? userId = null, CancellationToken cancellationToken = default)
+    public async Task<AIContext> SaveAsync(AIContext context, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var savedContext = await scope.ExecuteWithContextAsync(async db =>
         {
-            AiContextEntity? existing = await db.Contexts
+            AIContextEntity? existing = await db.Contexts
                 .Include(c => c.Resources)
                 .FirstOrDefaultAsync(c => c.Id == context.Id, cancellationToken);
 
@@ -116,7 +116,7 @@ internal class EfCoreAiContextRepository : IAiContextRepository
                 context.CreatedByUserId = userId;
                 context.ModifiedByUserId = userId;
 
-                AiContextEntity newEntity = AiContextFactory.BuildEntity(context);
+                AIContextEntity newEntity = AIContextFactory.BuildEntity(context);
                 db.Contexts.Add(newEntity);
             }
             else
@@ -127,7 +127,7 @@ internal class EfCoreAiContextRepository : IAiContextRepository
                 context.DateModified = DateTime.UtcNow;
                 context.ModifiedByUserId = userId;
 
-                AiContextFactory.UpdateEntity(existing, context);
+                AIContextFactory.UpdateEntity(existing, context);
 
                 // Handle resources: remove deleted, update existing, add new
                 var existingResourceIds = existing.Resources.Select(r => r.Id).ToHashSet();
@@ -146,11 +146,11 @@ internal class EfCoreAiContextRepository : IAiContextRepository
                     if (existingResourceIds.Contains(resource.Id))
                     {
                         var existingResource = existing.Resources.First(r => r.Id == resource.Id);
-                        AiContextFactory.UpdateResourceEntity(existingResource, resource);
+                        AIContextFactory.UpdateResourceEntity(existingResource, resource);
                     }
                     else
                     {
-                        var newResource = AiContextFactory.BuildResourceEntity(resource, context.Id);
+                        var newResource = AIContextFactory.BuildResourceEntity(resource, context.Id);
                         db.ContextResources.Add(newResource);
                     }
                 }
@@ -167,11 +167,11 @@ internal class EfCoreAiContextRepository : IAiContextRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         bool deleted = await scope.ExecuteWithContextAsync(async db =>
         {
-            AiContextEntity? entity = await db.Contexts
+            AIContextEntity? entity = await db.Contexts
                 .Include(c => c.Resources)
                 .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 

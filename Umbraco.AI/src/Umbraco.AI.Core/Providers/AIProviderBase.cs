@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Core.Models;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// Attribute to mark AI provider implementations.
@@ -13,7 +13,7 @@ namespace Umbraco.Ai.Core.Providers;
 /// <param name="id"></param>
 /// <param name="name"></param>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public class AiProviderAttribute(string id, string name) : Attribute
+public class AIProviderAttribute(string id, string name) : Attribute
 {
     /// <summary>
     /// The unique identifier of the AI provider.
@@ -29,7 +29,7 @@ public class AiProviderAttribute(string id, string name) : Attribute
 /// <summary>
 /// Base class for AI providers.
 /// </summary>
-public abstract class AiProviderBase : IAiProvider
+public abstract class AIProviderBase : IAiProvider
 {
     /// <summary>
     /// The infrastructure services for AI providers.
@@ -51,17 +51,17 @@ public abstract class AiProviderBase : IAiProvider
     public virtual Type? SettingsType => null;
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiProviderBase"/> class.
+    /// Initializes a new instance of the <see cref="AIProviderBase"/> class.
     /// </summary>
     /// <exception cref="InvalidOperationException"></exception>
-    protected AiProviderBase(IAiProviderInfrastructure infrastructure)
+    protected AIProviderBase(IAiProviderInfrastructure infrastructure)
     {
         Infrastructure = infrastructure;
         
-        var attribute = GetType().GetCustomAttribute<AiProviderAttribute>(inherit: false);
+        var attribute = GetType().GetCustomAttribute<AIProviderAttribute>(inherit: false);
         if (attribute == null)
         {
-            throw new InvalidOperationException($"The AI provider '{GetType().FullName}' is missing the required AiProviderAttribute.");
+            throw new InvalidOperationException($"The AI provider '{GetType().FullName}' is missing the required AIProviderAttribute.");
         }
 
         Id = attribute.Id;
@@ -96,7 +96,7 @@ public abstract class AiProviderBase : IAiProvider
         => TryGetCapability<TCapability>(out _);
 
     /// <inheritdoc />
-    public virtual AiEditableModelSchema? GetSettingsSchema()
+    public virtual AIEditableModelSchema? GetSettingsSchema()
     {
         // Base implementation returns null (no settings)
         return null;
@@ -117,22 +117,22 @@ public abstract class AiProviderBase : IAiProvider
 /// Base class for AI providers with typed settings support.
 /// </summary>
 /// <typeparam name="TSettings">The type of settings object required by this provider.</typeparam>
-public abstract class AiProviderBase<TSettings> : AiProviderBase
+public abstract class AIProviderBase<TSettings> : AIProviderBase
     where TSettings : class, new()
 {
     /// <inheritdoc />
     public override Type? SettingsType => typeof(TSettings);
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiProviderBase{TSettings}"/> class.
+    /// Initializes a new instance of the <see cref="AIProviderBase{TSettings}"/> class.
     /// </summary>
     /// <param name="infrastructure"></param>
-    protected AiProviderBase(IAiProviderInfrastructure infrastructure)
+    protected AIProviderBase(IAiProviderInfrastructure infrastructure)
         : base(infrastructure)
     { }
 
     /// <inheritdoc />
-    public override AiEditableModelSchema? GetSettingsSchema()
+    public override AIEditableModelSchema? GetSettingsSchema()
         => Infrastructure.SchemaBuilder.BuildForType<TSettings>(Id);
 
     /// <summary>

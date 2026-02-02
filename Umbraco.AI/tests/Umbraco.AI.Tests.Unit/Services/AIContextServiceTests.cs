@@ -1,20 +1,20 @@
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Tests.Common.Builders;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Tests.Common.Builders;
 
-namespace Umbraco.Ai.Tests.Unit.Services;
+namespace Umbraco.AI.Tests.Unit.Services;
 
-public class AiContextServiceTests
+public class AIContextServiceTests
 {
     private readonly Mock<IAiContextRepository> _repositoryMock;
     private readonly Mock<IAiEntityVersionService> _versionServiceMock;
-    private readonly AiContextService _service;
+    private readonly AIContextService _service;
 
-    public AiContextServiceTests()
+    public AIContextServiceTests()
     {
         _repositoryMock = new Mock<IAiContextRepository>();
         _versionServiceMock = new Mock<IAiEntityVersionService>();
-        _service = new AiContextService(_repositoryMock.Object, _versionServiceMock.Object);
+        _service = new AIContextService(_repositoryMock.Object, _versionServiceMock.Object);
     }
 
     #region GetContextAsync
@@ -24,7 +24,7 @@ public class AiContextServiceTests
     {
         // Arrange
         var contextId = Guid.NewGuid();
-        var context = new AiContextBuilder()
+        var context = new AIContextBuilder()
             .WithId(contextId)
             .WithAlias("test-context")
             .WithName("Test Context")
@@ -51,7 +51,7 @@ public class AiContextServiceTests
 
         _repositoryMock
             .Setup(x => x.GetByIdAsync(contextId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiContext?)null);
+            .ReturnsAsync((AIContext?)null);
 
         // Act
         var result = await _service.GetContextAsync(contextId);
@@ -68,7 +68,7 @@ public class AiContextServiceTests
     public async Task GetContextByAliasAsync_WithExistingAlias_ReturnsContext()
     {
         // Arrange
-        var context = new AiContextBuilder()
+        var context = new AIContextBuilder()
             .WithAlias("test-context")
             .WithName("Test Context")
             .Build();
@@ -91,7 +91,7 @@ public class AiContextServiceTests
         // Arrange
         _repositoryMock
             .Setup(x => x.GetByAliasAsync("non-existent", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiContext?)null);
+            .ReturnsAsync((AIContext?)null);
 
         // Act
         var result = await _service.GetContextByAliasAsync("non-existent");
@@ -108,11 +108,11 @@ public class AiContextServiceTests
     public async Task GetContextsAsync_ReturnsAllContexts()
     {
         // Arrange
-        var contexts = new List<AiContext>
+        var contexts = new List<AIContext>
         {
-            new AiContextBuilder().WithAlias("context-1").Build(),
-            new AiContextBuilder().WithAlias("context-2").Build(),
-            new AiContextBuilder().WithAlias("context-3").Build()
+            new AIContextBuilder().WithAlias("context-1").Build(),
+            new AIContextBuilder().WithAlias("context-2").Build(),
+            new AIContextBuilder().WithAlias("context-3").Build()
         };
 
         _repositoryMock
@@ -132,7 +132,7 @@ public class AiContextServiceTests
         // Arrange
         _repositoryMock
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Enumerable.Empty<AiContext>());
+            .ReturnsAsync(Enumerable.Empty<AIContext>());
 
         // Act
         var result = await _service.GetContextsAsync();
@@ -149,10 +149,10 @@ public class AiContextServiceTests
     public async Task GetContextsPagedAsync_ReturnsPaginatedResults()
     {
         // Arrange
-        var contexts = new List<AiContext>
+        var contexts = new List<AIContext>
         {
-            new AiContextBuilder().WithAlias("context-1").Build(),
-            new AiContextBuilder().WithAlias("context-2").Build()
+            new AIContextBuilder().WithAlias("context-1").Build(),
+            new AIContextBuilder().WithAlias("context-2").Build()
         };
 
         _repositoryMock
@@ -171,9 +171,9 @@ public class AiContextServiceTests
     public async Task GetContextsPagedAsync_WithFilter_PassesFilterToRepository()
     {
         // Arrange
-        var contexts = new List<AiContext>
+        var contexts = new List<AIContext>
         {
-            new AiContextBuilder().WithAlias("brand-context").WithName("Brand Context").Build()
+            new AIContextBuilder().WithAlias("brand-context").WithName("Brand Context").Build()
         };
 
         _repositoryMock
@@ -197,7 +197,7 @@ public class AiContextServiceTests
     public async Task SaveContextAsync_SavesAndReturnsContext()
     {
         // Arrange
-        var context = new AiContextBuilder()
+        var context = new AIContextBuilder()
             .WithAlias("new-context")
             .WithName("New Context")
             .Build();
@@ -219,19 +219,19 @@ public class AiContextServiceTests
     public async Task SaveContextAsync_WithResources_SavesContextWithResources()
     {
         // Arrange
-        var resource = new AiContextResourceBuilder()
+        var resource = new AIContextResourceBuilder()
             .WithName("Brand Voice")
             .AsBrandVoice()
             .Build();
 
-        var context = new AiContextBuilder()
+        var context = new AIContextBuilder()
             .WithAlias("context-with-resources")
             .WithName("Context with Resources")
             .WithResources(resource)
             .Build();
 
         _repositoryMock
-            .Setup(x => x.SaveAsync(It.IsAny<AiContext>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAsync(It.IsAny<AIContext>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(context);
 
         // Act

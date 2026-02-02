@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Specifies the level of detail to capture for AI traces.
 /// </summary>
-public enum AiAuditLogDetailLevel
+public enum AIAuditLogDetailLevel
 {
     /// <summary>
     /// Minimal detail - only core audit-log information (user, model, tokens, status).

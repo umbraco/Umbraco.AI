@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Tests.Common.Builders;
+namespace Umbraco.AI.Tests.Common.Builders;
 
 /// <summary>
-/// Fluent builder for creating <see cref="AiConnection"/> instances in tests.
+/// Fluent builder for creating <see cref="AIConnection"/> instances in tests.
 /// </summary>
-public class AiConnectionBuilder
+public class AIConnectionBuilder
 {
     private Guid _id = Guid.NewGuid();
     private string _alias = $"test-connection-{Guid.NewGuid():N}";
@@ -17,37 +17,37 @@ public class AiConnectionBuilder
     private DateTime _dateCreated = DateTime.UtcNow;
     private DateTime _dateModified = DateTime.UtcNow;
 
-    public AiConnectionBuilder WithId(Guid id)
+    public AIConnectionBuilder WithId(Guid id)
     {
         _id = id;
         return this;
     }
 
-    public AiConnectionBuilder WithAlias(string alias)
+    public AIConnectionBuilder WithAlias(string alias)
     {
         _alias = alias;
         return this;
     }
 
-    public AiConnectionBuilder WithName(string name)
+    public AIConnectionBuilder WithName(string name)
     {
         _name = name;
         return this;
     }
 
-    public AiConnectionBuilder WithProviderId(string providerId)
+    public AIConnectionBuilder WithProviderId(string providerId)
     {
         _providerId = providerId;
         return this;
     }
 
-    public AiConnectionBuilder WithSettings(object? settings)
+    public AIConnectionBuilder WithSettings(object? settings)
     {
         _settings = settings;
         return this;
     }
 
-    public AiConnectionBuilder WithSettings<TSettings>(Action<TSettings> configure) where TSettings : class, new()
+    public AIConnectionBuilder WithSettings<TSettings>(Action<TSettings> configure) where TSettings : class, new()
     {
         var settings = new TSettings();
         configure(settings);
@@ -55,27 +55,27 @@ public class AiConnectionBuilder
         return this;
     }
 
-    public AiConnectionBuilder IsActive(bool isActive = true)
+    public AIConnectionBuilder IsActive(bool isActive = true)
     {
         _isActive = isActive;
         return this;
     }
 
-    public AiConnectionBuilder WithDateCreated(DateTime dateCreated)
+    public AIConnectionBuilder WithDateCreated(DateTime dateCreated)
     {
         _dateCreated = dateCreated;
         return this;
     }
 
-    public AiConnectionBuilder WithDateModified(DateTime dateModified)
+    public AIConnectionBuilder WithDateModified(DateTime dateModified)
     {
         _dateModified = dateModified;
         return this;
     }
 
-    public AiConnection Build()
+    public AIConnection Build()
     {
-        return new AiConnection
+        return new AIConnection
         {
             Id = _id,
             Alias = _alias,
@@ -88,5 +88,5 @@ public class AiConnectionBuilder
         };
     }
 
-    public static implicit operator AiConnection(AiConnectionBuilder builder) => builder.Build();
+    public static implicit operator AIConnection(AIConnectionBuilder builder) => builder.Build();
 }

@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAiAgent_AddUserTracking : Migration
+    public partial class UmbracoAIAgent_AddUserTracking : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

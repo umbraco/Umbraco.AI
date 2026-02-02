@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Core.Serialization;
+using Umbraco.AI.Core.Serialization;
 
-namespace Umbraco.Ai.Core;
+namespace Umbraco.AI.Core;
 
 /// <summary>
 /// Constants for Umbraco.Ai.
@@ -107,7 +107,7 @@ public static class Constants
         public const string LogKeys = "Umbraco.Ai.LogKeys";
         
         /// <summary>
-        /// Key for <see cref="EntityAdapter.AiSerializedEntity"/> data.
+        /// Key for <see cref="EntityAdapter.AISerializedEntity"/> data.
         /// </summary>
         public const string SerializedEntity = "Umbraco.Ai.SerializedEntity";
 

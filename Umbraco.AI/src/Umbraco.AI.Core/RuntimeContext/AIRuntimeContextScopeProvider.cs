@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace Umbraco.Ai.Core.RuntimeContext;
+namespace Umbraco.AI.Core.RuntimeContext;
 
 /// <summary>
 /// Provides runtime context scope management using HttpContext.Items for storage.
@@ -11,32 +11,32 @@ namespace Umbraco.Ai.Core.RuntimeContext;
 /// available across async boundaries within the same HTTP request.
 /// </para>
 /// <para>
-/// Nested scopes are supported: each call to <see cref="CreateScope(IEnumerable{AiRequestContextItem})"/>
+/// Nested scopes are supported: each call to <see cref="CreateScope(IEnumerable{AIRequestContextItem})"/>
 /// pushes a new context onto the stack, and disposing the scope pops it, restoring the previous context.
 /// </para>
 /// </remarks>
-internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProvider, IAiRuntimeContextAccessor
+internal sealed class AIRuntimeContextScopeProvider : IAiRuntimeContextScopeProvider, IAiRuntimeContextAccessor
 {
     private const string ContextKey = "Umbraco.Ai.RuntimeContext";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiRuntimeContextScopeProvider"/> class.
+    /// Initializes a new instance of the <see cref="AIRuntimeContextScopeProvider"/> class.
     /// </summary>
     /// <param name="httpContextAccessor">The HTTP context accessor.</param>
-    public AiRuntimeContextScopeProvider(IHttpContextAccessor httpContextAccessor)
+    public AIRuntimeContextScopeProvider(IHttpContextAccessor httpContextAccessor)
     {
         _httpContextAccessor = httpContextAccessor;
     }
 
     /// <inheritdoc />
-    public AiRuntimeContext? Context
+    public AIRuntimeContext? Context
     {
         get
         {
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext?.Items[ContextKey] is Stack<AiRuntimeContext> stack && stack.Count > 0)
+            if (httpContext?.Items[ContextKey] is Stack<AIRuntimeContext> stack && stack.Count > 0)
             {
                 return stack.Peek();
             }
@@ -50,25 +50,25 @@ internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
         => CreateScope([]);
 
     /// <inheritdoc />
-    public IAiRuntimeContextScope CreateScope(IEnumerable<AiRequestContextItem> items)
+    public IAiRuntimeContextScope CreateScope(IEnumerable<AIRequestContextItem> items)
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
         // If no HttpContext, return a detached scope
         if (httpContext == null)
         {
-            return new DetachedScope(new AiRuntimeContext(items));
+            return new DetachedScope(new AIRuntimeContext(items));
         }
 
         // Get or create stack
-        if (httpContext.Items[ContextKey] is not Stack<AiRuntimeContext> stack)
+        if (httpContext.Items[ContextKey] is not Stack<AIRuntimeContext> stack)
         {
-            stack = new Stack<AiRuntimeContext>();
+            stack = new Stack<AIRuntimeContext>();
             httpContext.Items[ContextKey] = stack;
         }
 
         var parentContext = stack.Count > 0 ? stack.Peek() : null;
-        var context = new AiRuntimeContext(items);
+        var context = new AIRuntimeContext(items);
         stack.Push(context);
 
         return new StackScope(this, context, stack, parentContext);
@@ -79,15 +79,15 @@ internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
     /// </summary>
     private sealed class StackScope : IAiRuntimeContextScope
     {
-        private readonly AiRuntimeContextScopeProvider _provider;
-        private readonly Stack<AiRuntimeContext> _stack;
+        private readonly AIRuntimeContextScopeProvider _provider;
+        private readonly Stack<AIRuntimeContext> _stack;
         private bool _disposed;
 
         public StackScope(
-            AiRuntimeContextScopeProvider provider,
-            AiRuntimeContext context,
-            Stack<AiRuntimeContext> stack,
-            AiRuntimeContext? parentContext)
+            AIRuntimeContextScopeProvider provider,
+            AIRuntimeContext context,
+            Stack<AIRuntimeContext> stack,
+            AIRuntimeContext? parentContext)
         {
             _provider = provider;
             _stack = stack;
@@ -96,9 +96,9 @@ internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
             Depth = stack.Count;
         }
 
-        public AiRuntimeContext Context { get; }
+        public AIRuntimeContext Context { get; }
 
-        public AiRuntimeContext? ParentContext { get; }
+        public AIRuntimeContext? ParentContext { get; }
 
         public int Depth { get; }
 
@@ -131,14 +131,14 @@ internal sealed class AiRuntimeContextScopeProvider : IAiRuntimeContextScopeProv
     /// </summary>
     private sealed class DetachedScope : IAiRuntimeContextScope
     {
-        public DetachedScope(AiRuntimeContext context)
+        public DetachedScope(AIRuntimeContext context)
         {
             Context = context;
         }
 
-        public AiRuntimeContext Context { get; }
+        public AIRuntimeContext Context { get; }
 
-        public AiRuntimeContext? ParentContext => null;
+        public AIRuntimeContext? ParentContext => null;
 
         public int Depth => 1;
 

@@ -1,20 +1,20 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.AuditLog;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Persistence.AuditLog;
+namespace Umbraco.AI.Persistence.AuditLog;
 
 /// <summary>
-/// Factory for mapping between <see cref="AiAuditLog"/> domain models and <see cref="AiAuditLogEntity"/> database entities.
+/// Factory for mapping between <see cref="AIAuditLog"/> domain models and <see cref="AIAuditLogEntity"/> database entities.
 /// </summary>
-internal static class AiAuditLogFactory
+internal static class AIAuditLogFactory
 {
     /// <summary>
-    /// Creates an <see cref="AiAuditLog"/> domain model from a database entity.
+    /// Creates an <see cref="AIAuditLog"/> domain model from a database entity.
     /// </summary>
     /// <param name="entity">The database entity.</param>
     /// <returns>The domain model.</returns>
-    public static AiAuditLog BuildDomain(AiAuditLogEntity entity)
+    public static AIAuditLog BuildDomain(AIAuditLogEntity entity)
     {
         // Deserialize Metadata if present
         IReadOnlyDictionary<string, string>? metadata = null;
@@ -30,19 +30,19 @@ internal static class AiAuditLogFactory
             }
         }
 
-        return new AiAuditLog
+        return new AIAuditLog
         {
             Id = entity.Id,
             StartTime = entity.StartTime,
             EndTime = entity.EndTime,
-            Status = (AiAuditLogStatus)entity.Status,
-            ErrorCategory = entity.ErrorCategory.HasValue ? (AiAuditLogErrorCategory)entity.ErrorCategory.Value : null,
+            Status = (AIAuditLogStatus)entity.Status,
+            ErrorCategory = entity.ErrorCategory.HasValue ? (AIAuditLogErrorCategory)entity.ErrorCategory.Value : null,
             ErrorMessage = entity.ErrorMessage,
             UserId = entity.UserId,
             UserName = entity.UserName,
             EntityId = entity.EntityId,
             EntityType = entity.EntityType,
-            Capability = (AiCapability)entity.Capability, // Changed from OperationType string to Capability enum
+            Capability = (AICapability)entity.Capability, // Changed from OperationType string to Capability enum
             ProfileId = entity.ProfileId,
             ProfileAlias = entity.ProfileAlias,
             ProfileVersion = entity.ProfileVersion,
@@ -56,18 +56,18 @@ internal static class AiAuditLogFactory
             TotalTokens = entity.TotalTokens,
             PromptSnapshot = entity.PromptSnapshot,
             ResponseSnapshot = entity.ResponseSnapshot,
-            DetailLevel = (AiAuditLogDetailLevel)entity.DetailLevel,
+            DetailLevel = (AIAuditLogDetailLevel)entity.DetailLevel,
             ParentAuditLogId = entity.ParentAuditLogId, // New: Parent audit-log tracking
             Metadata = metadata // New: Extensible metadata
         };
     }
 
     /// <summary>
-    /// Creates an <see cref="AiAuditLogEntity"/> database entity from a domain model.
+    /// Creates an <see cref="AIAuditLogEntity"/> database entity from a domain model.
     /// </summary>
     /// <param name="audit">The domain model.</param>
     /// <returns>The database entity.</returns>
-    public static AiAuditLogEntity BuildEntity(AiAuditLog audit)
+    public static AIAuditLogEntity BuildEntity(AIAuditLog audit)
     {
         // Serialize Metadata if present
         string? metadataJson = null;
@@ -76,7 +76,7 @@ internal static class AiAuditLogFactory
             metadataJson = JsonSerializer.Serialize(audit.Metadata);
         }
 
-        return new AiAuditLogEntity
+        return new AIAuditLogEntity
         {
             Id = audit.Id,
             StartTime = audit.StartTime,
@@ -109,11 +109,11 @@ internal static class AiAuditLogFactory
     }
 
     /// <summary>
-    /// Updates an existing <see cref="AiAuditLogEntity"/> with values from a domain model.
+    /// Updates an existing <see cref="AIAuditLogEntity"/> with values from a domain model.
     /// </summary>
     /// <param name="entity">The entity to update.</param>
     /// <param name="audit">The domain model with updated values.</param>
-    public static void UpdateEntity(AiAuditLogEntity entity, AiAuditLog audit)
+    public static void UpdateEntity(AIAuditLogEntity entity, AIAuditLog audit)
     {
         // Serialize Metadata if present
         string? metadataJson = null;

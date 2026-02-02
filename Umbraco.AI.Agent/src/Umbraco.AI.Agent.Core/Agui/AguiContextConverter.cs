@@ -1,7 +1,7 @@
-using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Agui.Models;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <summary>
 /// Default implementation of <see cref="IAguiContextConverter"/>.
@@ -9,14 +9,14 @@ namespace Umbraco.Ai.Agent.Core.Agui;
 internal sealed class AguiContextConverter : IAguiContextConverter
 {
     /// <inheritdoc />
-    public IReadOnlyList<AiRequestContextItem> ConvertToRequestContextItems(IEnumerable<AguiContextItem>? context)
+    public IReadOnlyList<AIRequestContextItem> ConvertToRequestContextItems(IEnumerable<AguiContextItem>? context)
     {
         if (context is null)
         {
             return [];
         }
 
-        return context.Select(item => new AiRequestContextItem
+        return context.Select(item => new AIRequestContextItem
         {
             Description = item.Description,
             Value = item.Value

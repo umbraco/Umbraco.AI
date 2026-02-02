@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Web.Api.Management.Common.Models;
+namespace Umbraco.AI.Web.Api.Management.Common.Models;
 
 /// <summary>
 /// Response model for comparing two versions of an entity.

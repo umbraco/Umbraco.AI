@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Special;
+namespace Umbraco.AI.Agui.Events.Special;
 
 /// <summary>
 /// Raw event for passing through unprocessed data.

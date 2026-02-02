@@ -1,7 +1,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-namespace Umbraco.Ai.Core.Chat.Middleware.Examples;
+namespace Umbraco.AI.Core.Chat.Middleware.Examples;
 
 /// <summary>
 /// Example middleware that adds logging to chat operations.
@@ -14,7 +14,7 @@ namespace Umbraco.Ai.Core.Chat.Middleware.Examples;
 /// {
 ///     public void Compose(IUmbracoBuilder builder)
 ///     {
-///         builder.AiChatMiddleware()
+///         builder.AIChatMiddleware()
 ///             .Append&lt;LoggingChatMiddleware&gt;();
 ///     }
 /// }

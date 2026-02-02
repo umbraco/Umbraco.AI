@@ -1,17 +1,17 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Context information for creating an AI usage record.
 /// Contains all metadata needed by the factory to create a complete record.
 /// </summary>
-public sealed class AiUsageRecordContext
+public sealed class AIUsageRecordContext
 {
     /// <summary>
     /// Gets the AI capability being executed (Chat, Embedding, etc.).
     /// </summary>
-    public required AiCapability Capability { get; init; }
+    public required AICapability Capability { get; init; }
 
     /// <summary>
     /// Gets the profile ID used for this operation.
@@ -54,13 +54,13 @@ public sealed class AiUsageRecordContext
     public Guid? FeatureId { get; init; }
 
     /// <summary>
-    /// Creates a context from AiUsageContext (for middleware compatibility).
+    /// Creates a context from AIUsageContext (for middleware compatibility).
     /// </summary>
-    /// <param name="usageContext">The AiUsageContext extracted from options.</param>
-    /// <returns>A new AiUsageRecordContext with validated required fields.</returns>
-    public static AiUsageRecordContext FromUsageContext(AiUsageContext usageContext)
+    /// <param name="usageContext">The AIUsageContext extracted from options.</param>
+    /// <returns>A new AIUsageRecordContext with validated required fields.</returns>
+    public static AIUsageRecordContext FromUsageContext(AIUsageContext usageContext)
     {
-        return new AiUsageRecordContext
+        return new AIUsageRecordContext
         {
             Capability = usageContext.Capability,
             ProfileId = usageContext.ProfileId ?? Guid.Empty,

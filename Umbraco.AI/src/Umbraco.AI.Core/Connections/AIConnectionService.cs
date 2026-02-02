@@ -1,25 +1,25 @@
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Core.Connections;
+namespace Umbraco.AI.Core.Connections;
 
 /// <summary>
 /// Service for managing AI provider connections with validation and business logic.
 /// </summary>
-internal sealed class AiConnectionService : IAiConnectionService
+internal sealed class AIConnectionService : IAiConnectionService
 {
     private readonly IAiConnectionRepository _repository;
-    private readonly AiProviderCollection _providers;
+    private readonly AIProviderCollection _providers;
     private readonly IAiEditableModelResolver _modelResolver;
     private readonly IAiEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
-    public AiConnectionService(
+    public AIConnectionService(
         IAiConnectionRepository repository,
-        AiProviderCollection providers,
+        AIProviderCollection providers,
         IAiEditableModelResolver modelResolver,
         IAiEntityVersionService versionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
@@ -32,19 +32,19 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public Task<AiConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return _repository.GetAsync(id, cancellationToken);
     }
 
     /// <inheritdoc />
-    public Task<AiConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
         return _repository.GetByAliasAsync(alias, cancellationToken);
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(providerId))
         {
@@ -55,7 +55,7 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public Task<(IEnumerable<AiConnection> Items, int Total)> GetConnectionsPagedAsync(
+    public Task<(IEnumerable<AIConnection> Items, int Total)> GetConnectionsPagedAsync(
         string? filter = null,
         string? providerId = null,
         int skip = 0,
@@ -66,14 +66,14 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AIConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default)
     {
         var connections = await _repository.GetByProviderAsync(providerId, cancellationToken);
-        return connections.Select(c => new AiConnectionRef(c.Id, c.Name));
+        return connections.Select(c => new AIConnectionRef(c.Id, c.Name));
     }
 
     /// <inheritdoc />
-    public async Task<AiConnection> SaveConnectionAsync(AiConnection connection, CancellationToken cancellationToken = default)
+    public async Task<AIConnection> SaveConnectionAsync(AIConnection connection, CancellationToken cancellationToken = default)
     {
         // Generate new ID if needed
         if (connection.Id == Guid.Empty)
@@ -211,14 +211,14 @@ internal sealed class AiConnectionService : IAiConnectionService
             return null;
         }
 
-        return new AiConfiguredProvider(provider, resolvedSettings);
+        return new AIConfiguredProvider(provider, resolvedSettings);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiCapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AICapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default)
     {
         var connections = await _repository.GetAllAsync(cancellationToken);
-        var capabilities = new HashSet<AiCapability>();
+        var capabilities = new HashSet<AICapability>();
 
         foreach (var connection in connections)
         {
@@ -236,7 +236,7 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiConnection>> GetConnectionsByCapabilityAsync(AiCapability capability, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AIConnection>> GetConnectionsByCapabilityAsync(AICapability capability, CancellationToken cancellationToken = default)
     {
         var connections = await _repository.GetAllAsync(cancellationToken);
 
@@ -248,7 +248,7 @@ internal sealed class AiConnectionService : IAiConnectionService
     }
 
     /// <inheritdoc />
-    public Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
+    public Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
         Guid connectionId,
         int skip,
         int take,
@@ -256,14 +256,14 @@ internal sealed class AiConnectionService : IAiConnectionService
         => _versionService.GetVersionHistoryAsync(connectionId, "Connection", skip, take, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AiConnection?> GetConnectionVersionSnapshotAsync(
+    public Task<AIConnection?> GetConnectionVersionSnapshotAsync(
         Guid connectionId,
         int version,
         CancellationToken cancellationToken = default)
-        => _versionService.GetVersionSnapshotAsync<AiConnection>(connectionId, version, cancellationToken);
+        => _versionService.GetVersionSnapshotAsync<AIConnection>(connectionId, version, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AiConnection> RollbackConnectionAsync(
+    public async Task<AIConnection> RollbackConnectionAsync(
         Guid connectionId,
         int targetVersion,
         CancellationToken cancellationToken = default)
@@ -276,7 +276,7 @@ internal sealed class AiConnectionService : IAiConnectionService
         }
 
         // Get the snapshot at the target version
-        var snapshot = await _versionService.GetVersionSnapshotAsync<AiConnection>(connectionId, targetVersion, cancellationToken);
+        var snapshot = await _versionService.GetVersionSnapshotAsync<AIConnection>(connectionId, targetVersion, cancellationToken);
         if (snapshot is null)
         {
             throw new InvalidOperationException($"Version {targetVersion} not found for connection '{connectionId}'.");
@@ -289,7 +289,7 @@ internal sealed class AiConnectionService : IAiConnectionService
 
         // Create a new version by saving the snapshot data
         // We need to preserve the ID and update the dates appropriately
-        var rolledBackConnection = new AiConnection
+        var rolledBackConnection = new AIConnection
         {
             Id = connectionId,
             Alias = snapshot.Alias,

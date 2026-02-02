@@ -1,7 +1,7 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <summary>
 /// Converts between AG-UI tool definitions and M.E.AI tool types.

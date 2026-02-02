@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agui.Models;
 
-namespace Umbraco.Ai.Agui.Events.Tools;
+namespace Umbraco.AI.Agui.Events.Tools;
 
 /// <summary>
 /// Event emitted with tool call result.

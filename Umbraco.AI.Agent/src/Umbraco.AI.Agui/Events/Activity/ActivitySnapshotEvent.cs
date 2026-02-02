@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Activity;
+namespace Umbraco.AI.Agui.Events.Activity;
 
 /// <summary>
 /// Event that delivers a complete snapshot of an activity message.

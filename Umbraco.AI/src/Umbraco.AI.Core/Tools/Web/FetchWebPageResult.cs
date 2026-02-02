@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Umbraco.Ai.Core.Tools.Web;
+namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Arguments for the FetchWebPage tool.

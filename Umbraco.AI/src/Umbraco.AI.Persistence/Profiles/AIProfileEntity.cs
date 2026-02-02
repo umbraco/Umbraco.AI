@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Persistence.Profiles;
+namespace Umbraco.AI.Persistence.Profiles;
 
 /// <summary>
 /// EF Core entity representing an AI profile configuration.
 /// </summary>
-internal class AiProfileEntity
+internal class AIProfileEntity
 {
     /// <summary>
     /// Unique identifier for the profile.

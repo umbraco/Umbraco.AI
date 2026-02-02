@@ -1,12 +1,12 @@
 using Shouldly;
-using Umbraco.Ai.Agui.Events.Lifecycle;
-using Umbraco.Ai.Agui.Events.Messages;
-using Umbraco.Ai.Agui.Events.Tools;
-using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Agui.Streaming;
+using Umbraco.AI.Agui.Events.Lifecycle;
+using Umbraco.AI.Agui.Events.Messages;
+using Umbraco.AI.Agui.Events.Tools;
+using Umbraco.AI.Agui.Models;
+using Umbraco.AI.Agui.Streaming;
 using Xunit;
 
-namespace Umbraco.Ai.Agent.Tests.Unit.Agui;
+namespace Umbraco.AI.Agent.Tests.Unit.Agui;
 
 public class AguiEventEmitterTests
 {

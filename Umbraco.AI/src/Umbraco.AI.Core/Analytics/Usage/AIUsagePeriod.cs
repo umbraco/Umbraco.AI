@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Defines the granularity period for usage statistics aggregation.
 /// </summary>
-public enum AiUsagePeriod
+public enum AIUsagePeriod
 {
     /// <summary>
     /// Hourly aggregation - data points represent one hour each.

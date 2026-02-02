@@ -2,18 +2,18 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
-using Umbraco.Ai.Web.Api.Management.Configuration;
-using Umbraco.Ai.Web.Api.Management.Profile.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
+using Umbraco.AI.Web.Api.Management.Configuration;
+using Umbraco.AI.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Profile.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 
 /// <summary>
 /// Controller to create a new profile.
@@ -24,7 +24,7 @@ public class CreateProfileController : ProfileControllerBase
 {
     private readonly IAiProfileService _profileService;
     private readonly IAiConnectionService _connectionService;
-    private readonly AiProviderCollection _providers;
+    private readonly AIProviderCollection _providers;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -33,7 +33,7 @@ public class CreateProfileController : ProfileControllerBase
     public CreateProfileController(
         IAiProfileService profileService,
         IAiConnectionService connectionService,
-        AiProviderCollection providers,
+        AIProviderCollection providers,
         IUmbracoMapper umbracoMapper)
     {
         _profileService = profileService;
@@ -58,7 +58,7 @@ public class CreateProfileController : ProfileControllerBase
         CancellationToken cancellationToken = default)
     {
         // Validate capability
-        if (!Enum.TryParse<AiCapability>(requestModel.Capability, true, out _))
+        if (!Enum.TryParse<AICapability>(requestModel.Capability, true, out _))
         {
             return ProfileOperationStatusResult(ProfileOperationStatus.InvalidCapability);
         }
@@ -84,7 +84,7 @@ public class CreateProfileController : ProfileControllerBase
             return ProfileOperationStatusResult(ProfileOperationStatus.ProviderNotFound);
         }
 
-        AiProfile profile = _umbracoMapper.Map<AiProfile>(requestModel)!;
+        AIProfile profile = _umbracoMapper.Map<AIProfile>(requestModel)!;
         var created = await _profileService.SaveProfileAsync(profile, cancellationToken);
 
         return CreatedAtAction(

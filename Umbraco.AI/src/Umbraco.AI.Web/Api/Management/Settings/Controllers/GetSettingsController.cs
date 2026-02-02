@@ -2,12 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Settings;
-using Umbraco.Ai.Web.Api.Management.Settings.Models;
+using Umbraco.AI.Core.Settings;
+using Umbraco.AI.Web.Api.Management.Settings.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Settings.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Settings.Controllers;
 
 /// <summary>
 /// Controller to get the current AI settings.

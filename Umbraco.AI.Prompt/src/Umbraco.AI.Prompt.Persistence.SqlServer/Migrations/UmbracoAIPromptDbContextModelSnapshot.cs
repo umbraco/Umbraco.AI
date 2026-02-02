@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.Ai.Prompt.Persistence;
+using Umbraco.AI.Prompt.Persistence;
 
 #nullable disable
 
-namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
+namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
 {
-    [DbContext(typeof(UmbracoAiPromptDbContext))]
-    partial class UmbracoAiPromptDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(UmbracoAIPromptDbContext))]
+    partial class UmbracoAIPromptDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -22,7 +22,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AiPromptEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AIPromptEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

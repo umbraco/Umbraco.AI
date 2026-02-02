@@ -2,25 +2,25 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Chat.Middleware;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.AuditLog.Middleware;
+namespace Umbraco.AI.Core.AuditLog.Middleware;
 
-internal sealed class AiAuditingChatClient : DelegatingChatClient
+internal sealed class AIAuditingChatClient : DelegatingChatClient
 {
     private readonly IAiRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAiAuditLogService _auditLogService;
     private readonly IAiAuditLogFactory _auditLogFactory;
-    private readonly IOptionsMonitor<AiAuditLogOptions> _auditLogOptions;
+    private readonly IOptionsMonitor<AIAuditLogOptions> _auditLogOptions;
 
-    public AiAuditingChatClient(
+    public AIAuditingChatClient(
         IChatClient innerClient,
         IAiRuntimeContextAccessor runtimeContextAccessor,
         IAiAuditLogService auditLogService,
         IAiAuditLogFactory auditLogFactory,
-        IOptionsMonitor<AiAuditLogOptions> auditLogOptions)
+        IOptionsMonitor<AIAuditLogOptions> auditLogOptions)
         : base(innerClient)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
@@ -35,14 +35,14 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         CancellationToken cancellationToken = default)
     {
         // Start audit-log recording if enabled
-        AiAuditScope? auditScope = null;
-        AiAuditLog? auditLog = null;
+        AIAuditScope? auditScope = null;
+        AIAuditLog? auditLog = null;
 
         if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
         {
             // Extract audit context from options and messages
-            var auditLogContext = AiAuditContext.ExtractFromRuntimeContext(
-                AiCapability.Chat,
+            var auditLogContext = AIAuditContext.ExtractFromRuntimeContext(
+                AICapability.Chat,
                 _runtimeContextAccessor.Context,
                 chatMessages.ToList());
 
@@ -60,10 +60,10 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
             auditLog = _auditLogFactory.Create(
                 auditLogContext,
                 metadata,
-                parentId: AiAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
+                parentId: AIAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
 
             // Create scope synchronously (for nested operation tracking)
-            auditScope = AiAuditScope.Begin(auditLog.Id);
+            auditScope = AIAuditScope.Begin(auditLog.Id);
 
             // Queue persistence in background (fire-and-forget)
             await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
@@ -76,12 +76,12 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
             // Complete audit-log (if exists)
             if (auditLog is not null)
             {
-                var trackingChatClient = InnerClient.GetService<AiTrackingChatClient>();
+                var trackingChatClient = InnerClient.GetService<AITrackingChatClient>();
 
                 // Queue completion in background (fire-and-forget)
                 await _auditLogService.QueueCompleteAuditLogAsync(
                     auditLog,
-                    new AiAuditResponse
+                    new AIAuditResponse
                     {
                         Data = trackingChatClient?.LastResponseMessages,
                         Usage = trackingChatClient?.LastUsageDetails,
@@ -118,14 +118,14 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // Start audit-log recording if enabled
-        AiAuditScope? auditScope = null;
-        AiAuditLog? auditLog = null;
+        AIAuditScope? auditScope = null;
+        AIAuditLog? auditLog = null;
 
         if (_auditLogOptions.CurrentValue.Enabled && _runtimeContextAccessor.Context is not null)
         {
             // Extract audit context from options and messages
-            var auditLogContext = AiAuditContext.ExtractFromRuntimeContext(
-                AiCapability.Chat,
+            var auditLogContext = AIAuditContext.ExtractFromRuntimeContext(
+                AICapability.Chat,
                 _runtimeContextAccessor.Context,
                 chatMessages.ToList());
 
@@ -143,10 +143,10 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
             auditLog = _auditLogFactory.Create(
                 auditLogContext,
                 metadata,
-                parentId: AiAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
+                parentId: AIAuditScope.Current?.AuditLogId); // Capture parent from ambient scope
 
             // Create scope synchronously (for nested operation tracking)
-            auditScope = AiAuditScope.Begin(auditLog.Id);
+            auditScope = AIAuditScope.Begin(auditLog.Id);
 
             // Queue persistence in background (fire-and-forget)
             await _auditLogService.QueueStartAuditLogAsync(auditLog, ct: cancellationToken);
@@ -183,12 +183,12 @@ internal sealed class AiAuditingChatClient : DelegatingChatClient
         // Mark audit-log as completed (no response capture for streaming)
         if (auditLog is not null)
         {
-            var trackingChatClient = InnerClient.GetService<AiTrackingChatClient>();
+            var trackingChatClient = InnerClient.GetService<AITrackingChatClient>();
 
             // Queue completion in background (fire-and-forget)
             await _auditLogService.QueueCompleteAuditLogAsync(
                 auditLog,
-                new AiAuditResponse
+                new AIAuditResponse
                 {
                     Data = trackingChatClient?.LastResponseMessages,
                     Usage = trackingChatClient?.LastUsageDetails,

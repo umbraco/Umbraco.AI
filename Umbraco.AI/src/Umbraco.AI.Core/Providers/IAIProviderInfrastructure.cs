@@ -1,11 +1,11 @@
-using Umbraco.Ai.Core.EditableModels;
+using Umbraco.AI.Core.EditableModels;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// Defines the infrastructure components required by AI providers.
 /// </summary>
-public interface IAiProviderInfrastructure
+public interface IAIProviderInfrastructure
 {
     /// <summary>
     /// Factory for creating AI capability instances.

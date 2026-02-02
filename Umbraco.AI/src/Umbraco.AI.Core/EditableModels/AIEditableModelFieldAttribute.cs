@@ -1,11 +1,11 @@
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
 /// <summary>
 /// Attribute to decorate properties with metadata for UI rendering.
 /// Used for both provider settings and data models.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public class AiEditableModelFieldAttribute : Attribute
+public class AIEditableModelFieldAttribute : Attribute
 {
     /// <summary>
     /// Display label for the field.
@@ -45,7 +45,7 @@ public class AiEditableModelFieldAttribute : Attribute
 }
 
 /// <summary>
-/// Short alias for <see cref="AiEditableModelFieldAttribute"/>.
+/// Short alias for <see cref="AIEditableModelFieldAttribute"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public class AiFieldAttribute : AiEditableModelFieldAttribute;
+public class AIFieldAttribute : AIEditableModelFieldAttribute;

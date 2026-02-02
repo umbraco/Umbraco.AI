@@ -1,9 +1,9 @@
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Core.Contexts.Resolvers;
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Prompt.Core.Prompts;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.Resolvers;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Prompt.Core.Prompts;
 
-namespace Umbraco.Ai.Prompt.Core.Context;
+namespace Umbraco.AI.Prompt.Core.Context;
 
 /// <summary>
 /// Resolves context from prompt-level context assignments.
@@ -35,30 +35,30 @@ internal sealed class PromptContextResolver : IAiContextResolver
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
+    public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
         var promptId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.MetadataKeys.PromptId);
         if (!promptId.HasValue)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         var prompt = await _promptService.GetPromptAsync(promptId.Value, cancellationToken);
         if (prompt is null || prompt.ContextIds.Count == 0)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         return await ResolveContextIdsAsync(prompt.ContextIds, prompt.Name, cancellationToken);
     }
 
-    private async Task<AiContextResolverResult> ResolveContextIdsAsync(
+    private async Task<AIContextResolverResult> ResolveContextIdsAsync(
         IEnumerable<Guid> contextIds,
         string? entityName,
         CancellationToken cancellationToken)
     {
-        var resources = new List<AiContextResolverResource>();
-        var sources = new List<AiContextResolverSource>();
+        var resources = new List<AIContextResolverResource>();
+        var sources = new List<AIContextResolverSource>();
 
         foreach (var contextId in contextIds)
         {
@@ -68,11 +68,11 @@ internal sealed class PromptContextResolver : IAiContextResolver
                 continue;
             }
 
-            sources.Add(new AiContextResolverSource(entityName, context.Name));
+            sources.Add(new AIContextResolverSource(entityName, context.Name));
 
             foreach (var resource in context.Resources.OrderBy(r => r.SortOrder))
             {
-                resources.Add(new AiContextResolverResource
+                resources.Add(new AIContextResolverResource
                 {
                     Id = resource.Id,
                     ResourceTypeId = resource.ResourceTypeId,
@@ -85,7 +85,7 @@ internal sealed class PromptContextResolver : IAiContextResolver
             }
         }
 
-        return new AiContextResolverResult
+        return new AIContextResolverResult
         {
             Resources = resources,
             Sources = sources

@@ -1,8 +1,8 @@
-using Umbraco.Ai.Core.EditableModels;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Tests.Common.Fakes;
+namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
 /// Fake implementation of <see cref="IAiProvider"/> for use in tests.
@@ -23,9 +23,9 @@ public class FakeAiProvider : IAiProvider
 
     public Type? SettingsType { get; set; } = typeof(FakeProviderSettings);
 
-    public AiEditableModelSchema? SettingsSchema { get; set; } = new AiEditableModelSchema(
+    public AIEditableModelSchema? SettingsSchema { get; set; } = new AIEditableModelSchema(
         typeof(FakeProviderSettings),
-        new List<AiEditableModelField>
+        new List<AIEditableModelField>
         {
             new()
             {
@@ -67,13 +67,13 @@ public class FakeAiProvider : IAiProvider
         return this;
     }
 
-    public FakeAiProvider WithSettingsSchema(AiEditableModelSchema? schema)
+    public FakeAiProvider WithSettingsSchema(AIEditableModelSchema? schema)
     {
         SettingsSchema = schema;
         return this;
     }
 
-    public AiEditableModelSchema? GetSettingsSchema() => SettingsSchema;
+    public AIEditableModelSchema? GetSettingsSchema() => SettingsSchema;
 
     public IReadOnlyCollection<IAiCapability> GetCapabilities() => _capabilities.Values.ToList();
 

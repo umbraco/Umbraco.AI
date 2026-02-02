@@ -1,22 +1,22 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Prompt.Persistence.Prompts;
+using Umbraco.AI.Prompt.Persistence.Prompts;
 
-namespace Umbraco.Ai.Prompt.Persistence;
+namespace Umbraco.AI.Prompt.Persistence;
 
 /// <summary>
-/// EF Core DbContext for Umbraco AI AiPrompt persistence.
+/// EF Core DbContext for Umbraco AI AIPrompt persistence.
 /// </summary>
-public class UmbracoAiPromptDbContext : DbContext
+public class UmbracoAIPromptDbContext : DbContext
 {
     /// <summary>
     /// Prompts table.
     /// </summary>
-    internal DbSet<AiPromptEntity> Prompts { get; set; } = null!;
+    internal DbSet<AIPromptEntity> Prompts { get; set; } = null!;
 
     /// <summary>
     /// Creates a new instance of the DbContext.
     /// </summary>
-    public UmbracoAiPromptDbContext(DbContextOptions<UmbracoAiPromptDbContext> options)
+    public UmbracoAIPromptDbContext(DbContextOptions<UmbracoAIPromptDbContext> options)
         : base(options)
     {
     }
@@ -26,7 +26,7 @@ public class UmbracoAiPromptDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<AiPromptEntity>(entity =>
+        modelBuilder.Entity<AIPromptEntity>(entity =>
         {
             entity.ToTable("umbracoAIPrompt");
             entity.HasKey(e => e.Id);

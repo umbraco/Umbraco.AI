@@ -1,12 +1,12 @@
 using System.Text.Json;
-using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Agents;
 
-namespace Umbraco.Ai.Agent.Persistence.Agents;
+namespace Umbraco.AI.Agent.Persistence.Agents;
 
 /// <summary>
-/// Factory for converting between <see cref="AiAgent"/> domain model and <see cref="AiAgentEntity"/>.
+/// Factory for converting between <see cref="AIAgent"/> domain model and <see cref="AIAgentEntity"/>.
 /// </summary>
-internal static class AiAgentEntityFactory
+internal static class AIAgentEntityFactory
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -16,9 +16,9 @@ internal static class AiAgentEntityFactory
     /// <summary>
     /// Builds a domain model from an entity.
     /// </summary>
-    public static Core.Agents.AiAgent BuildDomain(AiAgentEntity entity)
+    public static Core.Agents.AIAgent BuildDomain(AIAgentEntity entity)
     {
-        return new Core.Agents.AiAgent
+        return new Core.Agents.AIAgent
         {
             Id = entity.Id,
             Alias = entity.Alias,
@@ -40,9 +40,9 @@ internal static class AiAgentEntityFactory
     /// <summary>
     /// Builds an entity from a domain model.
     /// </summary>
-    public static AiAgentEntity BuildEntity(Core.Agents.AiAgent aiAgent)
+    public static AIAgentEntity BuildEntity(Core.Agents.AIAgent aiAgent)
     {
-        return new AiAgentEntity
+        return new AIAgentEntity
         {
             Id = aiAgent.Id,
             Alias = aiAgent.Alias,
@@ -64,7 +64,7 @@ internal static class AiAgentEntityFactory
     /// <summary>
     /// Updates an existing entity from a domain model.
     /// </summary>
-    public static void UpdateEntity(AiAgentEntity entity, Core.Agents.AiAgent aiAgent)
+    public static void UpdateEntity(AIAgentEntity entity, Core.Agents.AIAgent aiAgent)
     {
         entity.Alias = aiAgent.Alias;
         entity.Name = aiAgent.Name;

@@ -1,7 +1,7 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Represents an AI context containing resources that enrich AI operations with brand voice,
@@ -11,7 +11,7 @@ namespace Umbraco.Ai.Core.Contexts;
 /// Contexts are standalone, reusable entities that can be assigned to content nodes (via property editor),
 /// profiles, prompts, and agents. They are not owned by these entities but referenced by them.
 /// </remarks>
-public sealed class AiContext : IAiVersionableEntity
+public sealed class AIContext : IAiVersionableEntity
 {
     /// <summary>
     /// The unique identifier of the AI context.
@@ -57,7 +57,7 @@ public sealed class AiContext : IAiVersionableEntity
 
     /// <summary>
     /// The resources belonging to this context.
-    /// Resources are ordered by <see cref="AiContextResource.SortOrder"/>.
+    /// Resources are ordered by <see cref="AIContextResource.SortOrder"/>.
     /// </summary>
-    public IList<AiContextResource> Resources { get; set; } = [];
+    public IList<AIContextResource> Resources { get; set; } = [];
 }

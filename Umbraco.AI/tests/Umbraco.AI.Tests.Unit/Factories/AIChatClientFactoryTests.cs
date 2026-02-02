@@ -1,35 +1,35 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Chat.Middleware;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.RuntimeContext;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Factories;
+namespace Umbraco.AI.Tests.Unit.Factories;
 
-public class AiChatClientFactoryTests
+public class AIChatClientFactoryTests
 {
     private readonly Mock<IAiConnectionService> _connectionServiceMock;
     private readonly Mock<IAiRuntimeContextAccessor> _runtimeContextAccessorMock;
     private readonly Mock<IAiRuntimeContextScopeProvider> _scopeProviderMock;
-    private readonly AiRuntimeContextContributorCollection _contributors;
-    private readonly AiChatMiddlewareCollection _middleware;
+    private readonly AIRuntimeContextContributorCollection _contributors;
+    private readonly AIChatMiddlewareCollection _middleware;
 
-    public AiChatClientFactoryTests()
+    public AIChatClientFactoryTests()
     {
         _connectionServiceMock = new Mock<IAiConnectionService>();
         _runtimeContextAccessorMock = new Mock<IAiRuntimeContextAccessor>();
         _scopeProviderMock = new Mock<IAiRuntimeContextScopeProvider>();
-        _contributors = new AiRuntimeContextContributorCollection(() => Enumerable.Empty<IAiRuntimeContextContributor>());
-        _middleware = new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
+        _contributors = new AIRuntimeContextContributorCollection(() => Enumerable.Empty<IAiRuntimeContextContributor>());
+        _middleware = new AIChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
     }
 
-    private AiChatClientFactory CreateFactory()
+    private AIChatClientFactory CreateFactory()
     {
-        return new AiChatClientFactory(
+        return new AIChatClientFactory(
             _connectionServiceMock.Object,
             _middleware,
             _runtimeContextAccessorMock.Object,
@@ -37,9 +37,9 @@ public class AiChatClientFactoryTests
             _contributors);
     }
 
-    private AiChatClientFactory CreateFactory(AiChatMiddlewareCollection middleware)
+    private AIChatClientFactory CreateFactory(AIChatMiddlewareCollection middleware)
     {
-        return new AiChatClientFactory(
+        return new AIChatClientFactory(
             _connectionServiceMock.Object,
             middleware,
             _runtimeContextAccessorMock.Object,
@@ -75,23 +75,23 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .IsActive(true)
             .Build();
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("fake-provider", "gpt-4")
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .Build();
 
         var fakeChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
-        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(
@@ -125,7 +125,7 @@ public class AiChatClientFactoryTests
     public async Task CreateClientAsync_WithEmptyConnectionId_ThrowsInvalidOperationException()
     {
         // Arrange
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(Guid.Empty)
             .WithModel("fake-provider", "gpt-4")
             .WithName("Test Profile")
@@ -150,7 +150,7 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("fake-provider", "gpt-4")
             .WithName("Test Profile")
@@ -160,7 +160,7 @@ public class AiChatClientFactoryTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         // Act
         var act = () => factory.CreateClientAsync(profile);
@@ -179,14 +179,14 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithName("Inactive Connection")
             .WithProviderId("fake-provider")
             .IsActive(false)
             .Build();
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("fake-provider", "gpt-4")
             .WithName("Test Profile")
@@ -215,14 +215,14 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithName("OpenAI Connection")
             .WithProviderId("openai")
             .IsActive(true)
             .Build();
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("anthropic", "claude-3")
             .WithName("Anthropic Profile")
@@ -263,14 +263,14 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("embedding-only-provider")
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .IsActive(true)
             .Build();
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("embedding-only-provider", "embed-model")
             .Build();
@@ -308,14 +308,14 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .IsActive(true)
             .Build();
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("fake-provider", "gpt-4")
             .Build();
@@ -339,7 +339,7 @@ public class AiChatClientFactoryTests
             .Callback(() => applicationOrder.Add("middleware2"))
             .Returns(wrappedClient2);
 
-        var middlewareWithItems = new AiChatMiddlewareCollection(() => new[]
+        var middlewareWithItems = new AIChatMiddlewareCollection(() => new[]
         {
             middleware1Mock.Object,
             middleware2Mock.Object
@@ -347,7 +347,7 @@ public class AiChatClientFactoryTests
 
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
-        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(
@@ -379,14 +379,14 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .IsActive(true)
             .Build();
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("fake-provider", "gpt-4")
             .Build();
@@ -394,7 +394,7 @@ public class AiChatClientFactoryTests
         var baseChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
-        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(
@@ -428,13 +428,13 @@ public class AiChatClientFactoryTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId("fake-provider")
             .IsActive(true)
             .Build();
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithConnectionId(connectionId)
             .WithModel("fake-provider", "gpt-4")
             .Build();
@@ -442,7 +442,7 @@ public class AiChatClientFactoryTests
         var fakeChatClient = new FakeChatClient();
         var configuredCapabilityMock = new Mock<IAiConfiguredChatCapability>();
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
-        configuredCapabilityMock.Setup(x => x.Kind).Returns(AiCapability.Chat);
+        configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
         var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(

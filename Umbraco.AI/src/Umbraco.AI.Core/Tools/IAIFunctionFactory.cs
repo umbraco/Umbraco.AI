@@ -1,11 +1,11 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Tools;
+namespace Umbraco.AI.Core.Tools;
 
 /// <summary>
 /// Factory for creating MEAI AIFunction instances from AI tools.
 /// </summary>
-public interface IAiFunctionFactory
+public interface IAIFunctionFactory
 {
     /// <summary>
     /// Creates an AIFunction from the specified tool.

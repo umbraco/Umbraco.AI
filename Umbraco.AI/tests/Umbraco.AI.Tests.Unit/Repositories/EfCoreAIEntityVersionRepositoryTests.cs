@@ -1,9 +1,9 @@
-using Umbraco.Ai.Core.Versioning;
-using Umbraco.Ai.Persistence;
-using Umbraco.Ai.Persistence.Versioning;
-using Umbraco.Ai.Tests.Common.Fixtures;
+using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Persistence;
+using Umbraco.AI.Persistence.Versioning;
+using Umbraco.AI.Tests.Common.Fixtures;
 
-namespace Umbraco.Ai.Tests.Unit.Repositories;
+namespace Umbraco.AI.Tests.Unit.Repositories;
 
 [Collection("EfCoreEntityVersionTests")]
 public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixture>
@@ -15,7 +15,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         _fixture = fixture;
     }
 
-    private EfCoreAiEntityVersionRepository CreateRepository(UmbracoAiDbContext context)
+    private EfCoreAiEntityVersionRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
         return new EfCoreAiEntityVersionRepository(scopeProvider);
@@ -51,9 +51,9 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
 
         // Add 3 versions (below limit of 5) directly to context
         setupContext.EntityVersions.AddRange(
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 3, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 3, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
         );
         await setupContext.SaveChangesAsync();
 
@@ -78,7 +78,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         // Add 7 versions (above limit of 3)
         for (int i = 1; i <= 7; i++)
         {
-            setupContext.EntityVersions.Add(new AiEntityVersionEntity
+            setupContext.EntityVersions.Add(new AIEntityVersionEntity
             {
                 Id = Guid.NewGuid(),
                 EntityId = entityId,
@@ -133,7 +133,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         // Entity 1: 5 versions (2 should be deleted with limit 3)
         for (int i = 1; i <= 5; i++)
         {
-            setupContext.EntityVersions.Add(new AiEntityVersionEntity
+            setupContext.EntityVersions.Add(new AIEntityVersionEntity
             {
                 Id = Guid.NewGuid(),
                 EntityId = entity1,
@@ -147,7 +147,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         // Entity 2: 4 versions (1 should be deleted with limit 3)
         for (int i = 1; i <= 4; i++)
         {
-            setupContext.EntityVersions.Add(new AiEntityVersionEntity
+            setupContext.EntityVersions.Add(new AIEntityVersionEntity
             {
                 Id = Guid.NewGuid(),
                 EntityId = entity2,
@@ -186,7 +186,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         // Profile versions
         for (int i = 1; i <= 5; i++)
         {
-            setupContext.EntityVersions.Add(new AiEntityVersionEntity
+            setupContext.EntityVersions.Add(new AIEntityVersionEntity
             {
                 Id = Guid.NewGuid(),
                 EntityId = entityId,
@@ -200,7 +200,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         // Connection versions (same EntityId, different type)
         for (int i = 1; i <= 4; i++)
         {
-            setupContext.EntityVersions.Add(new AiEntityVersionEntity
+            setupContext.EntityVersions.Add(new AIEntityVersionEntity
             {
                 Id = Guid.NewGuid(),
                 EntityId = entityId,
@@ -287,9 +287,9 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
 
         // Add versions out of order
         setupContext.EntityVersions.AddRange(
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 3, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 3, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
         );
         await setupContext.SaveChangesAsync();
 
@@ -314,7 +314,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
 
         for (int i = 1; i <= 5; i++)
         {
-            setupContext.EntityVersions.Add(new AiEntityVersionEntity
+            setupContext.EntityVersions.Add(new AIEntityVersionEntity
             {
                 Id = Guid.NewGuid(),
                 EntityId = entityId,
@@ -361,9 +361,9 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         var entityId = Guid.NewGuid();
 
         setupContext.EntityVersions.AddRange(
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 3, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 3, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
         );
         await setupContext.SaveChangesAsync();
 
@@ -387,8 +387,8 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         var entityId = Guid.NewGuid();
 
         setupContext.EntityVersions.AddRange(
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow }
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entityId, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow }
         );
         await setupContext.SaveChangesAsync();
 
@@ -415,7 +415,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
 
         // Manually insert old version with past DateCreated
         var oldDate = DateTime.UtcNow.AddDays(-10);
-        setupContext.EntityVersions.Add(new AiEntityVersionEntity
+        setupContext.EntityVersions.Add(new AIEntityVersionEntity
         {
             Id = Guid.NewGuid(),
             EntityId = entityId,
@@ -424,7 +424,7 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
             Snapshot = "old-snapshot",
             DateCreated = oldDate
         });
-        setupContext.EntityVersions.Add(new AiEntityVersionEntity
+        setupContext.EntityVersions.Add(new AIEntityVersionEntity
         {
             Id = Guid.NewGuid(),
             EntityId = entityId,
@@ -463,9 +463,9 @@ public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
         var entity2 = Guid.NewGuid();
 
         setupContext.EntityVersions.AddRange(
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entity1, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entity1, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
-            new AiEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entity2, EntityType = "Connection", Version = 1, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entity1, EntityType = "Profile", Version = 1, Snapshot = "snapshot1", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entity1, EntityType = "Profile", Version = 2, Snapshot = "snapshot2", DateCreated = DateTime.UtcNow },
+            new AIEntityVersionEntity { Id = Guid.NewGuid(), EntityId = entity2, EntityType = "Connection", Version = 1, Snapshot = "snapshot3", DateCreated = DateTime.UtcNow }
         );
         await setupContext.SaveChangesAsync();
 

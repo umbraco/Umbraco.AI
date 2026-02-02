@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Providers;
+namespace Umbraco.AI.Core.Providers;
 
 /// <summary>
 /// Helper methods for capability runtime validation.
@@ -27,12 +27,12 @@ internal static class CapabilityGuards
 /// <summary>
 /// Defines a generic AI capability.
 /// </summary>
-public interface IAiCapability
+public interface IAICapability
 {
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
-    AiCapability Kind { get; }
+    AICapability Kind { get; }
     
     /// <summary>
     /// Gets the available AI models for this capability.
@@ -40,21 +40,21 @@ public interface IAiCapability
     /// <param name="settings"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
 /// Defines an AI capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings"></typeparam>
-public interface IAiCapability<TSettings> : IAiCapability
+public interface IAICapability<TSettings> : IAiCapability
     where TSettings : class
 { }
 
 /// <summary>
 /// Defines an AI capability for chat completions.
 /// </summary>
-public interface IAiChatCapability : IAiCapability
+public interface IAIChatCapability : IAiCapability
 {
     /// <summary>
     /// Creates a chat client with the provided settings.
@@ -68,7 +68,7 @@ public interface IAiChatCapability : IAiCapability
 /// <summary>
 /// Defines an AI capability for generating embeddings.
 /// </summary>
-public interface IAiEmbeddingCapability : IAiCapability
+public interface IAIEmbeddingCapability : IAiCapability
 {
     /// <summary>
     /// Creates an embedding generator with the provided settings.
@@ -82,7 +82,7 @@ public interface IAiEmbeddingCapability : IAiCapability
 /// <summary>
 /// Base implementation of an AI capability.
 /// </summary>
-public abstract class AiCapabilityBase(IAiProvider provider) : IAiCapability
+public abstract class AICapabilityBase(IAiProvider provider) : IAiCapability
 {
     /// <summary>
     /// Gets or sets the AI provider this capability belongs to.
@@ -92,23 +92,23 @@ public abstract class AiCapabilityBase(IAiProvider provider) : IAiCapability
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
-    public abstract AiCapability Kind { get; }
+    public abstract AICapability Kind { get; }
     
     /// <summary>
     /// Gets the available AI models for this capability.
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    protected abstract Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default);
+    protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default);
     
-    Task<IReadOnlyList<AiModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
+    Task<IReadOnlyList<AIModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
         => GetModelsAsync(cancellationToken);
 }
 
 /// <summary>
 /// Base implementation of an AI capability with specific settings.
 /// </summary>
-public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCapability
+public abstract class AICapabilityBase<TSettings>(IAiProvider provider) : IAiCapability
     where TSettings : class
 {
     /// <summary>
@@ -119,7 +119,7 @@ public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCap
     /// <summary>
     /// Gets the kind of AI capability.
     /// </summary>
-    public abstract AiCapability Kind { get; }
+    public abstract AICapability Kind { get; }
     
     /// <summary>
     /// Gets the available AI models for this capability.
@@ -127,9 +127,9 @@ public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCap
     /// <param name="settings"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    protected abstract Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(TSettings settings, CancellationToken cancellationToken = default);
+    protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(TSettings settings, CancellationToken cancellationToken = default);
     
-    Task<IReadOnlyList<AiModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
+    Task<IReadOnlyList<AIModelDescriptor>> IAiCapability.GetModelsAsync(object? settings, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
         CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(GetModelsAsync));
@@ -140,10 +140,10 @@ public abstract class AiCapabilityBase<TSettings>(IAiProvider provider) : IAiCap
 /// <summary>
 /// Base implementation of an AI chat capability.
 /// </summary>
-public abstract class AiChatCapabilityBase(IAiProvider provider) : AiCapabilityBase(provider), IAiChatCapability
+public abstract class AIChatCapabilityBase(IAiProvider provider) : AICapabilityBase(provider), IAiChatCapability
 {
     /// <inheritdoc />
-    public override AiCapability Kind => AiCapability.Chat;
+    public override AICapability Kind => AICapability.Chat;
 
     /// <summary>
     /// Creates a chat client with the specified model.
@@ -160,11 +160,11 @@ public abstract class AiChatCapabilityBase(IAiProvider provider) : AiCapabilityB
 /// Base implementation of an AI chat capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
-public abstract class AiChatCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiChatCapability
+public abstract class AIChatCapabilityBase<TSettings>(IAiProvider provider) : AICapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiChatCapability
     where TSettings : class
 {
     /// <inheritdoc />
-    public override AiCapability Kind => AiCapability.Chat;
+    public override AICapability Kind => AICapability.Chat;
 
     /// <summary>
     /// Creates a chat client with the provided settings and model.
@@ -186,10 +186,10 @@ public abstract class AiChatCapabilityBase<TSettings>(IAiProvider provider) : Ai
 /// <summary>
 /// Base implementation of an AI embedding capability.
 /// </summary>
-public abstract class AiEmbeddingCapabilityBase(IAiProvider provider) : AiCapabilityBase(provider), IAiEmbeddingCapability
+public abstract class AIEmbeddingCapabilityBase(IAiProvider provider) : AICapabilityBase(provider), IAiEmbeddingCapability
 {
     /// <inheritdoc />
-    public override AiCapability Kind => AiCapability.Embedding;
+    public override AICapability Kind => AICapability.Embedding;
 
     /// <summary>
     /// Creates an embedding generator with the specified model.
@@ -207,11 +207,11 @@ public abstract class AiEmbeddingCapabilityBase(IAiProvider provider) : AiCapabi
 /// Base implementation of an AI embedding capability with specific settings.
 /// </summary>
 /// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
-public abstract class AiEmbeddingCapabilityBase<TSettings>(IAiProvider provider) : AiCapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiEmbeddingCapability
+public abstract class AIEmbeddingCapabilityBase<TSettings>(IAiProvider provider) : AICapabilityBase<TSettings>(provider), IAiCapability<TSettings>, IAiEmbeddingCapability
     where TSettings : class
 {
     /// <inheritdoc />
-    public override AiCapability Kind => AiCapability.Embedding;
+    public override AICapability Kind => AICapability.Embedding;
 
     /// <summary>
     /// Creates an embedding generator with the provided settings and model.

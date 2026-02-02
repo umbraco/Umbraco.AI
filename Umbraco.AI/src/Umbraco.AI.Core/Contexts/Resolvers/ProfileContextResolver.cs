@@ -1,7 +1,7 @@
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Core.Contexts.Resolvers;
+namespace Umbraco.AI.Core.Contexts.Resolvers;
 
 /// <summary>
 /// Resolves context from profile-level context assignments.
@@ -33,30 +33,30 @@ internal sealed class ProfileContextResolver : IAiContextResolver
     }
 
     /// <inheritdoc />
-    public async Task<AiContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
+    public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
         var profileId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ProfileId);
         if (!profileId.HasValue)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         var profile = await _profileService.GetProfileAsync(profileId.Value, cancellationToken);
-        if (profile?.Settings is not AiChatProfileSettings chatSettings || chatSettings.ContextIds.Count == 0)
+        if (profile?.Settings is not AIChatProfileSettings chatSettings || chatSettings.ContextIds.Count == 0)
         {
-            return AiContextResolverResult.Empty;
+            return AIContextResolverResult.Empty;
         }
 
         return await ResolveContextIdsAsync(chatSettings.ContextIds, profile.Name, cancellationToken);
     }
 
-    private async Task<AiContextResolverResult> ResolveContextIdsAsync(
+    private async Task<AIContextResolverResult> ResolveContextIdsAsync(
         IEnumerable<Guid> contextIds,
         string? entityName,
         CancellationToken cancellationToken)
     {
-        var resources = new List<AiContextResolverResource>();
-        var sources = new List<AiContextResolverSource>();
+        var resources = new List<AIContextResolverResource>();
+        var sources = new List<AIContextResolverSource>();
 
         foreach (var contextId in contextIds)
         {
@@ -66,11 +66,11 @@ internal sealed class ProfileContextResolver : IAiContextResolver
                 continue;
             }
 
-            sources.Add(new AiContextResolverSource(entityName, context.Name));
+            sources.Add(new AIContextResolverSource(entityName, context.Name));
 
             foreach (var resource in context.Resources.OrderBy(r => r.SortOrder))
             {
-                resources.Add(new AiContextResolverResource
+                resources.Add(new AIContextResolverResource
                 {
                     Id = resource.Id,
                     ResourceTypeId = resource.ResourceTypeId,
@@ -83,7 +83,7 @@ internal sealed class ProfileContextResolver : IAiContextResolver
             }
         }
 
-        return new AiContextResolverResult
+        return new AIContextResolverResult
         {
             Resources = resources,
             Sources = sources

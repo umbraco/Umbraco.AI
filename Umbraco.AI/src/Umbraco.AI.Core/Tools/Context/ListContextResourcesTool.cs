@@ -1,6 +1,6 @@
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core.Contexts;
 
-namespace Umbraco.Ai.Core.Tools.Context;
+namespace Umbraco.AI.Core.Tools.Context;
 
 /// <summary>
 /// Tool that lists available on-demand context resources.
@@ -9,8 +9,8 @@ namespace Umbraco.Ai.Core.Tools.Context;
 /// This tool is dynamically injected when OnDemand resources are available.
 /// It lists resources that the LLM can retrieve using the GetContextResource tool.
 /// </remarks>
-[AiTool("list_context_resources", "List Context Resources", Category = "Context")]
-public class ListContextResourcesTool : AiToolBase, IAiSystemTool
+[AITool("list_context_resources", "List Context Resources", Category = "Context")]
+public class ListContextResourcesTool : AIToolBase, IAiSystemTool
 {
     private readonly IAiContextAccessor _contextAccessor;
 

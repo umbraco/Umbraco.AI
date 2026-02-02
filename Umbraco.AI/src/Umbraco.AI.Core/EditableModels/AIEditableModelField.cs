@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
 /// <summary>
 /// Represents a field definition for an editable model.
 /// </summary>
-public class AiEditableModelField
+public class AIEditableModelField
 {
     /// <summary>
     /// The unique key identifying the field.

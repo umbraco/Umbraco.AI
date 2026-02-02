@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Profiles;
+namespace Umbraco.AI.Core.Profiles;
 
 /// <summary>
 /// Defines a profile for AI model usage, including model reference, capabilities, and configuration settings.
 /// </summary>
-public sealed class AiProfile : IAiVersionableEntity
+public sealed class AIProfile : IAiVersionableEntity
 {
     /// <summary>
     /// The unique identifier of the AI profile.
@@ -27,16 +27,16 @@ public sealed class AiProfile : IAiVersionableEntity
     /// The capability of the AI profile (e.g., Chat, Embedding, etc.).
     /// Cannot be changed after creation.
     /// </summary>
-    public AiCapability Capability { get; init; } = AiCapability.Chat;
+    public AICapability Capability { get; init; } = AICapability.Chat;
 
     /// <summary>
     /// The AI model reference associated with this profile.
     /// </summary>
-    public AiModelRef Model { get; set; }
+    public AIModelRef Model { get; set; }
 
     /// <summary>
     /// The ID of the connection to use for this profile.
-    /// Must reference a valid AiConnection.Id that matches the provider in Model.ProviderId.
+    /// Must reference a valid AIConnection.Id that matches the provider in Model.ProviderId.
     /// </summary>
     public required Guid ConnectionId { get; set; }
 

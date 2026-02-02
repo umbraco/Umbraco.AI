@@ -1,9 +1,9 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Chat.Middleware;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Middleware;
+namespace Umbraco.AI.Tests.Unit.Middleware;
 
 public class MiddlewarePipelineTests
 {
@@ -19,7 +19,7 @@ public class MiddlewarePipelineTests
         var middleware2 = new TestMiddleware("Second", applicationOrder);
         var middleware3 = new TestMiddleware("Third", applicationOrder);
 
-        var collection = new AiChatMiddlewareCollection(() => new[]
+        var collection = new AIChatMiddlewareCollection(() => new[]
         {
             middleware1,
             middleware2,
@@ -50,7 +50,7 @@ public class MiddlewarePipelineTests
     public void EmptyMiddlewareCollection_ReturnsOriginalClient()
     {
         // Arrange
-        var collection = new AiChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
+        var collection = new AIChatMiddlewareCollection(() => Enumerable.Empty<IAiChatMiddleware>());
         var baseClient = new FakeChatClient();
 
         // Act
@@ -77,7 +77,7 @@ public class MiddlewarePipelineTests
         var middleware1 = new CapturingMiddleware(wrappedClients);
         var middleware2 = new CapturingMiddleware(wrappedClients);
 
-        var collection = new AiChatMiddlewareCollection(() => new[]
+        var collection = new AIChatMiddlewareCollection(() => new[]
         {
             middleware1,
             middleware2
@@ -113,7 +113,7 @@ public class MiddlewarePipelineTests
             .Setup(m => m.Apply(It.IsAny<IChatClient>()))
             .Returns(wrappedClient);
 
-        var collection = new AiChatMiddlewareCollection(() => new[] { modifyingMiddleware.Object });
+        var collection = new AIChatMiddlewareCollection(() => new[] { modifyingMiddleware.Object });
         var baseClient = new FakeChatClient("Original response");
 
         // Act
@@ -143,7 +143,7 @@ public class MiddlewarePipelineTests
         var applicationOrder = new List<string>();
         var middleware = new TestMiddleware("Only", applicationOrder);
 
-        var collection = new AiChatMiddlewareCollection(() => new[] { middleware });
+        var collection = new AIChatMiddlewareCollection(() => new[] { middleware });
         var baseClient = new FakeChatClient();
 
         // Act

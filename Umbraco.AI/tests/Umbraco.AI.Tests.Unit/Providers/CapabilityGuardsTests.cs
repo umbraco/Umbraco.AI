@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Providers;
+namespace Umbraco.AI.Tests.Unit.Providers;
 
 public class CapabilityGuardsTests
 {
@@ -154,7 +154,7 @@ public class CapabilityGuardsTests
 
     #region Test capabilities
 
-    private class TestChatCapability : AiChatCapabilityBase<FakeProviderSettings>
+    private class TestChatCapability : AIChatCapabilityBase<FakeProviderSettings>
     {
         private static readonly FakeAiProvider FakeProvider = new("test", "Test");
 
@@ -165,16 +165,16 @@ public class CapabilityGuardsTests
         protected override IChatClient CreateClient(FakeProviderSettings settings, string? modelId)
             => new FakeChatClient();
 
-        protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+        protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
             FakeProviderSettings settings,
             CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<AiModelDescriptor>>(new List<AiModelDescriptor>
+            => Task.FromResult<IReadOnlyList<AIModelDescriptor>>(new List<AIModelDescriptor>
             {
-                new(new AiModelRef("test", "model-1"), "Model 1")
+                new(new AIModelRef("test", "model-1"), "Model 1")
             });
     }
 
-    private class TestEmbeddingCapability : AiEmbeddingCapabilityBase<FakeProviderSettings>
+    private class TestEmbeddingCapability : AIEmbeddingCapabilityBase<FakeProviderSettings>
     {
         private static readonly FakeAiProvider FakeProvider = new("test", "Test");
 
@@ -185,12 +185,12 @@ public class CapabilityGuardsTests
         protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(FakeProviderSettings settings, string? modelId)
             => new FakeEmbeddingGenerator();
 
-        protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+        protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
             FakeProviderSettings settings,
             CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<AiModelDescriptor>>(new List<AiModelDescriptor>
+            => Task.FromResult<IReadOnlyList<AIModelDescriptor>>(new List<AIModelDescriptor>
             {
-                new(new AiModelRef("test", "embed-1"), "Embedding Model 1")
+                new(new AIModelRef("test", "embed-1"), "Embedding Model 1")
             });
     }
 

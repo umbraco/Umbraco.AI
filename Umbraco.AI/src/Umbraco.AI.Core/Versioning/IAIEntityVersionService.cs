@@ -1,6 +1,6 @@
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Service for managing entity versions in the unified versioning system.
@@ -19,7 +19,7 @@ namespace Umbraco.Ai.Core.Versioning;
 ///   <item>Provide convenience wrappers that delegate to this service</item>
 /// </list>
 /// </remarks>
-public interface IAiEntityVersionService
+public interface IAIEntityVersionService
 {
     /// <summary>
     /// Gets the version history for an entity with pagination support.
@@ -31,7 +31,7 @@ public interface IAiEntityVersionService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
     /// <exception cref="ArgumentException">Thrown if the entity type is not registered.</exception>
-    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetVersionHistoryAsync(
+    Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetVersionHistoryAsync(
         Guid entityId,
         string entityType,
         int skip,
@@ -47,7 +47,7 @@ public interface IAiEntityVersionService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The version record, or null if not found.</returns>
     /// <exception cref="ArgumentException">Thrown if the entity type is not registered.</exception>
-    Task<AiEntityVersion?> GetVersionAsync(
+    Task<AIEntityVersion?> GetVersionAsync(
         Guid entityId,
         string entityType,
         int version,
@@ -128,7 +128,7 @@ public interface IAiEntityVersionService
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The comparison result, or null if either version is not found.</returns>
     /// <exception cref="ArgumentException">Thrown if the entity type is not registered.</exception>
-    Task<AiVersionComparison?> CompareVersionsAsync(
+    Task<AIVersionComparison?> CompareVersionsAsync(
         Guid entityId,
         string entityType,
         int fromVersion,
@@ -163,7 +163,7 @@ public interface IAiEntityVersionService
     /// <returns>The result of the cleanup operation.</returns>
     /// <remarks>
     /// <para>
-    /// The cleanup policy is configured via <see cref="AiVersionCleanupPolicy"/>.
+    /// The cleanup policy is configured via <see cref="AIVersionCleanupPolicy"/>.
     /// </para>
     /// <para>
     /// When both max versions and retention days are set, versions must satisfy
@@ -171,5 +171,5 @@ public interface IAiEntityVersionService
     /// followed by count-based cleanup.
     /// </para>
     /// </remarks>
-    Task<AiVersionCleanupResult> CleanupVersionsAsync(CancellationToken cancellationToken = default);
+    Task<AIVersionCleanupResult> CleanupVersionsAsync(CancellationToken cancellationToken = default);
 }

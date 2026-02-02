@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Defines how a context resource is injected into AI operations.
 /// </summary>
-public enum AiContextResourceInjectionMode
+public enum AIContextResourceInjectionMode
 {
     /// <summary>
     /// Always included in system prompt.

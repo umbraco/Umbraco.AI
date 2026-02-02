@@ -7,31 +7,31 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.HostedServices;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Background service that periodically cleans up old AI audit-log records
 /// based on the configured retention period.
 /// </summary>
-internal sealed class AiAuditLogCleanupBackgroundJob : RecurringHostedServiceBase
+internal sealed class AIAuditLogCleanupBackgroundJob : RecurringHostedServiceBase
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IOptionsMonitor<AiAuditLogOptions> _options;
+    private readonly IOptionsMonitor<AIAuditLogOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
     private readonly IMainDom _mainDom;
-    private readonly ILogger<AiAuditLogCleanupBackgroundJob> _logger;
+    private readonly ILogger<AIAuditLogCleanupBackgroundJob> _logger;
 
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromHours(6);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromMinutes(5);
 
-    public AiAuditLogCleanupBackgroundJob(
+    public AIAuditLogCleanupBackgroundJob(
         IServiceProvider serviceProvider,
-        IOptionsMonitor<AiAuditLogOptions> options,
+        IOptionsMonitor<AIAuditLogOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
         IMainDom mainDom,
-        ILogger<AiAuditLogCleanupBackgroundJob> logger)
+        ILogger<AIAuditLogCleanupBackgroundJob> logger)
         : base(logger, CleanupInterval, StartupDelay)
     {
         _serviceProvider = serviceProvider;

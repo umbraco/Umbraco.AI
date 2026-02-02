@@ -1,25 +1,25 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.TaskQueue;
+using Umbraco.AI.Core.TaskQueue;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Service for recording raw AI usage data.
 /// </summary>
-internal sealed class AiUsageRecordingService : IAiUsageRecordingService
+internal sealed class AIUsageRecordingService : IAiUsageRecordingService
 {
     private readonly IAiUsageRecordRepository _repository;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IBackgroundTaskQueue _backgroundTaskQueue;
-    private readonly ILogger<AiUsageRecordingService> _logger;
+    private readonly ILogger<AIUsageRecordingService> _logger;
 
-    public AiUsageRecordingService(
+    public AIUsageRecordingService(
         IAiUsageRecordRepository repository,
-        IOptionsMonitor<AiAnalyticsOptions> options,
+        IOptionsMonitor<AIAnalyticsOptions> options,
         IBackgroundTaskQueue backgroundTaskQueue,
-        ILogger<AiUsageRecordingService> logger)
+        ILogger<AIUsageRecordingService> logger)
     {
         _repository = repository;
         _options = options;
@@ -28,7 +28,7 @@ internal sealed class AiUsageRecordingService : IAiUsageRecordingService
     }
 
     /// <inheritdoc />
-    public async Task RecordUsageAsync(AiUsageRecord record, CancellationToken ct = default)
+    public async Task RecordUsageAsync(AIUsageRecord record, CancellationToken ct = default)
     {
         // Check if analytics is enabled
         if (!_options.CurrentValue.Enabled)
@@ -59,7 +59,7 @@ internal sealed class AiUsageRecordingService : IAiUsageRecordingService
     }
 
     /// <inheritdoc />
-    public async ValueTask QueueRecordUsageAsync(AiUsageRecord record, CancellationToken ct = default)
+    public async ValueTask QueueRecordUsageAsync(AIUsageRecord record, CancellationToken ct = default)
     {
         // Check if analytics is enabled BEFORE queuing
         if (!_options.CurrentValue.Enabled)

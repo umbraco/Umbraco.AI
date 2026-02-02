@@ -1,8 +1,8 @@
-﻿using Umbraco.Ai.Core.Providers;
+﻿using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
-public static class AiEditableModelResolverExtensions
+public static class AIEditableModelResolverExtensions
 {
     /// <summary>
     /// Resolves settings for a provider without knowing the settings type at compile time.

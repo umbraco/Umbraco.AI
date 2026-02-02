@@ -1,26 +1,26 @@
 using System.Collections.Concurrent;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// In-memory implementation of <see cref="IAiPromptRepository"/> for testing and fallback scenarios.
 /// </summary>
 internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
 {
-    private readonly ConcurrentDictionary<Guid, AiPrompt> _prompts = new();
+    private readonly ConcurrentDictionary<Guid, AIPrompt> _prompts = new();
 
     /// <inheritdoc />
-    public Task<AiPrompt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AIPrompt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _prompts.TryGetValue(id, out var prompt);
         return Task.FromResult(prompt);
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public Task<AIPrompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
         var prompt = _prompts.Values.FirstOrDefault(p =>
             p.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase));
@@ -28,20 +28,20 @@ internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiPrompt>> GetAllAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult<IEnumerable<AiPrompt>>(_prompts.Values.ToList());
+    public Task<IEnumerable<AIPrompt>> GetAllAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IEnumerable<AIPrompt>>(_prompts.Values.ToList());
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiPrompt>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIPrompt>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
     {
         var prompts = _prompts.Values
             .Where(p => p.ProfileId == profileId)
             .ToList();
-        return Task.FromResult<IEnumerable<AiPrompt>>(prompts);
+        return Task.FromResult<IEnumerable<AIPrompt>>(prompts);
     }
 
     /// <inheritdoc />
-    public Task<PagedModel<AiPrompt>> GetPagedAsync(
+    public Task<PagedModel<AIPrompt>> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -69,11 +69,11 @@ internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
             .Take(take)
             .ToList();
 
-        return Task.FromResult(new PagedModel<AiPrompt>(total, items));
+        return Task.FromResult(new PagedModel<AIPrompt>(total, items));
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt> SaveAsync(AiPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default)
+    public Task<AIPrompt> SaveAsync(AIPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         _prompts[prompt.Id] = prompt;
         return Task.FromResult(prompt);
@@ -97,22 +97,22 @@ internal sealed class InMemoryAiPromptRepository : IAiPromptRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AiEntityVersion>> GetVersionHistoryAsync(
+    public Task<IEnumerable<AIEntityVersion>> GetVersionHistoryAsync(
         Guid promptId,
         int? limit = null,
         CancellationToken cancellationToken = default)
     {
         // In-memory repository doesn't track version history
-        return Task.FromResult<IEnumerable<AiEntityVersion>>([]);
+        return Task.FromResult<IEnumerable<AIEntityVersion>>([]);
     }
 
     /// <inheritdoc />
-    public Task<AiPrompt?> GetVersionSnapshotAsync(
+    public Task<AIPrompt?> GetVersionSnapshotAsync(
         Guid promptId,
         int version,
         CancellationToken cancellationToken = default)
     {
         // In-memory repository doesn't track version history
-        return Task.FromResult<AiPrompt?>(null);
+        return Task.FromResult<AIPrompt?>(null);
     }
 }

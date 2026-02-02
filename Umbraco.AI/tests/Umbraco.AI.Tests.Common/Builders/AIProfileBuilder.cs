@@ -1,74 +1,74 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 
-namespace Umbraco.Ai.Tests.Common.Builders;
+namespace Umbraco.AI.Tests.Common.Builders;
 
 /// <summary>
-/// Fluent builder for creating <see cref="AiProfile"/> instances in tests.
+/// Fluent builder for creating <see cref="AIProfile"/> instances in tests.
 /// </summary>
-public class AiProfileBuilder
+public class AIProfileBuilder
 {
     private Guid _id = Guid.NewGuid();
     private string _alias = "test-profile";
     private string _name = "Test Profile";
-    private AiCapability _capability = AiCapability.Chat;
-    private AiModelRef _model = new("test-provider", "test-model");
+    private AICapability _capability = AICapability.Chat;
+    private AIModelRef _model = new("test-provider", "test-model");
     private Guid _connectionId = Guid.NewGuid();
     private IAiProfileSettings? _settings;
     private IReadOnlyList<string> _tags = Array.Empty<string>();
 
-    public AiProfileBuilder WithId(Guid id)
+    public AIProfileBuilder WithId(Guid id)
     {
         _id = id;
         return this;
     }
 
-    public AiProfileBuilder WithAlias(string alias)
+    public AIProfileBuilder WithAlias(string alias)
     {
         _alias = alias;
         return this;
     }
 
-    public AiProfileBuilder WithName(string name)
+    public AIProfileBuilder WithName(string name)
     {
         _name = name;
         return this;
     }
 
-    public AiProfileBuilder WithCapability(AiCapability capability)
+    public AIProfileBuilder WithCapability(AICapability capability)
     {
         _capability = capability;
         return this;
     }
 
-    public AiProfileBuilder WithModel(string providerId, string modelId)
+    public AIProfileBuilder WithModel(string providerId, string modelId)
     {
-        _model = new AiModelRef(providerId, modelId);
+        _model = new AIModelRef(providerId, modelId);
         return this;
     }
 
-    public AiProfileBuilder WithModel(AiModelRef model)
+    public AIProfileBuilder WithModel(AIModelRef model)
     {
         _model = model;
         return this;
     }
 
-    public AiProfileBuilder WithConnectionId(Guid connectionId)
+    public AIProfileBuilder WithConnectionId(Guid connectionId)
     {
         _connectionId = connectionId;
         return this;
     }
 
-    public AiProfileBuilder WithSettings(IAiProfileSettings? settings)
+    public AIProfileBuilder WithSettings(IAiProfileSettings? settings)
     {
         _settings = settings;
         return this;
     }
 
-    public AiProfileBuilder WithChatSettings(float? temperature = null, int? maxTokens = null, string? systemPromptTemplate = null)
+    public AIProfileBuilder WithChatSettings(float? temperature = null, int? maxTokens = null, string? systemPromptTemplate = null)
     {
-        _capability = AiCapability.Chat;
-        _settings = new AiChatProfileSettings
+        _capability = AICapability.Chat;
+        _settings = new AIChatProfileSettings
         {
             Temperature = temperature,
             MaxTokens = maxTokens,
@@ -77,22 +77,22 @@ public class AiProfileBuilder
         return this;
     }
 
-    public AiProfileBuilder WithEmbeddingSettings()
+    public AIProfileBuilder WithEmbeddingSettings()
     {
-        _capability = AiCapability.Embedding;
-        _settings = new AiEmbeddingProfileSettings();
+        _capability = AICapability.Embedding;
+        _settings = new AIEmbeddingProfileSettings();
         return this;
     }
 
-    public AiProfileBuilder WithTags(params string[] tags)
+    public AIProfileBuilder WithTags(params string[] tags)
     {
         _tags = tags;
         return this;
     }
 
-    public AiProfile Build()
+    public AIProfile Build()
     {
-        return new AiProfile
+        return new AIProfile
         {
             Id = _id,
             Alias = _alias,
@@ -105,5 +105,5 @@ public class AiProfileBuilder
         };
     }
 
-    public static implicit operator AiProfile(AiProfileBuilder builder) => builder.Build();
+    public static implicit operator AIProfile(AIProfileBuilder builder) => builder.Build();
 }

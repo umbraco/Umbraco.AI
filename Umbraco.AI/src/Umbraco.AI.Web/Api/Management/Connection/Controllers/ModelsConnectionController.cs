@@ -2,18 +2,18 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Extensions;
-using Umbraco.Ai.Web.Api.Common.Configuration;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Configuration;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Extensions;
+using Umbraco.AI.Web.Api.Common.Configuration;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Common.Models;
+using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 
 /// <summary>
 /// Controller to get available models for a connection.
@@ -66,13 +66,13 @@ public class ModelsConnectionController : ConnectionControllerBase
 
         // Get capabilities filtered by requested capability
         IEnumerable<IAiConfiguredCapability> capabilities = configured.GetCapabilities();
-        if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AiCapability>(capability, true, out var capFilter))
+        if (!string.IsNullOrEmpty(capability) && Enum.TryParse<AICapability>(capability, true, out var capFilter))
         {
             capabilities = capabilities.Where(c => c.Kind == capFilter);
         }
 
         // Fetch models from all matching capabilities
-        var allModels = new List<AiModelDescriptor>();
+        var allModels = new List<AIModelDescriptor>();
         foreach (var cap in capabilities)
         {
             try
@@ -91,6 +91,6 @@ public class ModelsConnectionController : ConnectionControllerBase
             .GroupBy(m => m.Model.ModelId)
             .Select(g => g.First());
 
-        return Ok(_umbracoMapper.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(distinctModels));
+        return Ok(_umbracoMapper.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(distinctModels));
     }
 }

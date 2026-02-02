@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Web.Api.Common.Json;
+namespace Umbraco.AI.Web.Api.Common.Json;
 
 /// <summary>
 /// JSON converter for <see cref="IdOrAlias"/> that deserializes from a string value.

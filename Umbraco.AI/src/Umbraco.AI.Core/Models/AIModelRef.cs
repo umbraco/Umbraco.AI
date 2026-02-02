@@ -1,11 +1,11 @@
-﻿namespace Umbraco.Ai.Core.Models;
+﻿namespace Umbraco.AI.Core.Models;
 
 /// <summary>
 /// A reference to a specific AI model provided by an AI provider.
 /// </summary>
 /// <param name="providerId"></param>
 /// <param name="modelId"></param>
-public readonly struct AiModelRef(string providerId, string modelId)
+public readonly struct AIModelRef(string providerId, string modelId)
 {
     /// <summary>
     /// The alias of the AI provider.
@@ -18,7 +18,7 @@ public readonly struct AiModelRef(string providerId, string modelId)
     public string ModelId { get; } = modelId ?? throw new ArgumentNullException(nameof(modelId));
 
     /// <summary>
-    /// Returns a string representation of the AiModelRef in the format "ProviderId/ModelId".
+    /// Returns a string representation of the AIModelRef in the format "ProviderId/ModelId".
     /// </summary>
     /// <returns></returns>
     public override string ToString() => $"{ProviderId}/{ModelId}";

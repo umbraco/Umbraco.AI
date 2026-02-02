@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fakes;
-using Umbraco.Ai.Web.Api.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Common.Models;
-using Umbraco.Ai.Web.Api.Management.Connection.Controllers;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.AI.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Management.Common.Models;
+using Umbraco.AI.Web.Api.Management.Connection.Controllers;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Connection;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Connection;
 
 public class ModelsConnectionControllerTests
 {
@@ -30,7 +30,7 @@ public class ModelsConnectionControllerTests
     }
 
     private static Mock<IAiConfiguredProvider> CreateConfiguredProviderMock(
-        AiConnection connection,
+        AIConnection connection,
         IAiProvider provider,
         params IAiConfiguredCapability[] capabilities)
     {
@@ -41,8 +41,8 @@ public class ModelsConnectionControllerTests
     }
 
     private static Mock<IAiConfiguredCapability> CreateConfiguredCapabilityMock(
-        AiCapability kind,
-        IReadOnlyList<AiModelDescriptor> models)
+        AICapability kind,
+        IReadOnlyList<AIModelDescriptor> models)
     {
         var mock = new Mock<IAiConfiguredCapability>();
         mock.Setup(x => x.Kind).Returns(kind);
@@ -58,18 +58,18 @@ public class ModelsConnectionControllerTests
         // Arrange
         var providerId = "openai";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
         var provider = new FakeAiProvider(providerId, "OpenAI");
 
-        var models = new List<AiModelDescriptor>
+        var models = new List<AIModelDescriptor>
         {
-            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+            new(new AIModelRef(providerId, "gpt-4"), "GPT-4")
         };
 
-        var capabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, models);
+        var capabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat, models);
         var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, capabilityMock.Object);
 
         var responseModels = new List<ModelDescriptorResponseModel>
@@ -82,7 +82,7 @@ public class ModelsConnectionControllerTests
             .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
+            .Setup(x => x.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AIModelDescriptor>>()))
             .Returns(responseModels);
 
         var controller = CreateController();
@@ -123,24 +123,24 @@ public class ModelsConnectionControllerTests
         // Arrange
         var providerId = "openai";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
         var provider = new FakeAiProvider(providerId, "OpenAI");
 
         // Provider with both Chat and Embedding capabilities
-        var chatModels = new List<AiModelDescriptor>
+        var chatModels = new List<AIModelDescriptor>
         {
-            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+            new(new AIModelRef(providerId, "gpt-4"), "GPT-4")
         };
-        var embeddingModels = new List<AiModelDescriptor>
+        var embeddingModels = new List<AIModelDescriptor>
         {
-            new(new AiModelRef(providerId, "text-embedding-3-small"), "Embedding Model")
+            new(new AIModelRef(providerId, "text-embedding-3-small"), "Embedding Model")
         };
 
-        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, chatModels);
-        var embeddingCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Embedding, embeddingModels);
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat, chatModels);
+        var embeddingCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Embedding, embeddingModels);
 
         var configuredProviderMock = CreateConfiguredProviderMock(
             connection,
@@ -153,7 +153,7 @@ public class ModelsConnectionControllerTests
             .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
+            .Setup(x => x.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AIModelDescriptor>>()))
             .Returns(new List<ModelDescriptorResponseModel>());
 
         var controller = CreateController();
@@ -172,7 +172,7 @@ public class ModelsConnectionControllerTests
         // Arrange
         var providerId = "empty-provider";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
@@ -186,7 +186,7 @@ public class ModelsConnectionControllerTests
             .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
+            .Setup(x => x.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AIModelDescriptor>>()))
             .Returns(new List<ModelDescriptorResponseModel>());
 
         var controller = CreateController();
@@ -206,18 +206,18 @@ public class ModelsConnectionControllerTests
         // Arrange
         var providerId = "openai";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
         var provider = new FakeAiProvider(providerId, "OpenAI");
 
-        var chatModels = new List<AiModelDescriptor>
+        var chatModels = new List<AIModelDescriptor>
         {
-            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+            new(new AIModelRef(providerId, "gpt-4"), "GPT-4")
         };
 
-        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, chatModels);
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat, chatModels);
         var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, chatCapabilityMock.Object);
 
         _connectionServiceMock
@@ -225,7 +225,7 @@ public class ModelsConnectionControllerTests
             .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
+            .Setup(x => x.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AIModelDescriptor>>()))
             .Returns(new List<ModelDescriptorResponseModel>());
 
         var controller = CreateController();
@@ -234,8 +234,8 @@ public class ModelsConnectionControllerTests
         await controller.GetModels(new IdOrAlias(connectionId), capability: "InvalidCapability");
 
         // Assert - Should still return OK (models from all capabilities)
-        _mapperMock.Verify(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(
-            It.IsAny<IEnumerable<AiModelDescriptor>>()), Times.Once);
+        _mapperMock.Verify(x => x.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(
+            It.IsAny<IEnumerable<AIModelDescriptor>>()), Times.Once);
     }
 
     [Fact]
@@ -244,29 +244,29 @@ public class ModelsConnectionControllerTests
         // Arrange
         var providerId = "openai";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
         var provider = new FakeAiProvider(providerId, "OpenAI");
 
         // Create capability that returns same model twice
-        var duplicateModels = new List<AiModelDescriptor>
+        var duplicateModels = new List<AIModelDescriptor>
         {
-            new(new AiModelRef("openai", "gpt-4"), "GPT-4"),
-            new(new AiModelRef("openai", "gpt-4"), "GPT-4 Duplicate")
+            new(new AIModelRef("openai", "gpt-4"), "GPT-4"),
+            new(new AIModelRef("openai", "gpt-4"), "GPT-4 Duplicate")
         };
-        var chatCapabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, duplicateModels);
+        var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat, duplicateModels);
         var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, chatCapabilityMock.Object);
 
         _connectionServiceMock
             .Setup(x => x.GetConfiguredProviderAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(configuredProviderMock.Object);
 
-        IEnumerable<AiModelDescriptor>? capturedModels = null;
+        IEnumerable<AIModelDescriptor>? capturedModels = null;
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
-            .Callback<IEnumerable<AiModelDescriptor>>(m => capturedModels = m.ToList())
+            .Setup(x => x.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AIModelDescriptor>>()))
+            .Callback<IEnumerable<AIModelDescriptor>>(m => capturedModels = m.ToList())
             .Returns(new List<ModelDescriptorResponseModel>());
 
         var controller = CreateController();
@@ -290,19 +290,19 @@ public class ModelsConnectionControllerTests
         var alias = "my-connection";
         var providerId = "openai";
         var connectionId = Guid.NewGuid();
-        var connection = new AiConnectionBuilder()
+        var connection = new AIConnectionBuilder()
             .WithId(connectionId)
             .WithAlias(alias)
             .WithProviderId(providerId)
             .Build();
         var provider = new FakeAiProvider(providerId, "OpenAI");
 
-        var models = new List<AiModelDescriptor>
+        var models = new List<AIModelDescriptor>
         {
-            new(new AiModelRef(providerId, "gpt-4"), "GPT-4")
+            new(new AIModelRef(providerId, "gpt-4"), "GPT-4")
         };
 
-        var capabilityMock = CreateConfiguredCapabilityMock(AiCapability.Chat, models);
+        var capabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat, models);
         var configuredProviderMock = CreateConfiguredProviderMock(connection, provider, capabilityMock.Object);
 
         var responseModels = new List<ModelDescriptorResponseModel>
@@ -319,7 +319,7 @@ public class ModelsConnectionControllerTests
             .ReturnsAsync(configuredProviderMock.Object);
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AiModelDescriptor>>()))
+            .Setup(x => x.MapEnumerable<AIModelDescriptor, ModelDescriptorResponseModel>(It.IsAny<IEnumerable<AIModelDescriptor>>()))
             .Returns(responseModels);
 
         var controller = CreateController();
@@ -341,7 +341,7 @@ public class ModelsConnectionControllerTests
 
         _connectionServiceMock
             .Setup(x => x.GetConnectionByAliasAsync(alias, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiConnection?)null);
+            .ReturnsAsync((AIConnection?)null);
 
         var controller = CreateController();
 

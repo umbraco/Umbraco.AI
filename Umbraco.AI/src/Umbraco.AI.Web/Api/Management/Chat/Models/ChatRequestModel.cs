@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Ai.Web.Api.Common.Models;
+using Umbraco.AI.Web.Api.Common.Models;
 
-namespace Umbraco.Ai.Web.Api.Management.Chat.Models;
+namespace Umbraco.AI.Web.Api.Management.Chat.Models;
 
 /// <summary>
 /// Request model for chat completion.

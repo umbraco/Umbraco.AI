@@ -1,16 +1,16 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Embeddings;
+namespace Umbraco.AI.Core.Embeddings;
 
 /// <summary>
 /// Defines middleware that can be applied to AI embedding generators.
 /// Middleware can implement cross-cutting concerns like logging, caching, rate limiting, etc.
 /// </summary>
 /// <remarks>
-/// The order of middleware execution is controlled by the <see cref="AiEmbeddingMiddlewareCollectionBuilder"/>
+/// The order of middleware execution is controlled by the <see cref="AIEmbeddingMiddlewareCollectionBuilder"/>
 /// using <c>Append</c>, <c>InsertBefore</c>, and <c>InsertAfter</c> methods.
 /// </remarks>
-public interface IAiEmbeddingMiddleware
+public interface IAIEmbeddingMiddleware
 {
     /// <summary>
     /// Applies this middleware to the given embedding generator.

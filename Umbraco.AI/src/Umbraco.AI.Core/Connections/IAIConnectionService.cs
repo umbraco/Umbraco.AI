@@ -1,28 +1,28 @@
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Versioning;
 
-namespace Umbraco.Ai.Core.Connections;
+namespace Umbraco.AI.Core.Connections;
 
 /// <summary>
 /// Service for managing AI provider connections with validation and business logic.
 /// </summary>
-public interface IAiConnectionService
+public interface IAIConnectionService
 {
     /// <summary>
     /// Get a connection by ID.
     /// </summary>
-    Task<AiConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a connection by alias (case-insensitive).
     /// </summary>
-    Task<AiConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get all connections, optionally filtered by provider.
     /// </summary>
-    Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get connections with pagination and optional filtering.
@@ -33,7 +33,7 @@ public interface IAiConnectionService
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated connections and the total count.</returns>
-    Task<(IEnumerable<AiConnection> Items, int Total)> GetConnectionsPagedAsync(
+    Task<(IEnumerable<AIConnection> Items, int Total)> GetConnectionsPagedAsync(
         string? filter = null,
         string? providerId = null,
         int skip = 0,
@@ -43,13 +43,13 @@ public interface IAiConnectionService
     /// <summary>
     /// Get connection references for a provider (lightweight list for UI).
     /// </summary>
-    Task<IEnumerable<AiConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Save a connection (insert if new, update if exists) with validation.
     /// If connection.Id is Guid.Empty, a new Guid will be generated.
     /// </summary>
-    Task<AiConnection> SaveConnectionAsync(AiConnection connection, CancellationToken cancellationToken = default);
+    Task<AIConnection> SaveConnectionAsync(AIConnection connection, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Delete a connection (with usage checks).
@@ -71,7 +71,7 @@ public interface IAiConnectionService
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of capabilities that are available from at least one connection.</returns>
-    Task<IEnumerable<Models.AiCapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<Models.AICapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets connections that support a specific capability.
@@ -79,7 +79,7 @@ public interface IAiConnectionService
     /// <param name="capability">The capability to filter by.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Connections whose providers support the specified capability.</returns>
-    Task<IEnumerable<AiConnection>> GetConnectionsByCapabilityAsync(Models.AiCapability capability, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnection>> GetConnectionsByCapabilityAsync(Models.AICapability capability, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a configured provider for a connection with resolved settings.
@@ -98,7 +98,7 @@ public interface IAiConnectionService
     /// <param name="take">Maximum number of versions to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the paginated version history (ordered by version descending) and the total count.</returns>
-    Task<(IEnumerable<AiEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
+    Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetConnectionVersionHistoryAsync(
         Guid connectionId,
         int skip,
         int take,
@@ -111,7 +111,7 @@ public interface IAiConnectionService
     /// <param name="version">The version to retrieve.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The connection at that version, or null if not found.</returns>
-    Task<AiConnection?> GetConnectionVersionSnapshotAsync(
+    Task<AIConnection?> GetConnectionVersionSnapshotAsync(
         Guid connectionId,
         int version,
         CancellationToken cancellationToken = default);
@@ -124,7 +124,7 @@ public interface IAiConnectionService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated connection at the new version.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the connection or target version is not found.</exception>
-    Task<AiConnection> RollbackConnectionAsync(
+    Task<AIConnection> RollbackConnectionAsync(
         Guid connectionId,
         int targetVersion,
         CancellationToken cancellationToken = default);

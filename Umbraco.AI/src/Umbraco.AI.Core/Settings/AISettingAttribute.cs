@@ -1,6 +1,6 @@
-﻿namespace Umbraco.Ai.Core.Settings;
+﻿namespace Umbraco.AI.Core.Settings;
 
-internal class AiSettingAttribute(string? key = null) : Attribute
+internal class AISettingAttribute(string? key = null) : Attribute
 {
     public string? Key { get; } = key;
 }

@@ -1,11 +1,11 @@
 using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Shouldly;
-using Umbraco.Ai.Agent.Core.Agui;
-using Umbraco.Ai.Agui.Models;
+using Umbraco.AI.Agent.Core.Agui;
+using Umbraco.AI.Agui.Models;
 using Xunit;
 
-namespace Umbraco.Ai.Agent.Tests.Unit.Agui;
+namespace Umbraco.AI.Agent.Tests.Unit.Agui;
 
 public class AguiMessageConverterTests
 {

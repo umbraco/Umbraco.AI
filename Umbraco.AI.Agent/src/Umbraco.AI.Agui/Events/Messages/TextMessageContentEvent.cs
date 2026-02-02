@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Messages;
+namespace Umbraco.AI.Agui.Events.Messages;
 
 /// <summary>
 /// Event emitted for text message content deltas.

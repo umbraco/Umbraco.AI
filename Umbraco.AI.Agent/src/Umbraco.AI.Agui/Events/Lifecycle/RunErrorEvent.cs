@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Lifecycle;
+namespace Umbraco.AI.Agui.Events.Lifecycle;
 
 /// <summary>
 /// Event emitted when an agent run encounters an error.

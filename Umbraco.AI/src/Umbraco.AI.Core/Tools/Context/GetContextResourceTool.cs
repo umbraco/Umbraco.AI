@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core.Contexts;
 
-namespace Umbraco.Ai.Core.Tools.Context;
+namespace Umbraco.AI.Core.Tools.Context;
 
 /// <summary>
 /// Arguments for the GetContextResource tool.
@@ -18,8 +18,8 @@ public record GetContextResourceArgs(
 /// This tool is dynamically injected when OnDemand resources are available.
 /// Use list_context_resources first to see what's available.
 /// </remarks>
-[AiTool("get_context_resource", "Get Context Resource", Category = "Context")]
-public class GetContextResourceTool : AiToolBase<GetContextResourceArgs>, IAiSystemTool
+[AITool("get_context_resource", "Get Context Resource", Category = "Context")]
+public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAiSystemTool
 {
     private readonly IAiContextAccessor _contextAccessor;
     private readonly IAiContextFormatter _formatter;

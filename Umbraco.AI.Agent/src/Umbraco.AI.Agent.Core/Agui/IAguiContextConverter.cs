@@ -1,7 +1,7 @@
-using Umbraco.Ai.Agui.Models;
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Agui.Models;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Agent.Core.Agui;
+namespace Umbraco.AI.Agent.Core.Agui;
 
 /// <summary>
 /// Converts between AG-UI context items and core request context items.
@@ -13,5 +13,5 @@ public interface IAguiContextConverter
     /// </summary>
     /// <param name="context">The AG-UI context items to convert.</param>
     /// <returns>A list of core request context items.</returns>
-    IReadOnlyList<AiRequestContextItem> ConvertToRequestContextItems(IEnumerable<AguiContextItem>? context);
+    IReadOnlyList<AIRequestContextItem> ConvertToRequestContextItems(IEnumerable<AguiContextItem>? context);
 }

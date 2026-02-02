@@ -2,12 +2,12 @@ using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.Settings;
+namespace Umbraco.AI.Core.Settings;
 
 /// <summary>
 /// Service for managing AI settings.
 /// </summary>
-internal sealed class AiSettingsService : IAiSettingsService
+internal sealed class AISettingsService : IAiSettingsService
 {
     private readonly IAiSettingsRepository _repository;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
@@ -15,7 +15,7 @@ internal sealed class AiSettingsService : IAiSettingsService
     
     private const string SettingsCacheKey = "Umbraco.Ai.Settings";
 
-    public AiSettingsService(
+    public AISettingsService(
         IAiSettingsRepository repository,
         IAppPolicyCache cache,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
@@ -26,15 +26,15 @@ internal sealed class AiSettingsService : IAiSettingsService
     }
 
     /// <inheritdoc />
-    public async Task<AiSettings> GetSettingsAsync(CancellationToken cancellationToken = default)
+    public async Task<AISettings> GetSettingsAsync(CancellationToken cancellationToken = default)
         => (await _cache.GetCacheItemAsync(
             SettingsCacheKey,
             async () => await _repository.GetAsync(cancellationToken),
             null))!;
 
     /// <inheritdoc />
-    public async Task<AiSettings> SaveSettingsAsync(
-        AiSettings settings,
+    public async Task<AISettings> SaveSettingsAsync(
+        AISettings settings,
         CancellationToken cancellationToken = default)
     {
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;

@@ -1,12 +1,12 @@
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Core.EditableModels;
+namespace Umbraco.AI.Core.EditableModels;
 
 /// <summary>
 /// Service for resolving editable models from various storage formats.
 /// Handles JSON deserialization, configuration variable substitution, and validation.
 /// </summary>
-public interface IAiEditableModelResolver
+public interface IAIEditableModelResolver
 {
     /// <summary>
     /// Resolves a model from storage format (JsonElement, Dictionary, etc.) to a typed instance.

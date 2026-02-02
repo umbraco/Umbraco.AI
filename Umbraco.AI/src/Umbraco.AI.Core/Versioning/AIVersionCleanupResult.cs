@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Versioning;
+namespace Umbraco.AI.Core.Versioning;
 
 /// <summary>
 /// Result of a version cleanup operation.
 /// </summary>
-public sealed class AiVersionCleanupResult
+public sealed class AIVersionCleanupResult
 {
     /// <summary>
     /// Gets the number of versions deleted due to exceeding the age threshold.

@@ -1,12 +1,12 @@
 using System.Text.Json.Serialization;
-using Umbraco.Ai.Agui.Events.Activity;
-using Umbraco.Ai.Agui.Events.Lifecycle;
-using Umbraco.Ai.Agui.Events.Messages;
-using Umbraco.Ai.Agui.Events.Special;
-using Umbraco.Ai.Agui.Events.State;
-using Umbraco.Ai.Agui.Events.Tools;
+using Umbraco.AI.Agui.Events.Activity;
+using Umbraco.AI.Agui.Events.Lifecycle;
+using Umbraco.AI.Agui.Events.Messages;
+using Umbraco.AI.Agui.Events.Special;
+using Umbraco.AI.Agui.Events.State;
+using Umbraco.AI.Agui.Events.Tools;
 
-namespace Umbraco.Ai.Agui.Events;
+namespace Umbraco.AI.Agui.Events;
 
 /// <summary>
 /// Abstract base record for AG-UI events.

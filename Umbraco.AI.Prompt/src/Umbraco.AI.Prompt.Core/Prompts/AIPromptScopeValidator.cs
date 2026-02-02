@@ -3,27 +3,27 @@ using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.Entities;
 using Umbraco.Cms.Core.Services;
 
-namespace Umbraco.Ai.Prompt.Core.Prompts;
+namespace Umbraco.AI.Prompt.Core.Prompts;
 
 /// <summary>
 /// Validates whether a prompt execution is allowed based on its scope configuration.
 /// </summary>
-internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
+internal sealed class AIPromptScopeValidator : IAiPromptScopeValidator
 {
     private readonly IEntityService _entityService;
     private readonly IContentTypeService _contentTypeService;
     private readonly IMediaTypeService _mediaTypeService;
     private readonly IMemberTypeService _memberTypeService;
     private readonly IDataTypeService _dataTypeService;
-    private readonly ILogger<AiPromptScopeValidator> _logger;
+    private readonly ILogger<AIPromptScopeValidator> _logger;
 
-    public AiPromptScopeValidator(
+    public AIPromptScopeValidator(
         IEntityService entityService,
         IContentTypeService contentTypeService,
         IMediaTypeService mediaTypeService,
         IMemberTypeService memberTypeService,
         IDataTypeService dataTypeService,
-        ILogger<AiPromptScopeValidator> logger)
+        ILogger<AIPromptScopeValidator> logger)
     {
         _entityService = entityService;
         _contentTypeService = contentTypeService;
@@ -34,21 +34,21 @@ internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
     }
 
     /// <inheritdoc />
-    public async Task<AiPromptScopeValidationResult> ValidateAsync(
-        AiPrompt prompt,
-        AiPromptExecutionRequest request,
+    public async Task<AIPromptScopeValidationResult> ValidateAsync(
+        AIPrompt prompt,
+        AIPromptExecutionRequest request,
         CancellationToken cancellationToken = default)
     {
         // If no scope is defined, prompt is not allowed anywhere
         if (prompt.Scope is null)
         {
-            return AiPromptScopeValidationResult.Denied("Prompt has no scope defined.");
+            return AIPromptScopeValidationResult.Denied("Prompt has no scope defined.");
         }
 
         // If no allow rules are defined, prompt is not allowed anywhere
         if (prompt.Scope.AllowRules.Count == 0)
         {
-            return AiPromptScopeValidationResult.Denied("Prompt has no allow rules defined.");
+            return AIPromptScopeValidationResult.Denied("Prompt has no allow rules defined.");
         }
 
         // Build the resolved context from the request and actual content item
@@ -59,7 +59,7 @@ internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
         {
             if (MatchesRule(denyRule, resolvedContext))
             {
-                return AiPromptScopeValidationResult.Denied("Prompt execution denied by deny rule.");
+                return AIPromptScopeValidationResult.Denied("Prompt execution denied by deny rule.");
             }
         }
 
@@ -68,11 +68,11 @@ internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
         {
             if (MatchesRule(allowRule, resolvedContext))
             {
-                return AiPromptScopeValidationResult.Allowed();
+                return AIPromptScopeValidationResult.Allowed();
             }
         }
 
-        return AiPromptScopeValidationResult.Denied("No allow rule matched the execution context.");
+        return AIPromptScopeValidationResult.Denied("No allow rule matched the execution context.");
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
     /// This ensures the scope rules are validated against the real content type and property configuration.
     /// </summary>
     private async Task<ResolvedScopeContext> ResolveContextAsync(
-        AiPromptExecutionRequest request,
+        AIPromptExecutionRequest request,
         CancellationToken cancellationToken)
     {
         var context = new ResolvedScopeContext
@@ -174,7 +174,7 @@ internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
     /// All non-null/non-empty properties must match (AND logic between properties).
     /// For array properties, any value matching = that property matches (OR within array).
     /// </summary>
-    private static bool MatchesRule(AiPromptScopeRule rule, ResolvedScopeContext context)
+    private static bool MatchesRule(AIPromptScopeRule rule, ResolvedScopeContext context)
     {
         // Check property editor UI alias
         if (rule.PropertyEditorUiAliases is { Count: > 0 })
@@ -235,7 +235,7 @@ internal sealed class AiPromptScopeValidator : IAiPromptScopeValidator
 /// <summary>
 /// Result of scope validation.
 /// </summary>
-public sealed class AiPromptScopeValidationResult
+public sealed class AIPromptScopeValidationResult
 {
     /// <summary>
     /// Whether execution is allowed.
@@ -247,17 +247,17 @@ public sealed class AiPromptScopeValidationResult
     /// </summary>
     public string? DenialReason { get; private init; }
 
-    private AiPromptScopeValidationResult() { }
+    private AIPromptScopeValidationResult() { }
 
     /// <summary>
     /// Creates an allowed result.
     /// </summary>
-    public static AiPromptScopeValidationResult Allowed() => new() { IsAllowed = true };
+    public static AIPromptScopeValidationResult Allowed() => new() { IsAllowed = true };
 
     /// <summary>
     /// Creates a denied result with a reason.
     /// </summary>
-    public static AiPromptScopeValidationResult Denied(string reason) => new()
+    public static AIPromptScopeValidationResult Denied(string reason) => new()
     {
         IsAllowed = false,
         DenialReason = reason

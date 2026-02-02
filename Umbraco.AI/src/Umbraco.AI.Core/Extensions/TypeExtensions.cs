@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Ai.Extensions;
+﻿namespace Umbraco.AI.Extensions;
 
 internal static class TypeExtensions
 {

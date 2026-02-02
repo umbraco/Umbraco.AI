@@ -6,36 +6,36 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.HostedServices;
 
-namespace Umbraco.Ai.Core.Analytics.Usage;
+namespace Umbraco.AI.Core.Analytics.Usage;
 
 /// <summary>
 /// Background service that periodically aggregates raw usage records into hourly statistics.
 /// Runs continuously, processing completed hours and catching up on any missed periods.
 /// </summary>
-internal sealed class AiUsageHourlyAggregationJob : RecurringHostedServiceBase
+internal sealed class AIUsageHourlyAggregationJob : RecurringHostedServiceBase
 {
     private readonly IAiUsageAggregationService _aggregationService;
     private readonly IAiUsageRecordRepository _recordRepository;
     private readonly IAiUsageStatisticsRepository _statisticsRepository;
-    private readonly IOptionsMonitor<AiAnalyticsOptions> _options;
+    private readonly IOptionsMonitor<AIAnalyticsOptions> _options;
     private readonly IRuntimeState _runtimeState;
     private readonly IServerRoleAccessor _serverRoleAccessor;
     private readonly IMainDom _mainDom;
-    private readonly ILogger<AiUsageHourlyAggregationJob> _logger;
+    private readonly ILogger<AIUsageHourlyAggregationJob> _logger;
 
     // Run every 5 minutes
     private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan StartupDelay = TimeSpan.FromSeconds(30);
 
-    public AiUsageHourlyAggregationJob(
+    public AIUsageHourlyAggregationJob(
         IAiUsageAggregationService aggregationService,
         IAiUsageRecordRepository recordRepository,
         IAiUsageStatisticsRepository statisticsRepository,
-        IOptionsMonitor<AiAnalyticsOptions> options,
+        IOptionsMonitor<AIAnalyticsOptions> options,
         IRuntimeState runtimeState,
         IServerRoleAccessor serverRoleAccessor,
         IMainDom mainDom,
-        ILogger<AiUsageHourlyAggregationJob> logger)
+        ILogger<AIUsageHourlyAggregationJob> logger)
         : base(logger, CheckInterval, StartupDelay)
     {
         _aggregationService = aggregationService;

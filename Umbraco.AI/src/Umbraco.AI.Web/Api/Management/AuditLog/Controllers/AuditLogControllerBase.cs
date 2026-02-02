@@ -1,17 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.OperationStatus;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Web.Api;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Web.Api.Management.AuditLog.Controllers;
+namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 
 /// <summary>
 /// Base controller for AuditLog management API endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.AuditLog.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.AuditLog.RouteSegment)]
-public abstract class AuditLogControllerBase : UmbracoAiCoreManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.AuditLog.RouteSegment)]
+public abstract class AuditLogControllerBase : UmbracoAICoreManagementControllerBase
 {
     /// <summary>
     /// Maps a audit-log operation status to an appropriate action result.

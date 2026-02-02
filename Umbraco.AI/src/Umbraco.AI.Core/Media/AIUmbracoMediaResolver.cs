@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Services;
 
-namespace Umbraco.Ai.Prompt.Core.Media;
+namespace Umbraco.AI.Prompt.Core.Media;
 
 /// <summary>
 /// Resolves images from media references using Umbraco's media service and file storage.
 /// </summary>
-internal sealed class AiUmbracoMediaResolver : IAiUmbracoMediaResolver
+internal sealed class AIUmbracoMediaResolver : IAiUmbracoMediaResolver
 {
     private static readonly Dictionary<string, string> ExtensionToMediaType = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -22,12 +22,12 @@ internal sealed class AiUmbracoMediaResolver : IAiUmbracoMediaResolver
 
     private readonly IMediaService _mediaService;
     private readonly MediaFileManager _mediaFileManager;
-    private readonly ILogger<AiUmbracoMediaResolver> _logger;
+    private readonly ILogger<AIUmbracoMediaResolver> _logger;
 
-    public AiUmbracoMediaResolver(
+    public AIUmbracoMediaResolver(
         IMediaService mediaService,
         MediaFileManager mediaFileManager,
-        ILogger<AiUmbracoMediaResolver> logger)
+        ILogger<AIUmbracoMediaResolver> logger)
     {
         _mediaService = mediaService;
         _mediaFileManager = mediaFileManager;
@@ -35,7 +35,7 @@ internal sealed class AiUmbracoMediaResolver : IAiUmbracoMediaResolver
     }
 
     /// <inheritdoc />
-    public async Task<AiMediaContent?> ResolveAsync(object? value, CancellationToken cancellationToken = default)
+    public async Task<AIMediaContent?> ResolveAsync(object? value, CancellationToken cancellationToken = default)
     {
         if (value is null)
         {
@@ -171,7 +171,7 @@ internal sealed class AiUmbracoMediaResolver : IAiUmbracoMediaResolver
         return (null, null);
     }
 
-    private AiMediaContent? ResolveFromMediaKey(Guid mediaKey)
+    private AIMediaContent? ResolveFromMediaKey(Guid mediaKey)
     {
         var media = _mediaService.GetById(mediaKey);
         if (media is null)
@@ -215,7 +215,7 @@ internal sealed class AiUmbracoMediaResolver : IAiUmbracoMediaResolver
         return ResolveFromPath(filePath);
     }
 
-    private AiMediaContent? ResolveFromPath(string filePath)
+    private AIMediaContent? ResolveFromPath(string filePath)
     {
         // Normalize the path - remove leading /media/ if present since MediaFileManager works with relative paths
         var relativePath = filePath;
@@ -248,7 +248,7 @@ internal sealed class AiUmbracoMediaResolver : IAiUmbracoMediaResolver
         using var memoryStream = new MemoryStream();
         stream.CopyTo(memoryStream);
 
-        return new AiMediaContent
+        return new AIMediaContent
         {
             Data = memoryStream.ToArray(),
             MediaType = mediaType

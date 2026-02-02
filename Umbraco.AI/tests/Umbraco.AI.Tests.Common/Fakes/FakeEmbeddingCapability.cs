@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.Ai.Tests.Common.Fakes;
+namespace Umbraco.AI.Tests.Common.Fakes;
 
 /// <summary>
 /// Fake implementation of <see cref="IAiEmbeddingCapability"/> for use in tests.
@@ -10,27 +10,27 @@ namespace Umbraco.Ai.Tests.Common.Fakes;
 public class FakeEmbeddingCapability : IAiEmbeddingCapability
 {
     private readonly IEmbeddingGenerator<string, Embedding<float>> _generator;
-    private readonly IReadOnlyList<AiModelDescriptor> _models;
+    private readonly IReadOnlyList<AIModelDescriptor> _models;
 
     public FakeEmbeddingCapability(
         IEmbeddingGenerator<string, Embedding<float>>? generator = null,
-        IReadOnlyList<AiModelDescriptor>? models = null)
+        IReadOnlyList<AIModelDescriptor>? models = null)
     {
         _generator = generator ?? new FakeEmbeddingGenerator();
-        _models = models ?? new List<AiModelDescriptor>
+        _models = models ?? new List<AIModelDescriptor>
         {
-            new(new AiModelRef("fake-provider", "fake-embedding-1"), "Fake Embedding Model 1")
+            new(new AIModelRef("fake-provider", "fake-embedding-1"), "Fake Embedding Model 1")
         };
     }
 
-    public AiCapability Kind => AiCapability.Embedding;
+    public AICapability Kind => AICapability.Embedding;
 
     public IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(object? settings, string? modelId = null)
     {
         return _generator;
     }
 
-    public Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(object? settings = null, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_models);
     }

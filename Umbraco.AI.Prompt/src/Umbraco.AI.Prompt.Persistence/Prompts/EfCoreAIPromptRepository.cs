@@ -1,39 +1,39 @@
 using Microsoft.EntityFrameworkCore;
-using Umbraco.Ai.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
 
-namespace Umbraco.Ai.Prompt.Persistence.Prompts;
+namespace Umbraco.AI.Prompt.Persistence.Prompts;
 
 /// <summary>
 /// EF Core implementation of <see cref="IAiPromptRepository"/>.
 /// </summary>
 internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiPromptDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIPromptDbContext> _scopeProvider;
 
-    public EfCoreAiPromptRepository(IEFCoreScopeProvider<UmbracoAiPromptDbContext> scopeProvider)
+    public EfCoreAiPromptRepository(IEFCoreScopeProvider<UmbracoAIPromptDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
 
     /// <inheritdoc />
-    public async Task<Core.Prompts.AiPrompt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Core.Prompts.AIPrompt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Prompts.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, cancellationToken));
 
         scope.Complete();
 
-        return entity is null ? null : AiPromptEntityFactory.BuildDomain(entity);
+        return entity is null ? null : AIPromptEntityFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
-    public async Task<Core.Prompts.AiPrompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public async Task<Core.Prompts.AIPrompt?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Prompts.AsNoTracking()
@@ -41,35 +41,35 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
 
         scope.Complete();
 
-        return entity is null ? null : AiPromptEntityFactory.BuildDomain(entity);
+        return entity is null ? null : AIPromptEntityFactory.BuildDomain(entity);
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Core.Prompts.AiPrompt>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Core.Prompts.AIPrompt>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
             await db.Prompts.AsNoTracking().OrderBy(e => e.Name).ToListAsync(cancellationToken));
 
         scope.Complete();
 
-        return entities.Select(AiPromptEntityFactory.BuildDomain);
+        return entities.Select(AIPromptEntityFactory.BuildDomain);
     }
 
     /// <inheritdoc />
-    public async Task<PagedModel<Core.Prompts.AiPrompt>> GetPagedAsync(
+    public async Task<PagedModel<Core.Prompts.AIPrompt>> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AiPromptEntity> query = db.Prompts.AsNoTracking();
+            IQueryable<AIPromptEntity> query = db.Prompts.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(filter))
             {
@@ -96,14 +96,14 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
 
         scope.Complete();
 
-        var prompts = result.items.Select(AiPromptEntityFactory.BuildDomain).ToList();
-        return new PagedModel<Core.Prompts.AiPrompt>(result.total, prompts);
+        var prompts = result.items.Select(AIPromptEntityFactory.BuildDomain).ToList();
+        return new PagedModel<Core.Prompts.AIPrompt>(result.total, prompts);
     }
 
     /// <inheritdoc />
-    public async Task<Core.Prompts.AiPrompt> SaveAsync(Core.Prompts.AiPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default)
+    public async Task<Core.Prompts.AIPrompt> SaveAsync(Core.Prompts.AIPrompt prompt, Guid? userId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var savedPrompt = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -117,7 +117,7 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
                 prompt.CreatedByUserId = userId;
                 prompt.ModifiedByUserId = userId;
 
-                var entity = AiPromptEntityFactory.BuildEntity(prompt);
+                var entity = AIPromptEntityFactory.BuildEntity(prompt);
                 db.Prompts.Add(entity);
             }
             else
@@ -127,7 +127,7 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
                 prompt.DateModified = DateTime.UtcNow;
                 prompt.ModifiedByUserId = userId;
 
-                AiPromptEntityFactory.UpdateEntity(existing, prompt);
+                AIPromptEntityFactory.UpdateEntity(existing, prompt);
             }
 
             await db.SaveChangesAsync(cancellationToken);
@@ -142,7 +142,7 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -165,7 +165,7 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
     /// <inheritdoc />
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var exists = await scope.ExecuteWithContextAsync(async db =>
             await db.Prompts.AnyAsync(e => e.Id == id, cancellationToken));
@@ -178,7 +178,7 @@ internal sealed class EfCoreAiPromptRepository : IAiPromptRepository
     /// <inheritdoc />
     public async Task<bool> AliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiPromptDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var exists = await scope.ExecuteWithContextAsync(async db =>
         {

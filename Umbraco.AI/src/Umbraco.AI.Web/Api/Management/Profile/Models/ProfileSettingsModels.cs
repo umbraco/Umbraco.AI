@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Web.Api.Management.Profile.Models;
+namespace Umbraco.AI.Web.Api.Management.Profile.Models;
 
 /// <summary>
 /// Base class for capability-specific profile settings in the API.

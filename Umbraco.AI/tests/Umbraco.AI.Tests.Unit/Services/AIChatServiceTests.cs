@@ -1,31 +1,31 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Tests.Common.Fakes;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Tests.Common.Fakes;
 
-namespace Umbraco.Ai.Tests.Unit.Services;
+namespace Umbraco.AI.Tests.Unit.Services;
 
-public class AiChatServiceTests
+public class AIChatServiceTests
 {
     private readonly Mock<IAiChatClientFactory> _clientFactoryMock;
     private readonly Mock<IAiProfileService> _profileServiceMock;
-    private readonly Mock<IOptionsMonitor<AiOptions>> _optionsMock;
-    private readonly AiChatService _service;
+    private readonly Mock<IOptionsMonitor<AIOptions>> _optionsMock;
+    private readonly AIChatService _service;
 
-    public AiChatServiceTests()
+    public AIChatServiceTests()
     {
         _clientFactoryMock = new Mock<IAiChatClientFactory>();
         _profileServiceMock = new Mock<IAiProfileService>();
-        _optionsMock = new Mock<IOptionsMonitor<AiOptions>>();
-        _optionsMock.Setup(x => x.CurrentValue).Returns(new AiOptions
+        _optionsMock = new Mock<IOptionsMonitor<AIOptions>>();
+        _optionsMock.Setup(x => x.CurrentValue).Returns(new AIOptions
         {
             DefaultChatProfileAlias = "default-chat"
         });
 
-        _service = new AiChatService(
+        _service = new AIChatService(
             _clientFactoryMock.Object,
             _profileServiceMock.Object,
             _optionsMock.Object);
@@ -42,16 +42,16 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var defaultProfile = new AiProfileBuilder()
+        var defaultProfile = new AIProfileBuilder()
             .WithAlias("default-chat")
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .Build();
 
         var fakeChatClient = new FakeChatClient("Hello! How can I help you?");
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(defaultProfile);
 
         _clientFactoryMock
@@ -65,7 +65,7 @@ public class AiChatServiceTests
         response.ShouldNotBeNull();
         response.Text.ShouldBe("Hello! How can I help you?");
         _profileServiceMock.Verify(
-            x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()),
+            x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -83,9 +83,9 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .Build();
 
@@ -122,7 +122,7 @@ public class AiChatServiceTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var act = () => _service.GetChatResponseAsync(profileId, messages);
@@ -142,9 +142,9 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var embeddingProfile = new AiProfileBuilder()
+        var embeddingProfile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithName("Embedding Profile")
             .Build();
 
@@ -173,8 +173,8 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var profile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Chat)
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .WithChatSettings(temperature: 0.7f, maxTokens: 1000)
             .Build();
@@ -188,7 +188,7 @@ public class AiChatServiceTests
         var fakeChatClient = new FakeChatClient();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _clientFactoryMock
@@ -217,8 +217,8 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var profile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Chat)
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .WithChatSettings(temperature: 0.5f, maxTokens: 500)
             .Build();
@@ -226,7 +226,7 @@ public class AiChatServiceTests
         var fakeChatClient = new FakeChatClient();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _clientFactoryMock
@@ -254,8 +254,8 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var profile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Chat)
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .Build();
 
@@ -267,7 +267,7 @@ public class AiChatServiceTests
         var fakeChatClient = new FakeChatClient();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _clientFactoryMock
@@ -295,15 +295,15 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var profile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Chat)
+        var profile = new AIProfileBuilder()
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .Build();
 
         var fakeChatClient = new FakeChatClient("Hello World!");
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
         _clientFactoryMock
@@ -333,9 +333,9 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .Build();
 
@@ -372,7 +372,7 @@ public class AiChatServiceTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -394,9 +394,9 @@ public class AiChatServiceTests
             new(ChatRole.User, "Hello")
         };
 
-        var embeddingProfile = new AiProfileBuilder()
+        var embeddingProfile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithName("Embedding Profile")
             .Build();
 
@@ -422,15 +422,15 @@ public class AiChatServiceTests
     public async Task GetChatClientAsync_WithNullProfileId_UsesDefaultProfile()
     {
         // Arrange
-        var defaultProfile = new AiProfileBuilder()
-            .WithCapability(AiCapability.Chat)
+        var defaultProfile = new AIProfileBuilder()
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .Build();
 
         var fakeChatClient = new FakeChatClient();
 
         _profileServiceMock
-            .Setup(x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()))
             .ReturnsAsync(defaultProfile);
 
         _clientFactoryMock
@@ -443,7 +443,7 @@ public class AiChatServiceTests
         // Assert
         client.ShouldBe(fakeChatClient);
         _profileServiceMock.Verify(
-            x => x.GetDefaultProfileAsync(AiCapability.Chat, It.IsAny<CancellationToken>()),
+            x => x.GetDefaultProfileAsync(AICapability.Chat, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -452,9 +452,9 @@ public class AiChatServiceTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var profile = new AiProfileBuilder()
+        var profile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Chat)
+            .WithCapability(AICapability.Chat)
             .WithModel("openai", "gpt-4")
             .Build();
 
@@ -486,7 +486,7 @@ public class AiChatServiceTests
 
         _profileServiceMock
             .Setup(x => x.GetProfileAsync(profileId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AiProfile?)null);
+            .ReturnsAsync((AIProfile?)null);
 
         // Act
         var act = () => _service.GetChatClientAsync(profileId);
@@ -501,9 +501,9 @@ public class AiChatServiceTests
     {
         // Arrange
         var profileId = Guid.NewGuid();
-        var embeddingProfile = new AiProfileBuilder()
+        var embeddingProfile = new AIProfileBuilder()
             .WithId(profileId)
-            .WithCapability(AiCapability.Embedding)
+            .WithCapability(AICapability.Embedding)
             .WithName("Embedding Profile")
             .Build();
 

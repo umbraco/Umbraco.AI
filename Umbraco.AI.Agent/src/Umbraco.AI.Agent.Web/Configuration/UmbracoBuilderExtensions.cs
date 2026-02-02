@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
-using Umbraco.Ai.Agent.Web.Api.Management.Agent.Mapping;
+using Umbraco.AI.Agent.Web.Api.Management.Agent.Mapping;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 
-namespace Umbraco.Ai.Agent.Web.Configuration;
+namespace Umbraco.AI.Agent.Web.Configuration;
 
 /// <summary>
 /// Extension methods for configuring Umbraco.Ai.Agent.Web services.

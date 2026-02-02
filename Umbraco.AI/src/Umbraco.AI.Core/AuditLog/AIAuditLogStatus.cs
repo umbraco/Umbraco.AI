@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Represents the execution status of an AI audit-log.
 /// </summary>
-public enum AiAuditLogStatus
+public enum AIAuditLogStatus
 {
     /// <summary>
     /// The AI operation is currently executing.

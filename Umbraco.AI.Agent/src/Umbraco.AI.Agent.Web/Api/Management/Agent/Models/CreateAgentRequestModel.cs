@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 
 /// <summary>
 /// Request model for creating a agent.

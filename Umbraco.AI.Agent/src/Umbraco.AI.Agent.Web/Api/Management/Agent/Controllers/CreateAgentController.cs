@@ -2,12 +2,12 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Agent.Core.Agents;
-using Umbraco.Ai.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.Ai.Agent.Web.Api.Management.Agent.Controllers;
+namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
 /// <summary>
 /// Controller for creating Agents.
@@ -22,9 +22,9 @@ public class CreateAgentController : AgentControllerBase
     /// <summary>
     /// Creates a new instance of the controller.
     /// </summary>
-    public CreateAgentController(IAiAgentService AiAgentService, IUmbracoMapper umbracoMapper)
+    public CreateAgentController(IAiAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AiAgentService;
+        _AiAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -43,11 +43,11 @@ public class CreateAgentController : AgentControllerBase
         [FromBody] CreateAgentRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AiAgent agent = _umbracoMapper.Map<AiAgent>(model)!;
+        AIAgent agent = _umbracoMapper.Map<AIAgent>(model)!;
 
         try
         {
-            AiAgent created = await _AiAgentService.SaveAgentAsync(agent, cancellationToken);
+            AIAgent created = await _AiAgentService.SaveAgentAsync(agent, cancellationToken);
 
             return CreatedAtAction(
                 nameof(ByIdOrAliasAgentController.GetAgentByIdOrAlias),

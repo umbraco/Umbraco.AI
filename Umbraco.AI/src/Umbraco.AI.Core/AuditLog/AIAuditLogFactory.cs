@@ -2,24 +2,24 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core.Security;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
-/// Factory implementation for creating AiAuditLog instances.
+/// Factory implementation for creating AIAuditLog instances.
 /// </summary>
-internal sealed class AiAuditLogFactory : IAiAuditLogFactory
+internal sealed class AIAuditLogFactory : IAiAuditLogFactory
 {
-    private readonly IOptionsMonitor<AiAuditLogOptions> _options;
+    private readonly IOptionsMonitor<AIAuditLogOptions> _options;
     private readonly IBackOfficeSecurityAccessor _securityAccessor;
-    private readonly ILogger<AiAuditLogFactory> _logger;
+    private readonly ILogger<AIAuditLogFactory> _logger;
 
-    public AiAuditLogFactory(
-        IOptionsMonitor<AiAuditLogOptions> options,
+    public AIAuditLogFactory(
+        IOptionsMonitor<AIAuditLogOptions> options,
         IBackOfficeSecurityAccessor securityAccessor,
-        ILogger<AiAuditLogFactory> logger)
+        ILogger<AIAuditLogFactory> logger)
     {
         _options = options;
         _securityAccessor = securityAccessor;
@@ -27,24 +27,24 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
     }
 
     /// <inheritdoc />
-    public AiAuditLog Create(
-        AiAuditContext context,
+    public AIAuditLog Create(
+        AIAuditContext context,
         IReadOnlyDictionary<string, string>? metadata = null,
         Guid? parentId = null)
     {
         if (!context.ProfileId.HasValue)
-            throw new ArgumentException("ProfileId must be set in the AiAuditContext.", nameof(context));
+            throw new ArgumentException("ProfileId must be set in the AIAuditContext.", nameof(context));
         if (string.IsNullOrWhiteSpace(context.ProfileAlias))
-            throw new ArgumentException("ProfileAlias must be set in the AiAuditContext.", nameof(context));
+            throw new ArgumentException("ProfileAlias must be set in the AIAuditContext.", nameof(context));
         if (string.IsNullOrWhiteSpace(context.ProviderId))
-            throw new ArgumentException("ProviderId must be set in the AiAuditContext.", nameof(context));
+            throw new ArgumentException("ProviderId must be set in the AIAuditContext.", nameof(context));
         if (string.IsNullOrWhiteSpace(context.ModelId))
-            throw new ArgumentException("ModelId must be set in the AiAuditContext.", nameof(context));
+            throw new ArgumentException("ModelId must be set in the AIAuditContext.", nameof(context));
 
         var user = _securityAccessor.BackOfficeSecurity?.CurrentUser;
         var detailLevel = _options.CurrentValue.DetailLevel;
 
-        var auditLog = new AiAuditLog
+        var auditLog = new AIAuditLog
         {
             Id = Guid.NewGuid(),
             ParentAuditLogId = parentId,
@@ -67,7 +67,7 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
             DetailLevel = detailLevel,
             
             // Set initial run state
-            Status = AiAuditLogStatus.Running,
+            Status = AIAuditLogStatus.Running,
             StartTime = DateTime.UtcNow,
         };
 
@@ -88,7 +88,7 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
     private const int MaxArgumentLength = 500;
     private const int MaxResultLength = 1000;
 
-    private static string? FormatPromptSnapshot(object? promptObj, AiCapability capability)
+    private static string? FormatPromptSnapshot(object? promptObj, AICapability capability)
     {
         if (promptObj is null)
         {
@@ -99,10 +99,10 @@ internal sealed class AiAuditLogFactory : IAiAuditLogFactory
         {
             return capability switch
             {
-                AiCapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
+                AICapability.Chat when promptObj is IEnumerable<ChatMessage> messages =>
                     string.Join("\n", messages.Select(FormatChatMessage)),
 
-                AiCapability.Embedding when promptObj is IEnumerable<string> values =>
+                AICapability.Embedding when promptObj is IEnumerable<string> values =>
                     string.Join("\n", values.Select((v, i) => $"[{i}] {v}")),
 
                 _ => promptObj.ToString()

@@ -1,8 +1,8 @@
-using Umbraco.Ai.Core.RuntimeContext;
+using Umbraco.AI.Core.RuntimeContext;
 
-namespace Umbraco.Ai.Tests.Unit.RuntimeContext;
+namespace Umbraco.AI.Tests.Unit.RuntimeContext;
 
-public class AiRequestContextItemCollectionTests
+public class AIRequestContextItemCollectionTests
 {
     [Fact]
     public void Handle_WhenMatchFound_InvokesHandlerAndReturnsTrue()
@@ -10,11 +10,11 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 2", Value = "value2" }
         };
-        var collection = new AiRequestContextItemCollection(items);
-        var handledItem = (AiRequestContextItem?)null;
+        var collection = new AIRequestContextItemCollection(items);
+        var handledItem = (AIRequestContextItem?)null;
 
         // Act
         var result = collection.Handle(
@@ -33,9 +33,9 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Act
         collection.Handle(
@@ -53,9 +53,9 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
         var handlerInvoked = false;
 
         // Act
@@ -75,10 +75,10 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 1", Value = "value2" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 1", Value = "value2" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
         var handledValues = new List<string?>();
 
         // Act - Handle first matching item
@@ -103,11 +103,11 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "TypeA", Value = "value1" },
-            new AiRequestContextItem { Description = "TypeB", Value = "value2" },
-            new AiRequestContextItem { Description = "TypeA", Value = "value3" }
+            new AIRequestContextItem { Description = "TypeA", Value = "value1" },
+            new AIRequestContextItem { Description = "TypeB", Value = "value2" },
+            new AIRequestContextItem { Description = "TypeA", Value = "value3" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
         var handledValues = new List<string?>();
 
         // Act
@@ -127,11 +127,11 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "TypeA", Value = "value1" },
-            new AiRequestContextItem { Description = "TypeB", Value = "value2" },
-            new AiRequestContextItem { Description = "TypeA", Value = "value3" }
+            new AIRequestContextItem { Description = "TypeA", Value = "value1" },
+            new AIRequestContextItem { Description = "TypeB", Value = "value2" },
+            new AIRequestContextItem { Description = "TypeA", Value = "value3" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Act
         collection.HandleAll(
@@ -151,10 +151,10 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "TypeA", Value = "value1" },
-            new AiRequestContextItem { Description = "TypeA", Value = "value2" }
+            new AIRequestContextItem { Description = "TypeA", Value = "value1" },
+            new AIRequestContextItem { Description = "TypeA", Value = "value2" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Handle first item individually
         collection.Handle(
@@ -179,11 +179,11 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 2", Value = "value2" },
-            new AiRequestContextItem { Description = "Item 3", Value = "value3" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 2", Value = "value2" },
+            new AIRequestContextItem { Description = "Item 3", Value = "value3" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Handle first item
         collection.Handle(
@@ -207,10 +207,10 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 2", Value = "value2" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Act
         collection.HandleUnhandled(_ => { });
@@ -227,9 +227,9 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Handle all items first
         collection.HandleUnhandled(_ => { });
@@ -249,9 +249,9 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         collection.Handle(
             item => item.Description == "Item 1",
@@ -267,9 +267,9 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Act & Assert
         collection.IsHandled(items[0]).ShouldBeFalse();
@@ -281,11 +281,11 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 2", Value = "value2" },
-            new AiRequestContextItem { Description = "Item 3", Value = "value3" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 2", Value = "value2" },
+            new AIRequestContextItem { Description = "Item 3", Value = "value3" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Act
         collection.Handle(item => item.Description == "Item 1", _ => { });
@@ -299,7 +299,7 @@ public class AiRequestContextItemCollectionTests
     public void Handle_NullPredicate_ThrowsArgumentNullException()
     {
         // Arrange
-        var collection = new AiRequestContextItemCollection([]);
+        var collection = new AIRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
@@ -310,7 +310,7 @@ public class AiRequestContextItemCollectionTests
     public void Handle_NullHandler_ThrowsArgumentNullException()
     {
         // Arrange
-        var collection = new AiRequestContextItemCollection([]);
+        var collection = new AIRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
@@ -321,7 +321,7 @@ public class AiRequestContextItemCollectionTests
     public void HandleAll_NullPredicate_ThrowsArgumentNullException()
     {
         // Arrange
-        var collection = new AiRequestContextItemCollection([]);
+        var collection = new AIRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
@@ -332,7 +332,7 @@ public class AiRequestContextItemCollectionTests
     public void HandleAll_NullHandler_ThrowsArgumentNullException()
     {
         // Arrange
-        var collection = new AiRequestContextItemCollection([]);
+        var collection = new AIRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
@@ -343,7 +343,7 @@ public class AiRequestContextItemCollectionTests
     public void HandleUnhandled_NullHandler_ThrowsArgumentNullException()
     {
         // Arrange
-        var collection = new AiRequestContextItemCollection([]);
+        var collection = new AIRequestContextItemCollection([]);
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
@@ -356,10 +356,10 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 2", Value = "value2" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Act & Assert
         collection.Count.ShouldBe(2);
@@ -371,10 +371,10 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 2", Value = "value2" }
         };
-        var collection = new AiRequestContextItemCollection(items);
+        var collection = new AIRequestContextItemCollection(items);
 
         // Act & Assert
         collection[0].Description.ShouldBe("Item 1");
@@ -387,11 +387,11 @@ public class AiRequestContextItemCollectionTests
         // Arrange
         var items = new[]
         {
-            new AiRequestContextItem { Description = "Item 1", Value = "value1" },
-            new AiRequestContextItem { Description = "Item 2", Value = "value2" }
+            new AIRequestContextItem { Description = "Item 1", Value = "value1" },
+            new AIRequestContextItem { Description = "Item 2", Value = "value2" }
         };
-        var collection = new AiRequestContextItemCollection(items);
-        var enumerated = new List<AiRequestContextItem>();
+        var collection = new AIRequestContextItemCollection(items);
+        var enumerated = new List<AIRequestContextItem>();
 
         // Act
         foreach (var item in collection)

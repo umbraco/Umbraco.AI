@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Tests.Common.Builders;
-using Umbraco.Ai.Web.Api.Management.Profile.Controllers;
-using Umbraco.Ai.Web.Api.Management.Profile.Models;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.AI.Web.Api.Management.Profile.Controllers;
+using Umbraco.AI.Web.Api.Management.Profile.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Tests.Unit.Api.Management.Profile;
+namespace Umbraco.AI.Tests.Unit.Api.Management.Profile;
 
 public class AllProfileControllerTests
 {
@@ -29,10 +29,10 @@ public class AllProfileControllerTests
     public async Task GetAllProfiles_WithNoFilter_ReturnsAllProfiles()
     {
         // Arrange
-        var profiles = new List<AiProfile>
+        var profiles = new List<AIProfile>
         {
-            new AiProfileBuilder().WithAlias("profile-1").WithCapability(AiCapability.Chat).Build(),
-            new AiProfileBuilder().WithAlias("profile-2").WithCapability(AiCapability.Embedding).Build()
+            new AIProfileBuilder().WithAlias("profile-1").WithCapability(AICapability.Chat).Build(),
+            new AIProfileBuilder().WithAlias("profile-2").WithCapability(AICapability.Embedding).Build()
         };
 
         var responseModels = profiles.Select(p => new ProfileItemResponseModel
@@ -48,7 +48,7 @@ public class AllProfileControllerTests
             .ReturnsAsync((profiles.AsEnumerable(), profiles.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
             .Returns(responseModels);
 
         // Act
@@ -64,9 +64,9 @@ public class AllProfileControllerTests
     public async Task GetAllProfiles_WithCapabilityFilter_ReturnsFilteredProfiles()
     {
         // Arrange
-        var chatProfiles = new List<AiProfile>
+        var chatProfiles = new List<AIProfile>
         {
-            new AiProfileBuilder().WithAlias("chat-1").WithCapability(AiCapability.Chat).Build()
+            new AIProfileBuilder().WithAlias("chat-1").WithCapability(AICapability.Chat).Build()
         };
 
         var responseModels = chatProfiles.Select(p => new ProfileItemResponseModel
@@ -78,11 +78,11 @@ public class AllProfileControllerTests
         }).ToList();
 
         _profileServiceMock
-            .Setup(x => x.GetProfilesPagedAsync(null, AiCapability.Chat, 0, 100, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetProfilesPagedAsync(null, AICapability.Chat, 0, 100, It.IsAny<CancellationToken>()))
             .ReturnsAsync((chatProfiles.AsEnumerable(), chatProfiles.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
             .Returns(responseModels);
 
         // Act
@@ -98,9 +98,9 @@ public class AllProfileControllerTests
     public async Task GetAllProfiles_WithInvalidCapabilityFilter_ReturnsAllProfiles()
     {
         // Arrange
-        var profiles = new List<AiProfile>
+        var profiles = new List<AIProfile>
         {
-            new AiProfileBuilder().Build()
+            new AIProfileBuilder().Build()
         };
 
         _profileServiceMock
@@ -108,7 +108,7 @@ public class AllProfileControllerTests
             .ReturnsAsync((profiles.AsEnumerable(), profiles.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act - passing invalid capability falls back to null capability (all profiles)
@@ -122,24 +122,24 @@ public class AllProfileControllerTests
     public async Task GetAllProfiles_WithCaseInsensitiveCapability_ReturnsFilteredProfiles()
     {
         // Arrange
-        var embeddingProfiles = new List<AiProfile>
+        var embeddingProfiles = new List<AIProfile>
         {
-            new AiProfileBuilder().WithCapability(AiCapability.Embedding).Build()
+            new AIProfileBuilder().WithCapability(AICapability.Embedding).Build()
         };
 
         _profileServiceMock
-            .Setup(x => x.GetProfilesPagedAsync(null, AiCapability.Embedding, 0, 100, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetProfilesPagedAsync(null, AICapability.Embedding, 0, 100, It.IsAny<CancellationToken>()))
             .ReturnsAsync((embeddingProfiles.AsEnumerable(), embeddingProfiles.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act - using lowercase
         await _controller.GetAllProfiles(capability: "embedding");
 
         // Assert
-        _profileServiceMock.Verify(x => x.GetProfilesPagedAsync(null, AiCapability.Embedding, 0, 100, It.IsAny<CancellationToken>()), Times.Once);
+        _profileServiceMock.Verify(x => x.GetProfilesPagedAsync(null, AICapability.Embedding, 0, 100, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -148,10 +148,10 @@ public class AllProfileControllerTests
         // Arrange
         _profileServiceMock
             .Setup(x => x.GetProfilesPagedAsync(null, null, 0, 100, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Enumerable.Empty<AiProfile>(), 0));
+            .ReturnsAsync((Enumerable.Empty<AIProfile>(), 0));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
             .Returns(new List<ProfileItemResponseModel>());
 
         // Act
@@ -169,7 +169,7 @@ public class AllProfileControllerTests
     {
         // Arrange
         var allProfiles = Enumerable.Range(1, 10)
-            .Select(i => new AiProfileBuilder().WithAlias($"profile-{i}").Build())
+            .Select(i => new AIProfileBuilder().WithAlias($"profile-{i}").Build())
             .ToList();
 
         // The paged method returns only the requested page
@@ -180,8 +180,8 @@ public class AllProfileControllerTests
             .ReturnsAsync((pagedProfiles.AsEnumerable(), 10)); // Total is still 10
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
-            .Returns((IEnumerable<AiProfile> items) => items.Select(p => new ProfileItemResponseModel
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
+            .Returns((IEnumerable<AIProfile> items) => items.Select(p => new ProfileItemResponseModel
             {
                 Id = p.Id,
                 Alias = p.Alias,
@@ -203,9 +203,9 @@ public class AllProfileControllerTests
     public async Task GetAllProfiles_WithFilter_ReturnsFilteredProfiles()
     {
         // Arrange
-        var filteredProfiles = new List<AiProfile>
+        var filteredProfiles = new List<AIProfile>
         {
-            new AiProfileBuilder().WithAlias("test-profile").WithName("Test Profile").Build()
+            new AIProfileBuilder().WithAlias("test-profile").WithName("Test Profile").Build()
         };
 
         var responseModels = filteredProfiles.Select(p => new ProfileItemResponseModel
@@ -221,7 +221,7 @@ public class AllProfileControllerTests
             .ReturnsAsync((filteredProfiles.AsEnumerable(), filteredProfiles.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
             .Returns(responseModels);
 
         // Act
@@ -238,9 +238,9 @@ public class AllProfileControllerTests
     public async Task GetAllProfiles_WithFilterAndCapability_ReturnsFilteredProfiles()
     {
         // Arrange
-        var filteredProfiles = new List<AiProfile>
+        var filteredProfiles = new List<AIProfile>
         {
-            new AiProfileBuilder().WithAlias("chat-test").WithName("Chat Test").WithCapability(AiCapability.Chat).Build()
+            new AIProfileBuilder().WithAlias("chat-test").WithName("Chat Test").WithCapability(AICapability.Chat).Build()
         };
 
         var responseModels = filteredProfiles.Select(p => new ProfileItemResponseModel
@@ -252,11 +252,11 @@ public class AllProfileControllerTests
         }).ToList();
 
         _profileServiceMock
-            .Setup(x => x.GetProfilesPagedAsync("test", AiCapability.Chat, 0, 100, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetProfilesPagedAsync("test", AICapability.Chat, 0, 100, It.IsAny<CancellationToken>()))
             .ReturnsAsync((filteredProfiles.AsEnumerable(), filteredProfiles.Count));
 
         _mapperMock
-            .Setup(x => x.MapEnumerable<AiProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AiProfile>>()))
+            .Setup(x => x.MapEnumerable<AIProfile, ProfileItemResponseModel>(It.IsAny<IEnumerable<AIProfile>>()))
             .Returns(responseModels);
 
         // Act
@@ -266,7 +266,7 @@ public class AllProfileControllerTests
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
         var viewModel = okResult.Value.ShouldBeOfType<PagedViewModel<ProfileItemResponseModel>>();
         viewModel.Total.ShouldBe(1);
-        _profileServiceMock.Verify(x => x.GetProfilesPagedAsync("test", AiCapability.Chat, 0, 100, It.IsAny<CancellationToken>()), Times.Once);
+        _profileServiceMock.Verify(x => x.GetProfilesPagedAsync("test", AICapability.Chat, 0, 100, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion

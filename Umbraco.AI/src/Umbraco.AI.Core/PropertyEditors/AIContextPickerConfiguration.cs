@@ -1,11 +1,11 @@
 using Umbraco.Cms.Core.PropertyEditors;
 
-namespace Umbraco.Ai.Core.PropertyEditors;
+namespace Umbraco.AI.Core.PropertyEditors;
 
 /// <summary>
 /// Configuration for the AI Context Picker property editor.
 /// </summary>
-public class AiContextPickerConfiguration
+public class AIContextPickerConfiguration
 {
     /// <summary>
     /// Gets or sets a value indicating whether multiple contexts can be selected.

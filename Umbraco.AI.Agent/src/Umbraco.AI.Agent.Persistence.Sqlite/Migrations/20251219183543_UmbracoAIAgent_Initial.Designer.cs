@@ -4,15 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Umbraco.Ai.Agent.Persistence;
+using Umbraco.AI.Agent.Persistence;
 
 #nullable disable
 
-namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
+namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
-    [DbContext(typeof(UmbracoAiAgentDbContext))]
+    [DbContext(typeof(UmbracoAIAgentDbContext))]
     [Migration("20251219183543_UmbracoAiAgent_Initial")]
-    partial class UmbracoAiAgent_Initial
+    partial class UmbracoAIAgent_Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,7 +20,7 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentEntity", b =>
+            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

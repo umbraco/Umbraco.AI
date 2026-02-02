@@ -1,9 +1,9 @@
-using Umbraco.Ai.Core.Contexts;
-using Umbraco.Ai.Core.Contexts.ResourceTypes;
-using Umbraco.Ai.Web.Api.Management.Context.Models;
+using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Web.Api.Management.Context.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.Ai.Web.Api.Management.Context.Mapping;
+namespace Umbraco.AI.Web.Api.Management.Context.Mapping;
 
 /// <summary>
 /// Map definitions for Context models.
@@ -14,32 +14,32 @@ public class ContextMapDefinition : IMapDefinition
     public void DefineMaps(IUmbracoMapper mapper)
     {
         // Response mappings (domain -> response)
-        mapper.Define<AiContext, ContextResponseModel>((_, _) => new ContextResponseModel(), MapToResponse);
-        mapper.Define<AiContext, ContextItemResponseModel>((_, _) => new ContextItemResponseModel(), MapToItemResponse);
-        mapper.Define<AiContextResource, ContextResourceModel>((_, _) => new ContextResourceModel(), MapResourceToModel);
+        mapper.Define<AIContext, ContextResponseModel>((_, _) => new ContextResponseModel(), MapToResponse);
+        mapper.Define<AIContext, ContextItemResponseModel>((_, _) => new ContextItemResponseModel(), MapToItemResponse);
+        mapper.Define<AIContextResource, ContextResourceModel>((_, _) => new ContextResourceModel(), MapResourceToModel);
 
         // Request mappings (request -> domain)
-        mapper.Define<CreateContextRequestModel, AiContext>(CreateContextFactory, MapFromCreateRequest);
-        mapper.Define<UpdateContextRequestModel, AiContext>((_, _) => new AiContext
+        mapper.Define<CreateContextRequestModel, AIContext>(CreateContextFactory, MapFromCreateRequest);
+        mapper.Define<UpdateContextRequestModel, AIContext>((_, _) => new AIContext
         {
             Alias = string.Empty,
             Name = string.Empty
         }, MapFromUpdateRequest);
-        mapper.Define<ContextResourceModel, AiContextResource>(CreateResourceFactory, MapResourceFromModel);
+        mapper.Define<ContextResourceModel, AIContextResource>(CreateResourceFactory, MapResourceFromModel);
     }
 
-    private static AiContext CreateContextFactory(CreateContextRequestModel source, MapperContext context)
+    private static AIContext CreateContextFactory(CreateContextRequestModel source, MapperContext context)
     {
-        return new AiContext
+        return new AIContext
         {
             Alias = source.Alias,
             Name = source.Name
         };
     }
 
-    private static AiContextResource CreateResourceFactory(ContextResourceModel source, MapperContext context)
+    private static AIContextResource CreateResourceFactory(ContextResourceModel source, MapperContext context)
     {
-        return new AiContextResource
+        return new AIContextResource
         {
             ResourceTypeId = source.ResourceTypeId,
             Name = source.Name,
@@ -48,22 +48,22 @@ public class ContextMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll -Id -Alias -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
-    private static void MapFromCreateRequest(CreateContextRequestModel source, AiContext target, MapperContext context)
+    private static void MapFromCreateRequest(CreateContextRequestModel source, AIContext target, MapperContext context)
     {
         target.Name = source.Name;
-        target.Resources = source.Resources.Select(r => context.Map<AiContextResource>(r)!).ToList();
+        target.Resources = source.Resources.Select(r => context.Map<AIContextResource>(r)!).ToList();
     }
 
     // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
-    private static void MapFromUpdateRequest(UpdateContextRequestModel source, AiContext target, MapperContext context)
+    private static void MapFromUpdateRequest(UpdateContextRequestModel source, AIContext target, MapperContext context)
     {
         target.Alias = source.Alias;
         target.Name = source.Name;
-        target.Resources = source.Resources.Select(r => context.Map<AiContextResource>(r)!).ToList();
+        target.Resources = source.Resources.Select(r => context.Map<AIContextResource>(r)!).ToList();
     }
 
     // Umbraco.Code.MapAll -ResourceTypeId
-    private static void MapResourceFromModel(ContextResourceModel source, AiContextResource target, MapperContext context)
+    private static void MapResourceFromModel(ContextResourceModel source, AIContextResource target, MapperContext context)
     {
         target.Id = source.Id;
         // ResourceTypeId is set in factory (init-only property)
@@ -71,13 +71,13 @@ public class ContextMapDefinition : IMapDefinition
         target.Description = source.Description;
         target.SortOrder = source.SortOrder;
         target.Data = source.Data;
-        target.InjectionMode = Enum.TryParse<AiContextResourceInjectionMode>(source.InjectionMode, true, out var mode)
+        target.InjectionMode = Enum.TryParse<AIContextResourceInjectionMode>(source.InjectionMode, true, out var mode)
             ? mode
-            : AiContextResourceInjectionMode.Always;
+            : AIContextResourceInjectionMode.Always;
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToResponse(AiContext source, ContextResponseModel target, MapperContext context)
+    private static void MapToResponse(AIContext source, ContextResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Alias = source.Alias;
@@ -89,7 +89,7 @@ public class ContextMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll -Version
-    private static void MapToItemResponse(AiContext source, ContextItemResponseModel target, MapperContext context)
+    private static void MapToItemResponse(AIContext source, ContextItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Alias = source.Alias;
@@ -100,7 +100,7 @@ public class ContextMapDefinition : IMapDefinition
     }
 
     // Umbraco.Code.MapAll
-    private static void MapResourceToModel(AiContextResource source, ContextResourceModel target, MapperContext context)
+    private static void MapResourceToModel(AIContextResource source, ContextResourceModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.ResourceTypeId = source.ResourceTypeId;

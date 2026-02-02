@@ -1,10 +1,10 @@
-namespace Umbraco.Ai.Persistence.Analytics.Usage;
+namespace Umbraco.AI.Persistence.Analytics.Usage;
 
 /// <summary>
 /// EF Core entity for raw AI usage records.
 /// These records are ephemeral - aggregated into statistics and then deleted.
 /// </summary>
-internal class AiUsageRecordEntity
+internal class AIUsageRecordEntity
 {
     /// <summary>
     /// Gets or sets the unique identifier for this usage record.

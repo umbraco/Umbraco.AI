@@ -1,16 +1,16 @@
 using Microsoft.Extensions.AI;
 
-namespace Umbraco.Ai.Core.Chat;
+namespace Umbraco.AI.Core.Chat;
 
 /// <summary>
 /// Defines middleware that can be applied to AI chat clients.
 /// Middleware can implement cross-cutting concerns like logging, caching, rate limiting, etc.
 /// </summary>
 /// <remarks>
-/// The order of middleware execution is controlled by the <see cref="AiChatMiddlewareCollectionBuilder"/>
+/// The order of middleware execution is controlled by the <see cref="AIChatMiddlewareCollectionBuilder"/>
 /// using <c>Append</c>, <c>InsertBefore</c>, and <c>InsertAfter</c> methods.
 /// </remarks>
-public interface IAiChatMiddleware
+public interface IAIChatMiddleware
 {
     /// <summary>
     /// Applies this middleware to the given chat client.

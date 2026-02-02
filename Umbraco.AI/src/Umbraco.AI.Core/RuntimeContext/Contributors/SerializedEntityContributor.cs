@@ -1,12 +1,12 @@
 using System.Text.Json;
-using Umbraco.Ai.Core.EntityAdapter;
+using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.Extensions;
 
-namespace Umbraco.Ai.Core.RuntimeContext.Contributors;
+namespace Umbraco.AI.Core.RuntimeContext.Contributors;
 
 /// <summary>
 /// Contributes data from context items that contain serialized entity data.
-/// Extracts <see cref="AiSerializedEntity"/> and populates template variables.
+/// Extracts <see cref="AISerializedEntity"/> and populates template variables.
 /// </summary>
 internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
 {
@@ -26,14 +26,14 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
     }
 
     /// <inheritdoc />
-    public void Contribute(AiRuntimeContext context)
+    public void Contribute(AIRuntimeContext context)
     {
         context.RequestContextItems.Handle(
             IsSerializedEntity,
             item => ProcessSerializedEntity(item, context));
     }
 
-    private bool IsSerializedEntity(AiRequestContextItem item)
+    private bool IsSerializedEntity(AIRequestContextItem item)
     {
         // Check if the value contains entity structure by looking for entityType and properties
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
@@ -54,7 +54,7 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
         }
     }
 
-    private void ProcessSerializedEntity(AiRequestContextItem item, AiRuntimeContext context)
+    private void ProcessSerializedEntity(AIRequestContextItem item, AIRuntimeContext context)
     {
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
@@ -105,7 +105,7 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
         }
     }
 
-    private static AiSerializedEntity? DeserializeEntity(JsonElement element)
+    private static AISerializedEntity? DeserializeEntity(JsonElement element)
     {
         try
         {
@@ -130,7 +130,7 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
                 parentUnique = parentUniqueElement.GetString();
             }
 
-            var properties = new List<AiSerializedProperty>();
+            var properties = new List<AISerializedProperty>();
             if (element.TryGetProperty("properties", out var propsElement) && propsElement.ValueKind == JsonValueKind.Array)
             {
                 foreach (var prop in propsElement.EnumerateArray())
@@ -150,7 +150,7 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
                         value = ConvertJsonElement(v);
                     }
 
-                    properties.Add(new AiSerializedProperty
+                    properties.Add(new AISerializedProperty
                     {
                         Alias = alias,
                         Label = label,
@@ -160,7 +160,7 @@ internal sealed class SerializedEntityContributor : IAiRuntimeContextContributor
                 }
             }
 
-            return new AiSerializedEntity
+            return new AISerializedEntity
             {
                 EntityType = entityType,
                 Unique = unique,

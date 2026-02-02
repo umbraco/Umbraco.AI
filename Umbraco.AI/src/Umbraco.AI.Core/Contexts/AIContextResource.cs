@@ -1,9 +1,9 @@
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Represents a resource within an AI context, such as brand voice guidelines or reference text.
 /// </summary>
-public sealed class AiContextResource
+public sealed class AIContextResource
 {
     /// <summary>
     /// The unique identifier of the resource.
@@ -40,7 +40,7 @@ public sealed class AiContextResource
     /// <summary>
     /// Determines how and when this resource is included in AI operations.
     /// </summary>
-    public AiContextResourceInjectionMode InjectionMode { get; set; } = AiContextResourceInjectionMode.Always;
+    public AIContextResourceInjectionMode InjectionMode { get; set; } = AIContextResourceInjectionMode.Always;
 
     // V2: public float[]? Embedding { get; set; }  // For semantic injection mode
 }

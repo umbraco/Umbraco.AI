@@ -1,21 +1,21 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Profiles;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Profiles;
 
-namespace Umbraco.Ai.Core.Chat;
+namespace Umbraco.AI.Core.Chat;
 
-internal sealed class AiChatService : IAiChatService
+internal sealed class AIChatService : IAiChatService
 {
     private readonly IAiChatClientFactory _clientFactory;
     private readonly IAiProfileService _profileService;
-    private readonly AiOptions _options;
+    private readonly AIOptions _options;
 
-    public AiChatService(
+    public AIChatService(
         IAiChatClientFactory clientFactory,
         IAiProfileService profileService,
-        IOptionsMonitor<AiOptions> options)
+        IOptionsMonitor<AIOptions> options)
     {
         _clientFactory = clientFactory;
         _profileService = profileService;
@@ -27,7 +27,7 @@ internal sealed class AiChatService : IAiChatService
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
         return await GetChatResponseInternalAsync(profile, messages, options, cancellationToken);
     }
 
@@ -49,7 +49,7 @@ internal sealed class AiChatService : IAiChatService
     }
 
     private async Task<ChatResponse> GetChatResponseInternalAsync(
-        AiProfile profile,
+        AIProfile profile,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options,
         CancellationToken cancellationToken)
@@ -65,7 +65,7 @@ internal sealed class AiChatService : IAiChatService
         ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var profile = await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
         await foreach (var update in GetStreamingChatResponseInternalAsync(profile, messages, options, cancellationToken))
         {
             yield return update;
@@ -93,7 +93,7 @@ internal sealed class AiChatService : IAiChatService
     }
 
     private async IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseInternalAsync(
-        AiProfile profile,
+        AIProfile profile,
         IEnumerable<ChatMessage> messages,
         ChatOptions? options,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -113,7 +113,7 @@ internal sealed class AiChatService : IAiChatService
     {
         var profile = profileId.HasValue
             ? await _profileService.GetProfileAsync(profileId.Value, cancellationToken)
-            : await _profileService.GetDefaultProfileAsync(AiCapability.Chat, cancellationToken);
+            : await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
         
         if (profile is null)
         {
@@ -125,11 +125,11 @@ internal sealed class AiChatService : IAiChatService
         return await _clientFactory.CreateClientAsync(profile, cancellationToken);
     }
 
-    private static ChatOptions MergeOptions(AiProfile profile, ChatOptions? callerOptions)
+    private static ChatOptions MergeOptions(AIProfile profile, ChatOptions? callerOptions)
     {
-        var chatSettings = profile.Settings as AiChatProfileSettings;
+        var chatSettings = profile.Settings as AIChatProfileSettings;
 
-        // Note: Profile ID and telemetry metadata are automatically injected by AiChatClientFactory via RuntimeContext
+        // Note: Profile ID and telemetry metadata are automatically injected by AIChatClientFactory via RuntimeContext
 
         // If caller provides options, merge with profile defaults
         // Caller options take precedence over profile settings
@@ -161,9 +161,9 @@ internal sealed class AiChatService : IAiChatService
         };
     }
     
-    private void EnsureProfileSupportsChat(AiProfile profile)
+    private void EnsureProfileSupportsChat(AIProfile profile)
     {
-        if (profile.Capability != AiCapability.Chat)
+        if (profile.Capability != AICapability.Chat)
         {
             throw new InvalidOperationException($"The profile '{profile.Name}' does not support chat capability.");
         }

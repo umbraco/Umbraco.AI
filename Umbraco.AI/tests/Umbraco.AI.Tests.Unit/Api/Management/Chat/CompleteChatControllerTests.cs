@@ -1,15 +1,15 @@
 // using Microsoft.AspNetCore.Http;
 // using Microsoft.AspNetCore.Mvc;
 // using Microsoft.Extensions.AI;
-// using Umbraco.Ai.Core.Chat;
-// using Umbraco.Ai.Core.Profiles;
-// using Umbraco.Ai.Tests.Common.Builders;
-// using Umbraco.Ai.Web.Api.Management.Chat.Controllers;
-// using Umbraco.Ai.Web.Api.Common.Models;
-// using Umbraco.Ai.Web.Api.Management.Chat.Models;
+// using Umbraco.AI.Core.Chat;
+// using Umbraco.AI.Core.Profiles;
+// using Umbraco.AI.Tests.Common.Builders;
+// using Umbraco.AI.Web.Api.Management.Chat.Controllers;
+// using Umbraco.AI.Web.Api.Common.Models;
+// using Umbraco.AI.Web.Api.Management.Chat.Models;
 // using Umbraco.Cms.Core.Mapping;
 //
-// namespace Umbraco.Ai.Tests.Unit.Api.Management.Chat;
+// namespace Umbraco.AI.Tests.Unit.Api.Management.Chat;
 //
 // public class CompleteChatControllerTests
 // {

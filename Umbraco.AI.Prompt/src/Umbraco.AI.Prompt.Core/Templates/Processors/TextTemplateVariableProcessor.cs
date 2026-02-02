@@ -1,7 +1,7 @@
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Prompt.Core.Utils;
+using Umbraco.AI.Prompt.Core.Utils;
 
-namespace Umbraco.Ai.Prompt.Core.Templates.Processors;
+namespace Umbraco.AI.Prompt.Core.Templates.Processors;
 
 /// <summary>
 /// Default template variable processor that resolves paths to text content.

@@ -3,43 +3,43 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.TaskQueue;
+using Umbraco.AI.Core.TaskQueue;
 
-namespace Umbraco.Ai.Core.AuditLog;
+namespace Umbraco.AI.Core.AuditLog;
 
 /// <summary>
 /// Service implementation for AI governance tracing operations.
 /// </summary>
-internal sealed class AiAuditLogService : IAiAuditLogService
+internal sealed class AIAuditLogService : IAiAuditLogService
 {
     private readonly IAiAuditLogRepository _auditLogRepository;
-    private readonly IOptionsMonitor<AiAuditLogOptions> _options;
+    private readonly IOptionsMonitor<AIAuditLogOptions> _options;
     private readonly IBackgroundTaskQueue _backgroundTaskQueue;
-    private readonly ILogger<AiAuditLogService> _logger;
+    private readonly ILogger<AIAuditLogService> _logger;
 
-    public AiAuditLogService(
+    public AIAuditLogService(
         IAiAuditLogRepository auditLogRepository,
-        IOptionsMonitor<AiAuditLogOptions> options,
+        IOptionsMonitor<AIAuditLogOptions> options,
         IBackgroundTaskQueue backgroundTaskQueue,
         ILoggerFactory loggerFactory)
     {
         _auditLogRepository = auditLogRepository;
         _options = options;
         _backgroundTaskQueue = backgroundTaskQueue;
-        _logger = loggerFactory.CreateLogger<AiAuditLogService>();
+        _logger = loggerFactory.CreateLogger<AIAuditLogService>();
     }
 
     /// <inheritdoc />
-    public async Task<AiAuditLog> StartAuditLogAsync(AiAuditLog auditLog,
+    public async Task<AIAuditLog> StartAuditLogAsync(AIAuditLog auditLog,
         CancellationToken ct = default)
     {
-        // The AiAuditLog.Create factory method should have already set most properties.
+        // The AIAuditLog.Create factory method should have already set most properties.
         // This method just handles parent ID resolution and persists to the database.
 
         // Set parent ID from explicit parameter or auto-detect from ambient scope
         if (!auditLog.ParentAuditLogId.HasValue)
         {
-            var resolvedParentId = AiAuditScope.Current?.AuditLogId;
+            var resolvedParentId = AIAuditScope.Current?.AuditLogId;
             if (resolvedParentId.HasValue)
             {
                 auditLog.ParentAuditLogId = resolvedParentId;
@@ -47,9 +47,9 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         }
 
         // Ensure status is set to Running
-        if (auditLog.Status != AiAuditLogStatus.Running)
+        if (auditLog.Status != AIAuditLogStatus.Running)
         {
-            auditLog.Status = AiAuditLogStatus.Running;
+            auditLog.Status = AIAuditLogStatus.Running;
         }
 
         await _auditLogRepository.SaveAsync(auditLog, ct);
@@ -63,13 +63,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
     /// <inheritdoc />
     public async Task CompleteAuditLogAsync(
-        AiAuditLog audit,
-        AiAuditResponse? response,
+        AIAuditLog audit,
+        AIAuditResponse? response,
         CancellationToken ct = default)
     {
 
         audit.EndTime = DateTime.UtcNow;
-        audit.Status = AiAuditLogStatus.Succeeded;
+        audit.Status = AIAuditLogStatus.Succeeded;
         
         if (response?.Usage is not null)
         {
@@ -97,18 +97,18 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
         _logger.LogDebug(
             "Completed audit-log {AuditLogId} with status {Status} (Duration: {Duration}ms, Tokens: {TotalTokens})",
-            audit.Id, AiAuditLogStatus.Succeeded, audit.Duration?.TotalMilliseconds, audit.TotalTokens);
+            audit.Id, AIAuditLogStatus.Succeeded, audit.Duration?.TotalMilliseconds, audit.TotalTokens);
     }
 
     /// <inheritdoc />
     public async Task RecordAuditLogFailureAsync(
-        AiAuditLog audit,
+        AIAuditLog audit,
         Exception exception,
         CancellationToken ct = default)
     {
 
         audit.EndTime = DateTime.UtcNow;
-        audit.Status = AiAuditLogStatus.Failed;
+        audit.Status = AIAuditLogStatus.Failed;
         audit.ErrorMessage = exception.Message;
         audit.ErrorCategory = CategorizeError(exception);
 
@@ -130,14 +130,14 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
     /// <inheritdoc />
     public async ValueTask QueueStartAuditLogAsync(
-        AiAuditLog auditLog,
+        AIAuditLog auditLog,
         CancellationToken ct = default)
     {
         // IMPORTANT: Resolve parent ID from ambient scope NOW, before queuing,
         // because AuditScope.Current won't be available in the background worker context
         if (!auditLog.ParentAuditLogId.HasValue)
         {
-            var resolvedParentId = AiAuditScope.Current?.AuditLogId;
+            var resolvedParentId = AIAuditScope.Current?.AuditLogId;
             if (resolvedParentId.HasValue)
             {
                 auditLog.ParentAuditLogId = resolvedParentId.Value;
@@ -145,9 +145,9 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         }
 
         // Ensure status is set to Running
-        if (auditLog.Status != AiAuditLogStatus.Running)
+        if (auditLog.Status != AIAuditLogStatus.Running)
         {
-            auditLog.Status = AiAuditLogStatus.Running;
+            auditLog.Status = AIAuditLogStatus.Running;
         }
 
         // Queue the persistence operation (all business logic already resolved above)
@@ -168,13 +168,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
     /// <inheritdoc />
     public async ValueTask QueueCompleteAuditLogAsync(
-        AiAuditLog audit,
-        AiAuditResponse? response,
+        AIAuditLog audit,
+        AIAuditResponse? response,
         CancellationToken ct = default)
     {
         // Do all the business logic NOW, before queuing
         audit.EndTime = DateTime.UtcNow;
-        audit.Status = AiAuditLogStatus.Succeeded;
+        audit.Status = AIAuditLogStatus.Succeeded;
 
         if (response?.Usage is not null)
         {
@@ -216,13 +216,13 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
     /// <inheritdoc />
     public async ValueTask QueueRecordAuditLogFailureAsync(
-        AiAuditLog audit,
+        AIAuditLog audit,
         Exception exception,
         CancellationToken ct = default)
     {
         // Do all the business logic NOW, before queuing
         audit.EndTime = DateTime.UtcNow;
-        audit.Status = AiAuditLogStatus.Failed;
+        audit.Status = AIAuditLogStatus.Failed;
         audit.ErrorMessage = exception.Message;
         audit.ErrorCategory = CategorizeError(exception);
 
@@ -256,19 +256,19 @@ internal sealed class AiAuditLogService : IAiAuditLogService
     }
 
     /// <inheritdoc />
-    public async Task<AiAuditLog?> GetAuditLogAsync(Guid id, CancellationToken ct = default)
+    public async Task<AIAuditLog?> GetAuditLogAsync(Guid id, CancellationToken ct = default)
         => await _auditLogRepository.GetByIdAsync(id, ct);
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<AiAuditLog>, int Total)> GetAuditLogsPagedAsync(
-        AiAuditLogFilter filter,
+    public async Task<(IEnumerable<AIAuditLog>, int Total)> GetAuditLogsPagedAsync(
+        AIAuditLogFilter filter,
         int skip,
         int take,
         CancellationToken ct = default)
         => await _auditLogRepository.GetPagedAsync(filter, skip, take, ct);
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AiAuditLog>> GetEntityHistoryAsync(
+    public async Task<IEnumerable<AIAuditLog>> GetEntityHistoryAsync(
         string entityId,
         string entityType,
         int limit,
@@ -297,7 +297,7 @@ internal sealed class AiAuditLogService : IAiAuditLogService
         return deleted;
     }
 
-    private static AiAuditLogErrorCategory CategorizeError(Exception exception)
+    private static AIAuditLogErrorCategory CategorizeError(Exception exception)
     {
         // Basic error categorization - can be enhanced based on exception types
         var exceptionType = exception.GetType().Name;
@@ -305,45 +305,45 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
         if (message.Contains("unauthorized") || message.Contains("authentication") || message.Contains("api key"))
         {
-            return AiAuditLogErrorCategory.Authentication;
+            return AIAuditLogErrorCategory.Authentication;
         }
 
         if (message.Contains("rate limit") || message.Contains("quota"))
         {
-            return AiAuditLogErrorCategory.RateLimiting;
+            return AIAuditLogErrorCategory.RateLimiting;
         }
 
         if (message.Contains("model not found") || message.Contains("model") && message.Contains("not available"))
         {
-            return AiAuditLogErrorCategory.ModelNotFound;
+            return AIAuditLogErrorCategory.ModelNotFound;
         }
 
         if (message.Contains("invalid") || message.Contains("bad request"))
         {
-            return AiAuditLogErrorCategory.InvalidRequest;
+            return AIAuditLogErrorCategory.InvalidRequest;
         }
 
         if (message.Contains("server error") || message.Contains("500"))
         {
-            return AiAuditLogErrorCategory.ServerError;
+            return AIAuditLogErrorCategory.ServerError;
         }
 
         if (message.Contains("network") || message.Contains("timeout") || message.Contains("connection"))
         {
-            return AiAuditLogErrorCategory.NetworkError;
+            return AIAuditLogErrorCategory.NetworkError;
         }
 
         if (message.Contains("context") && message.Contains("resolution"))
         {
-            return AiAuditLogErrorCategory.ContextResolution;
+            return AIAuditLogErrorCategory.ContextResolution;
         }
 
         if (message.Contains("tool"))
         {
-            return AiAuditLogErrorCategory.ToolExecution;
+            return AIAuditLogErrorCategory.ToolExecution;
         }
 
-        return AiAuditLogErrorCategory.Unknown;
+        return AIAuditLogErrorCategory.Unknown;
     }
 
     /// <summary>
@@ -359,8 +359,8 @@ internal sealed class AiAuditLogService : IAiAuditLogService
 
         return data switch
         {
-            IEnumerable<ChatMessage> messages => AiChatMessageFormatter.FormatChatMessages(messages),
-            ChatMessage message => AiChatMessageFormatter.FormatChatMessage(message),
+            IEnumerable<ChatMessage> messages => AIChatMessageFormatter.FormatChatMessages(messages),
+            ChatMessage message => AIChatMessageFormatter.FormatChatMessage(message),
             string text => text,
             _ => data.ToString()
         };

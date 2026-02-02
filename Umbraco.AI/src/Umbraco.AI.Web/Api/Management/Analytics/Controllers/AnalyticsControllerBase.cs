@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
-using Umbraco.Ai.Web.Api.Management.Common.Controllers;
-using Umbraco.Ai.Web.Api.Management.Common.Routing;
+using Umbraco.AI.Web.Api.Management.Common.Controllers;
+using Umbraco.AI.Web.Api.Management.Common.Routing;
 
-namespace Umbraco.Ai.Web.Api.Management.Analytics.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Analytics.Controllers;
 
 /// <summary>
 /// Base controller for Analytics management API endpoints.
 /// </summary>
 [ApiExplorerSettings(GroupName = Constants.ManagementApi.Feature.Analytics.GroupName)]
-[UmbracoAiVersionedManagementApiRoute(Constants.ManagementApi.Feature.Analytics.RouteSegment)]
-public abstract class AnalyticsControllerBase : UmbracoAiCoreManagementControllerBase
+[UmbracoAIVersionedManagementApiRoute(Constants.ManagementApi.Feature.Analytics.RouteSegment)]
+public abstract class AnalyticsControllerBase : UmbracoAICoreManagementControllerBase
 {
 }

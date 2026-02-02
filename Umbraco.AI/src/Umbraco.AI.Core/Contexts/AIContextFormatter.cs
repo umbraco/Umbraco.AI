@@ -1,27 +1,27 @@
 using System.Text;
 using System.Text.Json;
-using Umbraco.Ai.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
 
-namespace Umbraco.Ai.Core.Contexts;
+namespace Umbraco.AI.Core.Contexts;
 
 /// <summary>
 /// Default implementation of <see cref="IAiContextFormatter"/>.
 /// </summary>
-internal sealed class AiContextFormatter : IAiContextFormatter
+internal sealed class AIContextFormatter : IAiContextFormatter
 {
-    private readonly AiContextResourceTypeCollection _resourceTypes;
+    private readonly AIContextResourceTypeCollection _resourceTypes;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AiContextFormatter"/> class.
+    /// Initializes a new instance of the <see cref="AIContextFormatter"/> class.
     /// </summary>
     /// <param name="resourceTypes">The collection of resource types.</param>
-    public AiContextFormatter(AiContextResourceTypeCollection resourceTypes)
+    public AIContextFormatter(AIContextResourceTypeCollection resourceTypes)
     {
         _resourceTypes = resourceTypes;
     }
 
     /// <inheritdoc />
-    public string FormatContextForLlm(AiResolvedContext context)
+    public string FormatContextForLlm(AIResolvedContext context)
     {
         var hasInjected = context.InjectedResources.Count > 0;
         var hasOnDemand = context.OnDemandResources.Count > 0;
@@ -73,7 +73,7 @@ internal sealed class AiContextFormatter : IAiContextFormatter
     }
 
     /// <inheritdoc />
-    public string FormatResourceForLlm(AiResolvedResource resource)
+    public string FormatResourceForLlm(AIResolvedResource resource)
     {
         var resourceType = _resourceTypes.GetById(resource.ResourceTypeId);
         if (resourceType is not null) return resourceType.FormatForLlm(resource.Data);

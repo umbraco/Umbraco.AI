@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Umbraco.Ai.Agui.Events.Activity;
+namespace Umbraco.AI.Agui.Events.Activity;
 
 /// <summary>
 /// Event that provides incremental updates to an activity snapshot using JSON Patch (RFC 6902).

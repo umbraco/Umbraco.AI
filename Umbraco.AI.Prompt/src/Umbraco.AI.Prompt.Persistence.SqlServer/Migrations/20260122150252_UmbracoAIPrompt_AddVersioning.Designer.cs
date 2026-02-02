@@ -12,7 +12,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20260122150252_UmbracoAiPrompt_AddVersioning")]
+    [Migration("20260122150252_UmbracoAIPrompt_AddVersioning")]
     partial class UmbracoAIPrompt_AddVersioning
     {
         /// <inheritdoc />

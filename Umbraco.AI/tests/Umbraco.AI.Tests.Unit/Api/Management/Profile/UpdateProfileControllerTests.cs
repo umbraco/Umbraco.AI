@@ -65,7 +65,7 @@ public class UpdateProfileControllerTests
             .WithCapability(AICapability.Chat)
             .Build();
         var connection = new AIConnectionBuilder().WithId(connectionId).Build();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
         _providers.Add(provider);
 
         var requestModel = new UpdateProfileRequestModel
@@ -210,7 +210,7 @@ public class UpdateProfileControllerTests
             .WithAlias("original-alias")
             .Build();
         var connection = new AIConnectionBuilder().WithId(connectionId).Build();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
         _providers.Add(provider);
 
         var requestModel = new UpdateProfileRequestModel
@@ -256,7 +256,7 @@ public class UpdateProfileControllerTests
             .WithCapability(AICapability.Embedding)
             .Build();
         var connection = new AIConnectionBuilder().WithId(connectionId).Build();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
         _providers.Add(provider);
 
         var requestModel = new UpdateProfileRequestModel
@@ -308,7 +308,7 @@ public class UpdateProfileControllerTests
             .WithCapability(AICapability.Chat)
             .Build();
         var connection = new AIConnectionBuilder().WithId(connectionId).Build();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
         _providers.Add(provider);
 
         var requestModel = new UpdateProfileRequestModel

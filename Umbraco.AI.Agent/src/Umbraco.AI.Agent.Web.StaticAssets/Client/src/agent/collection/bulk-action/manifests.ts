@@ -6,7 +6,7 @@ export const agentBulkActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityBulkAction",
         kind: "default",
-        alias: "UmbracoAiAgent.EntityBulkAction.Agent.Delete",
+        alias: "UmbracoAIAgent.EntityBulkAction.Agent.Delete",
         name: "Bulk Delete Agent Entity Action",
         weight: 100,
         api: () => import("./agent-bulk-delete.action.js"),

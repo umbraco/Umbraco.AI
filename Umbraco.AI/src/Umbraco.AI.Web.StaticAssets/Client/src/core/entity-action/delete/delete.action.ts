@@ -17,7 +17,7 @@ export interface UaiDeleteActionArgs {
 }
 
 /**
- * Reusable delete action for Umbraco.Ai entities.
+ * Reusable delete action for Umbraco.AI entities.
  * Extend this class and provide configuration via getArgs().
  *
  * Note: Event dispatching is handled by the repository, not the action.

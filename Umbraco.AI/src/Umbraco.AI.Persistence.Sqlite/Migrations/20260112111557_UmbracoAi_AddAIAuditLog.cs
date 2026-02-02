@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAi_AddAiAuditLog : Migration
+    public partial class UmbracoAI_AddAIAuditLog : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

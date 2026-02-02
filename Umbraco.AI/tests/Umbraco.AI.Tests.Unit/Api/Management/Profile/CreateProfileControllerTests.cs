@@ -81,7 +81,7 @@ public class CreateProfileControllerTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var connection = new AIConnectionBuilder().WithId(connectionId).Build();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
         _providers.Add(provider);
 
         var requestModel = new CreateProfileRequestModel
@@ -245,7 +245,7 @@ public class CreateProfileControllerTests
         // Arrange
         var connectionId = Guid.NewGuid();
         var connection = new AIConnectionBuilder().WithId(connectionId).Build();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
         _providers.Add(provider);
 
         var requestModel = new CreateProfileRequestModel

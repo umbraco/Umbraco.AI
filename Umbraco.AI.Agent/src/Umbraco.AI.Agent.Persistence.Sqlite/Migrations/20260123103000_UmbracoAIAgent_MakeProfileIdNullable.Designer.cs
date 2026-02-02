@@ -11,7 +11,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20260123103000_UmbracoAiAgent_MakeProfileIdNullable")]
+    [Migration("20260123103000_UmbracoAIAgent_MakeProfileIdNullable")]
     partial class UmbracoAIAgent_MakeProfileIdNullable
     {
         /// <inheritdoc />

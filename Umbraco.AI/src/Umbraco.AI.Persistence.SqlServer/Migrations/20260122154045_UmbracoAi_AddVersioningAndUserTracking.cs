@@ -6,12 +6,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAi_AddVersioningAndUserTracking : Migration
+    public partial class UmbracoAI_AddVersioningAndUserTracking : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Remove deprecated columns from umbracoAiProfile
+            // Remove deprecated columns from umbracoAIProfile
             migrationBuilder.DropColumn(
                 name: "MaxTokens",
                 table: "umbracoAIProfile");
@@ -24,7 +24,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 name: "Temperature",
                 table: "umbracoAIProfile");
 
-            // Add versioning and user tracking columns to umbracoAiConnection
+            // Add versioning and user tracking columns to umbracoAIConnection
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
                 table: "umbracoAIConnection",
@@ -37,7 +37,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 type: "int",
                 nullable: true);
 
-            // Add versioning and user tracking columns to umbracoAiProfile
+            // Add versioning and user tracking columns to umbracoAIProfile
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
                 table: "umbracoAIProfile",
@@ -71,7 +71,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 nullable: false,
                 defaultValue: 1);
 
-            // Add version tracking columns to umbracoAiAuditLog
+            // Add version tracking columns to umbracoAIAuditLog
             migrationBuilder.AddColumn<int>(
                 name: "ProfileVersion",
                 table: "umbracoAIAuditLog",
@@ -84,7 +84,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 type: "int",
                 nullable: true);
 
-            // Add versioning and user tracking columns to umbracoAiContext
+            // Add versioning and user tracking columns to umbracoAIContext
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
                 table: "umbracoAIContext",
@@ -104,7 +104,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 nullable: false,
                 defaultValue: 1);
 
-            // Create unified umbracoAiEntityVersion table for all entity version history
+            // Create unified umbracoAIEntityVersion table for all entity version history
             migrationBuilder.CreateTable(
                 name: "umbracoAIEntityVersion",
                 columns: table => new
@@ -142,7 +142,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
             migrationBuilder.DropTable(
                 name: "umbracoAIEntityVersion");
 
-            // Remove versioning and user tracking columns from umbracoAiContext
+            // Remove versioning and user tracking columns from umbracoAIContext
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
                 table: "umbracoAIContext");
@@ -155,7 +155,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 name: "Version",
                 table: "umbracoAIContext");
 
-            // Remove versioning and user tracking columns from umbracoAiProfile
+            // Remove versioning and user tracking columns from umbracoAIProfile
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
                 table: "umbracoAIProfile");
@@ -176,7 +176,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 name: "Version",
                 table: "umbracoAIProfile");
 
-            // Remove user tracking columns from umbracoAiConnection
+            // Remove user tracking columns from umbracoAIConnection
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
                 table: "umbracoAIConnection");
@@ -185,7 +185,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 name: "ModifiedByUserId",
                 table: "umbracoAIConnection");
 
-            // Remove version tracking columns from umbracoAiAuditLog
+            // Remove version tracking columns from umbracoAIAuditLog
             migrationBuilder.DropColumn(
                 name: "ProfileVersion",
                 table: "umbracoAIAuditLog");
@@ -194,7 +194,7 @@ namespace Umbraco.AI.Persistence.SqlServer.Migrations
                 name: "FeatureVersion",
                 table: "umbracoAIAuditLog");
 
-            // Restore deprecated columns to umbracoAiProfile
+            // Restore deprecated columns to umbracoAIProfile
             migrationBuilder.AddColumn<int>(
                 name: "MaxTokens",
                 table: "umbracoAIProfile",

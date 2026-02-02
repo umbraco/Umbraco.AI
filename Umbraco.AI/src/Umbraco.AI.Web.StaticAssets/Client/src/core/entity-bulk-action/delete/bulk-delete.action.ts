@@ -18,7 +18,7 @@ export interface UaiBulkDeleteActionArgs {
 }
 
 /**
- * Reusable bulk delete action for Umbraco.Ai entities.
+ * Reusable bulk delete action for Umbraco.AI entities.
  * Extend this class and provide configuration via getArgs().
  *
  * Note: Event dispatching is handled by the repository for each deleted item.

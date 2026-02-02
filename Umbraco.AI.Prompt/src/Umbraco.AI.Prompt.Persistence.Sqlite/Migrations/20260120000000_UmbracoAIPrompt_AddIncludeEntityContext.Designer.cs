@@ -11,7 +11,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20260120000000_UmbracoAiPrompt_AddIncludeEntityContext")]
+    [Migration("20260120000000_UmbracoAIPrompt_AddIncludeEntityContext")]
     partial class UmbracoAIPrompt_AddIncludeEntityContext
     {
         /// <inheritdoc />

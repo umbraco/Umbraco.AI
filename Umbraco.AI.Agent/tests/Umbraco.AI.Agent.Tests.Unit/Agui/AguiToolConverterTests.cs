@@ -148,7 +148,7 @@ public class AguiToolConverterTests
     }
 
     [Fact]
-    public void ConvertToFrontendTools_ReturnsAiFrontendToolFunctionInstances()
+    public void ConvertToFrontendTools_ReturnsAIFrontendToolFunctionInstances()
     {
         // Arrange
         var tools = new List<AguiTool>

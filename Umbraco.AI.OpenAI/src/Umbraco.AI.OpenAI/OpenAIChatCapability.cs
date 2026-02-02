@@ -4,16 +4,16 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
 
-namespace Umbraco.AI.OpenAi;
+namespace Umbraco.AI.OpenAI;
 
 /// <summary>
 /// AI chat capability for OpenAI provider.
 /// </summary>
-public class OpenAiChatCapability(OpenAiProvider provider) : AIChatCapabilityBase<OpenAiProviderSettings>(provider)
+public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
     
-    private new OpenAiProvider Provider => (OpenAiProvider)base.Provider;
+    private new OpenAIProvider Provider => (OpenAIProvider)base.Provider;
 
     /// <summary>
     /// Patterns that match chat/completion models.
@@ -38,7 +38,7 @@ public class OpenAiChatCapability(OpenAiProvider provider) : AIChatCapabilityBas
 
     /// <inheritdoc />
     protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
-        OpenAiProviderSettings settings,
+        OpenAIProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
@@ -47,13 +47,13 @@ public class OpenAiChatCapability(OpenAiProvider provider) : AIChatCapabilityBas
             .Where(IsChatModel)
             .Select(id => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, id),
-                OpenAiModelUtilities.FormatDisplayName(id)))
+                OpenAIModelUtilities.FormatDisplayName(id)))
             .ToList();
     }
 
     /// <inheritdoc />
-    protected override IChatClient CreateClient(OpenAiProviderSettings settings, string? modelId)
-        => OpenAiProvider.CreateOpenAiClient(settings)
+    protected override IChatClient CreateClient(OpenAIProviderSettings settings, string? modelId)
+        => OpenAIProvider.CreateOpenAIClient(settings)
             .GetChatClient(modelId ?? DefaultChatModel)
             .AsIChatClient();
 

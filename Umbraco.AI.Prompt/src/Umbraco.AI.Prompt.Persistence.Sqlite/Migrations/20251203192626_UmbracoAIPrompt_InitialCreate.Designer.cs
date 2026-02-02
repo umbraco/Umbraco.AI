@@ -11,7 +11,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20251203192626_UmbracoAiPrompt_InitialCreate")]
+    [Migration("20251203192626_UmbracoAIPrompt_InitialCreate")]
     partial class UmbracoAIPrompt_InitialCreate
     {
         /// <inheritdoc />

@@ -34,15 +34,15 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The Umbraco builder for chaining.</returns>
-    internal static IUmbracoBuilder AddUmbracoAiWeb(this IUmbracoBuilder builder)
+    internal static IUmbracoBuilder AddUmbracoAIWeb(this IUmbracoBuilder builder)
     {
-        builder.AddUmbracoAiManagementApi();
-        builder.AddUmbracoAiMapDefinitions();
+        builder.AddUmbracoAIManagementApi();
+        builder.AddUmbracoAIMapDefinitions();
 
         return builder;
     }
 
-    private static IUmbracoBuilder AddUmbracoAiMapDefinitions(this IUmbracoBuilder builder)
+    private static IUmbracoBuilder AddUmbracoAIMapDefinitions(this IUmbracoBuilder builder)
     {
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<CommonMapDefinition>()
@@ -60,9 +60,9 @@ public static class UmbracoBuilderExtensions
         return builder;
     }
 
-    private static IUmbracoBuilder AddUmbracoAiManagementApi(this IUmbracoBuilder builder)
+    private static IUmbracoBuilder AddUmbracoAIManagementApi(this IUmbracoBuilder builder)
     {
-        builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>
+        builder.WithUmbracoAIManagementApi(Constants.ManagementApi.ApiName, options =>
         {
             options.SwaggerDoc(
                 Constants.ManagementApi.ApiName,
@@ -85,7 +85,7 @@ public static class UmbracoBuilderExtensions
     /// <param name="configureSwagger"></param>
     /// <param name="configureJson"></param>
     /// <returns></returns>
-    public static IUmbracoBuilder WithUmbracoAiManagementApi(this IUmbracoBuilder builder, string apiName, Action<SwaggerGenOptions>? configureSwagger = null,
+    public static IUmbracoBuilder WithUmbracoAIManagementApi(this IUmbracoBuilder builder, string apiName, Action<SwaggerGenOptions>? configureSwagger = null,
         Action<JsonSerializerOptions>? configureJson = null)
     {
         if (configureSwagger != null)

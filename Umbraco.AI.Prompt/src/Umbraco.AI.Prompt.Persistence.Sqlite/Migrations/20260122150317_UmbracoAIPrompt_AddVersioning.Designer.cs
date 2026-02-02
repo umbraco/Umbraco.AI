@@ -11,7 +11,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20260122150317_UmbracoAiPrompt_AddVersioning")]
+    [Migration("20260122150317_UmbracoAIPrompt_AddVersioning")]
     partial class UmbracoAIPrompt_AddVersioning
     {
         /// <inheritdoc />

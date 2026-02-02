@@ -7,11 +7,11 @@ namespace Umbraco.AI.Tests.Common.Fakes;
 /// <summary>
 /// Fake implementation of <see cref="IAIProvider"/> for use in tests.
 /// </summary>
-public class FakeAiProvider : IAIProvider
+public class FakeAIProvider : IAIProvider
 {
     private readonly Dictionary<Type, IAICapability> _capabilities = new();
 
-    public FakeAiProvider(string id = "fake-provider", string name = "Fake Provider")
+    public FakeAIProvider(string id = "fake-provider", string name = "Fake Provider")
     {
         Id = id;
         Name = name;
@@ -43,31 +43,31 @@ public class FakeAiProvider : IAIProvider
             }
         });
 
-    public FakeAiProvider WithCapability<TCapability>(TCapability capability) where TCapability : IAICapability
+    public FakeAIProvider WithCapability<TCapability>(TCapability capability) where TCapability : IAICapability
     {
         _capabilities[typeof(TCapability)] = capability;
         return this;
     }
 
-    public FakeAiProvider WithChatCapability(IAIChatCapability? capability = null)
+    public FakeAIProvider WithChatCapability(IAIChatCapability? capability = null)
     {
         _capabilities[typeof(IAIChatCapability)] = capability ?? new FakeChatCapability();
         return this;
     }
 
-    public FakeAiProvider WithEmbeddingCapability(IAIEmbeddingCapability? capability = null)
+    public FakeAIProvider WithEmbeddingCapability(IAIEmbeddingCapability? capability = null)
     {
         _capabilities[typeof(IAIEmbeddingCapability)] = capability ?? new FakeEmbeddingCapability();
         return this;
     }
 
-    public FakeAiProvider WithSettingsType<TSettings>() where TSettings : class
+    public FakeAIProvider WithSettingsType<TSettings>() where TSettings : class
     {
         SettingsType = typeof(TSettings);
         return this;
     }
 
-    public FakeAiProvider WithSettingsSchema(AIEditableModelSchema? schema)
+    public FakeAIProvider WithSettingsSchema(AIEditableModelSchema? schema)
     {
         SettingsSchema = schema;
         return this;

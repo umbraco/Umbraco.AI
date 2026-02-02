@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <Title>Umbraco Ai Google Provider</Title>
-    <Description>Google provider for Umbraco Ai</Description>
-    <StaticWebAssetBasePath>App_Plugins/UmbracoAiGoogle</StaticWebAssetBasePath>
+    <Title>Umbraco AI Google Provider</Title>
+    <Description>Google provider for Umbraco AI</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAIGoogle</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>
 

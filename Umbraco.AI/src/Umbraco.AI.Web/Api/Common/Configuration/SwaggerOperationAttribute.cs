@@ -41,7 +41,7 @@ public sealed class SwaggerOperationAttribute : Attribute
     /// </summary>
     /// <remarks>
     /// Tags are added alongside the default group tag (from ApiExplorerSettings.GroupName).
-    /// Use this to add a project-level tag (e.g., "Umbraco Ai") that can be used to filter
+    /// Use this to add a project-level tag (e.g., "Umbraco AI") that can be used to filter
     /// operations when generating API clients.
     /// </remarks>
     public string[]? Tags { get; set; }

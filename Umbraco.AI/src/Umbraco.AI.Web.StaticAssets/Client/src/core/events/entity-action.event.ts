@@ -1,7 +1,7 @@
 import { UmbEntityActionEvent } from '@umbraco-cms/backoffice/entity-action';
 
 /**
- * Custom event for Umbraco.Ai entity actions.
+ * Custom event for Umbraco.AI entity actions.
  * Dispatched by repositories after successful CRUD operations.
  * @public
  */

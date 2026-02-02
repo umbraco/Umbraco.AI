@@ -7,7 +7,7 @@ namespace Umbraco.AI.Tests.Common.Fakes;
 /// <summary>
 /// Fake in-memory implementation of <see cref="IAIContextRepository"/> for use in tests.
 /// </summary>
-public class FakeAiContextRepository : IAIContextRepository
+public class FakeAIContextRepository : IAIContextRepository
 {
     private readonly Dictionary<Guid, AIContext> _contexts = new();
 
@@ -19,7 +19,7 @@ public class FakeAiContextRepository : IAIContextRepository
     /// <summary>
     /// Seeds the repository with initial contexts.
     /// </summary>
-    public FakeAiContextRepository WithContexts(params AIContext[] contexts)
+    public FakeAIContextRepository WithContexts(params AIContext[] contexts)
     {
         foreach (var context in contexts)
         {

@@ -15,7 +15,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAiAgent.Workspace.Agent.View.Details",
+        alias: "UmbracoAIAgent.Workspace.Agent.View.Details",
         name: "Agent Details Workspace View",
         js: () => import("./views/agent-details-workspace-view.element.js"),
         weight: 100,
@@ -33,7 +33,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAiAgent.Workspace.Agent.View.Info",
+        alias: "UmbracoAIAgent.Workspace.Agent.View.Info",
         name: "Agent Info Workspace View",
         js: () => import("./views/agent-info-workspace-view.element.js"),
         weight: 100,
@@ -52,7 +52,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAiAgent.WorkspaceAction.Agent.Save",
+        alias: "UmbracoAIAgent.WorkspaceAction.Agent.Save",
         name: "Save Agent",
         api: UmbSubmitWorkspaceAction,
         meta: {

@@ -4,16 +4,16 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Extensions;
 
-namespace Umbraco.AI.OpenAi;
+namespace Umbraco.AI.OpenAI;
 
 /// <summary>
 /// AI embedding capability for OpenAI provider.
 /// </summary>
-public class OpenAiEmbeddingCapability(OpenAiProvider provider) : AIEmbeddingCapabilityBase<OpenAiProviderSettings>(provider)
+public class OpenAIEmbeddingCapability(OpenAIProvider provider) : AIEmbeddingCapabilityBase<OpenAIProviderSettings>(provider)
 {
     private const string DefaultEmbeddingModel = "text-embedding-3-small";
     
-    private new OpenAiProvider Provider => (OpenAiProvider)base.Provider;
+    private new OpenAIProvider Provider => (OpenAIProvider)base.Provider;
 
     /// <summary>
     /// Patterns that match embedding models.
@@ -25,7 +25,7 @@ public class OpenAiEmbeddingCapability(OpenAiProvider provider) : AIEmbeddingCap
 
     /// <inheritdoc />
     protected override async Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
-        OpenAiProviderSettings settings,
+        OpenAIProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         var allModels = await Provider.GetAvailableModelIdsAsync(settings, cancellationToken);
@@ -34,13 +34,13 @@ public class OpenAiEmbeddingCapability(OpenAiProvider provider) : AIEmbeddingCap
             .Where(IsEmbeddingModel)
             .Select(id => new AIModelDescriptor(
                 new AIModelRef(Provider.Id, id),
-                OpenAiModelUtilities.FormatDisplayName(id)))
+                OpenAIModelUtilities.FormatDisplayName(id)))
             .ToList();
     }
 
     /// <inheritdoc />
-    protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(OpenAiProviderSettings settings, string? modelId)
-        => OpenAiProvider.CreateOpenAiClient(settings)
+    protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(OpenAIProviderSettings settings, string? modelId)
+        => OpenAIProvider.CreateOpenAIClient(settings)
             .GetEmbeddingClient(modelId ?? DefaultEmbeddingModel)
             .AsIEmbeddingGenerator();
 

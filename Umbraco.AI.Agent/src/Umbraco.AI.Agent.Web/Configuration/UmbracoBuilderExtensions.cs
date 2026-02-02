@@ -17,14 +17,14 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static IUmbracoBuilder AddUmbracoAiAgentWeb(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddUmbracoAIAgentWeb(this IUmbracoBuilder builder)
     {
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<AgentMapDefinition>(); 
 
         // Configure Management API
-        builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>
+        builder.WithUmbracoAIManagementApi(Constants.ManagementApi.ApiName, options =>
         {
             options.SwaggerDoc(
                 Constants.ManagementApi.ApiName,

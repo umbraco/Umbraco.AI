@@ -12,8 +12,8 @@ using Umbraco.AI.Persistence;
 namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIDbContext))]
-    [Migration("20251126185234_UmbracoAi_InitialCreate")]
-    partial class UmbracoAi_InitialCreate
+    [Migration("20251126185234_UmbracoAI_InitialCreate")]
+    partial class UmbracoAI_InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

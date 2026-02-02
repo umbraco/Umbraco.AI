@@ -12,7 +12,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20260109000000_UmbracoAiAgent_AddContextIds")]
+    [Migration("20260109000000_UmbracoAIAgent_AddContextIds")]
     partial class UmbracoAIAgent_AddContextIds
     {
         /// <inheritdoc />

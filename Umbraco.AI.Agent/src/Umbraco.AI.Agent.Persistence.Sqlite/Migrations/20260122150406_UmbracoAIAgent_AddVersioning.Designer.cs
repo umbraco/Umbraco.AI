@@ -11,7 +11,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20260122150406_UmbracoAiAgent_AddVersioning")]
+    [Migration("20260122150406_UmbracoAIAgent_AddVersioning")]
     partial class UmbracoAIAgent_AddVersioning
     {
         /// <inheritdoc />

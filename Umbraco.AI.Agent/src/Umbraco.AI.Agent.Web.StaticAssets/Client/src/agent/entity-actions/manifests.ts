@@ -4,7 +4,7 @@ export const agentEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAiAgent.EntityAction.Agent.Create",
+        alias: "UmbracoAIAgent.EntityAction.Agent.Create",
         name: "Create Agent Entity Action",
         weight: 1200,
         api: () => import("./agent-create.action.js"),
@@ -17,7 +17,7 @@ export const agentEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "delete",
-        alias: "UmbracoAiAgent.EntityAction.Agent.Delete",
+        alias: "UmbracoAIAgent.EntityAction.Agent.Delete",
         name: "Delete Agent Entity Action",
         weight: 100,
         api: () => import("./agent-delete.action.js"),

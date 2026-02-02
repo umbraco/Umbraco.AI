@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Umbraco.AI.Core.EditableModels;
 
-namespace Umbraco.AI.OpenAi;
+namespace Umbraco.AI.OpenAI;
 
 /// <summary>
 /// Settings for the OpenAI provider.
 /// </summary>
-public class OpenAiProviderSettings
+public class OpenAIProviderSettings
 {
     /// <summary>
     /// The API key for authenticating with OpenAI services.

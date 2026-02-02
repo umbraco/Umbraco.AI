@@ -5,7 +5,7 @@
 namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAi_AddDimensionNamesToAnalytics : Migration
+    public partial class UmbracoAI_AddDimensionNamesToAnalytics : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

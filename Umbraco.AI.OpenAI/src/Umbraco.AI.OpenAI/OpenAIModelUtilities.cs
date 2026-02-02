@@ -3,7 +3,7 @@ namespace Umbraco.AI.Extensions;
 /// <summary>
 /// Utility methods for working with OpenAI models.
 /// </summary>
-internal static class OpenAiModelUtilities
+internal static class OpenAIModelUtilities
 {
     /// <summary>
     /// Formats a model ID into a human-readable display name.

@@ -18,7 +18,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class UpdateAgentController : AgentControllerBase
 {
-    private readonly IAIAgentService _AiAgentService;
+    private readonly IAIAgentService _AIAgentService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -26,7 +26,7 @@ public class UpdateAgentController : AgentControllerBase
     /// </summary>
     public UpdateAgentController(IAIAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AIAgentService;
+        _AIAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -47,7 +47,7 @@ public class UpdateAgentController : AgentControllerBase
         [FromBody] UpdateAgentRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AIAgent? existing = await _AiAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
+        AIAgent? existing = await _AIAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
         if (existing is null)
         {
             return AgentNotFound();
@@ -55,7 +55,7 @@ public class UpdateAgentController : AgentControllerBase
 
         AIAgent agent = _umbracoMapper.Map(model, existing);
 
-        await _AiAgentService.SaveAgentAsync(agent, cancellationToken);
+        await _AIAgentService.SaveAgentAsync(agent, cancellationToken);
         return Ok();
     }
 }

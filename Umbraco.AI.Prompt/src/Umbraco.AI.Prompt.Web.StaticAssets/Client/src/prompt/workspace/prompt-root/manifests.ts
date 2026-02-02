@@ -20,7 +20,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceView",
         kind: "collection",
-        alias: "UmbracoAiPrompt.WorkspaceView.PromptRoot.Collection",
+        alias: "UmbracoAIPrompt.WorkspaceView.PromptRoot.Collection",
         name: "Prompt Root Collection Workspace View",
         meta: {
             label: "Collection",

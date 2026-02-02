@@ -12,7 +12,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20251203192609_UmbracoAiPrompt_InitialCreate")]
+    [Migration("20251203192609_UmbracoAIPrompt_InitialCreate")]
     partial class UmbracoAIPrompt_InitialCreate
     {
         /// <inheritdoc />

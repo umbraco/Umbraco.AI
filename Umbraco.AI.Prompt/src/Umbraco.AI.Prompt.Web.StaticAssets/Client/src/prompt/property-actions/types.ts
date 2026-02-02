@@ -60,7 +60,7 @@ export interface UaiPromptPropertyActionMeta {
 
 /**
  * Context item for passing data to AI operations.
- * Matches backend AiRequestContextItem.
+ * Matches backend AIRequestContextItem.
  */
 export interface UaiPromptContextItem {
     /** Human-readable description */

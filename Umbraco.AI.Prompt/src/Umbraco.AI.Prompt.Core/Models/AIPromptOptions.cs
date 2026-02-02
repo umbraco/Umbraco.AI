@@ -8,5 +8,5 @@ public class AIPromptOptions
     /// <summary>
     /// The configuration section name.
     /// </summary>
-    public const string SectionName = "Umbraco:Ai:Prompt";
+    public const string SectionName = "Umbraco:AI:Prompt";
 }

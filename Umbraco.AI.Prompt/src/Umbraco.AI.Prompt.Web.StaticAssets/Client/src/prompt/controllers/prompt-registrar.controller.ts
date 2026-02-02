@@ -23,7 +23,7 @@ export class UmbPromptRegistrarController extends UmbControllerBase {
         const { data, error } = await this.#repository.getActivePrompts();
 
         if (error || !data) {
-            console.warn('[UmbracoAiPrompt] Failed to fetch prompts for registration:', error);
+            console.warn('[UmbracoAIPrompt] Failed to fetch prompts for registration:', error);
             return;
         }
 
@@ -44,6 +44,6 @@ export class UmbPromptRegistrarController extends UmbControllerBase {
             }
         });
 
-        console.log(`[UmbracoAiPrompt] Registered ${manifests.length} prompt property actions`);
+        console.log(`[UmbracoAIPrompt] Registered ${manifests.length} prompt property actions`);
     }
 }

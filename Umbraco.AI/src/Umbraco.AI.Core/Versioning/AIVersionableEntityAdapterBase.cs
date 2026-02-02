@@ -19,7 +19,7 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAIVersionableEn
 {
     /// <inheritdoc />
     /// <remarks>
-    /// Derived from the generic type parameter by removing the "Ai" prefix.
+    /// Derived from the generic type parameter by removing the "AI" prefix.
     /// For example: <c>AIConnection</c> becomes <c>Connection</c>.
     /// </remarks>
     public virtual string EntityTypeName
@@ -27,7 +27,7 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAIVersionableEn
         get
         {
             var name = typeof(TEntity).Name;
-            return name.StartsWith("Ai", StringComparison.Ordinal)
+            return name.StartsWith("AI", StringComparison.Ordinal)
                 ? name.Substring(2)
                 : name;
         }

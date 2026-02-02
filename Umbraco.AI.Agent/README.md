@@ -1,54 +1,54 @@
-# Umbraco.Ai.Agent
+# Umbraco.AI.Agent
 
-An agent management add-on for Umbraco.Ai that provides storage, execution, and management of AI agents with full [AG-UI protocol](https://docs.ag-ui.com/) support.
+An agent management add-on for Umbraco.AI that provides storage, execution, and management of AI agents with full [AG-UI protocol](https://docs.ag-ui.com/) support.
 
 ## Features
 
 - **Agent Management** - Store and manage AI agent definitions with instructions and configuration
 - **Agent Execution** - Run agents with real-time SSE streaming via the AG-UI protocol
-- **Profile Integration** - Link agents to Umbraco.Ai profiles for model configuration
+- **Profile Integration** - Link agents to Umbraco.AI profiles for model configuration
 - **Context Injection** - Attach context sources to agents for RAG scenarios
 - **Backoffice UI** - Agent management interface integrated into Umbraco
 - **Management API** - RESTful API for agent CRUD operations and execution
 
-> **Note:** For the Copilot chat UI (sidebar, tool execution, HITL approval), install [`Umbraco.Ai.Agent.Copilot`](../Umbraco.Ai.Agent.Copilot/README.md) alongside this package.
+> **Note:** For the Copilot chat UI (sidebar, tool execution, HITL approval), install [`Umbraco.AI.Agent.Copilot`](../Umbraco.AI.Agent.Copilot/README.md) alongside this package.
 
 ## Monorepo Context
 
-This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
+This package is part of the [Umbraco.AI monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
 
 ## Installation
 
 ```bash
 # Agent only (management + APIs)
-dotnet add package Umbraco.Ai.Agent
+dotnet add package Umbraco.AI.Agent
 
 # Agent + Copilot (includes chat UI)
-dotnet add package Umbraco.Ai.Agent
-dotnet add package Umbraco.Ai.Agent.Copilot
+dotnet add package Umbraco.AI.Agent
+dotnet add package Umbraco.AI.Agent.Copilot
 ```
 
 This meta-package includes all required components. For more control, install individual packages:
 
 | Package | Description |
 |---------|-------------|
-| `Umbraco.Ai.Agent.Core` | Domain models and service interfaces |
-| `Umbraco.Ai.Agent.Web` | Management API controllers |
-| `Umbraco.Ai.Agent.Web.StaticAssets` | Backoffice UI components |
-| `Umbraco.Ai.Agent.Persistence` | EF Core persistence |
-| `Umbraco.Ai.Agent.Persistence.SqlServer` | SQL Server migrations |
-| `Umbraco.Ai.Agent.Persistence.Sqlite` | SQLite migrations |
-| `Umbraco.Ai.Agui` | AG-UI protocol SDK |
+| `Umbraco.AI.Agent.Core` | Domain models and service interfaces |
+| `Umbraco.AI.Agent.Web` | Management API controllers |
+| `Umbraco.AI.Agent.Web.StaticAssets` | Backoffice UI components |
+| `Umbraco.AI.Agent.Persistence` | EF Core persistence |
+| `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations |
+| `Umbraco.AI.Agent.Persistence.Sqlite` | SQLite migrations |
+| `Umbraco.AI.Agui` | AG-UI protocol SDK |
 
 ## Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 
 ## Agent Model
 
-An `AiAgent` represents a stored agent definition:
+An `AIAgent` represents a stored agent definition:
 
 | Property | Description |
 |----------|-------------|
@@ -56,7 +56,7 @@ An `AiAgent` represents a stored agent definition:
 | `Alias` | URL-safe unique identifier |
 | `Name` | Display name |
 | `Description` | Optional description |
-| `ProfileId` | Umbraco.Ai profile for model configuration |
+| `ProfileId` | Umbraco.AI profile for model configuration |
 | `ContextIds` | Context sources for RAG injection |
 | `Instructions` | System instructions defining agent behavior |
 | `IsActive` | Whether the agent is available for use |
@@ -95,9 +95,9 @@ Content-Type: application/json
 
 Response: `text/event-stream` with AG-UI events.
 
-## Umbraco.Ai.Agui
+## Umbraco.AI.Agui
 
-The `Umbraco.Ai.Agui` package is a standalone AG-UI protocol SDK that provides:
+The `Umbraco.AI.Agui` package is a standalone AG-UI protocol SDK that provides:
 
 - **Event Types** - All AG-UI event models (lifecycle, messages, tools, state)
 - **SSE Streaming** - `AguiEventStreamResult` for ASP.NET Core streaming

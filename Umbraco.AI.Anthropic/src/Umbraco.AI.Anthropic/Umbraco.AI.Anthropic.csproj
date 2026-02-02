@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <Title>Umbraco Ai Anthropic Provider</Title>
-    <Description>Anthropic provider for Umbraco Ai</Description>
-    <StaticWebAssetBasePath>App_Plugins/UmbracoAiAnthropic</StaticWebAssetBasePath>
+    <Title>Umbraco AI Anthropic Provider</Title>
+    <Description>Anthropic provider for Umbraco AI</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAIAnthropic</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>
 

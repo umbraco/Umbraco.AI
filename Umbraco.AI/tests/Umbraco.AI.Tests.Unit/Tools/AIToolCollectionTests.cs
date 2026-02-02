@@ -171,7 +171,7 @@ public class AIToolCollectionTests
     #region GetSystemTools / GetUserTools
 
     [Fact]
-    public void GetSystemTools_ReturnsOnlyToolsImplementingIAiSystemTool()
+    public void GetSystemTools_ReturnsOnlyToolsImplementingIAISystemTool()
     {
         // Arrange
         var systemTool1 = new FakeSystemTool("system-1", "System Tool One");
@@ -190,7 +190,7 @@ public class AIToolCollectionTests
     }
 
     [Fact]
-    public void GetUserTools_ReturnsOnlyToolsNotImplementingIAiSystemTool()
+    public void GetUserTools_ReturnsOnlyToolsNotImplementingIAISystemTool()
     {
         // Arrange
         var systemTool = new FakeSystemTool("system-1", "System Tool");

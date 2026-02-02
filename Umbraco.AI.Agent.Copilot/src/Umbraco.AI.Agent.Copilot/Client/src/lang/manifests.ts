@@ -1,7 +1,7 @@
 const localizationManifests: UmbExtensionManifest[] = [
     {
         type: "localization",
-        alias: "UAiAgent.Copilot.Localization.En",
+        alias: "UAIAgent.Copilot.Localization.En",
         weight: -100,
         name: "English",
         meta: {

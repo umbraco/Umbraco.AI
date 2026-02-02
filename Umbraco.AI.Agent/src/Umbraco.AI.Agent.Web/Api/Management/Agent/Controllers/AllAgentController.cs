@@ -14,7 +14,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 [ApiVersion("1.0")]
 public class AllAgentController : AgentControllerBase
 {
-    private readonly IAIAgentService _AiAgentService;
+    private readonly IAIAgentService _AIAgentService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -22,7 +22,7 @@ public class AllAgentController : AgentControllerBase
     /// </summary>
     public AllAgentController(IAIAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AIAgentService;
+        _AIAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -49,7 +49,7 @@ public class AllAgentController : AgentControllerBase
         bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await _AiAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, scopeId, isActive, cancellationToken);
+        var result = await _AIAgentService.GetAgentsPagedAsync(skip, take, filter, profileId, scopeId, isActive, cancellationToken);
 
         var viewModel = new PagedViewModel<AgentItemResponseModel>
         {

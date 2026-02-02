@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Agent Startup</Title>
-        <Description>Startup and DI registration for Umbraco Ai Agent</Description>
+        <Title>Umbraco AI Agent Startup</Title>
+        <Description>Startup and DI registration for Umbraco AI Agent</Description>
     </PropertyGroup>
 
     <PropertyGroup>

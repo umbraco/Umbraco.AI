@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <Title>Umbraco Ai</Title>
-        <Description>Contains static assets for Umbraco Ai</Description>
-        <StaticWebAssetBasePath>App_Plugins/UmbracoAi</StaticWebAssetBasePath>
+        <Title>Umbraco AI</Title>
+        <Description>Contains static assets for Umbraco AI</Description>
+        <StaticWebAssetBasePath>App_Plugins/UmbracoAI</StaticWebAssetBasePath>
         <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     </PropertyGroup>
 

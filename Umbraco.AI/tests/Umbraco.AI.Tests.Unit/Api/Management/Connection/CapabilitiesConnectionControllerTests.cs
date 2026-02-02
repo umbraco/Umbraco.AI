@@ -47,7 +47,7 @@ public class CapabilitiesConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
 
         var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat);
         var configuredProviderMock = CreateConfiguredProviderMock(provider, chatCapabilityMock.Object);
@@ -93,7 +93,7 @@ public class CapabilitiesConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
 
         var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat);
         var embeddingCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Embedding);
@@ -124,7 +124,7 @@ public class CapabilitiesConnectionControllerTests
     {
         // Arrange
         var connectionId = Guid.NewGuid();
-        var provider = new FakeAiProvider("empty-provider", "Empty Provider");
+        var provider = new FakeAIProvider("empty-provider", "Empty Provider");
 
         var configuredProviderMock = CreateConfiguredProviderMock(provider);
 
@@ -157,7 +157,7 @@ public class CapabilitiesConnectionControllerTests
             .WithId(connectionId)
             .WithAlias(alias)
             .Build();
-        var provider = new FakeAiProvider("openai", "OpenAI");
+        var provider = new FakeAIProvider("openai", "OpenAI");
 
         var chatCapabilityMock = CreateConfiguredCapabilityMock(AICapability.Chat);
         var configuredProviderMock = CreateConfiguredProviderMock(provider, chatCapabilityMock.Object);

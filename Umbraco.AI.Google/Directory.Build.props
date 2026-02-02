@@ -4,7 +4,7 @@
     <Company>Umbraco HQ</Company>
     <Authors>Umbraco</Authors>
     <Copyright>Copyright © Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
-    <Product>Umbraco Ai Google Provider</Product>
+    <Product>Umbraco AI Google Provider</Product>
     <PackageProjectUrl>https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Google</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
     <PackageTags>umbraco ai google gemini umbraco-marketplace</PackageTags>

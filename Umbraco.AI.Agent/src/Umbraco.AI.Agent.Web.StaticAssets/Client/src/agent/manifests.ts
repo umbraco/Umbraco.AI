@@ -4,7 +4,7 @@ import { agentMenuManifests } from "./menu/manifests.js";
 import { agentRepositoryManifests } from "./repository/manifests.js";
 import { agentWorkspaceManifests } from "./workspace/manifests.js";
 
-// Note: Tools and approval manifests have been moved to Umbraco.Ai.Agent.Copilot package
+// Note: Tools and approval manifests have been moved to Umbraco.AI.Agent.Copilot package
 
 export const agentManifests = [
     ...agentCollectionManifests,

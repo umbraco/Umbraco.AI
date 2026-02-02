@@ -19,9 +19,9 @@ public static class UmbracoBuilderExtensions
         if (builder.Services.Any(x => x.ServiceType == typeof(AIProviderCollection)))
             return builder;
 
-        builder.AddUmbracoAiCore();
-        builder.AddUmbracoAiPersistence();
-        builder.AddUmbracoAiWeb();
+        builder.AddUmbracoAICore();
+        builder.AddUmbracoAIPersistence();
+        builder.AddUmbracoAIWeb();
 
         return builder;
     }

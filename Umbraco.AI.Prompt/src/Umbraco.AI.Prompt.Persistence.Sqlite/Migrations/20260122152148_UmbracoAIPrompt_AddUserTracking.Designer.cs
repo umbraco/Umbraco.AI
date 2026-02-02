@@ -11,7 +11,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20260122152148_UmbracoAiPrompt_AddUserTracking")]
+    [Migration("20260122152148_UmbracoAIPrompt_AddUserTracking")]
     partial class UmbracoAIPrompt_AddUserTracking
     {
         /// <inheritdoc />

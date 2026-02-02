@@ -12,7 +12,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20260122152211_UmbracoAiAgent_AddUserTracking")]
+    [Migration("20260122152211_UmbracoAIAgent_AddUserTracking")]
     partial class UmbracoAIAgent_AddUserTracking
     {
         /// <inheritdoc />

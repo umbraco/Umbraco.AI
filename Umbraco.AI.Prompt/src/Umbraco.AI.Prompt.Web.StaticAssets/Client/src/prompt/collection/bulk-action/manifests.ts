@@ -6,7 +6,7 @@ export const promptBulkActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityBulkAction",
         kind: "default",
-        alias: "UmbracoAiPrompt.EntityBulkAction.Prompt.Delete",
+        alias: "UmbracoAIPrompt.EntityBulkAction.Prompt.Delete",
         name: "Bulk Delete Prompt Entity Action",
         weight: 100,
         api: () => import("./prompt-bulk-delete.action.js"),

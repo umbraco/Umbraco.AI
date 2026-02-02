@@ -20,7 +20,7 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static IUmbracoBuilder AddUmbracoAiAgentPersistence(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddUmbracoAIAgentPersistence(this IUmbracoBuilder builder)
     {
         // Register DbContext with provider-specific migrations assembly
         builder.Services.AddUmbracoDbContext<UmbracoAIAgentDbContext>((options, connectionString, providerName, serviceProvider) =>

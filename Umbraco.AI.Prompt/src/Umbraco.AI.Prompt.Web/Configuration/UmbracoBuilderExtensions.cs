@@ -17,7 +17,7 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static IUmbracoBuilder AddUmbracoAiPromptWeb(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddUmbracoAIPromptWeb(this IUmbracoBuilder builder)
     {
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
@@ -25,7 +25,7 @@ public static class UmbracoBuilderExtensions
             .Add<PromptExecutionMapDefinition>(); 
 
         // Configure Management API
-        builder.WithUmbracoAiManagementApi(Constants.ManagementApi.ApiName, options =>
+        builder.WithUmbracoAIManagementApi(Constants.ManagementApi.ApiName, options =>
         {
             options.SwaggerDoc(
                 Constants.ManagementApi.ApiName,

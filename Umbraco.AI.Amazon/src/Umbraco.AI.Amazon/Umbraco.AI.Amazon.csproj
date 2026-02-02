@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <Title>Umbraco Ai Amazon Bedrock Provider</Title>
-    <Description>Amazon Bedrock provider for Umbraco Ai</Description>
-    <StaticWebAssetBasePath>App_Plugins/UmbracoAiAmazon</StaticWebAssetBasePath>
+    <Title>Umbraco AI Amazon Bedrock Provider</Title>
+    <Description>Amazon Bedrock provider for Umbraco AI</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAIAmazon</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>
 

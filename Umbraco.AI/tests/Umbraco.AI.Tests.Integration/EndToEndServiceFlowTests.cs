@@ -36,19 +36,19 @@ public class EndToEndServiceFlowTests : IDisposable
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Umbraco:Ai:DefaultChatProfileAlias"] = "default-chat",
-                ["Umbraco:Ai:DefaultEmbeddingProfileAlias"] = "default-embedding"
+                ["Umbraco:AI:DefaultChatProfileAlias"] = "default-chat",
+                ["Umbraco:AI:DefaultEmbeddingProfileAlias"] = "default-embedding"
             })
             .Build();
 
         // Create fake provider and client
         _fakeChatClient = new FakeChatClient("Test response from fake provider");
         var fakeChatCapability = new FakeChatCapability(_fakeChatClient);
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithChatCapability(fakeChatCapability);
 
         // Register AI services directly
-        RegisterAiServices(services, configuration, fakeProvider);
+        RegisterAIServices(services, configuration, fakeProvider);
 
         _serviceProvider = services.BuildServiceProvider();
 
@@ -391,19 +391,19 @@ public class EndToEndServiceFlowTests : IDisposable
     #region Helper Methods
 
     /// <summary>
-    /// Registers AI services directly, simulating what AddUmbracoAiCore does but bypassing
+    /// Registers AI services directly, simulating what AddUmbracoAICore does but bypassing
     /// Umbraco's collection builder pattern (which requires TypeLoader that can't be mocked).
     /// </summary>
-    private static void RegisterAiServices(
+    private static void RegisterAIServices(
         IServiceCollection services,
         IConfiguration configuration,
-        FakeAiProvider fakeProvider)
+        FakeAIProvider fakeProvider)
     {
         // Register configuration (required by AIEditableModelResolver)
         services.AddSingleton<IConfiguration>(configuration);
 
         // Bind AIOptions
-        services.Configure<AIOptions>(configuration.GetSection("Umbraco:Ai"));
+        services.Configure<AIOptions>(configuration.GetSection("Umbraco:AI"));
 
         // Provider infrastructure
         services.AddSingleton<IAICapabilityFactory, AICapabilityFactory>();

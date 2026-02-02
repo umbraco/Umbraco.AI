@@ -15,7 +15,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAiPrompt.Workspace.Prompt.View.Details",
+        alias: "UmbracoAIPrompt.Workspace.Prompt.View.Details",
         name: "Prompt Details Workspace View",
         js: () => import("./views/prompt-details-workspace-view.element.js"),
         weight: 100,
@@ -33,7 +33,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAiPrompt.Workspace.Prompt.View.Info",
+        alias: "UmbracoAIPrompt.Workspace.Prompt.View.Info",
         name: "Prompt Info Workspace View",
         js: () => import("./views/prompt-info-workspace-view.element.js"),
         weight: 100,
@@ -52,7 +52,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAiPrompt.WorkspaceAction.Prompt.Save",
+        alias: "UmbracoAIPrompt.WorkspaceAction.Prompt.Save",
         name: "Save Prompt",
         api: UmbSubmitWorkspaceAction,
         meta: {

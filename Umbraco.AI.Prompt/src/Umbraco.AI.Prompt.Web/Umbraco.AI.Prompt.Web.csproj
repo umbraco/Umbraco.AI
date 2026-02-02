@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Prompt Web</Title>
-        <Description>Management API for Umbraco Ai Prompt</Description>
+        <Title>Umbraco AI Prompt Web</Title>
+        <Description>Management API for Umbraco AI Prompt</Description>
     </PropertyGroup>
 
     <PropertyGroup>

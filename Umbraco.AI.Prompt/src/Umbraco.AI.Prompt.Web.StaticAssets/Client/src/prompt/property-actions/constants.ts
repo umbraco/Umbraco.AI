@@ -11,7 +11,7 @@ export const TEXT_BASED_PROPERTY_EDITOR_UIS = [
 /**
  * Alias prefix for dynamically registered prompt property actions.
  */
-export const UAI_PROMPT_PROPERTY_ACTION_PREFIX = 'UmbracoAiPrompt.PropertyAction';
+export const UAI_PROMPT_PROPERTY_ACTION_PREFIX = 'UmbracoAIPrompt.PropertyAction';
 
 /**
  * Alias for the prompt scope condition.

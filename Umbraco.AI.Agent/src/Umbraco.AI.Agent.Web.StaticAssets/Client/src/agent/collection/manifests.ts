@@ -16,7 +16,7 @@ export const agentCollectionManifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "collectionView",
-        alias: "UmbracoAiAgent.CollectionView.Agent.Table",
+        alias: "UmbracoAIAgent.CollectionView.Agent.Table",
         name: "Agent Table View",
         element: () => import("./views/table/agent-table-collection-view.element.js"),
         meta: {

@@ -34,13 +34,13 @@ public class ServiceResolutionTests : IDisposable
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Umbraco:Ai:DefaultChatProfileAlias"] = "default-chat",
-                ["Umbraco:Ai:DefaultEmbeddingProfileAlias"] = "default-embedding"
+                ["Umbraco:AI:DefaultChatProfileAlias"] = "default-chat",
+                ["Umbraco:AI:DefaultEmbeddingProfileAlias"] = "default-embedding"
             })
             .Build();
 
-        // Register AI services directly (simulating what AddUmbracoAiCore does)
-        RegisterAiServices(services, configuration);
+        // Register AI services directly (simulating what AddUmbracoAICore does)
+        RegisterAIServices(services, configuration);
 
         _serviceProvider = services.BuildServiceProvider();
     }
@@ -53,7 +53,7 @@ public class ServiceResolutionTests : IDisposable
     #region Smoke Test - Critical Service Graph
 
     [Fact]
-    public void IAiChatService_CanBeResolved_WithEntireDependencyChain()
+    public void IAIChatService_CanBeResolved_WithEntireDependencyChain()
     {
         // This smoke test verifies the entire critical service graph resolves.
         // If any registration is missing, this will fail.
@@ -63,7 +63,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void AiProviderCollection_CanBeResolved()
+    public void AIProviderCollection_CanBeResolved()
     {
         var providers = _serviceProvider.GetService<AIProviderCollection>();
 
@@ -71,7 +71,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiChatClientFactory_CanBeResolved()
+    public void IAIChatClientFactory_CanBeResolved()
     {
         var factory = _serviceProvider.GetService<IAIChatClientFactory>();
 
@@ -79,7 +79,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiProfileService_CanBeResolved()
+    public void IAIProfileService_CanBeResolved()
     {
         var service = _serviceProvider.GetService<IAIProfileService>();
 
@@ -87,7 +87,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiConnectionService_CanBeResolved()
+    public void IAIConnectionService_CanBeResolved()
     {
         var service = _serviceProvider.GetService<IAIConnectionService>();
 
@@ -95,7 +95,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiEditableModelResolver_CanBeResolved()
+    public void IAIEditableModelResolver_CanBeResolved()
     {
         var resolver = _serviceProvider.GetService<IAIEditableModelResolver>();
 
@@ -107,7 +107,7 @@ public class ServiceResolutionTests : IDisposable
     #region Infrastructure Services
 
     [Fact]
-    public void IAiProviderInfrastructure_CanBeResolved()
+    public void IAIProviderInfrastructure_CanBeResolved()
     {
         var infrastructure = _serviceProvider.GetService<IAIProviderInfrastructure>();
 
@@ -115,7 +115,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiCapabilityFactory_CanBeResolved()
+    public void IAICapabilityFactory_CanBeResolved()
     {
         var factory = _serviceProvider.GetService<IAICapabilityFactory>();
 
@@ -123,7 +123,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiEditableModelSchemaBuilder_CanBeResolved()
+    public void IAIEditableModelSchemaBuilder_CanBeResolved()
     {
         var builder = _serviceProvider.GetService<IAIEditableModelSchemaBuilder>();
 
@@ -135,7 +135,7 @@ public class ServiceResolutionTests : IDisposable
     #region Repository Services
 
     [Fact]
-    public void IAiConnectionRepository_CanBeResolved()
+    public void IAIConnectionRepository_CanBeResolved()
     {
         var repository = _serviceProvider.GetService<IAIConnectionRepository>();
 
@@ -143,7 +143,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void IAiProfileRepository_CanBeResolved()
+    public void IAIProfileRepository_CanBeResolved()
     {
         var repository = _serviceProvider.GetService<IAIProfileRepository>();
 
@@ -155,7 +155,7 @@ public class ServiceResolutionTests : IDisposable
     #region Provider Collection Contains Fake Provider
 
     [Fact]
-    public void AiProviderCollection_ContainsRegisteredProvider()
+    public void AIProviderCollection_ContainsRegisteredProvider()
     {
         var providers = _serviceProvider.GetRequiredService<AIProviderCollection>();
 
@@ -167,7 +167,7 @@ public class ServiceResolutionTests : IDisposable
     }
 
     [Fact]
-    public void AiProviderCollection_CanGetChatCapabilityFromProvider()
+    public void AIProviderCollection_CanGetChatCapabilityFromProvider()
     {
         var providers = _serviceProvider.GetRequiredService<AIProviderCollection>();
 
@@ -179,16 +179,16 @@ public class ServiceResolutionTests : IDisposable
     #endregion
 
     /// <summary>
-    /// Registers AI services directly, simulating what AddUmbracoAiCore does but bypassing
+    /// Registers AI services directly, simulating what AddUmbracoAICore does but bypassing
     /// Umbraco's collection builder pattern (which requires TypeLoader that can't be mocked).
     /// </summary>
-    private static void RegisterAiServices(IServiceCollection services, IConfiguration configuration)
+    private static void RegisterAIServices(IServiceCollection services, IConfiguration configuration)
     {
         // Register configuration (required by AIEditableModelResolver)
         services.AddSingleton<IConfiguration>(configuration);
 
         // Bind AIOptions
-        services.Configure<AIOptions>(configuration.GetSection("Umbraco:Ai"));
+        services.Configure<AIOptions>(configuration.GetSection("Umbraco:AI"));
 
         // Provider infrastructure
         services.AddSingleton<IAICapabilityFactory, AICapabilityFactory>();
@@ -196,7 +196,7 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<IAIProviderInfrastructure, AIProviderInfrastructure>();
 
         // Register a fake provider (in real scenario, these are auto-discovered)
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithChatCapability()
             .WithEmbeddingCapability();
         services.AddSingleton<IAIProvider>(fakeProvider);

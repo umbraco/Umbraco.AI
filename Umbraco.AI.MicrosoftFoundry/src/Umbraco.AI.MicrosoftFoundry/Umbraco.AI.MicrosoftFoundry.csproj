@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <Title>Umbraco Ai Microsoft Foundry Provider</Title>
-    <Description>Microsoft AI Foundry provider for Umbraco Ai</Description>
-    <StaticWebAssetBasePath>App_Plugins/UmbracoAiMicrosoftFoundry</StaticWebAssetBasePath>
+    <Title>Umbraco AI Microsoft Foundry Provider</Title>
+    <Description>Microsoft AI Foundry provider for Umbraco AI</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAIMicrosoftFoundry</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>
 

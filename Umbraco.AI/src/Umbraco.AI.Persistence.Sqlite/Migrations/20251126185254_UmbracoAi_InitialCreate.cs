@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAi_InitialCreate : Migration
+    public partial class UmbracoAI_InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -50,7 +50,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 {
                     table.PrimaryKey("PK_umbracoAIProfile", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_umbracoAIProfile_umbracoAiConnection_ConnectionId",
+                        name: "FK_umbracoAIProfile_umbracoAIConnection_ConnectionId",
                         column: x => x.ConnectionId,
                         principalTable: "umbracoAIConnection",
                         principalColumn: "Id",

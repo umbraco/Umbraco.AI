@@ -37,7 +37,7 @@ namespace Umbraco.AI.Extensions;
 /// </summary>
 public static partial class UmbracoBuilderExtensions
 {
-    internal static IUmbracoBuilder AddUmbracoAiCore(this IUmbracoBuilder builder)
+    internal static IUmbracoBuilder AddUmbracoAICore(this IUmbracoBuilder builder)
     {
         var services = builder.Services;
         var config = builder.Config;
@@ -46,14 +46,14 @@ public static partial class UmbracoBuilderExtensions
         if (services.Any(x => x.ServiceType == typeof(AIProviderCollection)))
             return builder;
 
-        // Bind AIOptions from "Umbraco:Ai" section
-        services.Configure<AIOptions>(config.GetSection("Umbraco:Ai"));
+        // Bind AIOptions from "Umbraco:AI" section
+        services.Configure<AIOptions>(config.GetSection("Umbraco:AI"));
 
-        // Bind AIAuditLogOptions from "Umbraco:Ai:AuditLog" section
-        services.Configure<AIAuditLogOptions>(config.GetSection("Umbraco:Ai:AuditLog"));
+        // Bind AIAuditLogOptions from "Umbraco:AI:AuditLog" section
+        services.Configure<AIAuditLogOptions>(config.GetSection("Umbraco:AI:AuditLog"));
 
-        // Bind AIAnalyticsOptions from "Umbraco:Ai:Analytics" section
-        services.Configure<AIAnalyticsOptions>(config.GetSection("Umbraco:Ai:Analytics"));
+        // Bind AIAnalyticsOptions from "Umbraco:AI:Analytics" section
+        services.Configure<AIAnalyticsOptions>(config.GetSection("Umbraco:AI:Analytics"));
 
         // Security infrastructure
         services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();
@@ -113,7 +113,7 @@ public static partial class UmbracoBuilderExtensions
         });
 
         // Configure web fetch options
-        services.Configure<AIWebFetchOptions>(config.GetSection("Umbraco:Ai:Tools:WebFetch"));
+        services.Configure<AIWebFetchOptions>(config.GetSection("Umbraco:AI:Tools:WebFetch"));
 
         // Background task queue for async audit recording
         services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
@@ -138,7 +138,7 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAISettingsService, AISettingsService>();
 
         // Unified versioning service
-        services.Configure<AIVersionCleanupPolicy>(config.GetSection("Umbraco:Ai:VersionCleanupPolicy"));
+        services.Configure<AIVersionCleanupPolicy>(config.GetSection("Umbraco:AI:VersionCleanupPolicy"));
         services.AddSingleton<IAIEntityVersionService, AIEntityVersionService>();
         services.AddHostedService<AIVersionCleanupBackgroundJob>();
 

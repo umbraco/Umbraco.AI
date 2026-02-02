@@ -16,7 +16,7 @@ export const promptCollectionManifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "collectionView",
-        alias: "UmbracoAiPrompt.CollectionView.Prompt.Table",
+        alias: "UmbracoAIPrompt.CollectionView.Prompt.Table",
         name: "Prompt Table View",
         element: () => import("./views/table/prompt-table-collection-view.element.js"),
         meta: {

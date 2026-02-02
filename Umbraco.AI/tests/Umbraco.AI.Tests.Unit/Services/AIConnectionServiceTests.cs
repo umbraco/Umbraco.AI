@@ -108,7 +108,7 @@ public class AIConnectionServiceTests
     public async Task GetConnectionsAsync_WithProviderFilter_ReturnsFilteredConnections()
     {
         // Arrange
-        var openAiConnections = new List<AIConnection>
+        var openAIConnections = new List<AIConnection>
         {
             new AIConnectionBuilder().WithName("OpenAI 1").WithProviderId("openai").Build(),
             new AIConnectionBuilder().WithName("OpenAI 2").WithProviderId("openai").Build()
@@ -118,7 +118,7 @@ public class AIConnectionServiceTests
 
         _repositoryMock
             .Setup(x => x.GetByProviderAsync("openai", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(openAiConnections);
+            .ReturnsAsync(openAIConnections);
 
         // Act
         var result = await service.GetConnectionsAsync("openai");
@@ -200,7 +200,7 @@ public class AIConnectionServiceTests
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .Build();
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
@@ -233,7 +233,7 @@ public class AIConnectionServiceTests
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .Build();
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
@@ -281,7 +281,7 @@ public class AIConnectionServiceTests
             .WithSettings(new FakeProviderSettings { ApiKey = "test-key" })
             .Build();
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
@@ -310,7 +310,7 @@ public class AIConnectionServiceTests
             .WithDateModified(DateTime.UtcNow.AddDays(-1))
             .Build();
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var service = CreateService(fakeProvider);
 
         _repositoryMock
@@ -380,7 +380,7 @@ public class AIConnectionServiceTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = "valid-key" };
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
@@ -415,7 +415,7 @@ public class AIConnectionServiceTests
     {
         // Arrange
         var settings = new FakeProviderSettings { ApiKey = null };
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var service = CreateService(fakeProvider);
 
         _settingsResolverMock
@@ -447,7 +447,7 @@ public class AIConnectionServiceTests
             .Build();
 
         var fakeChatCapability = new FakeChatCapability();
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithChatCapability(fakeChatCapability);
 
         var service = CreateService(fakeProvider);
@@ -523,7 +523,7 @@ public class AIConnectionServiceTests
             .WithSettings(settings)
             .Build();
 
-        var fakeProvider = new FakeAiProvider("empty-provider", "Empty Provider");
+        var fakeProvider = new FakeAIProvider("empty-provider", "Empty Provider");
         // No capabilities added
 
         var service = CreateService(fakeProvider);
@@ -566,7 +566,7 @@ public class AIConnectionServiceTests
             .Setup(c => c.Kind)
             .Returns(AICapability.Chat);
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithCapability(failingCapability.Object);
 
         var service = CreateService(fakeProvider);
@@ -603,7 +603,7 @@ public class AIConnectionServiceTests
             .Build();
 
         var fakeChatCapability = new FakeChatCapability();
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithChatCapability(fakeChatCapability);
 
         var service = CreateService(fakeProvider);
@@ -677,7 +677,7 @@ public class AIConnectionServiceTests
             .WithSettings(settings)
             .Build();
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var service = CreateService(fakeProvider);
 
         _repositoryMock
@@ -709,7 +709,7 @@ public class AIConnectionServiceTests
 
         var fakeChatCapability = new FakeChatCapability();
         var fakeEmbeddingCapability = new FakeEmbeddingCapability();
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithChatCapability(fakeChatCapability)
             .WithEmbeddingCapability(fakeEmbeddingCapability);
 
@@ -749,7 +749,7 @@ public class AIConnectionServiceTests
 
         var fakeChatClient = new FakeChatClient();
         var fakeChatCapability = new FakeChatCapability(fakeChatClient);
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
             .WithChatCapability(fakeChatCapability);
 
         var service = CreateService(fakeProvider);

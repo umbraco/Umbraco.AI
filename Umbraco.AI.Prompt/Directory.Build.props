@@ -4,7 +4,7 @@
     <Company>Umbraco HQ</Company>
     <Authors>Umbraco</Authors>
     <Copyright>Copyright Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
-    <Product>Umbraco Ai Prompt</Product>
+    <Product>Umbraco AI Prompt</Product>
     <PackageProjectUrl>https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Prompt</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
     <PackageTags>umbraco ai prompt umbraco-marketplace</PackageTags>
@@ -16,7 +16,7 @@
 
   <!-- Local Dev -->
   <PropertyGroup>
-    <UseLocalUmbracoAi>true</UseLocalUmbracoAi>
+    <UseLocalUmbracoAI>true</UseLocalUmbracoAI>
   </PropertyGroup>
 
     <!-- NuGet -->

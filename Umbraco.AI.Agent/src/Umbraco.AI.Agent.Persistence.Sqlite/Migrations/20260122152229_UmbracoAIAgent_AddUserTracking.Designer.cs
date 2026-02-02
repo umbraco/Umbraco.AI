@@ -11,7 +11,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20260122152229_UmbracoAiAgent_AddUserTracking")]
+    [Migration("20260122152229_UmbracoAIAgent_AddUserTracking")]
     partial class UmbracoAIAgent_AddUserTracking
     {
         /// <inheritdoc />

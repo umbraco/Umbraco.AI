@@ -11,8 +11,8 @@ using Umbraco.AI.Persistence;
 namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIDbContext))]
-    [Migration("20260123100000_UmbracoAi_AddConnectionVersioning")]
-    partial class UmbracoAi_AddConnectionVersioning
+    [Migration("20260123100000_UmbracoAI_AddConnectionVersioning")]
+    partial class UmbracoAI_AddConnectionVersioning
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -62,7 +62,7 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "OpenAI");
+        var provider = new FakeAIProvider(providerId, "OpenAI");
 
         var models = new List<AIModelDescriptor>
         {
@@ -127,7 +127,7 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "OpenAI");
+        var provider = new FakeAIProvider(providerId, "OpenAI");
 
         // Provider with both Chat and Embedding capabilities
         var chatModels = new List<AIModelDescriptor>
@@ -176,7 +176,7 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "Empty Provider");
+        var provider = new FakeAIProvider(providerId, "Empty Provider");
 
         // No capabilities
         var configuredProviderMock = CreateConfiguredProviderMock(connection, provider);
@@ -210,7 +210,7 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "OpenAI");
+        var provider = new FakeAIProvider(providerId, "OpenAI");
 
         var chatModels = new List<AIModelDescriptor>
         {
@@ -248,7 +248,7 @@ public class ModelsConnectionControllerTests
             .WithId(connectionId)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "OpenAI");
+        var provider = new FakeAIProvider(providerId, "OpenAI");
 
         // Create capability that returns same model twice
         var duplicateModels = new List<AIModelDescriptor>
@@ -295,7 +295,7 @@ public class ModelsConnectionControllerTests
             .WithAlias(alias)
             .WithProviderId(providerId)
             .Build();
-        var provider = new FakeAiProvider(providerId, "OpenAI");
+        var provider = new FakeAIProvider(providerId, "OpenAI");
 
         var models = new List<AIModelDescriptor>
         {

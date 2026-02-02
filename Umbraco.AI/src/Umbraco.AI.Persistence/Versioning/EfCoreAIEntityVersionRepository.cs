@@ -158,7 +158,7 @@ internal sealed class EfCoreAIEntityVersionRepository : IAIEntityVersionReposito
             // Use ROW_NUMBER window function to identify excess versions per entity
             // This is more efficient than GroupBy + SelectMany and works in both SQL Server and SQLite
             var sql = @"
-                DELETE FROM umbracoAiEntityVersion
+                DELETE FROM umbracoAIEntityVersion
                 WHERE Id IN (
                     SELECT Id FROM (
                         SELECT Id,
@@ -166,7 +166,7 @@ internal sealed class EfCoreAIEntityVersionRepository : IAIEntityVersionReposito
                                    PARTITION BY EntityId, EntityType
                                    ORDER BY Version DESC
                                ) AS RowNum
-                        FROM umbracoAiEntityVersion
+                        FROM umbracoAIEntityVersion
                     ) AS Ranked
                     WHERE RowNum > {0}
                 )";

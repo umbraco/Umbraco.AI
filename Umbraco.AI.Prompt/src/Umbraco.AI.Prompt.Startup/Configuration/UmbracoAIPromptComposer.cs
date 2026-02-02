@@ -14,6 +14,6 @@ public class UmbracoAIPromptComposer : IComposer
     /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AddUmbracoAiPrompt();
+        builder.AddUmbracoAIPrompt();
     }
 }

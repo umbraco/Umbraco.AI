@@ -1,7 +1,7 @@
 import { UmbModalToken } from '@umbraco-cms/backoffice/modal';
 import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue } from './types.js';
 
-export const UAI_PROMPT_PREVIEW_MODAL_ALIAS = 'UmbracoAiPrompt.Modal.PromptPreview';
+export const UAI_PROMPT_PREVIEW_MODAL_ALIAS = 'UmbracoAIPrompt.Modal.PromptPreview';
 
 /**
  * Modal token for the centered dialog version.

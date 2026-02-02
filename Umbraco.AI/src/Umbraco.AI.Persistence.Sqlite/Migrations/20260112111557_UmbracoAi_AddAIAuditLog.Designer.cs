@@ -11,8 +11,8 @@ using Umbraco.AI.Persistence;
 namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIDbContext))]
-    [Migration("20260112111557_UmbracoAi_AddAiAuditLog")]
-    partial class UmbracoAi_AddAiAuditLog
+    [Migration("20260112111557_UmbracoAI_AddAIAuditLog")]
+    partial class UmbracoAI_AddAIAuditLog
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -4,7 +4,7 @@ import { UAI_PROMPT_ROOT_ENTITY_TYPE, UAI_PROMPT_ICON } from "../constants.js";
 export const promptMenuManifests: ManifestMenuItem[] = [
     {
         type: "menuItem",
-        alias: "UmbracoAiPrompt.MenuItem.Prompts",
+        alias: "UmbracoAIPrompt.MenuItem.Prompts",
         name: "Prompts Menu Item",
         weight: 80,
         meta: {

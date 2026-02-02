@@ -12,8 +12,8 @@ using Umbraco.AI.Persistence;
 namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIDbContext))]
-    [Migration("20260114191644_UmbracoAi_AddDimensionNamesToAnalytics")]
-    partial class UmbracoAi_AddDimensionNamesToAnalytics
+    [Migration("20260114191644_UmbracoAI_AddDimensionNamesToAnalytics")]
+    partial class UmbracoAI_AddDimensionNamesToAnalytics
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

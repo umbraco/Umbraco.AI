@@ -11,7 +11,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20251219183543_UmbracoAiAgent_Initial")]
+    [Migration("20251219183543_UmbracoAIAgent_Initial")]
     partial class UmbracoAIAgent_Initial
     {
         /// <inheritdoc />

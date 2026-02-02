@@ -277,7 +277,7 @@ public class AIEditableModelResolverTests
     public void ResolveSettingsForProvider_WithNullSettings_ReturnsNull()
     {
         // Arrange
-        var provider = new FakeAiProvider().WithSettingsType<FakeProviderSettings>();
+        var provider = new FakeAIProvider().WithSettingsType<FakeProviderSettings>();
         var resolver = CreateResolver();
 
         // Act
@@ -291,7 +291,7 @@ public class AIEditableModelResolverTests
     public void ResolveSettingsForProvider_WithProviderWithoutSettingsType_ReturnsNull()
     {
         // Arrange
-        var provider = new FakeAiProvider { SettingsType = null };
+        var provider = new FakeAIProvider { SettingsType = null };
         var resolver = CreateResolver();
 
         // Act
@@ -305,7 +305,7 @@ public class AIEditableModelResolverTests
     public void ResolveSettingsForProvider_WithValidSettings_ResolvesUsingProviderSettingsType()
     {
         // Arrange
-        var provider = new FakeAiProvider("test-provider", "Test Provider")
+        var provider = new FakeAIProvider("test-provider", "Test Provider")
             .WithSettingsType<FakeProviderSettings>();
         SetupProviderWithValidation("test-provider");
         var resolver = CreateResolver();
@@ -329,7 +329,7 @@ public class AIEditableModelResolverTests
 
     private void SetupProviderWithValidation(string providerId, bool requireApiKey = true)
     {
-        var provider = new FakeAiProvider(providerId, "Test Provider");
+        var provider = new FakeAIProvider(providerId, "Test Provider");
         provider.SettingsType = typeof(FakeProviderSettings);
 
         var fields = new List<AIEditableModelField>();

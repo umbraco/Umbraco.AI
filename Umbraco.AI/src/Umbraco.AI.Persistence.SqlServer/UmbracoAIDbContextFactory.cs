@@ -15,7 +15,7 @@ public class UmbracoAIDbContextFactory : IDesignTimeDbContextFactory<UmbracoAIDb
 
         // Use a dummy connection string for design-time operations
         optionsBuilder.UseSqlServer(
-            "Server=.;Database=UmbracoAi_Design;Integrated Security=true;TrustServerCertificate=true",
+            "Server=.;Database=UmbracoAI_Design;Integrated Security=true;TrustServerCertificate=true",
             x => x.MigrationsAssembly(typeof(UmbracoAIDbContextFactory).Assembly.FullName));
 
         return new UmbracoAIDbContext(optionsBuilder.Options);

@@ -12,8 +12,8 @@ using Umbraco.AI.Persistence;
 namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIDbContext))]
-    [Migration("20260122154045_UmbracoAi_AddVersioningAndUserTracking")]
-    partial class UmbracoAi_AddVersioningAndUserTracking
+    [Migration("20260122154045_UmbracoAI_AddVersioningAndUserTracking")]
+    partial class UmbracoAI_AddVersioningAndUserTracking
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

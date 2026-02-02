@@ -31,7 +31,7 @@ public class AIConnection : IAIVersionableEntity
 
     /// <summary>
     /// Provider-specific settings (credentials, endpoints, etc.).
-    /// Type depends on provider (e.g., OpenAiProviderSettings).
+    /// Type depends on provider (e.g., OpenAIProviderSettings).
     /// </summary>
     public object? Settings { get; set; }
 

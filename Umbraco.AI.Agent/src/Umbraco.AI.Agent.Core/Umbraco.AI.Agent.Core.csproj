@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Agent Core</Title>
-        <Description>Core domain models and services for Umbraco Ai Agent</Description>
+        <Title>Umbraco AI Agent Core</Title>
+        <Description>Core domain models and services for Umbraco AI Agent</Description>
     </PropertyGroup>
 
     <PropertyGroup>

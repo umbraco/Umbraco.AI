@@ -4,7 +4,7 @@
     <Company>Umbraco HQ</Company>
     <Authors>Umbraco</Authors>
     <Copyright>Copyright Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
-    <Product>Umbraco Ai Agent</Product>
+    <Product>Umbraco AI Agent</Product>
     <PackageProjectUrl>https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Agent</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
     <PackageTags>umbraco ai agent umbraco-marketplace</PackageTags>
@@ -14,12 +14,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- Local Dev -->
-  <PropertyGroup>
-    <UseLocalUmbracoAi>true</UseLocalUmbracoAi>
-  </PropertyGroup>
-
-    <!-- NuGet -->
+  <!-- NuGet -->
   <PropertyGroup>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>

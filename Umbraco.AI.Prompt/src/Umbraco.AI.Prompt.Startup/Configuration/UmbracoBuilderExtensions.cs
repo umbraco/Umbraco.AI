@@ -17,7 +17,7 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static IUmbracoBuilder AddUmbracoAiPrompt(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddUmbracoAIPrompt(this IUmbracoBuilder builder)
     {
         // Prevent multiple registrations
         if (builder.Services.Any(x => x.ServiceType == typeof(IAIPromptService)))
@@ -25,9 +25,9 @@ public static class UmbracoBuilderExtensions
             return builder;
         }
 
-        builder.AddUmbracoAiPromptCore();
-        builder.AddUmbracoAiPromptPersistence();
-        builder.AddUmbracoAiPromptWeb();
+        builder.AddUmbracoAIPromptCore();
+        builder.AddUmbracoAIPromptPersistence();
+        builder.AddUmbracoAIPromptWeb();
 
         return builder;
     }

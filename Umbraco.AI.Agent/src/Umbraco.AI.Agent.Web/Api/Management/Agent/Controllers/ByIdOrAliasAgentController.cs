@@ -15,7 +15,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 [ApiVersion("1.0")]
 public class ByIdOrAliasAgentController : AgentControllerBase
 {
-    private readonly IAIAgentService _AiAgentService;
+    private readonly IAIAgentService _AIAgentService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -23,7 +23,7 @@ public class ByIdOrAliasAgentController : AgentControllerBase
     /// </summary>
     public ByIdOrAliasAgentController(IAIAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AIAgentService;
+        _AIAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -41,7 +41,7 @@ public class ByIdOrAliasAgentController : AgentControllerBase
         IdOrAlias agentIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var agent = await _AiAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
+        var agent = await _AIAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
         if (agent is null)
         {
             return AgentNotFound();

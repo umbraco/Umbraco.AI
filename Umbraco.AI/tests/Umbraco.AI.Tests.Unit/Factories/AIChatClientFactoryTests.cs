@@ -93,7 +93,7 @@ public class AIChatClientFactoryTests
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(
             fakeProvider,
             configuredCapabilityMock.Object);
@@ -228,7 +228,7 @@ public class AIChatClientFactoryTests
             .WithName("Anthropic Profile")
             .Build();
 
-        var fakeProvider = new FakeAiProvider("openai", "OpenAI"); // Connection's provider
+        var fakeProvider = new FakeAIProvider("openai", "OpenAI"); // Connection's provider
         var configuredProviderMock = CreateConfiguredProviderMock(fakeProvider);
 
         var factory = CreateFactory();
@@ -275,7 +275,7 @@ public class AIChatClientFactoryTests
             .WithModel("embedding-only-provider", "embed-model")
             .Build();
 
-        var fakeProvider = new FakeAiProvider("embedding-only-provider", "Embedding Only Provider");
+        var fakeProvider = new FakeAIProvider("embedding-only-provider", "Embedding Only Provider");
         // No chat capability - configured provider mock will return null for GetCapability<IAIConfiguredChatCapability>()
         var configuredProviderMock = CreateConfiguredProviderMock(fakeProvider, chatCapability: null);
 
@@ -349,7 +349,7 @@ public class AIChatClientFactoryTests
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(
             fakeProvider,
             configuredCapabilityMock.Object);
@@ -396,7 +396,7 @@ public class AIChatClientFactoryTests
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(baseChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(
             fakeProvider,
             configuredCapabilityMock.Object);
@@ -444,7 +444,7 @@ public class AIChatClientFactoryTests
         configuredCapabilityMock.Setup(x => x.CreateClient(It.IsAny<string?>())).Returns(fakeChatClient);
         configuredCapabilityMock.Setup(x => x.Kind).Returns(AICapability.Chat);
 
-        var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider");
+        var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider");
         var configuredProviderMock = CreateConfiguredProviderMock(
             fakeProvider,
             configuredCapabilityMock.Object);

@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{FBF56CC3-7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Core", "Umbraco.AI/src\Umbraco.AI.Core\Umbraco.AI.Core.csproj", "{93844438-F30C-47C0-92B7-30344910D394}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai", "Umbraco.AI/src\Umbraco.AI/Umbraco.AI.csproj", "{E70C2CAC-B5E2-4AB0-83BD-AD3AE01DA474}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI", "Umbraco.AI/src\Umbraco.AI/Umbraco.AI.csproj", "{E70C2CAC-B5E2-4AB0-83BD-AD3AE01DA474}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Startup", "Umbraco.AI/src\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj", "{5E1720F5-9D81-41B6-AB6B-519BB288E1D2}"
 EndProject
@@ -69,7 +69,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Web.Stati
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenAI", "OpenAI", "{CE99858F-6413-ADB7-F81D-698515E9799A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.OpenAi", "Umbraco.AI.OpenAi\src\Umbraco.AI.OpenAi\Umbraco.AI.OpenAi.csproj", "{AFCACE79-CC6F-4C2F-98BB-B6CCC59DA8BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.OpenAI", "Umbraco.AI.OpenAI\src\Umbraco.AI.OpenAI\Umbraco.AI.OpenAI.csproj", "{AFCACE79-CC6F-4C2F-98BB-B6CCC59DA8BF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Anthropic", "Anthropic", "{26322C59-6A7E-78E8-35C3-3245D0F3BF09}"
 EndProject

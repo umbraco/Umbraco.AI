@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Versioning;
 /// Repository interface for unified entity version storage.
 /// </summary>
 /// <remarks>
-/// This repository handles all version CRUD operations for the unified <c>umbracoAiEntityVersion</c> table.
+/// This repository handles all version CRUD operations for the unified <c>umbracoAIEntityVersion</c> table.
 /// It is an internal implementation detail of the <see cref="IAIEntityVersionService"/>.
 /// </remarks>
 internal interface IAIEntityVersionRepository

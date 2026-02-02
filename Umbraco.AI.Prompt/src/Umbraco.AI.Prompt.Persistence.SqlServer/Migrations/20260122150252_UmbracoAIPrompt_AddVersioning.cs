@@ -11,7 +11,7 @@ namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Add Version column to umbracoAiPrompt
+            // Add Version column to umbracoAIPrompt
             migrationBuilder.AddColumn<int>(
                 name: "Version",
                 table: "umbracoAIPrompt",

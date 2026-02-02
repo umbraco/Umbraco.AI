@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Prompt Core</Title>
-        <Description>Core domain models and services for Umbraco Ai Prompt</Description>
+        <Title>Umbraco AI Prompt Core</Title>
+        <Description>Core domain models and services for Umbraco AI Prompt</Description>
     </PropertyGroup>
 
     <PropertyGroup>

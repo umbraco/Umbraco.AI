@@ -11,7 +11,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20260124000000_UmbracoAiPrompt_ChangeUserIdToGuid")]
+    [Migration("20260124000000_UmbracoAIPrompt_ChangeUserIdToGuid")]
     partial class UmbracoAIPrompt_ChangeUserIdToGuid
     {
         /// <inheritdoc />

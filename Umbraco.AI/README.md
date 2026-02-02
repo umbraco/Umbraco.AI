@@ -1,6 +1,6 @@
-# Umbraco.Ai
+# Umbraco.AI
 
-Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified way to connect and interact with AI providers. Built on top of `Microsoft.Extensions.AI`, it offers a provider-agnostic abstraction layer with Umbraco-specific features like connections, profiles, and configurable middleware.
+Umbraco.AI is an AI integration package for Umbraco CMS that provides a unified way to connect and interact with AI providers. Built on top of `Microsoft.Extensions.AI`, it offers a provider-agnostic abstraction layer with Umbraco-specific features like connections, profiles, and configurable middleware.
 
 ## Features
 
@@ -16,30 +16,30 @@ Umbraco.Ai is an AI integration package for Umbraco CMS that provides a unified 
 
 ## Project Structure
 
-- **Umbraco.Ai.Core** - Core abstractions, providers, services, and models
-- **Umbraco.Ai.Persistence** - EF Core DbContext, entities, and repository implementations
-- **Umbraco.Ai.Persistence.SqlServer** - SQL Server migrations for persistence layer
-- **Umbraco.Ai.Persistence.Sqlite** - SQLite migrations for persistence layer
-- **Umbraco.Ai.Web** - Management API and backoffice endpoints
-- **Umbraco.Ai.Web.StaticAssets** - Frontend assets for backoffice UI
-- **Umbraco.Ai.Startup** - Composition and startup configuration
-- **Umbraco.Ai** - Meta-package that references all components
+- **Umbraco.AI.Core** - Core abstractions, providers, services, and models
+- **Umbraco.AI.Persistence** - EF Core DbContext, entities, and repository implementations
+- **Umbraco.AI.Persistence.SqlServer** - SQL Server migrations for persistence layer
+- **Umbraco.AI.Persistence.Sqlite** - SQLite migrations for persistence layer
+- **Umbraco.AI.Web** - Management API and backoffice endpoints
+- **Umbraco.AI.Web.StaticAssets** - Frontend assets for backoffice UI
+- **Umbraco.AI.Startup** - Composition and startup configuration
+- **Umbraco.AI** - Meta-package that references all components
 
 ## Monorepo Context
 
-This package is part of the [Umbraco.Ai monorepo](../README.md). Provider packages are also included in the monorepo:
-- **Umbraco.Ai.OpenAi** - Located in `../Umbraco.Ai.OpenAi/`
-- **Umbraco.Ai.Anthropic** - Located in `../Umbraco.Ai.Anthropic/`
-- **Umbraco.Ai.Amazon** - Located in `../Umbraco.Ai.Amazon/`
-- **Umbraco.Ai.Google** - Located in `../Umbraco.Ai.Google/`
-- **Umbraco.Ai.MicrosoftFoundry** - Located in `../Umbraco.Ai.MicrosoftFoundry/`
+This package is part of the [Umbraco.AI monorepo](../README.md). Provider packages are also included in the monorepo:
+- **Umbraco.AI.OpenAI** - Located in `../Umbraco.AI.OpenAI/`
+- **Umbraco.AI.Anthropic** - Located in `../Umbraco.AI.Anthropic/`
+- **Umbraco.AI.Amazon** - Located in `../Umbraco.AI.Amazon/`
+- **Umbraco.AI.Google** - Located in `../Umbraco.AI.Google/`
+- **Umbraco.AI.MicrosoftFoundry** - Located in `../Umbraco.AI.MicrosoftFoundry/`
 
 ## Getting Started
 
 ### Installation
 
 ```bash
-dotnet add package Umbraco.Ai
+dotnet add package Umbraco.AI
 ```
 
 ### Local Development
@@ -52,7 +52,7 @@ For local development and testing, use the monorepo setup script from the reposi
 ./scripts/install-demo-site.sh   # Linux/Mac
 ```
 
-This creates a unified solution (`Umbraco.Ai.local.sln`) with all packages and a demo site. See the [root README](../README.md) for details.
+This creates a unified solution (`Umbraco.AI.local.sln`) with all packages and a demo site. See the [root README](../README.md) for details.
 
 ## Documentation
 

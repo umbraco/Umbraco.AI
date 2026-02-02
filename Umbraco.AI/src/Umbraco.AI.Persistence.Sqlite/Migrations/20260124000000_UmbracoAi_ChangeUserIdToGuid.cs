@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Umbraco.AI.Persistence.Sqlite.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAi_ChangeUserIdToGuid : Migration
+    public partial class UmbracoAI_ChangeUserIdToGuid : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // SQLite stores GUIDs as TEXT, so we need to drop and recreate the columns
-            // umbracoAiConnection
+            // umbracoAIConnection
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIConnection");
             migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIConnection");
             migrationBuilder.AddColumn<Guid>(
@@ -25,7 +25,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 type: "TEXT",
                 nullable: true);
 
-            // umbracoAiProfile
+            // umbracoAIProfile
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIProfile");
             migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIProfile");
             migrationBuilder.AddColumn<Guid>(
@@ -39,7 +39,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 type: "TEXT",
                 nullable: true);
 
-            // umbracoAiContext
+            // umbracoAIContext
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIContext");
             migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIContext");
             migrationBuilder.AddColumn<Guid>(
@@ -53,7 +53,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 type: "TEXT",
                 nullable: true);
 
-            // umbracoAiEntityVersion
+            // umbracoAIEntityVersion
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIEntityVersion");
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByUserId",
@@ -65,7 +65,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // umbracoAiConnection - revert to INTEGER
+            // umbracoAIConnection - revert to INTEGER
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIConnection");
             migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIConnection");
             migrationBuilder.AddColumn<int>(
@@ -79,7 +79,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 type: "INTEGER",
                 nullable: true);
 
-            // umbracoAiProfile - revert to INTEGER
+            // umbracoAIProfile - revert to INTEGER
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIProfile");
             migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIProfile");
             migrationBuilder.AddColumn<int>(
@@ -93,7 +93,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 type: "INTEGER",
                 nullable: true);
 
-            // umbracoAiContext - revert to INTEGER
+            // umbracoAIContext - revert to INTEGER
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIContext");
             migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIContext");
             migrationBuilder.AddColumn<int>(
@@ -107,7 +107,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 type: "INTEGER",
                 nullable: true);
 
-            // umbracoAiEntityVersion - revert to INTEGER
+            // umbracoAIEntityVersion - revert to INTEGER
             migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIEntityVersion");
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",

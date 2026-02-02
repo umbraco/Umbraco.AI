@@ -6,12 +6,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Umbraco.AI.Persistence.SqlServer.Migrations
 {
     /// <inheritdoc />
-    public partial class UmbracoAi_AddConnectionVersioning : Migration
+    public partial class UmbracoAI_AddConnectionVersioning : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Add Version column to umbracoAiConnection table
+            // Add Version column to umbracoAIConnection table
             migrationBuilder.AddColumn<int>(
                 name: "Version",
                 table: "umbracoAIConnection",

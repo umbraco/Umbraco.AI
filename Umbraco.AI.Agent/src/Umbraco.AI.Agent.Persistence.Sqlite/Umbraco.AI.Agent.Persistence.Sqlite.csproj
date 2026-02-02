@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Title>Umbraco Ai Agent Persistence SQLite</Title>
-        <Description>SQLite migrations for Umbraco Ai Agent</Description>
+        <Title>Umbraco AI Agent Persistence SQLite</Title>
+        <Description>SQLite migrations for Umbraco AI Agent</Description>
     </PropertyGroup>
 
     <ItemGroup>

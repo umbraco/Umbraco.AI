@@ -11,7 +11,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20260124000000_UmbracoAiAgent_ChangeUserIdToGuid")]
+    [Migration("20260124000000_UmbracoAIAgent_ChangeUserIdToGuid")]
     partial class UmbracoAIAgent_ChangeUserIdToGuid
     {
         /// <inheritdoc />

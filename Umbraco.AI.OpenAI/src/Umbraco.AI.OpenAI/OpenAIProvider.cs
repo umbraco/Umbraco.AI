@@ -2,30 +2,30 @@ using System.ClientModel;
 using Microsoft.Extensions.Caching.Memory;
 using Umbraco.AI.Core.Providers;
 
-namespace Umbraco.AI.OpenAi;
+namespace Umbraco.AI.OpenAI;
 
 /// <summary>
 /// AI provider for OpenAI services.
 /// </summary>
 [AIProvider("openai", "OpenAI")]
-public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
+public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
 {
-    private const string CacheKeyPrefix = "OpenAi_Models_";
+    private const string CacheKeyPrefix = "OpenAI_Models_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     private readonly IMemoryCache _cache;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="OpenAiProvider"/> class.
+    /// Initializes a new instance of the <see cref="OpenAIProvider"/> class.
     /// </summary>
     /// <param name="infrastructure">The provider infrastructure.</param>
     /// <param name="cache">The memory cache.</param>
-    public OpenAiProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
+    public OpenAIProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         _cache = cache;
-        WithCapability<OpenAiChatCapability>();
-        WithCapability<OpenAiEmbeddingCapability>();
+        WithCapability<OpenAIChatCapability>();
+        WithCapability<OpenAIEmbeddingCapability>();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of all available model IDs.</returns>
     internal async Task<IReadOnlyList<string>> GetAvailableModelIdsAsync(
-        OpenAiProviderSettings settings,
+        OpenAIProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
@@ -50,7 +50,7 @@ public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
             return cachedModels;
         }
 
-        var client = CreateOpenAiClient(settings).GetOpenAIModelClient();
+        var client = CreateOpenAIClient(settings).GetOpenAIModelClient();
         var result = await client.GetModelsAsync(cancellationToken);
 
         var modelIds = result.Value
@@ -66,7 +66,7 @@ public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
     /// <summary>
     /// Creates an OpenAI client configured with the provided settings.
     /// </summary>
-    internal static OpenAI.OpenAIClient CreateOpenAiClient(OpenAiProviderSettings settings)
+    internal static OpenAI.OpenAIClient CreateOpenAIClient(OpenAIProviderSettings settings)
     {
         if (string.IsNullOrWhiteSpace(settings.ApiKey))
         {
@@ -83,7 +83,7 @@ public class OpenAiProvider : AIProviderBase<OpenAiProviderSettings>
             });
     }
 
-    private static string GetCacheKey(OpenAiProviderSettings settings)
+    private static string GetCacheKey(OpenAIProviderSettings settings)
     {
         // Cache per API key + endpoint combination
         var endpoint = settings.Endpoint ?? "default";

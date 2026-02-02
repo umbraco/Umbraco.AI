@@ -3,7 +3,7 @@ import { coreManifests } from "./core/manifests.js";
 import { agentManifests } from "./agent/manifests.js";
 
 // Aggregate all manifests into a single bundle
-// Note: Copilot manifests are now in Umbraco.Ai.Agent.Copilot package
+// Note: Copilot manifests are now in Umbraco.AI.Agent.Copilot package
 export const manifests: UmbExtensionManifest[] = [
     ...langManifests,
     ...coreManifests,

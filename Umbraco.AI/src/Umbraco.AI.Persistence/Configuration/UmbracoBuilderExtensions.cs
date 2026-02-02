@@ -35,7 +35,7 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static IUmbracoBuilder AddUmbracoAiPersistence(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddUmbracoAIPersistence(this IUmbracoBuilder builder)
     {
         // Register DbContext using Umbraco's database provider detection with migrations assembly config
         builder.Services.AddUmbracoDbContext<UmbracoAIDbContext>((options, connectionString, providerName, serviceProvider) =>

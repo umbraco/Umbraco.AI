@@ -1,7 +1,7 @@
 import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
 
 /**
- * AuditLog status enum matching backend AiAuditLogStatus
+ * AuditLog status enum matching backend AIAuditLogStatus
  */
 export type UaiAuditLogStatus = "Running" | "Succeeded" | "Failed" | "Cancelled" | "PartialSuccess";
 

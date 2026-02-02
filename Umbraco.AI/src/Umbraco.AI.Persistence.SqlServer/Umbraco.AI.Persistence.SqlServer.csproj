@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Title>Umbraco Ai Persistence SQL Server</Title>
-        <Description>SQL Server migrations for Umbraco Ai persistence</Description>
+        <Title>Umbraco AI Persistence SQL Server</Title>
+        <Description>SQL Server migrations for Umbraco AI persistence</Description>
     </PropertyGroup>
 
     <ItemGroup>

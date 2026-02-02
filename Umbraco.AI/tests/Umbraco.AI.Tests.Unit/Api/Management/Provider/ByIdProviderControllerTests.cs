@@ -30,7 +30,7 @@ public class ByIdProviderControllerTests
     {
         // Arrange
         var providerId = "openai";
-        var provider = new FakeAiProvider(providerId, "OpenAI");
+        var provider = new FakeAIProvider(providerId, "OpenAI");
         _providers.Add(provider);
 
         var responseModel = new ProviderResponseModel
@@ -87,7 +87,7 @@ public class ByIdProviderControllerTests
     {
         // Arrange
         var providerId = "openai";
-        var provider = new FakeAiProvider(providerId, "OpenAI");
+        var provider = new FakeAIProvider(providerId, "OpenAI");
         _providers.Add(provider);
 
         _mapperMock

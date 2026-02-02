@@ -16,7 +16,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
 public class CreateAgentController : AgentControllerBase
 {
-    private readonly IAIAgentService _AiAgentService;
+    private readonly IAIAgentService _AIAgentService;
     private readonly IUmbracoMapper _umbracoMapper;
 
     /// <summary>
@@ -24,7 +24,7 @@ public class CreateAgentController : AgentControllerBase
     /// </summary>
     public CreateAgentController(IAIAgentService AIAgentService, IUmbracoMapper umbracoMapper)
     {
-        _AiAgentService = AIAgentService;
+        _AIAgentService = AIAgentService;
         _umbracoMapper = umbracoMapper;
     }
 
@@ -47,7 +47,7 @@ public class CreateAgentController : AgentControllerBase
 
         try
         {
-            AIAgent created = await _AiAgentService.SaveAgentAsync(agent, cancellationToken);
+            AIAgent created = await _AIAgentService.SaveAgentAsync(agent, cancellationToken);
 
             return CreatedAtAction(
                 nameof(ByIdOrAliasAgentController.GetAgentByIdOrAlias),

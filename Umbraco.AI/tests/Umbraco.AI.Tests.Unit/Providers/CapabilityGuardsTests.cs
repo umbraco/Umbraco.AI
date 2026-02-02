@@ -156,7 +156,7 @@ public class CapabilityGuardsTests
 
     private class TestChatCapability : AIChatCapabilityBase<FakeProviderSettings>
     {
-        private static readonly FakeAiProvider FakeProvider = new("test", "Test");
+        private static readonly FakeAIProvider FakeProvider = new("test", "Test");
 
         public TestChatCapability() : base(FakeProvider)
         {
@@ -176,7 +176,7 @@ public class CapabilityGuardsTests
 
     private class TestEmbeddingCapability : AIEmbeddingCapabilityBase<FakeProviderSettings>
     {
-        private static readonly FakeAiProvider FakeProvider = new("test", "Test");
+        private static readonly FakeAIProvider FakeProvider = new("test", "Test");
 
         public TestEmbeddingCapability() : base(FakeProvider)
         {

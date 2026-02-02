@@ -22,7 +22,7 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
-    public static IUmbracoBuilder AddUmbracoAiAgentCore(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddUmbracoAIAgentCore(this IUmbracoBuilder builder)
     {
         // Prevent multiple registrations
         if (builder.Services.Any(x => x.ServiceType == typeof(IAIAgentService)))

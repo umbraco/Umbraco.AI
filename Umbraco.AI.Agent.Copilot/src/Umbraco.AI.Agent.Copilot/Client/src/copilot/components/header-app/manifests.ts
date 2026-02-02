@@ -11,7 +11,7 @@ export const UAI_COPILOT_ALLOWED_SECTION_PATHNAMES = [
   "media",
 ];
 
-export const UAI_COPILOT_SECTION_CONDITION_ALIAS = "UmbracoAiAgent.Condition.CopilotSection";
+export const UAI_COPILOT_SECTION_CONDITION_ALIAS = "UmbracoAIAgent.Condition.CopilotSection";
 
 /**
  * Custom condition for section filtering.
@@ -31,7 +31,7 @@ const conditionManifest: ManifestCondition = {
 
 const headerAppManifest: ManifestHeaderApp = {
   type: "headerApp",
-  alias: "UmbracoAiAgent.HeaderApp.Copilot",
+  alias: "UmbracoAIAgent.HeaderApp.Copilot",
   name: "AI Copilot Header App",
   element: () => import("./copilot-header-app.element.js"),
   weight: 100,

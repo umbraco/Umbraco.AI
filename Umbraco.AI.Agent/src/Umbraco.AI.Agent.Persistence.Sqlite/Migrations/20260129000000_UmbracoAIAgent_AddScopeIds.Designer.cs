@@ -11,7 +11,7 @@ using Umbraco.AI.Agent.Persistence;
 namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(UmbracoAIAgentDbContext))]
-    [Migration("20260129000000_UmbracoAiAgent_AddScopeIds")]
+    [Migration("20260129000000_UmbracoAIAgent_AddScopeIds")]
     partial class UmbracoAIAgent_AddScopeIds
     {
         /// <inheritdoc />

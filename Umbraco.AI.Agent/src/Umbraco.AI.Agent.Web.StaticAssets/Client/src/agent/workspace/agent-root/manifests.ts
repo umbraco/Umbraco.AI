@@ -20,7 +20,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceView",
         kind: "collection",
-        alias: "UmbracoAiAgent.WorkspaceView.AgentRoot.Collection",
+        alias: "UmbracoAIAgent.WorkspaceView.AgentRoot.Collection",
         name: "Agent Root Collection Workspace View",
         meta: {
             label: "Collection",

@@ -14,6 +14,6 @@ public class UmbracoAIAgentComposer : IComposer
     /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AddUmbracoAiAgent();
+        builder.AddUmbracoAIAgent();
     }
 }

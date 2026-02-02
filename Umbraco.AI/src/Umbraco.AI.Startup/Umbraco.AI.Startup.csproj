@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Title>Umbraco Ai Startup</Title>
-        <Description>Contains startup logic for Umbraco Ai</Description>
+        <Title>Umbraco AI Startup</Title>
+        <Description>Contains startup logic for Umbraco AI</Description>
     </PropertyGroup>
 
     <ItemGroup>

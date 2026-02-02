@@ -31,8 +31,8 @@ public class AllProviderControllerTests
         // Arrange
         _providers = new List<IAIProvider>
         {
-            new FakeAiProvider("openai", "OpenAI"),
-            new FakeAiProvider("anthropic", "Anthropic")
+            new FakeAIProvider("openai", "OpenAI"),
+            new FakeAIProvider("anthropic", "Anthropic")
         };
 
         var responseModels = _providers.Select(p => new ProviderItemResponseModel
@@ -83,7 +83,7 @@ public class AllProviderControllerTests
         // Arrange
         _providers = new List<IAIProvider>
         {
-            new FakeAiProvider("test", "Test Provider")
+            new FakeAIProvider("test", "Test Provider")
         };
 
         _mapperMock

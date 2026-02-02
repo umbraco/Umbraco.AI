@@ -4,7 +4,7 @@ import { UAI_AGENT_ROOT_ENTITY_TYPE, UAI_AGENT_ICON } from "../constants.js";
 export const agentMenuManifests: ManifestMenuItem[] = [
     {
         type: "menuItem",
-        alias: "UmbracoAiAgent.MenuItem.Agents",
+        alias: "UmbracoAIAgent.MenuItem.Agents",
         name: "Agents Menu Item",
         weight: 70,
         meta: {

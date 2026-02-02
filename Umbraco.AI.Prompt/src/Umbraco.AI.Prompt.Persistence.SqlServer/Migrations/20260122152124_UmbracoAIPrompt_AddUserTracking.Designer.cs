@@ -12,7 +12,7 @@ using Umbraco.AI.Prompt.Persistence;
 namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(UmbracoAIPromptDbContext))]
-    [Migration("20260122152124_UmbracoAiPrompt_AddUserTracking")]
+    [Migration("20260122152124_UmbracoAIPrompt_AddUserTracking")]
     partial class UmbracoAIPrompt_AddUserTracking
     {
         /// <inheritdoc />

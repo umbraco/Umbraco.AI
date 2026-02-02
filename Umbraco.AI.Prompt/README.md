@@ -1,11 +1,11 @@
-# Umbraco.Ai.Prompt
+# Umbraco.AI.Prompt
 
-A prompt template management add-on for Umbraco.Ai that provides storage, organization, and management of AI prompt templates with full backoffice integration.
+A prompt template management add-on for Umbraco.AI that provides storage, organization, and management of AI prompt templates with full backoffice integration.
 
 ## Features
 
 - **Prompt Management** - Store and manage AI prompt templates with full CRUD operations
-- **Profile Integration** - Link prompts to Umbraco.Ai profiles for consistent configuration
+- **Profile Integration** - Link prompts to Umbraco.AI profiles for consistent configuration
 - **Tag Organization** - Organize prompts using tags for easy categorization
 - **Backoffice UI** - Full management interface integrated into Umbraco
 - **Management API** - RESTful API for prompt CRUD operations
@@ -13,29 +13,29 @@ A prompt template management add-on for Umbraco.Ai that provides storage, organi
 
 ## Monorepo Context
 
-This package is part of the [Umbraco.Ai monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
+This package is part of the [Umbraco.AI monorepo](../README.md). For local development, see the monorepo setup instructions in the root README.
 
 ## Installation
 
 ```bash
-dotnet add package Umbraco.Ai.Prompt
+dotnet add package Umbraco.AI.Prompt
 ```
 
 This meta-package includes all required components. For more control, install individual packages:
 
 | Package | Description |
 |---------|-------------|
-| `Umbraco.Ai.Prompt.Core` | Domain models and service interfaces |
-| `Umbraco.Ai.Prompt.Web` | Management API controllers |
-| `Umbraco.Ai.Prompt.Web.StaticAssets` | Backoffice UI components |
-| `Umbraco.Ai.Prompt.Persistence` | EF Core persistence |
-| `Umbraco.Ai.Prompt.Persistence.SqlServer` | SQL Server migrations |
-| `Umbraco.Ai.Prompt.Persistence.Sqlite` | SQLite migrations |
+| `Umbraco.AI.Prompt.Core` | Domain models and service interfaces |
+| `Umbraco.AI.Prompt.Web` | Management API controllers |
+| `Umbraco.AI.Prompt.Web.StaticAssets` | Backoffice UI components |
+| `Umbraco.AI.Prompt.Persistence` | EF Core persistence |
+| `Umbraco.AI.Prompt.Persistence.SqlServer` | SQL Server migrations |
+| `Umbraco.AI.Prompt.Persistence.Sqlite` | SQLite migrations |
 
 ## Requirements
 
 - Umbraco CMS 17.0.0+
-- Umbraco.Ai 1.0.0+
+- Umbraco.AI 1.0.0+
 - .NET 10.0
 
 ## Prompt Model
@@ -49,7 +49,7 @@ A `Prompt` represents a stored prompt template:
 | `Name` | Display name |
 | `Description` | Optional description |
 | `Content` | The prompt template text |
-| `ProfileId` | Optional link to Umbraco.Ai profile |
+| `ProfileId` | Optional link to Umbraco.AI profile |
 | `Tags` | Categorization tags |
 | `IsActive` | Whether the prompt is available for use |
 

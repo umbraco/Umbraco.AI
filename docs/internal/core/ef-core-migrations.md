@@ -1,26 +1,26 @@
 # EF Core Migrations
 
-Umbraco.Ai uses Entity Framework Core for database persistence with provider-specific migrations for SQL Server and SQLite.
+Umbraco.AI uses Entity Framework Core for database persistence with provider-specific migrations for SQL Server and SQLite.
 
 ## Project Structure
 
 ```
 src/
-├── Umbraco.Ai.Persistence/           # Core DbContext and repositories
+├── Umbraco.AI.Persistence/           # Core DbContext and repositories
 │   ├── UmbracoAiDbContext.cs         # EF Core DbContext
 │   ├── Entities/                     # Database entities
 │   └── Repositories/                 # EF Core repository implementations
-├── Umbraco.Ai.Persistence.SqlServer/ # SQL Server migrations
+├── Umbraco.AI.Persistence.SqlServer/ # SQL Server migrations
 │   ├── Migrations/                   # Generated migrations
 │   └── UmbracoAiDbContextFactory.cs  # Design-time factory
-└── Umbraco.Ai.Persistence.Sqlite/    # SQLite migrations
+└── Umbraco.AI.Persistence.Sqlite/    # SQLite migrations
     ├── Migrations/                   # Generated migrations
     └── UmbracoAiDbContextFactory.cs  # Design-time factory
 ```
 
 ## Migration Naming Convention
 
-All migrations MUST use the `UmbracoAi_` prefix to clearly identify them as belonging to Umbraco.Ai. This is important because EF Core migrations can be used by multiple packages in the same Umbraco installation, and the prefix helps distinguish which migrations belong to which package.
+All migrations MUST use the `UmbracoAi_` prefix to clearly identify them as belonging to Umbraco.AI. This is important because EF Core migrations can be used by multiple packages in the same Umbraco installation, and the prefix helps distinguish which migrations belong to which package.
 
 **Format:** `UmbracoAi_<DescriptiveName>`
 
@@ -36,26 +36,26 @@ When you modify `UmbracoAiDbContext` or any entity classes, you need to generate
 ### Generate SQL Server Migration
 
 ```bash
-dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.AI.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
 ```
 
 ### Generate SQLite Migration
 
 ```bash
-dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.AI.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
 ```
 
 ### Example: Adding a New Table
 
-1. Add the entity class to `Umbraco.Ai.Persistence/Entities/`
+1. Add the entity class to `Umbraco.AI.Persistence/Entities/`
 2. Add the `DbSet<T>` property to `UmbracoAiDbContext`
 3. Configure the entity in `OnModelCreating()` if needed
 4. Generate migrations for both providers:
 
 ```bash
 # From the repository root
-dotnet ef migrations add UmbracoAi_AddNewEntity -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
-dotnet ef migrations add UmbracoAi_AddNewEntity -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_AddNewEntity -p src/Umbraco.AI.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAi_AddNewEntity -p src/Umbraco.AI.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
 ```
 
 ## Removing Migrations
@@ -64,10 +64,10 @@ If you need to undo the last migration (before it's applied to any database):
 
 ```bash
 # Remove SQL Server migration
-dotnet ef migrations remove -p src/Umbraco.Ai.Persistence.SqlServer -c UmbracoAiDbContext
+dotnet ef migrations remove -p src/Umbraco.AI.Persistence.SqlServer -c UmbracoAiDbContext
 
 # Remove SQLite migration
-dotnet ef migrations remove -p src/Umbraco.Ai.Persistence.Sqlite -c UmbracoAiDbContext
+dotnet ef migrations remove -p src/Umbraco.AI.Persistence.Sqlite -c UmbracoAiDbContext
 ```
 
 ## Design-Time Factories

@@ -3,25 +3,25 @@ description: >-
   Service for managing global AI settings.
 ---
 
-# IAiSettingsService
+# IAISettingsService
 
 Service for reading and updating global AI settings such as default profiles.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Settings;
+using Umbraco.AI.Core.Settings;
 ```
 
 ## Interface
 
-{% code title="IAiSettingsService" %}
+{% code title="IAISettingsService" %}
 ```csharp
-public interface IAiSettingsService
+public interface IAISettingsService
 {
-    Task<AiSettings> GetSettingsAsync(CancellationToken cancellationToken = default);
+    Task<AISettings> GetSettingsAsync(CancellationToken cancellationToken = default);
 
-    Task<AiSettings> SaveSettingsAsync(AiSettings settings, CancellationToken cancellationToken = default);
+    Task<AISettings> SaveSettingsAsync(AISettings settings, CancellationToken cancellationToken = default);
 }
 ```
 {% endcode %}
@@ -59,7 +59,7 @@ Updates the global AI settings.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `settings` | `AiSettings` | The settings to save |
+| `settings` | `AISettings` | The settings to save |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved settings with audit properties updated.
@@ -81,12 +81,12 @@ Console.WriteLine($"Settings updated at {saved.DateModified}");
 ```csharp
 public class SettingsManager
 {
-    private readonly IAiSettingsService _settingsService;
-    private readonly IAiProfileService _profileService;
+    private readonly IAISettingsService _settingsService;
+    private readonly IAIProfileService _profileService;
 
     public SettingsManager(
-        IAiSettingsService settingsService,
-        IAiProfileService profileService)
+        IAISettingsService settingsService,
+        IAIProfileService profileService)
     {
         _settingsService = settingsService;
         _profileService = profileService;
@@ -100,7 +100,7 @@ public class SettingsManager
             throw new ArgumentException($"Profile '{profileAlias}' not found");
         }
 
-        if (profile.Capability != AiCapability.Chat)
+        if (profile.Capability != AICapability.Chat)
         {
             throw new ArgumentException($"Profile '{profileAlias}' is not a chat profile");
         }
@@ -129,5 +129,5 @@ public class SettingsManager
 
 ## Related
 
-* [AiSettings](../models/ai-settings.md) - The settings model
+* [AISettings](../models/ai-settings.md) - The settings model
 * [Settings Concept](../../concepts/settings.md) - Settings concepts

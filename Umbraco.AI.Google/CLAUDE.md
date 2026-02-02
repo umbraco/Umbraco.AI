@@ -2,21 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Note:** This is the Umbraco.Ai.Google provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
+> **Note:** This is the Umbraco.AI.Google provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
 
 ## Build Commands
 
 ```bash
 # Build the solution
-dotnet build Umbraco.Ai.Google.sln
+dotnet build Umbraco.AI.Google.sln
 
 # Run tests
-dotnet test Umbraco.Ai.Google.sln
+dotnet test Umbraco.AI.Google.sln
 ```
 
 ## Architecture Overview
 
-Umbraco.Ai.Google is a provider plugin for Umbraco.Ai that enables integration with Google's Gemini models. It follows the provider plugin architecture defined by Umbraco.Ai.Core.
+Umbraco.AI.Google is a provider plugin for Umbraco.AI that enables integration with Google's Gemini models. It follows the provider plugin architecture defined by Umbraco.AI.Core.
 
 ### Project Structure
 
@@ -24,7 +24,7 @@ This provider uses a simplified structure (single project):
 
 | Project | Purpose |
 |---------|---------|
-| `Umbraco.Ai.Google` | Provider implementation, capabilities, and settings |
+| `Umbraco.AI.Google` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
 
@@ -81,7 +81,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 
 ## Key Namespaces
 
-- `Umbraco.Ai.Google` - Root namespace for provider, capabilities, and settings
+- `Umbraco.AI.Google` - Root namespace for provider, capabilities, and settings
 
 ## Configuration Example
 
@@ -96,7 +96,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 ## Dependencies
 
 - Umbraco CMS 17.x
-- Umbraco.Ai 1.x
+- Umbraco.AI 1.x
 - Google.GenAI
 
 ## Target Framework
@@ -107,14 +107,14 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 
 ## Provider Discovery
 
-The provider is automatically discovered by Umbraco.Ai through:
+The provider is automatically discovered by Umbraco.AI through:
 1. `[AiProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
 3. Registration in the `AiProvidersCollectionBuilder`
 
 ## Testing
 
-For testing provider implementations, use the test utilities from `Umbraco.Ai.Tests.Common`:
+For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
 - `FakeAiProvider` - Test double for provider testing
 - `AiConnectionBuilder` - Fluent builder for test connections
 - `AiProfileBuilder` - Fluent builder for test profiles

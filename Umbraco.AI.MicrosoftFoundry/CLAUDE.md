@@ -2,21 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Note:** This is the Umbraco.Ai.MicrosoftFoundry provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
+> **Note:** This is the Umbraco.AI.MicrosoftFoundry provider package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
 
 ## Build Commands
 
 ```bash
 # Build the solution
-dotnet build Umbraco.Ai.MicrosoftFoundry.sln
+dotnet build Umbraco.AI.MicrosoftFoundry.sln
 
 # Run tests
-dotnet test Umbraco.Ai.MicrosoftFoundry.sln
+dotnet test Umbraco.AI.MicrosoftFoundry.sln
 ```
 
 ## Architecture Overview
 
-Umbraco.Ai.MicrosoftFoundry is a provider plugin for Umbraco.Ai that enables integration with Microsoft AI Foundry (Azure AI Inference). It follows the provider plugin architecture defined by Umbraco.Ai.Core.
+Umbraco.AI.MicrosoftFoundry is a provider plugin for Umbraco.AI that enables integration with Microsoft AI Foundry (Azure AI Inference). It follows the provider plugin architecture defined by Umbraco.AI.Core.
 
 ### Project Structure
 
@@ -24,7 +24,7 @@ This provider uses a simplified structure (single project):
 
 | Project | Purpose |
 |---------|---------|
-| `Umbraco.Ai.MicrosoftFoundry` | Provider implementation, capabilities, and settings |
+| `Umbraco.AI.MicrosoftFoundry` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
 
@@ -90,7 +90,7 @@ One endpoint + one API key provides access to all deployed models. Users specify
 
 ## Key Namespaces
 
-- `Umbraco.Ai.MicrosoftFoundry` - Root namespace for provider, capabilities, and settings
+- `Umbraco.AI.MicrosoftFoundry` - Root namespace for provider, capabilities, and settings
 
 ## Configuration Examples
 
@@ -108,7 +108,7 @@ One endpoint + one API key provides access to all deployed models. Users specify
 ## Dependencies
 
 - Umbraco CMS 17.x
-- Umbraco.Ai 1.x
+- Umbraco.AI 1.x
 - Azure.AI.Inference
 - Microsoft.Extensions.AI.AzureAIInference
 
@@ -120,7 +120,7 @@ One endpoint + one API key provides access to all deployed models. Users specify
 
 ## Provider Discovery
 
-The provider is automatically discovered by Umbraco.Ai through:
+The provider is automatically discovered by Umbraco.AI through:
 1. `[AiProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
 3. Registration in the `AiProvidersCollectionBuilder`

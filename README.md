@@ -12,19 +12,19 @@
 
 ## Products
 
-This is a monorepo containing multiple Umbraco.Ai packages:
+This is a monorepo containing multiple Umbraco.AI packages:
 
 | Product | Description | Version | Location |
 |---------|-------------|---------|----------|
-| [**Umbraco.Ai**](Umbraco.Ai/) | Core AI integration layer | 1.x | `Umbraco.Ai/` |
-| [**Umbraco.Ai.Agent**](Umbraco.Ai.Agent/) | AI agent management and runtime | 1.x | `Umbraco.Ai.Agent/` |
-| [**Umbraco.Ai.Agent.Copilot**](Umbraco.Ai.Agent.Copilot/) | Copilot chat UI for agents (frontend-only) | 1.x | `Umbraco.Ai.Agent.Copilot/` |
-| [**Umbraco.Ai.Prompt**](Umbraco.Ai.Prompt/) | Prompt template management | 1.x | `Umbraco.Ai.Prompt/` |
-| [**Umbraco.Ai.OpenAi**](Umbraco.Ai.OpenAi/) | OpenAI provider | 1.x | `Umbraco.Ai.OpenAi/` |
-| [**Umbraco.Ai.Anthropic**](Umbraco.Ai.Anthropic/) | Anthropic provider | 1.x | `Umbraco.Ai.Anthropic/` |
-| [**Umbraco.Ai.Amazon**](Umbraco.Ai.Amazon/) | Amazon Bedrock provider | 1.x | `Umbraco.Ai.Amazon/` |
-| [**Umbraco.Ai.Google**](Umbraco.Ai.Google/) | Google Gemini provider | 1.x | `Umbraco.Ai.Google/` |
-| [**Umbraco.Ai.MicrosoftFoundry**](Umbraco.Ai.MicrosoftFoundry/) | Microsoft AI Foundry provider | 1.x | `Umbraco.Ai.MicrosoftFoundry/` |
+| [**Umbraco.AI**](Umbraco.AI/) | Core AI integration layer | 1.x | `Umbraco.AI/` |
+| [**Umbraco.AI.Agent**](Umbraco.AI.Agent/) | AI agent management and runtime | 1.x | `Umbraco.AI.Agent/` |
+| [**Umbraco.AI.Agent.Copilot**](Umbraco.AI.Agent.Copilot/) | Copilot chat UI for agents (frontend-only) | 1.x | `Umbraco.AI.Agent.Copilot/` |
+| [**Umbraco.AI.Prompt**](Umbraco.AI.Prompt/) | Prompt template management | 1.x | `Umbraco.AI.Prompt/` |
+| [**Umbraco.AI.OpenAi**](Umbraco.AI.OpenAi/) | OpenAI provider | 1.x | `Umbraco.AI.OpenAi/` |
+| [**Umbraco.AI.Anthropic**](Umbraco.AI.Anthropic/) | Anthropic provider | 1.x | `Umbraco.AI.Anthropic/` |
+| [**Umbraco.AI.Amazon**](Umbraco.AI.Amazon/) | Amazon Bedrock provider | 1.x | `Umbraco.AI.Amazon/` |
+| [**Umbraco.AI.Google**](Umbraco.AI.Google/) | Google Gemini provider | 1.x | `Umbraco.AI.Google/` |
+| [**Umbraco.AI.MicrosoftFoundry**](Umbraco.AI.MicrosoftFoundry/) | Microsoft AI Foundry provider | 1.x | `Umbraco.AI.MicrosoftFoundry/` |
 
 ## Quick Start
 
@@ -39,8 +39,8 @@ The fastest way to get started is using the install-demo script, which creates a
 ```
 
 This creates:
-- `Umbraco.Ai.local.sln` - Unified solution with all products
-- `demo/Umbraco.Ai.DemoSite/` - Umbraco instance with all packages referenced
+- `Umbraco.AI.local.sln` - Unified solution with all products
+- `demo/Umbraco.AI.DemoSite/` - Umbraco instance with all packages referenced
 
 After running the script, build the frontend and backend:
 
@@ -52,10 +52,10 @@ npm install
 npm run build
 
 # Build the unified solution
-dotnet build Umbraco.Ai.local.sln
+dotnet build Umbraco.AI.local.sln
 
-# Run the demo site (from demo/Umbraco.Ai.DemoSite/)
-cd demo/Umbraco.Ai.DemoSite
+# Run the demo site (from demo/Umbraco.AI.DemoSite/)
+cd demo/Umbraco.AI.DemoSite
 dotnet run
 ```
 
@@ -69,14 +69,14 @@ Each product has its own solution file and can be built independently:
 
 ```bash
 # Build individual products
-dotnet build Umbraco.Ai/Umbraco.Ai.sln
-dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
-dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
-dotnet build Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.sln
-dotnet build Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.sln
-dotnet build Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.sln
-dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
-dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
+dotnet build Umbraco.AI/Umbraco.AI.sln
+dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
+dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
+dotnet build Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.sln
+dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
+dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
+dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
+dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.sln
 ```
 
 ### Frontend Development (npm Workspaces)
@@ -108,15 +108,15 @@ npm run watch:agent
 ## Architecture
 
 ```
-Umbraco.Ai (Core)
-    ├── Umbraco.Ai.OpenAi (Provider - depends on Core)
-    ├── Umbraco.Ai.Anthropic (Provider - depends on Core)
-    ├── Umbraco.Ai.Amazon (Provider - depends on Core)
-    ├── Umbraco.Ai.Google (Provider - depends on Core)
-    ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
-    ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
-    └── Umbraco.Ai.Agent (Add-on - depends on Core)
-            └── Umbraco.Ai.Agent.Copilot (Chat UI - depends on Agent)
+Umbraco.AI (Core)
+    ├── Umbraco.AI.OpenAi (Provider - depends on Core)
+    ├── Umbraco.AI.Anthropic (Provider - depends on Core)
+    ├── Umbraco.AI.Amazon (Provider - depends on Core)
+    ├── Umbraco.AI.Google (Provider - depends on Core)
+    ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
+    ├── Umbraco.AI.Prompt (Add-on - depends on Core)
+    └── Umbraco.AI.Agent (Add-on - depends on Core)
+            └── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent)
 ```
 
 ## Documentation
@@ -124,10 +124,10 @@ Umbraco.Ai (Core)
 - **[User Documentation](docs/public/README.md)** - Getting started, concepts, API reference, and guides
 - [CLAUDE.md](CLAUDE.md) - Development guide, build commands, and coding standards
 - Product-specific guides:
-  - [Umbraco.Ai/CLAUDE.md](Umbraco.Ai/CLAUDE.md) - Core package
-  - [Umbraco.Ai.Agent/CLAUDE.md](Umbraco.Ai.Agent/CLAUDE.md) - Agent add-on
-  - [Umbraco.Ai.Agent.Copilot/CLAUDE.md](Umbraco.Ai.Agent.Copilot/CLAUDE.md) - Agent Copilot add-on
-  - [Umbraco.Ai.Prompt/CLAUDE.md](Umbraco.Ai.Prompt/CLAUDE.md) - Prompt add-on
+  - [Umbraco.AI/CLAUDE.md](Umbraco.AI/CLAUDE.md) - Core package
+  - [Umbraco.AI.Agent/CLAUDE.md](Umbraco.AI.Agent/CLAUDE.md) - Agent add-on
+  - [Umbraco.AI.Agent.Copilot/CLAUDE.md](Umbraco.AI.Agent.Copilot/CLAUDE.md) - Agent Copilot add-on
+  - [Umbraco.AI.Prompt/CLAUDE.md](Umbraco.AI.Prompt/CLAUDE.md) - Prompt add-on
 
 ## Target Framework
 

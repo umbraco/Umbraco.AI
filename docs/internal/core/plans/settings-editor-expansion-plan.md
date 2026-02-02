@@ -6,11 +6,11 @@ Expand the settings editor to expose additional configuration options beyond the
 
 ### Current State
 
-The settings editor currently exposes only two settings via `AiSettings`:
+The settings editor currently exposes only two settings via `AISettings`:
 - `DefaultChatProfileId` - Default profile for chat operations
 - `DefaultEmbeddingProfileId` - Default profile for embedding operations
 
-These are persisted using the `[AiSetting]` attribute pattern which stores settings as key-value pairs with full audit metadata.
+These are persisted using the `[AISetting]` attribute pattern which stores settings as key-value pairs with full audit metadata.
 
 ### Goals
 
@@ -36,27 +36,27 @@ These are persisted using the `[AiSetting]` attribute pattern which stores setti
 
 ### Implementation
 
-**1. Add properties to `AiSettings.cs`:**
+**1. Add properties to `AISettings.cs`:**
 ```csharp
-[AiSetting]
+[AISetting]
 public bool? AuditLogEnabled { get; init; }
 
-[AiSetting]
+[AISetting]
 public int? AuditLogRetentionDays { get; init; }
 
-[AiSetting]
-public AiAuditLogDetailLevel? AuditLogDetailLevel { get; init; }
+[AISetting]
+public AIAuditLogDetailLevel? AuditLogDetailLevel { get; init; }
 
-[AiSetting]
+[AISetting]
 public bool? AuditLogPersistPrompts { get; init; }
 
-[AiSetting]
+[AISetting]
 public bool? AuditLogPersistResponses { get; init; }
 ```
 
-**2. Update `AiAuditLogOptions` to check `AiSettings` first:**
+**2. Update `AIAuditLogOptions` to check `AISettings` first:**
 ```csharp
-// In AiAuditLogService or a new options resolver
+// In AIAuditLogService or a new options resolver
 public bool IsEnabled => _aiSettings.AuditLogEnabled ?? _options.Enabled;
 public int RetentionDays => _aiSettings.AuditLogRetentionDays ?? _options.RetentionDays;
 // etc.
@@ -94,22 +94,22 @@ public int RetentionDays => _aiSettings.AuditLogRetentionDays ?? _options.Retent
 
 ### Implementation
 
-**1. Add properties to `AiSettings.cs`:**
+**1. Add properties to `AISettings.cs`:**
 ```csharp
-[AiSetting]
+[AISetting]
 public bool? AnalyticsEnabled { get; init; }
 
-[AiSetting]
+[AISetting]
 public int? AnalyticsHourlyRetentionDays { get; init; }
 
-[AiSetting]
+[AISetting]
 public int? AnalyticsDailyRetentionDays { get; init; }
 
-[AiSetting]
+[AISetting]
 public bool? AnalyticsIncludeUserDimension { get; init; }
 ```
 
-**2. Update `AiAnalyticsOptions` resolution pattern (same as audit log)**
+**2. Update `AIAnalyticsOptions` resolution pattern (same as audit log)**
 
 **3. Update API models and frontend**
 
@@ -133,22 +133,22 @@ public bool? AnalyticsIncludeUserDimension { get; init; }
 
 ### Implementation
 
-**1. Add properties to `AiSettings.cs`:**
+**1. Add properties to `AISettings.cs`:**
 ```csharp
-[AiSetting]
+[AISetting]
 public bool? WebFetchEnabled { get; init; }
 
-[AiSetting]
+[AISetting]
 public IReadOnlyList<string>? WebFetchAllowedDomains { get; init; }
 
-[AiSetting]
+[AISetting]
 public IReadOnlyList<string>? WebFetchBlockedDomains { get; init; }
 
-[AiSetting]
+[AISetting]
 public int? WebFetchTimeoutSeconds { get; init; }
 ```
 
-**2. Update `AiWebFetchOptions` resolution pattern**
+**2. Update `AIWebFetchOptions` resolution pattern**
 
 **3. Update API models and frontend**
 
@@ -199,8 +199,8 @@ Settings
 
 ### Files to Modify
 
-- `Umbraco.Ai/src/Umbraco.Ai.Web.StaticAssets/Client/src/settings/` - Settings editor components
-- `Umbraco.Ai/src/Umbraco.Ai.Web/Api/Management/Settings/Models/` - API request/response models
+- `Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/settings/` - Settings editor components
+- `Umbraco.AI/src/Umbraco.AI.Web/Api/Management/Settings/Models/` - API request/response models
 - OpenAPI spec regeneration after API changes
 
 ---
@@ -215,17 +215,17 @@ public interface IOptionsResolver<TOptions> where TOptions : class
     TOptions Resolve();
 }
 
-public class AiAuditLogOptionsResolver : IOptionsResolver<AiAuditLogOptions>
+public class AIAuditLogOptionsResolver : IOptionsResolver<AIAuditLogOptions>
 {
-    private readonly IAiSettingsService _settingsService;
-    private readonly IOptions<AiAuditLogOptions> _configOptions;
+    private readonly IAISettingsService _settingsService;
+    private readonly IOptions<AIAuditLogOptions> _configOptions;
 
-    public AiAuditLogOptions Resolve()
+    public AIAuditLogOptions Resolve()
     {
         var settings = _settingsService.GetSettingsAsync().GetAwaiter().GetResult();
         var config = _configOptions.Value;
 
-        return new AiAuditLogOptions
+        return new AIAuditLogOptions
         {
             Enabled = settings.AuditLogEnabled ?? config.Enabled,
             RetentionDays = settings.AuditLogRetentionDays ?? config.RetentionDays,
@@ -265,17 +265,17 @@ Register resolvers and update services to use them instead of `IOptions<T>` dire
 ## Files Summary
 
 ### Core Changes
-- `src/Umbraco.Ai.Core/Settings/AiSettings.cs` - Add new setting properties
-- `src/Umbraco.Ai.Core/Settings/AiSettingsService.cs` - May need caching updates
+- `src/Umbraco.AI.Core/Settings/AISettings.cs` - Add new setting properties
+- `src/Umbraco.AI.Core/Settings/AISettingsService.cs` - May need caching updates
 
 ### Options Resolution
 - New `IOptionsResolver<T>` interface and implementations
 - Update services to use resolvers instead of `IOptions<T>`
 
 ### Web API
-- `src/Umbraco.Ai.Web/Api/Management/Settings/Models/SettingsResponseModel.cs`
-- `src/Umbraco.Ai.Web/Api/Management/Settings/Models/UpdateSettingsRequestModel.cs`
+- `src/Umbraco.AI.Web/Api/Management/Settings/Models/SettingsResponseModel.cs`
+- `src/Umbraco.AI.Web/Api/Management/Settings/Models/UpdateSettingsRequestModel.cs`
 
 ### Frontend
-- `src/Umbraco.Ai.Web.StaticAssets/Client/src/settings/` - Editor components
+- `src/Umbraco.AI.Web.StaticAssets/Client/src/settings/` - Editor components
 - Regenerate OpenAPI client after API changes

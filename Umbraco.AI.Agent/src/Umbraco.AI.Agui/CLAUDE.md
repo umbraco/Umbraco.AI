@@ -1,8 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with the Umbraco.Ai.Agui project.
+This file provides guidance to Claude Code (claude.ai/code) when working with the Umbraco.AI.Agui project.
 
-> **Note:** This is the AG-UI protocol SDK for Umbraco.Ai. See the [Agent CLAUDE.md](../../CLAUDE.md) and [root CLAUDE.md](../../../CLAUDE.md) for shared coding standards and repository-wide conventions.
+> **Note:** This is the AG-UI protocol SDK for Umbraco.AI. See the [Agent CLAUDE.md](../../CLAUDE.md) and [root CLAUDE.md](../../../CLAUDE.md) for shared coding standards and repository-wide conventions.
 
 ## ⚠️ CRITICAL: AG-UI Protocol Compliance
 
@@ -24,7 +24,7 @@ AG-UI is an open, lightweight, event-based protocol that standardizes communicat
 
 ### Required Patterns ✅
 
-When working with `Umbraco.Ai.Agui`, you MUST:
+When working with `Umbraco.AI.Agui`, you MUST:
 
 - ✅ **Use event-based patterns** - All new functionality must implement `IAguiEvent`
 - ✅ **Support streaming** - Use `IAsyncEnumerable<IAguiEvent>` and `AguiEventEmitter`
@@ -57,7 +57,7 @@ All events in this project must belong to one of these AG-UI-defined categories:
 
 ### Validation Checklist
 
-Before committing changes to `Umbraco.Ai.Agui`, verify:
+Before committing changes to `Umbraco.AI.Agui`, verify:
 
 - [ ] All new events implement `IAguiEvent` and extend `BaseAguiEvent`
 - [ ] Event names follow AG-UI naming conventions (check against spec)
@@ -72,7 +72,7 @@ Before committing changes to `Umbraco.Ai.Agui`, verify:
 
 ## Project Overview
 
-**Umbraco.Ai.Agui** is the AG-UI protocol SDK for Umbraco.Ai. It provides:
+**Umbraco.AI.Agui** is the AG-UI protocol SDK for Umbraco.AI. It provides:
 
 - Event types for all AG-UI protocol events
 - Models for AG-UI data structures (messages, tools, context, run requests)
@@ -84,7 +84,7 @@ This project is a **pure SDK** - it contains no business logic, UI, or database 
 ## Project Structure
 
 ```
-Umbraco.Ai.Agui/
+Umbraco.AI.Agui/
 ├── Events/                      # AG-UI event implementations
 │   ├── IAguiEvent.cs           # Base event interface
 │   ├── BaseAguiEvent.cs        # Base event class
@@ -135,28 +135,28 @@ Umbraco.Ai.Agui/
 ├── Configuration/               # DI registration
 │   └── ServiceCollectionExtensions.cs
 ├── AguiConstants.cs            # Protocol constants (event types, content types)
-└── Umbraco.Ai.Agui.csproj
+└── Umbraco.AI.Agui.csproj
 ```
 
 ## Build Commands
 
-This project is part of the `Umbraco.Ai.Agent.sln` solution.
+This project is part of the `Umbraco.AI.Agent.sln` solution.
 
 ```bash
 # Build from Agent solution root
-cd Umbraco.Ai.Agent
-dotnet build Umbraco.Ai.Agent.sln
+cd Umbraco.AI.Agent
+dotnet build Umbraco.AI.Agent.sln
 
 # Build this project directly
-dotnet build src/Umbraco.Ai.Agui/Umbraco.Ai.Agui.csproj
+dotnet build src/Umbraco.AI.Agui/Umbraco.AI.Agui.csproj
 
 # Run tests
-dotnet test tests/Umbraco.Ai.Agent.Tests.Unit/Umbraco.Ai.Agent.Tests.Unit.csproj --filter Category=Agui
+dotnet test tests/Umbraco.AI.Agent.Tests.Unit/Umbraco.AI.Agent.Tests.Unit.csproj --filter Category=Agui
 ```
 
 ## Testing Requirements
 
-All changes to `Umbraco.Ai.Agui` MUST include unit tests:
+All changes to `Umbraco.AI.Agui` MUST include unit tests:
 
 ```csharp
 // Example: Testing event serialization
@@ -185,10 +185,10 @@ Tests should verify:
 
 ## Key Namespaces
 
-- `Umbraco.Ai.Agui.Events` - All AG-UI event types
-- `Umbraco.Ai.Agui.Models` - AG-UI data models
-- `Umbraco.Ai.Agui.Streaming` - SSE streaming infrastructure
-- `Umbraco.Ai.Agui.Configuration` - DI registration
+- `Umbraco.AI.Agui.Events` - All AG-UI event types
+- `Umbraco.AI.Agui.Models` - AG-UI data models
+- `Umbraco.AI.Agui.Streaming` - SSE streaming infrastructure
+- `Umbraco.AI.Agui.Configuration` - DI registration
 
 ## Usage Example
 
@@ -259,7 +259,7 @@ When adding a new event type, follow these steps:
 
 ```csharp
 // Example: Adding a new lifecycle event
-namespace Umbraco.Ai.Agui.Events.Lifecycle;
+namespace Umbraco.AI.Agui.Events.Lifecycle;
 
 /// <summary>
 /// Emitted when a run is paused by the agent.

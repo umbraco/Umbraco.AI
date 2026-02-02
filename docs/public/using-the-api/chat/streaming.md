@@ -21,13 +21,13 @@ Streaming lets users see the response as it's being generated, reducing perceive
 {% code title="BasicStreaming.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 
 public class StreamingExample
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public StreamingExample(IAiChatService chatService)
+    public StreamingExample(IAIChatService chatService)
     {
         _chatService = chatService;
     }
@@ -90,9 +90,9 @@ Return a streaming response to the client:
 [Route("api/chat")]
 public class ChatController : UmbracoApiController
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public ChatController(IAiChatService chatService)
+    public ChatController(IAIChatService chatService)
     {
         _chatService = chatService;
     }

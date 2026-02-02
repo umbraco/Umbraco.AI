@@ -1,12 +1,12 @@
 ---
 description: >-
-  Umbraco.Ai is a provider-agnostic AI integration layer for Umbraco CMS,
+  Umbraco.AI is a provider-agnostic AI integration layer for Umbraco CMS,
   built on Microsoft.Extensions.AI.
 ---
 
-# Umbraco.Ai
+# Umbraco.AI
 
-Umbraco.Ai brings AI capabilities to your Umbraco CMS installation through a flexible, provider-agnostic architecture. Whether you want to integrate OpenAI, Azure OpenAI, or other AI services, Umbraco.Ai provides a consistent API and backoffice experience.
+Umbraco.AI brings AI capabilities to your Umbraco CMS installation through a flexible, provider-agnostic architecture. Whether you want to integrate OpenAI, Azure OpenAI, or other AI services, Umbraco.AI provides a consistent API and backoffice experience.
 
 ## Key Features
 
@@ -18,7 +18,7 @@ Umbraco.Ai brings AI capabilities to your Umbraco CMS installation through a fle
 
 ## Getting Started
 
-New to Umbraco.Ai? Start here:
+New to Umbraco.AI? Start here:
 
 {% content-ref url="getting-started/README.md" %}
 [Getting Started](getting-started/README.md)
@@ -26,7 +26,7 @@ New to Umbraco.Ai? Start here:
 
 ## Core Concepts
 
-Understand how Umbraco.Ai is structured:
+Understand how Umbraco.AI is structured:
 
 {% content-ref url="concepts/README.md" %}
 [Core Concepts](concepts/README.md)
@@ -53,13 +53,13 @@ Create custom providers, middleware, and tools:
 {% code title="ChatController.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 
 public class ChatController : UmbracoApiController
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public ChatController(IAiChatService chatService)
+    public ChatController(IAIChatService chatService)
     {
         _chatService = chatService;
     }
@@ -84,4 +84,4 @@ public class ChatController : UmbracoApiController
 
 * Umbraco CMS 17.0 or later
 * .NET 10.0 or later
-* At least one AI provider package (for example, `Umbraco.Ai.OpenAi`)
+* At least one AI provider package (for example, `Umbraco.AI.OpenAi`)

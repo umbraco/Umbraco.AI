@@ -24,27 +24,27 @@ GET /umbraco/ai/management/api/v1/versions/supported-types
     {
       "type": "connection",
       "displayName": "Connection",
-      "package": "Umbraco.Ai"
+      "package": "Umbraco.AI"
     },
     {
       "type": "profile",
       "displayName": "Profile",
-      "package": "Umbraco.Ai"
+      "package": "Umbraco.AI"
     },
     {
       "type": "context",
       "displayName": "Context",
-      "package": "Umbraco.Ai"
+      "package": "Umbraco.AI"
     },
     {
       "type": "prompt",
       "displayName": "Prompt",
-      "package": "Umbraco.Ai.Prompt"
+      "package": "Umbraco.AI.Prompt"
     },
     {
       "type": "agent",
       "displayName": "Agent",
-      "package": "Umbraco.Ai.Agent"
+      "package": "Umbraco.AI.Agent"
     }
   ]
 }

@@ -94,7 +94,7 @@ Set a default agent for Copilot in your application:
 
 {% code title="Example.cs" %}
 ```csharp
-services.Configure<AiAgentOptions>(options =>
+services.Configure<AIAgentOptions>(options =>
 {
     options.DefaultCopilotAgentAlias = "content-assistant";
 });

@@ -12,13 +12,13 @@ Generate a single embedding vector for a piece of text. This is the most common 
 {% code title="BasicEmbedding.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Embeddings;
+using Umbraco.AI.Core.Embeddings;
 
 public class EmbeddingExample
 {
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIEmbeddingService _embeddingService;
 
-    public EmbeddingExample(IAiEmbeddingService embeddingService)
+    public EmbeddingExample(IAIEmbeddingService embeddingService)
     {
         _embeddingService = embeddingService;
     }
@@ -66,12 +66,12 @@ string? model = embedding.ModelId;
 ```csharp
 public class ProfiledEmbeddingService
 {
-    private readonly IAiEmbeddingService _embeddingService;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIEmbeddingService _embeddingService;
+    private readonly IAIProfileService _profileService;
 
     public ProfiledEmbeddingService(
-        IAiEmbeddingService embeddingService,
-        IAiProfileService profileService)
+        IAIEmbeddingService embeddingService,
+        IAIProfileService profileService)
     {
         _embeddingService = embeddingService;
         _profileService = profileService;
@@ -100,11 +100,11 @@ A common pattern for search indexing:
 ```csharp
 public class ContentIndexer
 {
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIEmbeddingService _embeddingService;
     private readonly IVectorStore _vectorStore;
 
     public ContentIndexer(
-        IAiEmbeddingService embeddingService,
+        IAIEmbeddingService embeddingService,
         IVectorStore vectorStore)
     {
         _embeddingService = embeddingService;
@@ -143,9 +143,9 @@ Compare two embeddings using cosine similarity:
 ```csharp
 public class SimilarityService
 {
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIEmbeddingService _embeddingService;
 
-    public SimilarityService(IAiEmbeddingService embeddingService)
+    public SimilarityService(IAIEmbeddingService embeddingService)
     {
         _embeddingService = embeddingService;
     }

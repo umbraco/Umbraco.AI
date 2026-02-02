@@ -75,7 +75,7 @@ var entityId = "content-guid";
 
 var response = await httpClient.GetAsync(
     $"/umbraco/ai/management/api/v1/audit-log/entity/{entityType}/{entityId}?limit=10");
-var history = await response.Content.ReadFromJsonAsync<AiEntityAuditHistoryModel>();
+var history = await response.Content.ReadFromJsonAsync<AIEntityAuditHistoryModel>();
 ```
 {% endcode %}
 

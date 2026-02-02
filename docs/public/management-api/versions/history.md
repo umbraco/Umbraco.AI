@@ -97,7 +97,7 @@ var entityId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 
 var response = await httpClient.GetAsync(
     $"/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}?skip=0&take=10");
-var history = await response.Content.ReadFromJsonAsync<PagedResult<AiEntityVersionModel>>();
+var history = await response.Content.ReadFromJsonAsync<PagedResult<AIEntityVersionModel>>();
 ```
 {% endcode %}
 

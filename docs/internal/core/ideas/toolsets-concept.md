@@ -14,7 +14,7 @@ ToolSets would be named collections of tools that can be referenced by Agents, p
 
 ```csharp
 // Hypothetical ToolSet model
-public sealed class AiToolSet
+public sealed class AIToolSet
 {
     public required Guid Id { get; init; }
     public required string Alias { get; init; }
@@ -37,7 +37,7 @@ public sealed class AiToolSet
 Agents could then reference ToolSets instead of (or in addition to) individual tools:
 
 ```csharp
-public sealed class AiAgent
+public sealed class AIAgent
 {
     public IReadOnlyList<string> EnabledToolSetAliases { get; init; } = [];
     public IReadOnlyList<string> AdditionalToolIds { get; init; } = [];
@@ -97,7 +97,7 @@ With ToolSets having permissions, we'd have **two governance layers**:
 
 ### 3. Bypassing ToolSets
 
-Developers using Core directly can always access tools via `IAiToolRegistry`:
+Developers using Core directly can always access tools via `IAIToolRegistry`:
 
 ```csharp
 _toolRegistry.GetTool("content.update")  // Always works, no governance
@@ -112,10 +112,10 @@ ToolSet governance would only apply within the Agents layer.
 Tools already have a `Category` property for organization:
 
 ```csharp
-[AiTool("content.update", "Update Content", Category = "Content")]
+[AITool("content.update", "Update Content", Category = "Content")]
 ```
 
-And `IAiToolRegistry` provides:
+And `IAIToolRegistry` provides:
 ```csharp
 _toolRegistry.GetToolsByCategory("content")
 ```
@@ -135,7 +135,7 @@ ToolSets arose partly from wanting a way to group tools for reuse. But if we don
 A simpler approach: rely on built-in Categories and let Agents reference them:
 
 ```csharp
-public sealed class AiAgent
+public sealed class AIAgent
 {
     /// <summary>
     /// Enable all tools in these categories.

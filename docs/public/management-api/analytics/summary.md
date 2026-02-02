@@ -70,7 +70,7 @@ var to = DateTime.UtcNow;
 var response = await httpClient.GetAsync(
     $"/umbraco/ai/management/api/v1/analytics/summary?from={from:O}&to={to:O}");
 
-var summary = await response.Content.ReadFromJsonAsync<AiUsageSummary>();
+var summary = await response.Content.ReadFromJsonAsync<AIUsageSummary>();
 
 Console.WriteLine($"Total Requests: {summary.TotalRequests}");
 Console.WriteLine($"Total Tokens: {summary.TotalTokens:N0}");

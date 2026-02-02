@@ -2,16 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Note:** This is the Umbraco.Ai.Prompt add-on package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
+> **Note:** This is the Umbraco.AI.Prompt add-on package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
 
 ## Build Commands
 
 ```bash
 # Build the solution
-dotnet build Umbraco.Ai.Prompt.sln
+dotnet build Umbraco.AI.Prompt.sln
 
 # Build frontend assets (from Client directory)
-cd src/Umbraco.Ai.Prompt.Web.StaticAssets/Client
+cd src/Umbraco.AI.Prompt.Web.StaticAssets/Client
 npm install
 npm run build
 
@@ -23,28 +23,28 @@ npm run watch
 
 ```bash
 # Run all tests
-dotnet test Umbraco.Ai.Prompt.sln
+dotnet test Umbraco.AI.Prompt.sln
 
 # Run specific test project
-dotnet test tests/Umbraco.Ai.Prompt.Tests.Unit/Umbraco.Ai.Prompt.Tests.Unit.csproj
+dotnet test tests/Umbraco.AI.Prompt.Tests.Unit/Umbraco.AI.Prompt.Tests.Unit.csproj
 ```
 
 ## Architecture Overview
 
-Umbraco.Ai.Prompt is a prompt management plugin for Umbraco.Ai. It provides storage, organization, and management of AI prompt templates with full backoffice UI integration.
+Umbraco.AI.Prompt is a prompt management plugin for Umbraco.AI. It provides storage, organization, and management of AI prompt templates with full backoffice UI integration.
 
 ### Project Structure
 
 | Project | Purpose |
 |---------|---------|
-| `Umbraco.Ai.Prompt.Core` | Core domain models, services, and repository interfaces |
-| `Umbraco.Ai.Prompt.Persistence` | EF Core DbContext, entities, and repository implementations |
-| `Umbraco.Ai.Prompt.Persistence.SqlServer` | SQL Server migrations |
-| `Umbraco.Ai.Prompt.Persistence.Sqlite` | SQLite migrations |
-| `Umbraco.Ai.Prompt.Web` | Management API controllers, models, and mapping |
-| `Umbraco.Ai.Prompt.Web.StaticAssets` | TypeScript/Lit frontend components |
-| `Umbraco.Ai.Prompt.Startup` | Umbraco Composer for auto-discovery and DI registration |
-| `Umbraco.Ai.Prompt` | Meta-package that bundles all components |
+| `Umbraco.AI.Prompt.Core` | Core domain models, services, and repository interfaces |
+| `Umbraco.AI.Prompt.Persistence` | EF Core DbContext, entities, and repository implementations |
+| `Umbraco.AI.Prompt.Persistence.SqlServer` | SQL Server migrations |
+| `Umbraco.AI.Prompt.Persistence.Sqlite` | SQLite migrations |
+| `Umbraco.AI.Prompt.Web` | Management API controllers, models, and mapping |
+| `Umbraco.AI.Prompt.Web.StaticAssets` | TypeScript/Lit frontend components |
+| `Umbraco.AI.Prompt.Startup` | Umbraco Composer for auto-discovery and DI registration |
+| `Umbraco.AI.Prompt` | Meta-package that bundles all components |
 
 ### Key Services
 
@@ -59,7 +59,7 @@ The `Prompt` entity represents a stored prompt template:
 - `Name` - Display name
 - `Description` - Optional description
 - `Content` - The prompt template text
-- `ProfileId` - Optional link to Umbraco.Ai profile (soft FK)
+- `ProfileId` - Optional link to Umbraco.AI profile (soft FK)
 - `Tags` - Categorization tags
 - `IsActive` - Active status
 - `DateCreated` / `DateModified` - Timestamps
@@ -77,9 +77,9 @@ Endpoints are under `/umbraco/ai/management/api/v1/prompts/`:
 | PUT | `/prompts/{promptIdOrAlias}` | Update prompt by ID or alias |
 | DELETE | `/prompts/{promptIdOrAlias}` | Delete prompt by ID or alias |
 
-The `{promptIdOrAlias}` parameter accepts either a GUID (e.g., `550e8400-e29b-41d4-a716-446655440000`) or a string alias (e.g., `my-prompt-alias`). This pattern matches Umbraco.Ai's `IdOrAlias` convention.
+The `{promptIdOrAlias}` parameter accepts either a GUID (e.g., `550e8400-e29b-41d4-a716-446655440000`) or a string alias (e.g., `my-prompt-alias`). This pattern matches Umbraco.AI's `IdOrAlias` convention.
 
-The API shares the same Swagger group (`ai-management`) as Umbraco.Ai.
+The API shares the same Swagger group (`ai-management`) as Umbraco.AI.
 
 ## Database Migrations
 
@@ -88,13 +88,13 @@ Migrations use the `UmbracoAiPrompt_` prefix.
 ```bash
 # SQL Server
 dotnet ef migrations add UmbracoAiPrompt_<MigrationName> \
-  -p src/Umbraco.Ai.Prompt.Persistence.SqlServer \
+  -p src/Umbraco.AI.Prompt.Persistence.SqlServer \
   -c UmbracoAiPromptDbContext \
   --output-dir Migrations
 
 # SQLite
 dotnet ef migrations add UmbracoAiPrompt_<MigrationName> \
-  -p src/Umbraco.Ai.Prompt.Persistence.Sqlite \
+  -p src/Umbraco.AI.Prompt.Persistence.Sqlite \
   -c UmbracoAiPromptDbContext \
   --output-dir Migrations
 ```
@@ -116,10 +116,10 @@ Web follows Umbraco CMS Management API conventions:
 
 ## Key Namespaces
 
-- `Umbraco.Ai.Prompt.Core.Prompts` - Prompt domain model and services
-- `Umbraco.Ai.Prompt.Persistence` - EF Core persistence
-- `Umbraco.Ai.Prompt.Web.Api.Management.Prompt` - API controllers and models
-- `Umbraco.Ai.Prompt.Extensions` - DI extension methods
+- `Umbraco.AI.Prompt.Core.Prompts` - Prompt domain model and services
+- `Umbraco.AI.Prompt.Persistence` - EF Core persistence
+- `Umbraco.AI.Prompt.Web.Api.Management.Prompt` - API controllers and models
+- `Umbraco.AI.Prompt.Extensions` - DI extension methods
 
 ## Configuration
 
@@ -144,5 +144,5 @@ Web follows Umbraco CMS Management API conventions:
 ## Dependencies
 
 - Umbraco CMS 17.x
-- Umbraco.Ai 1.x
+- Umbraco.AI 1.x
 - Entity Framework Core 10.x

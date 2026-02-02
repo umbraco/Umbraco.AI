@@ -47,7 +47,7 @@ curl -X GET "https://your-site.com/umbraco/ai/management/api/v1/settings" \
 {% code title="C#" %}
 ```csharp
 var response = await httpClient.GetAsync("/umbraco/ai/management/api/v1/settings");
-var settings = await response.Content.ReadFromJsonAsync<AiSettingsModel>();
+var settings = await response.Content.ReadFromJsonAsync<AISettingsModel>();
 ```
 {% endcode %}
 

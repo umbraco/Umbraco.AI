@@ -5,13 +5,13 @@ description: >-
 
 # Prompt Management
 
-The Prompt Management add-on (`Umbraco.Ai.Prompt`) enables you to create, manage, and execute reusable prompt templates through the Umbraco backoffice and Management API.
+The Prompt Management add-on (`Umbraco.AI.Prompt`) enables you to create, manage, and execute reusable prompt templates through the Umbraco backoffice and Management API.
 
 ## Installation
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Prompt
+Install-Package Umbraco.AI.Prompt
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Prompt
+dotnet add package Umbraco.AI.Prompt
 ```
 {% endcode %}
 
@@ -52,9 +52,9 @@ In the backoffice, navigate to **Settings** > **AI** > **Prompts** and create a 
 ```csharp
 public class ArticleSummarizer
 {
-    private readonly IAiPromptService _promptService;
+    private readonly IAIPromptService _promptService;
 
-    public ArticleSummarizer(IAiPromptService promptService)
+    public ArticleSummarizer(IAIPromptService promptService)
     {
         _promptService = promptService;
     }
@@ -65,7 +65,7 @@ public class ArticleSummarizer
 
         var result = await _promptService.ExecutePromptAsync(
             prompt!.Id,
-            new AiPromptExecutionRequest
+            new AIPromptExecutionRequest
             {
                 Variables = new Dictionary<string, string>
                 {
@@ -126,7 +126,7 @@ Requirements:
 | [Template Syntax](template-syntax.md) | Variable interpolation details |
 | [Scoping](scoping.md) | Content type allow/deny rules |
 | [API Reference](api/README.md) | Management API endpoints |
-| [Service Reference](reference/ai-prompt-service.md) | IAiPromptService |
+| [Service Reference](reference/ai-prompt-service.md) | IAIPromptService |
 
 ## Related
 

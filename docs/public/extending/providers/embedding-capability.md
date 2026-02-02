@@ -5,13 +5,13 @@ description: >-
 
 # Embedding Capability
 
-The embedding capability enables vector embedding generation. Implement it by extending `AiEmbeddingCapabilityBase<TSettings>`.
+The embedding capability enables vector embedding generation. Implement it by extending `AIEmbeddingCapabilityBase<TSettings>`.
 
 ## Base Class
 
-{% code title="AiEmbeddingCapabilityBase<TSettings>" %}
+{% code title="AIEmbeddingCapabilityBase<TSettings>" %}
 ```csharp
-public abstract class AiEmbeddingCapabilityBase<TSettings> : IAiEmbeddingCapability
+public abstract class AIEmbeddingCapabilityBase<TSettings> : IAIEmbeddingCapability
     where TSettings : class
 {
     // Implement this: Create an IEmbeddingGenerator
@@ -20,7 +20,7 @@ public abstract class AiEmbeddingCapabilityBase<TSettings> : IAiEmbeddingCapabil
         string? modelId);
 
     // Implement this: Return available models
-    protected abstract Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         TSettings settings,
         CancellationToken cancellationToken = default);
 }
@@ -32,12 +32,12 @@ public abstract class AiEmbeddingCapabilityBase<TSettings> : IAiEmbeddingCapabil
 {% code title="MyEmbeddingCapability.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
-public class MyEmbeddingCapability : AiEmbeddingCapabilityBase<MyProviderSettings>
+public class MyEmbeddingCapability : AIEmbeddingCapabilityBase<MyProviderSettings>
 {
-    public MyEmbeddingCapability(IAiProvider provider) : base(provider) { }
+    public MyEmbeddingCapability(IAIProvider provider) : base(provider) { }
 
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(
         MyProviderSettings settings,
@@ -46,16 +46,16 @@ public class MyEmbeddingCapability : AiEmbeddingCapabilityBase<MyProviderSetting
         return new MyEmbeddingGenerator(settings, modelId ?? "embedding-model");
     }
 
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         MyProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var models = new List<AiModelDescriptor>
+        var models = new List<AIModelDescriptor>
         {
             new("embedding-small", "Embedding Small (1536 dims)"),
             new("embedding-large", "Embedding Large (3072 dims)")
         };
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(models);
+        return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(models);
     }
 }
 ```
@@ -67,10 +67,10 @@ Add the embedding capability in your provider constructor:
 
 {% code title="MyProvider.cs" %}
 ```csharp
-[AiProvider("myprovider", "My AI Provider")]
-public class MyProvider : AiProviderBase<MyProviderSettings>
+[AIProvider("myprovider", "My AI Provider")]
+public class MyProvider : AIProviderBase<MyProviderSettings>
 {
-    public MyProvider(IAiProviderInfrastructure infrastructure)
+    public MyProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
         WithCapability<MyChatCapability>();
@@ -205,9 +205,9 @@ If your service has an existing M.E.AI embedding generator:
 using Microsoft.Extensions.AI;
 using OpenAI;
 
-public class MyOpenAiCompatibleEmbeddingCapability : AiEmbeddingCapabilityBase<MyProviderSettings>
+public class MyOpenAiCompatibleEmbeddingCapability : AIEmbeddingCapabilityBase<MyProviderSettings>
 {
-    public MyOpenAiCompatibleEmbeddingCapability(IAiProvider provider) : base(provider) { }
+    public MyOpenAiCompatibleEmbeddingCapability(IAIProvider provider) : base(provider) { }
 
     protected override IEmbeddingGenerator<string, Embedding<float>> CreateGenerator(
         MyProviderSettings settings,
@@ -221,11 +221,11 @@ public class MyOpenAiCompatibleEmbeddingCapability : AiEmbeddingCapabilityBase<M
         return client.AsEmbeddingGenerator(modelId ?? "text-embedding-3-small");
     }
 
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         MyProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(new List<AiModelDescriptor>
+        return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(new List<AIModelDescriptor>
         {
             new("text-embedding-3-small", "Text Embedding 3 Small"),
             new("text-embedding-3-large", "Text Embedding 3 Large")
@@ -277,16 +277,16 @@ If your API returns dimension information, include it in the model descriptors:
 
 {% code title="With Dimensions" %}
 ```csharp
-protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
     MyProviderSettings settings,
     CancellationToken cancellationToken = default)
 {
-    var models = new List<AiModelDescriptor>
+    var models = new List<AIModelDescriptor>
     {
         new("embedding-small", "Small (1536 dimensions)"),
         new("embedding-large", "Large (3072 dimensions)")
     };
-    return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(models);
+    return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(models);
 }
 ```
 {% endcode %}

@@ -72,25 +72,25 @@ Benefits of configuration references:
 
 ## Accessing Connections in Code
 
-Use `IAiConnectionService` to work with connections:
+Use `IAIConnectionService` to work with connections:
 
 {% code title="Example.cs" %}
 ```csharp
 public class ConnectionExample
 {
-    private readonly IAiConnectionService _connectionService;
+    private readonly IAIConnectionService _connectionService;
 
-    public ConnectionExample(IAiConnectionService connectionService)
+    public ConnectionExample(IAIConnectionService connectionService)
     {
         _connectionService = connectionService;
     }
 
-    public async Task<AiConnection?> GetByAlias(string alias)
+    public async Task<AIConnection?> GetByAlias(string alias)
     {
         return await _connectionService.GetConnectionByAliasAsync(alias);
     }
 
-    public async Task<IEnumerable<AiConnection>> GetAllForProvider(string providerId)
+    public async Task<IEnumerable<AIConnection>> GetAllForProvider(string providerId)
     {
         return await _connectionService.GetConnectionsAsync(providerId);
     }

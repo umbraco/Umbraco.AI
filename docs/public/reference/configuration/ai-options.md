@@ -3,9 +3,9 @@ description: >-
   Configuration options for AI services (fallback mechanism).
 ---
 
-# AiOptions
+# AIOptions
 
-Configuration options for Umbraco.Ai services, bound from `appsettings.json`. These serve as a fallback when database settings are not configured.
+Configuration options for Umbraco.AI services, bound from `appsettings.json`. These serve as a fallback when database settings are not configured.
 
 {% hint style="info" %}
 The recommended way to configure default profiles is through the backoffice (**Settings** > **AI** > **Settings**). Use `appsettings.json` only for advanced scenarios like CI/CD pipelines or infrastructure-as-code where database settings cannot be used.
@@ -14,14 +14,14 @@ The recommended way to configure default profiles is through the backoffice (**S
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 ```
 
 ## Class Definition
 
-{% code title="AiOptions" %}
+{% code title="AIOptions" %}
 ```csharp
-public class AiOptions
+public class AIOptions
 {
     public string? DefaultChatProfileAlias { get; set; }
     public string? DefaultEmbeddingProfileAlias { get; set; }
@@ -62,7 +62,7 @@ Database settings (configured via backoffice) take precedence over configuration
 
 ### Setting Defaults
 
-When you call `IAiChatService.GetChatResponseAsync()` without specifying a profile ID, it first checks for a default in database settings. If not found, it falls back to the profile with the alias specified in `DefaultChatProfileAlias`.
+When you call `IAIChatService.GetChatResponseAsync()` without specifying a profile ID, it first checks for a default in database settings. If not found, it falls back to the profile with the alias specified in `DefaultChatProfileAlias`.
 
 {% code title="Example" %}
 ```csharp
@@ -76,18 +76,18 @@ var response = await _chatService.GetChatResponseAsync(specificProfileId, messag
 
 ### Accessing Options
 
-You can inject `IOptions<AiOptions>` to access configuration:
+You can inject `IOptions<AIOptions>` to access configuration:
 
 {% code title="Example" %}
 ```csharp
 using Microsoft.Extensions.Options;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Models;
 
 public class MyService
 {
-    private readonly AiOptions _options;
+    private readonly AIOptions _options;
 
-    public MyService(IOptions<AiOptions> options)
+    public MyService(IOptions<AIOptions> options)
     {
         _options = options.Value;
     }

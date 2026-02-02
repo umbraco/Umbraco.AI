@@ -6,7 +6,7 @@ allowed-tools: Bash, AskUserQuestion, Read, Glob
 
 # Setup Repository
 
-You are helping set up the Umbraco.Ai repository for local development.
+You are helping set up the Umbraco.AI repository for local development.
 
 ## Task
 
@@ -27,7 +27,7 @@ Perform initial repository setup by running the appropriate setup scripts based 
    - Command: `npm install`
 
 4. **Initial Build** - Build the unified solution
-   - Command: `dotnet build Umbraco.Ai.local.sln`
+   - Command: `dotnet build Umbraco.AI.local.sln`
 
 ## Workflow
 

@@ -3,29 +3,29 @@ description: >-
   Service for managing and running agents.
 ---
 
-# IAiAgentService
+# IAIAgentService
 
 Service for agent CRUD operations and streaming execution.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Agents;
 ```
 
 ## Interface
 
-{% code title="IAiAgentService" %}
+{% code title="IAIAgentService" %}
 ```csharp
-public interface IAiAgentService
+public interface IAIAgentService
 {
-    Task<AiAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<AiAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiAgent>> GetAgentsAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIAgent>> GetAgentsAsync(CancellationToken cancellationToken = default);
 
-    Task<PagedModel<AiAgent>> GetAgentsPagedAsync(
+    Task<PagedModel<AIAgent>> GetAgentsPagedAsync(
         int skip = 0,
         int take = 100,
         string? filter = null,
@@ -33,11 +33,11 @@ public interface IAiAgentService
         string? scopeId = null,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiAgent>> GetAgentsByScopeAsync(
+    Task<IEnumerable<AIAgent>> GetAgentsByScopeAsync(
         string scopeId,
         CancellationToken cancellationToken = default);
 
-    Task<AiAgent> SaveAgentAsync(AiAgent agent, CancellationToken cancellationToken = default);
+    Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAgentAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -45,8 +45,8 @@ public interface IAiAgentService
 
     IAsyncEnumerable<IAguiEvent> StreamAgentAsync(
         Guid agentId,
-        AiAgentRunRequest request,
-        IEnumerable<AiFrontendToolDefinition>? frontendToolDefinitions = null,
+        AIAgentRunRequest request,
+        IEnumerable<AIFrontendToolDefinition>? frontendToolDefinitions = null,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -114,7 +114,7 @@ Creates or updates an agent.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `agent` | `AiAgent` | The agent to save |
+| `agent` | `AIAgent` | The agent to save |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved agent with ID and version.
@@ -149,8 +149,8 @@ Runs an agent and streams AG-UI events.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `agentId` | `Guid` | The agent ID |
-| `request` | `AiAgentRunRequest` | Run parameters |
-| `frontendToolDefinitions` | `IEnumerable<AiFrontendToolDefinition>?` | Frontend tools |
+| `request` | `AIAgentRunRequest` | Run parameters |
+| `frontendToolDefinitions` | `IEnumerable<AIFrontendToolDefinition>?` | Frontend tools |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: Async enumerable of AG-UI events.
@@ -159,11 +159,11 @@ Runs an agent and streams AG-UI events.
 ```csharp
 await foreach (var evt in _agentService.StreamAgentAsync(
     agentId,
-    new AiAgentRunRequest
+    new AIAgentRunRequest
     {
-        Messages = new List<AiAgentMessage>
+        Messages = new List<AIAgentMessage>
         {
-            new AiAgentMessage { Role = "user", Content = "Hello!" }
+            new AIAgentMessage { Role = "user", Content = "Hello!" }
         }
     }))
 {
@@ -182,22 +182,22 @@ await foreach (var evt in _agentService.StreamAgentAsync(
 
 ## Related Models
 
-### AiAgentRunRequest
+### AIAgentRunRequest
 
-{% code title="AiAgentRunRequest" %}
+{% code title="AIAgentRunRequest" %}
 ```csharp
-public class AiAgentRunRequest
+public class AIAgentRunRequest
 {
-    public IReadOnlyList<AiAgentMessage> Messages { get; set; } = Array.Empty<AiAgentMessage>();
+    public IReadOnlyList<AIAgentMessage> Messages { get; set; } = Array.Empty<AIAgentMessage>();
 }
 ```
 {% endcode %}
 
-### AiAgentMessage
+### AIAgentMessage
 
-{% code title="AiAgentMessage" %}
+{% code title="AIAgentMessage" %}
 ```csharp
-public class AiAgentMessage
+public class AIAgentMessage
 {
     public string Role { get; set; } = "user";
     public string Content { get; set; } = string.Empty;
@@ -205,11 +205,11 @@ public class AiAgentMessage
 ```
 {% endcode %}
 
-### AiFrontendToolDefinition
+### AIFrontendToolDefinition
 
-{% code title="AiFrontendToolDefinition" %}
+{% code title="AIFrontendToolDefinition" %}
 ```csharp
-public class AiFrontendToolDefinition
+public class AIFrontendToolDefinition
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -220,6 +220,6 @@ public class AiFrontendToolDefinition
 
 ## Related
 
-* [AiAgent Model](ai-agent.md) - Agent model reference
+* [AIAgent Model](ai-agent.md) - Agent model reference
 * [Agent Concepts](../concepts.md) - Concepts overview
 * [Scopes](../scopes.md) - Agent categorization

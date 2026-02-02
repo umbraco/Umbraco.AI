@@ -112,7 +112,7 @@ Combine agent instructions with AI Contexts for brand voice:
 
 {% code title="Example" %}
 ```csharp
-var agent = new AiAgent
+var agent = new AIAgent
 {
     Alias = "brand-writer",
     Name = "Brand Writer",

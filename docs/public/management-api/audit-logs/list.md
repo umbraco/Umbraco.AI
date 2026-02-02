@@ -107,7 +107,7 @@ var queryParams = new Dictionary<string, string>
 
 var query = string.Join("&", queryParams.Select(kv => $"{kv.Key}={kv.Value}"));
 var response = await httpClient.GetAsync($"/umbraco/ai/management/api/v1/audit-log?{query}");
-var result = await response.Content.ReadFromJsonAsync<PagedResult<AiAuditLogModel>>();
+var result = await response.Content.ReadFromJsonAsync<PagedResult<AIAuditLogModel>>();
 ```
 {% endcode %}
 

@@ -1,21 +1,21 @@
 ---
 description: >-
-  Detailed configuration guides for each AI provider supported by Umbraco.Ai.
+  Detailed configuration guides for each AI provider supported by Umbraco.AI.
 ---
 
 # Providers
 
-Umbraco.Ai supports multiple AI providers through installable NuGet packages. Each provider connects to a different AI service and may support different capabilities.
+Umbraco.AI supports multiple AI providers through installable NuGet packages. Each provider connects to a different AI service and may support different capabilities.
 
 ## Available Providers
 
 | Provider | Package | Capabilities | Best For |
 |----------|---------|--------------|----------|
-| [OpenAI](openai.md) | `Umbraco.Ai.OpenAi` | Chat, Embedding | General purpose, most models |
-| [Anthropic](anthropic.md) | `Umbraco.Ai.Anthropic` | Chat | Claude models, long context |
-| [Google Gemini](google.md) | `Umbraco.Ai.Google` | Chat | Gemini models, multimodal |
-| [Amazon Bedrock](amazon.md) | `Umbraco.Ai.Amazon` | Chat, Embedding | AWS integration, multiple models |
-| [Microsoft AI Foundry](microsoft-foundry.md) | `Umbraco.Ai.MicrosoftFoundry` | Chat, Embedding | Azure, enterprise compliance |
+| [OpenAI](openai.md) | `Umbraco.AI.OpenAi` | Chat, Embedding | General purpose, most models |
+| [Anthropic](anthropic.md) | `Umbraco.AI.Anthropic` | Chat | Claude models, long context |
+| [Google Gemini](google.md) | `Umbraco.AI.Google` | Chat | Gemini models, multimodal |
+| [Amazon Bedrock](amazon.md) | `Umbraco.AI.Amazon` | Chat, Embedding | AWS integration, multiple models |
+| [Microsoft AI Foundry](microsoft-foundry.md) | `Umbraco.AI.MicrosoftFoundry` | Chat, Embedding | Azure, enterprise compliance |
 
 ## Choosing a Provider
 
@@ -55,9 +55,9 @@ You can install multiple providers simultaneously. Each provider registers indep
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.OpenAi
-Install-Package Umbraco.Ai.Anthropic
-Install-Package Umbraco.Ai.Google
+Install-Package Umbraco.AI.OpenAi
+Install-Package Umbraco.AI.Anthropic
+Install-Package Umbraco.AI.Google
 ```
 {% endcode %}
 
@@ -65,9 +65,9 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.OpenAi
-dotnet add package Umbraco.Ai.Anthropic
-dotnet add package Umbraco.Ai.Google
+dotnet add package Umbraco.AI.OpenAi
+dotnet add package Umbraco.AI.Anthropic
+dotnet add package Umbraco.AI.Google
 ```
 {% endcode %}
 

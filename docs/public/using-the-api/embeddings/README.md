@@ -16,13 +16,13 @@ Embeddings convert text into numerical vectors that capture semantic meaning. Si
 * **Clustering** - Group similar content together
 * **RAG** - Retrieve relevant context for AI responses
 
-## IAiEmbeddingService
+## IAIEmbeddingService
 
 The primary interface for embedding operations:
 
-{% code title="IAiEmbeddingService.cs" %}
+{% code title="IAIEmbeddingService.cs" %}
 ```csharp
-public interface IAiEmbeddingService
+public interface IAIEmbeddingService
 {
     // Single embedding
     Task<Embedding<float>> GenerateEmbeddingAsync(
@@ -61,13 +61,13 @@ public interface IAiEmbeddingService
 {% code title="Example.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Embeddings;
+using Umbraco.AI.Core.Embeddings;
 
 public class SearchService
 {
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIEmbeddingService _embeddingService;
 
-    public SearchService(IAiEmbeddingService embeddingService)
+    public SearchService(IAIEmbeddingService embeddingService)
     {
         _embeddingService = embeddingService;
     }

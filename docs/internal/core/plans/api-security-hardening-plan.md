@@ -38,7 +38,7 @@ This plan addresses security improvements for the Chat and Embedding API endpoin
 
 Add validation limits to the existing `Constants.cs` file using static class grouping.
 
-**File:** `src/Umbraco.Ai.Web/Constants.cs`
+**File:** `src/Umbraco.AI.Web/Constants.cs`
 
 Add the following static class inside the `Constants` class:
 
@@ -125,7 +125,7 @@ public static class Validation
 
 ### Step 1.2: Update Chat Request Models
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Chat/Models/ChatRequestModel.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatRequestModel.cs`
 
 ```csharp
 public class ChatRequestModel
@@ -139,7 +139,7 @@ public class ChatRequestModel
 }
 ```
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Chat/Models/ChatMessageModel.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatMessageModel.cs`
 
 ```csharp
 public class ChatMessageModel
@@ -156,7 +156,7 @@ public class ChatMessageModel
 
 ### Step 1.3: Update Embedding Request Model
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Embedding/Models/GenerateEmbeddingRequestModel.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Embedding/Models/GenerateEmbeddingRequestModel.cs`
 
 ```csharp
 public class GenerateEmbeddingRequestModel
@@ -175,10 +175,10 @@ public class GenerateEmbeddingRequestModel
 
 ### Step 1.4: Create Custom Validation for Collection Item Lengths
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Common/Validation/MaxItemLengthAttribute.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Common/Validation/MaxItemLengthAttribute.cs`
 
 ```csharp
-namespace Umbraco.Ai.Web.Api.Management.Common.Validation;
+namespace Umbraco.AI.Web.Api.Management.Common.Validation;
 
 /// <summary>
 /// Validates that all string items in a collection do not exceed a maximum length.
@@ -218,7 +218,7 @@ public class MaxItemLengthAttribute : ValidationAttribute
 
 ### Step 1.5: Update Connection/Profile Request Models
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Connection/Models/CreateConnectionRequestModel.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Connection/Models/CreateConnectionRequestModel.cs`
 
 ```csharp
 [Required]
@@ -234,7 +234,7 @@ public required string Name { get; init; }
 public required string ProviderId { get; init; }
 ```
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Profile/Models/CreateProfileRequestModel.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Profile/Models/CreateProfileRequestModel.cs`
 
 ```csharp
 [Required]
@@ -252,7 +252,7 @@ public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
 
 ### Step 1.6: Tests
 
-**File:** `tests/Umbraco.Ai.Tests.Unit/Api/Management/Chat/ChatRequestModelValidationTests.cs`
+**File:** `tests/Umbraco.AI.Tests.Unit/Api/Management/Chat/ChatRequestModelValidationTests.cs`
 
 ```csharp
 public class ChatRequestModelValidationTests
@@ -307,15 +307,15 @@ public class ChatRequestModelValidationTests
 
 ### Step 2.1: Create Custom Exception Types
 
-**File:** `src/Umbraco.Ai.Core/Exceptions/AiException.cs`
+**File:** `src/Umbraco.AI.Core/Exceptions/AIException.cs`
 
 ```csharp
-namespace Umbraco.Ai.Core.Exceptions;
+namespace Umbraco.AI.Core.Exceptions;
 
 /// <summary>
 /// Base exception for AI operations.
 /// </summary>
-public class AiException : Exception
+public class AIException : Exception
 {
     /// <summary>
     /// User-safe error message (no sensitive details).
@@ -327,7 +327,7 @@ public class AiException : Exception
     /// </summary>
     public string ErrorCode { get; }
 
-    public AiException(string errorCode, string userMessage, string internalMessage, Exception? innerException = null)
+    public AIException(string errorCode, string userMessage, string internalMessage, Exception? innerException = null)
         : base(internalMessage, innerException)
     {
         ErrorCode = errorCode;
@@ -335,31 +335,31 @@ public class AiException : Exception
     }
 }
 
-public class AiProfileNotFoundException : AiException
+public class AIProfileNotFoundException : AIException
 {
-    public AiProfileNotFoundException(string identifier)
+    public AIProfileNotFoundException(string identifier)
         : base("PROFILE_NOT_FOUND", "The requested AI profile was not found.",
                $"Profile not found: {identifier}") { }
 }
 
-public class AiConnectionNotFoundException : AiException
+public class AIConnectionNotFoundException : AIException
 {
-    public AiConnectionNotFoundException(Guid connectionId)
+    public AIConnectionNotFoundException(Guid connectionId)
         : base("CONNECTION_NOT_FOUND", "The requested AI connection was not found.",
                $"Connection not found: {connectionId}") { }
 }
 
-public class AiProviderException : AiException
+public class AIProviderException : AIException
 {
-    public AiProviderException(string userMessage, string internalMessage, Exception? innerException = null)
+    public AIProviderException(string userMessage, string internalMessage, Exception? innerException = null)
         : base("PROVIDER_ERROR", userMessage, internalMessage, innerException) { }
 }
 
-public class AiRateLimitException : AiException
+public class AIRateLimitException : AIException
 {
     public TimeSpan? RetryAfter { get; }
 
-    public AiRateLimitException(TimeSpan? retryAfter = null)
+    public AIRateLimitException(TimeSpan? retryAfter = null)
         : base("RATE_LIMITED", "Too many requests. Please try again later.",
                "Rate limit exceeded")
     {
@@ -370,35 +370,35 @@ public class AiRateLimitException : AiException
 
 ### Step 2.2: Create Error Response Factory
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Common/Errors/AiProblemDetailsFactory.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Common/Errors/AIProblemDetailsFactory.cs`
 
 ```csharp
-namespace Umbraco.Ai.Web.Api.Management.Common.Errors;
+namespace Umbraco.AI.Web.Api.Management.Common.Errors;
 
 /// <summary>
 /// Factory for creating sanitized ProblemDetails responses.
 /// </summary>
-public static class AiProblemDetailsFactory
+public static class AIProblemDetailsFactory
 {
     public static ProblemDetails FromException(Exception ex, bool includeDetails = false)
     {
         return ex switch
         {
-            AiProfileNotFoundException e => new ProblemDetails
+            AIProfileNotFoundException e => new ProblemDetails
             {
                 Title = "Profile Not Found",
                 Detail = e.UserMessage,
                 Status = StatusCodes.Status404NotFound,
                 Extensions = { ["errorCode"] = e.ErrorCode }
             },
-            AiConnectionNotFoundException e => new ProblemDetails
+            AIConnectionNotFoundException e => new ProblemDetails
             {
                 Title = "Connection Not Found",
                 Detail = e.UserMessage,
                 Status = StatusCodes.Status404NotFound,
                 Extensions = { ["errorCode"] = e.ErrorCode }
             },
-            AiRateLimitException e => new ProblemDetails
+            AIRateLimitException e => new ProblemDetails
             {
                 Title = "Rate Limit Exceeded",
                 Detail = e.UserMessage,
@@ -409,7 +409,7 @@ public static class AiProblemDetailsFactory
                     ["retryAfter"] = e.RetryAfter?.TotalSeconds
                 }
             },
-            AiException e => new ProblemDetails
+            AIException e => new ProblemDetails
             {
                 Title = "AI Operation Failed",
                 Detail = e.UserMessage,
@@ -430,7 +430,7 @@ public static class AiProblemDetailsFactory
 
 ### Step 2.3: Update Controllers to Use Sanitized Errors
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/CompleteChatController.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/CompleteChatController.cs`
 
 ```csharp
 [HttpPost("complete")]
@@ -450,29 +450,29 @@ public async Task<IActionResult> CompleteChat(ChatRequestModel requestModel, Can
 
         return Ok(ToChatResponseModel(response));
     }
-    catch (AiException ex)
+    catch (AIException ex)
     {
         _logger.LogWarning(ex, "Chat completion failed: {ErrorCode}", ex.ErrorCode);
         return StatusCode(
-            AiProblemDetailsFactory.FromException(ex).Status ?? 400,
-            AiProblemDetailsFactory.FromException(ex));
+            AIProblemDetailsFactory.FromException(ex).Status ?? 400,
+            AIProblemDetailsFactory.FromException(ex));
     }
     catch (Exception ex)
     {
         _logger.LogError(ex, "Unexpected error during chat completion");
-        return StatusCode(500, AiProblemDetailsFactory.FromException(ex));
+        return StatusCode(500, AIProblemDetailsFactory.FromException(ex));
     }
 }
 ```
 
 ### Step 2.4: Update Stream Controller Error Handling
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/StreamChatController.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/StreamChatController.cs`
 
 ```csharp
 private async Task WriteErrorToStream(Exception ex, CancellationToken cancellationToken)
 {
-    var problem = AiProblemDetailsFactory.FromException(ex);
+    var problem = AIProblemDetailsFactory.FromException(ex);
     Response.StatusCode = problem.Status ?? 400;
 
     var errorPayload = new
@@ -493,16 +493,16 @@ private async Task WriteErrorToStream(Exception ex, CancellationToken cancellati
 
 ### Step 2.5: Update Services to Throw Custom Exceptions
 
-**File:** `src/Umbraco.Ai.Core/Chat/AiChatService.cs` (and similar services)
+**File:** `src/Umbraco.AI.Core/Chat/AIChatService.cs` (and similar services)
 
 ```csharp
 public async Task<ChatResponse> GetResponseAsync(Guid profileId, IEnumerable<ChatMessage> messages, ...)
 {
     var profile = await _profileRepository.GetByIdAsync(profileId, cancellationToken)
-        ?? throw new AiProfileNotFoundException(profileId.ToString());
+        ?? throw new AIProfileNotFoundException(profileId.ToString());
 
     var connection = await _connectionRepository.GetByIdAsync(profile.ConnectionId, cancellationToken)
-        ?? throw new AiConnectionNotFoundException(profile.ConnectionId);
+        ?? throw new AIConnectionNotFoundException(profile.ConnectionId);
 
     try
     {
@@ -510,11 +510,11 @@ public async Task<ChatResponse> GetResponseAsync(Guid profileId, IEnumerable<Cha
     }
     catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests)
     {
-        throw new AiRateLimitException();
+        throw new AIRateLimitException();
     }
     catch (Exception ex)
     {
-        throw new AiProviderException(
+        throw new AIProviderException(
             "The AI provider encountered an error processing your request.",
             $"Provider {profile.ProviderId} failed: {ex.Message}",
             ex);
@@ -536,7 +536,7 @@ ASP.NET Core includes rate limiting middleware built-in via `Microsoft.AspNetCor
 
 ### Step 3.2: Add Rate Limiting Constants to Constants.cs
 
-**File:** `src/Umbraco.Ai.Web/Constants.cs`
+**File:** `src/Umbraco.AI.Web/Constants.cs`
 
 Add the following static class inside the `Constants` class:
 
@@ -586,15 +586,15 @@ public static class RateLimiting
 
 ### Step 3.3: Create Rate Limiting Configuration Options
 
-**File:** `src/Umbraco.Ai.Core/Models/AiRateLimitOptions.cs`
+**File:** `src/Umbraco.AI.Core/Models/AIRateLimitOptions.cs`
 
 ```csharp
-namespace Umbraco.Ai.Core.Models;
+namespace Umbraco.AI.Core.Models;
 
 /// <summary>
 /// Configuration for AI API rate limiting.
 /// </summary>
-public class AiRateLimitOptions
+public class AIRateLimitOptions
 {
     /// <summary>
     /// Enable or disable rate limiting globally.
@@ -634,12 +634,12 @@ public class RateLimitSettings
 }
 ```
 
-Update `AiOptions`:
+Update `AIOptions`:
 
-**File:** `src/Umbraco.Ai.Core/Models/AiOptions.cs`
+**File:** `src/Umbraco.AI.Core/Models/AIOptions.cs`
 
 ```csharp
-public class AiOptions
+public class AIOptions
 {
     public string? DefaultChatProfileAlias { get; set; }
     public string? DefaultEmbeddingProfileAlias { get; set; }
@@ -647,7 +647,7 @@ public class AiOptions
     /// <summary>
     /// Rate limiting configuration for AI endpoints.
     /// </summary>
-    public AiRateLimitOptions RateLimiting { get; set; } = new();
+    public AIRateLimitOptions RateLimiting { get; set; } = new();
 }
 ```
 
@@ -655,13 +655,13 @@ public class AiOptions
 
 Since Umbraco does not call `app.UseRateLimiter()`, we need to add it via Umbraco's pipeline filter system.
 
-**File:** `src/Umbraco.Ai.Web/Configuration/UmbracoAiRateLimitingPipelineFilter.cs`
+**File:** `src/Umbraco.AI.Web/Configuration/UmbracoAiRateLimitingPipelineFilter.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Builder;
 using Umbraco.Cms.Web.Common.ApplicationBuilder;
 
-namespace Umbraco.Ai.Web.Configuration;
+namespace Umbraco.AI.Web.Configuration;
 
 /// <summary>
 /// Pipeline filter that adds rate limiting middleware to the Umbraco pipeline.
@@ -680,7 +680,7 @@ internal sealed class UmbracoAiRateLimitingPipelineFilter : UmbracoPipelineFilte
 
 ### Step 3.5: Register Rate Limiting Services and Middleware
 
-**File:** `src/Umbraco.Ai.Web/Configuration/UmbracoBuilderExtensions.cs`
+**File:** `src/Umbraco.AI.Web/Configuration/UmbracoBuilderExtensions.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Http;
@@ -704,7 +704,7 @@ private static void ConfigureRateLimiting(IUmbracoBuilder builder)
     // Get configuration
     var aiOptions = builder.Config
         .GetSection("Umbraco:Ai")
-        .Get<AiOptions>() ?? new AiOptions();
+        .Get<AIOptions>() ?? new AIOptions();
 
     if (!aiOptions.RateLimiting.Enabled)
         return;
@@ -795,7 +795,7 @@ private static void ConfigureRateLimiting(IUmbracoBuilder builder)
 
 ### Step 3.6: Apply Rate Limiting to Controllers
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/CompleteChatController.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/CompleteChatController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.RateLimiting;
@@ -805,7 +805,7 @@ using Microsoft.AspNetCore.RateLimiting;
 public async Task<IActionResult> CompleteChat(...)
 ```
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/StreamChatController.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/StreamChatController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.RateLimiting;
@@ -815,7 +815,7 @@ using Microsoft.AspNetCore.RateLimiting;
 public async Task StreamChat(...)
 ```
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Embedding/Controllers/GenerateEmbeddingController.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Embedding/Controllers/GenerateEmbeddingController.cs`
 
 ```csharp
 using Microsoft.AspNetCore.RateLimiting;
@@ -860,15 +860,15 @@ public async Task<IActionResult> GenerateEmbeddings(...)
 
 ### Step 4.1: Create Audit Log Model
 
-**File:** `src/Umbraco.Ai.Core/Audit/AiAuditEntry.cs`
+**File:** `src/Umbraco.AI.Core/Audit/AIAuditEntry.cs`
 
 ```csharp
-namespace Umbraco.Ai.Core.Audit;
+namespace Umbraco.AI.Core.Audit;
 
 /// <summary>
 /// Represents an audit log entry for AI operations.
 /// </summary>
-public record AiAuditEntry
+public record AIAuditEntry
 {
     public required string Operation { get; init; }
     public required string UserId { get; init; }
@@ -887,32 +887,32 @@ public record AiAuditEntry
 
 ### Step 4.2: Create Audit Logger Interface
 
-**File:** `src/Umbraco.Ai.Core/Audit/IAiAuditLogger.cs`
+**File:** `src/Umbraco.AI.Core/Audit/IAIAuditLogger.cs`
 
 ```csharp
-namespace Umbraco.Ai.Core.Audit;
+namespace Umbraco.AI.Core.Audit;
 
 /// <summary>
 /// Logs audit entries for AI operations.
 /// </summary>
-public interface IAiAuditLogger
+public interface IAIAuditLogger
 {
-    void Log(AiAuditEntry entry);
-    Task LogAsync(AiAuditEntry entry, CancellationToken cancellationToken = default);
+    void Log(AIAuditEntry entry);
+    Task LogAsync(AIAuditEntry entry, CancellationToken cancellationToken = default);
 }
 ```
 
 ### Step 4.3: Create Structured Logging Implementation
 
-**File:** `src/Umbraco.Ai.Core/Audit/StructuredAiAuditLogger.cs`
+**File:** `src/Umbraco.AI.Core/Audit/StructuredAiAuditLogger.cs`
 
 ```csharp
-namespace Umbraco.Ai.Core.Audit;
+namespace Umbraco.AI.Core.Audit;
 
 /// <summary>
 /// Audit logger that writes to Microsoft.Extensions.Logging with structured data.
 /// </summary>
-public class StructuredAiAuditLogger : IAiAuditLogger
+public class StructuredAiAuditLogger : IAIAuditLogger
 {
     private readonly ILogger<StructuredAiAuditLogger> _logger;
 
@@ -921,7 +921,7 @@ public class StructuredAiAuditLogger : IAiAuditLogger
         _logger = logger;
     }
 
-    public void Log(AiAuditEntry entry)
+    public void Log(AIAuditEntry entry)
     {
         _logger.LogInformation(
             "AI Operation: {Operation} | User: {UserId} ({UserName}) | Profile: {ProfileAlias} | " +
@@ -939,7 +939,7 @@ public class StructuredAiAuditLogger : IAiAuditLogger
             entry.ErrorCode);
     }
 
-    public Task LogAsync(AiAuditEntry entry, CancellationToken cancellationToken = default)
+    public Task LogAsync(AIAuditEntry entry, CancellationToken cancellationToken = default)
     {
         Log(entry);
         return Task.CompletedTask;
@@ -949,19 +949,19 @@ public class StructuredAiAuditLogger : IAiAuditLogger
 
 ### Step 4.4: Create Action Filter for Automatic Audit Logging
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Common/Filters/AiAuditLogFilter.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Common/Filters/AIAuditLogFilter.cs`
 
 ```csharp
-namespace Umbraco.Ai.Web.Api.Management.Common.Filters;
+namespace Umbraco.AI.Web.Api.Management.Common.Filters;
 
 /// <summary>
 /// Action filter that automatically logs AI API operations.
 /// </summary>
-public class AiAuditLogFilter : IAsyncActionFilter
+public class AIAuditLogFilter : IAsyncActionFilter
 {
-    private readonly IAiAuditLogger _auditLogger;
+    private readonly IAIAuditLogger _auditLogger;
 
-    public AiAuditLogFilter(IAiAuditLogger auditLogger)
+    public AIAuditLogFilter(IAIAuditLogger auditLogger)
     {
         _auditLogger = auditLogger;
     }
@@ -986,7 +986,7 @@ public class AiAuditLogFilter : IAsyncActionFilter
             if (result.Exception != null)
             {
                 success = false;
-                errorCode = result.Exception is AiException aiEx ? aiEx.ErrorCode : "UNHANDLED";
+                errorCode = result.Exception is AIException aiEx ? aiEx.ErrorCode : "UNHANDLED";
             }
             else if (result.Result is ObjectResult { StatusCode: >= 400 })
             {
@@ -997,14 +997,14 @@ public class AiAuditLogFilter : IAsyncActionFilter
         catch (Exception ex)
         {
             success = false;
-            errorCode = ex is AiException aiEx ? aiEx.ErrorCode : "UNHANDLED";
+            errorCode = ex is AIException aiEx ? aiEx.ErrorCode : "UNHANDLED";
             throw;
         }
         finally
         {
             stopwatch.Stop();
 
-            var entry = new AiAuditEntry
+            var entry = new AIAuditEntry
             {
                 Operation = operation,
                 UserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
@@ -1045,10 +1045,10 @@ public class AiAuditLogFilter : IAsyncActionFilter
 
 ### Step 4.5: Apply Filter to AI Controllers
 
-**File:** `src/Umbraco.Ai.Web/Api/Management/Common/Controllers/UmbracoAiCoreManagementControllerBase.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Common/Controllers/UmbracoAiCoreManagementControllerBase.cs`
 
 ```csharp
-[ServiceFilter(typeof(AiAuditLogFilter))]
+[ServiceFilter(typeof(AIAuditLogFilter))]
 public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagementControllerBase
 {
     // ...
@@ -1057,18 +1057,18 @@ public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagemen
 
 ### Step 4.6: Register Audit Services
 
-**File:** `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs`
+**File:** `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs`
 
 ```csharp
 // In AddUmbracoAiCore()
-builder.Services.AddSingleton<IAiAuditLogger, StructuredAiAuditLogger>();
+builder.Services.AddSingleton<IAIAuditLogger, StructuredAiAuditLogger>();
 ```
 
-**File:** `src/Umbraco.Ai.Web/Configuration/UmbracoBuilderExtensions.cs`
+**File:** `src/Umbraco.AI.Web/Configuration/UmbracoBuilderExtensions.cs`
 
 ```csharp
 // In AddUmbracoAiWeb()
-builder.Services.AddScoped<AiAuditLogFilter>();
+builder.Services.AddScoped<AIAuditLogFilter>();
 ```
 
 ---
@@ -1084,8 +1084,8 @@ builder.Services.AddScoped<AiAuditLogFilter>();
 6. Write validation tests
 
 ### Sprint 2: Error Sanitization (P1)
-1. Create `AiException.cs` hierarchy
-2. Create `AiProblemDetailsFactory.cs`
+1. Create `AIException.cs` hierarchy
+2. Create `AIProblemDetailsFactory.cs`
 3. Update `CompleteChatController.cs`
 4. Update `StreamChatController.cs`
 5. Update `GenerateEmbeddingController.cs`
@@ -1094,18 +1094,18 @@ builder.Services.AddScoped<AiAuditLogFilter>();
 
 ### Sprint 3: Rate Limiting (P0)
 1. Add `RateLimiting` static class to `Constants.cs`
-2. Create `AiRateLimitOptions.cs`
-3. Update `AiOptions.cs`
+2. Create `AIRateLimitOptions.cs`
+3. Update `AIOptions.cs`
 4. Create `UmbracoAiRateLimitingPipelineFilter.cs`
 5. Add rate limiting configuration in `UmbracoBuilderExtensions.cs`
 6. Apply `[EnableRateLimiting]` to controllers
 7. Write rate limiting integration tests
 
 ### Sprint 4: Audit Logging (P2)
-1. Create `AiAuditEntry.cs`
-2. Create `IAiAuditLogger.cs`
+1. Create `AIAuditEntry.cs`
+2. Create `IAIAuditLogger.cs`
 3. Create `StructuredAiAuditLogger.cs`
-4. Create `AiAuditLogFilter.cs`
+4. Create `AIAuditLogFilter.cs`
 5. Register services
 6. Apply filter to base controller
 7. Write audit logging tests
@@ -1116,32 +1116,32 @@ builder.Services.AddScoped<AiAuditLogFilter>();
 
 | File | Phase |
 |------|-------|
-| `src/Umbraco.Ai.Web/Api/Management/Common/Validation/MaxItemLengthAttribute.cs` | 1 |
-| `src/Umbraco.Ai.Core/Exceptions/AiException.cs` | 2 |
-| `src/Umbraco.Ai.Web/Api/Management/Common/Errors/AiProblemDetailsFactory.cs` | 2 |
-| `src/Umbraco.Ai.Core/Models/AiRateLimitOptions.cs` | 3 |
-| `src/Umbraco.Ai.Web/Configuration/UmbracoAiRateLimitingPipelineFilter.cs` | 3 |
-| `src/Umbraco.Ai.Core/Audit/AiAuditEntry.cs` | 4 |
-| `src/Umbraco.Ai.Core/Audit/IAiAuditLogger.cs` | 4 |
-| `src/Umbraco.Ai.Core/Audit/StructuredAiAuditLogger.cs` | 4 |
-| `src/Umbraco.Ai.Web/Api/Management/Common/Filters/AiAuditLogFilter.cs` | 4 |
+| `src/Umbraco.AI.Web/Api/Management/Common/Validation/MaxItemLengthAttribute.cs` | 1 |
+| `src/Umbraco.AI.Core/Exceptions/AIException.cs` | 2 |
+| `src/Umbraco.AI.Web/Api/Management/Common/Errors/AIProblemDetailsFactory.cs` | 2 |
+| `src/Umbraco.AI.Core/Models/AIRateLimitOptions.cs` | 3 |
+| `src/Umbraco.AI.Web/Configuration/UmbracoAiRateLimitingPipelineFilter.cs` | 3 |
+| `src/Umbraco.AI.Core/Audit/AIAuditEntry.cs` | 4 |
+| `src/Umbraco.AI.Core/Audit/IAIAuditLogger.cs` | 4 |
+| `src/Umbraco.AI.Core/Audit/StructuredAiAuditLogger.cs` | 4 |
+| `src/Umbraco.AI.Web/Api/Management/Common/Filters/AIAuditLogFilter.cs` | 4 |
 
 ## Files to Modify
 
 | File | Phase |
 |------|-------|
-| `src/Umbraco.Ai.Web/Constants.cs` | 1, 3 |
-| `src/Umbraco.Ai.Web/Api/Management/Chat/Models/ChatRequestModel.cs` | 1 |
-| `src/Umbraco.Ai.Web/Api/Management/Chat/Models/ChatMessageModel.cs` | 1 |
-| `src/Umbraco.Ai.Web/Api/Management/Embedding/Models/GenerateEmbeddingRequestModel.cs` | 1 |
-| `src/Umbraco.Ai.Web/Api/Management/Connection/Models/CreateConnectionRequestModel.cs` | 1 |
-| `src/Umbraco.Ai.Web/Api/Management/Profile/Models/CreateProfileRequestModel.cs` | 1 |
-| `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/CompleteChatController.cs` | 2, 3 |
-| `src/Umbraco.Ai.Web/Api/Management/Chat/Controllers/StreamChatController.cs` | 2, 3 |
-| `src/Umbraco.Ai.Web/Api/Management/Embedding/Controllers/GenerateEmbeddingController.cs` | 2, 3 |
-| `src/Umbraco.Ai.Core/Models/AiOptions.cs` | 3 |
-| `src/Umbraco.Ai.Web/Configuration/UmbracoBuilderExtensions.cs` | 3, 4 |
-| `src/Umbraco.Ai.Core/Configuration/UmbracoBuilderExtensions.cs` | 4 |
+| `src/Umbraco.AI.Web/Constants.cs` | 1, 3 |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatRequestModel.cs` | 1 |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Models/ChatMessageModel.cs` | 1 |
+| `src/Umbraco.AI.Web/Api/Management/Embedding/Models/GenerateEmbeddingRequestModel.cs` | 1 |
+| `src/Umbraco.AI.Web/Api/Management/Connection/Models/CreateConnectionRequestModel.cs` | 1 |
+| `src/Umbraco.AI.Web/Api/Management/Profile/Models/CreateProfileRequestModel.cs` | 1 |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/CompleteChatController.cs` | 2, 3 |
+| `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/StreamChatController.cs` | 2, 3 |
+| `src/Umbraco.AI.Web/Api/Management/Embedding/Controllers/GenerateEmbeddingController.cs` | 2, 3 |
+| `src/Umbraco.AI.Core/Models/AIOptions.cs` | 3 |
+| `src/Umbraco.AI.Web/Configuration/UmbracoBuilderExtensions.cs` | 3, 4 |
+| `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` | 4 |
 
 ---
 
@@ -1152,7 +1152,7 @@ Add to `docs/public/configuration.md`:
 ```markdown
 ## Rate Limiting
 
-Umbraco.Ai includes built-in rate limiting to prevent abuse of AI endpoints.
+Umbraco.AI includes built-in rate limiting to prevent abuse of AI endpoints.
 
 ### Default Limits
 
@@ -1209,7 +1209,7 @@ Set `Enabled` to `false` to disable rate limiting (not recommended for productio
 ### Unit Tests
 
 - Validation attribute tests (valid/invalid inputs)
-- AiProblemDetailsFactory tests (exception mapping)
+- AIProblemDetailsFactory tests (exception mapping)
 - Custom exception tests
 
 ### Integration Tests

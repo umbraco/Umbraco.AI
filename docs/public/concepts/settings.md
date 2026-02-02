@@ -5,7 +5,7 @@ description: >-
 
 # Settings
 
-AI Settings provide a central place to configure system-wide defaults for Umbraco.Ai. These settings are stored in the database and managed through the backoffice or programmatically.
+AI Settings provide a central place to configure system-wide defaults for Umbraco.AI. These settings are stored in the database and managed through the backoffice or programmatically.
 
 ## What Settings Store
 
@@ -38,14 +38,14 @@ See [Managing Settings](../backoffice/managing-settings.md) for detailed instruc
 ```csharp
 public class SettingsExample
 {
-    private readonly IAiSettingsService _settingsService;
+    private readonly IAISettingsService _settingsService;
 
-    public SettingsExample(IAiSettingsService settingsService)
+    public SettingsExample(IAISettingsService settingsService)
     {
         _settingsService = settingsService;
     }
 
-    public async Task<AiSettings> GetCurrentSettings()
+    public async Task<AISettings> GetCurrentSettings()
     {
         return await _settingsService.GetSettingsAsync();
     }

@@ -99,19 +99,19 @@ Suggest improvements for SEO.
 
 ### From Code
 
-Execute prompts programmatically using `IAiPromptService`:
+Execute prompts programmatically using `IAIPromptService`:
 
 {% code title="Example.cs" %}
 ```csharp
 var result = await _promptService.ExecutePromptAsync(
     promptId,
-    new AiPromptExecutionRequest
+    new AIPromptExecutionRequest
     {
         EntityId = contentId,
         EntityType = "document",
         PropertyAlias = "bodyText",
         Culture = "en-US",
-        Context = new List<AiRequestContextItem>
+        Context = new List<AIRequestContextItem>
         {
             new() { Description = "Target language", Value = "French" },
             new() { Description = "Current content", Value = content.GetValue<string>("bodyText") }
@@ -120,7 +120,7 @@ var result = await _promptService.ExecutePromptAsync(
 ```
 {% endcode %}
 
-The `AiPromptExecutionRequest` requires:
+The `AIPromptExecutionRequest` requires:
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -134,15 +134,15 @@ Optional properties:
 |----------|------|-------------|
 | `Culture` | `string?` | Culture variant code |
 | `Segment` | `string?` | Segment variant |
-| `Context` | `IReadOnlyList<AiRequestContextItem>?` | Additional context items |
+| `Context` | `IReadOnlyList<AIRequestContextItem>?` | Additional context items |
 
 ## Context Items
 
 Context items provide additional information to the prompt:
 
-{% code title="AiRequestContextItem.cs" %}
+{% code title="AIRequestContextItem.cs" %}
 ```csharp
-public class AiRequestContextItem
+public class AIRequestContextItem
 {
     public required string Description { get; init; }
     public string? Value { get; init; }

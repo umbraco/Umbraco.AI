@@ -24,7 +24,7 @@ The profile used for chat operations when no profile is explicitly specified.
 | Default Chat Profile | Select from available chat profiles |
 
 When set, this profile is used by:
-- `IAiChatService.GetChatResponseAsync()` without a profile ID
+- `IAIChatService.GetChatResponseAsync()` without a profile ID
 - Prompts without an associated profile
 - Agents without an associated profile
 
@@ -37,7 +37,7 @@ The profile used for embedding operations when no profile is explicitly specifie
 | Default Embedding Profile | Select from available embedding profiles |
 
 When set, this profile is used by:
-- `IAiEmbeddingService.GenerateEmbeddingsAsync()` without a profile ID
+- `IAIEmbeddingService.GenerateEmbeddingsAsync()` without a profile ID
 
 ## Configuring Settings
 

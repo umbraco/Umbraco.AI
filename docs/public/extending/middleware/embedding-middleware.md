@@ -5,13 +5,13 @@ description: >-
 
 # Embedding Middleware
 
-Embedding middleware wraps `IEmbeddingGenerator<string, Embedding<float>>` instances to add behavior to embedding generation. Implement `IAiEmbeddingMiddleware` to create custom middleware.
+Embedding middleware wraps `IEmbeddingGenerator<string, Embedding<float>>` instances to add behavior to embedding generation. Implement `IAIEmbeddingMiddleware` to create custom middleware.
 
 ## Interface
 
-{% code title="IAiEmbeddingMiddleware" %}
+{% code title="IAIEmbeddingMiddleware" %}
 ```csharp
-public interface IAiEmbeddingMiddleware
+public interface IAIEmbeddingMiddleware
 {
     IEmbeddingGenerator<string, Embedding<float>> Apply(
         IEmbeddingGenerator<string, Embedding<float>> generator);
@@ -26,9 +26,9 @@ The `Apply` method receives the current generator and returns a wrapped generato
 {% code title="SimpleEmbeddingMiddleware.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Embeddings;
+using Umbraco.AI.Core.Embeddings;
 
-public class SimpleEmbeddingMiddleware : IAiEmbeddingMiddleware
+public class SimpleEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
     public IEmbeddingGenerator<string, Embedding<float>> Apply(
         IEmbeddingGenerator<string, Embedding<float>> generator)
@@ -47,7 +47,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-public class MetricsEmbeddingMiddleware : IAiEmbeddingMiddleware
+public class MetricsEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
     private readonly ILogger<MetricsEmbeddingMiddleware> _logger;
 
@@ -127,7 +127,7 @@ Microsoft.Extensions.AI provides built-in middleware for embedding generators:
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-public class LoggingEmbeddingMiddleware : IAiEmbeddingMiddleware
+public class LoggingEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
     private readonly ILoggerFactory _loggerFactory;
 
@@ -153,14 +153,14 @@ Register middleware in a Composer:
 
 {% code title="MyComposer.cs" %}
 ```csharp
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
 
 public class MyComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiEmbeddingMiddleware()
+        builder.AIEmbeddingMiddleware()
             .Append<MetricsEmbeddingMiddleware>();
     }
 }
@@ -178,7 +178,7 @@ using System.Text;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Caching.Memory;
 
-public class CachingEmbeddingMiddleware : IAiEmbeddingMiddleware
+public class CachingEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
     private readonly IMemoryCache _cache;
 
@@ -276,7 +276,7 @@ Normalize embedding vectors to unit length:
 ```csharp
 using Microsoft.Extensions.AI;
 
-public class NormalizationEmbeddingMiddleware : IAiEmbeddingMiddleware
+public class NormalizationEmbeddingMiddleware : IAIEmbeddingMiddleware
 {
     public IEmbeddingGenerator<string, Embedding<float>> Apply(
         IEmbeddingGenerator<string, Embedding<float>> generator)

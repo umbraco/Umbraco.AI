@@ -5,16 +5,16 @@ description: >-
 
 # Services
 
-Umbraco.Ai provides core services for AI operations. All services are registered with dependency injection and can be injected into controllers, composers, or other services.
+Umbraco.AI provides core services for AI operations. All services are registered with dependency injection and can be injected into controllers, composers, or other services.
 
 ## Available Services
 
 | Service | Purpose |
 |---------|---------|
-| [IAiChatService](ai-chat-service.md) | Chat completions (streaming and non-streaming) |
-| [IAiEmbeddingService](ai-embedding-service.md) | Text embedding generation |
-| [IAiProfileService](ai-profile-service.md) | Profile CRUD operations |
-| [IAiConnectionService](ai-connection-service.md) | Connection management |
+| [IAIChatService](ai-chat-service.md) | Chat completions (streaming and non-streaming) |
+| [IAIEmbeddingService](ai-embedding-service.md) | Text embedding generation |
+| [IAIProfileService](ai-profile-service.md) | Profile CRUD operations |
+| [IAIConnectionService](ai-connection-service.md) | Connection management |
 
 ## Usage Pattern
 
@@ -22,15 +22,15 @@ All services follow standard dependency injection patterns:
 
 {% code title="Using Services" %}
 ```csharp
-using Umbraco.Ai.Core.Chat;
-using Umbraco.Ai.Core.Profiles;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Profiles;
 
 public class MyController : Controller
 {
-    private readonly IAiChatService _chatService;
-    private readonly IAiProfileService _profileService;
+    private readonly IAIChatService _chatService;
+    private readonly IAIProfileService _profileService;
 
-    public MyController(IAiChatService chatService, IAiProfileService profileService)
+    public MyController(IAIChatService chatService, IAIProfileService profileService)
     {
         _chatService = chatService;
         _profileService = profileService;
@@ -49,17 +49,17 @@ public class MyController : Controller
 ## In This Section
 
 {% content-ref url="ai-chat-service.md" %}
-[IAiChatService](ai-chat-service.md)
+[IAIChatService](ai-chat-service.md)
 {% endcontent-ref %}
 
 {% content-ref url="ai-embedding-service.md" %}
-[IAiEmbeddingService](ai-embedding-service.md)
+[IAIEmbeddingService](ai-embedding-service.md)
 {% endcontent-ref %}
 
 {% content-ref url="ai-profile-service.md" %}
-[IAiProfileService](ai-profile-service.md)
+[IAIProfileService](ai-profile-service.md)
 {% endcontent-ref %}
 
 {% content-ref url="ai-connection-service.md" %}
-[IAiConnectionService](ai-connection-service.md)
+[IAIConnectionService](ai-connection-service.md)
 {% endcontent-ref %}

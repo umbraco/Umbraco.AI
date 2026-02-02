@@ -1,6 +1,6 @@
 # Umbraco Backoffice Entity Workspace Guide
 
-A comprehensive guide for implementing entity management UI in the Umbraco backoffice, based on the actual patterns used in Umbraco.Ai (connection workspace).
+A comprehensive guide for implementing entity management UI in the Umbraco backoffice, based on the actual patterns used in Umbraco.AI (connection workspace).
 
 ## Overview
 

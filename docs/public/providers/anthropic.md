@@ -11,7 +11,7 @@ Anthropic provides access to Claude models, known for their large context window
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Anthropic
+Install-Package Umbraco.AI.Anthropic
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Anthropic
+dotnet add package Umbraco.AI.Anthropic
 ```
 {% endcode %}
 
@@ -77,7 +77,7 @@ Claude's 200K token context window is ideal for processing long documents, exten
 
 {% code title="Example.cs" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "anthropic-production",
     Name = "Anthropic Production",
@@ -96,14 +96,14 @@ await _connectionService.SaveConnectionAsync(connection);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "claude-assistant",
     Name = "Claude Assistant",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     ConnectionId = connectionId,
-    Model = new AiModelRef("anthropic", "claude-sonnet-4-20250514"),
-    Settings = new AiChatProfileSettings
+    Model = new AIModelRef("anthropic", "claude-sonnet-4-20250514"),
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 4096,
@@ -143,10 +143,10 @@ Claude responds well to detailed system prompts:
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     // ...
-    Settings = new AiChatProfileSettings
+    Settings = new AIChatProfileSettings
     {
         SystemPromptTemplate = @"You are a technical documentation writer.
 

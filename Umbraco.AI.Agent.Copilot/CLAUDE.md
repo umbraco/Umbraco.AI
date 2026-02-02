@@ -2,11 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Note:** This is the Umbraco.Ai.Agent.Copilot add-on package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
+> **Note:** This is the Umbraco.AI.Agent.Copilot add-on package. See the [root CLAUDE.md](../CLAUDE.md) for shared coding standards, build commands, and repository-wide conventions that apply to all packages.
 
 ## Package Overview
 
-`Umbraco.Ai.Agent.Copilot` is a **frontend-only package** that provides the copilot chat UI for Umbraco AI agents. It has no backend code - all backend functionality comes from `Umbraco.Ai.Agent`.
+`Umbraco.AI.Agent.Copilot` is a **frontend-only package** that provides the copilot chat UI for Umbraco AI agents. It has no backend code - all backend functionality comes from `Umbraco.AI.Agent`.
 
 ### What This Package Contains
 
@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### What This Package Does NOT Contain
 
 - No C# code
-- No backend APIs (uses `Umbraco.Ai.Agent` APIs)
+- No backend APIs (uses `Umbraco.AI.Agent` APIs)
 - No database access
 - No Umbraco Composer
 
@@ -33,15 +33,15 @@ npm run build:copilot
 npm run watch:copilot
 
 # Build .NET solution (minimal - just static assets)
-dotnet build Umbraco.Ai.Agent.Copilot/Umbraco.Ai.Agent.Copilot.sln
+dotnet build Umbraco.AI.Agent.Copilot/Umbraco.AI.Agent.Copilot.sln
 ```
 
 ## Project Structure
 
 ```
-Umbraco.Ai.Agent.Copilot/
+Umbraco.AI.Agent.Copilot/
 ├── src/
-│   └── Umbraco.Ai.Agent.Copilot/
+│   └── Umbraco.AI.Agent.Copilot/
 │       ├── Client/
 │       │   ├── src/
 │       │   │   ├── copilot/              # Main copilot module
@@ -64,9 +64,9 @@ Umbraco.Ai.Agent.Copilot/
 │       │   ├── package.json
 │       │   ├── tsconfig.json
 │       │   └── vite.config.ts
-│       └── Umbraco.Ai.Agent.Copilot.csproj
+│       └── Umbraco.AI.Agent.Copilot.csproj
 ├── Directory.Build.props
-├── Umbraco.Ai.Agent.Copilot.sln
+├── Umbraco.AI.Agent.Copilot.sln
 ├── README.md
 └── CLAUDE.md
 ```
@@ -182,7 +182,7 @@ This package is frontend-only. Testing approaches:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                 Umbraco.Ai.Agent                     │
+│                 Umbraco.AI.Agent                     │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │
 │  │    Core      │ │  Persistence │ │     Web      │ │
 │  │  (Services)  │ │  (Database)  │ │   (APIs)     │ │
@@ -196,7 +196,7 @@ This package is frontend-only. Testing approaches:
                           │ depends on (npm + runtime)
                           ▼
 ┌─────────────────────────────────────────────────────┐
-│            Umbraco.Ai.Agent.Copilot                  │
+│            Umbraco.AI.Agent.Copilot                  │
 │  ┌──────────────────────────────────────────────────┤
 │  │         Web.StaticAssets (Copilot UI)            │
 │  │    - Chat sidebar, tool execution, HITL          │
@@ -223,7 +223,7 @@ This package is frontend-only. Testing approaches:
 ### Debugging Copilot
 
 1. Build copilot: `npm run build:copilot`
-2. Run demo site: `dotnet run --project demo/Umbraco.Ai.DemoSite`
+2. Run demo site: `dotnet run --project demo/Umbraco.AI.DemoSite`
 3. Open browser dev tools to see console logs
 4. Check Network tab for AG-UI streaming requests
 

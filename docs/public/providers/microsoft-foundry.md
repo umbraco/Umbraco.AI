@@ -11,7 +11,7 @@ Microsoft AI Foundry (formerly Azure AI Studio) provides a unified endpoint for 
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.MicrosoftFoundry
+Install-Package Umbraco.AI.MicrosoftFoundry
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.MicrosoftFoundry
+dotnet add package Umbraco.AI.MicrosoftFoundry
 ```
 {% endcode %}
 
@@ -88,7 +88,7 @@ Available models depend on your Azure subscription, region, and deployed models 
 
 {% code title="Example.cs" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "ai-foundry-production",
     Name = "AI Foundry Production",
@@ -110,14 +110,14 @@ await _connectionService.SaveConnectionAsync(connection);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "foundry-assistant",
     Name = "AI Foundry Assistant",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     ConnectionId = connectionId,
-    Model = new AiModelRef("microsoft-foundry", "gpt-4o"),
-    Settings = new AiChatProfileSettings
+    Model = new AIModelRef("microsoft-foundry", "gpt-4o"),
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 4096,
@@ -133,13 +133,13 @@ await _profileService.SaveProfileAsync(profile);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "foundry-embeddings",
     Name = "AI Foundry Embeddings",
-    Capability = AiCapability.Embedding,
+    Capability = AICapability.Embedding,
     ConnectionId = connectionId,
-    Model = new AiModelRef("microsoft-foundry", "text-embedding-ada-002")
+    Model = new AIModelRef("microsoft-foundry", "text-embedding-ada-002")
 };
 
 await _profileService.SaveProfileAsync(profile);
@@ -161,7 +161,7 @@ Microsoft AI Foundry provides regional deployments for data residency requiremen
 {% code title="Example.cs" %}
 ```csharp
 // Use private endpoints for enhanced security
-var connection = new AiConnection
+var connection = new AIConnection
 {
     // ...
     Settings = new MicrosoftFoundryProviderSettings

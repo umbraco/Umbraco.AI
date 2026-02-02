@@ -1,6 +1,6 @@
-# Contributing to Umbraco.Ai
+# Contributing to Umbraco.AI
 
-This guide explains how to contribute to the Umbraco.Ai monorepo, covering branch naming conventions, git workflows, and release processes.
+This guide explains how to contribute to the Umbraco.AI monorepo, covering branch naming conventions, git workflows, and release processes.
 
 ## Table of Contents
 
@@ -26,8 +26,8 @@ This guide explains how to contribute to the Umbraco.Ai monorepo, covering branc
 
 ```bash
 # Clone the repository
-git clone https://github.com/umbraco/Umbraco.Ai.git
-cd Umbraco.Ai
+git clone https://github.com/umbraco/Umbraco.AI.git
+cd Umbraco.AI
 
 # Run setup script (creates unified solution + demo site)
 .\scripts\install-demo-site.ps1  # Windows
@@ -38,21 +38,21 @@ cd Umbraco.Ai
 ./scripts/setup-git-hooks.sh   # Linux/Mac
 
 # Open unified solution
-start Umbraco.Ai.local.sln
+start Umbraco.AI.local.sln
 ```
 
 ### Repository Structure
 
 ```
-Umbraco.Ai/                    # Monorepo root
-├── Umbraco.Ai/                # Core AI layer (1.x)
-├── Umbraco.Ai.Agent/          # Agent add-on (1.x)
-├── Umbraco.Ai.Prompt/         # Prompt add-on (1.x)
-├── Umbraco.Ai.OpenAi/         # OpenAI provider (1.x)
-├── Umbraco.Ai.Anthropic/      # Anthropic provider (1.x)
-├── Umbraco.Ai.Amazon/         # Amazon Bedrock provider (1.x)
-├── Umbraco.Ai.Google/         # Google Gemini provider (1.x)
-├── Umbraco.Ai.MicrosoftFoundry/ # Microsoft AI Foundry provider (1.x)
+Umbraco.AI/                    # Monorepo root
+├── Umbraco.AI/                # Core AI layer (1.x)
+├── Umbraco.AI.Agent/          # Agent add-on (1.x)
+├── Umbraco.AI.Prompt/         # Prompt add-on (1.x)
+├── Umbraco.AI.OpenAi/         # OpenAI provider (1.x)
+├── Umbraco.AI.Anthropic/      # Anthropic provider (1.x)
+├── Umbraco.AI.Amazon/         # Amazon Bedrock provider (1.x)
+├── Umbraco.AI.Google/         # Google Gemini provider (1.x)
+├── Umbraco.AI.MicrosoftFoundry/ # Microsoft AI Foundry provider (1.x)
 ├── demo/                      # Demo site (generated)
 └── docs/                      # Shared documentation
 ```
@@ -153,14 +153,14 @@ git pull origin main
 git checkout -b feature/add-embeddings
 
 # 2. Make changes in the product directory
-# Edit: Umbraco.Ai/src/Umbraco.Ai.Core/...
+# Edit: Umbraco.AI/src/Umbraco.AI.Core/...
 
 # 3. Build and test
-dotnet build Umbraco.Ai/Umbraco.Ai.sln
-dotnet test Umbraco.Ai/Umbraco.Ai.sln
+dotnet build Umbraco.AI/Umbraco.AI.sln
+dotnet test Umbraco.AI/Umbraco.AI.sln
 
 # 4. Test in demo site
-cd demo/Umbraco.Ai.DemoSite
+cd demo/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit changes
@@ -182,14 +182,14 @@ When a feature spans multiple products (e.g., Core + Agent):
 git checkout -b feature/shared-context
 
 # 2. Make changes to both products
-# Edit: Umbraco.Ai/src/Umbraco.Ai.Core/...
-# Edit: Umbraco.Ai.Agent/src/Umbraco.Ai.Agent.Core/...
+# Edit: Umbraco.AI/src/Umbraco.AI.Core/...
+# Edit: Umbraco.AI.Agent/src/Umbraco.AI.Agent.Core/...
 
 # 3. Build unified solution (tests everything together)
-dotnet build Umbraco.Ai.local.sln
+dotnet build Umbraco.AI.local.sln
 
 # 4. Test in demo site
-cd demo/Umbraco.Ai.DemoSite
+cd demo/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit atomic changes
@@ -225,7 +225,7 @@ By default, all products use **project references** to Core (changes visible imm
 
 ```xml
 <!-- Agent.Core.csproj -->
-<ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj"
+<ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj"
                   Condition="'$(UseProjectReferences)' == 'true'" />
 ```
 
@@ -237,11 +237,11 @@ This means:
 
 ```bash
 # Run tests for specific product
-dotnet test Umbraco.Ai/Umbraco.Ai.sln
-dotnet test Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
+dotnet test Umbraco.AI/Umbraco.AI.sln
+dotnet test Umbraco.AI.Agent/Umbraco.AI.Agent.sln
 
 # Run all tests
-dotnet test Umbraco.Ai.local.sln
+dotnet test Umbraco.AI.local.sln
 ```
 
 ## Pull Request Process
@@ -315,14 +315,14 @@ Each product is versioned and released independently using Nerdbank.GitVersionin
 
 | Product | Version Scheme | Current |
 |---------|----------------|---------|
-| Umbraco.Ai (Core) | 1.x (independent) | 1.0.0 |
-| Umbraco.Ai.Agent | 1.x (independent) | 1.0.0 |
-| Umbraco.Ai.Prompt | 1.x (independent) | 1.0.0 |
-| Umbraco.Ai.OpenAi | 1.x (independent) | 1.0.0 |
-| Umbraco.Ai.Anthropic | 1.x (independent) | 1.0.0 |
-| Umbraco.Ai.Amazon | 1.x (independent) | 1.0.0 |
-| Umbraco.Ai.Google | 1.x (independent) | 1.0.0 |
-| Umbraco.Ai.MicrosoftFoundry | 1.x (independent) | 1.0.0 |
+| Umbraco.AI (Core) | 1.x (independent) | 1.0.0 |
+| Umbraco.AI.Agent | 1.x (independent) | 1.0.0 |
+| Umbraco.AI.Prompt | 1.x (independent) | 1.0.0 |
+| Umbraco.AI.OpenAi | 1.x (independent) | 1.0.0 |
+| Umbraco.AI.Anthropic | 1.x (independent) | 1.0.0 |
+| Umbraco.AI.Amazon | 1.x (independent) | 1.0.0 |
+| Umbraco.AI.Google | 1.x (independent) | 1.0.0 |
+| Umbraco.AI.MicrosoftFoundry | 1.x (independent) | 1.0.0 |
 
 ### Release Workflow
 
@@ -350,8 +350,8 @@ The script will scan for all products and present an interactive multiselect int
 
 ```json
 [
-  "Umbraco.Ai",
-  "Umbraco.Ai.OpenAi"
+  "Umbraco.AI",
+  "Umbraco.AI.OpenAi"
 ]
 ```
 
@@ -374,7 +374,7 @@ Edit each product's `version.json` in the manifest:
 ```
 
 ```bash
-git add release-manifest.json Umbraco.Ai/version.json
+git add release-manifest.json Umbraco.AI/version.json
 git commit -m "chore(release): prepare 2026.01"
 git push -u origin release/2026.01
 ```
@@ -405,7 +405,7 @@ The Azure DevOps **release pipeline** automatically triggers after the build com
 3. **Tag Git Repository**
    - Reads `pack-manifest` artifact to get each package name and version
    - Creates git tag for each deployed package: `[Product_Name]@[Version]`
-   - Examples: `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+   - Examples: `Umbraco.AI@1.1.0`, `Umbraco.AI.OpenAi@1.2.0`
    - Tags are pushed to the repository
 
 **MyGet URL:** `https://www.myget.org/F/umbraco-ai/api/v3/index.json`
@@ -417,7 +417,7 @@ The Azure DevOps **release pipeline** automatically triggers after the build com
 dotnet nuget add source https://www.myget.org/F/umbraco-ai/api/v3/index.json -n UmbracoAi
 
 # Install pre-release package
-dotnet add package Umbraco.Ai.Core --version 1.1.0-*
+dotnet add package Umbraco.AI.Core --version 1.1.0-*
 
 # Install pre-release npm package
 npm install @umbraco-ai/core@next
@@ -441,10 +441,10 @@ Once testing passes, trigger the production release from Azure DevOps. The relea
 3. **Tag Git Repository**
    - Reads `pack-manifest` to get each package name and version
    - Creates git tag for each deployed package: `[Product_Name]@[Version]`
-   - Examples: `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+   - Examples: `Umbraco.AI@1.1.0`, `Umbraco.AI.OpenAi@1.2.0`
    - Tags are pushed to the repository
 
-**NuGet URL:** `https://www.nuget.org/packages/Umbraco.Ai.Core`
+**NuGet URL:** `https://www.nuget.org/packages/Umbraco.AI.Core`
 **npm URL:** `https://www.npmjs.com/package/@umbraco-ai/core`
 
 #### 8. Merge to Main
@@ -467,7 +467,7 @@ git push origin --delete release/2026.01
 ```
 
 **Note on Git Tags:** The release pipeline automatically creates git tags during deployment:
-- Product-specific tags (e.g., `Umbraco.Ai@1.1.0`) track each deployed package version
+- Product-specific tags (e.g., `Umbraco.AI@1.1.0`) track each deployed package version
 - These tags reference the exact commit that was built and released
 - Use these tags as base points for hotfix branches or to trace which code version is in production
 
@@ -478,25 +478,25 @@ For emergency fixes to production:
 ```bash
 # 1. Create hotfix branch from the production tag
 # Find the specific product version that needs fixing
-git tag --list | grep "Umbraco.Ai@"
-# Example output: Umbraco.Ai@1.1.0, Umbraco.Ai.OpenAi@1.2.0
+git tag --list | grep "Umbraco.AI@"
+# Example output: Umbraco.AI@1.1.0, Umbraco.AI.OpenAi@1.2.0
 
 # Branch from the specific product tag
-git checkout -b hotfix/2026.01.1 Umbraco.Ai@1.1.0
+git checkout -b hotfix/2026.01.1 Umbraco.AI@1.1.0
 
 # If multiple products need hotfixes, branch from main or support branch
 # git checkout -b hotfix/2026.01.1 main
 # git checkout -b hotfix/2026.01.1 support/1.x
 
 # 2. Fix the issue
-# Edit: Umbraco.Ai/src/...
+# Edit: Umbraco.AI/src/...
 
 # 3. Update version.json for affected products
 # Change: "version": "1.1.1"
-# Edit: Umbraco.Ai/version.json
+# Edit: Umbraco.AI/version.json
 
 # 4. Generate changelog for the hotfix
-npm run changelog -- --product=Umbraco.Ai --version=1.1.1
+npm run changelog -- --product=Umbraco.AI --version=1.1.1
 # Review and edit the changelog entry
 
 # 5. (Optional) Add release-manifest.json if you want an explicit pack list
@@ -509,10 +509,10 @@ npm run changelog -- --product=Umbraco.Ai --version=1.1.1
 ./scripts/generate-release-manifest.sh    # Linux/Mac
 
 # Or create manually:
-echo '["Umbraco.Ai"]' > release-manifest.json
+echo '["Umbraco.AI"]' > release-manifest.json
 
 # 6. Commit and push
-git add Umbraco.Ai/CHANGELOG.md release-manifest.json Umbraco.Ai/version.json
+git add Umbraco.AI/CHANGELOG.md release-manifest.json Umbraco.AI/version.json
 git commit -m "fix(core): resolve critical security issue"
 git push -u origin hotfix/2026.01.1
 
@@ -522,14 +522,14 @@ git push -u origin hotfix/2026.01.1
 # - Publishes artifacts: all-nuget-packages, all-npm-packages, pack-manifest
 
 # 8. Release pipeline deploys to MyGet and creates pre-release tags
-# Tags example: Umbraco.Ai@1.1.1-preview
+# Tags example: Umbraco.AI@1.1.1-preview
 
 # 9. Test hotfix packages
-dotnet add package Umbraco.Ai.Core --version 1.1.1-*
+dotnet add package Umbraco.AI.Core --version 1.1.1-*
 
 # 10. Trigger production release from Azure DevOps
 # - Release pipeline deploys to NuGet.org and npm registry
-# - Automatically creates production tags: Umbraco.Ai@1.1.1
+# - Automatically creates production tags: Umbraco.AI@1.1.1
 
 # 11. Merge hotfix to main (or support branch)
 # Create PR: hotfix/2026.01.1 → main (or support/1.x)
@@ -557,9 +557,9 @@ Or manually create the file at repo root:
 
 ```json
 [
-  "Umbraco.Ai",
-  "Umbraco.Ai.OpenAi",
-  "Umbraco.Ai.Anthropic"
+  "Umbraco.AI",
+  "Umbraco.AI.OpenAi",
+  "Umbraco.AI.Anthropic"
 ]
 ```
 
@@ -568,9 +568,9 @@ Or manually create the file at repo root:
 3. **Push release branch** - CI enforces that all listed products are packed
 
 4. **Release pipeline creates tags** for each product:
-   - `Umbraco.Ai@1.1.0`
-   - `Umbraco.Ai.OpenAi@1.2.0`
-   - `Umbraco.Ai.Anthropic@1.2.0`
+   - `Umbraco.AI@1.1.0`
+   - `Umbraco.AI.OpenAi@1.2.0`
+   - `Umbraco.AI.Anthropic@1.2.0`
 
 **Important:** On `release/*` branches, `release-manifest.json` is **required**. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
 
@@ -578,20 +578,20 @@ On `hotfix/*` branches, the manifest is **optional**. If present, it is enforced
 
 ### Cross-Product Dependency Management
 
-Add-on packages and providers depend on Umbraco.Ai (Core). When releasing products with dependencies, follow these guidelines:
+Add-on packages and providers depend on Umbraco.AI (Core). When releasing products with dependencies, follow these guidelines:
 
 #### Version Ranges (Required)
 
 **Always use version ranges** for cross-product dependencies. This allows add-ons to work with a range of Core versions without requiring simultaneous releases.
 
-**Example:** If Umbraco.Ai.Prompt 1.1.0 is compatible with Core 1.1.x and later within the 1.x series:
+**Example:** If Umbraco.AI.Prompt 1.1.0 is compatible with Core 1.1.x and later within the 1.x series:
 
 ```xml
-<!-- Umbraco.Ai.Prompt/Directory.Packages.props -->
+<!-- Umbraco.AI.Prompt/Directory.Packages.props -->
 <Project>
   <ItemGroup>
     <!-- Use a range: minimum version 1.1.0, up to (but not including) 1.999.999 -->
-    <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
   </ItemGroup>
 </Project>
 ```
@@ -615,14 +615,14 @@ When releasing Core with breaking changes:
 1. **Bump Core minor version**: `1.1.0` → `1.2.0`
 2. **Update dependent products**: Update their `Directory.Packages.props` to the new minimum version:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.2.0, 1.999.999)" />
+   <PackageVersion Include="Umbraco.AI.Core" Version="[1.2.0, 1.999.999)" />
    ```
 3. **Include in release manifest**: All dependent products must be included in the same release:
    ```json
    [
-     "Umbraco.Ai",
-     "Umbraco.Ai.Prompt",
-     "Umbraco.Ai.Agent"
+     "Umbraco.AI",
+     "Umbraco.AI.Prompt",
+     "Umbraco.AI.Agent"
    ]
    ```
 
@@ -642,10 +642,10 @@ Before releasing, verify dependencies resolve correctly:
 
 ```bash
 # Build with NuGet references (not project references)
-dotnet build Umbraco.Ai.local.sln /p:UseProjectReferences=false
+dotnet build Umbraco.AI.local.sln /p:UseProjectReferences=false
 
 # Verify the correct Core version is resolved
-dotnet list Umbraco.Ai.Prompt/src/Umbraco.Ai.Prompt.Core package --include-transitive | grep Umbraco.Ai.Core
+dotnet list Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Core package --include-transitive | grep Umbraco.AI.Core
 ```
 
 ## Maintaining Changelogs
@@ -686,15 +686,15 @@ Scopes are automatically discovered from product `changelog.config.json` files:
 
 | Product | Scopes |
 |---------|--------|
-| **Umbraco.Ai** | `core`, `profile`, `chat`, `embedding`, `connection`, `middleware`, `registry`, `settings`, `providers`, `ui`, `frontend`, `api` |
-| **Umbraco.Ai.Agent** | `agent` |
-| **Umbraco.Ai.Agent.Copilot** | `copilot`, `tools`, `approval` |
-| **Umbraco.Ai.Prompt** | `prompt` |
-| **Umbraco.Ai.OpenAi** | `openai` |
-| **Umbraco.Ai.Anthropic** | `anthropic` |
-| **Umbraco.Ai.Amazon** | `amazon` |
-| **Umbraco.Ai.Google** | `google` |
-| **Umbraco.Ai.MicrosoftFoundry** | `microsoft-foundry` |
+| **Umbraco.AI** | `core`, `profile`, `chat`, `embedding`, `connection`, `middleware`, `registry`, `settings`, `providers`, `ui`, `frontend`, `api` |
+| **Umbraco.AI.Agent** | `agent` |
+| **Umbraco.AI.Agent.Copilot** | `copilot`, `tools`, `approval` |
+| **Umbraco.AI.Prompt** | `prompt` |
+| **Umbraco.AI.OpenAi** | `openai` |
+| **Umbraco.AI.Anthropic** | `anthropic` |
+| **Umbraco.AI.Amazon** | `amazon` |
+| **Umbraco.AI.Google** | `google` |
+| **Umbraco.AI.MicrosoftFoundry** | `microsoft-foundry` |
 | **Meta scopes** | `deps`, `ci`, `docs`, `release` |
 
 **Examples:**
@@ -727,21 +727,21 @@ npm run changelog:list
 **Generate changelog for a specific product:**
 ```bash
 # Using npm script
-npm run changelog -- --product=Umbraco.Ai --version=1.1.0
+npm run changelog -- --product=Umbraco.AI --version=1.1.0
 
 # Using Node.js directly
-node scripts/generate-changelog.js --product=Umbraco.Ai --version=1.1.0
+node scripts/generate-changelog.js --product=Umbraco.AI --version=1.1.0
 
 # Using PowerShell wrapper
-.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
+.\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0
 
 # Using Bash wrapper
-./scripts/generate-changelog.sh --product=Umbraco.Ai --version=1.1.0
+./scripts/generate-changelog.sh --product=Umbraco.AI --version=1.1.0
 ```
 
 **Generate unreleased changes:**
 ```bash
-npm run changelog -- --product=Umbraco.Ai --unreleased
+npm run changelog -- --product=Umbraco.AI --unreleased
 ```
 
 **Generate all changelogs at once:**
@@ -765,15 +765,15 @@ When creating a release, follow these steps:
    ```
    Or manually create `release-manifest.json`:
    ```json
-   ["Umbraco.Ai", "Umbraco.Ai.OpenAi"]
+   ["Umbraco.AI", "Umbraco.AI.OpenAi"]
    ```
 
 3. **Update version.json** for each product in the manifest
 
 4. **Generate changelogs** for each product:
    ```bash
-   npm run changelog -- --product=Umbraco.Ai --version=1.1.0
-   npm run changelog -- --product=Umbraco.Ai.OpenAi --version=1.2.0
+   npm run changelog -- --product=Umbraco.AI --version=1.1.0
+   npm run changelog -- --product=Umbraco.AI.OpenAi --version=1.2.0
    ```
 
 5. **Review and edit** generated changelogs (if needed):
@@ -784,13 +784,13 @@ When creating a release, follow these steps:
 
 6. **Commit changelogs:**
    ```bash
-   git add Umbraco.Ai/CHANGELOG.md Umbraco.Ai.OpenAi/CHANGELOG.md
+   git add Umbraco.AI/CHANGELOG.md Umbraco.AI.OpenAi/CHANGELOG.md
    git commit -m "docs(core,openai): update CHANGELOGs for release 2026.01"
    ```
 
 7. **Commit version updates:**
    ```bash
-   git add release-manifest.json Umbraco.Ai/version.json Umbraco.Ai.OpenAi/version.json
+   git add release-manifest.json Umbraco.AI/version.json Umbraco.AI.OpenAi/version.json
    git commit -m "chore(release): prepare 2026.01"
    ```
 
@@ -811,7 +811,7 @@ When creating a release, follow these steps:
 
 11. **Trigger production release** from Azure DevOps
     - Release pipeline deploys to NuGet.org and npm
-    - Automatically creates git tags: `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+    - Automatically creates git tags: `Umbraco.AI@1.1.0`, `Umbraco.AI.OpenAi@1.2.0`
     - Tags include the changelog commits
 
 12. **Merge release branch to main**
@@ -820,11 +820,11 @@ When creating a release, follow these steps:
 
 To add changelog support for a new product:
 
-1. **Create product directory:** `Umbraco.Ai.NewProduct/`
+1. **Create product directory:** `Umbraco.AI.NewProduct/`
 
 2. **Create changelog config:**
    ```json
-   // Umbraco.Ai.NewProduct/changelog.config.json
+   // Umbraco.AI.NewProduct/changelog.config.json
    {
      "scopes": ["new-product"]
    }
@@ -838,7 +838,7 @@ To add changelog support for a new product:
 
 4. **Generate initial changelog:**
    ```bash
-   npm run changelog -- --product=Umbraco.Ai.NewProduct --unreleased
+   npm run changelog -- --product=Umbraco.AI.NewProduct --unreleased
    ```
 
 No script changes needed - products are discovered automatically by convention!
@@ -957,7 +957,7 @@ Each build produces the following artifacts:
 ```json
 [
   {
-    "name": "Umbraco.Ai",
+    "name": "Umbraco.AI",
     "version": "1.1.0",
     "type": "nuget"
   },
@@ -975,8 +975,8 @@ The release pipeline automatically creates git tags for traceability:
 
 | Tag Format | Example | Purpose | Created When |
 |------------|---------|---------|--------------|
-| `<Product>@<Version>` | `Umbraco.Ai@1.1.0` | Tracks deployed package version | Automated (by release pipeline) |
-| `<Product>@<Version>` | `Umbraco.Ai.OpenAi@1.2.0` | Tracks deployed package version | Automated (by release pipeline) |
+| `<Product>@<Version>` | `Umbraco.AI@1.1.0` | Tracks deployed package version | Automated (by release pipeline) |
+| `<Product>@<Version>` | `Umbraco.AI.OpenAi@1.2.0` | Tracks deployed package version | Automated (by release pipeline) |
 
 **How it works:**
 1. Release pipeline reads `pack-manifest` artifact
@@ -987,7 +987,7 @@ The release pipeline automatically creates git tags for traceability:
 - Trace which exact commit was deployed for each package
 - Navigate to source code for any production version
 - Use tags as base points for hotfix branches
-- Compare versions across products (e.g., `git log Umbraco.Ai@1.0.0..Umbraco.Ai@1.1.0`)
+- Compare versions across products (e.g., `git log Umbraco.AI@1.0.0..Umbraco.AI@1.1.0`)
 
 ### Change Detection
 
@@ -999,7 +999,7 @@ The Azure DevOps pipeline uses smart change detection to build only affected pro
 $changedFiles = git diff --name-only HEAD~1 HEAD
 
 # Determine changed products
-if ($file.StartsWith("Umbraco.Ai/")) {
+if ($file.StartsWith("Umbraco.AI/")) {
     $changedProducts["core"] = $true
 }
 
@@ -1068,7 +1068,7 @@ graph TB
 **8. TagRepository** (all deployments)
 - Reads `pack-manifest` artifact
 - Creates git tag for each package: `<Product>@<Version>`
-- Pushes tags to repository (e.g., `Umbraco.Ai@1.1.0`)
+- Pushes tags to repository (e.g., `Umbraco.AI@1.1.0`)
 - Tags point to the commit that was built
 
 ## Coding Standards
@@ -1097,7 +1097,7 @@ public class AiProfileService
 **Extension Methods:**
 ```csharp
 // Must be in .Extensions namespace
-namespace Umbraco.Ai.Extensions
+namespace Umbraco.AI.Extensions
 {
     public static class ChatClientExtensions { }
 }
@@ -1139,14 +1139,14 @@ Update documentation when:
 
 ### Getting Help
 
-1. **Search existing issues**: [GitHub Issues](https://github.com/umbraco/Umbraco.Ai/issues)
+1. **Search existing issues**: [GitHub Issues](https://github.com/umbraco/Umbraco.AI/issues)
 2. **Ask on Discord**: [Umbraco Discord Server](https://discord.umbraco.com)
 3. **Create new issue**: Provide minimal reproduction
 
 ### Reporting Bugs
 
 Include:
-- Product and version (e.g., Umbraco.Ai.Core 1.0.0)
+- Product and version (e.g., Umbraco.AI.Core 1.0.0)
 - Umbraco CMS version
 - .NET version
 - Steps to reproduce
@@ -1163,8 +1163,8 @@ Include:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the same license as the Umbraco.Ai project.
+By contributing, you agree that your contributions will be licensed under the same license as the Umbraco.AI project.
 
 ---
 
-Thank you for contributing to Umbraco.Ai! 🚀
+Thank you for contributing to Umbraco.AI! 🚀

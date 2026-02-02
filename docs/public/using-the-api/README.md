@@ -1,18 +1,18 @@
 ---
 description: >-
-  Learn how to use Umbraco.Ai services in your code for chat, embeddings, and more.
+  Learn how to use Umbraco.AI services in your code for chat, embeddings, and more.
 ---
 
 # Using the API
 
-Umbraco.Ai provides a service layer that wraps Microsoft.Extensions.AI types with Umbraco-specific features like profiles and connections. This section covers how to use these services in your code.
+Umbraco.AI provides a service layer that wraps Microsoft.Extensions.AI types with Umbraco-specific features like profiles and connections. This section covers how to use these services in your code.
 
 ## Primary Services
 
 | Service | Purpose |
 |---------|---------|
-| `IAiChatService` | Chat completions and conversational AI |
-| `IAiEmbeddingService` | Generate vector embeddings for text |
+| `IAIChatService` | Chat completions and conversational AI |
+| `IAIEmbeddingService` | Generate vector embeddings for text |
 
 ## Dependency Injection
 
@@ -22,12 +22,12 @@ All services are registered automatically and can be injected into your controll
 ```csharp
 public class MyController : UmbracoApiController
 {
-    private readonly IAiChatService _chatService;
-    private readonly IAiEmbeddingService _embeddingService;
+    private readonly IAIChatService _chatService;
+    private readonly IAIEmbeddingService _embeddingService;
 
     public MyController(
-        IAiChatService chatService,
-        IAiEmbeddingService embeddingService)
+        IAIChatService chatService,
+        IAIEmbeddingService embeddingService)
     {
         _chatService = chatService;
         _embeddingService = embeddingService;
@@ -38,7 +38,7 @@ public class MyController : UmbracoApiController
 
 ## Using M.E.AI Types
 
-Umbraco.Ai uses standard Microsoft.Extensions.AI types:
+Umbraco.AI uses standard Microsoft.Extensions.AI types:
 
 | Type | Namespace | Purpose |
 |------|-----------|---------|

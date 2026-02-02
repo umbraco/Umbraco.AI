@@ -5,11 +5,11 @@ description: >-
 
 # Frontend Integration
 
-Umbraco.Ai provides TypeScript APIs for integrating AI chat capabilities into custom backoffice elements. The frontend APIs work within the Umbraco backoffice context.
+Umbraco.AI provides TypeScript APIs for integrating AI chat capabilities into custom backoffice elements. The frontend APIs work within the Umbraco backoffice context.
 
 ## Package
 
-The chat API is exported from the Umbraco.Ai client package:
+The chat API is exported from the Umbraco.AI client package:
 
 {% code title="Import" %}
 ```typescript

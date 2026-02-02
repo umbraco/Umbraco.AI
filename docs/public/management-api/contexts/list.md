@@ -65,6 +65,6 @@ curl -X GET "https://your-site.com/umbraco/ai/management/api/v1/context?skip=0&t
 {% code title="C#" %}
 ```csharp
 var response = await httpClient.GetAsync("/umbraco/ai/management/api/v1/context?skip=0&take=10");
-var result = await response.Content.ReadFromJsonAsync<PagedResult<AiContextModel>>();
+var result = await response.Content.ReadFromJsonAsync<PagedResult<AIContextModel>>();
 ```
 {% endcode %}

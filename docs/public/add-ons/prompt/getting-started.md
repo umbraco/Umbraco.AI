@@ -11,7 +11,7 @@ This guide walks you through creating and using your first prompt.
 
 Before starting, ensure you have:
 
-- Umbraco.Ai installed and configured
+- Umbraco.AI installed and configured
 - At least one AI connection set up
 - At least one chat profile created
 
@@ -19,7 +19,7 @@ Before starting, ensure you have:
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Prompt
+Install-Package Umbraco.AI.Prompt
 ```
 {% endcode %}
 
@@ -74,9 +74,9 @@ In the prompt editor, use the **Test** panel:
 ```csharp
 public class MetaDescriptionGenerator
 {
-    private readonly IAiPromptService _promptService;
+    private readonly IAIPromptService _promptService;
 
-    public MetaDescriptionGenerator(IAiPromptService promptService)
+    public MetaDescriptionGenerator(IAIPromptService promptService)
     {
         _promptService = promptService;
     }
@@ -87,7 +87,7 @@ public class MetaDescriptionGenerator
 
         var result = await _promptService.ExecutePromptAsync(
             prompt!.Id,
-            new AiPromptExecutionRequest
+            new AIPromptExecutionRequest
             {
                 Variables = new Dictionary<string, string>
                 {

@@ -3,35 +3,35 @@ description: >-
   Service for managing AI contexts.
 ---
 
-# IAiContextService
+# IAIContextService
 
 Service for context CRUD operations and lookups. Contexts store brand voice, guidelines, and content for AI injection.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Contexts;
+using Umbraco.AI.Core.Contexts;
 ```
 
 ## Interface
 
-{% code title="IAiContextService" %}
+{% code title="IAIContextService" %}
 ```csharp
-public interface IAiContextService
+public interface IAIContextService
 {
-    Task<AiContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<AiContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiContext>> GetContextsAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIContext>> GetContextsAsync(CancellationToken cancellationToken = default);
 
-    Task<(IEnumerable<AiContext> Items, int Total)> GetContextsPagedAsync(
+    Task<(IEnumerable<AIContext> Items, int Total)> GetContextsPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);
 
-    Task<AiContext> SaveContextAsync(AiContext context, CancellationToken cancellationToken = default);
+    Task<AIContext> SaveContextAsync(AIContext context, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteContextAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -127,20 +127,20 @@ Creates or updates a context. When updating, a new version is created automatica
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `context` | `AiContext` | The context to save |
+| `context` | `AIContext` | The context to save |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved context with ID assigned and version incremented.
 
 {% code title="Example" %}
 ```csharp
-var context = new AiContext
+var context = new AIContext
 {
     Alias = "brand-voice",
     Name = "Brand Voice",
-    Resources = new List<AiContextResource>
+    Resources = new List<AIContextResource>
     {
-        new AiContextResource
+        new AIContextResource
         {
             ResourceTypeId = "text",
             Name = "Tone of Voice",
@@ -202,5 +202,5 @@ if (await _contextService.ContextAliasExistsAsync("new-alias", existingContextId
 
 ## Related
 
-* [AiContext](../models/ai-context.md) - The context model
+* [AIContext](../models/ai-context.md) - The context model
 * [Contexts Concept](../../concepts/contexts.md) - Context concepts

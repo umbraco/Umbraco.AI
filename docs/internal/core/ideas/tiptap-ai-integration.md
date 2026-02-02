@@ -46,14 +46,14 @@ TipTap Editor Toolbar
 The TipTap integration lives in its own NuGet package for optional installation:
 
 ```
-Umbraco.Ai.Tiptap (RCL with embedded client code)
+Umbraco.AI.Tiptap (RCL with embedded client code)
     │
-    ├── References: Umbraco.Ai.Core (for IAiChatService, AiPrompt)
+    ├── References: Umbraco.AI.Core (for IAIChatService, AIPrompt)
     │
-    └── Client calls: Umbraco.Ai.Web API endpoints
+    └── Client calls: Umbraco.AI.Web API endpoints
 ```
 
-**Rationale**: Not all Umbraco.Ai users need RTE integration. Keeping it separate allows:
+**Rationale**: Not all Umbraco.AI users need RTE integration. Keeping it separate allows:
 - Smaller core package size
 - Optional installation
 - Independent versioning
@@ -289,8 +289,8 @@ User clicks AI toolbar button
 ### Project Structure
 
 ```
-src/Umbraco.Ai.Tiptap/
-├── Umbraco.Ai.Tiptap.csproj          # RCL project
+src/Umbraco.AI.Tiptap/
+├── Umbraco.AI.Tiptap.csproj          # RCL project
 ├── TiptapComposer.cs                  # Auto-registration
 ├── wwwroot/
 │   └── App_Plugins/
@@ -326,7 +326,7 @@ export const manifests: Array<UmbExtensionManifest> = [
   {
     type: 'tiptapToolbarExtension',
     kind: 'button',
-    alias: 'UmbracoAi.Tiptap.Toolbar.AiAssistant',
+    alias: 'UmbracoAi.Tiptap.Toolbar.AIAssistant',
     name: 'AI Assistant TipTap Toolbar Extension',
     api: () => import('./ai.tiptap-toolbar-api.js'),
     meta: {
@@ -347,7 +347,7 @@ export const manifests: Array<UmbExtensionManifest> = [
 ### Toolbar API
 
 ```typescript
-export default class AiTiptapToolbarApi extends UmbTiptapToolbarElementApiBase {
+export default class AITiptapToolbarApi extends UmbTiptapToolbarElementApiBase {
   override async execute(editor?: Editor): Promise<void> {
     if (!editor) return;
 
@@ -380,7 +380,7 @@ export default class AiTiptapToolbarApi extends UmbTiptapToolbarElementApiBase {
 
 ### Streaming Chat API
 
-New endpoint in `Umbraco.Ai.Web`:
+New endpoint in `Umbraco.AI.Web`:
 
 ```
 POST /umbraco/ai/management/api/v1/chat/stream
@@ -472,7 +472,7 @@ Should there be safeguards for large selections?
 3. Profile system supporting token limits
 
 ### Implementation Order
-1. Create `Umbraco.Ai.Tiptap` RCL project
+1. Create `Umbraco.AI.Tiptap` RCL project
 2. Implement toolbar extension and manifest
 3. Build modal with action selection grid
 4. Add streaming display component
@@ -486,4 +486,4 @@ Should there be safeguards for large selections?
 
 - [AI Prompts](./ai-prompts.md) - Configurable prompt system (dependency)
 - [AI Context](./ai-context.md) - Brand voice and property hints
-- [Umbraco.Ai.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants
+- [Umbraco.AI.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants

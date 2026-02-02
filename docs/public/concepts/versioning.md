@@ -5,17 +5,17 @@ description: >-
 
 # Version History
 
-Umbraco.Ai automatically tracks version history for key entities. Every time you save a connection, profile, context, prompt, or agent, a new version is created with a complete snapshot of the entity state.
+Umbraco.AI automatically tracks version history for key entities. Every time you save a connection, profile, context, prompt, or agent, a new version is created with a complete snapshot of the entity state.
 
 ## Supported Entity Types
 
 | Entity Type | Package | Description |
 |-------------|---------|-------------|
-| `connection` | Umbraco.Ai | API credentials and provider settings |
-| `profile` | Umbraco.Ai | Model configuration and settings |
-| `context` | Umbraco.Ai | Brand voice and content resources |
-| `prompt` | Umbraco.Ai.Prompt | Prompt templates |
-| `agent` | Umbraco.Ai.Agent | AI agent definitions |
+| `connection` | Umbraco.AI | API credentials and provider settings |
+| `profile` | Umbraco.AI | Model configuration and settings |
+| `context` | Umbraco.AI | Brand voice and content resources |
+| `prompt` | Umbraco.AI.Prompt | Prompt templates |
+| `agent` | Umbraco.AI.Agent | AI agent definitions |
 
 ## How Versioning Works
 
@@ -61,14 +61,14 @@ Each version record stores:
 ```csharp
 public class VersioningExample
 {
-    private readonly IAiEntityVersionService _versionService;
+    private readonly IAIEntityVersionService _versionService;
 
-    public VersioningExample(IAiEntityVersionService versionService)
+    public VersioningExample(IAIEntityVersionService versionService)
     {
         _versionService = versionService;
     }
 
-    public async Task<IEnumerable<AiEntityVersion>> GetProfileHistory(Guid profileId)
+    public async Task<IEnumerable<AIEntityVersion>> GetProfileHistory(Guid profileId)
     {
         var (versions, total) = await _versionService.GetVersionHistoryAsync(
             profileId,
@@ -86,9 +86,9 @@ public class VersioningExample
 
 {% code title="Example.cs" %}
 ```csharp
-public async Task<AiProfile?> GetProfileAtVersion(Guid profileId, int version)
+public async Task<AIProfile?> GetProfileAtVersion(Guid profileId, int version)
 {
-    return await _versionService.GetVersionSnapshotAsync<AiProfile>(
+    return await _versionService.GetVersionSnapshotAsync<AIProfile>(
         profileId,
         version);
 }
@@ -99,7 +99,7 @@ public async Task<AiProfile?> GetProfileAtVersion(Guid profileId, int version)
 
 {% code title="Example.cs" %}
 ```csharp
-public async Task<AiVersionComparison?> CompareVersions(
+public async Task<AIVersionComparison?> CompareVersions(
     Guid entityId,
     int fromVersion,
     int toVersion)
@@ -125,7 +125,7 @@ To roll back to a previous version:
 public async Task RollbackProfile(Guid profileId, int targetVersion)
 {
     // Get the snapshot from the target version
-    var previousState = await _versionService.GetVersionSnapshotAsync<AiProfile>(
+    var previousState = await _versionService.GetVersionSnapshotAsync<AIProfile>(
         profileId,
         targetVersion);
 
@@ -165,7 +165,7 @@ Over time, version history can accumulate. You can configure automatic cleanup:
 
 {% code title="Example.cs" %}
 ```csharp
-public async Task<AiVersionCleanupResult> CleanupOldVersions()
+public async Task<AIVersionCleanupResult> CleanupOldVersions()
 {
     return await _versionService.CleanupVersionsAsync();
 }

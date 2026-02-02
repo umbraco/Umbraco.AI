@@ -1,13 +1,13 @@
 ---
 name: demo-site-automation
-description: Automates browser-based interactions with Umbraco.Ai demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents). Use when testing UI workflows, creating or editing AI entities through the backoffice, or demonstrating Umbraco.Ai features.
+description: Automates browser-based interactions with Umbraco.AI demo site using Playwright. Handles login, navigation, and editing of AI entities (connections, profiles, prompts, agents). Use when testing UI workflows, creating or editing AI entities through the backoffice, or demonstrating Umbraco.AI features.
 argument-hint: [login|navigate-to-<section>|edit-<entity>|create-<entity>|status]
 allowed-tools: mcp__playwright__*, Bash, Read, Skill
 ---
 
 # Demo Site Browser Interactions
 
-Automate browser-based interactions with the Umbraco.Ai demo site using Playwright MCP.
+Automate browser-based interactions with the Umbraco.AI demo site using Playwright MCP.
 
 ## Command: $ARGUMENTS
 
@@ -21,9 +21,9 @@ Execute the requested browser interaction with the demo site.
 ### Navigation
 - **navigate-to-connections**: Navigate to AI Connections section
 - **navigate-to-profiles**: Navigate to AI Profiles section
-- **navigate-to-prompts**: Navigate to AI Prompts section (Umbraco.Ai.Prompt)
-- **navigate-to-agents**: Navigate to AI Agents section (Umbraco.Ai.Agent)
-- **navigate-to-copilot**: Open Copilot chat UI (Umbraco.Ai.Agent.Copilot)
+- **navigate-to-prompts**: Navigate to AI Prompts section (Umbraco.AI.Prompt)
+- **navigate-to-agents**: Navigate to AI Agents section (Umbraco.AI.Agent)
+- **navigate-to-copilot**: Open Copilot chat UI (Umbraco.AI.Agent.Copilot)
 
 ### Entity Operations
 - **create-connection [provider]**: Create new AI connection (e.g., OpenAI, Anthropic)
@@ -154,11 +154,11 @@ Similar pattern to create-connection, but navigate to `/umbraco#/ai/profiles` an
 
 #### For "create-prompt"
 
-Navigate to `/umbraco#/ai-prompt/prompts` (requires Umbraco.Ai.Prompt package). Follow create pattern with prompt-specific fields (name, template, variables).
+Navigate to `/umbraco#/ai-prompt/prompts` (requires Umbraco.AI.Prompt package). Follow create pattern with prompt-specific fields (name, template, variables).
 
 #### For "create-agent"
 
-Navigate to `/umbraco#/ai-agent/agents` (requires Umbraco.Ai.Agent package). Follow create pattern with agent-specific fields (name, profile, tools, system prompt).
+Navigate to `/umbraco#/ai-agent/agents` (requires Umbraco.AI.Agent package). Follow create pattern with agent-specific fields (name, profile, tools, system prompt).
 
 #### For "navigate-to-copilot"
 

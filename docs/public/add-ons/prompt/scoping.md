@@ -29,14 +29,14 @@ Scoping allows you to control which content types can use a prompt. This helps o
 
 {% code title="Example.cs" %}
 ```csharp
-var prompt = new AiPrompt
+var prompt = new AIPrompt
 {
     Alias = "product-description",
     Name = "Product Description",
     Instructions = "Write a product description...",
-    Scope = new AiPromptScope
+    Scope = new AIPromptScope
     {
-        Mode = AiPromptScopeMode.Allow,
+        Mode = AIPromptScopeMode.Allow,
         ContentTypeAliases = new[] { "product", "productVariant" }
     }
 };
@@ -63,15 +63,15 @@ await _promptService.SavePromptAsync(prompt);
 
 ## Scope Model
 
-{% code title="AiPromptScope" %}
+{% code title="AIPromptScope" %}
 ```csharp
-public class AiPromptScope
+public class AIPromptScope
 {
-    public AiPromptScopeMode Mode { get; set; } = AiPromptScopeMode.None;
+    public AIPromptScopeMode Mode { get; set; } = AIPromptScopeMode.None;
     public IReadOnlyList<string> ContentTypeAliases { get; set; } = Array.Empty<string>();
 }
 
-public enum AiPromptScopeMode
+public enum AIPromptScopeMode
 {
     None = 0,   // No restriction
     Allow = 1,  // Only specified types
@@ -124,7 +124,7 @@ Scoping is enforced in the backoffice UI but **not** when executing prompts via 
 public async Task<string?> ExecuteWithScopeCheckAsync(
     Guid promptId,
     string contentTypeAlias,
-    AiPromptExecutionRequest request)
+    AIPromptExecutionRequest request)
 {
     var prompt = await _promptService.GetPromptAsync(promptId);
     if (prompt == null) return null;

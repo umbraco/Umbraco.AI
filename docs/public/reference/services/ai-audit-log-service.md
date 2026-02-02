@@ -3,42 +3,42 @@ description: >-
   Service for AI operation audit logging.
 ---
 
-# IAiAuditLogService
+# IAIAuditLogService
 
 Service for recording and querying AI operation audit logs. Audit logs track every chat and embedding request with timing, token usage, and outcome information.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.AuditLog;
+using Umbraco.AI.Core.AuditLog;
 ```
 
 ## Interface
 
-{% code title="IAiAuditLogService" %}
+{% code title="IAIAuditLogService" %}
 ```csharp
-public interface IAiAuditLogService
+public interface IAIAuditLogService
 {
     // Recording methods (used internally by AI services)
-    Task<AiAuditLog> StartAuditLogAsync(AiAuditLog auditLog, CancellationToken cancellationToken = default);
-    Task CompleteAuditLogAsync(AiAuditLog audit, object? response, CancellationToken cancellationToken = default);
-    Task RecordAuditLogFailureAsync(AiAuditLog audit, Exception exception, CancellationToken cancellationToken = default);
+    Task<AIAuditLog> StartAuditLogAsync(AIAuditLog auditLog, CancellationToken cancellationToken = default);
+    Task CompleteAuditLogAsync(AIAuditLog audit, object? response, CancellationToken cancellationToken = default);
+    Task RecordAuditLogFailureAsync(AIAuditLog audit, Exception exception, CancellationToken cancellationToken = default);
 
     // Fire-and-forget variants (non-blocking)
-    void QueueStartAuditLogAsync(AiAuditLog auditLog, CancellationToken cancellationToken = default);
-    void QueueCompleteAuditLogAsync(AiAuditLog audit, object? response, CancellationToken cancellationToken = default);
-    void QueueRecordAuditLogFailureAsync(AiAuditLog audit, Exception exception, CancellationToken cancellationToken = default);
+    void QueueStartAuditLogAsync(AIAuditLog auditLog, CancellationToken cancellationToken = default);
+    void QueueCompleteAuditLogAsync(AIAuditLog audit, object? response, CancellationToken cancellationToken = default);
+    void QueueRecordAuditLogFailureAsync(AIAuditLog audit, Exception exception, CancellationToken cancellationToken = default);
 
     // Query methods
-    Task<AiAuditLog?> GetAuditLogAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIAuditLog?> GetAuditLogAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<(IEnumerable<AiAuditLog> Items, int Total)> GetAuditLogsPagedAsync(
-        AiAuditLogFilter? filter = null,
+    Task<(IEnumerable<AIAuditLog> Items, int Total)> GetAuditLogsPagedAsync(
+        AIAuditLogFilter? filter = null,
         int skip = 0,
         int take = 50,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiAuditLog>> GetEntityHistoryAsync(
+    Task<IEnumerable<AIAuditLog>> GetEntityHistoryAsync(
         string entityId,
         string entityType,
         int limit = 20,
@@ -82,7 +82,7 @@ Gets audit logs with filtering and pagination.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `filter` | `AiAuditLogFilter?` | Filter criteria |
+| `filter` | `AIAuditLogFilter?` | Filter criteria |
 | `skip` | `int` | Records to skip |
 | `take` | `int` | Records to take (max 100) |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
@@ -91,12 +91,12 @@ Gets audit logs with filtering and pagination.
 
 {% code title="Example" %}
 ```csharp
-var filter = new AiAuditLogFilter
+var filter = new AIAuditLogFilter
 {
     From = DateTime.UtcNow.AddDays(-7),
     To = DateTime.UtcNow,
-    Status = AiAuditLogStatus.Failed,
-    Capability = AiCapability.Chat
+    Status = AIAuditLogStatus.Failed,
+    Capability = AICapability.Chat
 };
 
 var (logs, total) = await _auditLogService.GetAuditLogsPagedAsync(
@@ -163,14 +163,14 @@ Console.WriteLine($"Cleaned up {deletedCount} old audit logs");
 
 ## Filter Properties
 
-The `AiAuditLogFilter` class supports:
+The `AIAuditLogFilter` class supports:
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `From` | `DateTime?` | Start of date range |
 | `To` | `DateTime?` | End of date range |
-| `Status` | `AiAuditLogStatus?` | Filter by status |
-| `Capability` | `AiCapability?` | Filter by capability |
+| `Status` | `AIAuditLogStatus?` | Filter by status |
+| `Capability` | `AICapability?` | Filter by capability |
 | `ProfileId` | `Guid?` | Filter by profile |
 | `ProviderId` | `string?` | Filter by provider |
 | `UserId` | `Guid?` | Filter by user |
@@ -185,5 +185,5 @@ The `AiAuditLogFilter` class supports:
 
 ## Related
 
-* [AiAuditLog](../models/ai-audit-log.md) - The audit log model
+* [AIAuditLog](../models/ai-audit-log.md) - The audit log model
 * [Audit Logs Backoffice](../../backoffice/audit-logs.md) - Viewing audit logs

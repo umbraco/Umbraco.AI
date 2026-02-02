@@ -1,11 +1,11 @@
 ---
 description: >-
-  Configuration options for Umbraco.Ai.
+  Configuration options for Umbraco.AI.
 ---
 
 # Configuration
 
-Umbraco.Ai supports configuration through both the backoffice and `appsettings.json`.
+Umbraco.AI supports configuration through both the backoffice and `appsettings.json`.
 
 ## Default Profiles
 
@@ -39,7 +39,7 @@ Database settings (configured via backoffice) take precedence over configuration
 
 | Class | Description |
 |-------|-------------|
-| [AiOptions](ai-options.md) | Configuration file settings (fallback) |
+| [AIOptions](ai-options.md) | Configuration file settings (fallback) |
 
 ## Provider Credentials
 
@@ -86,5 +86,5 @@ Never commit API keys to source control. Use environment variables, user secrets
 ## In This Section
 
 {% content-ref url="ai-options.md" %}
-[AiOptions](ai-options.md)
+[AIOptions](ai-options.md)
 {% endcontent-ref %}

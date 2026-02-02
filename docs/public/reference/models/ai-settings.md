@@ -3,31 +3,31 @@ description: >-
   Model representing global AI settings.
 ---
 
-# AiSettings
+# AISettings
 
 Represents the global AI configuration settings, including default profiles.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Settings;
+using Umbraco.AI.Core.Settings;
 ```
 
 ## Definition
 
-{% code title="AiSettings" %}
+{% code title="AISettings" %}
 ```csharp
-public class AiSettings : IAiAuditableEntity
+public class AISettings : IAIAuditableEntity
 {
     // Fixed settings ID (singleton)
     public static readonly Guid SettingsId = Guid.Parse("672BF83C-97E0-4D04-9D33-23FC2E5EBE42");
 
     public Guid Id => SettingsId;
 
-    [AiSetting]
+    [AISetting]
     public Guid? DefaultChatProfileId { get; set; }
 
-    [AiSetting]
+    [AISetting]
     public Guid? DefaultEmbeddingProfileId { get; set; }
 
     // Audit properties
@@ -54,7 +54,7 @@ public class AiSettings : IAiAuditableEntity
 ## Notes
 
 - Settings use a singleton pattern with a fixed ID
-- The `[AiSetting]` attribute marks properties that are persisted to the database
+- The `[AISetting]` attribute marks properties that are persisted to the database
 - Settings changes are tracked in the audit log
 
 ## Example
@@ -75,5 +75,5 @@ await _settingsService.SaveSettingsAsync(settings);
 
 ## Related
 
-* [IAiSettingsService](../services/ai-settings-service.md) - Settings service
+* [IAISettingsService](../services/ai-settings-service.md) - Settings service
 * [Settings Concept](../../concepts/settings.md) - Settings concepts

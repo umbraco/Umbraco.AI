@@ -1,11 +1,11 @@
 ---
 description: >-
-  Get up and running with Umbraco.Ai in your Umbraco CMS installation.
+  Get up and running with Umbraco.AI in your Umbraco CMS installation.
 ---
 
 # Getting Started
 
-This guide walks you through installing Umbraco.Ai, configuring your first AI connection, and making your first AI-powered request.
+This guide walks you through installing Umbraco.AI, configuring your first AI connection, and making your first AI-powered request.
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ Before you begin, ensure you have:
 <tbody>
 <tr>
 <td><strong>1. Installation</strong></td>
-<td>Install the Umbraco.Ai packages via NuGet</td>
+<td>Install the Umbraco.AI packages via NuGet</td>
 </tr>
 <tr>
 <td><strong>2. Configuration</strong></td>

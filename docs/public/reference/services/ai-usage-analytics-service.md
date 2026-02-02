@@ -3,58 +3,58 @@ description: >-
   Service for AI usage analytics and reporting.
 ---
 
-# IAiUsageAnalyticsService
+# IAIUsageAnalyticsService
 
 Service for querying aggregated AI usage statistics derived from audit logs.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Analytics.Usage;
+using Umbraco.AI.Core.Analytics.Usage;
 ```
 
 ## Interface
 
-{% code title="IAiUsageAnalyticsService" %}
+{% code title="IAIUsageAnalyticsService" %}
 ```csharp
-public interface IAiUsageAnalyticsService
+public interface IAIUsageAnalyticsService
 {
-    Task<AiUsageSummary> GetSummaryAsync(
+    Task<AIUsageSummary> GetSummaryAsync(
         DateTime from,
         DateTime to,
-        AiUsageGranularity requestedGranularity = AiUsageGranularity.Day,
-        AiUsageFilter? filter = null,
+        AIUsageGranularity requestedGranularity = AIUsageGranularity.Day,
+        AIUsageFilter? filter = null,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiUsageTimeSeriesPoint>> GetTimeSeriesAsync(
+    Task<IEnumerable<AIUsageTimeSeriesPoint>> GetTimeSeriesAsync(
         DateTime from,
         DateTime to,
-        AiUsageGranularity requestedGranularity = AiUsageGranularity.Day,
-        AiUsageFilter? filter = null,
+        AIUsageGranularity requestedGranularity = AIUsageGranularity.Day,
+        AIUsageFilter? filter = null,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByProviderAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByProviderAsync(
         DateTime from,
         DateTime to,
-        AiUsageGranularity requestedGranularity = AiUsageGranularity.Day,
+        AIUsageGranularity requestedGranularity = AIUsageGranularity.Day,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByModelAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByModelAsync(
         DateTime from,
         DateTime to,
-        AiUsageGranularity requestedGranularity = AiUsageGranularity.Day,
+        AIUsageGranularity requestedGranularity = AIUsageGranularity.Day,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByProfileAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByProfileAsync(
         DateTime from,
         DateTime to,
-        AiUsageGranularity requestedGranularity = AiUsageGranularity.Day,
+        AIUsageGranularity requestedGranularity = AIUsageGranularity.Day,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiUsageBreakdownItem>> GetBreakdownByUserAsync(
+    Task<IEnumerable<AIUsageBreakdownItem>> GetBreakdownByUserAsync(
         DateTime from,
         DateTime to,
-        AiUsageGranularity requestedGranularity = AiUsageGranularity.Day,
+        AIUsageGranularity requestedGranularity = AIUsageGranularity.Day,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -70,11 +70,11 @@ Gets aggregated usage statistics for a time period.
 |-----------|------|-------------|
 | `from` | `DateTime` | Start of period |
 | `to` | `DateTime` | End of period |
-| `requestedGranularity` | `AiUsageGranularity` | Data granularity |
-| `filter` | `AiUsageFilter?` | Optional filter |
+| `requestedGranularity` | `AIUsageGranularity` | Data granularity |
+| `filter` | `AIUsageFilter?` | Optional filter |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
-**Returns**: `AiUsageSummary` with totals and averages.
+**Returns**: `AIUsageSummary` with totals and averages.
 
 {% code title="Example" %}
 ```csharp
@@ -97,8 +97,8 @@ Gets usage metrics over time for trend analysis.
 |-----------|------|-------------|
 | `from` | `DateTime` | Start of period |
 | `to` | `DateTime` | End of period |
-| `requestedGranularity` | `AiUsageGranularity` | Time interval |
-| `filter` | `AiUsageFilter?` | Optional filter |
+| `requestedGranularity` | `AIUsageGranularity` | Time interval |
+| `filter` | `AIUsageFilter?` | Optional filter |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: Time series data points.
@@ -108,7 +108,7 @@ Gets usage metrics over time for trend analysis.
 var timeSeries = await _analyticsService.GetTimeSeriesAsync(
     from: DateTime.UtcNow.AddDays(-7),
     to: DateTime.UtcNow,
-    requestedGranularity: AiUsageGranularity.Day);
+    requestedGranularity: AIUsageGranularity.Day);
 
 foreach (var point in timeSeries)
 {
@@ -172,7 +172,7 @@ var byUser = await _analyticsService.GetBreakdownByUserAsync(
 
 ## Model Classes
 
-### AiUsageSummary
+### AIUsageSummary
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -185,7 +185,7 @@ var byUser = await _analyticsService.GetBreakdownByUserAsync(
 | `SuccessRate` | `double` | Success ratio (0.0-1.0) |
 | `AverageDurationMs` | `int` | Average operation time |
 
-### AiUsageTimeSeriesPoint
+### AIUsageTimeSeriesPoint
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -197,7 +197,7 @@ var byUser = await _analyticsService.GetBreakdownByUserAsync(
 | `SuccessCount` | `int` | Successes |
 | `FailureCount` | `int` | Failures |
 
-### AiUsageBreakdownItem
+### AIUsageBreakdownItem
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -207,7 +207,7 @@ var byUser = await _analyticsService.GetBreakdownByUserAsync(
 | `TotalTokens` | `long` | Tokens used |
 | `Percentage` | `double` | Share of total |
 
-### AiUsageGranularity
+### AIUsageGranularity
 
 | Value | Description |
 |-------|-------------|
@@ -222,9 +222,9 @@ var byUser = await _analyticsService.GetBreakdownByUserAsync(
 ```csharp
 public class UsageDashboard
 {
-    private readonly IAiUsageAnalyticsService _analyticsService;
+    private readonly IAIUsageAnalyticsService _analyticsService;
 
-    public UsageDashboard(IAiUsageAnalyticsService analyticsService)
+    public UsageDashboard(IAIUsageAnalyticsService analyticsService)
     {
         _analyticsService = analyticsService;
     }

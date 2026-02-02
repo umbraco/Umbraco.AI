@@ -1,6 +1,6 @@
 # AI Request Interaction Flow
 
-This document describes the complete interaction flow for AI requests in the Umbraco.Ai system, from frontend context detection through to LLM response.
+This document describes the complete interaction flow for AI requests in the Umbraco.AI system, from frontend context detection through to LLM response.
 
 ## Architecture Overview
 
@@ -56,7 +56,7 @@ The system consists of two parallel pipelines that converge:
 │  │                    PHASE 1: REQUEST CONTEXT PROCESSING                  │   │
 │  ├─────────────────────────────────────────────────────────────────────────┤   │
 │  │                                                                         │   │
-│  │  AiRequestContextProcessorCollection.Process(contextItems)              │   │
+│  │  AIRequestContextProcessorCollection.Process(contextItems)              │   │
 │  │         │                                                               │   │
 │  │         ├────▶ SerializedEntityProcessor                                │   │
 │  │         │        • Deserializes UaiSerializedEntity                     │   │
@@ -68,7 +68,7 @@ The system consists of two parallel pipelines that converge:
 │  │                  • Adds description to SystemMessageParts               │   │
 │  │                                                                         │   │
 │  │         ┌──────────────────────────────────────────────────────────┐    │   │
-│  │         │              AiRequestContext (output)                   │    │   │
+│  │         │              AIRequestContext (output)                   │    │   │
 │  │         │  • Items[]              - Original context items         │    │   │
 │  │         │  • Variables{}          - Template variables             │    │   │
 │  │         │  • SystemMessageParts[] - System prompt additions        │    │   │
@@ -82,7 +82,7 @@ The system consists of two parallel pipelines that converge:
 │  │                    PHASE 2: TEMPLATE PROCESSING                         │   │
 │  ├─────────────────────────────────────────────────────────────────────────┤   │
 │  │                                                                         │   │
-│  │  IAiPromptTemplateService.ProcessTemplate(instructions, variables)      │   │
+│  │  IAIPromptTemplateService.ProcessTemplate(instructions, variables)      │   │
 │  │                                                                         │   │
 │  │    Input:  "Write description for {$Document_Title}"                    │   │
 │  │    Variables: { "$Document_Title": "My Article" }                       │   │
@@ -103,7 +103,7 @@ The system consists of two parallel pipelines that converge:
 │  │    AgentIdKey: agent.Id          // For AgentContextResolver            │   │
 │  │  }                                                                      │   │
 │  │                                                                         │   │
-│  │  IAiContextResolutionService.ResolveContextAsync(additionalProperties)  │   │
+│  │  IAIContextResolutionService.ResolveContextAsync(additionalProperties)  │   │
 │  │         │                                                               │   │
 │  │         ├────▶ ProfileContextResolver                                   │   │
 │  │         │        • Reads ProfileIdKey → loads profile contexts          │   │
@@ -118,7 +118,7 @@ The system consists of two parallel pipelines that converge:
 │  │                  • Reads AgentIdKey → loads agent contexts              │   │
 │  │                                                                         │   │
 │  │         ┌──────────────────────────────────────────────────────────┐    │   │
-│  │         │              AiResolvedContext (output)                  │    │   │
+│  │         │              AIResolvedContext (output)                  │    │   │
 │  │         │  • Sources[]           - Which resolvers contributed     │    │   │
 │  │         │  • InjectedResources[] - "Always" mode (inject now)      │    │   │
 │  │         │  • OnDemandResources[] - "OnDemand" (list for LLM)       │    │   │
@@ -153,7 +153,7 @@ The system consists of two parallel pipelines that converge:
 │  │                    PHASE 5: RESPONSE PROCESSING                         │   │
 │  ├─────────────────────────────────────────────────────────────────────────┤   │
 │  │                                                                         │   │
-│  │  AiPromptExecutionResult {                                              │   │
+│  │  AIPromptExecutionResult {                                              │   │
 │  │    Content: string,              // LLM response text                   │   │
 │  │    Usage: UsageDetails,          // Token counts                        │   │
 │  │    PropertyChanges: [            // Optional structured changes         │   │
@@ -212,11 +212,11 @@ The system consists of two parallel pipelines that converge:
 | `UAI_WORKSPACE_REGISTRY_CONTEXT` | Frontend | Tracks all active workspaces globally |
 | `UaiEntityAdapterContext` | Frontend | Matches adapters, serializes entities |
 | `uaiEntityAdapter` | Frontend | Plugin system for entity-specific serialization |
-| `IAiRequestContextProcessor` | Backend Phase 1 | Extracts variables, system parts, typed data |
-| `IAiPromptTemplateService` | Backend Phase 2 | Variable substitution in prompts |
-| `IAiContextResolver` | Backend Phase 3 | Resolves knowledge base resources |
+| `IAIRequestContextProcessor` | Backend Phase 1 | Extracts variables, system parts, typed data |
+| `IAIPromptTemplateService` | Backend Phase 2 | Variable substitution in prompts |
+| `IAIContextResolver` | Backend Phase 3 | Resolves knowledge base resources |
 | `ContextInjectingChatClient` | Backend Phase 4 | Assembles final LLM request |
-| `AiPromptExecutionResult` | Backend Phase 5 | Packages LLM response with property changes |
+| `AIPromptExecutionResult` | Backend Phase 5 | Packages LLM response with property changes |
 | `uaiEntityAdapter.applyPropertyChange` | Frontend Response | Stages property changes in workspace |
 
 ## Data Transformation Summary
@@ -227,7 +227,7 @@ Frontend Entity → UaiSerializedEntity → UaiRequestContextItem[]
                                                 │
                                     ┌───────────┴───────────┐
                                     ▼                       ▼
-                           AiRequestContext         ChatOptions.AdditionalProperties
+                           AIRequestContext         ChatOptions.AdditionalProperties
                            (Variables, System)      (Keys for resolvers)
                                     │                       │
                                     ▼                       ▼
@@ -243,7 +243,7 @@ Frontend Entity → UaiSerializedEntity → UaiRequestContextItem[]
 LLM Response
      │
      ▼
-AiPromptExecutionResult { Content, Usage, PropertyChanges[] }
+AIPromptExecutionResult { Content, Usage, PropertyChanges[] }
      │
      ▼ (API mapping)
 PromptExecutionResponseModel { Content, Usage, PropertyChanges[] }
@@ -265,19 +265,19 @@ Changes STAGED in workspace (user saves to persist)
 
 ### Phase 1: Request Context Processing
 
-The `AiRequestContextProcessorCollection` processes incoming context items from the frontend:
+The `AIRequestContextProcessorCollection` processes incoming context items from the frontend:
 
-**SerializedEntityProcessor** (`Umbraco.Ai.Core/RequestContext/Processors/SerializedEntityProcessor.cs`):
+**SerializedEntityProcessor** (`Umbraco.AI.Core/RequestContext/Processors/SerializedEntityProcessor.cs`):
 - Deserializes `UaiSerializedEntity` from JSON
 - Extracts `EntityId`, `EntityType`, `ParentEntityId`
 - Builds template variables (e.g., `$Document_Title`, `$Document_Body`)
 - Generates system message parts describing the entity being edited
 
-**DefaultSystemMessageProcessor** (`Umbraco.Ai.Core/RequestContext/Processors/DefaultSystemMessageProcessor.cs`):
+**DefaultSystemMessageProcessor** (`Umbraco.AI.Core/RequestContext/Processors/DefaultSystemMessageProcessor.cs`):
 - Fallback processor for unhandled items
 - Adds item descriptions to system message parts
 
-**Output: `AiRequestContext`**
+**Output: `AIRequestContext`**
 ```csharp
 {
     Items,              // Original context items
@@ -289,7 +289,7 @@ The `AiRequestContextProcessorCollection` processes incoming context items from 
 
 ### Phase 2: Template Processing
 
-The `IAiPromptTemplateService` performs variable substitution:
+The `IAIPromptTemplateService` performs variable substitution:
 
 ```
 Input:  "Write description for {$Document_Title}"
@@ -299,7 +299,7 @@ Output: "Write description for My Article"
 
 ### Phase 3: Context Resolution
 
-Multiple `IAiContextResolver` implementations check `ChatOptions.AdditionalProperties` to resolve knowledge base resources:
+Multiple `IAIContextResolver` implementations check `ChatOptions.AdditionalProperties` to resolve knowledge base resources:
 
 | Resolver | Key | Source |
 |----------|-----|--------|
@@ -308,7 +308,7 @@ Multiple `IAiContextResolver` implementations check `ChatOptions.AdditionalPrope
 | `PromptContextResolver` | `PromptIdKey` | Prompt's configured contexts |
 | `AgentContextResolver` | `AgentIdKey` | Agent's configured contexts |
 
-**Output: `AiResolvedContext`**
+**Output: `AIResolvedContext`**
 ```csharp
 {
     Sources,            // Which resolvers contributed
@@ -332,13 +332,13 @@ The `ContextInjectingChatClient` middleware assembles the final LLM request:
 
 ### Phase 5: Response Processing & Property Changes
 
-The LLM response is packaged into `AiPromptExecutionResult` which may include property changes:
+The LLM response is packaged into `AIPromptExecutionResult` which may include property changes:
 
-**Core Models** (`Umbraco.Ai.Core/EntityAdapter/`):
+**Core Models** (`Umbraco.AI.Core/EntityAdapter/`):
 
 ```csharp
 // Request to change a property value
-public class AiPropertyChange
+public class AIPropertyChange
 {
     public required string Alias { get; init; }  // Property alias
     public object? Value { get; init; }          // New value
@@ -347,14 +347,14 @@ public class AiPropertyChange
 }
 
 // Result of applying a property change
-public class AiPropertyChangeResult
+public class AIPropertyChangeResult
 {
     public required bool Success { get; init; }  // Whether change was applied
     public string? Error { get; init; }          // Error message if failed
 }
 ```
 
-**API Models** (`Umbraco.Ai.Prompt.Web/Api/Management/Prompt/Models/`):
+**API Models** (`Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/`):
 
 ```csharp
 // Response from prompt execution
@@ -375,7 +375,7 @@ public class PropertyChangeModel
 }
 ```
 
-**Frontend Types** (`Umbraco.Ai/Client/src/entity-adapter/types.ts`):
+**Frontend Types** (`Umbraco.AI/Client/src/entity-adapter/types.ts`):
 
 ```typescript
 // Request to change a property
@@ -404,53 +404,53 @@ interface UaiPropertyChangeResult {
 
 | Component | File |
 |-----------|------|
-| Workspace Registry | `Umbraco.Ai/Client/src/workspace-registry/workspace-registry.context.ts` |
-| Entity Adapter Context | `Umbraco.Ai/Client/src/entity-adapter/entity-adapter.context.ts` |
-| Entity Adapter Types | `Umbraco.Ai/Client/src/entity-adapter/types.ts` |
-| Request Context Item | `Umbraco.Ai/Client/src/request-context/types.ts` |
-| Processor Collection | `Umbraco.Ai.Core/RequestContext/AiRequestContextProcessorCollection.cs` |
-| Serialized Entity Processor | `Umbraco.Ai.Core/RequestContext/Processors/SerializedEntityProcessor.cs` |
-| Default System Message Processor | `Umbraco.Ai.Core/RequestContext/Processors/DefaultSystemMessageProcessor.cs` |
-| Request Context | `Umbraco.Ai.Core/RequestContext/AiRequestContext.cs` |
-| Context Resolution Service | `Umbraco.Ai.Core/Contexts/AiContextResolutionService.cs` |
-| Context Injecting Client | `Umbraco.Ai.Core/Contexts/Middleware/ContextInjectingChatClient.cs` |
-| Profile Context Resolver | `Umbraco.Ai.Core/Contexts/Resolvers/ProfileContextResolver.cs` |
-| Content Context Resolver | `Umbraco.Ai.Core/Contexts/Resolvers/ContentContextResolver.cs` |
-| Prompt Context Resolver | `Umbraco.Ai.Prompt.Core/Context/PromptContextResolver.cs` |
-| Agent Context Resolver | `Umbraco.Ai.Agent.Core/Context/AgentContextResolver.cs` |
-| Property Change (Core) | `Umbraco.Ai.Core/EntityAdapter/AiPropertyChange.cs` |
-| Property Change Result (Core) | `Umbraco.Ai.Core/EntityAdapter/AiPropertyChangeResult.cs` |
-| Property Change Model (API) | `Umbraco.Ai.Prompt.Web/Api/Management/Prompt/Models/PropertyChangeModel.cs` |
-| Execution Result (Core) | `Umbraco.Ai.Prompt.Core/Prompts/AiPromptExecutionResult.cs` |
-| Execution Response (API) | `Umbraco.Ai.Prompt.Web/Api/Management/Prompt/Models/PromptExecutionResponseModel.cs` |
+| Workspace Registry | `Umbraco.AI/Client/src/workspace-registry/workspace-registry.context.ts` |
+| Entity Adapter Context | `Umbraco.AI/Client/src/entity-adapter/entity-adapter.context.ts` |
+| Entity Adapter Types | `Umbraco.AI/Client/src/entity-adapter/types.ts` |
+| Request Context Item | `Umbraco.AI/Client/src/request-context/types.ts` |
+| Processor Collection | `Umbraco.AI.Core/RequestContext/AIRequestContextProcessorCollection.cs` |
+| Serialized Entity Processor | `Umbraco.AI.Core/RequestContext/Processors/SerializedEntityProcessor.cs` |
+| Default System Message Processor | `Umbraco.AI.Core/RequestContext/Processors/DefaultSystemMessageProcessor.cs` |
+| Request Context | `Umbraco.AI.Core/RequestContext/AIRequestContext.cs` |
+| Context Resolution Service | `Umbraco.AI.Core/Contexts/AIContextResolutionService.cs` |
+| Context Injecting Client | `Umbraco.AI.Core/Contexts/Middleware/ContextInjectingChatClient.cs` |
+| Profile Context Resolver | `Umbraco.AI.Core/Contexts/Resolvers/ProfileContextResolver.cs` |
+| Content Context Resolver | `Umbraco.AI.Core/Contexts/Resolvers/ContentContextResolver.cs` |
+| Prompt Context Resolver | `Umbraco.AI.Prompt.Core/Context/PromptContextResolver.cs` |
+| Agent Context Resolver | `Umbraco.AI.Agent.Core/Context/AgentContextResolver.cs` |
+| Property Change (Core) | `Umbraco.AI.Core/EntityAdapter/AIPropertyChange.cs` |
+| Property Change Result (Core) | `Umbraco.AI.Core/EntityAdapter/AIPropertyChangeResult.cs` |
+| Property Change Model (API) | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PropertyChangeModel.cs` |
+| Execution Result (Core) | `Umbraco.AI.Prompt.Core/Prompts/AIPromptExecutionResult.cs` |
+| Execution Response (API) | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PromptExecutionResponseModel.cs` |
 
 ## Extension Points
 
 ### Add Custom Request Processor
 
 ```csharp
-public class MyCustomProcessor : IAiRequestContextProcessor
+public class MyCustomProcessor : IAIRequestContextProcessor
 {
-    public bool CanHandle(AiRequestContextItem item) { ... }
-    public void Process(AiRequestContextItem item, AiRequestContext context) { ... }
+    public bool CanHandle(AIRequestContextItem item) { ... }
+    public void Process(AIRequestContextItem item, AIRequestContext context) { ... }
 }
 
 // Register in Composer:
-builder.AiRequestContextProcessors().Append<MyCustomProcessor>();
+builder.AIRequestContextProcessors().Append<MyCustomProcessor>();
 ```
 
 ### Add Custom Context Resolver
 
 ```csharp
-public class MyContextResolver : IAiContextResolver
+public class MyContextResolver : IAIContextResolver
 {
-    public async Task<AiContextResolverResult> ResolveAsync(
-        AiContextResolverRequest request,
+    public async Task<AIContextResolverResult> ResolveAsync(
+        AIContextResolverRequest request,
         CancellationToken ct) { ... }
 }
 
 // Register in Composer:
-builder.AiContextResolvers().Append<MyContextResolver>();
+builder.AIContextResolvers().Append<MyContextResolver>();
 ```
 
 ### Add Entity Adapter (Frontend)

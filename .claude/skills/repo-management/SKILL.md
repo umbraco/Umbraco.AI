@@ -6,7 +6,7 @@ allowed-tools: AskUserQuestion, Skill, Bash
 
 # Repository Manager
 
-You are the orchestrator for managing the Umbraco.Ai repository. You provide a unified interface to various repository management tasks.
+You are the orchestrator for managing the Umbraco.AI repository. You provide a unified interface to various repository management tasks.
 
 ## Task
 
@@ -35,7 +35,7 @@ Generate changelogs from commit history:
 
 ### 4. Build Operations
 Common build tasks:
-- `dotnet build Umbraco.Ai.local.sln` - Build unified solution
+- `dotnet build Umbraco.AI.local.sln` - Build unified solution
 - `npm run build` - Build all frontends
 - `npm run watch` - Watch all frontends
 - `dotnet test` - Run tests

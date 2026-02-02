@@ -31,14 +31,14 @@ AI responds: "Product SKU-123 has 47 units in stock at Warehouse A."
 
 A tool consists of:
 
-1. **Metadata** - ID, name, description, category via `[AiTool]` attribute
+1. **Metadata** - ID, name, description, category via `[AITool]` attribute
 2. **Arguments** - Optional input parameters as a typed class
 3. **Implementation** - The `ExecuteAsync` method
 
 ```
 MyTool/
 ├── MyToolArgs.cs        # Input parameters (optional)
-├── MyTool.cs            # Tool implementation with [AiTool] attribute
+├── MyTool.cs            # Tool implementation with [AITool] attribute
 └── MyToolResult.cs      # Return type (optional)
 ```
 
@@ -48,10 +48,10 @@ MyTool/
 
 {% code title="CurrentTimeTool.cs" %}
 ```csharp
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 
-[AiTool("get_current_time", "Get Current Time")]
-public class CurrentTimeTool : AiToolBase
+[AITool("get_current_time", "Get Current Time")]
+public class CurrentTimeTool : AIToolBase
 {
     public override string Description =>
         "Returns the current server date and time.";
@@ -73,13 +73,13 @@ public class CurrentTimeTool : AiToolBase
 {% code title="InventoryTool.cs" %}
 ```csharp
 using System.ComponentModel;
-using Umbraco.Ai.Core.Tools;
+using Umbraco.AI.Core.Tools;
 
 public record InventoryArgs(
     [property: Description("The product SKU to look up")] string Sku);
 
-[AiTool("lookup_inventory", "Lookup Inventory", Category = "Products")]
-public class InventoryTool : AiToolBase<InventoryArgs>
+[AITool("lookup_inventory", "Lookup Inventory", Category = "Products")]
+public class InventoryTool : AIToolBase<InventoryArgs>
 {
     private readonly IProductService _productService;
 
@@ -113,11 +113,11 @@ public class InventoryTool : AiToolBase<InventoryArgs>
 
 ## Registration
 
-Tools are auto-discovered via the `[AiTool]` attribute and `IDiscoverable` interface. To manually control registration:
+Tools are auto-discovered via the `[AITool]` attribute and `IDiscoverable` interface. To manually control registration:
 
 {% code title="MyComposer.cs" %}
 ```csharp
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
 
 public class MyComposer : IComposer
@@ -125,11 +125,11 @@ public class MyComposer : IComposer
     public void Compose(IUmbracoBuilder builder)
     {
         // Add a tool that isn't auto-discovered
-        builder.AiTools()
+        builder.AITools()
             .Add<MyCustomTool>();
 
         // Exclude an auto-discovered tool
-        builder.AiTools()
+        builder.AITools()
             .Exclude<SomeUnwantedTool>();
     }
 }
@@ -154,8 +154,8 @@ public record SearchArgs(
 Inject services through the constructor:
 
 ```csharp
-[AiTool("send_email", "Send Email")]
-public class SendEmailTool : AiToolBase<EmailArgs>
+[AITool("send_email", "Send Email")]
+public class SendEmailTool : AIToolBase<EmailArgs>
 {
     private readonly IEmailService _emailService;
     private readonly ILogger<SendEmailTool> _logger;
@@ -175,8 +175,8 @@ public class SendEmailTool : AiToolBase<EmailArgs>
 Tools that modify data should be marked as destructive:
 
 ```csharp
-[AiTool("delete_item", "Delete Item", IsDestructive = true)]
-public class DeleteItemTool : AiToolBase<DeleteArgs>
+[AITool("delete_item", "Delete Item", IsDestructive = true)]
+public class DeleteItemTool : AIToolBase<DeleteArgs>
 {
     // ...
 }

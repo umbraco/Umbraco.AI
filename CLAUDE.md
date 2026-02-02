@@ -4,19 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Structure
 
-This is a monorepo containing Umbraco.Ai and its add-on packages:
+This is a monorepo containing Umbraco.AI and its add-on packages:
 
 | Product | Description | Location |
 |---------|-------------|----------|
-| **Umbraco.Ai** | Core AI integration layer for Umbraco CMS | `Umbraco.Ai/` |
-| **Umbraco.Ai.Prompt** | Prompt template management add-on | `Umbraco.Ai.Prompt/` |
-| **Umbraco.Ai.Agent** | AI agent management add-on | `Umbraco.Ai.Agent/` |
-| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | `Umbraco.Ai.Agent.Copilot/` |
-| **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
-| **Umbraco.Ai.Anthropic** | Anthropic provider plugin | `Umbraco.Ai.Anthropic/` |
-| **Umbraco.Ai.Amazon** | Amazon Bedrock provider plugin | `Umbraco.Ai.Amazon/` |
-| **Umbraco.Ai.Google** | Google Gemini provider plugin | `Umbraco.Ai.Google/` |
-| **Umbraco.Ai.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.Ai.MicrosoftFoundry/` |
+| **Umbraco.AI** | Core AI integration layer for Umbraco CMS | `Umbraco.AI/` |
+| **Umbraco.AI.Prompt** | Prompt template management add-on | `Umbraco.AI.Prompt/` |
+| **Umbraco.AI.Agent** | AI agent management add-on | `Umbraco.AI.Agent/` |
+| **Umbraco.AI.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/` |
+| **Umbraco.AI.OpenAi** | OpenAI provider plugin | `Umbraco.AI.OpenAi/` |
+| **Umbraco.AI.Anthropic** | Anthropic provider plugin | `Umbraco.AI.Anthropic/` |
+| **Umbraco.AI.Amazon** | Amazon Bedrock provider plugin | `Umbraco.AI.Amazon/` |
+| **Umbraco.AI.Google** | Google Gemini provider plugin | `Umbraco.AI.Google/` |
+| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.AI.MicrosoftFoundry/` |
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
@@ -31,7 +31,7 @@ Use the setup skill for first-time repository configuration:
 
 ### Demo Site
 
-**Location:** `demo/Umbraco.Ai.DemoSite/`
+**Location:** `demo/Umbraco.AI.DemoSite/`
 **Credentials:** admin@example.com / password1234
 
 **Infrastructure Operations:**
@@ -94,20 +94,20 @@ The Azure DevOps project used for backlog management is shared across multiple U
 
 ```bash
 # Build unified solution (all products + demo)
-dotnet build Umbraco.Ai.local.sln
+dotnet build Umbraco.AI.local.sln
 
 # Build individual product
-dotnet build Umbraco.Ai/Umbraco.Ai.sln
-dotnet build Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.sln
-dotnet build Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.sln
-dotnet build Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.sln
-dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
-dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
-dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
-dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
+dotnet build Umbraco.AI/Umbraco.AI.sln
+dotnet build Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.sln
+dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
+dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
+dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
+dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.sln
+dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
+dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
 
 # Run tests for a product
-dotnet test Umbraco.Ai/Umbraco.Ai.sln
+dotnet test Umbraco.AI/Umbraco.AI.sln
 ```
 
 ### Frontend (npm)
@@ -147,19 +147,19 @@ npm run watch:agent
 ### Product Dependencies
 
 ```
-Umbraco.Ai (Core)
-    ├── Umbraco.Ai.OpenAi (Provider - depends on Core)
-    ├── Umbraco.Ai.Anthropic (Provider - depends on Core)
-    ├── Umbraco.Ai.Amazon (Provider - depends on Core)
-    ├── Umbraco.Ai.Google (Provider - depends on Core)
-    ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
-    ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
-    └── Umbraco.Ai.Agent (Add-on - depends on Core)
+Umbraco.AI (Core)
+    ├── Umbraco.AI.OpenAi (Provider - depends on Core)
+    ├── Umbraco.AI.Anthropic (Provider - depends on Core)
+    ├── Umbraco.AI.Amazon (Provider - depends on Core)
+    ├── Umbraco.AI.Google (Provider - depends on Core)
+    ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
+    ├── Umbraco.AI.Prompt (Add-on - depends on Core)
+    └── Umbraco.AI.Agent (Add-on - depends on Core)
 ```
 
 ### Standard Project Structure
 
-**Core and Add-on packages** (Umbraco.Ai, Umbraco.Ai.Agent, Umbraco.Ai.Prompt) follow this structure:
+**Core and Add-on packages** (Umbraco.AI, Umbraco.AI.Agent, Umbraco.AI.Prompt) follow this structure:
 
 ```
 ProductName/
@@ -181,7 +181,7 @@ ProductName/
 └── CLAUDE.md                       # Product-specific guidance
 ```
 
-**Provider packages** (Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic, Umbraco.Ai.Amazon, Umbraco.Ai.Google, Umbraco.Ai.MicrosoftFoundry) use a simplified structure:
+**Provider packages** (Umbraco.AI.OpenAi, Umbraco.AI.Anthropic, Umbraco.AI.Amazon, Umbraco.AI.Google, Umbraco.AI.MicrosoftFoundry) use a simplified structure:
 
 ```
 ProviderName/
@@ -193,7 +193,7 @@ ProviderName/
 └── CLAUDE.md
 ```
 
-### Core Concepts (Umbraco.Ai)
+### Core Concepts (Umbraco.AI)
 
 - **Providers** - Installable plugins for AI services (e.g., OpenAI)
 - **Connections** - Store API keys and provider settings
@@ -213,7 +213,7 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | `scripts/generate-changelog.js` | Node.js changelog generator (main implementation) |
 | `scripts/generate-release-manifest.ps1` | Interactive release manifest generator (Windows) |
 | `scripts/generate-release-manifest.sh` | Interactive release manifest generator (Linux/Mac) |
-| `Umbraco.Ai.local.sln` | Unified solution (generated) |
+| `Umbraco.AI.local.sln` | Unified solution (generated) |
 | `package.json` | Root npm scripts for frontend builds and changelog generation |
 | `commitlint.config.js` | Commit message validation with dynamic scope loading |
 | `release-manifest.json` | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`) |
@@ -253,8 +253,8 @@ On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
 
 ```json
 [
-  "Umbraco.Ai",
-  "Umbraco.Ai.OpenAi"
+  "Umbraco.AI",
+  "Umbraco.AI.OpenAi"
 ]
 ```
 
@@ -271,7 +271,7 @@ Use the interactive script to select which products to include:
 ```
 
 The script will:
-1. Scan for all `Umbraco.Ai*` product folders
+1. Scan for all `Umbraco.AI*` product folders
 2. Present an interactive multiselect interface
 3. Generate `release-manifest.json` at the repository root
 
@@ -296,26 +296,26 @@ The Azure DevOps release pipeline:
 2. Deploys packages to package feeds (MyGet for pre-release, NuGet.org/npm for production)
 3. Tags the git repository with `[Product_Name]@[Version]` for each deployed package
 
-**Example tags:** `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+**Example tags:** `Umbraco.AI@1.1.0`, `Umbraco.AI.OpenAi@1.2.0`
 
 For detailed release workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
 ## Cross-Product Dependency Management
 
-Add-on packages and providers depend on Umbraco.Ai (Core). These dependencies are managed using **Central Package Management** via `Directory.Packages.props`.
+Add-on packages and providers depend on Umbraco.AI (Core). These dependencies are managed using **Central Package Management** via `Directory.Packages.props`.
 
 ### Version Ranges for Add-ons
 
 **Always use version ranges** for cross-product dependencies. This allows add-ons to work with a range of Core versions without requiring simultaneous releases.
 
-When an add-on (e.g., Umbraco.Ai.Prompt or Umbraco.Ai.Agent) needs to depend on a specific version range of Core, create a `Directory.Packages.props` file within the product folder:
+When an add-on (e.g., Umbraco.AI.Prompt or Umbraco.AI.Agent) needs to depend on a specific version range of Core, create a `Directory.Packages.props` file within the product folder:
 
-**Example:** `Umbraco.Ai.Prompt/Directory.Packages.props`
+**Example:** `Umbraco.AI.Prompt/Directory.Packages.props`
 ```xml
 <Project>
   <ItemGroup>
     <!-- Minimum version 1.1.0, accepts all 1.x versions -->
-    <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
   </ItemGroup>
 </Project>
 ```
@@ -337,17 +337,17 @@ If you release Core 1.1.0 with breaking changes, but Agent 1.0.0 isn't ready for
 
 1. **Agent's Directory.Packages.props** specifies minimum Core 1.0.0:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
+   <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
    ```
 
 2. **Root Directory.Packages.props** may have a broader or different range:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
+   <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
    ```
 
 3. When Agent is ready for Core 1.1.0+, update its `Directory.Packages.props` minimum version:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
+   <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
    ```
 
 ### Version Range Guidelines
@@ -368,7 +368,7 @@ If you release Core 1.1.0 with breaking changes, but Agent 1.0.0 isn't ready for
 ## Excluded Folders
 
 - `Ref/` - External reference projects (not part of build)
-- `Umbraco.Ai-entity-snapshot-service/` - Legacy/alternate reference
+- `Umbraco.AI-entity-snapshot-service/` - Legacy/alternate reference
 
 ## Changelog Generation
 
@@ -419,16 +419,16 @@ Changelogs are generated manually before creating a release:
 npm run changelog:list
 
 # Generate changelog for a specific product
-npm run changelog -- --product=Umbraco.Ai --version=1.1.0
+npm run changelog -- --product=Umbraco.AI --version=1.1.0
 
 # Generate for unreleased changes
-npm run changelog -- --product=Umbraco.Ai --unreleased
+npm run changelog -- --product=Umbraco.AI --unreleased
 
 # PowerShell wrapper
-.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
+.\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0
 
 # Bash wrapper
-./scripts/generate-changelog.sh --product=Umbraco.Ai --version=1.1.0
+./scripts/generate-changelog.sh --product=Umbraco.AI --version=1.1.0
 ```
 
 Each product has a `changelog.config.json` file defining its scopes. The generation script automatically discovers all products by scanning for these config files - no hardcoded product lists.
@@ -590,6 +590,6 @@ public interface IAiProfileRepository
 
 ### Extension Methods
 
-All extension methods MUST be placed in the `Umbraco.Ai.Extensions` namespace (or the product-specific equivalent like `Umbraco.Ai.Prompt.Extensions`) for ease of discovery via IntelliSense.
+All extension methods MUST be placed in the `Umbraco.AI.Extensions` namespace (or the product-specific equivalent like `Umbraco.AI.Prompt.Extensions`) for ease of discovery via IntelliSense.
 
 # Lessons Learned

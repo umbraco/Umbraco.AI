@@ -362,7 +362,7 @@ public class EfCoreAIContextRepositoryTests : IClassFixture<EfCoreTestFixture>
             .Build();
 
         var aiContext = new AIContextBuilder()
-            .WithAlias("context-with-resources")
+            .WithAlias("save-context-with-resources")
             .WithName("Context with Resources")
             .WithResources(resource)
             .Build();

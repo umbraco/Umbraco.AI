@@ -72,6 +72,7 @@ public class EfCoreAIEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixt
     public async Task DeleteExcessVersionsAsync_WithVersionsAboveLimit_DeletesOldestVersions()
     {
         // Arrange
+        await ClearEntityVersionsAsync();
         await using var setupContext = _fixture.CreateContext();
         var entityId = Guid.NewGuid();
 

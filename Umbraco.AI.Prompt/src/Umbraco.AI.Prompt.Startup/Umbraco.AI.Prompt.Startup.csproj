@@ -17,10 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Core.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.SqlServer.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Web.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.SqlServer\Umbraco.AI.Prompt.Persistence.SqlServer.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.Sqlite\Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Web\Umbraco.AI.Prompt.Web.csproj" />
     </ItemGroup>
 </Project>

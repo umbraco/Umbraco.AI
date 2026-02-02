@@ -9,11 +9,11 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.Ai.Startup" />
+        <PackageReference Include="Umbraco.AI.Startup" />
     </ItemGroup>
 
     <ItemGroup>

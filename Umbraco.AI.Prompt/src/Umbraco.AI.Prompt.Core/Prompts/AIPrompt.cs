@@ -35,7 +35,7 @@ public sealed class AIPrompt : IAIVersionableEntity
 
     /// <summary>
     /// Optional ID of the AI profile this prompt is designed for.
-    /// References AIProfile.Id from Umbraco.Ai.Core.
+    /// References AIProfile.Id from Umbraco.AI.Core.
     /// </summary>
     public Guid? ProfileId { get; set; }
 

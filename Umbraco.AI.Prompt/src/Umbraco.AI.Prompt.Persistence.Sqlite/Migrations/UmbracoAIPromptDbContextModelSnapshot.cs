@@ -17,7 +17,7 @@ namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AIPromptEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Prompt.Persistence.Prompts.AIPromptEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

@@ -7,15 +7,15 @@ namespace Umbraco.AI.Persistence.Notifications;
 /// <summary>
 /// Notification handler that runs pending EF Core migrations on application startup.
 /// </summary>
-public class RunAiMigrationNotificationHandler
+public class RunAIMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
     private readonly IDbContextFactory<UmbracoAIDbContext> _dbContextFactory;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="RunAiMigrationNotificationHandler"/>.
+    /// Initializes a new instance of <see cref="RunAIMigrationNotificationHandler"/>.
     /// </summary>
-    public RunAiMigrationNotificationHandler(IDbContextFactory<UmbracoAIDbContext> dbContextFactory)
+    public RunAIMigrationNotificationHandler(IDbContextFactory<UmbracoAIDbContext> dbContextFactory)
         => _dbContextFactory = dbContextFactory;
 
     /// <inheritdoc />

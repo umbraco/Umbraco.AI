@@ -8,7 +8,7 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// <summary>
 /// In-memory implementation of <see cref="IAIPromptRepository"/> for testing and fallback scenarios.
 /// </summary>
-internal sealed class InMemoryAiPromptRepository : IAIPromptRepository
+internal sealed class InMemoryAIPromptRepository : IAIPromptRepository
 {
     private readonly ConcurrentDictionary<Guid, AIPrompt> _prompts = new();
 

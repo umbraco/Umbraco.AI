@@ -13,12 +13,12 @@ using Umbraco.Cms.Core.DependencyInjection;
 namespace Umbraco.AI.Agent.Core.Configuration;
 
 /// <summary>
-/// Extension methods for configuring Umbraco.Ai.Agent.Core services.
+/// Extension methods for configuring Umbraco.AI.Agent.Core services.
 /// </summary>
 public static class UmbracoBuilderExtensions
 {
     /// <summary>
-    /// Adds Umbraco.Ai.Agent core services to the builder.
+    /// Adds Umbraco.AI.Agent core services to the builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
@@ -35,7 +35,7 @@ public static class UmbracoBuilderExtensions
             builder.Config.GetSection(AIAgentOptions.SectionName));
 
         // Register in-memory repository as fallback (replaced by persistence layer)
-        builder.Services.AddSingleton<IAIAgentRepository, InMemoryAiAgentRepository>();
+        builder.Services.AddSingleton<IAIAgentRepository, InMemoryAIAgentRepository>();
 
         // Register service
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();

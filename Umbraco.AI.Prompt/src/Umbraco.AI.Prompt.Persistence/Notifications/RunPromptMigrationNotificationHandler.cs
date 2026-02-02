@@ -26,16 +26,16 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
     {
         try
         {
-            _logger.LogInformation("Running Umbraco.Ai.Prompt database migrations...");
+            _logger.LogInformation("Running Umbraco.AI.Prompt database migrations...");
 
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.Database.MigrateAsync(cancellationToken);
 
-            _logger.LogInformation("Umbraco.Ai.Prompt database migrations completed successfully.");
+            _logger.LogInformation("Umbraco.AI.Prompt database migrations completed successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to run Umbraco.Ai.Prompt database migrations.");
+            _logger.LogError(ex, "Failed to run Umbraco.AI.Prompt database migrations.");
             throw;
         }
     }

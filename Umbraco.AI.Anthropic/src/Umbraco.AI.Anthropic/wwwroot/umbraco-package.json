@@ -1,5 +1,5 @@
 {
-    "name": "Umbraco Ai Anthropic Provider",
+    "name": "Umbraco AI Anthropic Provider",
     "$schema": "../umbraco-package-schema.json",
     "extensions": [
         {

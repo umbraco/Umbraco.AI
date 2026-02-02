@@ -13,7 +13,7 @@ public static class UmbracoBuilderExtensions
     /// </summary>
     /// <param name="builder"></param>
     /// <returns></returns>
-    public static IUmbracoBuilder AddUmbracoAi(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddUmbracoAI(this IUmbracoBuilder builder)
     {
         // Prevent multiple registrations
         if (builder.Services.Any(x => x.ServiceType == typeof(AIProviderCollection)))

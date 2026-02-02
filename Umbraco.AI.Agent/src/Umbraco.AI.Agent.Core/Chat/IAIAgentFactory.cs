@@ -12,7 +12,7 @@ namespace Umbraco.AI.Agent.Core.Chat;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This factory creates <see cref="ChatClientAgent"/> instances that wrap the Umbraco.Ai
+/// This factory creates <see cref="ChatClientAgent"/> instances that wrap the Umbraco.AI
 /// chat pipeline. The created agents can be used directly with MAF's <c>RunAsync</c> and
 /// <c>RunStreamingAsync</c> methods for both automation scenarios and AG-UI streaming.
 /// </para>

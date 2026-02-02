@@ -20,7 +20,7 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Agent.Persistence.Agents.AIAgentEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,7 +82,7 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIAgent", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -118,9 +118,9 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIAgentVersion", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
                 {
-                    b.HasOne("Umbraco.Ai.Agent.Persistence.Agents.AIAgentEntity", null)
+                    b.HasOne("Umbraco.AI.Agent.Persistence.Agents.AIAgentEntity", null)
                         .WithMany()
                         .HasForeignKey("AgentId")
                         .OnDelete(DeleteBehavior.Cascade)

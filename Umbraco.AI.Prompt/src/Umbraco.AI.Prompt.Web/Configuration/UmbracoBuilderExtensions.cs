@@ -8,12 +8,12 @@ using Umbraco.AI.Extensions;
 namespace Umbraco.AI.Prompt.Web.Configuration;
 
 /// <summary>
-/// Extension methods for configuring Umbraco.Ai.Prompt.Web services.
+/// Extension methods for configuring Umbraco.AI.Prompt.Web services.
 /// </summary>
 public static class UmbracoBuilderExtensions
 {
     /// <summary>
-    /// Adds Umbraco.Ai.Prompt web services to the builder.
+    /// Adds Umbraco.AI.Prompt web services to the builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>

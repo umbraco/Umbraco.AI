@@ -26,16 +26,16 @@ internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncH
     {
         try
         {
-            _logger.LogInformation("Running Umbraco.Ai.Agent database migrations...");
+            _logger.LogInformation("Running Umbraco.AI.Agent database migrations...");
 
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.Database.MigrateAsync(cancellationToken);
 
-            _logger.LogInformation("Umbraco.Ai.Agent database migrations completed successfully.");
+            _logger.LogInformation("Umbraco.AI.Agent database migrations completed successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to run Umbraco.Ai.Agent database migrations.");
+            _logger.LogError(ex, "Failed to run Umbraco.AI.Agent database migrations.");
             throw;
         }
     }

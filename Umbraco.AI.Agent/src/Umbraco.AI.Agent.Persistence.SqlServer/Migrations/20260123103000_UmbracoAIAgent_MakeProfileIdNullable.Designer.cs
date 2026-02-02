@@ -25,7 +25,7 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Agent.Persistence.Agents.AIAgentEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -87,7 +87,7 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAIAgent", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -123,9 +123,9 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
                     b.ToTable("umbracoAIAgentVersion", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Agent.Persistence.Agents.AIAgentVersionEntity", b =>
                 {
-                    b.HasOne("Umbraco.Ai.Agent.Persistence.Agents.AIAgentEntity", null)
+                    b.HasOne("Umbraco.AI.Agent.Persistence.Agents.AIAgentEntity", null)
                         .WithMany()
                         .HasForeignKey("AgentId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -13,7 +13,7 @@ internal sealed class AISettingsService : IAISettingsService
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly IAppPolicyCache _cache;
     
-    private const string SettingsCacheKey = "Umbraco.Ai.Settings";
+    private const string SettingsCacheKey = "Umbraco.AI.Settings";
 
     public AISettingsService(
         IAISettingsRepository repository,

@@ -8,11 +8,11 @@ namespace Umbraco.AI.Prompt.Persistence.Prompts;
 /// <summary>
 /// EF Core implementation of <see cref="IAIPromptRepository"/>.
 /// </summary>
-internal sealed class EfCoreAiPromptRepository : IAIPromptRepository
+internal sealed class EfCoreAIPromptRepository : IAIPromptRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIPromptDbContext> _scopeProvider;
 
-    public EfCoreAiPromptRepository(IEFCoreScopeProvider<UmbracoAIPromptDbContext> scopeProvider)
+    public EfCoreAIPromptRepository(IEFCoreScopeProvider<UmbracoAIPromptDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }

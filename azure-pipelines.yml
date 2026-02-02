@@ -49,6 +49,7 @@ trigger:
       - dev
       - release/*
       - hotfix/*
+      - feature/*
 
 pr:
   branches:

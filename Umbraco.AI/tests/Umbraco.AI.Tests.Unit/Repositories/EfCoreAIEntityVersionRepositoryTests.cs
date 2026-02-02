@@ -6,19 +6,19 @@ using Umbraco.AI.Tests.Common.Fixtures;
 namespace Umbraco.AI.Tests.Unit.Repositories;
 
 [Collection("EfCoreEntityVersionTests")]
-public class EfCoreAiEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixture>
+public class EfCoreAIEntityVersionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
 
-    public EfCoreAiEntityVersionRepositoryTests(EfCoreTestFixture fixture)
+    public EfCoreAIEntityVersionRepositoryTests(EfCoreTestFixture fixture)
     {
         _fixture = fixture;
     }
 
-    private EfCoreAiEntityVersionRepository CreateRepository(UmbracoAIDbContext context)
+    private EfCoreAIEntityVersionRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
-        return new EfCoreAiEntityVersionRepository(scopeProvider);
+        return new EfCoreAIEntityVersionRepository(scopeProvider);
     }
 
     private async Task ClearEntityVersionsAsync()

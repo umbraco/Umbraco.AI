@@ -8,11 +8,11 @@ namespace Umbraco.AI.Agent.Persistence.Agents;
 /// <summary>
 /// EF Core implementation of <see cref="IAIAgentRepository"/>.
 /// </summary>
-internal sealed class EfCoreAiAgentRepository : IAIAgentRepository
+internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIAgentDbContext> _scopeProvider;
 
-    public EfCoreAiAgentRepository(IEFCoreScopeProvider<UmbracoAIAgentDbContext> scopeProvider)
+    public EfCoreAIAgentRepository(IEFCoreScopeProvider<UmbracoAIAgentDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }

@@ -6,7 +6,7 @@ namespace Umbraco.AI.Core.Versioning;
 /// <summary>
 /// In-memory implementation of <see cref="IAIEntityVersionRepository"/> for testing.
 /// </summary>
-internal sealed class InMemoryAiEntityVersionRepository : IAIEntityVersionRepository
+internal sealed class InMemoryAIEntityVersionRepository : IAIEntityVersionRepository
 {
     private readonly ConcurrentDictionary<string, AIEntityVersion> _versions = new();
 

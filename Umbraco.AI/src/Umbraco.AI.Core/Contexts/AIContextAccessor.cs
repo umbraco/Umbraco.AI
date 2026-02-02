@@ -12,7 +12,7 @@ namespace Umbraco.AI.Core.Contexts;
 /// </remarks>
 internal sealed class AIContextAccessor(IHttpContextAccessor httpContextAccessor) : IAIContextAccessor
 {
-    private const string ContextKey = "Umbraco.Ai.ResolvedContext";
+    private const string ContextKey = "Umbraco.AI.ResolvedContext";
 
     /// <inheritdoc />
     public AIResolvedContext? Context =>

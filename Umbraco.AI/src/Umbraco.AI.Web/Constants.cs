@@ -8,7 +8,7 @@ public class Constants
     /// <summary>
     /// Defines the root namespace for the application.
     /// </summary>
-    public const string AppNamespaceRoot = "Umbraco.Ai";
+    public const string AppNamespaceRoot = "Umbraco.AI";
     
     /// <summary>
     /// Defines constants for the AI Management API.

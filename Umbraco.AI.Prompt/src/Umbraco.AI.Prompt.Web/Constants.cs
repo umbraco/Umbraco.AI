@@ -8,7 +8,7 @@ namespace Umbraco.AI.Prompt.Web;
 public class Constants
 {
     /// <summary>
-    /// Management API constants - reuses Umbraco.Ai shared values.
+    /// Management API constants - reuses Umbraco.AI shared values.
     /// </summary>
     public static class ManagementApi
     {
@@ -23,7 +23,7 @@ public class Constants
         public const string ApiTitle = "Umbraco AI Prompt Management API";
         
         /// <summary>
-        /// The backoffice API path - shared with Umbraco.Ai.
+        /// The backoffice API path - shared with Umbraco.AI.
         /// </summary>
         public const string BackofficePath = UmbracoAIConstants.ManagementApi.BackofficePath; // "/ai/management/api"
 

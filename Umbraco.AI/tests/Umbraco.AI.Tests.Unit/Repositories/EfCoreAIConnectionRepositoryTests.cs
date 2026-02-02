@@ -9,12 +9,12 @@ using Umbraco.AI.Tests.Common.Fixtures;
 
 namespace Umbraco.AI.Tests.Unit.Repositories;
 
-public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
+public class EfCoreAIConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
     private readonly Mock<IAIConnectionFactory> _connectionFactoryMock;
 
-    public EfCoreAiConnectionRepositoryTests(EfCoreTestFixture fixture)
+    public EfCoreAIConnectionRepositoryTests(EfCoreTestFixture fixture)
     {
         _fixture = fixture;
         _connectionFactoryMock = new Mock<IAIConnectionFactory>();
@@ -75,10 +75,10 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
             });
     }
 
-    private EfCoreAiConnectionRepository CreateRepository(UmbracoAIDbContext context)
+    private EfCoreAIConnectionRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
-        return new EfCoreAiConnectionRepository(scopeProvider, _connectionFactoryMock.Object);
+        return new EfCoreAIConnectionRepository(scopeProvider, _connectionFactoryMock.Object);
     }
 
     #region GetAsync

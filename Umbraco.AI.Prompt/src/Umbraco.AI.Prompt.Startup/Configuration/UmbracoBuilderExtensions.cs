@@ -8,12 +8,12 @@ using Umbraco.Cms.Core.DependencyInjection;
 namespace Umbraco.AI.Prompt.Extensions;
 
 /// <summary>
-/// Extension methods for adding all Umbraco.Ai.Prompt services.
+/// Extension methods for adding all Umbraco.AI.Prompt services.
 /// </summary>
 public static class UmbracoBuilderExtensions
 {
     /// <summary>
-    /// Adds all Umbraco.Ai.Prompt services to the builder.
+    /// Adds all Umbraco.AI.Prompt services to the builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>

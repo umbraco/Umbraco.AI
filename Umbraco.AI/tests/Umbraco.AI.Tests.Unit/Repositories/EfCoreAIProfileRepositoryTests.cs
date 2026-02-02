@@ -8,19 +8,19 @@ using Umbraco.AI.Tests.Common.Fixtures;
 
 namespace Umbraco.AI.Tests.Unit.Repositories;
 
-public class EfCoreAiProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
+public class EfCoreAIProfileRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
 
-    public EfCoreAiProfileRepositoryTests(EfCoreTestFixture fixture)
+    public EfCoreAIProfileRepositoryTests(EfCoreTestFixture fixture)
     {
         _fixture = fixture;
     }
 
-    private EfCoreAiProfileRepository CreateRepository(UmbracoAIDbContext context)
+    private EfCoreAIProfileRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
-        return new EfCoreAiProfileRepository(scopeProvider);
+        return new EfCoreAIProfileRepository(scopeProvider);
     }
 
     private async Task<Guid> EnsureConnectionExists(UmbracoAIDbContext context)

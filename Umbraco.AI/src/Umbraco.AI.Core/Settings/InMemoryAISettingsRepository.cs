@@ -3,7 +3,7 @@ namespace Umbraco.AI.Core.Settings;
 /// <summary>
 /// In-memory implementation of the settings repository for development/testing.
 /// </summary>
-internal sealed class InMemoryAiSettingsRepository : IAISettingsRepository
+internal sealed class InMemoryAISettingsRepository : IAISettingsRepository
 {
     private AISettings _settings = new();
 

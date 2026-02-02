@@ -1,5 +1,5 @@
 {
-    "name": "Umbraco Ai Microsoft Foundry Provider",
+    "name": "Umbraco AI Microsoft Foundry Provider",
     "$schema": "../umbraco-package-schema.json",
     "extensions": [
         {

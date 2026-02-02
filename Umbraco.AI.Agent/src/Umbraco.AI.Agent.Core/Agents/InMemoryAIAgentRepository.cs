@@ -8,7 +8,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <summary>
 /// In-memory implementation of <see cref="IAIAgentRepository"/> for testing and fallback scenarios.
 /// </summary>
-internal sealed class InMemoryAiAgentRepository : IAIAgentRepository
+internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
 {
     private readonly ConcurrentDictionary<Guid, AIAgent> _agents = new();
 

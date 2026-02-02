@@ -1,7 +1,7 @@
 namespace Umbraco.AI.Prompt.Core.Models;
 
 /// <summary>
-/// Configuration options for Umbraco.Ai.Prompt.
+/// Configuration options for Umbraco.AI.Prompt.
 /// </summary>
 public class AIPromptOptions
 {

@@ -10,15 +10,15 @@ namespace Umbraco.AI.Persistence.Connections;
 /// <summary>
 /// EF Core implementation of the AI connection repository.
 /// </summary>
-internal class EfCoreAiConnectionRepository : IAIConnectionRepository
+internal class EfCoreAIConnectionRepository : IAIConnectionRepository
 {
     private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
     private readonly IAIConnectionFactory _connectionFactory;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="EfCoreAiConnectionRepository"/>.
+    /// Initializes a new instance of <see cref="EfCoreAIConnectionRepository"/>.
     /// </summary>
-    public EfCoreAiConnectionRepository(
+    public EfCoreAIConnectionRepository(
         IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider,
         IAIConnectionFactory connectionFactory)
     {

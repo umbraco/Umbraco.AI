@@ -17,7 +17,7 @@ namespace Umbraco.AI.Core.RuntimeContext;
 /// </remarks>
 internal sealed class AIRuntimeContextScopeProvider : IAIRuntimeContextScopeProvider, IAIRuntimeContextAccessor
 {
-    private const string ContextKey = "Umbraco.Ai.RuntimeContext";
+    private const string ContextKey = "Umbraco.AI.RuntimeContext";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
 

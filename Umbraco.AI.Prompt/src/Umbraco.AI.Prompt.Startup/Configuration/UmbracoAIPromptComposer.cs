@@ -6,7 +6,7 @@ using Umbraco.Cms.Core.DependencyInjection;
 namespace Umbraco.AI.Prompt.Startup.Configuration;
 
 /// <summary>
-/// Umbraco Composer for auto-discovery and registration of Umbraco.Ai.Prompt services.
+/// Umbraco Composer for auto-discovery and registration of Umbraco.AI.Prompt services.
 /// </summary>
 [ComposeAfter(typeof(UmbracoAIComposer))]
 public class UmbracoAIPromptComposer : IComposer

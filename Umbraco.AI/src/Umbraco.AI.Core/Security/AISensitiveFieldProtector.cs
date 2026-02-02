@@ -11,7 +11,7 @@ namespace Umbraco.AI.Core.Security;
 internal sealed class AISensitiveFieldProtector : IAISensitiveFieldProtector
 {
     private const string EncryptedPrefix = "ENC:";
-    private const string Purpose = "Umbraco.Ai.SensitiveFields.v1";
+    private const string Purpose = "Umbraco.AI.SensitiveFields.v1";
 
     private readonly IDataProtector _protector;
     private readonly ILogger<AISensitiveFieldProtector> _logger;

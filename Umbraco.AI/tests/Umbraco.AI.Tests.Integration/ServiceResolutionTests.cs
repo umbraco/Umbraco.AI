@@ -229,21 +229,21 @@ public class ServiceResolutionTests : IDisposable
 
         // Settings service (required by AIProfileService)
         services.AddSingleton<IAppPolicyCache>(NoAppCache.Instance);
-        services.AddSingleton<IAISettingsRepository, InMemoryAiSettingsRepository>();
+        services.AddSingleton<IAISettingsRepository, InMemoryAISettingsRepository>();
         services.AddSingleton<IAISettingsService, AISettingsService>();
 
         // Unified versioning service (stub implementation for tests)
         services.AddSingleton<AIVersionableEntityAdapterCollection>(_ =>
             new AIVersionableEntityAdapterCollection(() => Enumerable.Empty<IAIVersionableEntityAdapter>()));
-        services.AddSingleton<IAIEntityVersionRepository, InMemoryAiEntityVersionRepository>();
+        services.AddSingleton<IAIEntityVersionRepository, InMemoryAIEntityVersionRepository>();
         services.AddSingleton<IAIEntityVersionService, AIEntityVersionService>();
 
         // Connection system
-        services.AddSingleton<IAIConnectionRepository, InMemoryAiConnectionRepository>();
+        services.AddSingleton<IAIConnectionRepository, InMemoryAIConnectionRepository>();
         services.AddSingleton<IAIConnectionService, AIConnectionService>();
 
         // Profile resolution
-        services.AddSingleton<IAIProfileRepository, InMemoryAiProfileRepository>();
+        services.AddSingleton<IAIProfileRepository, InMemoryAIProfileRepository>();
         services.AddSingleton<IAIProfileService, AIProfileService>();
 
         // Client factories

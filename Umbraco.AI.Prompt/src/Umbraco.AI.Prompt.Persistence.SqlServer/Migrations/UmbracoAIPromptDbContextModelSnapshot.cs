@@ -22,7 +22,7 @@ namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Umbraco.Ai.Prompt.Persistence.Prompts.AIPromptEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Prompt.Persistence.Prompts.AIPromptEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

@@ -8,12 +8,12 @@ using Umbraco.Cms.Core.DependencyInjection;
 namespace Umbraco.AI.Agent.Extensions;
 
 /// <summary>
-/// Extension methods for adding all Umbraco.Ai.Agent services.
+/// Extension methods for adding all Umbraco.AI.Agent services.
 /// </summary>
 public static class UmbracoBuilderExtensions
 {
     /// <summary>
-    /// Adds all Umbraco.Ai.Agent services to the builder.
+    /// Adds all Umbraco.AI.Agent services to the builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>

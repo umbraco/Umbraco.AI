@@ -15,6 +15,6 @@ public class UmbracoAIComposer : IComposer
     /// <param name="builder"></param>
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AddUmbracoAi();
+        builder.AddUmbracoAI();
     }
 }

@@ -20,7 +20,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AIConnectionEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Persistence.Entities.AIConnectionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,7 +63,7 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIConnection", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AIProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Persistence.Entities.AIProfileEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,9 +120,9 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIProfile", (string)null);
                 });
 
-            modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AIProfileEntity", b =>
+            modelBuilder.Entity("Umbraco.AI.Persistence.Entities.AIProfileEntity", b =>
                 {
-                    b.HasOne("Umbraco.Ai.Persistence.Entities.AIConnectionEntity", null)
+                    b.HasOne("Umbraco.AI.Persistence.Entities.AIConnectionEntity", null)
                         .WithMany()
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)

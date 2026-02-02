@@ -7,19 +7,19 @@ using Umbraco.AI.Tests.Common.Fixtures;
 
 namespace Umbraco.AI.Tests.Unit.Repositories;
 
-public class EfCoreAiContextRepositoryTests : IClassFixture<EfCoreTestFixture>
+public class EfCoreAIContextRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
 
-    public EfCoreAiContextRepositoryTests(EfCoreTestFixture fixture)
+    public EfCoreAIContextRepositoryTests(EfCoreTestFixture fixture)
     {
         _fixture = fixture;
     }
 
-    private EfCoreAiContextRepository CreateRepository(UmbracoAIDbContext context)
+    private EfCoreAIContextRepository CreateRepository(UmbracoAIDbContext context)
     {
         var scopeProvider = new TestEfCoreScopeProvider(() => context);
-        return new EfCoreAiContextRepository(scopeProvider);
+        return new EfCoreAIContextRepository(scopeProvider);
     }
 
     #region GetByIdAsync

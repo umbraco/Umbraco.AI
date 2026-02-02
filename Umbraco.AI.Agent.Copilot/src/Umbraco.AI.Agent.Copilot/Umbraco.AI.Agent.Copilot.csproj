@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
     <PropertyGroup>
-        <Title>Umbraco Ai Agent Copilot</Title>
-        <Description>Copilot chat UI for Umbraco Ai Agent</Description>
-        <StaticWebAssetBasePath>App_Plugins/UmbracoAiAgentCopilot</StaticWebAssetBasePath>
+        <Title>Umbraco AI Agent Copilot</Title>
+        <Description>Copilot chat UI for Umbraco AI Agent</Description>
+        <StaticWebAssetBasePath>App_Plugins/UmbracoAIAgentCopilot</StaticWebAssetBasePath>
         <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     </PropertyGroup>
 
@@ -11,11 +11,11 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\..\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.Ai.Agent.Core" />
+        <PackageReference Include="Umbraco.AI.Agent.Core" />
     </ItemGroup>
 
     <ItemGroup>

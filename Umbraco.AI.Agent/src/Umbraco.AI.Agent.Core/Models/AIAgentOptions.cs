@@ -1,7 +1,7 @@
 namespace Umbraco.AI.Agent.Core.Models;
 
 /// <summary>
-/// Configuration options for Umbraco.Ai.Agent.
+/// Configuration options for Umbraco.AI.Agent.
 /// </summary>
 public class AIAgentOptions
 {

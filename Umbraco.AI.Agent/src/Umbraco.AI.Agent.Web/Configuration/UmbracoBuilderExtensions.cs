@@ -8,12 +8,12 @@ using Umbraco.AI.Extensions;
 namespace Umbraco.AI.Agent.Web.Configuration;
 
 /// <summary>
-/// Extension methods for configuring Umbraco.Ai.Agent.Web services.
+/// Extension methods for configuring Umbraco.AI.Agent.Web services.
 /// </summary>
 public static class UmbracoBuilderExtensions
 {
     /// <summary>
-    /// Adds Umbraco.Ai.Agent web services to the builder.
+    /// Adds Umbraco.AI.Agent web services to the builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>

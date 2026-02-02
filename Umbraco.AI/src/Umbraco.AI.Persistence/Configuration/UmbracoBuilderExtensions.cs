@@ -47,19 +47,19 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAIConnectionFactory, AIConnectionFactory>();
 
         // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
-        builder.Services.AddSingleton<IAIConnectionRepository, EfCoreAiConnectionRepository>();
-        builder.Services.AddSingleton<IAIProfileRepository, EfCoreAiProfileRepository>();
-        builder.Services.AddSingleton<IAIContextRepository, EfCoreAiContextRepository>();
-        builder.Services.AddSingleton<IAIAuditLogRepository, EfCoreAiAuditLogRepository>();
-        builder.Services.AddSingleton<IAIUsageRecordRepository, EfCoreAiUsageRecordRepository>();
-        builder.Services.AddSingleton<IAIUsageStatisticsRepository, EfCoreAiUsageStatisticsRepository>();
-        builder.Services.AddSingleton<IAISettingsRepository, EfCoreAiSettingsRepository>();
+        builder.Services.AddSingleton<IAIConnectionRepository, EfCoreAIConnectionRepository>();
+        builder.Services.AddSingleton<IAIProfileRepository, EfCoreAIProfileRepository>();
+        builder.Services.AddSingleton<IAIContextRepository, EfCoreAIContextRepository>();
+        builder.Services.AddSingleton<IAIAuditLogRepository, EfCoreAIAuditLogRepository>();
+        builder.Services.AddSingleton<IAIUsageRecordRepository, EfCoreAIUsageRecordRepository>();
+        builder.Services.AddSingleton<IAIUsageStatisticsRepository, EfCoreAIUsageStatisticsRepository>();
+        builder.Services.AddSingleton<IAISettingsRepository, EfCoreAISettingsRepository>();
 
         // Unified versioning repository
-        builder.Services.AddSingleton<IAIEntityVersionRepository, EfCoreAiEntityVersionRepository>();
+        builder.Services.AddSingleton<IAIEntityVersionRepository, EfCoreAIEntityVersionRepository>();
 
         // Register migration notification handler
-        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAiMigrationNotificationHandler>();
+        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAIMigrationNotificationHandler>();
 
         return builder;
     }
@@ -79,18 +79,18 @@ public static class UmbracoBuilderExtensions
         {
             case Constants.ProviderNames.SQLServer:
                 options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.Ai.Persistence.SqlServer"));
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.SqlServer"));
                 break;
 
             case Constants.ProviderNames.SQLLite:
             case "Microsoft.Data.SQLite":
                 options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.Ai.Persistence.Sqlite"));
+                    x.MigrationsAssembly("Umbraco.AI.Persistence.Sqlite"));
                 break;
 
             default:
                 throw new InvalidOperationException(
-                    $"The database provider '{providerName}' is not supported by Umbraco.Ai.Persistence. " +
+                    $"The database provider '{providerName}' is not supported by Umbraco.AI.Persistence. " +
                     $"Supported providers: SQL Server, SQLite.");
         }
     }

@@ -11,12 +11,12 @@ using Umbraco.Extensions;
 namespace Umbraco.AI.Prompt.Persistence.Configuration;
 
 /// <summary>
-/// Extension methods for configuring Umbraco.Ai.Prompt.Persistence services.
+/// Extension methods for configuring Umbraco.AI.Prompt.Persistence services.
 /// </summary>
 public static class UmbracoBuilderExtensions
 {
     /// <summary>
-    /// Adds Umbraco.Ai.Prompt persistence services to the builder.
+    /// Adds Umbraco.AI.Prompt persistence services to the builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
@@ -29,7 +29,7 @@ public static class UmbracoBuilderExtensions
         });
 
         // Replace in-memory repository with EF Core implementation
-        builder.Services.AddSingleton<IAIPromptRepository, EfCoreAiPromptRepository>();
+        builder.Services.AddSingleton<IAIPromptRepository, EfCoreAIPromptRepository>();
 
         // Register migration notification handler
         builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunPromptMigrationNotificationHandler>();
@@ -51,18 +51,18 @@ public static class UmbracoBuilderExtensions
         {
             case Constants.ProviderNames.SQLServer:
                 options.UseSqlServer(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.Ai.Prompt.Persistence.SqlServer"));
+                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.SqlServer"));
                 break;
 
             case Constants.ProviderNames.SQLLite:
             case "Microsoft.Data.SQLite":
                 options.UseSqlite(connectionString, x =>
-                    x.MigrationsAssembly("Umbraco.Ai.Prompt.Persistence.Sqlite"));
+                    x.MigrationsAssembly("Umbraco.AI.Prompt.Persistence.Sqlite"));
                 break;
 
             default:
                 throw new InvalidOperationException(
-                    $"Database provider '{providerName}' is not supported by Umbraco.Ai.Prompt.");
+                    $"Database provider '{providerName}' is not supported by Umbraco.AI.Prompt.");
         }
     }
 }

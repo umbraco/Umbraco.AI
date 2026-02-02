@@ -1,5 +1,5 @@
 {
-    "name": "Umbraco Ai Google Provider",
+    "name": "Umbraco AI Google Provider",
     "$schema": "../umbraco-package-schema.json",
     "extensions": [
         {

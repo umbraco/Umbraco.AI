@@ -13,11 +13,11 @@ public static class Constants
         /// <summary>
         /// Key for prompt ID in metadata collections.
         /// </summary>
-        public const string PromptId = "Umbraco.Ai.PromptId";
+        public const string PromptId = "Umbraco.AI.PromptId";
         
         /// <summary>
         /// Key for prompt alias in metadata collections.
         /// </summary> 
-        public const string PromptAlias = "Umbraco.Ai.PromptAlias";
+        public const string PromptAlias = "Umbraco.AI.PromptAlias";
     }
 } 

@@ -98,7 +98,7 @@ public static partial class UmbracoBuilderExtensions
         {
             var options = sp.GetRequiredService<IOptions<AIWebFetchOptions>>().Value;
             client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
-            client.DefaultRequestHeaders.Add("User-Agent", "Umbraco.Ai.WebFetchTool/1.0");
+            client.DefaultRequestHeaders.Add("User-Agent", "Umbraco.AI.WebFetchTool/1.0");
         })
         .ConfigurePrimaryHttpMessageHandler((sp) =>
         {
@@ -126,15 +126,15 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIEditableModelResolver, AIEditableModelResolver>();
 
         // Connection system
-        services.AddSingleton<IAIConnectionRepository, InMemoryAiConnectionRepository>();
+        services.AddSingleton<IAIConnectionRepository, InMemoryAIConnectionRepository>();
         services.AddSingleton<IAIConnectionService, AIConnectionService>();
 
         // Profile resolution
-        services.AddSingleton<IAIProfileRepository, InMemoryAiProfileRepository>();
+        services.AddSingleton<IAIProfileRepository, InMemoryAIProfileRepository>();
         services.AddSingleton<IAIProfileService, AIProfileService>();
 
         // Settings
-        services.AddSingleton<IAISettingsRepository, InMemoryAiSettingsRepository>();
+        services.AddSingleton<IAISettingsRepository, InMemoryAISettingsRepository>();
         services.AddSingleton<IAISettingsService, AISettingsService>();
 
         // Unified versioning service
@@ -163,7 +163,7 @@ public static partial class UmbracoBuilderExtensions
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true));
 
         // Context system
-        services.AddSingleton<IAIContextRepository, InMemoryAiContextRepository>();
+        services.AddSingleton<IAIContextRepository, InMemoryAIContextRepository>();
         services.AddSingleton<IAIContextService, AIContextService>();
         services.AddSingleton<IAIContextFormatter, AIContextFormatter>();
         services.AddSingleton<IAIContextAccessor, AIContextAccessor>();

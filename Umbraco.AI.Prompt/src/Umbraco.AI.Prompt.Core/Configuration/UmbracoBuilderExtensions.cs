@@ -10,12 +10,12 @@ using Umbraco.Cms.Core.DependencyInjection;
 namespace Umbraco.AI.Prompt.Core.Configuration;
 
 /// <summary>
-/// Extension methods for configuring Umbraco.Ai.Prompt.Core services.
+/// Extension methods for configuring Umbraco.AI.Prompt.Core services.
 /// </summary>
 public static class UmbracoBuilderExtensions
 {
     /// <summary>
-    /// Adds Umbraco.Ai.Prompt core services to the builder.
+    /// Adds Umbraco.AI.Prompt core services to the builder.
     /// </summary>
     /// <param name="builder">The Umbraco builder.</param>
     /// <returns>The builder for chaining.</returns>
@@ -32,7 +32,7 @@ public static class UmbracoBuilderExtensions
             builder.Config.GetSection(AIPromptOptions.SectionName));
 
         // Register in-memory repository as fallback (replaced by persistence layer)
-        builder.Services.AddSingleton<IAIPromptRepository, InMemoryAiPromptRepository>();
+        builder.Services.AddSingleton<IAIPromptRepository, InMemoryAIPromptRepository>();
 
         // Register template variable processors
         builder.Services.AddSingleton<TextTemplateVariableProcessor>();

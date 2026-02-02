@@ -9,18 +9,18 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Persistence.SqlServer</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Persistence.SqlServer</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Persistence.Sqlite</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Persistence.Sqlite</_Parameter1>
         </AssemblyAttribute>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>Umbraco.Ai.Agent.Tests.Unit</_Parameter1>
+            <_Parameter1>Umbraco.AI.Agent.Tests.Unit</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
 </Project>

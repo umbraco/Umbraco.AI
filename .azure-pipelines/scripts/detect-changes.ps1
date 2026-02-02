@@ -377,6 +377,12 @@ function Get-ChangedProducts {
     Write-Host "  Comparison: $comparisonBase..HEAD" -ForegroundColor Gray
 
     # Filter out ErrorRecord objects (git warnings/errors) and keep only strings (file paths)
+    # Log any warnings for visibility, but don't fail the build
+    $gitWarnings = $changedFiles | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] }
+    if ($gitWarnings) {
+        Write-Host "  Git warnings (non-critical):" -ForegroundColor DarkYellow
+        $gitWarnings | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+    }
     $changedFiles = $changedFiles | Where-Object { $_ -is [string] }
 
     # Check product folders

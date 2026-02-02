@@ -410,7 +410,7 @@ public string? EnabledToolScopeIds { get; set; }
 ```
 
 #### 1.3 EF Core Configuration
-**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\UmbracoAiAgentDbContext.cs`
+**File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\UmbracoAIAgentDbContext.cs`
 
 Update `OnModelCreating()` to handle JSON conversion (consistent with existing `ContextIds`, `ScopeIds` pattern):
 
@@ -429,7 +429,7 @@ builder.Property(e => e.EnabledToolScopeIds)
 ```
 
 #### 1.4 Database Migration
-**Migration Name**: `UmbracoAiAgent_AddToolPermissions`
+**Migration Name**: `UmbracoAIAgent_AddToolPermissions`
 
 **Changes**:
 - Add nullable `EnabledToolIds` column (nvarchar(4000))
@@ -441,7 +441,7 @@ Set common safe scopesfor backward compatibility:
 
 ```sql
 -- Migrate existing agents to have default tool scopes
-UPDATE UmbracoAiAgent_Agents
+UPDATE UmbracoAIAgent_Agents
 SET EnabledToolScopeIds = '["Search","Navigation","Translation","Web"]'
 WHERE EnabledToolScopeIds IS NULL;
 ```
@@ -1323,10 +1323,10 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 
 ### Persistence Layer
 - [ ] Add properties to `AIAgentEntity.cs`
-- [ ] Update `UmbracoAiAgentDbContext.cs` with JSON converters
+- [ ] Update `UmbracoAIAgentDbContext.cs` with JSON converters
 - [ ] Update `AIAgentRepository.cs` mapping (if needed)
-- [ ] Create SQL Server migration: `UmbracoAiAgent_AddToolPermissions`
-- [ ] Create SQLite migration: `UmbracoAiAgent_AddToolPermissions`
+- [ ] Create SQL Server migration: `UmbracoAIAgent_AddToolPermissions`
+- [ ] Create SQLite migration: `UmbracoAIAgent_AddToolPermissions`
 - [ ] Add migration script for default values
 
 ### Service Integration
@@ -1383,7 +1383,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 | `Umbraco.AI.Agent.Core/Agents/AIAgentService.cs` | Service implementation | Implement tool permission methods, inject `AIToolCollection` |
 | `Umbraco.AI.Agent.Core/Chat/AIAgentFactory.cs` | Agent creation | Call `_agentService.GetEnabledToolIdsAsync()`, filter tools using metadata from `additionalProperties` |
 | `Umbraco.AI.Agent.Persistence/Agents/AIAgentEntity.cs` | EF entity | Add JSON columns |
-| `Umbraco.AI.Agent.Persistence/UmbracoAiAgentDbContext.cs` | EF configuration | Add JSON converters |
+| `Umbraco.AI.Agent.Persistence/UmbracoAIAgentDbContext.cs` | EF configuration | Add JSON converters |
 | `Umbraco.AI.Agent.Web/.../RunAgentController.cs` | Agent execution | Extract tool metadata from `forwardedProps`, pass to factory |
 | `Umbraco.AI.Agent.Web/...Models/AgentCreateRequestModel.cs` | API model | Add properties |
 | `Umbraco.AI.Agent.Web/...Models/AgentUpdateRequestModel.cs` | API model | Add properties |

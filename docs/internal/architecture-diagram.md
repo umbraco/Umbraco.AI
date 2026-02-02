@@ -269,13 +269,13 @@ ProductName/
 │   │       └── IAIEmbeddingService.cs
 │   │
 │   ├── ProductName.Persistence/             # Data Access Layer
-│   │   ├── UmbracoAiDbContext.cs
+│   │   ├── UmbracoAIDbContext.cs
 │   │   ├── Entities/
 │   │   │   ├── AIConnectionEntity.cs
 │   │   │   └── AIProfileEntity.cs
 │   │   └── Repositories/
-│   │       ├── EfCoreAiConnectionRepository.cs
-│   │       └── EfCoreAiProfileRepository.cs
+│   │       ├── EfCoreAIConnectionRepository.cs
+│   │       └── EfCoreAIProfileRepository.cs
 │   │
 │   ├── ProductName.Persistence.SqlServer/   # SQL Server Migrations
 │   │   └── Migrations/
@@ -304,7 +304,7 @@ ProductName/
 │   │       └── vite.config.ts
 │   │
 │   ├── ProductName.Startup/                 # DI Registration
-│   │   └── UmbracoAiComposer.cs
+│   │   └── UmbracoAIComposer.cs
 │   │
 │   └── ProductName/                         # Meta-package
 │       └── ProductName.csproj               # References all projects
@@ -479,9 +479,9 @@ EXAMPLE AGENT:
 │                          DATABASE TABLES                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-UMBRACO.AI (CORE)                    Prefix: UmbracoAi_
+UMBRACO.AI (CORE)                    Prefix: UmbracoAI_
 ┌─────────────────────────────────┐  ┌─────────────────────────────────┐
-│      UmbracoAiConnections       │  │       UmbracoAiProfiles         │
+│      UmbracoAIConnections       │  │       UmbracoAIProfiles         │
 ├─────────────────────────────────┤  ├─────────────────────────────────┤
 │ Id          : uniqueidentifier  │  │ Id          : uniqueidentifier  │
 │ Alias       : nvarchar(255)     │  │ Alias       : nvarchar(255)     │
@@ -495,9 +495,9 @@ UMBRACO.AI (CORE)                    Prefix: UmbracoAi_
               │ FK                    │ DateModified: datetime2         │  │
               └───────────────────────┴─────────────────────────────────┘  │
                                                                            │
-UMBRACO.AI.PROMPT                    Prefix: UmbracoAiPrompt_              │
+UMBRACO.AI.PROMPT                    Prefix: UmbracoAIPrompt_              │
 ┌─────────────────────────────────┐                                        │
-│       UmbracoAiPrompts          │                                        │
+│       UmbracoAIPrompts          │                                        │
 ├─────────────────────────────────┤                                        │
 │ Id          : uniqueidentifier  │                                        │
 │ Alias       : nvarchar(255)     │                                        │
@@ -512,9 +512,9 @@ UMBRACO.AI.PROMPT                    Prefix: UmbracoAiPrompt_              │
 │ DateModified: datetime2         │                                        │
 └─────────────────────────────────┘                                        │
                                                                            │
-UMBRACO.AI.AGENT                     Prefix: UmbracoAiAgent_               │
+UMBRACO.AI.AGENT                     Prefix: UmbracoAIAgent_               │
 ┌─────────────────────────────────┐                                        │
-│        UmbracoAiAgents          │                                        │
+│        UmbracoAIAgents          │                                        │
 ├─────────────────────────────────┤                                        │
 │ Id          : uniqueidentifier  │                                        │
 │ Alias       : nvarchar(255)     │                                        │

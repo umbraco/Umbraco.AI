@@ -50,11 +50,11 @@ src/Umbraco.AI.Core/
 │   ├── AISnapshotOptions.cs
 │   ├── AIRequestContext.cs
 │   ├── Serializers/
-│   │   ├── DefaultAiPropertyValueSerializer.cs
-│   │   ├── BlockEditorAiPropertyValueSerializer.cs
-│   │   ├── RichTextAiPropertyValueSerializer.cs
-│   │   ├── MediaPickerAiPropertyValueSerializer.cs
-│   │   └── ContentPickerAiPropertyValueSerializer.cs
+│   │   ├── DefaultAIPropertyValueSerializer.cs
+│   │   ├── BlockEditorAIPropertyValueSerializer.cs
+│   │   ├── RichTextAIPropertyValueSerializer.cs
+│   │   ├── MediaPickerAIPropertyValueSerializer.cs
+│   │   └── ContentPickerAIPropertyValueSerializer.cs
 ```
 
 ### Core Interfaces
@@ -452,7 +452,7 @@ Built-in serializers that handle core `IPublishedProperty.GetValue()` return typ
 #### Default Serializer (Fallback)
 
 ```csharp
-public class DefaultAiPropertyValueSerializer : IAIPropertyValueSerializer
+public class DefaultAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     public bool CanSerialize(IPublishedPropertyType propertyType) => true;
 
@@ -495,7 +495,7 @@ public class DefaultAiPropertyValueSerializer : IAIPropertyValueSerializer
 #### Block Editor Serializer
 
 ```csharp
-public class BlockEditorAiPropertyValueSerializer : IAIPropertyValueSerializer
+public class BlockEditorAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     public bool CanSerialize(IPublishedPropertyType propertyType)
         => propertyType.EditorAlias is
@@ -612,7 +612,7 @@ public class BlockEditorAiPropertyValueSerializer : IAIPropertyValueSerializer
 #### Rich Text Serializer
 
 ```csharp
-public class RichTextAiPropertyValueSerializer : IAIPropertyValueSerializer
+public class RichTextAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     public bool CanSerialize(IPublishedPropertyType propertyType)
         => propertyType.EditorAlias == Constants.PropertyEditors.Aliases.TinyMce ||
@@ -662,11 +662,11 @@ public class RichTextAiPropertyValueSerializer : IAIPropertyValueSerializer
 Returns a simple reference model (no expansion):
 
 ```csharp
-public class MediaPickerAiPropertyValueSerializer : IAIPropertyValueSerializer
+public class MediaPickerAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     private readonly IPublishedUrlProvider _urlProvider;
 
-    public MediaPickerAiPropertyValueSerializer(IPublishedUrlProvider urlProvider)
+    public MediaPickerAIPropertyValueSerializer(IPublishedUrlProvider urlProvider)
     {
         _urlProvider = urlProvider;
     }
@@ -712,11 +712,11 @@ public class MediaPickerAiPropertyValueSerializer : IAIPropertyValueSerializer
 Returns a simple reference model (no expansion):
 
 ```csharp
-public class ContentPickerAiPropertyValueSerializer : IAIPropertyValueSerializer
+public class ContentPickerAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     private readonly IPublishedUrlProvider _urlProvider;
 
-    public ContentPickerAiPropertyValueSerializer(IPublishedUrlProvider urlProvider)
+    public ContentPickerAIPropertyValueSerializer(IPublishedUrlProvider urlProvider)
     {
         _urlProvider = urlProvider;
     }
@@ -818,15 +818,15 @@ public class AITemplateResolver : IAITemplateResolver
 ```csharp
 public static class AISnapshotComposerExtensions
 {
-    public static IUmbracoBuilder AddAiSnapshots(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddAISnapshots(this IUmbracoBuilder builder)
     {
         // Register serializer collection with default serializers
         builder.AIPropertyValueSerializers()
-            .Append<BlockEditorAiPropertyValueSerializer>()
-            .Append<RichTextAiPropertyValueSerializer>()
-            .Append<MediaPickerAiPropertyValueSerializer>()
-            .Append<ContentPickerAiPropertyValueSerializer>()
-            .Append<DefaultAiPropertyValueSerializer>(); // Fallback last
+            .Append<BlockEditorAIPropertyValueSerializer>()
+            .Append<RichTextAIPropertyValueSerializer>()
+            .Append<MediaPickerAIPropertyValueSerializer>()
+            .Append<ContentPickerAIPropertyValueSerializer>()
+            .Append<DefaultAIPropertyValueSerializer>(); // Fallback last
 
         builder.Services.AddSingleton<IAIEntitySnapshotService, AIEntitySnapshotService>();
         builder.Services.AddSingleton<IAITemplateResolver, AITemplateResolver>();

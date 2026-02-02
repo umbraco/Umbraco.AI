@@ -146,7 +146,7 @@ docs/public/
 | Article | Content |
 |---------|---------|
 | `installation.md` | NuGet package installation, provider packages (OpenAI), prerequisites (.NET 10, Umbraco 17+) |
-| `configuration.md` | appsettings.json structure, `Umbraco:Ai` section, default profile aliases |
+| `configuration.md` | appsettings.json structure, `Umbraco:AI` section, default profile aliases |
 | `first-connection.md` | Backoffice walkthrough: create connection, enter API key, configuration references, multiple connections |
 | `first-profile.md` | Create a chat profile, select model, configure settings, use in code |
 

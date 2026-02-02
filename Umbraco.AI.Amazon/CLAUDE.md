@@ -34,7 +34,7 @@ The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 [AIProvider("amazon", "Amazon Bedrock")]
 public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
 {
-    public AmazonProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public AmazonProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         WithCapability<AmazonChatCapability>();
@@ -133,7 +133,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
-- `FakeAiProvider` - Test double for provider testing
+- `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles
 

@@ -22,7 +22,7 @@ For advanced scenarios (CI/CD, infrastructure-as-code), you can configure defaul
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "DefaultChatProfileAlias": "default-chat",
       "DefaultEmbeddingProfileAlias": "default-embedding"
     }

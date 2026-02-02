@@ -34,7 +34,7 @@ The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 [AIProvider("openai", "OpenAI")]
 public class OpenAIProvider : AIProviderBase<OpenAISettings>
 {
-    public OpenAIProvider(IAiProviderInfrastructure infrastructure)
+    public OpenAIProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
         WithCapability<OpenAIChatCapability>();
@@ -63,13 +63,13 @@ Settings use the `[AIField]` attribute for UI generation:
 ```csharp
 public class OpenAISettings
 {
-    [AIField("provider-type", "Provider Type", AiFieldType.Select)]
+    [AIField("provider-type", "Provider Type", AIFieldType.Select)]
     public string ProviderType { get; set; } = "openai"; // or "azure"
 
-    [AIField("api-key", "API Key", AiFieldType.Password)]
+    [AIField("api-key", "API Key", AIFieldType.Password)]
     public string ApiKey { get; set; } = string.Empty;
 
-    [AIField("endpoint", "Azure Endpoint", AiFieldType.Text)]
+    [AIField("endpoint", "Azure Endpoint", AIFieldType.Text)]
     public string? AzureEndpoint { get; set; }
 
     // ... other settings
@@ -147,7 +147,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
-- `FakeAiProvider` - Test double for provider testing
+- `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles
 

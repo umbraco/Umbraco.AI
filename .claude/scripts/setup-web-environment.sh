@@ -1,6 +1,6 @@
 #!/bin/bash
 # Full setup script for Claude Code web environment
-# This script prepares the environment for building the Umbraco.Ai solution.
+# This script prepares the environment for building the Umbraco.AI solution.
 #
 # What it does:
 # 1. Installs .NET SDK 10.0 if not present (via apt)
@@ -89,7 +89,7 @@ if is_claude_web_environment; then
 
     echo "=== Setup Complete ==="
     echo ""
-    echo "You can now build with: dotnet build Umbraco.Ai.sln"
+    echo "You can now build with: dotnet build Umbraco.AI.sln"
 else
     echo "Not in Claude Code web environment - no setup needed"
     echo "For local development, use the standard setup: /repo-setup"

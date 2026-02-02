@@ -140,7 +140,7 @@ Analytics are derived from audit logs. Configure retention:
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "AuditLog": {
         "RetentionDays": 90
       }

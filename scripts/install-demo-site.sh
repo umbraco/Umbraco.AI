@@ -130,8 +130,8 @@ echo "Adding Umbraco.AI (Core) projects..."
 add_product_projects "Umbraco.AI" "Core"
 
 # Step 6: Add OpenAI provider projects
-echo "Adding Umbraco.AI.OpenAi projects..."
-add_product_projects "Umbraco.AI.OpenAi" "OpenAi"
+echo "Adding Umbraco.AI.OpenAI projects..."
+add_product_projects "Umbraco.AI.OpenAI" "OpenAI"
 
 # Step 7: Add Prompt projects
 echo "Adding Umbraco.AI.Prompt projects..."
@@ -174,8 +174,8 @@ dotnet add "$DEMO_PROJECT" reference "Umbraco.AI/src/Umbraco.AI/Umbraco.AI.cspro
 dotnet add "$DEMO_PROJECT" reference "Umbraco.AI/src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj"
 
 # OpenAI provider
-if [ -f "Umbraco.AI.OpenAi/src/Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.csproj" ]; then
-    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.OpenAi/src/Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.csproj"
+if [ -f "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj"
 fi
 
 # Anthropic provider

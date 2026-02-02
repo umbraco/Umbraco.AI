@@ -69,11 +69,11 @@ public static partial class UmbracoBuilderExtensions
 
 ### Auto-Discovery Registration
 
-In the core `AddUmbracoAi()` extension method, register a producer that uses TypeLoader:
+In the core `AddUmbracoAI()` extension method, register a producer that uses TypeLoader:
 
 ```csharp
 // In UmbracoBuilderExtensions.cs
-public static IUmbracoBuilder AddUmbracoAi(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddUmbracoAI(this IUmbracoBuilder builder)
 {
     // Auto-discover providers using TypeLoader
     builder.AIProviders()
@@ -263,7 +263,7 @@ public interface IAIEmbeddingService
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
-- ✅ `UmbracoAiApiRouteAttribute.cs` - Custom route attribute for `/umbraco/ai/management/api/v1`
+- ✅ `UmbracoAIApiRouteAttribute.cs` - Custom route attribute for `/umbraco/ai/management/api/v1`
 - ✅ `AIManagementControllerBase.cs` - Base controller with OpenAPI tags
 - ✅ Connection controllers (All, ById, Create, Update, Delete, Test)
 - ✅ Profile controllers (All, ById, ByAlias, Create, Update, Delete)
@@ -278,7 +278,7 @@ public interface IAIEmbeddingService
 ```
 src/Umbraco.AI.Web/Api/Management/
 ├── Routing/
-│   └── UmbracoAiApiRouteAttribute.cs
+│   └── UmbracoAIApiRouteAttribute.cs
 ├── Controllers/
 │   └── AIManagementControllerBase.cs
 ├── Connection/
@@ -421,27 +421,27 @@ src/Umbraco.AI.Persistence/           (SHARED CORE)
 │   ├── AIConnectionEntity.cs
 │   └── AIProfileEntity.cs
 ├── Repositories/
-│   ├── EfCoreAiConnectionRepository.cs
-│   └── EfCoreAiProfileRepository.cs
+│   ├── EfCoreAIConnectionRepository.cs
+│   └── EfCoreAIProfileRepository.cs
 ├── Notifications/
-│   └── RunAiMigrationNotificationHandler.cs
+│   └── RunAIMigrationNotificationHandler.cs
 ├── Extensions/
 │   └── UmbracoBuilderExtensions.cs
 ├── Composers/
-│   └── UmbracoAiPersistenceComposer.cs
-└── UmbracoAiDbContext.cs
+│   └── UmbracoAIPersistenceComposer.cs
+└── UmbracoAIDbContext.cs
 
 src/Umbraco.AI.Persistence.SqlServer/  (SQL Server migrations only)
 ├── Migrations/
 │   ├── 20251125_InitialCreate.cs
-│   └── UmbracoAiDbContextModelSnapshot.cs
-└── UmbracoAiSqlServerComposer.cs
+│   └── UmbracoAIDbContextModelSnapshot.cs
+└── UmbracoAISqlServerComposer.cs
 
 src/Umbraco.AI.Persistence.Sqlite/     (SQLite migrations only)
 ├── Migrations/
 │   ├── 20251125_InitialCreate.cs
-│   └── UmbracoAiDbContextModelSnapshot.cs
-└── UmbracoAiSqliteComposer.cs
+│   └── UmbracoAIDbContextModelSnapshot.cs
+└── UmbracoAISqliteComposer.cs
 ```
 
 ### Connection String Strategy
@@ -452,16 +452,16 @@ Uses Umbraco's database connection via `UseUmbracoDatabaseProvider()`. AI tables
 
 **`src/Umbraco.AI.Persistence/Extensions/UmbracoBuilderExtensions.cs`:**
 ```csharp
-public static IUmbracoBuilder AddUmbracoAiPersistence(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddUmbracoAIPersistence(this IUmbracoBuilder builder)
 {
-    builder.Services.AddUmbracoDbContext<UmbracoAiDbContext>((serviceProvider, options) =>
+    builder.Services.AddUmbracoDbContext<UmbracoAIDbContext>((serviceProvider, options) =>
     {
         options.UseUmbracoDatabaseProvider(serviceProvider);
     });
 
     // Replace in-memory repositories with EF Core implementations
-    builder.Services.AddScoped<IAIConnectionRepository, EfCoreAiConnectionRepository>();
-    builder.Services.AddScoped<IAIProfileRepository, EfCoreAiProfileRepository>();
+    builder.Services.AddScoped<IAIConnectionRepository, EfCoreAIConnectionRepository>();
+    builder.Services.AddScoped<IAIProfileRepository, EfCoreAIProfileRepository>();
 
     return builder;
 }
@@ -485,9 +485,9 @@ Umbraco.AI.Persistence.Sqlite
 
 ### DbContext Setup (Following Umbraco Patterns)
 
-**UmbracoAiDbContext.cs:**
+**UmbracoAIDbContext.cs:**
 ```csharp
-public class UmbracoAiDbContext : DbContext
+public class UmbracoAIDbContext : DbContext
 {
     public required DbSet<AIConnectionEntity> Connections { get; set; }
     public required DbSet<AIProfileEntity> Profiles { get; set; }
@@ -520,14 +520,14 @@ public class UmbracoAiDbContext : DbContext
 
 ### Auto-Migration on Startup
 
-**RunAiMigrationNotificationHandler.cs:**
+**RunAIMigrationNotificationHandler.cs:**
 ```csharp
-public class RunAiMigrationNotificationHandler
+public class RunAIMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
-    private readonly UmbracoAiDbContext _dbContext;
+    private readonly UmbracoAIDbContext _dbContext;
 
-    public RunAiMigrationNotificationHandler(UmbracoAiDbContext dbContext)
+    public RunAIMigrationNotificationHandler(UmbracoAIDbContext dbContext)
         => _dbContext = dbContext;
 
     public async Task HandleAsync(
@@ -545,13 +545,13 @@ public class RunAiMigrationNotificationHandler
 
 ### Repository Pattern with IEfCoreScopeProvider
 
-**EfCoreAiConnectionRepository.cs:**
+**EfCoreAIConnectionRepository.cs:**
 ```csharp
-public class EfCoreAiConnectionRepository : IAIConnectionRepository
+public class EfCoreAIConnectionRepository : IAIConnectionRepository
 {
-    private readonly IEfCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEfCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAiConnectionRepository(IEfCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
+    public EfCoreAIConnectionRepository(IEfCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
         => _scopeProvider = scopeProvider;
 
     public async Task<AIConnection?> GetAsync(Guid id, CancellationToken ct = default)
@@ -617,20 +617,20 @@ Generate migrations per database provider (context lives in shared project, migr
 ```bash
 # SQL Server
 dotnet ef migrations add InitialCreate \
-  --context UmbracoAiDbContext \
+  --context UmbracoAIDbContext \
   --project src/Umbraco.AI.Persistence.SqlServer \
   --startup-project src/Umbraco.AI.DemoSite
 
 # SQLite
 dotnet ef migrations add InitialCreate \
-  --context UmbracoAiDbContext \
+  --context UmbracoAIDbContext \
   --project src/Umbraco.AI.Persistence.Sqlite \
   --startup-project src/Umbraco.AI.DemoSite
 ```
 
 The `MigrationsAssembly()` call in each provider's setup ensures EF Core looks for migrations in the correct provider-specific assembly.
 
-Migrations auto-apply on startup via `RunAiMigrationNotificationHandler`.
+Migrations auto-apply on startup via `RunAIMigrationNotificationHandler`.
 
 ### Testing Requirements
 
@@ -638,7 +638,7 @@ Migrations auto-apply on startup via `RunAiMigrationNotificationHandler`.
 
 Test repository methods with in-memory SQLite:
 
-**EfCoreAiConnectionRepository:**
+**EfCoreAIConnectionRepository:**
 - `GetAsync` - Returns null when not found
 - `GetAllAsync` - Returns empty list when no data
 - `SaveAsync` - Creates new entity (insert)
@@ -647,7 +647,7 @@ Test repository methods with in-memory SQLite:
 - `DeleteAsync` - Returns false when not found
 - Settings JSON serialization/deserialization
 
-**EfCoreAiProfileRepository:**
+**EfCoreAIProfileRepository:**
 - `GetByIdAsync` - Returns null when not found
 - `GetByAliasAsync` - Case-insensitive alias lookup
 - `GetAllAsync` - Filters by capability
@@ -666,12 +666,12 @@ public class EfCoreTestFixture : IDisposable
 {
     private readonly SqliteConnection _connection;
 
-    public UmbracoAiDbContext CreateContext()
+    public UmbracoAIDbContext CreateContext()
     {
-        var options = new DbContextOptionsBuilder<UmbracoAiDbContext>()
+        var options = new DbContextOptionsBuilder<UmbracoAIDbContext>()
             .UseSqlite(_connection)
             .Options;
-        return new UmbracoAiDbContext(options);
+        return new UmbracoAIDbContext(options);
     }
 
     public EfCoreTestFixture()
@@ -689,11 +689,11 @@ public class EfCoreTestFixture : IDisposable
 
 Usage in tests:
 ```csharp
-public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
+public class EfCoreAIConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
     private readonly EfCoreTestFixture _fixture;
 
-    public EfCoreAiConnectionRepositoryTests(EfCoreTestFixture fixture)
+    public EfCoreAIConnectionRepositoryTests(EfCoreTestFixture fixture)
         => _fixture = fixture;
 
     [Fact]
@@ -701,7 +701,7 @@ public class EfCoreAiConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
     {
         await using var context = _fixture.CreateContext();
         var scopeProvider = CreateScopeProvider(context);
-        var repository = new EfCoreAiConnectionRepository(scopeProvider);
+        var repository = new EfCoreAIConnectionRepository(scopeProvider);
 
         var result = await repository.GetAsync(Guid.NewGuid());
 
@@ -803,12 +803,12 @@ export const AIConnectionConstants = {
         Entity: "icon-plug",
     },
     Workspace: {
-        Collection: 'UmbracoAi.Workspace.Connections',
-        Entity: 'UmbracoAi.Workspace.Connection',
+        Collection: 'UmbracoAI.Workspace.Connections',
+        Entity: 'UmbracoAI.Workspace.Connection',
     },
-    Store: 'UmbracoAi.Store.Connection',
-    Repository: 'UmbracoAi.Repository.Connection',
-    Collection: 'UmbracoAi.Collection.Connection',
+    Store: 'UmbracoAI.Store.Connection',
+    Repository: 'UmbracoAI.Repository.Connection',
+    Collection: 'UmbracoAI.Collection.Connection',
 }
 ```
 

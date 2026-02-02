@@ -126,7 +126,7 @@ Web follows Umbraco CMS Management API conventions:
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "Prompt": {
         // Future configuration options
       }

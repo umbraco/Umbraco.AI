@@ -41,7 +41,7 @@ Umbraco.AI.Core
 │   ├── AIEntitySnapshot.cs
 │   ├── AISnapshotOptions.cs
 │   └── Serializers/
-│       └── BlockEditorAiPropertyValueSerializer.cs  # Uses BlockStructureHelper
+│       └── BlockEditorAIPropertyValueSerializer.cs  # Uses BlockStructureHelper
 ```
 
 ---
@@ -388,7 +388,7 @@ Uses `IDataTypeService` to get `EditorUiAlias` from the property's DataType.
 **File**: `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.Content.cs`
 
 ```csharp
-public static IUmbracoBuilder AddAiContent(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddAIContent(this IUmbracoBuilder builder)
 {
     builder.Services.AddSingleton<IPublishedContentResolver, PublishedContentResolver>();
     builder.Services.AddSingleton<IPropertyEditorInfoResolver, PropertyEditorInfoResolver>();
@@ -754,7 +754,7 @@ Culture: {{culture}}
 | File | Change |
 |------|--------|
 | `Snapshots/AIEntitySnapshotService.cs` | Use `IPublishedContentResolver` |
-| `Snapshots/Serializers/BlockEditorAiPropertyValueSerializer.cs` | Can optionally use `BlockStructureHelper` for traversal |
+| `Snapshots/Serializers/BlockEditorAIPropertyValueSerializer.cs` | Can optionally use `BlockStructureHelper` for traversal |
 
 ### Deleted Files (Umbraco.AI.Core)
 

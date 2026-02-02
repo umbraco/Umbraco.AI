@@ -34,7 +34,7 @@ The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 [AIProvider("google", "Google")]
 public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
 {
-    public GoogleProvider(IAiProviderInfrastructure infrastructure, IMemoryCache cache)
+    public GoogleProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
         : base(infrastructure)
     {
         WithCapability<GoogleChatCapability>();
@@ -115,7 +115,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
-- `FakeAiProvider` - Test double for provider testing
+- `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles
 

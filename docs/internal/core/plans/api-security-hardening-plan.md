@@ -554,12 +554,12 @@ public static class RateLimiting
         /// <summary>
         /// Policy name for chat endpoints.
         /// </summary>
-        public const string Chat = "UmbracoAiChat";
+        public const string Chat = "UmbracoAIChat";
 
         /// <summary>
         /// Policy name for embedding endpoints.
         /// </summary>
-        public const string Embedding = "UmbracoAiEmbedding";
+        public const string Embedding = "UmbracoAIEmbedding";
     }
 
     /// <summary>
@@ -655,7 +655,7 @@ public class AIOptions
 
 Since Umbraco does not call `app.UseRateLimiter()`, we need to add it via Umbraco's pipeline filter system.
 
-**File:** `src/Umbraco.AI.Web/Configuration/UmbracoAiRateLimitingPipelineFilter.cs`
+**File:** `src/Umbraco.AI.Web/Configuration/UmbracoAIRateLimitingPipelineFilter.cs`
 
 ```csharp
 using Microsoft.AspNetCore.Builder;
@@ -666,10 +666,10 @@ namespace Umbraco.AI.Web.Configuration;
 /// <summary>
 /// Pipeline filter that adds rate limiting middleware to the Umbraco pipeline.
 /// </summary>
-internal sealed class UmbracoAiRateLimitingPipelineFilter : UmbracoPipelineFilter
+internal sealed class UmbracoAIRateLimitingPipelineFilter : UmbracoPipelineFilter
 {
-    public UmbracoAiRateLimitingPipelineFilter()
-        : base("UmbracoAiRateLimiting")
+    public UmbracoAIRateLimitingPipelineFilter()
+        : base("UmbracoAIRateLimiting")
     {
         // Add rate limiter middleware before routing (PreRouting stage)
         // This ensures rate limiting happens early in the pipeline
@@ -689,7 +689,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Threading.RateLimiting;
 using Umbraco.Cms.Web.Common.ApplicationBuilder;
 
-public static IUmbracoBuilder AddUmbracoAiWeb(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddUmbracoAIWeb(this IUmbracoBuilder builder)
 {
     // ... existing registrations
 
@@ -703,7 +703,7 @@ private static void ConfigureRateLimiting(IUmbracoBuilder builder)
 {
     // Get configuration
     var aiOptions = builder.Config
-        .GetSection("Umbraco:Ai")
+        .GetSection("Umbraco:AI")
         .Get<AIOptions>() ?? new AIOptions();
 
     if (!aiOptions.RateLimiting.Enabled)
@@ -788,7 +788,7 @@ private static void ConfigureRateLimiting(IUmbracoBuilder builder)
     // Register pipeline filter to add UseRateLimiter() middleware
     builder.Services.Configure<UmbracoPipelineOptions>(options =>
     {
-        options.AddFilter(new UmbracoAiRateLimitingPipelineFilter());
+        options.AddFilter(new UmbracoAIRateLimitingPipelineFilter());
     });
 }
 ```
@@ -832,7 +832,7 @@ public async Task<IActionResult> GenerateEmbeddings(...)
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "DefaultChatProfileAlias": "default-chat",
       "RateLimiting": {
         "Enabled": true,
@@ -904,7 +904,7 @@ public interface IAIAuditLogger
 
 ### Step 4.3: Create Structured Logging Implementation
 
-**File:** `src/Umbraco.AI.Core/Audit/StructuredAiAuditLogger.cs`
+**File:** `src/Umbraco.AI.Core/Audit/StructuredAIAuditLogger.cs`
 
 ```csharp
 namespace Umbraco.AI.Core.Audit;
@@ -912,11 +912,11 @@ namespace Umbraco.AI.Core.Audit;
 /// <summary>
 /// Audit logger that writes to Microsoft.Extensions.Logging with structured data.
 /// </summary>
-public class StructuredAiAuditLogger : IAIAuditLogger
+public class StructuredAIAuditLogger : IAIAuditLogger
 {
-    private readonly ILogger<StructuredAiAuditLogger> _logger;
+    private readonly ILogger<StructuredAIAuditLogger> _logger;
 
-    public StructuredAiAuditLogger(ILogger<StructuredAiAuditLogger> logger)
+    public StructuredAIAuditLogger(ILogger<StructuredAIAuditLogger> logger)
     {
         _logger = logger;
     }
@@ -1045,11 +1045,11 @@ public class AIAuditLogFilter : IAsyncActionFilter
 
 ### Step 4.5: Apply Filter to AI Controllers
 
-**File:** `src/Umbraco.AI.Web/Api/Management/Common/Controllers/UmbracoAiCoreManagementControllerBase.cs`
+**File:** `src/Umbraco.AI.Web/Api/Management/Common/Controllers/UmbracoAICoreManagementControllerBase.cs`
 
 ```csharp
 [ServiceFilter(typeof(AIAuditLogFilter))]
-public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagementControllerBase
+public abstract class UmbracoAICoreManagementControllerBase : UmbracoAIManagementControllerBase
 {
     // ...
 }
@@ -1060,14 +1060,14 @@ public abstract class UmbracoAiCoreManagementControllerBase : UmbracoAiManagemen
 **File:** `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs`
 
 ```csharp
-// In AddUmbracoAiCore()
-builder.Services.AddSingleton<IAIAuditLogger, StructuredAiAuditLogger>();
+// In AddUmbracoAICore()
+builder.Services.AddSingleton<IAIAuditLogger, StructuredAIAuditLogger>();
 ```
 
 **File:** `src/Umbraco.AI.Web/Configuration/UmbracoBuilderExtensions.cs`
 
 ```csharp
-// In AddUmbracoAiWeb()
+// In AddUmbracoAIWeb()
 builder.Services.AddScoped<AIAuditLogFilter>();
 ```
 
@@ -1096,7 +1096,7 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 1. Add `RateLimiting` static class to `Constants.cs`
 2. Create `AIRateLimitOptions.cs`
 3. Update `AIOptions.cs`
-4. Create `UmbracoAiRateLimitingPipelineFilter.cs`
+4. Create `UmbracoAIRateLimitingPipelineFilter.cs`
 5. Add rate limiting configuration in `UmbracoBuilderExtensions.cs`
 6. Apply `[EnableRateLimiting]` to controllers
 7. Write rate limiting integration tests
@@ -1104,7 +1104,7 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 ### Sprint 4: Audit Logging (P2)
 1. Create `AIAuditEntry.cs`
 2. Create `IAIAuditLogger.cs`
-3. Create `StructuredAiAuditLogger.cs`
+3. Create `StructuredAIAuditLogger.cs`
 4. Create `AIAuditLogFilter.cs`
 5. Register services
 6. Apply filter to base controller
@@ -1120,10 +1120,10 @@ builder.Services.AddScoped<AIAuditLogFilter>();
 | `src/Umbraco.AI.Core/Exceptions/AIException.cs` | 2 |
 | `src/Umbraco.AI.Web/Api/Management/Common/Errors/AIProblemDetailsFactory.cs` | 2 |
 | `src/Umbraco.AI.Core/Models/AIRateLimitOptions.cs` | 3 |
-| `src/Umbraco.AI.Web/Configuration/UmbracoAiRateLimitingPipelineFilter.cs` | 3 |
+| `src/Umbraco.AI.Web/Configuration/UmbracoAIRateLimitingPipelineFilter.cs` | 3 |
 | `src/Umbraco.AI.Core/Audit/AIAuditEntry.cs` | 4 |
 | `src/Umbraco.AI.Core/Audit/IAIAuditLogger.cs` | 4 |
-| `src/Umbraco.AI.Core/Audit/StructuredAiAuditLogger.cs` | 4 |
+| `src/Umbraco.AI.Core/Audit/StructuredAIAuditLogger.cs` | 4 |
 | `src/Umbraco.AI.Web/Api/Management/Common/Filters/AIAuditLogFilter.cs` | 4 |
 
 ## Files to Modify
@@ -1166,7 +1166,7 @@ Umbraco.AI includes built-in rate limiting to prevent abuse of AI endpoints.
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "RateLimiting": {
         "Enabled": true,
         "Chat": {
@@ -1192,7 +1192,7 @@ Set `Enabled` to `false` to disable rate limiting (not recommended for productio
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "RateLimiting": {
         "Enabled": false
       }

@@ -34,7 +34,7 @@ The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 [AIProvider("anthropic", "Anthropic")]
 public class AnthropicProvider : AIProviderBase<AnthropicSettings>
 {
-    public AnthropicProvider(IAiProviderInfrastructure infrastructure)
+    public AnthropicProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
         WithCapability<AnthropicChatCapability>();
@@ -57,10 +57,10 @@ Settings use the `[AIField]` attribute for UI generation:
 ```csharp
 public class AnthropicSettings
 {
-    [AIField("api-key", "API Key", AiFieldType.Password)]
+    [AIField("api-key", "API Key", AIFieldType.Password)]
     public string ApiKey { get; set; } = string.Empty;
 
-    [AIField("base-url", "Base URL", AiFieldType.Text)]
+    [AIField("base-url", "Base URL", AIFieldType.Text)]
     public string? BaseUrl { get; set; }
 
     // ... other settings
@@ -120,7 +120,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
-- `FakeAiProvider` - Test double for provider testing
+- `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles
 

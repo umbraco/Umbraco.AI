@@ -83,8 +83,8 @@ Each add-on has its own database tables with a package-specific prefix:
 
 | Add-on | Migration Prefix |
 |--------|-----------------|
-| Prompt | `UmbracoAiPrompt_` |
-| Agent | `UmbracoAiAgent_` |
+| Prompt | `UmbracoAIPrompt_` |
+| Agent | `UmbracoAIAgent_` |
 
 {% hint style="info" %}
 Agent Copilot is a frontend-only package with no database tables.

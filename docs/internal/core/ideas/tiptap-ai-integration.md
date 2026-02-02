@@ -294,7 +294,7 @@ src/Umbraco.AI.Tiptap/
 ├── TiptapComposer.cs                  # Auto-registration
 ├── wwwroot/
 │   └── App_Plugins/
-│       └── UmbracoAiTiptap/
+│       └── UmbracoAITiptap/
 │           └── (compiled JS/CSS)
 └── Client/                            # TypeScript source
     ├── src/
@@ -326,7 +326,7 @@ export const manifests: Array<UmbExtensionManifest> = [
   {
     type: 'tiptapToolbarExtension',
     kind: 'button',
-    alias: 'UmbracoAi.Tiptap.Toolbar.AIAssistant',
+    alias: 'UmbracoAI.Tiptap.Toolbar.AIAssistant',
     name: 'AI Assistant TipTap Toolbar Extension',
     api: () => import('./ai.tiptap-toolbar-api.js'),
     meta: {
@@ -337,7 +337,7 @@ export const manifests: Array<UmbExtensionManifest> = [
   },
   {
     type: 'modal',
-    alias: 'UmbracoAi.Modal.TiptapAiPanel',
+    alias: 'UmbracoAI.Modal.TiptapAIPanel',
     name: 'AI Panel Modal',
     element: () => import('../ui/modals/ai-panel-modal.element.js'),
   },

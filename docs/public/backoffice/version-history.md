@@ -97,7 +97,7 @@ Configure in `appsettings.json`:
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "Versioning": {
         "MaxVersionsPerEntity": 50,
         "CleanupIntervalDays": 7

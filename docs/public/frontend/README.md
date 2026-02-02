@@ -26,7 +26,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { UaiChatController, UaiChatMessage, UaiChatResult } from '@umbraco-ai/backoffice';
 
 @customElement('my-ai-element')
-export class MyAiElement extends LitElement {
+export class MyAIElement extends LitElement {
     #chatController = new UaiChatController(this);
 
     @state()

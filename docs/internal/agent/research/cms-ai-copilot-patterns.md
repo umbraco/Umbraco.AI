@@ -691,7 +691,7 @@ AI generates semantic JSON, transformer converts to property editor format.
 - Con: Need transformers per property editor type
 
 #### 4. Property Editor AI Contracts
-Each property editor exposes `GetAiInputSchema()` and `TransformAiOutput()`.
+Each property editor exposes `GetAIInputSchema()` and `TransformAIOutput()`.
 - Pro: Property editors own their AI integration
 - Con: Requires updating all editors, third-party issues
 

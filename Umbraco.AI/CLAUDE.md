@@ -77,7 +77,7 @@ var connection = new AIConnectionBuilder()
 ```
 
 **Fakes** - Test doubles for isolated testing:
-- `FakeAiProvider` - Configurable provider for testing
+- `FakeAIProvider` - Configurable provider for testing
 - `FakeChatCapability` / `FakeChatClient` - Chat without real API calls
 - `FakeEmbeddingCapability` - Embedding capability implementation
 - `FakeProviderSettings` - Provider settings for testing
@@ -161,8 +161,8 @@ Provider (plugin with capabilities)
 ### Capability System
 
 Providers expose discrete capabilities:
-- `IAiChatCapability` - Chat completions (conversational AI)
-- `IAiEmbeddingCapability` - Text embeddings (vector representations)
+- `IAIChatCapability` - Chat completions (conversational AI)
+- `IAIEmbeddingCapability` - Text embeddings (vector representations)
 - Future: Media (image generation), Moderation (content safety)
 
 Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<string, Embedding<float>>`).
@@ -188,18 +188,18 @@ builder.AIProviders()
 
 ### Key Services
 
-- `IAiChatService` - Primary developer interface for chat completions. Resolves profiles and creates configured clients automatically.
-- `IAiProfileService` - Profile CRUD and lookup by alias
-- `IAiConnectionService` - Connection CRUD and validation
-- `IAiRegistry` - Central registry of all providers and capabilities
-- `IAiChatClientFactory` - Creates `IChatClient` instances with middleware applied
+- `IAIChatService` - Primary developer interface for chat completions. Resolves profiles and creates configured clients automatically.
+- `IAIProfileService` - Profile CRUD and lookup by alias
+- `IAIConnectionService` - Connection CRUD and validation
+- `IAIRegistry` - Central registry of all providers and capabilities
+- `IAIChatClientFactory` - Creates `IChatClient` instances with middleware applied
 
 ### Middleware Pipeline
 
 Middleware wraps M.E.AI clients using the builder pattern. Ordering is controlled via the `OrderedCollectionBuilder` pattern using `Append()`, `InsertBefore<T>()`, and `InsertAfter<T>()` methods.
 
 ```csharp
-public interface IAiChatMiddleware
+public interface IAIChatMiddleware
 {
     IChatClient Apply(IChatClient client);
 }
@@ -239,7 +239,7 @@ The `IdOrAlias` class:
 - Provides `IsId` and `IsAlias` properties to check which format was provided
 - Located in `Umbraco.AI.Web.Api.Common.Models`
 
-Resolution is handled via extension methods on `IAiProfileService`:
+Resolution is handled via extension methods on `IAIProfileService`:
 ```csharp
 // Returns Guid? - null if not found
 await profileService.TryGetProfileIdAsync(idOrAlias, cancellationToken);
@@ -286,7 +286,7 @@ await profileService.GetProfileIdAsync(idOrAlias, cancellationToken);
 
 ### Naming Conventions
 
-- Interfaces: `I{Name}.cs` (e.g., `IAiChatService.cs`)
+- Interfaces: `I{Name}.cs` (e.g., `IAIChatService.cs`)
 - Implementations: `{Name}.cs` (e.g., `AIChatService.cs`)
 - Collections: `{Name}Collection.cs` and `{Name}CollectionBuilder.cs`
 
@@ -337,7 +337,7 @@ Example:
 [AIProvider("myprovider", "My Provider")]
 public class MyProvider : AIProviderBase<MyProviderSettings>
 {
-    public MyProvider(IAiProviderInfrastructure infrastructure) : base(infrastructure)
+    public MyProvider(IAIProviderInfrastructure infrastructure) : base(infrastructure)
     {
         WithCapability<MyChatCapability>();
     }
@@ -347,15 +347,15 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 ## Key Namespaces
 
 **Feature namespaces (Umbraco.AI.Core):**
-- `Umbraco.AI.Core.Chat` - Chat service, factory, middleware (`IAiChatService`, `IAiChatClientFactory`)
-- `Umbraco.AI.Core.Embeddings` - Embedding service, factory, middleware (`IAiEmbeddingService`)
-- `Umbraco.AI.Core.Connections` - Connection model, service, repository (`AIConnection`, `IAiConnectionService`)
-- `Umbraco.AI.Core.Profiles` - Profile model, service, repository (`AIProfile`, `IAiProfileService`)
+- `Umbraco.AI.Core.Chat` - Chat service, factory, middleware (`IAIChatService`, `IAIChatClientFactory`)
+- `Umbraco.AI.Core.Embeddings` - Embedding service, factory, middleware (`IAIEmbeddingService`)
+- `Umbraco.AI.Core.Connections` - Connection model, service, repository (`AIConnection`, `IAIConnectionService`)
+- `Umbraco.AI.Core.Profiles` - Profile model, service, repository (`AIProfile`, `IAIProfileService`)
 
 **Shared namespaces (Umbraco.AI.Core):**
 - `Umbraco.AI.Core.Providers` - Provider SDK (base classes, capabilities, collections)
 - `Umbraco.AI.Core.Models` - Shared domain models (`AICapability`, `AIModelRef`, `AIOptions`)
-- `Umbraco.AI.Core.Registry` - Provider registry (`IAiRegistry`)
+- `Umbraco.AI.Core.Registry` - Provider registry (`IAIRegistry`)
 - `Umbraco.AI.Core.EditableModels` - Editable model infrastructure (`AIFieldAttribute`, `AIEditableModelSchema`, `IAIEditableModelResolver`)
 
 **Persistence namespaces:**
@@ -367,7 +367,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "DefaultChatProfileAlias": "default-chat",
       "DefaultEmbeddingProfileAlias": "default-embedding"
     }

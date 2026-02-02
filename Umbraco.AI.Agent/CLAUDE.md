@@ -48,8 +48,8 @@ Umbraco.AI.Agent is an agent management plugin for Umbraco.AI. It provides stora
 
 ### Key Services
 
-- `IAiAgentService` - Primary interface for agent CRUD operations
-- `IAiAgentRepository` - Repository interface for agent persistence
+- `IAIAgentService` - Primary interface for agent CRUD operations
+- `IAIAgentRepository` - Repository interface for agent persistence
 
 ### Domain Model
 
@@ -126,7 +126,7 @@ Web follows Umbraco CMS Management API conventions:
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "Agent": {
         // Future configuration options
       }

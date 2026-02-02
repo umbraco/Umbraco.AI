@@ -91,7 +91,7 @@ For advanced scenarios like CI/CD pipelines or infrastructure-as-code, you can c
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "DefaultChatProfileAlias": "content-writer",
       "DefaultEmbeddingProfileAlias": "embeddings"
     }

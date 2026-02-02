@@ -113,7 +113,7 @@ Management API layer for backoffice integration:
 
 Umbraco integration via Composer pattern:
 
-- `UmbracoAiComposer` - Implements `IComposer` for auto-discovery
+- `UmbracoAIComposer` - Implements `IComposer` for auto-discovery
 - `UmbracoBuilderExtensions` - Extension methods for `IUmbracoBuilder`
 
 ### Umbraco.AI
@@ -125,7 +125,7 @@ Meta-package that bundles all components for NuGet distribution.
 Frontend assets for backoffice UI:
 
 - TypeScript/JavaScript components in `Client/`
-- Compiled assets served from `App_Plugins/UmbracoAi`
+- Compiled assets served from `App_Plugins/UmbracoAI`
 
 ---
 
@@ -237,7 +237,7 @@ Providers are managed via `AIProviderCollectionBuilder`, which extends Umbraco's
 - **Caching**: Uses Umbraco's TypeLoader caching for efficient type discovery
 
 ```csharp
-// In AddUmbracoAiCore() - auto-discover providers
+// In AddUmbracoAICore() - auto-discover providers
 builder.AIProviders()
     .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIProvider, AIProviderAttribute>(cache: true));
 
@@ -412,7 +412,7 @@ public interface IAIConnectionService
 
 ### Current Storage
 
-Connections are currently stored in-memory via `InMemoryAiConnectionRepository`. This is a placeholder for future persistent storage implementations.
+Connections are currently stored in-memory via `InMemoryAIConnectionRepository`. This is a placeholder for future persistent storage implementations.
 
 ---
 
@@ -729,12 +729,12 @@ public class AIOptions
 }
 ```
 
-Configuration section: `Umbraco:Ai`
+Configuration section: `Umbraco:AI`
 
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "DefaultChatProfileAlias": "default-chat",
       "DefaultEmbeddingProfileAlias": "default-embedding"
     }
@@ -817,14 +817,14 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 
 ### Registration Flow
 
-1. **UmbracoAiComposer** (discovered by Umbraco)
-   - Calls `builder.AddUmbracoAi()`
+1. **UmbracoAIComposer** (discovered by Umbraco)
+   - Calls `builder.AddUmbracoAI()`
 
-2. **AddUmbracoAi()** (in Umbraco.AI.Startup)
-   - Calls `AddUmbracoAiCore()` for core services
-   - Calls `AddUmbracoAiWeb()` for management API
+2. **AddUmbracoAI()** (in Umbraco.AI.Startup)
+   - Calls `AddUmbracoAICore()` for core services
+   - Calls `AddUmbracoAIWeb()` for management API
 
-3. **AddUmbracoAiCore()** (in Umbraco.AI.Core)
+3. **AddUmbracoAICore()** (in Umbraco.AI.Core)
    - Binds `AIOptions` from configuration
    - Registers infrastructure services
    - Scans and registers providers
@@ -839,9 +839,9 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 | `IAIEditableModelSchemaBuilder` | `AIEditableModelSchemaBuilder` | Singleton |
 | `IAIProviderInfrastructure` | `AIProviderInfrastructure` | Singleton |
 | `IAIEditableModelResolver` | `AIEditableModelResolver` | Singleton |
-| `IAIConnectionRepository` | `InMemoryAiConnectionRepository` | Singleton |
+| `IAIConnectionRepository` | `InMemoryAIConnectionRepository` | Singleton |
 | `IAIConnectionService` | `AIConnectionService` | Singleton |
-| `IAIProfileRepository` | `InMemoryAiProfileRepository` | Singleton |
+| `IAIProfileRepository` | `InMemoryAIProfileRepository` | Singleton |
 | `IAIProfileService` | `AIProfileService` | Singleton |
 | `IAIChatClientFactory` | `AIChatClientFactory` | Singleton |
 | `IAIEmbeddingGeneratorFactory` | `AIEmbeddingGeneratorFactory` | Singleton |
@@ -852,7 +852,7 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 Providers are discovered via Umbraco's TypeLoader and registered using the collection builder pattern:
 
 ```csharp
-// In AddUmbracoAiCore()
+// In AddUmbracoAICore()
 builder.AIProviders()
     .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIProvider, AIProviderAttribute>(cache: true));
 ```
@@ -867,7 +867,7 @@ This approach:
 Middleware collections are initialized (empty by default) and can be populated in Composers:
 
 ```csharp
-// In AddUmbracoAiCore() - initialize empty collections
+// In AddUmbracoAICore() - initialize empty collections
 _ = builder.AIChatMiddleware();
 _ = builder.AIEmbeddingMiddleware();
 
@@ -891,7 +891,7 @@ builder.AIChatMiddleware()
 
 The management API integrates with Umbraco's backoffice security:
 
-- `UmbracoAiManagementApiBackOfficeSecurityRequirementsOperationFilter` extends `BackOfficeSecurityRequirementsOperationFilterBase`
+- `UmbracoAIManagementApiBackOfficeSecurityRequirementsOperationFilter` extends `BackOfficeSecurityRequirementsOperationFilterBase`
 - Requires backoffice authentication
 - Respects Umbraco user permissions
 
@@ -899,8 +899,8 @@ The management API integrates with Umbraco's backoffice security:
 
 OpenAPI documentation is automatically generated:
 
-- `UmbracoAiManagementApiSchemaIdHandler` - Generates schema IDs
-- `UmbracoAiManagementApiOperationIdHandler` - Generates operation IDs
+- `UmbracoAIManagementApiSchemaIdHandler` - Generates schema IDs
+- `UmbracoAIManagementApiOperationIdHandler` - Generates operation IDs
 
 ### Planned Controllers
 

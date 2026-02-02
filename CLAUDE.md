@@ -532,7 +532,7 @@ Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId, CancellationToke
 // Other services use the entity service, not the repository
 public class AIChatService
 {
-    private readonly IAiProfileService _profileService;  // ✓ Uses service
+    private readonly IAIProfileService _profileService;  // ✓ Uses service
 
     public async Task<IChatClient> GetChatClientAsync(Guid profileId, CancellationToken ct)
     {
@@ -547,7 +547,7 @@ public class AIChatService
 // BAD: Service directly accessing another entity's repository
 public class AIChatService
 {
-    private readonly IAiProfileRepository _profileRepository;  // ✗ Direct repository access
+    private readonly IAIProfileRepository _profileRepository;  // ✗ Direct repository access
 
     public async Task<IChatClient> GetChatClientAsync(Guid profileId, CancellationToken ct)
     {
@@ -577,7 +577,7 @@ Repository methods follow the same `[Action][Entity]Async` pattern as services, 
 
 Repository methods can use shorter names since they operate on a single entity type:
 ```csharp
-public interface IAiProfileRepository
+public interface IAIProfileRepository
 {
     Task<AIProfile?> GetByIdAsync(Guid id, CancellationToken ct);
     Task<AIProfile?> GetByAliasAsync(string alias, CancellationToken ct);

@@ -1,11 +1,11 @@
 # ============================================================================
-# Umbraco.Ai Monorepo Change Detection Script
+# Umbraco.AI Monorepo Change Detection Script
 # ============================================================================
 # Automatically discovers products, analyzes dependencies, and determines
 # which products need to be rebuilt based on git changes.
 #
 # Key Features:
-# - Auto-discovers products by folder naming convention (Umbraco.Ai.*)
+# - Auto-discovers products by folder naming convention (Umbraco.AI.*)
 # - Parses .csproj files to extract actual dependencies
 # - Calculates build levels using topological sort
 # - Propagates changes to dependent products
@@ -28,13 +28,13 @@ function Get-ProductKey {
     .SYNOPSIS
     Converts a product name to a key used in hashtables.
     .EXAMPLE
-    "Umbraco.Ai" -> "core"
-    "Umbraco.Ai.Agent" -> "agent"
+    "Umbraco.AI" -> "core"
+    "Umbraco.AI.Agent" -> "agent"
     #>
     param([string]$ProductName)
 
-    if ($ProductName -eq "Umbraco.Ai") { return "core" }
-    return ($ProductName -replace "^Umbraco\.Ai\.", "").ToLower()
+    if ($ProductName -eq "Umbraco.AI") { return "core" }
+    return ($ProductName -replace "^Umbraco\.AI\.", "").ToLower()
 }
 
 function Get-VariableName {
@@ -58,13 +58,13 @@ function Get-VariableName {
 # PRODUCT DISCOVERY
 # ============================================================================
 
-function Get-UmbracoAiProducts {
+function Get-UmbracoAIProducts {
     <#
     .SYNOPSIS
-    Auto-discovers all Umbraco.Ai products and their subprojects.
+    Auto-discovers all Umbraco.AI products and their subprojects.
 
     .DESCRIPTION
-    Scans the root directory for folders matching "Umbraco.Ai*" pattern,
+    Scans the root directory for folders matching "Umbraco.AI*" pattern,
     finds their main .csproj files, and maps all subprojects to enable
     dependency resolution.
     #>
@@ -75,10 +75,10 @@ function Get-UmbracoAiProducts {
     $products = @{}
     $productsByName = @{}
 
-    # Find all product folders (Umbraco.Ai.*)
+    # Find all product folders (Umbraco.AI.*)
     $productFolders = Get-ChildItem -Path $RootPath -Directory | Where-Object {
-        $_.Name -match "^Umbraco\.Ai" -and
-        $_.Name -ne "Umbraco.Ai-entity-snapshot-service" -and
+        $_.Name -match "^Umbraco\.AI" -and
+        $_.Name -ne "Umbraco.AI-entity-snapshot-service" -and
         -not $_.Name.StartsWith(".")
     }
 
@@ -138,11 +138,11 @@ function Get-UmbracoAiProducts {
 function Get-ProjectDependencies {
     <#
     .SYNOPSIS
-    Extracts Umbraco.Ai dependencies from a .csproj file.
+    Extracts Umbraco.AI dependencies from a .csproj file.
 
     .DESCRIPTION
     Parses ProjectReference and PackageReference elements to find
-    dependencies on other Umbraco.Ai products.
+    dependencies on other Umbraco.AI products.
     #>
     param(
         [string]$ProjectPath,
@@ -167,12 +167,12 @@ function Get-ProjectDependencies {
             if ($reference.Include -match '([^\\\/]+)\.csproj$') {
                 $refName = $Matches[1]
             }
-            # Use PackageReference Include directly if it's Umbraco.Ai.*
-            elseif ($reference.Include -match '^Umbraco\.Ai') {
+            # Use PackageReference Include directly if it's Umbraco.AI.*
+            elseif ($reference.Include -match '^Umbraco\.AI') {
                 $refName = $reference.Include
             }
 
-            # Map to product key if it's an Umbraco.Ai product
+            # Map to product key if it's an Umbraco.AI product
             if ($refName -and $ProductsByName.ContainsKey($refName)) {
                 $depKey = $ProductsByName[$refName]
                 if ($depKey -and $dependencies -notcontains $depKey) {
@@ -607,7 +607,7 @@ function Write-PipelineVariables {
 # ============================================================================
 
 Write-Host "==================================="
-Write-Host "Umbraco.Ai Change Detection"
+Write-Host "Umbraco.AI Change Detection"
 Write-Host "==================================="
 Write-Host ""
 Write-Host "Source Branch: $SourceBranch"
@@ -616,7 +616,7 @@ Write-Host "Root Path: $RootPath"
 Write-Host ""
 
 # 1. Discover products
-$discovery = Get-UmbracoAiProducts -RootPath $RootPath
+$discovery = Get-UmbracoAIProducts -RootPath $RootPath
 $products = $discovery.Products
 $productsByName = $discovery.ProductsByName
 

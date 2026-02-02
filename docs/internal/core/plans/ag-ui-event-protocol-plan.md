@@ -423,7 +423,7 @@ public static class AgentEndpoints
 **Registration in Composer:**
 
 ```csharp
-public class UmbracoAiAgentsComposer : IComposer
+public class UmbracoAIAgentsComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
@@ -431,7 +431,7 @@ public class UmbracoAiAgentsComposer : IComposer
 
         builder.Services.Configure<UmbracoPipelineOptions>(options =>
         {
-            options.AddFilter(new UmbracoPipelineFilter("UmbracoAiAgents")
+            options.AddFilter(new UmbracoPipelineFilter("UmbracoAIAgents")
             {
                 Endpoints = app => app.MapAgentEndpoints()
             });
@@ -447,7 +447,7 @@ Use a controller that manually streams AG-UI events. This gives full control ove
 **File:** `src/Umbraco.AI.Agents/Api/Controllers/AgentChatController.cs`
 
 ```csharp
-[UmbracoAiAgentsApiRoute("agents")]
+[UmbracoAIAgentsApiRoute("agents")]
 [ApiExplorerSettings(GroupName = "Umbraco AI Agents")]
 public class AgentChatController : UmbracoAuthorizedApiController
 {
@@ -1242,7 +1242,7 @@ using Umbraco.AI.Agents.Api.OpenApi;
 
 namespace Umbraco.AI.Agents.Api.Controllers;
 
-[UmbracoAiVersionedManagementApiRoute("agents")]
+[UmbracoAIVersionedManagementApiRoute("agents")]
 [ApiExplorerSettings(GroupName = "Umbraco AI Agents")]
 public class AgentChatController : AgentControllerBase
 {
@@ -1339,7 +1339,7 @@ public static class AgentsSwaggerConfiguration
 **Usage in Composer:**
 
 ```csharp
-// In UmbracoAiAgentsComposer or startup
+// In UmbracoAIAgentsComposer or startup
 services.Configure<SwaggerGenOptions>(options =>
 {
     options.AddAgUiSchemas();

@@ -150,7 +150,7 @@ Over time, version history can accumulate. You can configure automatic cleanup:
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "Versioning": {
         "MaxVersionsPerEntity": 50,
         "CleanupIntervalDays": 7

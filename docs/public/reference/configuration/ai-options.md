@@ -42,7 +42,7 @@ public class AIOptions
 ```json
 {
   "Umbraco": {
-    "Ai": {
+    "AI": {
       "DefaultChatProfileAlias": "content-assistant",
       "DefaultEmbeddingProfileAlias": "document-embeddings"
     }
@@ -117,8 +117,8 @@ Always configure default profiles if your application uses the simplified servic
 Override configuration via environment variables:
 
 ```bash
-export Umbraco__Ai__DefaultChatProfileAlias=production-chat
-export Umbraco__Ai__DefaultEmbeddingProfileAlias=production-embedding
+export Umbraco__AI__DefaultChatProfileAlias=production-chat
+export Umbraco__AI__DefaultEmbeddingProfileAlias=production-embedding
 ```
 
 Note the double underscores (`__`) as section separators.

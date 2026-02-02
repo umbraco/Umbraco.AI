@@ -103,7 +103,7 @@ Test doubles for isolated testing:
 
 | Fake | Purpose |
 |------|---------|
-| `FakeAiProvider` | Configurable provider with fluent API for adding capabilities |
+| `FakeAIProvider` | Configurable provider with fluent API for adding capabilities |
 | `FakeChatCapability` | Chat capability implementation without real API calls |
 | `FakeChatClient` | M.E.AI `IChatClient` implementation for testing |
 | `FakeEmbeddingCapability` | Embedding capability implementation |
@@ -114,7 +114,7 @@ Example usage:
 ```csharp
 var fakeChatClient = new FakeChatClient("Test response");
 var fakeChatCapability = new FakeChatCapability(fakeChatClient);
-var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
     .WithChatCapability(fakeChatCapability)
     .WithEmbeddingCapability();
 ```
@@ -268,14 +268,14 @@ Verify the DI container can resolve all critical services:
 
 ```csharp
 [Fact]
-public void IAiChatService_CanBeResolved_WithEntireDependencyChain()
+public void IAIChatService_CanBeResolved_WithEntireDependencyChain()
 {
     var chatService = _serviceProvider.GetService<IAIChatService>();
     chatService.ShouldNotBeNull();
 }
 
 [Fact]
-public void IAiRegistry_ContainsRegisteredProvider()
+public void IAIRegistry_ContainsRegisteredProvider()
 {
     var registry = _serviceProvider.GetRequiredService<IAIRegistry>();
     var provider = registry.GetProvider("fake-provider");
@@ -322,17 +322,17 @@ public async Task FullFlow_CreateConnectionAndProfile_GetChatResponse_Succeeds()
 Integration tests bypass Umbraco's collection builder by registering services directly:
 
 ```csharp
-private static void RegisterAiServices(IServiceCollection services, IConfiguration configuration)
+private static void RegisterAIServices(IServiceCollection services, IConfiguration configuration)
 {
     services.AddSingleton<IConfiguration>(configuration);
-    services.Configure<AIOptions>(configuration.GetSection("Umbraco:Ai"));
+    services.Configure<AIOptions>(configuration.GetSection("Umbraco:AI"));
 
     // Provider infrastructure
     services.AddSingleton<IAICapabilityFactory, AICapabilityFactory>();
     services.AddSingleton<IAIProviderInfrastructure, AIProviderInfrastructure>();
 
     // Register fake provider
-    var fakeProvider = new FakeAiProvider("fake-provider", "Fake Provider")
+    var fakeProvider = new FakeAIProvider("fake-provider", "Fake Provider")
         .WithChatCapability();
     services.AddSingleton<IAIProvider>(fakeProvider);
 

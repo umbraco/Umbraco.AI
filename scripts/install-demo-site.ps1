@@ -107,8 +107,8 @@ Write-Host "Adding Umbraco.AI (Core) projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI" -SolutionFolder "Core"
 
 # Step 6: Add OpenAI provider projects
-Write-Host "Adding Umbraco.AI.OpenAi projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.OpenAi" -SolutionFolder "OpenAi"
+Write-Host "Adding Umbraco.AI.OpenAI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.OpenAI" -SolutionFolder "OpenAI"
 
 # Step 7: Add Prompt projects
 Write-Host "Adding Umbraco.AI.Prompt projects..." -ForegroundColor Green
@@ -151,8 +151,8 @@ dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI/Umbraco.AI.csproj"
 dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj"
 
 # OpenAI provider
-if (Test-Path "Umbraco.AI.OpenAi/src/Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.csproj") {
-    dotnet add $demoProject reference "Umbraco.AI.OpenAi/src/Umbraco.AI.OpenAi/Umbraco.AI.OpenAi.csproj"
+if (Test-Path "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj"
 }
 
 # Anthropic provider

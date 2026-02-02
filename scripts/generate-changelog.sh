@@ -81,6 +81,6 @@ if [[ -z "$CI" ]]; then
   echo "  git add $PRODUCT/CHANGELOG.md"
 
   # Convert product name to lowercase for commit message scope
-  SCOPE=$(echo "$PRODUCT" | sed 's/Umbraco\.Ai\.//' | sed 's/Umbraco\.Ai/core/' | tr '[:upper:]' '[:lower:]')
+  SCOPE=$(echo "$PRODUCT" | sed 's/Umbraco\.AI\.//' | sed 's/Umbraco\.AI/core/' | tr '[:upper:]' '[:lower:]')
   echo "  git commit -m 'docs($SCOPE): update CHANGELOG for v$VERSION'"
 fi

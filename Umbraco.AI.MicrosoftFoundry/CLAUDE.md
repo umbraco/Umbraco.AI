@@ -34,7 +34,7 @@ The provider is implemented using the `AIProviderBase<TSettings>` pattern:
 [AIProvider("microsoft-foundry", "Microsoft AI Foundry")]
 public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderSettings>
 {
-    public MicrosoftFoundryProvider(IAiProviderInfrastructure infrastructure)
+    public MicrosoftFoundryProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
         WithCapability<MicrosoftFoundryChatCapability>();

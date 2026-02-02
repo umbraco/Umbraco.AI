@@ -414,7 +414,7 @@ The Azure DevOps **release pipeline** automatically triggers after the build com
 
 ```bash
 # Add MyGet feed
-dotnet nuget add source https://www.myget.org/F/umbraco-ai/api/v3/index.json -n UmbracoAi
+dotnet nuget add source https://www.myget.org/F/umbraco-ai/api/v3/index.json -n UmbracoAI
 
 # Install pre-release package
 dotnet add package Umbraco.AI.Core --version 1.1.0-*
@@ -1089,8 +1089,8 @@ Task<IEnumerable<AIAgent>> GetAllAgentsAsync(CancellationToken ct);
 // Only access your own repository
 public class AIProfileService
 {
-    private readonly IAiProfileRepository _profileRepository;  // ✓ Own repo
-    private readonly IAiConnectionRepository _connectionRepository; // ✗ Other repo
+    private readonly IAIProfileRepository _profileRepository;  // ✓ Own repo
+    private readonly IAIConnectionRepository _connectionRepository; // ✗ Other repo
 }
 ```
 

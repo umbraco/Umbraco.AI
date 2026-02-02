@@ -154,7 +154,7 @@ When multiple composers add middleware, they combine in composer execution order
 
 {% code title="ComposerA.cs" %}
 ```csharp
-[ComposeAfter(typeof(UmbracoAiComposer))]
+[ComposeAfter(typeof(UmbracoAIComposer))]
 public class ComposerA : IComposer
 {
     public void Compose(IUmbracoBuilder builder)

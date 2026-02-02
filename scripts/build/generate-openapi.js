@@ -23,7 +23,7 @@ const swaggerPath = `umbraco/swagger/${swaggerEndpoint}/swagger.json`;
 console.log(chalk.green("Generating OpenAPI client..."));
 
 function getUniqueIdentifier() {
-  const sanitize = (name) => name.replace(/[^a-zA-Z0-9\-_]/g, '') || 'default';
+  const sanitize = (name) => name.replace(/[^a-zA-Z0-9\-_.]/g, '') || 'default';
 
   try {
     const gitDir = execSync('git rev-parse --git-dir', { encoding: 'utf-8' }).trim();
@@ -47,7 +47,7 @@ function getUniqueIdentifier() {
 
 // Get named pipe path based on git worktree/branch
 const identifier = getUniqueIdentifier();
-const pipeName = `umbraco-ai-demo-${identifier}`;
+const pipeName = `umbraco.demosite.${identifier}`;
 const socketPath = process.platform === 'win32'
   ? `\\\\.\\pipe\\${pipeName}`
   : `/tmp/${pipeName}`;

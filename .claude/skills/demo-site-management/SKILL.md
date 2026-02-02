@@ -32,16 +32,16 @@ Execute the requested demo site operation.
 
 ### For "start"
 1. Check if already running using multi-method detection:
-   - Try querying port info endpoint via named pipe (see "Query port info via named pipe" section)
+   - Try querying site address endpoint via named pipe (see "Query site address via named pipe" section)
    - Check if background tasks exist with "DemoSite" in description
    - If running, report and exit
 2. If not running, start in background: `cd demo/Umbraco.Ai.DemoSite && dotnet run --launch-profile DemoSite-Claude`
 3. Wait 15-20 seconds for startup
-4. Query port info endpoint via named pipe to get port and pipe name (see "Query port info via named pipe" section)
+4. Query site address endpoint via named pipe to get port and pipe name (see "Query site address via named pipe" section)
 5. Report:
    - Task ID for later stopping (save this for future commands)
-   - Port number (from port info endpoint)
-   - Pipe name (format: umbraco-ai-demo-{branch-or-worktree})
+   - Port number (from site address endpoint)
+   - Pipe name (format: umbraco.demosite.{branch-or-worktree})
    - Site URL
 
 ### For "stop"
@@ -68,12 +68,12 @@ Execute the requested demo site operation.
 
 ### For "generate-client"
 1. Check if site is running:
-   - Try querying port info endpoint via named pipe (see "Query port info via named pipe" section)
+   - Try querying site address endpoint via named pipe (see "Query site address via named pipe" section)
    - Check if any background bash tasks are related to DemoSite
 2. If not running, report error with suggestion: "Demo site not running. Start it with `/demo-site-management start`"
 3. Run: `npm run generate-client` (runs all three packages concurrently)
 4. Monitor output for:
-   - "Using named pipe: umbraco-ai-demo-{identifier}" (should appear 3 times)
+   - "Using named pipe: umbraco.demosite.{identifier}" (should appear 3 times)
    - "✓ TypeScript client generated successfully" (should appear 3 times)
    - No errors (EPIPE, connection refused, etc.)
 5. Report summary:
@@ -84,7 +84,7 @@ Execute the requested demo site operation.
 ### For "status"
 Use multi-method detection to determine site status:
 
-1. **Query port info endpoint**: Try querying via named pipe (see "Query port info via named pipe" section)
+1. **Query site address endpoint**: Try querying via named pipe (see "Query site address via named pipe" section)
    - If successful, site is running and you have port info
    - If fails, continue to other methods
 
@@ -98,10 +98,10 @@ Use multi-method detection to determine site status:
    - If no git, identifier is "default"
 
 4. **Report comprehensive status**:
-   - Running: yes/no (based on port info endpoint response)
+   - Running: yes/no (based on site address endpoint response)
    - Task ID: if background task found
-   - Port: from port info endpoint
-   - Pipe name: `umbraco-ai-demo-{identifier}`
+   - Port: from site address endpoint
+   - Pipe name: `umbraco.demosite.{identifier}`
    - Git context: branch name, worktree name, or "not in git repo"
    - Suggestion: How to start if not running, or how to connect if running
 
@@ -110,7 +110,7 @@ Execute stop operation, wait 3 seconds, then execute start operation.
 
 ### For "open"
 1. Check if demo site is running and get port info:
-   - Query port info endpoint via named pipe (see "Query port info via named pipe" section)
+   - Query site address endpoint via named pipe (see "Query site address via named pipe" section)
    - If fails, report error: "Demo site not running. Start it with `/demo-site-management start`"
 2. Launch default browser with discovered URL:
    - Windows: `powershell.exe -Command "Start-Process 'https://127.0.0.1:<port>'"`
@@ -122,9 +122,9 @@ Execute stop operation, wait 3 seconds, then execute start operation.
    - Note about certificate warning (self-signed HTTPS)
    - Credentials reminder: admin@example.com / password1234
 
-## Query Port Info via Named Pipe
+## Query Site Address via Named Pipe
 
-The demo site exposes a `/port-info` endpoint that returns port and pipe information as JSON.
+The demo site exposes a `/site-address` endpoint that returns port and pipe information as JSON.
 Query it via HTTP over named pipes without needing to know the port:
 
 **Using Node.js** (recommended, cross-platform):
@@ -143,36 +143,31 @@ function getIdentifier() {
   } catch { return 'default'; }
 }
 
-const identifier = getIdentifier().replace(/[^a-zA-Z0-9\-_]/g, '') || 'default';
-const pipeName = `umbraco-ai-demo-${identifier}`;
+const identifier = getIdentifier().replace(/[^a-zA-Z0-9\-_.]/g, '') || 'default';
+const pipeName = `umbraco.demosite.${identifier}`;
 const socketPath = process.platform === 'win32' ? `\\\\.\\pipe\\${pipeName}` : `/tmp/${pipeName}`;
 
-const data = await new Promise((resolve, reject) => {
-  http.get({ socketPath, path: '/port-info' }, (res) => {
+const address = await new Promise((resolve, reject) => {
+  http.get({ socketPath, path: '/site-address' }, (res) => {
     let body = '';
     res.on('data', chunk => body += chunk);
-    res.on('end', () => res.statusCode === 200 ? resolve(JSON.parse(body)) : reject(new Error(`HTTP ${res.statusCode}`)));
+    res.on('end', () => res.statusCode === 200 ? resolve(body) : reject(new Error(`HTTP ${res.statusCode}`)));
   }).on('error', reject);
 });
 
-// data = { port: 55209, addresses: ["https://127.0.0.1:55209"], pipeName: "umbraco-ai-demo-dev", identifier: "dev" }
+// address = "https://127.0.0.1:44355"
 ```
 
 **Using curl** (PowerShell on Windows):
 ```powershell
 $identifier = (git branch --show-current).Trim() -replace '[^a-zA-Z0-9\-_]', ''
-$pipeName = "umbraco-ai-demo-$identifier"
-curl.exe --unix-socket "//./pipe/$pipeName" http://localhost/port-info
+$pipeName = "umbraco.demosite.$identifier"
+curl.exe --unix-socket "//./pipe/$pipeName" http://localhost/site-address
 ```
 
-**Response format:**
-```json
-{
-  "port": 55209,
-  "addresses": ["https://127.0.0.1:55209"],
-  "pipeName": "umbraco-ai-demo-dev",
-  "identifier": "dev"
-}
+**Response format:** Plain text HTTPS address
+```
+https://127.0.0.1:44355
 ```
 
 ## Detection Helper Commands
@@ -199,12 +194,12 @@ fi
 ## Port Discovery Details
 
 The demo site uses HTTP over named pipes for automatic port discovery:
-- **Pipe naming**: `umbraco-ai-demo-<identifier>`
+- **Pipe naming**: `umbraco.demosite.<identifier>`
 - **Identifier logic**:
   - Worktree: extracted from `.git/worktrees/<name>`
   - Main repo: current branch name
   - No git: `default`
-- **Port info endpoint**: `/port-info` (returns JSON with port, addresses, pipeName, identifier)
+- **Site address endpoint**: `/site-address` (returns HTTPS address as plain text)
 - **HTTP transport**: Kestrel listens on both named pipe and HTTP/HTTPS
 - **Concurrent support**: Multiple clients can connect simultaneously
 - **Implementation**: `demo/Umbraco.Ai.DemoSite/Composers/NamedPipeListenerComposer.cs`
@@ -222,9 +217,9 @@ The demo site uses HTTP over named pipes for automatic port discovery:
 
 ### Multiple instances conflict
 - Each worktree/branch gets unique pipe name
-- Main branch: `umbraco-ai-demo-<branch-name>`
-- Worktree: `umbraco-ai-demo-<worktree-name>`
-- No git: `umbraco-ai-demo-default`
+- Main branch: `umbraco.demosite.<branch-name>`
+- Worktree: `umbraco.demosite.<worktree-name>`
+- No git: `umbraco.demosite.default`
 
 ## Success Criteria
 

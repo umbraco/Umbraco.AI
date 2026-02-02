@@ -21,36 +21,25 @@ public class NamedPipeListenerComposer : IComposer
         // Register Kestrel configuration
         builder.Services.AddSingleton<IConfigureOptions<KestrelServerOptions>, NamedPipeKestrelConfiguration>();
 
-        // Register port info endpoint
+        // Register site address endpoint
         builder.Services.Configure<UmbracoPipelineOptions>(options =>
         {
-            options.AddFilter(new UmbracoPipelineFilter("PortInfoEndpointFilter")
+            options.AddFilter(new UmbracoPipelineFilter("SiteAddressEndpointFilter")
             {
                 Endpoints = app =>
                 {
                     app.UseEndpoints(endpoints =>
                     {
-                        endpoints.MapGet("/port-info", async context =>
+                        endpoints.MapGet("/site-address", async context =>
                         {
                             var server = context.RequestServices.GetRequiredService<IServer>();
                             var addressesFeature = server.Features.Get<IServerAddressesFeature>();
-                            var addresses = addressesFeature?.Addresses
-                                .Where(a => a.StartsWith("http") && !a.Contains("pipe:"))
-                                .ToList() ?? [];
+                            var address = addressesFeature?.Addresses
+                                .FirstOrDefault(a => a.StartsWith("https") && !a.Contains("pipe:"))
+                                ?? "https://localhost:44355";
 
-                            var identifier = NamedPipeKestrelConfiguration.GetUniqueIdentifier();
-                            var port = addresses.Count > 0 && Uri.TryCreate(addresses[0], UriKind.Absolute, out var uri)
-                                ? uri.Port
-                                : 0;
-
-                            context.Response.ContentType = "application/json";
-                            await context.Response.WriteAsJsonAsync(new
-                            {
-                                port,
-                                addresses,
-                                pipeName = $"umbraco-ai-demo-{identifier}",
-                                identifier
-                            });
+                            context.Response.ContentType = "text/plain";
+                            await context.Response.WriteAsync(address);
                         });
                     });
                 }
@@ -70,7 +59,7 @@ public class NamedPipeKestrelConfiguration(IHostEnvironment hostEnvironment, ICo
         if (!hostEnvironment.IsDevelopment())
             return;
 
-        options.ListenNamedPipe($"umbraco-ai-demo-{GetUniqueIdentifier()}");
+        options.ListenNamedPipe($"umbraco.demosite.{GetUniqueIdentifier()}");
 
         // Read URLs from configuration or use dynamic HTTPS
         var urls = configuration["ASPNETCORE_URLS"] ?? configuration["urls"];
@@ -95,7 +84,7 @@ public class NamedPipeKestrelConfiguration(IHostEnvironment hostEnvironment, ICo
     public static string GetUniqueIdentifier()
     {
         static string Sanitize(string name) =>
-            string.Concat(name.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_')) is { Length: > 0 } s ? s : "default";
+            string.Concat(name.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_' or '.')) is { Length: > 0 } s ? s : "default";
 
         static string RunGit(string args)
         {

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Test script for port info endpoint via named pipe
+// Test script for site address endpoint via named pipe
 import http from 'http';
 import { execSync } from 'child_process';
 
 function getUniqueIdentifier() {
-  const sanitize = (name) => name.replace(/[^a-zA-Z0-9\-_]/g, '') || 'default';
+  const sanitize = (name) => name.replace(/[^a-zA-Z0-9\-_.]/g, '') || 'default';
 
   try {
     const gitDir = execSync('git rev-parse --git-dir', { encoding: 'utf-8' }).trim();
@@ -27,22 +27,21 @@ function getUniqueIdentifier() {
 }
 
 const identifier = getUniqueIdentifier();
-const pipeName = `umbraco-ai-demo-${identifier}`;
+const pipeName = `umbraco.demosite.${identifier}`;
 const socketPath = process.platform === 'win32'
   ? `\\\\.\\pipe\\${pipeName}`
   : `/tmp/${pipeName}`;
 
-console.log(`Testing port info endpoint via named pipe: ${pipeName}`);
+console.log(`Testing site address endpoint via named pipe: ${pipeName}`);
 
-http.get({ socketPath, path: '/port-info' }, (res) => {
+http.get({ socketPath, path: '/site-address' }, (res) => {
   let data = '';
   res.setEncoding('utf8');
   res.on('data', (chunk) => data += chunk);
   res.on('end', () => {
     if (res.statusCode === 200) {
-      const portInfo = JSON.parse(data);
-      console.log('\nPort Info:', JSON.stringify(portInfo, null, 2));
-      console.log(`\nSuccess! Demo site is running on port ${portInfo.port}`);
+      console.log(`\nSite address: ${data}`);
+      console.log('\nSuccess! Demo site is running.');
     } else {
       console.error(`\nError: HTTP ${res.statusCode} ${res.statusMessage}`);
       console.error(data);

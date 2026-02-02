@@ -4,6 +4,7 @@
 # Parameters:
 #   product: Product name (e.g., "Umbraco.AI", "Umbraco.AI.OpenAI")
 #   condition: Optional condition for all steps (default: true)
+#   useProjectReferences: Whether to use project references instead of NuGet packages (default: false)
 #
 # Prerequisites:
 #   - Build outputs must be downloaded to $(Build.SourcesDirectory)
@@ -21,6 +22,9 @@ parameters:
   - name: condition
     type: string
     default: 'true'
+  - name: useProjectReferences
+    type: boolean
+    default: false
 
 steps:
   - script: dotnet tool install --global nbgv || true
@@ -32,7 +36,7 @@ steps:
     condition: ${{ parameters.condition }}
     workingDirectory: ${{ parameters.product }}
 
-  - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:UseProjectReferences=false -p:DisableCloudBuildNumber=true
+  - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true
     displayName: Restore packages
     condition: ${{ parameters.condition }}
 
@@ -41,7 +45,7 @@ steps:
         --configuration Release \
         --no-build \
         --output ./artifacts/nupkg \
-        -p:UseProjectReferences=false \
+        -p:UseProjectReferences=${{ parameters.useProjectReferences }} \
         -p:DisableCloudBuildNumber=true
     displayName: Pack ${{ parameters.product }} (NuGet)
     condition: ${{ parameters.condition }}

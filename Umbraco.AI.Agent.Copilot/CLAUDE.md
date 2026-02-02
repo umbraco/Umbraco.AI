@@ -165,10 +165,10 @@ import { someUtil } from '@umbraco-ai/core';
 ## Build Output
 
 Frontend assets compile to:
-- `/App_Plugins/UmbracoAiAgentCopilot/umbraco-ai-agent-copilot.js`
+- `/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot.js`
 
 The import map in `umbraco-package.json` registers:
-- `@umbraco-ai/agent-copilot` -> `/App_Plugins/UmbracoAiAgentCopilot/umbraco-ai-agent-copilot.js`
+- `@umbraco-ai/agent-copilot` -> `/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot.js`
 
 ## Testing
 

@@ -83,19 +83,19 @@ The API shares the same Swagger group (`ai-management`) as Umbraco.AI.
 
 ## Database Migrations
 
-Migrations use the `UmbracoAiAgent_` prefix.
+Migrations use the `UmbracoAIAgent_` prefix.
 
 ```bash
 # SQL Server
-dotnet ef migrations add UmbracoAiAgent_<MigrationName> \
+dotnet ef migrations add UmbracoAIAgent_<MigrationName> \
   -p src/Umbraco.AI.Agent.Persistence.SqlServer \
-  -c UmbracoAiAgentDbContext \
+  -c UmbracoAIAgentDbContext \
   --output-dir Migrations
 
 # SQLite
-dotnet ef migrations add UmbracoAiAgent_<MigrationName> \
+dotnet ef migrations add UmbracoAIAgent_<MigrationName> \
   -p src/Umbraco.AI.Agent.Persistence.Sqlite \
-  -c UmbracoAiAgentDbContext \
+  -c UmbracoAIAgentDbContext \
   --output-dir Migrations
 ```
 

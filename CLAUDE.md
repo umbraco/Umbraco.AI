@@ -235,9 +235,9 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 
 - SQL Server and SQLite supported via EF Core
 - Each product has its own migrations with prefixes:
-  - `UmbracoAi_` - Core
-  - `UmbracoAiPrompt_` - Prompt add-on
-  - `UmbracoAiAgent_` - Agent add-on
+  - `UmbracoAI_` - Core
+  - `UmbracoAIPrompt_` - Prompt add-on
+  - `UmbracoAIAgent_` - Agent add-on
 
 ## Target Framework
 

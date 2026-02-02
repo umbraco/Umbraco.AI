@@ -321,7 +321,7 @@ This is intentional because:
 
 Located in `src/Umbraco.AI.Web.StaticAssets/Client/`:
 - Uses Lit web components with `@umbraco-cms/backoffice` package
-- Compiled to `wwwroot/` and served from `App_Plugins/UmbracoAi`
+- Compiled to `wwwroot/` and served from `App_Plugins/UmbracoAI`
 - API client generated from OpenAPI spec using `@hey-api/openapi-ts`
 
 ## Creating a New Provider
@@ -383,16 +383,16 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 
 ## Database Migrations
 
-Umbraco.AI uses EF Core with provider-specific migrations. All migrations MUST use the `UmbracoAi_` prefix to clearly identify them as belonging to Umbraco.AI (e.g., `UmbracoAi_InitialCreate`, `UmbracoAi_AddNewEntity`).
+Umbraco.AI uses EF Core with provider-specific migrations. All migrations MUST use the `UmbracoAI_` prefix to clearly identify them as belonging to Umbraco.AI (e.g., `UmbracoAI_InitialCreate`, `UmbracoAI_AddNewEntity`).
 
 To create new migrations after modifying entities:
 
 ```bash
 # SQL Server
-dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.AI.Persistence.SqlServer -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAI_<MigrationName> -p src/Umbraco.AI.Persistence.SqlServer -c UmbracoAIDbContext --output-dir Migrations
 
 # SQLite
-dotnet ef migrations add UmbracoAi_<MigrationName> -p src/Umbraco.AI.Persistence.Sqlite -c UmbracoAiDbContext --output-dir Migrations
+dotnet ef migrations add UmbracoAI_<MigrationName> -p src/Umbraco.AI.Persistence.Sqlite -c UmbracoAIDbContext --output-dir Migrations
 ```
 
 See `docs/internal/ef-core-migrations.md` for complete documentation.

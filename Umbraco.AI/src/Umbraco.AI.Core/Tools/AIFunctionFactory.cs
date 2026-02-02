@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.Extensions.AI;
+using MeaiAIFunctionFactory = Microsoft.Extensions.AI.AIFunctionFactory;
 
 namespace Umbraco.AI.Core.Tools;
 
@@ -20,7 +21,7 @@ internal sealed class AIFunctionFactory : IAIFunctionFactory
         }
 
         // For untyped tools, create a simple delegate
-        return AIFunctionFactory.Create(
+        return MeaiAIFunctionFactory.Create(
             tool.ExecuteAsync,
             name: tool.Id,
             description: tool.Description);
@@ -47,6 +48,6 @@ internal sealed class AIFunctionFactory : IAIFunctionFactory
         Func<TArgs, CancellationToken, Task<object>> execute =
             (args, ct) => tool.ExecuteAsync(args, ct);
 
-        return AIFunctionFactory.Create(execute, name: tool.Id, description: tool.Description);
+        return MeaiAIFunctionFactory.Create(execute, name: tool.Id, description: tool.Description);
     }
 }

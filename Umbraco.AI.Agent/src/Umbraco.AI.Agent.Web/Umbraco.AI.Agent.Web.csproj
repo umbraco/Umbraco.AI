@@ -9,11 +9,11 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.Ai.Web" />
+        <PackageReference Include="Umbraco.AI.Web" />
     </ItemGroup>
 
     <ItemGroup>
@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Agent.Core.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Agui.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj" />
     </ItemGroup>
 </Project>

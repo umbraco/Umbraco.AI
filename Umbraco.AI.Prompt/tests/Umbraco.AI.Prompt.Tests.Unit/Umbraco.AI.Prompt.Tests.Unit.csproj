@@ -23,15 +23,15 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+        <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.Ai.Core" />
+        <PackageReference Include="Umbraco.AI.Core" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Core.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
     </ItemGroup>
 
 </Project>

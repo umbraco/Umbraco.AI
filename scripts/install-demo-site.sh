@@ -105,7 +105,7 @@ cp "$SCRIPT_DIR/templates/NamedPipeListenerComposer.cs" "demo/Umbraco.AI.DemoSit
 
 # Step 4: Create unified solution
 echo "Creating unified solution..."
-dotnet new sln -n "Umbraco.AI.local" --force
+dotnet new sln -n "Umbraco.AI.local" --force --format sln
 
 # Helper function to add all projects from a product's src folder
 add_product_projects() {

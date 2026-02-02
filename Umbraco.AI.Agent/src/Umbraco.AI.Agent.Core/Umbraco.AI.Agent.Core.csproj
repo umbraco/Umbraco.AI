@@ -21,9 +21,9 @@
         <PackageReference Include="Umbraco.Cms.Core" />
     </ItemGroup>
 
-    <!-- Umbraco.AI.Agui is always a ProjectReference (internal component of Agent package) -->
+    <!-- Umbraco.AI.AGUI is always a ProjectReference (internal component of Agent package) -->
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Agui\Umbraco.AI.Agui.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.AGUI\Umbraco.AI.AGUI.csproj" />
     </ItemGroup>
 
     <ItemGroup>

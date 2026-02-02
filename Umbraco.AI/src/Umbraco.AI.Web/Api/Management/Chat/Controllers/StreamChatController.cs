@@ -4,11 +4,11 @@
 // using Microsoft.AspNetCore.Http;
 // using Microsoft.AspNetCore.Mvc;
 // using Microsoft.Extensions.AI;
-// using Umbraco.AI.Agui.Events;
-// using Umbraco.AI.Agui.Events.Lifecycle;
-// using Umbraco.AI.Agui.Events.Messages;
-// using Umbraco.AI.Agui.Models;
-// using Umbraco.AI.Agui.Streaming;
+// using Umbraco.AI.AGUI.Events;
+// using Umbraco.AI.AGUI.Events.Lifecycle;
+// using Umbraco.AI.AGUI.Events.Messages;
+// using Umbraco.AI.AGUI.Models;
+// using Umbraco.AI.AGUI.Streaming;
 // using Umbraco.AI.Core.Chat;
 // using Umbraco.AI.Core.Profiles;
 // using Umbraco.AI.Extensions;
@@ -52,20 +52,20 @@
 //     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
 //     public async Task<IResult> StreamChat(
 //         [FromHeader] IdOrAlias?  profileIdOrAlias,
-//         AguiRunRequest request,
+//         AGUIRunRequest request,
 //         CancellationToken cancellationToken = default)
 //     {
 //         var profileId = profileIdOrAlias != null
 //             ? await _profileService.TryGetProfileIdAsync(profileIdOrAlias, cancellationToken)
 //             : null;
 //         
-//         var events = StreamAguiEventsAsync(request, profileId, cancellationToken);
+//         var events = StreamAGUIEventsAsync(request, profileId, cancellationToken);
 //         
-//         return new AguiEventStreamResult(events);
+//         return new AGUIEventStreamResult(events);
 //     }
 //
-//     private async IAsyncEnumerable<IAguiEvent> StreamAguiEventsAsync(
-//         AguiRunRequest request,
+//     private async IAsyncEnumerable<IAGUIEvent> StreamAGUIEventsAsync(
+//         AGUIRunRequest request,
 //         Guid? profileId,
 //         [EnumeratorCancellation] CancellationToken cancellationToken)
 //     {
@@ -86,12 +86,12 @@
 //         yield return new TextMessageStartEvent
 //         {
 //             MessageId = messageId,
-//             Role = AguiMessageRole.Assistant,
+//             Role = AGUIMessageRole.Assistant,
 //             Timestamp = timestamp
 //         };
 //
 //         // Use Channel for streaming with proper error handling
-//         var channel = Channel.CreateUnbounded<IAguiEvent>();
+//         var channel = Channel.CreateUnbounded<IAGUIEvent>();
 //         var hasError = false;
 //         string? errorMessage = null;
 //
@@ -163,12 +163,12 @@
 //         {
 //             ThreadId = threadId,
 //             RunId = runId,
-//             Outcome = hasError ? AguiRunOutcome.Interrupt : AguiRunOutcome.Success,
+//             Outcome = hasError ? AGUIRunOutcome.Interrupt : AGUIRunOutcome.Success,
 //             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 //         };
 //     }
 //
-//     private static List<ChatMessage> ConvertToChatMessages(IEnumerable<AguiMessage> messages)
+//     private static List<ChatMessage> ConvertToChatMessages(IEnumerable<AGUIMessage> messages)
 //     {
 //         var chatMessages = new List<ChatMessage>();
 //
@@ -176,11 +176,11 @@
 //         {
 //             var role = msg.Role switch
 //             {
-//                 AguiMessageRole.User => ChatRole.User,
-//                 AguiMessageRole.Assistant => ChatRole.Assistant,
-//                 AguiMessageRole.System => ChatRole.System,
-//                 AguiMessageRole.Tool => ChatRole.Tool,
-//                 AguiMessageRole.Developer => ChatRole.System, // Map developer to system
+//                 AGUIMessageRole.User => ChatRole.User,
+//                 AGUIMessageRole.Assistant => ChatRole.Assistant,
+//                 AGUIMessageRole.System => ChatRole.System,
+//                 AGUIMessageRole.Tool => ChatRole.Tool,
+//                 AGUIMessageRole.Developer => ChatRole.System, // Map developer to system
 //                 _ => ChatRole.User
 //             };
 //

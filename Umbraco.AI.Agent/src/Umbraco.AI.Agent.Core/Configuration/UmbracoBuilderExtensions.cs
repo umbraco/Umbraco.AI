@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.Agui;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Models;
@@ -44,10 +44,10 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
 
         // Register AG-UI services
-        builder.Services.AddSingleton<IAguiMessageConverter, AguiMessageConverter>();
-        builder.Services.AddSingleton<IAguiToolConverter, AguiToolConverter>();
-        builder.Services.AddSingleton<IAguiContextConverter, AguiContextConverter>();
-        builder.Services.AddTransient<IAguiStreamingService, AguiStreamingService>();
+        builder.Services.AddSingleton<IAGUIMessageConverter, AGUIMessageConverter>();
+        builder.Services.AddSingleton<IAGUIToolConverter, AGUIToolConverter>();
+        builder.Services.AddSingleton<IAGUIContextConverter, AGUIContextConverter>();
+        builder.Services.AddTransient<IAGUIStreamingService, AGUIStreamingService>();
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();

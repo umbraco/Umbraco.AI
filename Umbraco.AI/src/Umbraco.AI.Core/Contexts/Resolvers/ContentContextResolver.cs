@@ -46,7 +46,7 @@ internal sealed class ContentContextResolver : IAIContextResolver
     /// <inheritdoc />
     public async Task<AIContextResolverResult> ResolveAsync(CancellationToken cancellationToken = default)
     {
-        // Get content ID from RuntimeContext (set by orchestrators like AguiStreamingService)
+        // Get content ID from RuntimeContext (set by orchestrators like AGUIStreamingService)
         var contentId = _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.ParentEntityId)
             ?? _runtimeContextAccessor.Context?.GetValue<Guid>(Constants.ContextKeys.EntityId);
         if (!contentId.HasValue)

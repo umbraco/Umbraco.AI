@@ -43,7 +43,7 @@ public interface IAIAgentService
 
     Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<IAguiEvent> StreamAgentAsync(
+    IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
         AIAgentRunRequest request,
         IEnumerable<AIFrontendToolDefinition>? frontendToolDefinitions = null,
@@ -169,10 +169,10 @@ await foreach (var evt in _agentService.StreamAgentAsync(
 {
     switch (evt)
     {
-        case AguiTextMessageContentEvent textEvt:
+        case AGUITextMessageContentEvent textEvt:
             Console.Write(textEvt.Content);
             break;
-        case AguiRunFinishedEvent:
+        case AGUIRunFinishedEvent:
             Console.WriteLine("\nDone!");
             break;
     }

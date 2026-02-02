@@ -207,7 +207,7 @@ Sends messages to the agent and starts a new run.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `messages` | `UaiChatMessage[]` | Yes | Conversation messages |
-| `tools` | `AguiTool[]` | No | Available tools for the agent |
+| `tools` | `AGUITool[]` | No | Available tools for the agent |
 | `context` | `Array<{description: string, value: string}>` | No | Context items for LLM awareness |
 
 **Returns:** `void`
@@ -597,7 +597,7 @@ import type {
   AgentClientCallbacks,
   AgentTransport,
   RunFinishedEvent,
-  AguiTool,
+  AGUITool,
 } from '@umbraco-ai/agent';
 ```
 

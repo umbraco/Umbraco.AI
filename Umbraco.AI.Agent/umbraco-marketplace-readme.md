@@ -11,7 +11,7 @@ AI agent management and runtime for Umbraco.AI - store, manage, and execute conv
 - **Context Injection** - Attach AI contexts for RAG scenarios and brand voice consistency
 - **Management API** - RESTful API for agent CRUD operations and execution
 - **Backoffice UI** - Agent management interface integrated into Umbraco
-- **Standalone SDK** - Umbraco.AI.Agui package can be used independently for custom AG-UI endpoints
+- **Standalone SDK** - Umbraco.AI.AGUI package can be used independently for custom AG-UI endpoints
 
 > For the Copilot chat sidebar with tool execution and HITL approval UI, install [Umbraco.AI.Agent.Copilot](https://www.nuget.org/packages/Umbraco.AI.Agent.Copilot) alongside this package.
 

@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
-using Umbraco.AI.Agui.Models;
-using Umbraco.AI.Agui.Streaming;
+using Umbraco.AI.AGUI.Models;
+using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Web.Api.Common.Models;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
@@ -68,7 +68,7 @@ public class RunAgentController : AgentControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IResult> RunAgent(
         IdOrAlias agentIdOrAlias,
-        AguiRunRequest request,
+        AGUIRunRequest request,
         CancellationToken cancellationToken = default)
     {
         // Resolve agent ID from ID or alias
@@ -90,6 +90,6 @@ public class RunAgentController : AgentControllerBase
             request.Tools,
             cancellationToken);
 
-        return new AguiEventStreamResult(events);
+        return new AGUIEventStreamResult(events);
     }
 }

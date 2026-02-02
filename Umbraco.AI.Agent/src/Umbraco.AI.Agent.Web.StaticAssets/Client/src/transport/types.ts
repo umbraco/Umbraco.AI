@@ -5,7 +5,7 @@
 // Re-export AG-UI types for convenience
 export {
   EventType,
-  type Tool as AguiTool,
+  type Tool as AGUITool,
   type ToolMessage
 } from "@ag-ui/core";
 
@@ -157,61 +157,61 @@ export interface RunFinishedEvent {
 // AG-UI Event Types (for type-safe event handling)
 // =============================================================================
 
-import { EventType as AguiEventType } from "@ag-ui/client";
+import { EventType as AGUIEventType } from "@ag-ui/client";
 
 /** Base event type with common fields */
 interface TypedBaseEvent {
-  type: AguiEventType;
+  type: AGUIEventType;
   rawEvent?: unknown;
 }
 
 /** TEXT_MESSAGE_START event */
 export interface TextMessageStartEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.TEXT_MESSAGE_START;
+  type: typeof AGUIEventType.TEXT_MESSAGE_START;
   messageId?: string;
 }
 
 /** TEXT_MESSAGE_CONTENT event - text delta */
 export interface TextMessageContentEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.TEXT_MESSAGE_CONTENT;
+  type: typeof AGUIEventType.TEXT_MESSAGE_CONTENT;
   delta: string;
 }
 
 /** TEXT_MESSAGE_END event */
 export interface TextMessageEndEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.TEXT_MESSAGE_END;
+  type: typeof AGUIEventType.TEXT_MESSAGE_END;
 }
 
 /** TOOL_CALL_START event */
 export interface ToolCallStartEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.TOOL_CALL_START;
+  type: typeof AGUIEventType.TOOL_CALL_START;
   toolCallId: string;
   toolCallName: string;
 }
 
 /** TOOL_CALL_ARGS event - argument delta */
 export interface ToolCallArgsEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.TOOL_CALL_ARGS;
+  type: typeof AGUIEventType.TOOL_CALL_ARGS;
   toolCallId: string;
   delta: string;
 }
 
 /** TOOL_CALL_END event */
 export interface ToolCallEndEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.TOOL_CALL_END;
+  type: typeof AGUIEventType.TOOL_CALL_END;
   toolCallId: string;
 }
 
 /** TOOL_CALL_RESULT event - backend tool execution result */
 export interface ToolCallResultEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.TOOL_CALL_RESULT;
+  type: typeof AGUIEventType.TOOL_CALL_RESULT;
   toolCallId: string;
   content: string;
 }
 
 /** RUN_FINISHED event */
-export interface RunFinishedAguiEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.RUN_FINISHED;
+export interface RunFinishedAGUIEvent extends TypedBaseEvent {
+  type: typeof AGUIEventType.RUN_FINISHED;
   outcome: string;
   interrupt?: unknown;
   error?: string;
@@ -219,30 +219,30 @@ export interface RunFinishedAguiEvent extends TypedBaseEvent {
 
 /** RUN_ERROR event */
 export interface RunErrorEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.RUN_ERROR;
+  type: typeof AGUIEventType.RUN_ERROR;
   message: string;
 }
 
 /** STATE_SNAPSHOT event */
 export interface StateSnapshotEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.STATE_SNAPSHOT;
+  type: typeof AGUIEventType.STATE_SNAPSHOT;
   state: UaiAgentState;
 }
 
 /** STATE_DELTA event */
 export interface StateDeltaEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.STATE_DELTA;
+  type: typeof AGUIEventType.STATE_DELTA;
   delta: Partial<UaiAgentState>;
 }
 
 /** MESSAGES_SNAPSHOT event */
 export interface MessagesSnapshotEvent extends TypedBaseEvent {
-  type: typeof AguiEventType.MESSAGES_SNAPSHOT;
+  type: typeof AGUIEventType.MESSAGES_SNAPSHOT;
   messages: unknown[];
 }
 
 /** Union of all typed AG-UI events */
-export type AguiTypedEvent =
+export type AGUITypedEvent =
   | TextMessageStartEvent
   | TextMessageContentEvent
   | TextMessageEndEvent
@@ -250,7 +250,7 @@ export type AguiTypedEvent =
   | ToolCallArgsEvent
   | ToolCallEndEvent
   | ToolCallResultEvent
-  | RunFinishedAguiEvent
+  | RunFinishedAGUIEvent
   | RunErrorEvent
   | StateSnapshotEvent
   | StateDeltaEvent

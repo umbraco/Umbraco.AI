@@ -4,6 +4,61 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type AGUIContextItemModel = {
+    description: string;
+    value?: string | null;
+};
+
+export type AGUIFunctionCallModel = {
+    name: string;
+    arguments: string;
+};
+
+export type AGUIMessageModel = {
+    id?: string | null;
+    role: AGUIMessageRoleModel;
+    content?: string | null;
+    name?: string | null;
+    toolCalls?: Array<AGUIToolCallModel> | null;
+    toolCallId?: string | null;
+};
+
+export type AGUIMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
+
+export type AGUIResumeInfoModel = {
+    interruptId: string;
+    payload?: unknown;
+};
+
+export type AGUIRunRequestModel = {
+    threadId: string;
+    runId: string;
+    messages: Array<AGUIMessageModel>;
+    tools?: Array<AGUIToolModel> | null;
+    state?: unknown;
+    context?: Array<AGUIContextItemModel> | null;
+    resume?: AGUIResumeInfoModel | null;
+    forwardedProps?: unknown;
+};
+
+export type AGUIToolCallModel = {
+    id: string;
+    type: string;
+    function: AGUIFunctionCallModel;
+};
+
+export type AGUIToolModel = {
+    name: string;
+    description: string;
+    parameters: AGUIToolParametersModel;
+};
+
+export type AGUIToolParametersModel = {
+    type: string;
+    properties: unknown;
+    required?: Array<string> | null;
+};
+
 export type AgentItemResponseModel = {
     id: string;
     alias: string;
@@ -35,61 +90,6 @@ export type AgentResponseModel = {
 export type AgentScopeItemResponseModel = {
     id: string;
     icon: string;
-};
-
-export type AguiContextItemModel = {
-    description: string;
-    value?: string | null;
-};
-
-export type AguiFunctionCallModel = {
-    name: string;
-    arguments: string;
-};
-
-export type AguiMessageModel = {
-    id?: string | null;
-    role: AguiMessageRoleModel;
-    content?: string | null;
-    name?: string | null;
-    toolCalls?: Array<AguiToolCallModel> | null;
-    toolCallId?: string | null;
-};
-
-export type AguiMessageRoleModel = 'User' | 'Assistant' | 'System' | 'Tool' | 'Developer' | 'Activity';
-
-export type AguiResumeInfoModel = {
-    interruptId: string;
-    payload?: unknown;
-};
-
-export type AguiRunRequestModel = {
-    threadId: string;
-    runId: string;
-    messages: Array<AguiMessageModel>;
-    tools?: Array<AguiToolModel> | null;
-    state?: unknown;
-    context?: Array<AguiContextItemModel> | null;
-    resume?: AguiResumeInfoModel | null;
-    forwardedProps?: unknown;
-};
-
-export type AguiToolCallModel = {
-    id: string;
-    type: string;
-    function: AguiFunctionCallModel;
-};
-
-export type AguiToolModel = {
-    name: string;
-    description: string;
-    parameters: AguiToolParametersModel;
-};
-
-export type AguiToolParametersModel = {
-    type: string;
-    properties: unknown;
-    required?: Array<string> | null;
 };
 
 export type CreateAgentRequestModel = {
@@ -308,7 +308,7 @@ export type UpdateAgentResponses = {
 };
 
 export type RunAgentData = {
-    body?: AguiRunRequestModel;
+    body?: AGUIRunRequestModel;
     path: {
         agentIdOrAlias: string;
     };

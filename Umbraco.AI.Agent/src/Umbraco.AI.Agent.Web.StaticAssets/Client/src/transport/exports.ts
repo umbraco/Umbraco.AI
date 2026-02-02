@@ -24,11 +24,11 @@ export type {
 } from './types.js';
 
 // AG-UI re-exports
-export { EventType, type AguiTool, type ToolMessage } from './types.js';
+export { EventType, type AGUITool, type ToolMessage } from './types.js';
 
 // AG-UI typed events
 export type {
-  AguiTypedEvent,
+  AGUITypedEvent,
   TextMessageStartEvent,
   TextMessageContentEvent,
   TextMessageEndEvent,
@@ -36,7 +36,7 @@ export type {
   ToolCallArgsEvent,
   ToolCallEndEvent,
   ToolCallResultEvent,
-  RunFinishedAguiEvent,
+  RunFinishedAGUIEvent,
   RunErrorEvent,
   StateSnapshotEvent,
   StateDeltaEvent,

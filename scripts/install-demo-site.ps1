@@ -146,9 +146,9 @@ dotnet sln "Umbraco.AI.local.sln" add "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoS
 Write-Host "Adding project references to demo site..." -ForegroundColor Green
 $demoProject = "demo/Umbraco.AI.DemoSite/Umbraco.AI.DemoSite.csproj"
 
-# Core references (meta-package + SQLite persistence)
-dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI/Umbraco.AI.csproj"
-dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj"
+# Core references (Startup + Web.StaticAssets)
+dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI.Startup/Umbraco.AI.Startup.csproj"
+dotnet add $demoProject reference "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Umbraco.AI.Web.StaticAssets.csproj"
 
 # OpenAI provider
 if (Test-Path "Umbraco.AI.OpenAI/src/Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.csproj") {
@@ -175,16 +175,16 @@ if (Test-Path "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
     dotnet add $demoProject reference "Umbraco.AI.Amazon/src/Umbraco.AI.Amazon/Umbraco.AI.Amazon.csproj"
 }
 
-# Prompt add-on (meta-package + SQLite persistence)
-if (Test-Path "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt/Umbraco.AI.Prompt.csproj") {
-    dotnet add $demoProject reference "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt/Umbraco.AI.Prompt.csproj"
-    dotnet add $demoProject reference "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence.Sqlite/Umbraco.AI.Prompt.Persistence.Sqlite.csproj"
+# Prompt add-on (Startup + Web.StaticAssets)
+if (Test-Path "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Startup/Umbraco.AI.Prompt.Startup.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Startup/Umbraco.AI.Prompt.Startup.csproj"
+    dotnet add $demoProject reference "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Umbraco.AI.Prompt.Web.StaticAssets.csproj"
 }
 
-# Agent add-on (meta-package + SQLite persistence)
-if (Test-Path "Umbraco.AI.Agent/src/Umbraco.AI.Agent/Umbraco.AI.Agent.csproj") {
-    dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent/Umbraco.AI.Agent.csproj"
-    dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Persistence.Sqlite/Umbraco.AI.Agent.Persistence.Sqlite.csproj"
+# Agent add-on (Startup + Web.StaticAssets)
+if (Test-Path "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj"
+    dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Umbraco.AI.Agent.Web.StaticAssets.csproj"
 }
 
 # Agent Copilot add-on (frontend-only static assets)

@@ -5,9 +5,9 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.MicrosoftFoundry", "src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj", "{62273843-8141-4562-A268-8BA25578E2F4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.MicrosoftFoundry", "src\Umbraco.AI.MicrosoftFoundry\Umbraco.AI.MicrosoftFoundry.csproj", "{62273843-8141-4562-A268-8BA25578E2F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Core", "..\Umbraco.Ai\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj", "{FED57D5D-8124-405C-8B39-7D2D823CDB02}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Core", "..\Umbraco.AI/src\Umbraco.AI.Core\Umbraco.AI.Core.csproj", "{FED57D5D-8124-405C-8B39-7D2D823CDB02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

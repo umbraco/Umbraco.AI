@@ -5,7 +5,7 @@
     <Authors>Umbraco</Authors>
     <Copyright>Copyright © Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
     <Product>Umbraco Ai Microsoft Foundry Provider</Product>
-    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Ai/tree/main/Umbraco.Ai.MicrosoftFoundry</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.MicrosoftFoundry</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
     <PackageTags>umbraco ai microsoft azure foundry umbraco-marketplace</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

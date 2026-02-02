@@ -10,7 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.Ai.Agent.Persistence\Umbraco.Ai.Agent.Persistence.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Agent.Persistence.csproj" />
     </ItemGroup>
 
     <ItemGroup>

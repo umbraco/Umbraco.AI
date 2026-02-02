@@ -3,25 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt", "src\Umbraco.Ai.Prompt\Umbraco.Ai.Prompt.csproj", "{0E00CE69-90E2-4D66-BAB8-74D615BF6087}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt", "src\Umbraco.AI.Prompt\Umbraco.AI.Prompt.csproj", "{0E00CE69-90E2-4D66-BAB8-74D615BF6087}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Startup", "src\Umbraco.Ai.Prompt.Startup\Umbraco.Ai.Prompt.Startup.csproj", "{19701B85-5605-4989-8F50-09435DF78DE3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Startup", "src\Umbraco.AI.Prompt.Startup\Umbraco.AI.Prompt.Startup.csproj", "{19701B85-5605-4989-8F50-09435DF78DE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Core", "src\Umbraco.Ai.Prompt.Core\Umbraco.Ai.Prompt.Core.csproj", "{9089AB3C-48AB-468F-8AFF-3C59F4B0956D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Core", "src\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj", "{9089AB3C-48AB-468F-8AFF-3C59F4B0956D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Persistence", "src\Umbraco.Ai.Prompt.Persistence\Umbraco.Ai.Prompt.Persistence.csproj", "{FE8CA58F-DAB9-4D7E-817F-39354059CF8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Persistence", "src\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj", "{FE8CA58F-DAB9-4D7E-817F-39354059CF8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Persistence.SqlServer", "src\Umbraco.Ai.Prompt.Persistence.SqlServer\Umbraco.Ai.Prompt.Persistence.SqlServer.csproj", "{385D4650-5E26-4565-98BC-92DCAFBB35E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Persistence.SqlServer", "src\Umbraco.AI.Prompt.Persistence.SqlServer\Umbraco.AI.Prompt.Persistence.SqlServer.csproj", "{385D4650-5E26-4565-98BC-92DCAFBB35E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Persistence.Sqlite", "src\Umbraco.Ai.Prompt.Persistence.Sqlite\Umbraco.Ai.Prompt.Persistence.Sqlite.csproj", "{32208A5A-8346-4C0C-A306-46C4C30EA40E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Persistence.Sqlite", "src\Umbraco.AI.Prompt.Persistence.Sqlite\Umbraco.AI.Prompt.Persistence.Sqlite.csproj", "{32208A5A-8346-4C0C-A306-46C4C30EA40E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Web", "src\Umbraco.Ai.Prompt.Web\Umbraco.Ai.Prompt.Web.csproj", "{CB62C7C8-B41C-4BB0-8257-DA10221A6578}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Web", "src\Umbraco.AI.Prompt.Web\Umbraco.AI.Prompt.Web.csproj", "{CB62C7C8-B41C-4BB0-8257-DA10221A6578}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Web.StaticAssets", "src\Umbraco.Ai.Prompt.Web.StaticAssets\Umbraco.Ai.Prompt.Web.StaticAssets.csproj", "{42EBC5DE-3D02-43C2-ADF7-8AE02A4B7099}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Web.StaticAssets", "src\Umbraco.AI.Prompt.Web.StaticAssets\Umbraco.AI.Prompt.Web.StaticAssets.csproj", "{42EBC5DE-3D02-43C2-ADF7-8AE02A4B7099}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{AD53D7F3-BAC3-47C0-997B-49D39918D00F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Tests.Unit", "tests\Umbraco.Ai.Prompt.Tests.Unit\Umbraco.Ai.Prompt.Tests.Unit.csproj", "{B8A7E6D1-2C3F-4E5A-9D8B-1F2A3C4D5E6F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Tests.Unit", "tests\Umbraco.AI.Prompt.Tests.Unit\Umbraco.AI.Prompt.Tests.Unit.csproj", "{B8A7E6D1-2C3F-4E5A-9D8B-1F2A3C4D5E6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

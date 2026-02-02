@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\..\..\Umbraco.Ai\src\Umbraco.Ai.Startup\Umbraco.Ai.Startup.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Startup.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
@@ -17,10 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.Ai.Agent.Core\Umbraco.Ai.Agent.Core.csproj" />
-        <ProjectReference Include="..\Umbraco.Ai.Agent.Persistence\Umbraco.Ai.Agent.Persistence.csproj" />
-        <ProjectReference Include="..\Umbraco.Ai.Agent.Persistence.SqlServer\Umbraco.Ai.Agent.Persistence.SqlServer.csproj" />
-        <ProjectReference Include="..\Umbraco.Ai.Agent.Persistence.Sqlite\Umbraco.Ai.Agent.Persistence.Sqlite.csproj" />
-        <ProjectReference Include="..\Umbraco.Ai.Agent.Web\Umbraco.Ai.Agent.Web.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Agent.Persistence.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Agent.Persistence.SqlServer.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Agent.Persistence.Sqlite.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Agent.Web.csproj" />
     </ItemGroup>
 </Project>

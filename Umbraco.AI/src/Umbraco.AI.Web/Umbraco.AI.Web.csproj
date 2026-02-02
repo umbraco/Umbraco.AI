@@ -3,7 +3,7 @@
     <PropertyGroup>
         <Title>Umbraco AI Web</Title>
         <Description>Management API for Umbraco AI</Description>
-        <RootNamespace>Umbraco.Ai.Web</RootNamespace>
+        <RootNamespace>Umbraco.AI.Web</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

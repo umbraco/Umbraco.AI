@@ -5,7 +5,7 @@
     <Authors>Umbraco</Authors>
     <Copyright>Copyright Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
     <Product>Umbraco Ai Agent Copilot</Product>
-    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Ai/tree/main/Umbraco.Ai.Agent.Copilot</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Agent.Copilot</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
     <PackageTags>umbraco ai agent copilot umbraco-marketplace</PackageTags>
     <NeutralLanguage>en-US</NeutralLanguage>

@@ -3,27 +3,27 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent", "src\Umbraco.Ai.Agent\Umbraco.Ai.Agent.csproj", "{0E00CE69-90E2-4D66-BAB8-74D615BF6087}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent", "src\Umbraco.AI.Agent\Umbraco.AI.Agent.csproj", "{0E00CE69-90E2-4D66-BAB8-74D615BF6087}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Startup", "src\Umbraco.Ai.Agent.Startup\Umbraco.Ai.Agent.Startup.csproj", "{19701B85-5605-4989-8F50-09435DF78DE3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Startup", "src\Umbraco.AI.Agent.Startup\Umbraco.AI.Agent.Startup.csproj", "{19701B85-5605-4989-8F50-09435DF78DE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Core", "src\Umbraco.Ai.Agent.Core\Umbraco.Ai.Agent.Core.csproj", "{9089AB3C-48AB-468F-8AFF-3C59F4B0956D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Core", "src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj", "{9089AB3C-48AB-468F-8AFF-3C59F4B0956D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Persistence", "src\Umbraco.Ai.Agent.Persistence\Umbraco.Ai.Agent.Persistence.csproj", "{FE8CA58F-DAB9-4D7E-817F-39354059CF8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Persistence", "src\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj", "{FE8CA58F-DAB9-4D7E-817F-39354059CF8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Persistence.SqlServer", "src\Umbraco.Ai.Agent.Persistence.SqlServer\Umbraco.Ai.Agent.Persistence.SqlServer.csproj", "{385D4650-5E26-4565-98BC-92DCAFBB35E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Persistence.SqlServer", "src\Umbraco.AI.Agent.Persistence.SqlServer\Umbraco.AI.Agent.Persistence.SqlServer.csproj", "{385D4650-5E26-4565-98BC-92DCAFBB35E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Persistence.Sqlite", "src\Umbraco.Ai.Agent.Persistence.Sqlite\Umbraco.Ai.Agent.Persistence.Sqlite.csproj", "{32208A5A-8346-4C0C-A306-46C4C30EA40E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Persistence.Sqlite", "src\Umbraco.AI.Agent.Persistence.Sqlite\Umbraco.AI.Agent.Persistence.Sqlite.csproj", "{32208A5A-8346-4C0C-A306-46C4C30EA40E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Web", "src\Umbraco.Ai.Agent.Web\Umbraco.Ai.Agent.Web.csproj", "{CB62C7C8-B41C-4BB0-8257-DA10221A6578}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Web", "src\Umbraco.AI.Agent.Web\Umbraco.AI.Agent.Web.csproj", "{CB62C7C8-B41C-4BB0-8257-DA10221A6578}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Web.StaticAssets", "src\Umbraco.Ai.Agent.Web.StaticAssets\Umbraco.Ai.Agent.Web.StaticAssets.csproj", "{42EBC5DE-3D02-43C2-ADF7-8AE02A4B7099}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Web.StaticAssets", "src\Umbraco.AI.Agent.Web.StaticAssets\Umbraco.AI.Agent.Web.StaticAssets.csproj", "{42EBC5DE-3D02-43C2-ADF7-8AE02A4B7099}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{AD53D7F3-BAC3-47C0-997B-49D39918D00F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agui", "src\Umbraco.Ai.Agui\Umbraco.Ai.Agui.csproj", "{E3B74D50-3361-4660-B688-437A64A9D617}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agui", "src\Umbraco.AI.Agui\Umbraco.AI.Agui.csproj", "{E3B74D50-3361-4660-B688-437A64A9D617}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Tests.Unit", "tests\Umbraco.Ai.Agent.Tests.Unit\Umbraco.Ai.Agent.Tests.Unit.csproj", "{AB4582F0-2F60-4A07-9B80-B4AC3AEBD87C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Tests.Unit", "tests\Umbraco.AI.Agent.Tests.Unit\Umbraco.AI.Agent.Tests.Unit.csproj", "{AB4582F0-2F60-4A07-9B80-B4AC3AEBD87C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,7 +5,7 @@
     <Authors>Umbraco</Authors>
     <Copyright>Copyright Umbraco $([System.DateTime]::Today.ToString('yyyy'))</Copyright>
     <Product>Umbraco Ai Prompt</Product>
-    <PackageProjectUrl>https://github.com/umbraco/Umbraco.Ai/tree/main/Umbraco.Ai.Prompt</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Prompt</PackageProjectUrl>
     <PackageIcon>logo-128.png</PackageIcon>
     <PackageTags>umbraco ai prompt umbraco-marketplace</PackageTags>
     <NeutralLanguage>en-US</NeutralLanguage>

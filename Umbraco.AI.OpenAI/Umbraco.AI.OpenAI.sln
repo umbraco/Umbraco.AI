@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.Ai.OpenAi", "src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj", "{9F79EF0C-CA7C-4A1A-AD82-E335EBA5BEB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.AI.OpenAi", "src\Umbraco.AI.OpenAi\Umbraco.AI.OpenAi.csproj", "{9F79EF0C-CA7C-4A1A-AD82-E335EBA5BEB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

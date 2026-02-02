@@ -10,7 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj" />
+        <ProjectReference Include="..MBRACO.AI.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

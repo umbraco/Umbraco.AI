@@ -5,75 +5,75 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Core", "Umbraco.Ai\src\Umbraco.Ai.Core\Umbraco.Ai.Core.csproj", "{93844438-F30C-47C0-92B7-30344910D394}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Core", "Umbraco.AI/src\Umbraco.AI.Core\Umbraco.AI.Core.csproj", "{93844438-F30C-47C0-92B7-30344910D394}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai", "Umbraco.Ai\src\Umbraco.Ai\Umbraco.Ai.csproj", "{E70C2CAC-B5E2-4AB0-83BD-AD3AE01DA474}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai", "Umbraco.AI/src\Umbraco.AI/Umbraco.AI.csproj", "{E70C2CAC-B5E2-4AB0-83BD-AD3AE01DA474}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Startup", "Umbraco.Ai\src\Umbraco.Ai.Startup\Umbraco.Ai.Startup.csproj", "{5E1720F5-9D81-41B6-AB6B-519BB288E1D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Startup", "Umbraco.AI/src\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj", "{5E1720F5-9D81-41B6-AB6B-519BB288E1D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Persistence", "Umbraco.Ai\src\Umbraco.Ai.Persistence\Umbraco.Ai.Persistence.csproj", "{B4EE2C60-AD94-483A-9E2E-9BCBD058299F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Persistence", "Umbraco.AI/src\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj", "{B4EE2C60-AD94-483A-9E2E-9BCBD058299F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Persistence.SqlServer", "Umbraco.Ai\src\Umbraco.Ai.Persistence.SqlServer\Umbraco.Ai.Persistence.SqlServer.csproj", "{8CA85C49-7013-4244-B1B7-5F105E3BE487}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Persistence.SqlServer", "Umbraco.AI/src\Umbraco.AI.Persistence.SqlServer\Umbraco.AI.Persistence.SqlServer.csproj", "{8CA85C49-7013-4244-B1B7-5F105E3BE487}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Persistence.Sqlite", "Umbraco.Ai\src\Umbraco.Ai.Persistence.Sqlite\Umbraco.Ai.Persistence.Sqlite.csproj", "{090ECE55-9C9A-43C7-8D60-C675E19E57E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Persistence.Sqlite", "Umbraco.AI/src\Umbraco.AI.Persistence.Sqlite\Umbraco.AI.Persistence.Sqlite.csproj", "{090ECE55-9C9A-43C7-8D60-C675E19E57E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Web", "Umbraco.Ai\src\Umbraco.Ai.Web\Umbraco.Ai.Web.csproj", "{193525A6-79A1-4C11-85FA-CD5EC9BC1142}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Web", "Umbraco.AI/src\Umbraco.AI.Web\Umbraco.AI.Web.csproj", "{193525A6-79A1-4C11-85FA-CD5EC9BC1142}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Web.StaticAssets", "Umbraco.Ai\src\Umbraco.Ai.Web.StaticAssets\Umbraco.Ai.Web.StaticAssets.csproj", "{316F8D1B-FA8D-4142-8E79-14C0E44754AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Web.StaticAssets", "Umbraco.AI/src\Umbraco.AI.Web.StaticAssets\Umbraco.AI.Web.StaticAssets.csproj", "{316F8D1B-FA8D-4142-8E79-14C0E44754AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Tests.Common", "Umbraco.Ai\tests\Umbraco.Ai.Tests.Common\Umbraco.Ai.Tests.Common.csproj", "{9A9FA331-CED5-4F41-B7AD-C0C395829868}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Tests.Common", "Umbraco.AI/tests\Umbraco.AI.Tests.Common\Umbraco.AI.Tests.Common.csproj", "{9A9FA331-CED5-4F41-B7AD-C0C395829868}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Tests.Integration", "Umbraco.Ai\tests\Umbraco.Ai.Tests.Integration\Umbraco.Ai.Tests.Integration.csproj", "{2F5A0AF6-9101-450C-B8C4-A4F93157E6F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Tests.Integration", "Umbraco.AI/tests\Umbraco.AI.Tests.Integration\Umbraco.AI.Tests.Integration.csproj", "{2F5A0AF6-9101-450C-B8C4-A4F93157E6F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Tests.Unit", "Umbraco.Ai\tests\Umbraco.Ai.Tests.Unit\Umbraco.Ai.Tests.Unit.csproj", "{E24CA9EA-DFF6-4B4D-8141-B56FD8B695AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Tests.Unit", "Umbraco.AI/tests\Umbraco.AI.Tests.Unit\Umbraco.AI.Tests.Unit.csproj", "{E24CA9EA-DFF6-4B4D-8141-B56FD8B695AB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agent", "Agent", "{F54EF77A-38CE-A906-3148-D95B2D24BFF5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent\Umbraco.Ai.Agent.csproj", "{A759902B-7B51-4DA9-9A04-8025CD7928D6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent", "Umbraco.AI.Agent\src\Umbraco.AI.Agent\Umbraco.AI.Agent.csproj", "{A759902B-7B51-4DA9-9A04-8025CD7928D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Startup", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Startup\Umbraco.Ai.Agent.Startup.csproj", "{50477E06-7E03-48A9-AE7F-635AB6770AE3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Startup", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Startup\Umbraco.AI.Agent.Startup.csproj", "{50477E06-7E03-48A9-AE7F-635AB6770AE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Core", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Core\Umbraco.Ai.Agent.Core.csproj", "{CDF8114E-6264-4695-8CCD-3AD894F8BF6F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Core", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj", "{CDF8114E-6264-4695-8CCD-3AD894F8BF6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agui", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agui\Umbraco.Ai.Agui.csproj", "{3B4417A2-240D-44C5-ACA6-640A4BD39E05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agui", "Umbraco.AI.Agent\src\Umbraco.AI.Agui\Umbraco.AI.Agui.csproj", "{3B4417A2-240D-44C5-ACA6-640A4BD39E05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Persistence", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Persistence\Umbraco.Ai.Agent.Persistence.csproj", "{13BE91C6-3C9D-45DB-87E9-D4796D838804}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Persistence", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj", "{13BE91C6-3C9D-45DB-87E9-D4796D838804}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Persistence.SqlServer", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Persistence.SqlServer\Umbraco.Ai.Agent.Persistence.SqlServer.csproj", "{879944FD-9882-4D89-BE38-D387BC062EBF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Persistence.SqlServer", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence.SqlServer\Umbraco.AI.Agent.Persistence.SqlServer.csproj", "{879944FD-9882-4D89-BE38-D387BC062EBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Persistence.Sqlite", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Persistence.Sqlite\Umbraco.Ai.Agent.Persistence.Sqlite.csproj", "{68956A63-90B9-42B5-BC92-F609663B0203}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Persistence.Sqlite", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence.Sqlite\Umbraco.AI.Agent.Persistence.Sqlite.csproj", "{68956A63-90B9-42B5-BC92-F609663B0203}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Web", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web\Umbraco.Ai.Agent.Web.csproj", "{07ED51E3-05D7-4BFC-9003-A2CEF34410D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Web", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Umbraco.AI.Agent.Web.csproj", "{07ED51E3-05D7-4BFC-9003-A2CEF34410D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Web.StaticAssets", "Umbraco.Ai.Agent\src\Umbraco.Ai.Agent.Web.StaticAssets\Umbraco.Ai.Agent.Web.StaticAssets.csproj", "{3BDE1D83-F220-4EA7-B839-A142FC655AD6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Web.StaticAssets", "Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web.StaticAssets\Umbraco.AI.Agent.Web.StaticAssets.csproj", "{3BDE1D83-F220-4EA7-B839-A142FC655AD6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Tests.Unit", "Umbraco.Ai.Agent\tests\Umbraco.Ai.Agent.Tests.Unit\Umbraco.Ai.Agent.Tests.Unit.csproj", "{F2FACF3B-7D30-4DB5-9F28-CE19105FDEFE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Tests.Unit", "Umbraco.AI.Agent\tests\Umbraco.AI.Agent.Tests.Unit\Umbraco.AI.Agent.Tests.Unit.csproj", "{F2FACF3B-7D30-4DB5-9F28-CE19105FDEFE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Prompt", "Prompt", "{62D3A392-DE78-B01B-6FE2-543B5A3B64EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt\Umbraco.Ai.Prompt.csproj", "{EA473E98-0091-4673-8690-3DB3E417BB1C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt\Umbraco.AI.Prompt.csproj", "{EA473E98-0091-4673-8690-3DB3E417BB1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Startup", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Startup\Umbraco.Ai.Prompt.Startup.csproj", "{4ABCBB58-8BBB-4E30-8057-74E42E4333B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Startup", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt.Startup\Umbraco.AI.Prompt.Startup.csproj", "{4ABCBB58-8BBB-4E30-8057-74E42E4333B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Core", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Core\Umbraco.Ai.Prompt.Core.csproj", "{B5F16159-9157-4ABC-8DF7-8136A8E2AC1B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Core", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj", "{B5F16159-9157-4ABC-8DF7-8136A8E2AC1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Persistence", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Persistence\Umbraco.Ai.Prompt.Persistence.csproj", "{F42E140F-93F4-4E32-BDCA-6557B3ED10BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Persistence", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj", "{F42E140F-93F4-4E32-BDCA-6557B3ED10BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Persistence.SqlServer", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Persistence.SqlServer\Umbraco.Ai.Prompt.Persistence.SqlServer.csproj", "{4EA782F5-DDBE-4702-9C72-79DFDB9D9C58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Persistence.SqlServer", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt.Persistence.SqlServer\Umbraco.AI.Prompt.Persistence.SqlServer.csproj", "{4EA782F5-DDBE-4702-9C72-79DFDB9D9C58}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Persistence.Sqlite", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Persistence.Sqlite\Umbraco.Ai.Prompt.Persistence.Sqlite.csproj", "{FFD26B4A-FC27-407C-AA76-8C067F79727D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Persistence.Sqlite", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt.Persistence.Sqlite\Umbraco.AI.Prompt.Persistence.Sqlite.csproj", "{FFD26B4A-FC27-407C-AA76-8C067F79727D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Web", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Web\Umbraco.Ai.Prompt.Web.csproj", "{7B4367FB-0551-4730-86B0-932E67CAC88F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Web", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt.Web\Umbraco.AI.Prompt.Web.csproj", "{7B4367FB-0551-4730-86B0-932E67CAC88F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Prompt.Web.StaticAssets", "Umbraco.Ai.Prompt\src\Umbraco.Ai.Prompt.Web.StaticAssets\Umbraco.Ai.Prompt.Web.StaticAssets.csproj", "{DDD1EA62-D414-4D4C-B23B-56A69ACEA975}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Prompt.Web.StaticAssets", "Umbraco.AI.Prompt\src\Umbraco.AI.Prompt.Web.StaticAssets\Umbraco.AI.Prompt.Web.StaticAssets.csproj", "{DDD1EA62-D414-4D4C-B23B-56A69ACEA975}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenAI", "OpenAI", "{CE99858F-6413-ADB7-F81D-698515E9799A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.OpenAi", "Umbraco.Ai.OpenAi\src\Umbraco.Ai.OpenAi\Umbraco.Ai.OpenAi.csproj", "{AFCACE79-CC6F-4C2F-98BB-B6CCC59DA8BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.OpenAi", "Umbraco.AI.OpenAi\src\Umbraco.AI.OpenAi\Umbraco.AI.OpenAi.csproj", "{AFCACE79-CC6F-4C2F-98BB-B6CCC59DA8BF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Anthropic", "Anthropic", "{26322C59-6A7E-78E8-35C3-3245D0F3BF09}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Anthropic", "Umbraco.Ai.Anthropic\src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj", "{29A43EF2-4A38-4D3C-BF74-20721EC88752}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Anthropic", "Umbraco.AI.Anthropic\src\Umbraco.AI.Anthropic\Umbraco.AI.Anthropic.csproj", "{29A43EF2-4A38-4D3C-BF74-20721EC88752}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{AE579FDE-7AC8-4B55-BE33-9FE07A2CBED2}"
 EndProject
@@ -81,17 +81,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AddOns", "AddOns", "{818C88
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MicrosoftFoundry", "MicrosoftFoundry", "{76CD4A3A-41DA-5F03-8993-1A7DC92B5AD4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.MicrosoftFoundry", "Umbraco.Ai.MicrosoftFoundry\src\Umbraco.Ai.MicrosoftFoundry\Umbraco.Ai.MicrosoftFoundry.csproj", "{6B367EAD-3054-4920-9E3D-028FB8B286A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.MicrosoftFoundry", "Umbraco.AI.MicrosoftFoundry\src\Umbraco.AI.MicrosoftFoundry\Umbraco.AI.MicrosoftFoundry.csproj", "{6B367EAD-3054-4920-9E3D-028FB8B286A6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Google", "Google", "{06194DD1-4B1C-9C5F-0A91-E543EBC9FA7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Google", "Umbraco.Ai.Google\src\Umbraco.Ai.Google\Umbraco.Ai.Google.csproj", "{0BC5E228-5D6F-46DD-80BE-FBABA09C5D6A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Google", "Umbraco.AI.Google\src\Umbraco.AI.Google\Umbraco.AI.Google.csproj", "{0BC5E228-5D6F-46DD-80BE-FBABA09C5D6A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Amazon", "Amazon", "{7BD47B9D-963C-C9A9-BA11-511A72CE0472}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Amazon", "Umbraco.Ai.Amazon\src\Umbraco.Ai.Amazon\Umbraco.Ai.Amazon.csproj", "{BE9F5A7D-8BB0-444C-9AB9-55F0365DDD05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Amazon", "Umbraco.AI.Amazon\src\Umbraco.AI.Amazon\Umbraco.AI.Amazon.csproj", "{BE9F5A7D-8BB0-444C-9AB9-55F0365DDD05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Ai.Agent.Copilot", "Umbraco.Ai.Agent.Copilot\src\Umbraco.Ai.Agent.Copilot\Umbraco.Ai.Agent.Copilot.csproj", "{8FF5948C-2D22-4EC5-B790-CDDB06A54A5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.AI.Agent.Copilot", "Umbraco.AI.Agent.Copilot\src\Umbraco.AI.Agent.Copilot\Umbraco.AI.Agent.Copilot.csproj", "{8FF5948C-2D22-4EC5-B790-CDDB06A54A5C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Copilot", "Copilot", "{1CBBE727-0D15-4AAF-BE7A-A5498CA8F3C0}"
 EndProject

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.Ai.Anthropic", "src\Umbraco.Ai.Anthropic\Umbraco.Ai.Anthropic.csproj", "{75CCBC1F-DB42-49B1-B459-655A4D2CBB47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Umbraco.AI.Anthropic", "src\Umbraco.AI.Anthropic\Umbraco.AI.Anthropic.csproj", "{75CCBC1F-DB42-49B1-B459-655A4D2CBB47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

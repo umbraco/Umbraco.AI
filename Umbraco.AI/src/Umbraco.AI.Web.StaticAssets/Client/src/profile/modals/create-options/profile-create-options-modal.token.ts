@@ -11,7 +11,7 @@ export interface UaiProfileCreateOptionsModalValue {
 export const UAI_PROFILE_CREATE_OPTIONS_MODAL = new UmbModalToken<
     UaiProfileCreateOptionsModalData,
     UaiProfileCreateOptionsModalValue
->("UmbracoAi.Modal.Profile.CreateOptions", {
+>("UmbracoAI.Modal.Profile.CreateOptions", {
     modal: {
         type: "dialog",
         size: "small",

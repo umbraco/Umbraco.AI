@@ -15,7 +15,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.Workspace.Connection.View.Details",
+        alias: "UmbracoAI.Workspace.Connection.View.Details",
         name: "Connection Details Workspace View",
         js: () => import("./views/connection-details-workspace-view.element.ts"),
         weight: 100,
@@ -33,7 +33,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.Workspace.Connection.View.Info",
+        alias: "UmbracoAI.Workspace.Connection.View.Info",
         name: "Connection Info Workspace View",
         js: () => import("./views/connection-info-workspace-view.element.js"),
         weight: 100,
@@ -52,7 +52,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAi.WorkspaceAction.Connection.Save",
+        alias: "UmbracoAI.WorkspaceAction.Connection.Save",
         name: "Save Connection",
         api: UmbSubmitWorkspaceAction,
         meta: {

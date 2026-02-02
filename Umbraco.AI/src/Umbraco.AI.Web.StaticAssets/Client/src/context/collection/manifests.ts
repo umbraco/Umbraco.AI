@@ -16,7 +16,7 @@ export const contextCollectionManifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "collectionView",
-        alias: "UmbracoAi.CollectionView.Context.Table",
+        alias: "UmbracoAI.CollectionView.Context.Table",
         name: "Context Table View",
         element: () => import("./views/table/context-table-collection-view.element.js"),
         meta: {

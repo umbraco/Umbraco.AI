@@ -6,7 +6,7 @@ export const auditLogBulkActionManifests: Array<UmbExtensionManifest> = [
     {
         type: 'entityBulkAction',
         kind: 'default',
-        alias: 'UmbracoAi.EntityBulkAction.AuditLog.Delete',
+        alias: 'UmbracoAI.EntityBulkAction.AuditLog.Delete',
         name: 'Delete Audit Logs Bulk Action',
         weight: 100,
         api: () => import('./audit-log-bulk-delete.action.js'),

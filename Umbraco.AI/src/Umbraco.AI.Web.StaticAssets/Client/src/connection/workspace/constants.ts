@@ -1,4 +1,4 @@
-export const UAI_CONNECTION_WORKSPACE_ALIAS = 'UmbracoAi.Workspace.Connection';
-export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = 'UmbracoAi.Workspace.ConnectionRoot';
+export const UAI_CONNECTION_WORKSPACE_ALIAS = 'UmbracoAI.Workspace.Connection';
+export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = 'UmbracoAI.Workspace.ConnectionRoot';
 
 

@@ -11,7 +11,7 @@ export interface UaiConnectionCreateOptionsModalValue {
 export const UAI_CONNECTION_CREATE_OPTIONS_MODAL = new UmbModalToken<
     UaiConnectionCreateOptionsModalData,
     UaiConnectionCreateOptionsModalValue
->("UmbracoAi.Modal.Connection.CreateOptions", {
+>("UmbracoAI.Modal.Connection.CreateOptions", {
     modal: {
         type: "dialog",
         size: "small",

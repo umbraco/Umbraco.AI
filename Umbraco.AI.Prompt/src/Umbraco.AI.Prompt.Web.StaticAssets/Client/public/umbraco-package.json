@@ -8,18 +8,18 @@
       "type": "bundle",
       "alias": "Umbraco.Ai.Prompt.Bundle",
       "name": "Umbraco AI Prompt Bundle",
-      "js": "/App_Plugins/UmbracoAiPrompt/umbraco-ai-prompt-manifests.js"
+      "js": "/App_Plugins/UmbracoAIPrompt/umbraco-ai-prompt-manifests.js"
     },
     {
       "type": "backofficeEntryPoint",
       "name": "Umbraco AI Prompt Backoffice Entry Point",
       "alias": "Umbraco.Ai.Prompt.BackofficeEntryPoint",
-      "js": "/App_Plugins/UmbracoAiPrompt/umbraco-ai-prompt-app.js"
+      "js": "/App_Plugins/UmbracoAIPrompt/umbraco-ai-prompt-app.js"
     }
   ],
   "importmap": {
     "imports": {
-      "@umbraco-ai/prompt": "/App_Plugins/UmbracoAiPrompt/umbraco-ai-prompt-app.js"
+      "@umbraco-ai/prompt": "/App_Plugins/UmbracoAIPrompt/umbraco-ai-prompt-app.js"
     }
   }
 }

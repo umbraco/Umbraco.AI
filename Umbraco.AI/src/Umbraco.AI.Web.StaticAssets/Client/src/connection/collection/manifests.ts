@@ -16,7 +16,7 @@ export const connectionCollectionManifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "collectionView",
-        alias: "UmbracoAi.CollectionView.Connection.Table",
+        alias: "UmbracoAI.CollectionView.Connection.Table",
         name: "Connection Table View",
         element: () => import("./views/table/connection-table-collection-view.element.js"),
         meta: {

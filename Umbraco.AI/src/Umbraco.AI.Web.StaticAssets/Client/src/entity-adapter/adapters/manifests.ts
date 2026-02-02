@@ -10,7 +10,7 @@ import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE } from "../extension-type.js";
 export const entityAdapterManifests: ManifestEntityAdapter[] = [
 	{
 		type: UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
-		alias: "UmbracoAi.EntityAdapter.Document",
+		alias: "UmbracoAI.EntityAdapter.Document",
 		name: "Document Entity Adapter",
 		forEntityType: "document",
 		api: () => import("./document.adapter.js"),

@@ -4,14 +4,14 @@ import { UAI_CONNECTION_ROOT_ENTITY_TYPE, UAI_CONNECTION_ICON } from "../constan
 export const connectionMenuManifests: ManifestMenuItem[] = [
     {
         type: "menuItem",
-        alias: "UmbracoAi.MenuItem.Connections",
+        alias: "UmbracoAI.MenuItem.Connections",
         name: "Connections Menu Item",
         weight: 200,
         meta: {
             label: "Connections",
             icon: UAI_CONNECTION_ICON,
             entityType: UAI_CONNECTION_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAi.Menu.Settings"],
+            menus: ["UmbracoAI.Menu.Settings"],
         },
     },
 ];

@@ -15,7 +15,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.Workspace.Context.View.Details",
+        alias: "UmbracoAI.Workspace.Context.View.Details",
         name: "Context Details Workspace View",
         js: () => import("./views/context-details-workspace-view.element.js"),
         weight: 100,
@@ -33,7 +33,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.Workspace.Context.View.Info",
+        alias: "UmbracoAI.Workspace.Context.View.Info",
         name: "Context Info Workspace View",
         js: () => import("./views/context-info-workspace-view.element.js"),
         weight: 100,
@@ -52,7 +52,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAi.WorkspaceAction.Context.Save",
+        alias: "UmbracoAI.WorkspaceAction.Context.Save",
         name: "Save Context",
         api: UmbSubmitWorkspaceAction,
         meta: {

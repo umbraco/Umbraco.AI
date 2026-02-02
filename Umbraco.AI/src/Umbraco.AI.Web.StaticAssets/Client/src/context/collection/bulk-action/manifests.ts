@@ -6,7 +6,7 @@ export const contextBulkActionManifests: Array<UmbExtensionManifest> = [
     {
         type: 'entityBulkAction',
         kind: 'default',
-        alias: 'UmbracoAi.EntityBulkAction.Context.Delete',
+        alias: 'UmbracoAI.EntityBulkAction.Context.Delete',
         name: 'Delete Contexts Bulk Action',
         weight: 100,
         api: () => import('./context-bulk-delete.action.js'),

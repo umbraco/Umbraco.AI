@@ -1,1 +1,1 @@
-export const UAI_CONNECTION_COLLECTION_ALIAS = 'UmbracoAi.Collection.Connection';
+export const UAI_CONNECTION_COLLECTION_ALIAS = 'UmbracoAI.Collection.Connection';

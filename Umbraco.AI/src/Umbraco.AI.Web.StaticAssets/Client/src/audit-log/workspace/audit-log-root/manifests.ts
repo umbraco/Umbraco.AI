@@ -18,7 +18,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceView",
         kind: "collection",
-        alias: "UmbracoAi.WorkspaceView.AuditLogRoot.Collection",
+        alias: "UmbracoAI.WorkspaceView.AuditLogRoot.Collection",
         name: "Audit Log Root Collection Workspace View",
         meta: {
             label: "Collection",

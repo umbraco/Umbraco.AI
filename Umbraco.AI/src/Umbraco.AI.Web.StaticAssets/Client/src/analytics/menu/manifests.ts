@@ -12,7 +12,7 @@ export const analyticsMenuManifests: ManifestMenuItem[] = [
             label: "Analytics",
             icon: "icon-chart",
             entityType: UAI_ANALYTICS_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAi.Menu.Settings"],
+            menus: ["UmbracoAI.Menu.Settings"],
         },
     },
 ];

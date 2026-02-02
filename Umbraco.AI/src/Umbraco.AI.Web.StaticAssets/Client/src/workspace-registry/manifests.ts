@@ -2,7 +2,7 @@ import type { ManifestGlobalContext } from "@umbraco-cms/backoffice/extension-re
 
 const globalContextManifest: ManifestGlobalContext = {
 	type: "globalContext",
-	alias: "UmbracoAi.WorkspaceRegistry.GlobalContext",
+	alias: "UmbracoAI.WorkspaceRegistry.GlobalContext",
 	name: "Umbraco AI Workspace Registry Global Context",
 	api: () => import("./workspace-registry.context.js"),
 };

@@ -11,7 +11,7 @@ export const promptMenuManifests: ManifestMenuItem[] = [
             label: "Prompts",
             icon: UAI_PROMPT_ICON,
             entityType: UAI_PROMPT_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAi.Menu.Settings"],
+            menus: ["UmbracoAI.Menu.Settings"],
         },
     },
 ];

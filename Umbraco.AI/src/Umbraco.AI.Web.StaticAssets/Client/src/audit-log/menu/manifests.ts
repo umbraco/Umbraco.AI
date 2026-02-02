@@ -13,7 +13,7 @@ export const auditLogMenuManifests: ManifestMenuItem[] = [
             label: "Logs",
             icon: UAI_AUDIT_LOG_ICON,
             entityType: UAI_AUDIT_LOG_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAi.Menu.Settings"],
+            menus: ["UmbracoAI.Menu.Settings"],
         },
     },
 ];

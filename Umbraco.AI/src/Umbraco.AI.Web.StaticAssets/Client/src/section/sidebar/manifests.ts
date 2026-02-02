@@ -4,12 +4,12 @@ export const sectionSidebarManifests: ManifestSectionSidebarApp[] = [
     {
         type: "sectionSidebarApp",
         kind: "menuWithEntityActions",
-        alias: "UmbracoAi.SectionSidebarApp.AiMenu",
+        alias: "UmbracoAI.SectionSidebarApp.AiMenu",
         name: "AI Section Sidebar",
         weight: 900,
         meta: {
             label: "AI",
-            menu: "UmbracoAi.Menu.Settings",
+            menu: "UmbracoAI.Menu.Settings",
         },
         conditions: [{ alias: "Umb.Condition.SectionAlias", match: "Umb.Section.Settings" }],
     },

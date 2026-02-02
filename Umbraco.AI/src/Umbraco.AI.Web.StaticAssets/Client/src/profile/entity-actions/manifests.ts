@@ -4,7 +4,7 @@ export const profileEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAi.EntityAction.Profile.Create",
+        alias: "UmbracoAI.EntityAction.Profile.Create",
         name: "Create Profile Entity Action",
         weight: 1200,
         api: () => import("./profile-create.action.js"),
@@ -18,7 +18,7 @@ export const profileEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAi.EntityAction.Profile.Delete",
+        alias: "UmbracoAI.EntityAction.Profile.Delete",
         name: "Delete Profile Entity Action",
         weight: 100,
         api: () => import("./profile-delete.action.js"),

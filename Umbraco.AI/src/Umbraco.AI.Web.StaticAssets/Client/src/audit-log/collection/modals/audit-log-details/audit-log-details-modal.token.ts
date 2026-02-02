@@ -11,7 +11,7 @@ export interface UaiAuditLogDetailsModalValue {
 export const UAI_AUDIT_LOG_DETAILS_MODAL = new UmbModalToken<
     UaiAuditLogDetailsModalData,
     UaiAuditLogDetailsModalValue
->("UmbracoAi.Modal.AuditLog.Details", {
+>("UmbracoAI.Modal.AuditLog.Details", {
     modal: {
         type: "sidebar",
         size: "medium",

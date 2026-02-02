@@ -11,7 +11,7 @@ export const agentMenuManifests: ManifestMenuItem[] = [
             label: "Agents",
             icon: UAI_AGENT_ICON,
             entityType: UAI_AGENT_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAi.Menu.Settings"],
+            menus: ["UmbracoAI.Menu.Settings"],
         },
     },
 ];

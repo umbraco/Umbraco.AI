@@ -8,18 +8,18 @@
       "type": "bundle",
       "alias": "Umbraco.Ai.Agent.Copilot.Bundle",
       "name": "Umbraco AI Agent Copilot Bundle",
-      "js": "/App_Plugins/UmbracoAiAgentCopilot/umbraco-ai-agent-copilot-manifests.js"
+      "js": "/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot-manifests.js"
     },
     {
       "type": "backofficeEntryPoint",
       "name": "Umbraco AI Agent Copilot Backoffice Entry Point",
       "alias": "Umbraco.Ai.Agent.Copilot.BackofficeEntryPoint",
-      "js": "/App_Plugins/UmbracoAiAgentCopilot/umbraco-ai-agent-copilot-app.js"
+      "js": "/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot-app.js"
     }
   ],
   "importmap": {
     "imports": {
-      "@umbraco-ai/agent-copilot": "/App_Plugins/UmbracoAiAgentCopilot/umbraco-ai-agent-copilot-app.js"
+      "@umbraco-ai/agent-copilot": "/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot-app.js"
     }
   }
 }

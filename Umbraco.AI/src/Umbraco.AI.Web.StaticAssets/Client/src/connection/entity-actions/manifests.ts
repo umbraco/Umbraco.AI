@@ -4,7 +4,7 @@ export const connectionEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAi.EntityAction.Connection.Create",
+        alias: "UmbracoAI.EntityAction.Connection.Create",
         name: "Create Connection Entity Action",
         weight: 1200,
         api: () => import("./connection-create.action.js"),
@@ -18,7 +18,7 @@ export const connectionEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAi.EntityAction.Connection.Delete",
+        alias: "UmbracoAI.EntityAction.Connection.Delete",
         name: "Delete Connection Entity Action",
         weight: 100,
         api: () => import("./connection-delete.action.js"),

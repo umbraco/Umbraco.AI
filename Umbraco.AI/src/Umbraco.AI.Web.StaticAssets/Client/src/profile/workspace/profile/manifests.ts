@@ -15,7 +15,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.Workspace.Profile.View.Details",
+        alias: "UmbracoAI.Workspace.Profile.View.Details",
         name: "Profile Details Workspace View",
         js: () => import("./views/profile-details-workspace-view.element.js"),
         weight: 100,
@@ -33,7 +33,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.Workspace.Profile.View.Info",
+        alias: "UmbracoAI.Workspace.Profile.View.Info",
         name: "Profile Info Workspace View",
         js: () => import("./views/profile-info-workspace-view.element.js"),
         weight: 100,
@@ -52,7 +52,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAi.WorkspaceAction.Profile.Save",
+        alias: "UmbracoAI.WorkspaceAction.Profile.Save",
         name: "Save Profile",
         api: UmbSubmitWorkspaceAction,
         meta: {

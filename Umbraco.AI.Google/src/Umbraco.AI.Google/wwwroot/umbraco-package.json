@@ -10,7 +10,7 @@
             "meta": {
                 "culture": "en"
             },
-            "js": "/App_Plugins/UmbracoAiGoogle/lang/en.js"
+            "js": "/App_Plugins/UmbracoAIGoogle/lang/en.js"
         }
     ],
     "version": ""

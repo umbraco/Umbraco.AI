@@ -16,7 +16,7 @@ export const profileCollectionManifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "collectionView",
-        alias: "UmbracoAi.CollectionView.Profile.Table",
+        alias: "UmbracoAI.CollectionView.Profile.Table",
         name: "Profile Table View",
         element: () => import("./views/table/profile-table-collection-view.element.js"),
         meta: {

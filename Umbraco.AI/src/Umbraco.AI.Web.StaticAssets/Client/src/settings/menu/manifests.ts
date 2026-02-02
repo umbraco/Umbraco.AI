@@ -12,7 +12,7 @@ export const settingsMenuManifests: ManifestMenuItem[] = [
             label: "Settings",
             icon: UAI_SETTINGS_ICON,
             entityType: UAI_SETTINGS_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAi.Menu.Settings"],
+            menus: ["UmbracoAI.Menu.Settings"],
         },
     },
 ];

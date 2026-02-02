@@ -8,18 +8,18 @@
       "type": "bundle",
       "alias": "Umbraco.Ai.Agent.Bundle",
       "name": "Umbraco AI Agent Bundle",
-      "js": "/App_Plugins/UmbracoAiAgent/umbraco-ai-agent-manifests.js"
+      "js": "/App_Plugins/UmbracoAIAgent/umbraco-ai-agent-manifests.js"
     },
     {
       "type": "backofficeEntryPoint",
       "name": "Umbraco AI Agent Backoffice Entry Point",
       "alias": "Umbraco.Ai.Agent.BackofficeEntryPoint",
-      "js": "/App_Plugins/UmbracoAiAgent/umbraco-ai-agent-app.js"
+      "js": "/App_Plugins/UmbracoAIAgent/umbraco-ai-agent-app.js"
     }
   ],
   "importmap": {
     "imports": {
-      "@umbraco-ai/agent": "/App_Plugins/UmbracoAiAgent/umbraco-ai-agent-app.js"
+      "@umbraco-ai/agent": "/App_Plugins/UmbracoAIAgent/umbraco-ai-agent-app.js"
     }
   }
 }

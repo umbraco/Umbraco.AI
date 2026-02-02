@@ -10,7 +10,7 @@
             "meta": {
                 "culture": "en"
             },
-            "js": "/App_Plugins/UmbracoAiAnthropic/lang/en.js"
+            "js": "/App_Plugins/UmbracoAIAnthropic/lang/en.js"
         }
     ],
     "version": ""

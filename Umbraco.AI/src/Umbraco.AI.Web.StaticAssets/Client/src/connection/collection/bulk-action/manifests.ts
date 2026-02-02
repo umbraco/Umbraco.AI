@@ -6,7 +6,7 @@ export const connectionBulkActionManifests: Array<UmbExtensionManifest> = [
     {
         type: 'entityBulkAction',
         kind: 'default',
-        alias: 'UmbracoAi.EntityBulkAction.Connection.Delete',
+        alias: 'UmbracoAI.EntityBulkAction.Connection.Delete',
         name: 'Delete Connections Bulk Action',
         weight: 100,
         api: () => import('./connection-bulk-delete.action.js'),

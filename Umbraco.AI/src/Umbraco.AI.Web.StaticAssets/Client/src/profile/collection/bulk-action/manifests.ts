@@ -6,7 +6,7 @@ export const profileBulkActionManifests: Array<UmbExtensionManifest> = [
     {
         type: 'entityBulkAction',
         kind: 'default',
-        alias: 'UmbracoAi.EntityBulkAction.Profile.Delete',
+        alias: 'UmbracoAI.EntityBulkAction.Profile.Delete',
         name: 'Delete Profiles Bulk Action',
         weight: 100,
         api: () => import('./profile-bulk-delete.action.js'),

@@ -4,7 +4,7 @@ export const contextEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAi.EntityAction.Context.Create",
+        alias: "UmbracoAI.EntityAction.Context.Create",
         name: "Create Context Entity Action",
         weight: 1200,
         api: () => import("./context-create.action.js"),
@@ -17,7 +17,7 @@ export const contextEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
-        alias: "UmbracoAi.EntityAction.Context.Delete",
+        alias: "UmbracoAI.EntityAction.Context.Delete",
         name: "Delete Context Entity Action",
         weight: 100,
         api: () => import("./context-delete.action.js"),

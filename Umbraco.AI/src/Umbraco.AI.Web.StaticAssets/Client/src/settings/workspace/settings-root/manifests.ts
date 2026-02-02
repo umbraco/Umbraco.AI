@@ -16,7 +16,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     },
     {
         type: "workspaceView",
-        alias: "UmbracoAi.WorkspaceView.SettingsRoot.Editor",
+        alias: "UmbracoAI.WorkspaceView.SettingsRoot.Editor",
         name: "Settings Editor Workspace View",
         element: () => import('./settings-editor.element.js'),
         weight: 1000,
@@ -35,7 +35,7 @@ export const manifests: Array<UmbExtensionManifest> = [
     {
         type: "workspaceAction",
         kind: "default",
-        alias: "UmbracoAi.WorkspaceAction.Settings.Save",
+        alias: "UmbracoAI.WorkspaceAction.Settings.Save",
         name: "Save Settings",
         api: UmbSubmitWorkspaceAction,
         meta: {

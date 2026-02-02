@@ -4,39 +4,6 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
-export type AgentItemResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
-    contextIds: Array<string>;
-    scopeIds: Array<string>;
-    isActive: boolean;
-    dateCreated: string;
-    dateModified: string;
-};
-
-export type AgentResponseModel = {
-    id: string;
-    alias: string;
-    name: string;
-    description?: string | null;
-    profileId?: string | null;
-    contextIds: Array<string>;
-    scopeIds: Array<string>;
-    instructions?: string | null;
-    isActive: boolean;
-    dateCreated: string;
-    dateModified: string;
-    version: number;
-};
-
-export type AgentScopeItemResponseModel = {
-    id: string;
-    icon: string;
-};
-
 export type AGUIContextItemModel = {
     description: string;
     value?: string | null;
@@ -90,6 +57,39 @@ export type AGUIToolParametersModel = {
     type: string;
     properties: unknown;
     required?: Array<string> | null;
+};
+
+export type AgentItemResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    contextIds: Array<string>;
+    scopeIds: Array<string>;
+    isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
+};
+
+export type AgentResponseModel = {
+    id: string;
+    alias: string;
+    name: string;
+    description?: string | null;
+    profileId?: string | null;
+    contextIds: Array<string>;
+    scopeIds: Array<string>;
+    instructions?: string | null;
+    isActive: boolean;
+    dateCreated: string;
+    dateModified: string;
+    version: number;
+};
+
+export type AgentScopeItemResponseModel = {
+    id: string;
+    icon: string;
 };
 
 export type CreateAgentRequestModel = {

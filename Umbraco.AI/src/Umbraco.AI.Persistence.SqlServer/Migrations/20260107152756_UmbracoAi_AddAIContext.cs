@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "umbracoAiContext",
+                name: "umbracoAIContext",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -23,11 +23,11 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiContext", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIContext", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "umbracoAiContextResource",
+                name: "umbracoAIContextResource",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -41,29 +41,29 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiContextResource", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIContextResource", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_umbracoAiContextResource_umbracoAiContext_ContextId",
+                        name: "FK_umbracoAIContextResource_umbracoAiContext_ContextId",
                         column: x => x.ContextId,
-                        principalTable: "umbracoAiContext",
+                        principalTable: "umbracoAIContext",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiContext_Alias",
-                table: "umbracoAiContext",
+                name: "IX_umbracoAIContext_Alias",
+                table: "umbracoAIContext",
                 column: "Alias",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiContextResource_ContextId",
-                table: "umbracoAiContextResource",
+                name: "IX_umbracoAIContextResource_ContextId",
+                table: "umbracoAIContextResource",
                 column: "ContextId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiContextResource_ResourceTypeId",
-                table: "umbracoAiContextResource",
+                name: "IX_umbracoAIContextResource_ResourceTypeId",
+                table: "umbracoAIContextResource",
                 column: "ResourceTypeId");
         }
 
@@ -71,10 +71,10 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "umbracoAiContextResource");
+                name: "umbracoAIContextResource");
 
             migrationBuilder.DropTable(
-                name: "umbracoAiContext");
+                name: "umbracoAIContext");
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "ContextIds",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "TEXT",
                 maxLength: 4000,
                 nullable: true);
@@ -23,7 +23,7 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "ContextIds",
-                table: "UmbracoAiAgent");
+                table: "umbracoAIAgent");
         }
     }
 }

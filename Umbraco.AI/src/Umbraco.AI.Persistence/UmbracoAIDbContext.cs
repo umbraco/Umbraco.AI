@@ -80,7 +80,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiConnectionEntity>(entity =>
         {
-            entity.ToTable("umbracoAiConnection");
+            entity.ToTable("umbracoAIConnection");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Alias)
@@ -122,7 +122,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiProfileEntity>(entity =>
         {
-            entity.ToTable("umbracoAiProfile");
+            entity.ToTable("umbracoAIProfile");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Alias)
@@ -175,7 +175,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiContextEntity>(entity =>
         {
-            entity.ToTable("umbracoAiContext");
+            entity.ToTable("umbracoAIContext");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Alias)
@@ -207,7 +207,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiContextResourceEntity>(entity =>
         {
-            entity.ToTable("umbracoAiContextResource");
+            entity.ToTable("umbracoAIContextResource");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.ContextId)
@@ -239,7 +239,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiAuditLogEntity>(entity =>
         {
-            entity.ToTable("umbracoAiAuditLog");
+            entity.ToTable("umbracoAIAuditLog");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.StartTime)
@@ -322,7 +322,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiUsageRecordEntity>(entity =>
         {
-            entity.ToTable("umbracoAiUsageRecord");
+            entity.ToTable("umbracoAIUsageRecord");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Timestamp)
@@ -392,7 +392,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiUsageStatisticsHourlyEntity>(entity =>
         {
-            entity.ToTable("umbracoAiUsageStatisticsHourly");
+            entity.ToTable("umbracoAIUsageStatisticsHourly");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Period)
@@ -458,7 +458,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiUsageStatisticsDailyEntity>(entity =>
         {
-            entity.ToTable("umbracoAiUsageStatisticsDaily");
+            entity.ToTable("umbracoAIUsageStatisticsDaily");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Period)
@@ -524,7 +524,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiEntityVersionEntity>(entity =>
         {
-            entity.ToTable("umbracoAiEntityVersion");
+            entity.ToTable("umbracoAIEntityVersion");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.EntityId)
@@ -556,7 +556,7 @@ public class UmbracoAiDbContext : DbContext
 
         modelBuilder.Entity<AiSettingsEntity>(entity =>
         {
-            entity.ToTable("umbracoAiSettings");
+            entity.ToTable("umbracoAISettings");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Key)

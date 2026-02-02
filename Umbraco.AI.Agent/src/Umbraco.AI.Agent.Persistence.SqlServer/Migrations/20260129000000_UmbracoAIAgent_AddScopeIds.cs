@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "ScopeIds",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "nvarchar(2000)",
                 maxLength: 2000,
                 nullable: true);
@@ -23,7 +23,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "ScopeIds",
-                table: "UmbracoAiAgent");
+                table: "umbracoAIAgent");
         }
     }
 }

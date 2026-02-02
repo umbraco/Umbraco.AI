@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "umbracoAiAuditLog",
+                name: "umbracoAIAuditLog",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -43,52 +43,52 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiAuditLog", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIAuditLog", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_EntityId_EntityType",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_EntityId_EntityType",
+                table: "umbracoAIAuditLog",
                 columns: new[] { "EntityId", "EntityType" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_ProfileId",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_ProfileId",
+                table: "umbracoAIAuditLog",
                 column: "ProfileId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_StartTime",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_StartTime",
+                table: "umbracoAIAuditLog",
                 column: "StartTime");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_StartTime_Status",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_StartTime_Status",
+                table: "umbracoAIAuditLog",
                 columns: new[] { "StartTime", "Status" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_Status",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_Status",
+                table: "umbracoAIAuditLog",
                 column: "Status");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_UserId",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_UserId",
+                table: "umbracoAIAuditLog",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_FeatureId",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_FeatureId",
+                table: "umbracoAIAuditLog",
                 column: "FeatureId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_FeatureType_FeatureId",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_FeatureType_FeatureId",
+                table: "umbracoAIAuditLog",
                 columns: new[] { "FeatureType", "FeatureId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAuditLog_ParentAuditLogId",
-                table: "umbracoAiAuditLog",
+                name: "IX_umbracoAIAuditLog_ParentAuditLogId",
+                table: "umbracoAIAuditLog",
                 column: "ParentAuditLogId");
         }
 
@@ -96,7 +96,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "umbracoAiAuditLog");
+                name: "umbracoAIAuditLog");
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
             // Add Version column to umbracoAiPrompt
             migrationBuilder.AddColumn<int>(
                 name: "Version",
-                table: "umbracoAiPrompt",
+                table: "umbracoAIPrompt",
                 type: "int",
                 nullable: false,
                 defaultValue: 1);
@@ -25,7 +25,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "Version",
-                table: "umbracoAiPrompt");
+                table: "umbracoAIPrompt");
         }
     }
 }

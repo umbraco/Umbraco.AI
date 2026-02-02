@@ -14,21 +14,21 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
             // Add Version, DateCreated, DateModified columns to UmbracoAiAgent
             migrationBuilder.AddColumn<int>(
                 name: "Version",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "int",
                 nullable: false,
                 defaultValue: 1);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "DateCreated",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "datetime2",
                 nullable: false,
                 defaultValueSql: "GETUTCDATE()");
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "DateModified",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "datetime2",
                 nullable: false,
                 defaultValueSql: "GETUTCDATE()");
@@ -39,15 +39,15 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "Version",
-                table: "UmbracoAiAgent");
+                table: "umbracoAIAgent");
 
             migrationBuilder.DropColumn(
                 name: "DateCreated",
-                table: "UmbracoAiAgent");
+                table: "umbracoAIAgent");
 
             migrationBuilder.DropColumn(
                 name: "DateModified",
-                table: "UmbracoAiAgent");
+                table: "umbracoAIAgent");
         }
     }
 }

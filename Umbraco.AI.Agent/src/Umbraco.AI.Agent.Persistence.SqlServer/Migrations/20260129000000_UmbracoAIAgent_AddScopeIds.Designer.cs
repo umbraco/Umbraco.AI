@@ -88,7 +88,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
 
                     b.HasIndex("ProfileId");
 
-                    b.ToTable("UmbracoAiAgent", (string)null);
+                    b.ToTable("umbracoAIAgent", (string)null);
                 });
 #pragma warning restore 612, 618
         }

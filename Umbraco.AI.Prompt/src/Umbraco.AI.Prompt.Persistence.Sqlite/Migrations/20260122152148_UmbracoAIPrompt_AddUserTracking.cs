@@ -12,13 +12,13 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
         {
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiPrompt",
+                table: "umbracoAIPrompt",
                 type: "INTEGER",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiPrompt",
+                table: "umbracoAIPrompt",
                 type: "INTEGER",
                 nullable: true);
         }
@@ -28,11 +28,11 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
-                table: "umbracoAiPrompt");
+                table: "umbracoAIPrompt");
 
             migrationBuilder.DropColumn(
                 name: "ModifiedByUserId",
-                table: "umbracoAiPrompt");
+                table: "umbracoAIPrompt");
         }
     }
 }

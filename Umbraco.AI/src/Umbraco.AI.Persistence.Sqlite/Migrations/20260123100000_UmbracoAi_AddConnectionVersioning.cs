@@ -14,7 +14,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
             // Add Version column to umbracoAiConnection table
             migrationBuilder.AddColumn<int>(
                 name: "Version",
-                table: "umbracoAiConnection",
+                table: "umbracoAIConnection",
                 type: "INTEGER",
                 nullable: false,
                 defaultValue: 1);
@@ -26,7 +26,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
             // Remove Version column from umbracoAiConnection
             migrationBuilder.DropColumn(
                 name: "Version",
-                table: "umbracoAiConnection");
+                table: "umbracoAIConnection");
         }
     }
 }

@@ -65,7 +65,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
 
                     b.HasIndex("ProviderId");
 
-                    b.ToTable("umbracoAiConnection", (string)null);
+                    b.ToTable("umbracoAIConnection", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiProfileEntity", b =>
@@ -122,7 +122,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
 
                     b.HasIndex("ConnectionId");
 
-                    b.ToTable("umbracoAiProfile", (string)null);
+                    b.ToTable("umbracoAIProfile", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Entities.AiProfileEntity", b =>

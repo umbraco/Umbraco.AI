@@ -28,7 +28,7 @@ public class UmbracoAiAgentDbContext : DbContext
 
         modelBuilder.Entity<AiAgentEntity>(entity =>
         {
-            entity.ToTable("UmbracoAiAgent");
+            entity.ToTable("umbracoAIAgent");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Alias)

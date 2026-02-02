@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "umbracoAiAgent",
+                name: "umbracoAIAgent",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -25,18 +25,18 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiAgent", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIAgent", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAgent_Alias",
-                table: "UmbracoAiAgent",
+                name: "IX_umbracoAIAgent_Alias",
+                table: "umbracoAIAgent",
                 column: "Alias",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiAgent_ProfileId",
-                table: "UmbracoAiAgent",
+                name: "IX_umbracoAIAgent_ProfileId",
+                table: "umbracoAIAgent",
                 column: "ProfileId");
         }
 
@@ -44,7 +44,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "UmbracoAiAgent");
+                name: "umbracoAIAgent");
         }
     }
 }

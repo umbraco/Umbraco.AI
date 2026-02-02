@@ -12,52 +12,52 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
         {
             // SQLite stores GUIDs as TEXT, so we need to drop and recreate the columns
             // umbracoAiConnection
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiConnection");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAiConnection");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIConnection");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIConnection");
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByUserId",
-                table: "umbracoAiConnection",
+                table: "umbracoAIConnection",
                 type: "TEXT",
                 nullable: true);
             migrationBuilder.AddColumn<Guid>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiConnection",
+                table: "umbracoAIConnection",
                 type: "TEXT",
                 nullable: true);
 
             // umbracoAiProfile
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiProfile");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAiProfile");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIProfile");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIProfile");
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByUserId",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "TEXT",
                 nullable: true);
             migrationBuilder.AddColumn<Guid>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "TEXT",
                 nullable: true);
 
             // umbracoAiContext
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiContext");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAiContext");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIContext");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIContext");
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByUserId",
-                table: "umbracoAiContext",
+                table: "umbracoAIContext",
                 type: "TEXT",
                 nullable: true);
             migrationBuilder.AddColumn<Guid>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiContext",
+                table: "umbracoAIContext",
                 type: "TEXT",
                 nullable: true);
 
             // umbracoAiEntityVersion
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiEntityVersion");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIEntityVersion");
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByUserId",
-                table: "umbracoAiEntityVersion",
+                table: "umbracoAIEntityVersion",
                 type: "TEXT",
                 nullable: true);
         }
@@ -66,52 +66,52 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // umbracoAiConnection - revert to INTEGER
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiConnection");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAiConnection");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIConnection");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIConnection");
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiConnection",
+                table: "umbracoAIConnection",
                 type: "INTEGER",
                 nullable: true);
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiConnection",
+                table: "umbracoAIConnection",
                 type: "INTEGER",
                 nullable: true);
 
             // umbracoAiProfile - revert to INTEGER
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiProfile");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAiProfile");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIProfile");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIProfile");
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "INTEGER",
                 nullable: true);
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "INTEGER",
                 nullable: true);
 
             // umbracoAiContext - revert to INTEGER
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiContext");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAiContext");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIContext");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIContext");
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiContext",
+                table: "umbracoAIContext",
                 type: "INTEGER",
                 nullable: true);
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiContext",
+                table: "umbracoAIContext",
                 type: "INTEGER",
                 nullable: true);
 
             // umbracoAiEntityVersion - revert to INTEGER
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAiEntityVersion");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIEntityVersion");
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiEntityVersion",
+                table: "umbracoAIEntityVersion",
                 type: "INTEGER",
                 nullable: true);
         }

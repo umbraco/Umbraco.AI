@@ -60,7 +60,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 
                     b.HasIndex("ProviderId");
 
-                    b.ToTable("umbracoAiConnection", (string)null);
+                    b.ToTable("umbracoAIConnection", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextEntity", b =>
@@ -90,7 +90,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                     b.HasIndex("Alias")
                         .IsUnique();
 
-                    b.ToTable("umbracoAiContext", (string)null);
+                    b.ToTable("umbracoAIContext", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>
@@ -132,7 +132,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 
                     b.HasIndex("ResourceTypeId");
 
-                    b.ToTable("umbracoAiContextResource", (string)null);
+                    b.ToTable("umbracoAIContextResource", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.AuditLog.AiAuditLogEntity", b =>
@@ -245,7 +245,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 
                     b.HasIndex("StartTime", "Status");
 
-                    b.ToTable("umbracoAiAuditLog", (string)null);
+                    b.ToTable("umbracoAIAuditLog", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Profiles.AiProfileEntity", b =>
@@ -296,7 +296,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
 
                     b.HasIndex("ConnectionId");
 
-                    b.ToTable("umbracoAiProfile", (string)null);
+                    b.ToTable("umbracoAIProfile", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Persistence.Context.AiContextResourceEntity", b =>

@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
         {
             migrationBuilder.AddColumn<bool>(
                 name: "IncludeEntityContext",
-                table: "umbracoAiPrompt",
+                table: "umbracoAIPrompt",
                 type: "bit",
                 nullable: false,
                 defaultValue: true);
@@ -23,7 +23,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "IncludeEntityContext",
-                table: "umbracoAiPrompt");
+                table: "umbracoAIPrompt");
         }
     }
 }

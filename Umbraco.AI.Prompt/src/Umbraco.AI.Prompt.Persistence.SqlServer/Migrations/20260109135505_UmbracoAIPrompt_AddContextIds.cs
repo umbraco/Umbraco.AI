@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "ContextIds",
-                table: "umbracoAiPrompt",
+                table: "umbracoAIPrompt",
                 type: "nvarchar(4000)",
                 maxLength: 4000,
                 nullable: true);
@@ -23,7 +23,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "ContextIds",
-                table: "umbracoAiPrompt");
+                table: "umbracoAIPrompt");
         }
     }
 }

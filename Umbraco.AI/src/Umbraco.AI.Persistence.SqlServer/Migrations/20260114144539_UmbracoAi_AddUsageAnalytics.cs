@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "umbracoAiUsageRecord",
+                name: "umbracoAIUsageRecord",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -38,11 +38,11 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiUsageRecord", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIUsageRecord", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "umbracoAiUsageStatisticsDaily",
+                name: "umbracoAIUsageStatisticsDaily",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -65,11 +65,11 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiUsageStatisticsDaily", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIUsageStatisticsDaily", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "umbracoAiUsageStatisticsHourly",
+                name: "umbracoAIUsageStatisticsHourly",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -92,69 +92,69 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiUsageStatisticsHourly", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIUsageStatisticsHourly", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageRecord_Timestamp",
-                table: "umbracoAiUsageRecord",
+                name: "IX_umbracoAIUsageRecord_Timestamp",
+                table: "umbracoAIUsageRecord",
                 column: "Timestamp");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageRecord_Timestamp_Status",
-                table: "umbracoAiUsageRecord",
+                name: "IX_umbracoAIUsageRecord_Timestamp_Status",
+                table: "umbracoAIUsageRecord",
                 columns: new[] { "Timestamp", "Status" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsDaily_Period",
-                table: "umbracoAiUsageStatisticsDaily",
+                name: "IX_umbracoAIUsageStatisticsDaily_Period",
+                table: "umbracoAIUsageStatisticsDaily",
                 column: "Period");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsDaily_Period_ModelId",
-                table: "umbracoAiUsageStatisticsDaily",
+                name: "IX_umbracoAIUsageStatisticsDaily_Period_ModelId",
+                table: "umbracoAIUsageStatisticsDaily",
                 columns: new[] { "Period", "ModelId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsDaily_Period_ProfileId",
-                table: "umbracoAiUsageStatisticsDaily",
+                name: "IX_umbracoAIUsageStatisticsDaily_Period_ProfileId",
+                table: "umbracoAIUsageStatisticsDaily",
                 columns: new[] { "Period", "ProfileId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsDaily_Period_ProviderId",
-                table: "umbracoAiUsageStatisticsDaily",
+                name: "IX_umbracoAIUsageStatisticsDaily_Period_ProviderId",
+                table: "umbracoAIUsageStatisticsDaily",
                 columns: new[] { "Period", "ProviderId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsDaily_Period_ProviderId_ModelId_ProfileId_Capability_UserId_EntityType_FeatureType",
-                table: "umbracoAiUsageStatisticsDaily",
+                name: "IX_umbracoAIUsageStatisticsDaily_Period_ProviderId_ModelId_ProfileId_Capability_UserId_EntityType_FeatureType",
+                table: "umbracoAIUsageStatisticsDaily",
                 columns: new[] { "Period", "ProviderId", "ModelId", "ProfileId", "Capability", "UserId", "EntityType", "FeatureType" },
                 unique: true,
                 filter: "[UserId] IS NOT NULL AND [EntityType] IS NOT NULL AND [FeatureType] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsHourly_Period",
-                table: "umbracoAiUsageStatisticsHourly",
+                name: "IX_umbracoAIUsageStatisticsHourly_Period",
+                table: "umbracoAIUsageStatisticsHourly",
                 column: "Period");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsHourly_Period_ModelId",
-                table: "umbracoAiUsageStatisticsHourly",
+                name: "IX_umbracoAIUsageStatisticsHourly_Period_ModelId",
+                table: "umbracoAIUsageStatisticsHourly",
                 columns: new[] { "Period", "ModelId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsHourly_Period_ProfileId",
-                table: "umbracoAiUsageStatisticsHourly",
+                name: "IX_umbracoAIUsageStatisticsHourly_Period_ProfileId",
+                table: "umbracoAIUsageStatisticsHourly",
                 columns: new[] { "Period", "ProfileId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsHourly_Period_ProviderId",
-                table: "umbracoAiUsageStatisticsHourly",
+                name: "IX_umbracoAIUsageStatisticsHourly_Period_ProviderId",
+                table: "umbracoAIUsageStatisticsHourly",
                 columns: new[] { "Period", "ProviderId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiUsageStatisticsHourly_Period_ProviderId_ModelId_ProfileId_Capability_UserId_EntityType_FeatureType",
-                table: "umbracoAiUsageStatisticsHourly",
+                name: "IX_umbracoAIUsageStatisticsHourly_Period_ProviderId_ModelId_ProfileId_Capability_UserId_EntityType_FeatureType",
+                table: "umbracoAIUsageStatisticsHourly",
                 columns: new[] { "Period", "ProviderId", "ModelId", "ProfileId", "Capability", "UserId", "EntityType", "FeatureType" },
                 unique: true,
                 filter: "[UserId] IS NOT NULL AND [EntityType] IS NOT NULL AND [FeatureType] IS NOT NULL");
@@ -164,13 +164,13 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "umbracoAiUsageRecord");
+                name: "umbracoAIUsageRecord");
 
             migrationBuilder.DropTable(
-                name: "umbracoAiUsageStatisticsDaily");
+                name: "umbracoAIUsageStatisticsDaily");
 
             migrationBuilder.DropTable(
-                name: "umbracoAiUsageStatisticsHourly");
+                name: "umbracoAIUsageStatisticsHourly");
         }
     }
 }

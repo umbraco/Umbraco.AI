@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "umbracoAiConnection",
+                name: "umbracoAIConnection",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -26,11 +26,11 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiConnection", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIConnection", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "umbracoAiProfile",
+                name: "umbracoAIProfile",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -48,40 +48,40 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiProfile", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIProfile", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_umbracoAiProfile_umbracoAiConnection_ConnectionId",
+                        name: "FK_umbracoAIProfile_umbracoAiConnection_ConnectionId",
                         column: x => x.ConnectionId,
-                        principalTable: "umbracoAiConnection",
+                        principalTable: "umbracoAIConnection",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiConnection_Alias",
-                table: "umbracoAiConnection",
+                name: "IX_umbracoAIConnection_Alias",
+                table: "umbracoAIConnection",
                 column: "Alias",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiConnection_ProviderId",
-                table: "umbracoAiConnection",
+                name: "IX_umbracoAIConnection_ProviderId",
+                table: "umbracoAIConnection",
                 column: "ProviderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiProfile_Alias",
-                table: "umbracoAiProfile",
+                name: "IX_umbracoAIProfile_Alias",
+                table: "umbracoAIProfile",
                 column: "Alias",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiProfile_Capability",
-                table: "umbracoAiProfile",
+                name: "IX_umbracoAIProfile_Capability",
+                table: "umbracoAIProfile",
                 column: "Capability");
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiProfile_ConnectionId",
-                table: "umbracoAiProfile",
+                name: "IX_umbracoAIProfile_ConnectionId",
+                table: "umbracoAIProfile",
                 column: "ConnectionId");
         }
 
@@ -89,10 +89,10 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "umbracoAiProfile");
+                name: "umbracoAIProfile");
 
             migrationBuilder.DropTable(
-                name: "umbracoAiConnection");
+                name: "umbracoAIConnection");
         }
     }
 }

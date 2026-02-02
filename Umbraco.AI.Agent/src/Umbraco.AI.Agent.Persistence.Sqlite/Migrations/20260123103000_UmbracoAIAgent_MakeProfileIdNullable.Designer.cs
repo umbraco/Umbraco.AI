@@ -79,7 +79,7 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
 
                     b.HasIndex("ProfileId");
 
-                    b.ToTable("UmbracoAiAgent", (string)null);
+                    b.ToTable("umbracoAIAgent", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>
@@ -115,7 +115,7 @@ namespace Umbraco.Ai.Agent.Persistence.Sqlite.Migrations
                     b.HasIndex("AgentId", "Version")
                         .IsUnique();
 
-                    b.ToTable("umbracoAiAgentVersion", (string)null);
+                    b.ToTable("umbracoAIAgentVersion", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.Ai.Agent.Persistence.Agents.AiAgentVersionEntity", b =>

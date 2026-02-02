@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "umbracoAiSettings",
+                name: "umbracoAISettings",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -25,12 +25,12 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiSettings", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAISettings", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiSettings_Key",
-                table: "umbracoAiSettings",
+                name: "IX_umbracoAISettings_Key",
+                table: "umbracoAISettings",
                 column: "Key",
                 unique: true);
         }
@@ -39,7 +39,7 @@ namespace Umbraco.Ai.Persistence.Sqlite.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "umbracoAiSettings");
+                name: "umbracoAISettings");
         }
     }
 }

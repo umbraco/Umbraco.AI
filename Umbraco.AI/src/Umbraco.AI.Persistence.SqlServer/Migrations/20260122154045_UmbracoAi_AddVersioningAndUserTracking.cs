@@ -14,59 +14,59 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
             // Remove deprecated columns from umbracoAiProfile
             migrationBuilder.DropColumn(
                 name: "MaxTokens",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             migrationBuilder.DropColumn(
                 name: "SystemPromptTemplate",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             migrationBuilder.DropColumn(
                 name: "Temperature",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             // Add versioning and user tracking columns to umbracoAiConnection
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiConnection",
+                table: "umbracoAIConnection",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiConnection",
+                table: "umbracoAIConnection",
                 type: "int",
                 nullable: true);
 
             // Add versioning and user tracking columns to umbracoAiProfile
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "DateCreated",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "datetime2",
                 nullable: false,
                 defaultValueSql: "GETUTCDATE()");
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "DateModified",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "datetime2",
                 nullable: false,
                 defaultValueSql: "GETUTCDATE()");
 
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "Version",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "int",
                 nullable: false,
                 defaultValue: 1);
@@ -74,39 +74,39 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
             // Add version tracking columns to umbracoAiAuditLog
             migrationBuilder.AddColumn<int>(
                 name: "ProfileVersion",
-                table: "umbracoAiAuditLog",
+                table: "umbracoAIAuditLog",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "FeatureVersion",
-                table: "umbracoAiAuditLog",
+                table: "umbracoAIAuditLog",
                 type: "int",
                 nullable: true);
 
             // Add versioning and user tracking columns to umbracoAiContext
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "umbracoAiContext",
+                table: "umbracoAIContext",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "umbracoAiContext",
+                table: "umbracoAIContext",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "Version",
-                table: "umbracoAiContext",
+                table: "umbracoAIContext",
                 type: "int",
                 nullable: false,
                 defaultValue: 1);
 
             // Create unified umbracoAiEntityVersion table for all entity version history
             migrationBuilder.CreateTable(
-                name: "umbracoAiEntityVersion",
+                name: "umbracoAIEntityVersion",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -120,18 +120,18 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiEntityVersion", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIEntityVersion", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiEntityVersion_EntityId_EntityType_Version",
-                table: "umbracoAiEntityVersion",
+                name: "IX_umbracoAIEntityVersion_EntityId_EntityType_Version",
+                table: "umbracoAIEntityVersion",
                 columns: new[] { "EntityId", "EntityType", "Version" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiEntityVersion_EntityType_EntityId",
-                table: "umbracoAiEntityVersion",
+                name: "IX_umbracoAIEntityVersion_EntityType_EntityId",
+                table: "umbracoAIEntityVersion",
                 columns: new[] { "EntityType", "EntityId" });
         }
 
@@ -140,76 +140,76 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         {
             // Drop unified entity version table
             migrationBuilder.DropTable(
-                name: "umbracoAiEntityVersion");
+                name: "umbracoAIEntityVersion");
 
             // Remove versioning and user tracking columns from umbracoAiContext
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
-                table: "umbracoAiContext");
+                table: "umbracoAIContext");
 
             migrationBuilder.DropColumn(
                 name: "ModifiedByUserId",
-                table: "umbracoAiContext");
+                table: "umbracoAIContext");
 
             migrationBuilder.DropColumn(
                 name: "Version",
-                table: "umbracoAiContext");
+                table: "umbracoAIContext");
 
             // Remove versioning and user tracking columns from umbracoAiProfile
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             migrationBuilder.DropColumn(
                 name: "DateCreated",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             migrationBuilder.DropColumn(
                 name: "DateModified",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             migrationBuilder.DropColumn(
                 name: "ModifiedByUserId",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             migrationBuilder.DropColumn(
                 name: "Version",
-                table: "umbracoAiProfile");
+                table: "umbracoAIProfile");
 
             // Remove user tracking columns from umbracoAiConnection
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
-                table: "umbracoAiConnection");
+                table: "umbracoAIConnection");
 
             migrationBuilder.DropColumn(
                 name: "ModifiedByUserId",
-                table: "umbracoAiConnection");
+                table: "umbracoAIConnection");
 
             // Remove version tracking columns from umbracoAiAuditLog
             migrationBuilder.DropColumn(
                 name: "ProfileVersion",
-                table: "umbracoAiAuditLog");
+                table: "umbracoAIAuditLog");
 
             migrationBuilder.DropColumn(
                 name: "FeatureVersion",
-                table: "umbracoAiAuditLog");
+                table: "umbracoAIAuditLog");
 
             // Restore deprecated columns to umbracoAiProfile
             migrationBuilder.AddColumn<int>(
                 name: "MaxTokens",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "SystemPromptTemplate",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<float>(
                 name: "Temperature",
-                table: "umbracoAiProfile",
+                table: "umbracoAIProfile",
                 type: "real",
                 nullable: true);
         }

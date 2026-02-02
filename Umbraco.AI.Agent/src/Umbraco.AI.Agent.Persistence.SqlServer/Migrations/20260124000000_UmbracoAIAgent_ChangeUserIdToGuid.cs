@@ -11,16 +11,16 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Drop the existing int columns and recreate as uniqueidentifier
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "UmbracoAiAgent");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "UmbracoAiAgent");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIAgent");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIAgent");
             migrationBuilder.AddColumn<Guid>(
                 name: "CreatedByUserId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "uniqueidentifier",
                 nullable: true);
             migrationBuilder.AddColumn<Guid>(
                 name: "ModifiedByUserId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "uniqueidentifier",
                 nullable: true);
         }
@@ -28,16 +28,16 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "UmbracoAiAgent");
-            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "UmbracoAiAgent");
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAIAgent");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAIAgent");
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "int",
                 nullable: true);
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "int",
                 nullable: true);
         }

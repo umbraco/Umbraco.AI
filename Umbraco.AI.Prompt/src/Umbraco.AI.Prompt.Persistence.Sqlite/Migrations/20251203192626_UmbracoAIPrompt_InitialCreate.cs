@@ -12,7 +12,7 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "umbracoAiPrompt",
+                name: "umbracoAIPrompt",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -29,18 +29,18 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_umbracoAiPrompt", x => x.Id);
+                    table.PrimaryKey("PK_umbracoAIPrompt", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiPrompt_Alias",
-                table: "umbracoAiPrompt",
+                name: "IX_umbracoAIPrompt_Alias",
+                table: "umbracoAIPrompt",
                 column: "Alias",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_umbracoAiPrompt_ProfileId",
-                table: "umbracoAiPrompt",
+                name: "IX_umbracoAIPrompt_ProfileId",
+                table: "umbracoAIPrompt",
                 column: "ProfileId");
         }
 
@@ -48,7 +48,7 @@ namespace Umbraco.Ai.Prompt.Persistence.Sqlite.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "umbracoAiPrompt");
+                name: "umbracoAIPrompt");
         }
     }
 }

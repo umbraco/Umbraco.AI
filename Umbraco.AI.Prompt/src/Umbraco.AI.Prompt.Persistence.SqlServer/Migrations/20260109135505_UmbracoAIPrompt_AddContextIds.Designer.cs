@@ -82,7 +82,7 @@ namespace Umbraco.Ai.Prompt.Persistence.SqlServer.Migrations
 
                     b.HasIndex("ProfileId");
 
-                    b.ToTable("umbracoAiPrompt", (string)null);
+                    b.ToTable("umbracoAIPrompt", (string)null);
                 });
 #pragma warning restore 612, 618
         }

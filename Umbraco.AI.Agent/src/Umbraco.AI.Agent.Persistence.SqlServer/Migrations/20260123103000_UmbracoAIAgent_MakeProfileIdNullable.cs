@@ -13,7 +13,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         {
             migrationBuilder.AlterColumn<Guid>(
                 name: "ProfileId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "uniqueidentifier",
                 nullable: true,
                 oldClrType: typeof(Guid),
@@ -25,7 +25,7 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         {
             migrationBuilder.AlterColumn<Guid>(
                 name: "ProfileId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "uniqueidentifier",
                 nullable: false,
                 oldClrType: typeof(Guid),

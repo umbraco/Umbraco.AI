@@ -28,7 +28,7 @@ public class UmbracoAiPromptDbContext : DbContext
 
         modelBuilder.Entity<AiPromptEntity>(entity =>
         {
-            entity.ToTable("umbracoAiPrompt");
+            entity.ToTable("umbracoAIPrompt");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Alias)

@@ -12,13 +12,13 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         {
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "int",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "ModifiedByUserId",
-                table: "UmbracoAiAgent",
+                table: "umbracoAIAgent",
                 type: "int",
                 nullable: true);
         }
@@ -28,11 +28,11 @@ namespace Umbraco.Ai.Agent.Persistence.SqlServer.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "CreatedByUserId",
-                table: "UmbracoAiAgent");
+                table: "umbracoAIAgent");
 
             migrationBuilder.DropColumn(
                 name: "ModifiedByUserId",
-                table: "UmbracoAiAgent");
+                table: "umbracoAIAgent");
         }
     }
 }

@@ -12,25 +12,25 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "ProfileAlias",
-                table: "umbracoAiUsageStatisticsHourly",
+                table: "umbracoAIUsageStatisticsHourly",
                 type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "UserName",
-                table: "umbracoAiUsageStatisticsHourly",
+                table: "umbracoAIUsageStatisticsHourly",
                 type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ProfileAlias",
-                table: "umbracoAiUsageStatisticsDaily",
+                table: "umbracoAIUsageStatisticsDaily",
                 type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "UserName",
-                table: "umbracoAiUsageStatisticsDaily",
+                table: "umbracoAIUsageStatisticsDaily",
                 type: "nvarchar(max)",
                 nullable: true);
         }
@@ -40,19 +40,19 @@ namespace Umbraco.Ai.Persistence.SqlServer.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "ProfileAlias",
-                table: "umbracoAiUsageStatisticsHourly");
+                table: "umbracoAIUsageStatisticsHourly");
 
             migrationBuilder.DropColumn(
                 name: "UserName",
-                table: "umbracoAiUsageStatisticsHourly");
+                table: "umbracoAIUsageStatisticsHourly");
 
             migrationBuilder.DropColumn(
                 name: "ProfileAlias",
-                table: "umbracoAiUsageStatisticsDaily");
+                table: "umbracoAIUsageStatisticsDaily");
 
             migrationBuilder.DropColumn(
                 name: "UserName",
-                table: "umbracoAiUsageStatisticsDaily");
+                table: "umbracoAIUsageStatisticsDaily");
         }
     }
 }

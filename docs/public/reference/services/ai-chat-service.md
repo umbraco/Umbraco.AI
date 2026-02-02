@@ -3,22 +3,22 @@ description: >-
   Service for AI chat completions.
 ---
 
-# IAiChatService
+# IAIChatService
 
 The primary service for performing chat completions. Acts as a thin layer over Microsoft.Extensions.AI, adding Umbraco-specific features like profiles and middleware.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 using Microsoft.Extensions.AI;
 ```
 
 ## Interface
 
-{% code title="IAiChatService" %}
+{% code title="IAIChatService" %}
 ```csharp
-public interface IAiChatService
+public interface IAIChatService
 {
     Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,

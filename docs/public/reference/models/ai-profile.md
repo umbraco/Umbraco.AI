@@ -3,29 +3,29 @@ description: >-
   Profile configuration for AI model usage.
 ---
 
-# AiProfile
+# AIProfile
 
 Represents a profile that combines a connection, model, and settings for a specific use case.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Profiles;
+using Umbraco.AI.Core.Profiles;
 ```
 
 ## Class Definition
 
-{% code title="AiProfile" %}
+{% code title="AIProfile" %}
 ```csharp
-public sealed class AiProfile
+public sealed class AIProfile
 {
     public Guid Id { get; internal set; }
     public required string Alias { get; set; }
     public required string Name { get; set; }
-    public AiCapability Capability { get; init; } = AiCapability.Chat;
-    public AiModelRef Model { get; set; }
+    public AICapability Capability { get; init; } = AICapability.Chat;
+    public AIModelRef Model { get; set; }
     public required Guid ConnectionId { get; set; }
-    public IAiProfileSettings? Settings { get; set; }
+    public IAIProfileSettings? Settings { get; set; }
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 }
 ```
@@ -38,21 +38,21 @@ public sealed class AiProfile
 | `Id` | `Guid` | Unique identifier (assigned on save) |
 | `Alias` | `string` | Unique alias for code references |
 | `Name` | `string` | Display name |
-| `Capability` | `AiCapability` | Type of AI capability (Chat, Embedding) |
-| `Model` | `AiModelRef` | Reference to provider and model |
+| `Capability` | `AICapability` | Type of AI capability (Chat, Embedding) |
+| `Model` | `AIModelRef` | Reference to provider and model |
 | `ConnectionId` | `Guid` | ID of the connection to use |
-| `Settings` | `IAiProfileSettings?` | Capability-specific settings |
+| `Settings` | `IAIProfileSettings?` | Capability-specific settings |
 | `Tags` | `IReadOnlyList<string>` | Optional categorization tags |
 
 ## Settings Types
 
 Settings are polymorphic based on capability.
 
-### AiChatProfileSettings
+### AIChatProfileSettings
 
 {% code title="Chat Settings" %}
 ```csharp
-public class AiChatProfileSettings : IAiProfileSettings
+public class AIChatProfileSettings : IAIProfileSettings
 {
     public float? Temperature { get; set; }
     public int? MaxTokens { get; set; }
@@ -67,11 +67,11 @@ public class AiChatProfileSettings : IAiProfileSettings
 | `MaxTokens` | `int?` | Maximum response tokens |
 | `SystemPromptTemplate` | `string?` | Default system prompt |
 
-### AiEmbeddingProfileSettings
+### AIEmbeddingProfileSettings
 
 {% code title="Embedding Settings" %}
 ```csharp
-public class AiEmbeddingProfileSettings : IAiProfileSettings
+public class AIEmbeddingProfileSettings : IAIProfileSettings
 {
     // Currently no additional settings
 }
@@ -82,17 +82,17 @@ public class AiEmbeddingProfileSettings : IAiProfileSettings
 
 {% code title="Example" %}
 ```csharp
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Models;
 
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "content-assistant",
     Name = "Content Assistant",
-    Capability = AiCapability.Chat,
-    Model = new AiModelRef("openai", "gpt-4o"),
+    Capability = AICapability.Chat,
+    Model = new AIModelRef("openai", "gpt-4o"),
     ConnectionId = connectionId,
-    Settings = new AiChatProfileSettings
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 4096,

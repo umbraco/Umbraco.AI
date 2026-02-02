@@ -5,20 +5,20 @@ description: >-
 
 # Chat Capability
 
-The chat capability enables conversational AI features. Implement it by extending `AiChatCapabilityBase<TSettings>`.
+The chat capability enables conversational AI features. Implement it by extending `AIChatCapabilityBase<TSettings>`.
 
 ## Base Class
 
-{% code title="AiChatCapabilityBase<TSettings>" %}
+{% code title="AIChatCapabilityBase<TSettings>" %}
 ```csharp
-public abstract class AiChatCapabilityBase<TSettings> : IAiChatCapability
+public abstract class AIChatCapabilityBase<TSettings> : IAIChatCapability
     where TSettings : class
 {
     // Implement this: Create an IChatClient
     protected abstract IChatClient CreateClient(TSettings settings, string? modelId);
 
     // Implement this: Return available models
-    protected abstract Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected abstract Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         TSettings settings,
         CancellationToken cancellationToken = default);
 }
@@ -30,28 +30,28 @@ public abstract class AiChatCapabilityBase<TSettings> : IAiChatCapability
 {% code title="MyChatCapability.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
-public class MyChatCapability : AiChatCapabilityBase<MyProviderSettings>
+public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
 {
-    public MyChatCapability(IAiProvider provider) : base(provider) { }
+    public MyChatCapability(IAIProvider provider) : base(provider) { }
 
     protected override IChatClient CreateClient(MyProviderSettings settings, string? modelId)
     {
         return new MyChatClient(settings, modelId ?? "default-model");
     }
 
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         MyProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
-        var models = new List<AiModelDescriptor>
+        var models = new List<AIModelDescriptor>
         {
             new("model-v1", "Model Version 1"),
             new("model-v2", "Model Version 2")
         };
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(models);
+        return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(models);
     }
 }
 ```
@@ -279,9 +279,9 @@ If your AI service already has an M.E.AI client, use it directly:
 using Microsoft.Extensions.AI;
 using OpenAI;
 
-public class MyOpenAiCompatibleCapability : AiChatCapabilityBase<MyProviderSettings>
+public class MyOpenAICompatibleCapability : AIChatCapabilityBase<MyProviderSettings>
 {
-    public MyOpenAiCompatibleCapability(IAiProvider provider) : base(provider) { }
+    public MyOpenAICompatibleCapability(IAIProvider provider) : base(provider) { }
 
     protected override IChatClient CreateClient(MyProviderSettings settings, string? modelId)
     {
@@ -294,12 +294,12 @@ public class MyOpenAiCompatibleCapability : AiChatCapabilityBase<MyProviderSetti
         return client.AsChatClient(modelId ?? "gpt-4o");
     }
 
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         MyProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         // Return models available through your service
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(new List<AiModelDescriptor>
+        return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(new List<AIModelDescriptor>
         {
             new("gpt-4o", "GPT-4o"),
             new("gpt-4o-mini", "GPT-4o Mini")

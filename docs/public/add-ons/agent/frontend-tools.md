@@ -6,7 +6,7 @@ description: >-
 # Frontend Tools
 
 {% hint style="warning" %}
-Frontend tools are part of the [`Umbraco.Ai.Agent.Copilot`](../agent-copilot/README.md) package. See the [Agent Copilot frontend tools documentation](../agent-copilot/frontend-tools.md) for full details.
+Frontend tools are part of the [`Umbraco.AI.Agent.Copilot`](../agent-copilot/README.md) package. See the [Agent Copilot frontend tools documentation](../agent-copilot/frontend-tools.md) for full details.
 {% endhint %}
 
 Frontend tools allow agents to perform actions in the browser. When an agent calls a tool, the frontend receives the call and executes the action.
@@ -37,7 +37,7 @@ Tools are defined when running the agent:
 ```csharp
 var frontendTools = new[]
 {
-    new AiFrontendToolDefinition
+    new AIFrontendToolDefinition
     {
         Name = "insert_content",
         Description = "Insert content at the current cursor position in the editor",
@@ -55,7 +55,7 @@ var frontendTools = new[]
             ["required"] = new JsonArray { "content" }
         }
     },
-    new AiFrontendToolDefinition
+    new AIFrontendToolDefinition
     {
         Name = "replace_selection",
         Description = "Replace the currently selected text",

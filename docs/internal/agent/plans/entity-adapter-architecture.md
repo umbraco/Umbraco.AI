@@ -1,4 +1,4 @@
-# Entity Adapter Architecture for Umbraco.Ai.Agent
+# Entity Adapter Architecture for Umbraco.AI.Agent
 
 ## Implementation Status
 
@@ -32,7 +32,7 @@
 | `copilot/services/copilot-run.controller.ts` | ✅ Modified |
 | `copilot/transport/uai-agent-client.ts` | ✅ Modified |
 | `copilot/components/sidebar/copilot-sidebar.element.ts` | ✅ Modified |
-| `Umbraco.Ai.Agent.Web/.../RunAgentController.cs` | ✅ Modified |
+| `Umbraco.AI.Agent.Web/.../RunAgentController.cs` | ✅ Modified |
 
 **Key technical findings:**
 - `UmbDocumentWorkspaceContext.name()` method returns observable that only emits initial value
@@ -378,7 +378,7 @@ class UaiEntityAdapterContext extends UmbContextBase {
 
 **Status**: Complete (commit `61e1e66`)
 
-**Location**: `src/Umbraco.Ai.Agent.Web.StaticAssets/Client/src/workspace-registry/`
+**Location**: `src/Umbraco.AI.Agent.Web.StaticAssets/Client/src/workspace-registry/`
 
 The workspace decorator pattern has been implemented as a standalone module that auto-registers workspace contexts for cross-DOM access.
 
@@ -693,7 +693,7 @@ class UaiEntityAdapterContext {
 ## File Structure
 
 ```
-src/Umbraco.Ai.Agent.Web.StaticAssets/Client/src/
+src/Umbraco.AI.Agent.Web.StaticAssets/Client/src/
 ├── workspace-registry/                    # ✅ COMPLETE
 │   ├── index.ts                           # Public exports
 │   ├── types.ts                           # WorkspaceEntry, WorkspaceChangeEvent

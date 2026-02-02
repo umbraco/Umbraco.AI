@@ -2,7 +2,7 @@
 
 ## Status: Under Consideration
 
-This document explores **AI Workflows**, a system for automating field population and content transformation using AI. Inspired by [Drupal AI Automators](https://www.drupal.org/project/ai), adapted to fit Umbraco's architecture and Umbraco.Ai's design philosophy.
+This document explores **AI Workflows**, a system for automating field population and content transformation using AI. Inspired by [Drupal AI Automators](https://www.drupal.org/project/ai), adapted to fit Umbraco's architecture and Umbraco.AI's design philosophy.
 
 > **Note**: For human-initiated, inline property operations, see [AI Prompts](./ai-prompts.md). Workflows are automatic (event-driven) and can orchestrate multiple steps.
 
@@ -42,14 +42,14 @@ All workflows are chains of steps. This provides:
 
 ```csharp
 // A workflow with multiple steps
-var processArticle = new AiWorkflow
+var processArticle = new AIWorkflow
 {
     Alias = "process-article",
     DocumentTypeAlias = "article",
     Trigger = WorkflowTrigger.OnPublish,
     Steps =
     [
-        new AiWorkflowStep
+        new AIWorkflowStep
         {
             Order = 1,
             StepTypeAlias = "llm-summarizer",
@@ -57,7 +57,7 @@ var processArticle = new AiWorkflow
             OutputTarget = "summary",
             ProfileAlias = "content-summarizer"
         },
-        new AiWorkflowStep
+        new AIWorkflowStep
         {
             Order = 2,
             StepTypeAlias = "llm-tagger",
@@ -65,7 +65,7 @@ var processArticle = new AiWorkflow
             OutputTarget = "tags",
             ProfileAlias = "content-tagger"
         },
-        new AiWorkflowStep
+        new AIWorkflowStep
         {
             Order = 3,
             StepTypeAlias = "llm-translator",
@@ -124,8 +124,8 @@ Following Umbraco patterns (Property Editors + Data Types):
 
 ```csharp
 // Developer creates Step Type
-[AiWorkflowStepType("llm-summarizer", "Summarize Text")]
-public class LlmSummarizerStep : AiWorkflowStepTypeBase
+[AIWorkflowStepType("llm-summarizer", "Summarize Text")]
+public class LlmSummarizerStep : AIWorkflowStepTypeBase
 {
     public override string[] RequiredInputs => ["text"];
     public override string OutputType => "string";
@@ -175,9 +175,9 @@ public class WorkflowStepContext
 ### Execution Flow
 
 ```csharp
-public class AiWorkflowExecutor
+public class AIWorkflowExecutor
 {
-    public async Task<WorkflowResult> ExecuteAsync(AiWorkflow workflow, IContent content)
+    public async Task<WorkflowResult> ExecuteAsync(AIWorkflow workflow, IContent content)
     {
         var results = new List<StepResult>();
 
@@ -286,7 +286,7 @@ Properties targeted by AI Workflows show visual indicators:
 
 ## Built-in Step Types
 
-Initial set of step types to ship with Umbraco.Ai:
+Initial set of step types to ship with Umbraco.AI:
 
 | Step Type | Description | Capability |
 |-----------|-------------|------------|
@@ -305,10 +305,10 @@ Developers can create custom step types for specialized needs.
 
 ### Profiles
 
-AI Workflows reference existing `AiProfile` for model/prompt configuration:
+AI Workflows reference existing `AIProfile` for model/prompt configuration:
 
 ```csharp
-public class AiWorkflowStep
+public class AIWorkflowStep
 {
     public string ProfileAlias { get; set; }  // References existing profile
     // ...
@@ -324,10 +324,10 @@ Workflows automatically incorporate AI Context (brand voice, property hints) whe
 Step types declare which capability they require:
 
 ```csharp
-[AiWorkflowStepType("llm-summarizer")]
-public class LlmSummarizerStep : AiWorkflowStepTypeBase
+[AIWorkflowStepType("llm-summarizer")]
+public class LlmSummarizerStep : AIWorkflowStepTypeBase
 {
-    public override AiCapabilityType RequiredCapability => AiCapabilityType.Chat;
+    public override AICapabilityType RequiredCapability => AICapabilityType.Chat;
 }
 ```
 
@@ -392,7 +392,7 @@ How to prevent runaway API costs from bulk operations?
 Should AI Workflows integrate with the Agents approval workflow?
 
 ```csharp
-public class AiWorkflowStep
+public class AIWorkflowStep
 {
     public bool RequiresApproval { get; set; }  // Pause for human review
 }
@@ -452,7 +452,7 @@ They share infrastructure (Profiles, Capabilities, Middleware, AI Context) but s
 
 - [AI Prompts](./ai-prompts.md) - Single-step, inline property operations
 - [AI Context](./ai-context.md) - Brand voice and property hints
-- [Umbraco.Ai.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants
+- [Umbraco.AI.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants
 
 ---
 

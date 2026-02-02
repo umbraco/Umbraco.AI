@@ -1,8 +1,8 @@
-# Reusable template for packing a single Umbraco.Ai product
+# Reusable template for packing a single Umbraco.AI product
 # Uses pre-built outputs from the Build stage
 #
 # Parameters:
-#   product: Product name (e.g., "Umbraco.Ai", "Umbraco.Ai.OpenAi")
+#   product: Product name (e.g., "Umbraco.AI", "Umbraco.AI.OpenAI")
 #   condition: Optional condition for all steps (default: true)
 #
 # Prerequisites:
@@ -32,7 +32,7 @@ steps:
     condition: ${{ parameters.condition }}
     workingDirectory: ${{ parameters.product }}
 
-  - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:DisableCloudBuildNumber=true
+  - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:UseProjectReferences=false -p:DisableCloudBuildNumber=true
     displayName: Restore packages
     condition: ${{ parameters.condition }}
 
@@ -95,13 +95,37 @@ steps:
       # Navigate to frontend client folder
       cd "$CLIENT_DIR"
 
-      # Update package.json version to match NuGet version
+      # Update package.json version and cleanse for publishing
       node -e "
         const fs = require('fs');
         const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+        // Update version to match NuGet version
         pkg.version = '$VERSION';
-        fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
         console.log('Updated package.json version to: ' + pkg.version);
+
+        // Cleanse package.json for publishing
+        console.log('Cleansing package.json for publishing...');
+
+        // Remove devDependencies
+        delete pkg.devDependencies;
+
+        // Convert dependencies to peerDependencies
+        // Existing peerDependencies take precedence over converted dependencies
+        if (pkg.dependencies) {
+          pkg.peerDependencies = {
+            ...pkg.dependencies,
+            ...(pkg.peerDependencies || {})
+          };
+          delete pkg.dependencies;
+        }
+
+        // Remove scripts (not needed in published package)
+        delete pkg.scripts;
+
+        // Write back to disk
+        fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+        console.log('Package cleansing complete');
       "
 
       # Create artifacts/npm directory

@@ -11,7 +11,7 @@ Amazon Bedrock provides a unified API for accessing multiple AI models from Amaz
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Amazon
+Install-Package Umbraco.AI.Amazon
 ```
 {% endcode %}
 
@@ -19,7 +19,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Amazon
+dotnet add package Umbraco.AI.Amazon
 ```
 {% endcode %}
 
@@ -119,7 +119,7 @@ Before using a model, you must enable it in your AWS account:
 
 {% code title="Example.cs" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "bedrock-production",
     Name = "Amazon Bedrock Production",
@@ -142,14 +142,14 @@ await _connectionService.SaveConnectionAsync(connection);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "nova-assistant",
     Name = "Nova Assistant",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     ConnectionId = connectionId,
-    Model = new AiModelRef("amazon", "amazon.nova-pro-v1:0"),
-    Settings = new AiChatProfileSettings
+    Model = new AIModelRef("amazon", "amazon.nova-pro-v1:0"),
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 4096,
@@ -165,14 +165,14 @@ await _profileService.SaveProfileAsync(profile);
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "claude-bedrock",
     Name = "Claude via Bedrock",
-    Capability = AiCapability.Chat,
+    Capability = AICapability.Chat,
     ConnectionId = connectionId,
-    Model = new AiModelRef("amazon", "anthropic.claude-3-5-sonnet-20241022-v2:0"),
-    Settings = new AiChatProfileSettings
+    Model = new AIModelRef("amazon", "anthropic.claude-3-5-sonnet-20241022-v2:0"),
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 4096
@@ -185,13 +185,13 @@ var profile = new AiProfile
 
 {% code title="Example.cs" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "bedrock-embeddings",
     Name = "Bedrock Embeddings",
-    Capability = AiCapability.Embedding,
+    Capability = AICapability.Embedding,
     ConnectionId = connectionId,
-    Model = new AiModelRef("amazon", "amazon.titan-embed-text-v2:0")
+    Model = new AIModelRef("amazon", "amazon.titan-embed-text-v2:0")
 };
 
 await _profileService.SaveProfileAsync(profile);
@@ -204,7 +204,7 @@ For enhanced security, use VPC endpoints:
 
 {% code title="Example.cs" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     // ...
     Settings = new AmazonProviderSettings

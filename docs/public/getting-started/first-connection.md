@@ -9,7 +9,7 @@ A connection stores the credentials and settings needed to communicate with an A
 
 ## Prerequisites
 
-* Umbraco.Ai and a provider package installed
+* Umbraco.AI and a provider package installed
 * An API key from your AI provider
 
 ## Create a Connection

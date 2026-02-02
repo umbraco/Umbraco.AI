@@ -1,10 +1,10 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Generate release-manifest.json for Umbraco.Ai releases
+    Generate release-manifest.json for Umbraco.AI releases
 
 .DESCRIPTION
-    Scans for all Umbraco.Ai* product folders and presents an interactive
+    Scans for all Umbraco.AI* product folders and presents an interactive
     multiselect interface to choose which products to include in the release.
     Generates release-manifest.json at the repository root.
 
@@ -20,13 +20,13 @@ $ErrorActionPreference = "Stop"
 # Get repository root (parent of scripts folder)
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
-# Find all Umbraco.Ai* folders at root
-$products = Get-ChildItem -Path $repoRoot -Directory -Filter "Umbraco.Ai*" |
+# Find all Umbraco.AI* folders at root
+$products = Get-ChildItem -Path $repoRoot -Directory -Filter "Umbraco.AI*" |
     Select-Object -ExpandProperty Name |
     Sort-Object
 
 if ($products.Count -eq 0) {
-    Write-Error "No Umbraco.Ai* folders found in repository root"
+    Write-Error "No Umbraco.AI* folders found in repository root"
     exit 1
 }
 

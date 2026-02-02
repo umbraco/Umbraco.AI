@@ -67,14 +67,14 @@ Contexts provide these benefits:
 ```csharp
 public class ContextExample
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
 
-    public ContextExample(IAiContextService contextService)
+    public ContextExample(IAIContextService contextService)
     {
         _contextService = contextService;
     }
 
-    public async Task<AiContext?> GetBrandContext()
+    public async Task<AIContext?> GetBrandContext()
     {
         return await _contextService.GetContextByAliasAsync("brand-voice");
     }
@@ -86,15 +86,15 @@ public class ContextExample
 
 {% code title="Example.cs" %}
 ```csharp
-public async Task<AiContext> CreateContext()
+public async Task<AIContext> CreateContext()
 {
-    var context = new AiContext
+    var context = new AIContext
     {
         Alias = "brand-guidelines",
         Name = "Brand Guidelines",
-        Resources = new List<AiContextResource>
+        Resources = new List<AIContextResource>
         {
-            new AiContextResource
+            new AIContextResource
             {
                 ResourceTypeId = "text",
                 Name = "Tone of Voice",
@@ -119,7 +119,7 @@ Contexts are typically associated with prompts or agents rather than directly wi
 // Contexts are injected automatically when using prompts
 var result = await _promptService.ExecutePromptAsync(
     promptId,
-    new AiPromptExecutionRequest
+    new AIPromptExecutionRequest
     {
         EntityContext = "The product being described..."
     });
@@ -158,14 +158,14 @@ When multiple contexts are used:
 ```csharp
 public class ContextManagement
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
 
-    public ContextManagement(IAiContextService contextService)
+    public ContextManagement(IAIContextService contextService)
     {
         _contextService = contextService;
     }
 
-    public async Task<IEnumerable<AiContext>> GetAllContexts()
+    public async Task<IEnumerable<AIContext>> GetAllContexts()
     {
         return await _contextService.GetContextsAsync();
     }

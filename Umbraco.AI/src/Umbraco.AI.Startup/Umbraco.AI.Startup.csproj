@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Umbraco AI Startup</Title>
+        <Description>Contains startup logic for Umbraco AI</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Umbraco.Cms.Core" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence.SqlServer\Umbraco.AI.Persistence.SqlServer.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence.Sqlite\Umbraco.AI.Persistence.Sqlite.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
+    </ItemGroup>
+
+
+</Project>

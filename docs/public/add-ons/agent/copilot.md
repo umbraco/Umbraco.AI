@@ -6,7 +6,7 @@ description: >-
 # Copilot
 
 {% hint style="warning" %}
-The Copilot UI is now provided by the separate [`Umbraco.Ai.Agent.Copilot`](../agent-copilot/README.md) package. See the [Agent Copilot documentation](../agent-copilot/copilot.md) for full details.
+The Copilot UI is now provided by the separate [`Umbraco.AI.Agent.Copilot`](../agent-copilot/README.md) package. See the [Agent Copilot documentation](../agent-copilot/copilot.md) for full details.
 {% endhint %}
 
 The Copilot is an AI-powered assistant that appears as a sidebar in the Umbraco backoffice. It provides conversational AI capabilities directly within your content editing workflow.
@@ -98,7 +98,7 @@ Set a default agent for Copilot in your application:
 
 {% code title="Example.cs" %}
 ```csharp
-services.Configure<AiAgentOptions>(options =>
+services.Configure<AIAgentOptions>(options =>
 {
     options.DefaultCopilotAgentAlias = "content-assistant";
 });

@@ -1,10 +1,10 @@
 #!/bin/bash
-# Setup script to configure git hooks for Umbraco.Ai monorepo
+# Setup script to configure git hooks for Umbraco.AI monorepo
 
 set -e
 
 echo "========================================="
-echo "Umbraco.Ai Git Hooks Setup"
+echo "Umbraco.AI Git Hooks Setup"
 echo "========================================="
 echo ""
 
@@ -48,9 +48,9 @@ echo ""
 echo "The following hooks are now active:"
 echo "  - pre-push: Validates branch naming conventions"
 echo "  - commit-msg: Validates commit messages (conventional commits)"
-echo "  - post-merge: Cleans up release-manifest.json after merge to main/dev/support/*"
-echo "  - pre-merge-commit: Restores release-manifest.json on release/hotfix branches if deleted during merge"
-echo "  - merge driver: Preserves release-manifest.json on release/hotfix branches (content conflicts only)"
+echo "  - post-merge: Commits staged release-manifest.json on release/hotfix; removes it on main/dev/support/*"
+echo "  - pre-merge-commit: Ensures release-manifest.json is staged on release/hotfix branches"
+echo "  - merge driver: Preserves release-manifest.json on release/hotfix branches during merges"
 echo ""
 echo "To disable hooks, run:"
 echo "  git config --unset core.hooksPath"

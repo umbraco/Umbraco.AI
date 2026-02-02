@@ -4,57 +4,89 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Structure
 
-This is a monorepo containing Umbraco.Ai and its add-on packages:
+This is a monorepo containing Umbraco.AI and its add-on packages:
 
 | Product | Description | Location |
 |---------|-------------|----------|
-| **Umbraco.Ai** | Core AI integration layer for Umbraco CMS | `Umbraco.Ai/` |
-| **Umbraco.Ai.Prompt** | Prompt template management add-on | `Umbraco.Ai.Prompt/` |
-| **Umbraco.Ai.Agent** | AI agent management add-on | `Umbraco.Ai.Agent/` |
-| **Umbraco.Ai.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | `Umbraco.Ai.Agent.Copilot/` |
-| **Umbraco.Ai.OpenAi** | OpenAI provider plugin | `Umbraco.Ai.OpenAi/` |
-| **Umbraco.Ai.Anthropic** | Anthropic provider plugin | `Umbraco.Ai.Anthropic/` |
-| **Umbraco.Ai.Amazon** | Amazon Bedrock provider plugin | `Umbraco.Ai.Amazon/` |
-| **Umbraco.Ai.Google** | Google Gemini provider plugin | `Umbraco.Ai.Google/` |
-| **Umbraco.Ai.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.Ai.MicrosoftFoundry/` |
+| **Umbraco.AI** | Core AI integration layer for Umbraco CMS | `Umbraco.AI/` |
+| **Umbraco.AI.Prompt** | Prompt template management add-on | `Umbraco.AI.Prompt/` |
+| **Umbraco.AI.Agent** | AI agent management add-on | `Umbraco.AI.Agent/` |
+| **Umbraco.AI.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/` |
+| **Umbraco.AI.OpenAI** | OpenAI provider plugin | `Umbraco.AI.OpenAI/` |
+| **Umbraco.AI.Anthropic** | Anthropic provider plugin | `Umbraco.AI.Anthropic/` |
+| **Umbraco.AI.Amazon** | Amazon Bedrock provider plugin | `Umbraco.AI.Amazon/` |
+| **Umbraco.AI.Google** | Google Gemini provider plugin | `Umbraco.AI.Google/` |
+| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.AI.MicrosoftFoundry/` |
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
-## Local Development Setup
+## Development Environment
 
-### Quick Start
+### Initial Setup
 
+Use the setup skill for first-time repository configuration:
 ```bash
-# One-time setup: creates unified solution + demo site
-.\scripts\install-demo-site.ps1  # Windows
-./scripts/install-demo-site.sh   # Linux/Mac
-
-# Configure git hooks (enforces branch naming convention)
-.\scripts\setup-git-hooks.ps1  # Windows
-./scripts/setup-git-hooks.sh   # Linux/Mac
-
-# Open the unified solution
-# Umbraco.Ai.local.sln
-
-# Build everything
-dotnet build Umbraco.Ai.local.sln
+/repo-setup  # Interactive setup: git hooks, demo site, dependencies, build
 ```
 
 ### Demo Site
 
-The setup script creates:
-- `Umbraco.Ai.local.sln` - Unified solution with all products
-- `demo/Umbraco.Ai.DemoSite/` - Umbraco instance with all packages referenced
-
+**Location:** `demo/Umbraco.AI.DemoSite/`
 **Credentials:** admin@example.com / password1234
 
-**Script options (PowerShell):**
-- `-SkipTemplateInstall` - Skip reinstalling Umbraco.Templates
-- `-Force` - Recreate demo if it already exists
+**Infrastructure Operations:**
+```bash
+/demo-site-management start              # Start with DemoSite-Claude profile (dynamic port)
+/demo-site-management stop               # Stop the running demo site
+/demo-site-management open               # Open in browser (auto-discovers port)
+/demo-site-management generate-client    # Generate OpenAPI clients
+/demo-site-management status             # Check running status and port info
+```
 
-**Script options (Bash):**
-- `-s, --skip-template-install` - Skip reinstalling Umbraco.Templates
-- `-f, --force` - Recreate demo if it already exists
+**Browser Automation (Playwright):**
+```bash
+/demo-site-automation login                         # Login to Umbraco backoffice
+/demo-site-automation navigate-to-connections       # Navigate to AI settings sections
+/demo-site-automation create-connection [provider]  # Create/edit AI entities
+```
+
+**Architecture Notes:**
+- `DemoSite-Claude` profile uses dynamic ports to avoid conflicts between worktrees
+- HTTP over named pipes: `umbraco.demosite.{branch-or-worktree}`
+- Site address endpoint: `/site-address` (query via named pipe to get HTTPS address)
+- Named pipes auto-cleanup on process exit
+- Multiple worktrees run simultaneously without port conflicts
+
+## Project Management
+
+**Azure DevOps Configuration:**
+
+This repository uses two Azure DevOps projects:
+
+**Backlog & Work Items:**
+- **Project:** D-Team Tracker
+- **Backlog:** AI Team
+- **Default Tag:** Umbraco AI
+
+**CI/CD Pipelines:**
+- **Project:** Umbraco AI
+
+**Default behavior:**
+- Unless otherwise specified, all Azure DevOps related tasks (work items, issues, sprints, etc.) should be managed in the D-Team Tracker project under the AI Team backlog
+- All backlog items created for this repository should be tagged with `Umbraco AI` unless explicitly stated otherwise
+- CI/CD pipelines and build configurations are located in the Umbraco AI project
+
+**Searching for Work Items:**
+
+The Azure DevOps project used for backlog management is shared across multiple Umbraco products. When searching for work items without filters, you will get results from multiple product teams.
+
+**IMPORTANT**: Always scope searches to this repository's team backlog to avoid cross-product results:
+
+1. **Preferred approach**: Filter by team backlog using `wit_list_backlog_work_items` with the project/team specified in the configuration above
+
+2. **Fallback approach**: Fetch team backlog items first, then query over those specific work item IDs
+
+3. **Avoid**: Unfiltered searches that return items across all product teams
 
 ## Build Commands
 
@@ -62,20 +94,20 @@ The setup script creates:
 
 ```bash
 # Build unified solution (all products + demo)
-dotnet build Umbraco.Ai.local.sln
+dotnet build Umbraco.AI.local.sln
 
 # Build individual product
-dotnet build Umbraco.Ai/Umbraco.Ai.sln
-dotnet build Umbraco.Ai.OpenAi/Umbraco.Ai.OpenAi.sln
-dotnet build Umbraco.Ai.Anthropic/Umbraco.Ai.Anthropic.sln
-dotnet build Umbraco.Ai.Amazon/Umbraco.Ai.Amazon.sln
-dotnet build Umbraco.Ai.Google/Umbraco.Ai.Google.sln
-dotnet build Umbraco.Ai.MicrosoftFoundry/Umbraco.Ai.MicrosoftFoundry.sln
-dotnet build Umbraco.Ai.Prompt/Umbraco.Ai.Prompt.sln
-dotnet build Umbraco.Ai.Agent/Umbraco.Ai.Agent.sln
+dotnet build Umbraco.AI/Umbraco.AI.sln
+dotnet build Umbraco.AI.OpenAI/Umbraco.AI.OpenAI.sln
+dotnet build Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.sln
+dotnet build Umbraco.AI.Amazon/Umbraco.AI.Amazon.sln
+dotnet build Umbraco.AI.Google/Umbraco.AI.Google.sln
+dotnet build Umbraco.AI.MicrosoftFoundry/Umbraco.AI.MicrosoftFoundry.sln
+dotnet build Umbraco.AI.Prompt/Umbraco.AI.Prompt.sln
+dotnet build Umbraco.AI.Agent/Umbraco.AI.Agent.sln
 
 # Run tests for a product
-dotnet test Umbraco.Ai/Umbraco.Ai.sln
+dotnet test Umbraco.AI/Umbraco.AI.sln
 ```
 
 ### Frontend (npm)
@@ -92,8 +124,8 @@ npm run build
 # Watch all frontends in parallel
 npm run watch
 
-# Generate OpenAPI clients (requires running demo site)
-npm run generate-client
+# Generate OpenAPI clients (requires running demo site with DemoSite-Claude profile)
+npm run generate-client  # Automatically discovers port via named pipe
 
 # Target specific products
 npm run build:core
@@ -115,19 +147,19 @@ npm run watch:agent
 ### Product Dependencies
 
 ```
-Umbraco.Ai (Core)
-    ├── Umbraco.Ai.OpenAi (Provider - depends on Core)
-    ├── Umbraco.Ai.Anthropic (Provider - depends on Core)
-    ├── Umbraco.Ai.Amazon (Provider - depends on Core)
-    ├── Umbraco.Ai.Google (Provider - depends on Core)
-    ├── Umbraco.Ai.MicrosoftFoundry (Provider - depends on Core)
-    ├── Umbraco.Ai.Prompt (Add-on - depends on Core)
-    └── Umbraco.Ai.Agent (Add-on - depends on Core)
+Umbraco.AI (Core)
+    ├── Umbraco.AI.OpenAI (Provider - depends on Core)
+    ├── Umbraco.AI.Anthropic (Provider - depends on Core)
+    ├── Umbraco.AI.Amazon (Provider - depends on Core)
+    ├── Umbraco.AI.Google (Provider - depends on Core)
+    ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
+    ├── Umbraco.AI.Prompt (Add-on - depends on Core)
+    └── Umbraco.AI.Agent (Add-on - depends on Core)
 ```
 
 ### Standard Project Structure
 
-**Core and Add-on packages** (Umbraco.Ai, Umbraco.Ai.Agent, Umbraco.Ai.Prompt) follow this structure:
+**Core and Add-on packages** (Umbraco.AI, Umbraco.AI.Agent, Umbraco.AI.Prompt) follow this structure:
 
 ```
 ProductName/
@@ -149,7 +181,7 @@ ProductName/
 └── CLAUDE.md                       # Product-specific guidance
 ```
 
-**Provider packages** (Umbraco.Ai.OpenAi, Umbraco.Ai.Anthropic, Umbraco.Ai.Amazon, Umbraco.Ai.Google, Umbraco.Ai.MicrosoftFoundry) use a simplified structure:
+**Provider packages** (Umbraco.AI.OpenAI, Umbraco.AI.Anthropic, Umbraco.AI.Amazon, Umbraco.AI.Google, Umbraco.AI.MicrosoftFoundry) use a simplified structure:
 
 ```
 ProviderName/
@@ -161,7 +193,7 @@ ProviderName/
 └── CLAUDE.md
 ```
 
-### Core Concepts (Umbraco.Ai)
+### Core Concepts (Umbraco.AI)
 
 - **Providers** - Installable plugins for AI services (e.g., OpenAI)
 - **Connections** - Store API keys and provider settings
@@ -181,7 +213,7 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | `scripts/generate-changelog.js` | Node.js changelog generator (main implementation) |
 | `scripts/generate-release-manifest.ps1` | Interactive release manifest generator (Windows) |
 | `scripts/generate-release-manifest.sh` | Interactive release manifest generator (Linux/Mac) |
-| `Umbraco.Ai.local.sln` | Unified solution (generated) |
+| `Umbraco.AI.local.sln` | Unified solution (generated) |
 | `package.json` | Root npm scripts for frontend builds and changelog generation |
 | `commitlint.config.js` | Commit message validation with dynamic scope loading |
 | `release-manifest.json` | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`) |
@@ -203,9 +235,9 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 
 - SQL Server and SQLite supported via EF Core
 - Each product has its own migrations with prefixes:
-  - `UmbracoAi_` - Core
-  - `UmbracoAiPrompt_` - Prompt add-on
-  - `UmbracoAiAgent_` - Agent add-on
+  - `UmbracoAI_` - Core
+  - `UmbracoAIPrompt_` - Prompt add-on
+  - `UmbracoAIAgent_` - Agent add-on
 
 ## Target Framework
 
@@ -221,8 +253,8 @@ On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
 
 ```json
 [
-  "Umbraco.Ai",
-  "Umbraco.Ai.OpenAi"
+  "Umbraco.AI",
+  "Umbraco.AI.OpenAI"
 ]
 ```
 
@@ -239,7 +271,7 @@ Use the interactive script to select which products to include:
 ```
 
 The script will:
-1. Scan for all `Umbraco.Ai*` product folders
+1. Scan for all `Umbraco.AI*` product folders
 2. Present an interactive multiselect interface
 3. Generate `release-manifest.json` at the repository root
 
@@ -264,26 +296,26 @@ The Azure DevOps release pipeline:
 2. Deploys packages to package feeds (MyGet for pre-release, NuGet.org/npm for production)
 3. Tags the git repository with `[Product_Name]@[Version]` for each deployed package
 
-**Example tags:** `Umbraco.Ai@1.1.0`, `Umbraco.Ai.OpenAi@1.2.0`
+**Example tags:** `Umbraco.AI@1.1.0`, `Umbraco.AI.OpenAI@1.2.0`
 
 For detailed release workflows, see [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
 ## Cross-Product Dependency Management
 
-Add-on packages and providers depend on Umbraco.Ai (Core). These dependencies are managed using **Central Package Management** via `Directory.Packages.props`.
+Add-on packages and providers depend on Umbraco.AI (Core). These dependencies are managed using **Central Package Management** via `Directory.Packages.props`.
 
 ### Version Ranges for Add-ons
 
 **Always use version ranges** for cross-product dependencies. This allows add-ons to work with a range of Core versions without requiring simultaneous releases.
 
-When an add-on (e.g., Umbraco.Ai.Prompt or Umbraco.Ai.Agent) needs to depend on a specific version range of Core, create a `Directory.Packages.props` file within the product folder:
+When an add-on (e.g., Umbraco.AI.Prompt or Umbraco.AI.Agent) needs to depend on a specific version range of Core, create a `Directory.Packages.props` file within the product folder:
 
-**Example:** `Umbraco.Ai.Prompt/Directory.Packages.props`
+**Example:** `Umbraco.AI.Prompt/Directory.Packages.props`
 ```xml
 <Project>
   <ItemGroup>
     <!-- Minimum version 1.1.0, accepts all 1.x versions -->
-    <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
   </ItemGroup>
 </Project>
 ```
@@ -305,17 +337,17 @@ If you release Core 1.1.0 with breaking changes, but Agent 1.0.0 isn't ready for
 
 1. **Agent's Directory.Packages.props** specifies minimum Core 1.0.0:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
+   <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
    ```
 
 2. **Root Directory.Packages.props** may have a broader or different range:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
+   <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
    ```
 
 3. When Agent is ready for Core 1.1.0+, update its `Directory.Packages.props` minimum version:
    ```xml
-   <PackageVersion Include="Umbraco.Ai.Core" Version="[1.1.0, 1.999.999)" />
+   <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
    ```
 
 ### Version Range Guidelines
@@ -336,7 +368,7 @@ If you release Core 1.1.0 with breaking changes, but Agent 1.0.0 isn't ready for
 ## Excluded Folders
 
 - `Ref/` - External reference projects (not part of build)
-- `Umbraco.Ai-entity-snapshot-service/` - Legacy/alternate reference
+- `Umbraco.AI-entity-snapshot-service/` - Legacy/alternate reference
 
 ## Changelog Generation
 
@@ -352,10 +384,29 @@ All commits should follow the [Conventional Commits](https://www.conventionalcom
 
 **Examples:**
 ```bash
-feat(chat): add streaming support
-fix(openai): handle rate limit errors
-docs(core): update API examples
+feat(chat): Add streaming support
+fix(openai): Handle rate limit errors
+docs(core): Update API examples
 ```
+
+**Formatting Rules (enforced by commitlint):**
+
+1. **Subject must be sentence-case** - Capitalize the first word after the scope
+   - ✅ `fix(frontend): Prevent scripts from hanging`
+   - ❌ `fix(frontend): prevent scripts from hanging`
+
+2. **Scope must be valid** - Use one of the allowed scopes defined in `commitlint.config.js`
+   - **Valid types**: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `revert`, `build`
+   - **Valid scopes**: Dynamically loaded from all `<Product>/changelog.config.json` files + meta scopes (`deps`, `ci`, `docs`, `release`)
+   - **Single scope only** - Multiple scopes are not supported (e.g., `fix(core,agent):` is invalid)
+   - **To list current options**: `npm run commit-options` or `node scripts/list-commit-options.js`
+   - **For Claude Code**: Read `commitlint.config.js` at runtime to discover valid types and scopes - never use hardcoded lists
+
+3. **Body lines must not exceed 100 characters** - Wrap long lines in the commit body
+
+4. **Split commits when changes affect multiple areas** - If your changes span multiple scopes, create separate commits
+   - ✅ Split into: `fix(core): Fix issue A` + `fix(agent): Fix issue B`
+   - ❌ Don't use: `fix(core,agent): Fix issues`
 
 Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
 
@@ -368,16 +419,16 @@ Changelogs are generated manually before creating a release:
 npm run changelog:list
 
 # Generate changelog for a specific product
-npm run changelog -- --product=Umbraco.Ai --version=1.1.0
+npm run changelog -- --product=Umbraco.AI --version=1.1.0
 
 # Generate for unreleased changes
-npm run changelog -- --product=Umbraco.Ai --unreleased
+npm run changelog -- --product=Umbraco.AI --unreleased
 
 # PowerShell wrapper
-.\scripts\generate-changelog.ps1 -Product Umbraco.Ai -Version 1.1.0
+.\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0
 
 # Bash wrapper
-./scripts/generate-changelog.sh --product=Umbraco.Ai --version=1.1.0
+./scripts/generate-changelog.sh --product=Umbraco.AI --version=1.1.0
 ```
 
 Each product has a `changelog.config.json` file defining its scopes. The generation script automatically discovers all products by scanning for these config files - no hardcoded product lists.
@@ -413,18 +464,18 @@ All async service methods MUST follow the pattern `[Action][Entity]Async`:
 **Correct Examples:**
 ```csharp
 // GOOD - follows [Action][Entity]Async
-Task<AiProfile?> GetProfileAsync(Guid id, CancellationToken ct);
-Task<AiConnection> CreateConnectionAsync(AiConnection connection, CancellationToken ct);
+Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken ct);
+Task<AIConnection> CreateConnectionAsync(AIConnection connection, CancellationToken ct);
 Task DeleteAgentAsync(Guid id, CancellationToken ct);
 Task<ChatResponse> GetChatResponseAsync(IEnumerable<ChatMessage> messages, CancellationToken ct);
-Task<IEnumerable<AiPrompt>> GetPromptsAsync(CancellationToken ct);
-Task<PagedResult<AiAgent>> GetAgentsPagedAsync(int skip, int take, CancellationToken ct);
+Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken ct);
+Task<PagedResult<AIAgent>> GetAgentsPagedAsync(int skip, int take, CancellationToken ct);
 ```
 
 **Incorrect Examples:**
 ```csharp
 // BAD - missing entity name
-Task<AiProfile?> GetAsync(Guid id, CancellationToken ct);           // Should be: GetProfileAsync
+Task<AIProfile?> GetAsync(Guid id, CancellationToken ct);           // Should be: GetProfileAsync
 Task DeleteAsync(Guid id, CancellationToken ct);                     // Should be: DeleteAgentAsync
 Task<ChatResponse> GetResponseAsync(...);                            // Should be: GetChatResponseAsync
 
@@ -432,7 +483,7 @@ Task<ChatResponse> GetResponseAsync(...);                            // Should b
 Task<bool> ProfileExistsAsync(string alias, CancellationToken ct);   // Should be: ExistsProfileAsync or ProfileAliasExistsAsync
 
 // BAD - missing Async suffix
-Task<AiProfile?> GetProfile(Guid id, CancellationToken ct);          // Should be: GetProfileAsync
+Task<AIProfile?> GetProfile(Guid id, CancellationToken ct);          // Should be: GetProfileAsync
 ```
 
 #### Variations and Qualifiers
@@ -441,15 +492,15 @@ Qualifiers like `ByAlias`, `Paged`, `All`, `Default` come after the entity:
 
 ```csharp
 // Qualified lookups
-Task<AiProfile?> GetProfileByAliasAsync(string alias, CancellationToken ct);
-Task<AiConnection?> GetConnectionByIdAsync(Guid id, CancellationToken ct);
+Task<AIProfile?> GetProfileByAliasAsync(string alias, CancellationToken ct);
+Task<AIConnection?> GetConnectionByIdAsync(Guid id, CancellationToken ct);
 
 // Collection operations
-Task<IEnumerable<AiProfile>> GetAllProfilesAsync(CancellationToken ct);
-Task<PagedResult<AiPrompt>> GetPromptsPagedAsync(int skip, int take, CancellationToken ct);
+Task<IEnumerable<AIProfile>> GetAllProfilesAsync(CancellationToken ct);
+Task<PagedResult<AIPrompt>> GetPromptsPagedAsync(int skip, int take, CancellationToken ct);
 
 // Default/specific retrieval
-Task<AiProfile?> GetDefaultProfileAsync(AiCapability capability, CancellationToken ct);
+Task<AIProfile?> GetDefaultProfileAsync(AICapability capability, CancellationToken ct);
 ```
 
 #### Existence Checks
@@ -479,9 +530,9 @@ Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId, CancellationToke
 **Correct:**
 ```csharp
 // Other services use the entity service, not the repository
-public class AiChatService
+public class AIChatService
 {
-    private readonly IAiProfileService _profileService;  // ✓ Uses service
+    private readonly IAIProfileService _profileService;  // ✓ Uses service
 
     public async Task<IChatClient> GetChatClientAsync(Guid profileId, CancellationToken ct)
     {
@@ -494,9 +545,9 @@ public class AiChatService
 **Incorrect:**
 ```csharp
 // BAD: Service directly accessing another entity's repository
-public class AiChatService
+public class AIChatService
 {
-    private readonly IAiProfileRepository _profileRepository;  // ✗ Direct repository access
+    private readonly IAIProfileRepository _profileRepository;  // ✗ Direct repository access
 
     public async Task<IChatClient> GetChatClientAsync(Guid profileId, CancellationToken ct)
     {
@@ -526,17 +577,19 @@ Repository methods follow the same `[Action][Entity]Async` pattern as services, 
 
 Repository methods can use shorter names since they operate on a single entity type:
 ```csharp
-public interface IAiProfileRepository
+public interface IAIProfileRepository
 {
-    Task<AiProfile?> GetByIdAsync(Guid id, CancellationToken ct);
-    Task<AiProfile?> GetByAliasAsync(string alias, CancellationToken ct);
-    Task<IEnumerable<AiProfile>> GetAllAsync(CancellationToken ct);
-    Task AddAsync(AiProfile profile, CancellationToken ct);
-    Task UpdateAsync(AiProfile profile, CancellationToken ct);
+    Task<AIProfile?> GetByIdAsync(Guid id, CancellationToken ct);
+    Task<AIProfile?> GetByAliasAsync(string alias, CancellationToken ct);
+    Task<IEnumerable<AIProfile>> GetAllAsync(CancellationToken ct);
+    Task AddAsync(AIProfile profile, CancellationToken ct);
+    Task UpdateAsync(AIProfile profile, CancellationToken ct);
     Task DeleteAsync(Guid id, CancellationToken ct);
 }
 ```
 
 ### Extension Methods
 
-All extension methods MUST be placed in the `Umbraco.Ai.Extensions` namespace (or the product-specific equivalent like `Umbraco.Ai.Prompt.Extensions`) for ease of discovery via IntelliSense.
+All extension methods MUST be placed in the `Umbraco.AI.Extensions` namespace (or the product-specific equivalent like `Umbraco.AI.Prompt.Extensions`) for ease of discovery via IntelliSense.
+
+# Lessons Learned

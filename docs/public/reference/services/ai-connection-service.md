@@ -3,39 +3,39 @@ description: >-
   Service for managing AI provider connections.
 ---
 
-# IAiConnectionService
+# IAIConnectionService
 
 Service for connection management with validation and testing capabilities.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Connections;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.Models;
 ```
 
 ## Interface
 
-{% code title="IAiConnectionService" %}
+{% code title="IAIConnectionService" %}
 ```csharp
-public interface IAiConnectionService
+public interface IAIConnectionService
 {
-    Task<AiConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIConnection?> GetConnectionAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<AiConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIConnection?> GetConnectionByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnection>> GetConnectionsAsync(string? providerId = null, CancellationToken cancellationToken = default);
 
-    Task<(IEnumerable<AiConnection> Items, int Total)> GetConnectionsPagedAsync(
+    Task<(IEnumerable<AIConnection> Items, int Total)> GetConnectionsPagedAsync(
         string? filter = null,
         string? providerId = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnectionRef>> GetConnectionReferencesAsync(string providerId, CancellationToken cancellationToken = default);
 
-    Task<AiConnection> SaveConnectionAsync(AiConnection connection, CancellationToken cancellationToken = default);
+    Task<AIConnection> SaveConnectionAsync(AIConnection connection, CancellationToken cancellationToken = default);
 
     Task DeleteConnectionAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -43,11 +43,11 @@ public interface IAiConnectionService
 
     Task<bool> TestConnectionAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiCapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AICapability>> GetAvailableCapabilitiesAsync(CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiConnection>> GetConnectionsByCapabilityAsync(AiCapability capability, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIConnection>> GetConnectionsByCapabilityAsync(AICapability capability, CancellationToken cancellationToken = default);
 
-    Task<IAiConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
+    Task<IAIConfiguredProvider?> GetConfiguredProviderAsync(Guid connectionId, CancellationToken cancellationToken = default);
 }
 ```
 {% endcode %}
@@ -117,14 +117,14 @@ Creates or updates a connection.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `connection` | `AiConnection` | The connection to save |
+| `connection` | `AIConnection` | The connection to save |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved connection with ID assigned.
 
 {% code title="Example" %}
 ```csharp
-var connection = new AiConnection
+var connection = new AIConnection
 {
     Alias = "my-openai",
     Name = "My OpenAI Connection",
@@ -206,7 +206,7 @@ Gets connections that support a specific capability.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `capability` | `AiCapability` | The capability to filter by |
+| `capability` | `AICapability` | The capability to filter by |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: Connections supporting the capability.
@@ -228,7 +228,7 @@ var provider = await _connectionService.GetConfiguredProviderAsync(connectionId)
 if (provider != null)
 {
     // Access provider capabilities
-    var chatCapability = provider.GetCapability<IAiChatCapability>();
+    var chatCapability = provider.GetCapability<IAIChatCapability>();
 }
 ```
 {% endcode %}

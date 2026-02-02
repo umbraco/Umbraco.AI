@@ -26,7 +26,7 @@ The **Agent Copilot** add-on registers the `copilot` scope, which indicates agen
 
 | Scope ID | Package | Icon | Description |
 |----------|---------|------|-------------|
-| `copilot` | Umbraco.Ai.Agent.Copilot | `icon-chat` | Agents available in the copilot chat sidebar |
+| `copilot` | Umbraco.AI.Agent.Copilot | `icon-chat` | Agents available in the copilot chat sidebar |
 
 ## Assigning Scopes to Agents
 
@@ -52,7 +52,7 @@ Include `scopeIds` when creating or updating an agent:
 ### Via Code
 
 ```csharp
-var agent = new AiAgent
+var agent = new AIAgent
 {
     Alias = "content-assistant",
     Name = "Content Assistant",
@@ -112,16 +112,16 @@ Add-on packages can register their own scopes to categorize agents for their spe
 
 ### 1. Define the Scope Class
 
-Create a class that derives from `AiAgentScopeBase` and decorate it with the `[AiAgentScope]` attribute:
+Create a class that derives from `AIAgentScopeBase` and decorate it with the `[AIAgentScope]` attribute:
 
 {% code title="MyFeatureScope.cs" %}
 ```csharp
-using Umbraco.Ai.Agent.Core.Scopes;
+using Umbraco.AI.Agent.Core.Scopes;
 
 namespace MyPackage.Scopes;
 
-[AiAgentScope("my-feature", Icon = "icon-settings")]
-public class MyFeatureScope : AiAgentScopeBase
+[AIAgentScope("my-feature", Icon = "icon-settings")]
+public class MyFeatureScope : AIAgentScopeBase
 {
     /// <summary>
     /// Constant for referencing this scope ID in code.
@@ -133,7 +133,7 @@ public class MyFeatureScope : AiAgentScopeBase
 
 ### 2. Automatic Registration
 
-Scopes are automatically discovered and registered during application startup. The framework scans for all types with the `[AiAgentScope]` attribute that implement `IAiAgentScope`.
+Scopes are automatically discovered and registered during application startup. The framework scans for all types with the `[AIAgentScope]` attribute that implement `IAIAgentScope`.
 
 ### 3. Manual Registration (Optional)
 
@@ -142,7 +142,7 @@ For more control, you can manually register scopes in a composer:
 {% code title="MyComposer.cs" %}
 ```csharp
 using Umbraco.Cms.Core.Composing;
-using Umbraco.Ai.Agent.Core.Configuration;
+using Umbraco.AI.Agent.Core.Configuration;
 
 namespace MyPackage;
 
@@ -150,7 +150,7 @@ public class MyComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiAgentScopes()
+        builder.AIAgentScopes()
             .Add<MyFeatureScope>();
     }
 }
@@ -162,14 +162,14 @@ public class MyComposer : IComposer
 ```csharp
 public class MyFeatureService
 {
-    private readonly IAiAgentService _agentService;
+    private readonly IAIAgentService _agentService;
 
-    public MyFeatureService(IAiAgentService agentService)
+    public MyFeatureService(IAIAgentService agentService)
     {
         _agentService = agentService;
     }
 
-    public async Task<IEnumerable<AiAgent>> GetMyFeatureAgentsAsync(
+    public async Task<IEnumerable<AIAgent>> GetMyFeatureAgentsAsync(
         CancellationToken cancellationToken = default)
     {
         return await _agentService.GetAgentsByScopeAsync(
@@ -181,10 +181,10 @@ public class MyFeatureService
 
 ## Scope Interface
 
-The `IAiAgentScope` interface defines the contract for scopes:
+The `IAIAgentScope` interface defines the contract for scopes:
 
 ```csharp
-public interface IAiAgentScope
+public interface IAIAgentScope
 {
     /// <summary>
     /// Gets the unique identifier for this scope.
@@ -222,14 +222,14 @@ export default {
 
 ## Scope Collection
 
-The `AiAgentScopeCollection` provides methods for working with registered scopes:
+The `AIAgentScopeCollection` provides methods for working with registered scopes:
 
 ```csharp
 public class MyScopeHelper
 {
-    private readonly AiAgentScopeCollection _scopes;
+    private readonly AIAgentScopeCollection _scopes;
 
-    public MyScopeHelper(AiAgentScopeCollection scopes)
+    public MyScopeHelper(AIAgentScopeCollection scopes)
     {
         _scopes = scopes;
     }
@@ -268,7 +268,7 @@ public class MyScopeHelper
 Agents can belong to multiple scopes when they serve multiple purposes:
 
 ```csharp
-var versatileAgent = new AiAgent
+var versatileAgent = new AIAgent
 {
     Alias = "universal-assistant",
     Name = "Universal Assistant",

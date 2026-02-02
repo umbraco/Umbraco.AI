@@ -5,7 +5,7 @@ description: >-
 
 # Agent Copilot
 
-The Agent Copilot add-on (`Umbraco.Ai.Agent.Copilot`) provides an interactive AI assistant sidebar in the Umbraco backoffice. It requires the Agent Runtime (`Umbraco.Ai.Agent`) for backend functionality.
+The Agent Copilot add-on (`Umbraco.AI.Agent.Copilot`) provides an interactive AI assistant sidebar in the Umbraco backoffice. It requires the Agent Runtime (`Umbraco.AI.Agent`) for backend functionality.
 
 ## Installation
 
@@ -13,8 +13,8 @@ Install both the Agent Runtime and Copilot packages:
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Agent
-Install-Package Umbraco.Ai.Agent.Copilot
+Install-Package Umbraco.AI.Agent
+Install-Package Umbraco.AI.Agent.Copilot
 ```
 {% endcode %}
 
@@ -22,13 +22,13 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Agent
-dotnet add package Umbraco.Ai.Agent.Copilot
+dotnet add package Umbraco.AI.Agent
+dotnet add package Umbraco.AI.Agent.Copilot
 ```
 {% endcode %}
 
 {% hint style="info" %}
-The `Umbraco.Ai.Agent.Copilot` package depends on `Umbraco.Ai.Agent` for agent definitions and streaming APIs.
+The `Umbraco.AI.Agent.Copilot` package depends on `Umbraco.AI.Agent` for agent definitions and streaming APIs.
 {% endhint %}
 
 ## Features
@@ -45,8 +45,8 @@ The `Umbraco.Ai.Agent.Copilot` package depends on `Umbraco.Ai.Agent` for agent d
 ### 1. Install Both Packages
 
 ```bash
-dotnet add package Umbraco.Ai.Agent
-dotnet add package Umbraco.Ai.Agent.Copilot
+dotnet add package Umbraco.AI.Agent
+dotnet add package Umbraco.AI.Agent.Copilot
 ```
 
 ### 2. Create an Agent
@@ -57,7 +57,7 @@ In the backoffice, navigate to **Settings** > **AI** > **Agents** and create an 
 
 {% code title="Program.cs" %}
 ```csharp
-services.Configure<AiAgentOptions>(options =>
+services.Configure<AIAgentOptions>(options =>
 {
     options.DefaultCopilotAgentAlias = "content-assistant";
 });
@@ -72,14 +72,14 @@ The Copilot sidebar appears in the Content and Media sections. Click the **AI As
 
 ```
 ┌───────────────────────────────────────────────────┐
-│                 Umbraco.Ai.Agent                   │
+│                 Umbraco.AI.Agent                   │
 │  (Backend APIs, Agent Definitions, Streaming)     │
 └───────────────────────────────────────────────────┘
                         │
                         │ uses
                         ▼
 ┌───────────────────────────────────────────────────┐
-│            Umbraco.Ai.Agent.Copilot               │
+│            Umbraco.AI.Agent.Copilot               │
 │  (Chat UI, Tool System, HITL Approval)            │
 └───────────────────────────────────────────────────┘
 ```

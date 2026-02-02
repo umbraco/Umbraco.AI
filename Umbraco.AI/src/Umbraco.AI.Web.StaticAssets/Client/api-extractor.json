@@ -1,0 +1,26 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  "projectFolder": ".",
+  "mainEntryPointFilePath": "<projectFolder>/types/exports.d.ts",
+  "compiler": {
+    "tsconfigFilePath": "<projectFolder>/tsconfig.api.json"
+  },
+  "apiReport": {
+    "enabled": false
+  },
+  "docModel": {
+    "enabled": false
+  },
+  "dtsRollup": {
+    "enabled": true,
+    "untrimmedFilePath": "<projectFolder>/types/umbraco-ai-types.d.ts",
+    "publicTrimmedFilePath": "<projectFolder>/types/umbraco-ai-public-types.d.ts"
+  },
+  "messages": {
+    "extractorMessageReporting": {
+      "ae-internal-missing-underscore": {
+        "logLevel": "none"
+      }
+    }
+  }
+}

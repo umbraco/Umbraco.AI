@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Title>Umbraco AI</Title>
+        <Description>Umbraco AI</Description>
+        <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+        <PackageTags>umbraco commerce umbraco-marketplace</PackageTags>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeSymbols>false</IncludeSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="docs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Web.StaticAssets\Umbraco.AI.Web.StaticAssets.csproj" />
+    </ItemGroup>
+
+</Project>

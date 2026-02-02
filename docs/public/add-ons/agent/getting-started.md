@@ -11,7 +11,7 @@ This guide walks you through creating and running your first AI agent.
 
 Before starting, ensure you have:
 
-- Umbraco.Ai installed and configured
+- Umbraco.AI installed and configured
 - At least one AI connection set up
 - At least one chat profile created
 
@@ -19,7 +19,7 @@ Before starting, ensure you have:
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Agent
+Install-Package Umbraco.AI.Agent
 ```
 {% endcode %}
 
@@ -69,9 +69,9 @@ Create a controller to expose the agent:
 [Route("api/agent")]
 public class AgentController : ControllerBase
 {
-    private readonly IAiAgentService _agentService;
+    private readonly IAIAgentService _agentService;
 
-    public AgentController(IAiAgentService agentService)
+    public AgentController(IAIAgentService agentService)
     {
         _agentService = agentService;
     }
@@ -92,9 +92,9 @@ public class AgentController : ControllerBase
 
         await foreach (var evt in _agentService.StreamAgentAsync(
             agent.Id,
-            new AiAgentRunRequest
+            new AIAgentRunRequest
             {
-                Messages = request.Messages.Select(m => new AiAgentMessage
+                Messages = request.Messages.Select(m => new AIAgentMessage
                 {
                     Role = m.Role,
                     Content = m.Content

@@ -3,21 +3,21 @@ description: >-
   Model representing an AI operation audit log entry.
 ---
 
-# AiAuditLog
+# AIAuditLog
 
 Represents a single AI operation audit record with timing, token usage, and outcome information.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.AuditLog;
+using Umbraco.AI.Core.AuditLog;
 ```
 
 ## Definition
 
-{% code title="AiAuditLog" %}
+{% code title="AIAuditLog" %}
 ```csharp
-public class AiAuditLog
+public class AIAuditLog
 {
     public Guid Id { get; set; }
 
@@ -27,8 +27,8 @@ public class AiAuditLog
     public TimeSpan? Duration => EndTime.HasValue ? EndTime.Value - StartTime : null;
 
     // Status
-    public AiAuditLogStatus Status { get; set; }
-    public AiAuditLogErrorCategory? ErrorCategory { get; set; }
+    public AIAuditLogStatus Status { get; set; }
+    public AIAuditLogErrorCategory? ErrorCategory { get; set; }
     public string? ErrorMessage { get; set; }
 
     // User context
@@ -40,7 +40,7 @@ public class AiAuditLog
     public string? EntityType { get; set; }
 
     // AI configuration
-    public AiCapability Capability { get; set; }
+    public AICapability Capability { get; set; }
     public Guid ProfileId { get; set; }
     public string ProfileAlias { get; set; } = string.Empty;
     public int? ProfileVersion { get; set; }
@@ -60,7 +60,7 @@ public class AiAuditLog
     // Content snapshots (if detail level allows)
     public string? PromptSnapshot { get; set; }
     public string? ResponseSnapshot { get; set; }
-    public AiAuditLogDetailLevel DetailLevel { get; set; }
+    public AIAuditLogDetailLevel DetailLevel { get; set; }
 
     // Relationships
     public Guid? ParentAuditLogId { get; set; }
@@ -84,8 +84,8 @@ public class AiAuditLog
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `Status` | `AiAuditLogStatus` | Operation outcome |
-| `ErrorCategory` | `AiAuditLogErrorCategory?` | Error classification |
+| `Status` | `AIAuditLogStatus` | Operation outcome |
+| `ErrorCategory` | `AIAuditLogErrorCategory?` | Error classification |
 | `ErrorMessage` | `string?` | Error details |
 
 ### Context Properties
@@ -101,7 +101,7 @@ public class AiAuditLog
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `Capability` | `AiCapability` | Chat, Embedding, etc. |
+| `Capability` | `AICapability` | Chat, Embedding, etc. |
 | `ProfileId` | `Guid` | Profile used |
 | `ProfileAlias` | `string` | Profile alias at time |
 | `ProfileVersion` | `int?` | Profile version at time |
@@ -130,15 +130,15 @@ public class AiAuditLog
 |----------|------|-------------|
 | `PromptSnapshot` | `string?` | Request content (if captured) |
 | `ResponseSnapshot` | `string?` | Response content (if captured) |
-| `DetailLevel` | `AiAuditLogDetailLevel` | Level of detail captured |
+| `DetailLevel` | `AIAuditLogDetailLevel` | Level of detail captured |
 
 ---
 
-# AiAuditLogStatus
+# AIAuditLogStatus
 
-{% code title="AiAuditLogStatus" %}
+{% code title="AIAuditLogStatus" %}
 ```csharp
-public enum AiAuditLogStatus
+public enum AIAuditLogStatus
 {
     Running = 0,
     Succeeded = 1,
@@ -151,11 +151,11 @@ public enum AiAuditLogStatus
 
 ---
 
-# AiAuditLogErrorCategory
+# AIAuditLogErrorCategory
 
-{% code title="AiAuditLogErrorCategory" %}
+{% code title="AIAuditLogErrorCategory" %}
 ```csharp
-public enum AiAuditLogErrorCategory
+public enum AIAuditLogErrorCategory
 {
     Unknown = 0,
     Authentication = 1,
@@ -170,11 +170,11 @@ public enum AiAuditLogErrorCategory
 
 ---
 
-# AiAuditLogDetailLevel
+# AIAuditLogDetailLevel
 
-{% code title="AiAuditLogDetailLevel" %}
+{% code title="AIAuditLogDetailLevel" %}
 ```csharp
-public enum AiAuditLogDetailLevel
+public enum AIAuditLogDetailLevel
 {
     Minimal = 0,   // Timing and status only
     Standard = 1,  // Above + profile, model, user
@@ -185,18 +185,18 @@ public enum AiAuditLogDetailLevel
 
 ---
 
-# AiAuditLogFilter
+# AIAuditLogFilter
 
 Used to filter audit log queries.
 
-{% code title="AiAuditLogFilter" %}
+{% code title="AIAuditLogFilter" %}
 ```csharp
-public class AiAuditLogFilter
+public class AIAuditLogFilter
 {
     public DateTime? From { get; set; }
     public DateTime? To { get; set; }
-    public AiAuditLogStatus? Status { get; set; }
-    public AiCapability? Capability { get; set; }
+    public AIAuditLogStatus? Status { get; set; }
+    public AICapability? Capability { get; set; }
     public Guid? ProfileId { get; set; }
     public string? ProviderId { get; set; }
     public Guid? UserId { get; set; }
@@ -207,5 +207,5 @@ public class AiAuditLogFilter
 
 ## Related
 
-* [IAiAuditLogService](../services/ai-audit-log-service.md) - Audit log service
+* [IAIAuditLogService](../services/ai-audit-log-service.md) - Audit log service
 * [Audit Logs Backoffice](../../backoffice/audit-logs.md) - Viewing logs

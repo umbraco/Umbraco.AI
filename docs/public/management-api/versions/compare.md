@@ -100,7 +100,7 @@ var toVersion = 5;
 
 var response = await httpClient.GetAsync(
     $"/umbraco/ai/management/api/v1/versions/{entityType}/{entityId}/{fromVersion}/compare/{toVersion}");
-var comparison = await response.Content.ReadFromJsonAsync<AiVersionComparisonModel>();
+var comparison = await response.Content.ReadFromJsonAsync<AIVersionComparisonModel>();
 
 foreach (var change in comparison.Changes)
 {

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Pre-merge-commit hook - Restore release-manifest.json on release/hotfix branches
+# Pre-merge-commit hook - Ensure release-manifest.json is committed on release/hotfix branches
 
 # Get current branch
 current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -9,7 +9,7 @@ if ! echo "$current_branch" | grep -qE "^(release|hotfix)/"; then
     exit 0
 fi
 
-# Check if release-manifest.json exists in HEAD but was deleted in the merge
+# Check if release-manifest.json exists in HEAD
 if git ls-tree HEAD release-manifest.json | grep -q .; then
     # File exists in HEAD
     if ! git ls-files --stage release-manifest.json | grep -q .; then
@@ -25,6 +25,18 @@ if git ls-tree HEAD release-manifest.json | grep -q .; then
         else
             echo "⚠️  Failed to restore release-manifest.json"
             exit 1
+        fi
+    else
+        # File is staged - ensure it stays staged for the merge commit
+        # This handles the case where the merge driver preserved the file
+        # Check if the staged version matches HEAD (no actual changes)
+        staged_hash=$(git ls-files --stage release-manifest.json | awk '{print $2}')
+        head_hash=$(git ls-tree HEAD release-manifest.json | awk '{print $3}')
+
+        if [ "$staged_hash" = "$head_hash" ]; then
+            # File is staged but unchanged from HEAD - ensure it's included in merge commit
+            # by explicitly staging it again (no-op but ensures it's in the commit)
+            git add release-manifest.json
         fi
     fi
 fi

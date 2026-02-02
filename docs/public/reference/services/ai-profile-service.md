@@ -3,41 +3,41 @@ description: >-
   Service for managing AI profiles.
 ---
 
-# IAiProfileService
+# IAIProfileService
 
 Service for profile CRUD operations and lookups.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Profiles;
-using Umbraco.Ai.Core.Models;
+using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Models;
 ```
 
 ## Interface
 
-{% code title="IAiProfileService" %}
+{% code title="IAIProfileService" %}
 ```csharp
-public interface IAiProfileService
+public interface IAIProfileService
 {
-    Task<AiProfile?> GetProfileAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<AiProfile?> GetProfileByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIProfile?> GetProfileByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiProfile>> GetAllProfilesAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIProfile>> GetAllProfilesAsync(CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<AiProfile>> GetProfilesAsync(AiCapability capability, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIProfile>> GetProfilesAsync(AICapability capability, CancellationToken cancellationToken = default);
 
-    Task<(IEnumerable<AiProfile> Items, int Total)> GetProfilesPagedAsync(
+    Task<(IEnumerable<AIProfile> Items, int Total)> GetProfilesPagedAsync(
         string? filter = null,
-        AiCapability? capability = null,
+        AICapability? capability = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);
 
-    Task<AiProfile> GetDefaultProfileAsync(AiCapability capability, CancellationToken cancellationToken = default);
+    Task<AIProfile> GetDefaultProfileAsync(AICapability capability, CancellationToken cancellationToken = default);
 
-    Task<AiProfile> SaveProfileAsync(AiProfile profile, CancellationToken cancellationToken = default);
+    Task<AIProfile> SaveProfileAsync(AIProfile profile, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteProfileAsync(Guid id, CancellationToken cancellationToken = default);
 }
@@ -97,15 +97,15 @@ Gets profiles for a specific capability.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `capability` | `AiCapability` | The capability to filter by |
+| `capability` | `AICapability` | The capability to filter by |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: Profiles matching the capability.
 
 {% code title="Example" %}
 ```csharp
-var chatProfiles = await _profileService.GetProfilesAsync(AiCapability.Chat);
-var embeddingProfiles = await _profileService.GetProfilesAsync(AiCapability.Embedding);
+var chatProfiles = await _profileService.GetProfilesAsync(AICapability.Chat);
+var embeddingProfiles = await _profileService.GetProfilesAsync(AICapability.Embedding);
 ```
 {% endcode %}
 
@@ -116,7 +116,7 @@ Gets profiles with pagination and optional filtering.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `filter` | `string?` | Filter by name (case-insensitive contains) |
-| `capability` | `AiCapability?` | Filter by capability |
+| `capability` | `AICapability?` | Filter by capability |
 | `skip` | `int` | Items to skip |
 | `take` | `int` | Items to take |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
@@ -127,7 +127,7 @@ Gets profiles with pagination and optional filtering.
 ```csharp
 var (profiles, total) = await _profileService.GetProfilesPagedAsync(
     filter: "assistant",
-    capability: AiCapability.Chat,
+    capability: AICapability.Chat,
     skip: 0,
     take: 10);
 
@@ -141,7 +141,7 @@ Gets the default profile for a capability.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `capability` | `AiCapability` | The capability |
+| `capability` | `AICapability` | The capability |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The default profile.
@@ -152,7 +152,7 @@ Gets the default profile for a capability.
 ```csharp
 try
 {
-    var defaultChat = await _profileService.GetDefaultProfileAsync(AiCapability.Chat);
+    var defaultChat = await _profileService.GetDefaultProfileAsync(AICapability.Chat);
     Console.WriteLine($"Default chat profile: {defaultChat.Alias}");
 }
 catch (InvalidOperationException ex)
@@ -168,21 +168,21 @@ Creates or updates a profile.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `profile` | `AiProfile` | The profile to save |
+| `profile` | `AIProfile` | The profile to save |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved profile with ID assigned.
 
 {% code title="Example" %}
 ```csharp
-var profile = new AiProfile
+var profile = new AIProfile
 {
     Alias = "new-assistant",
     Name = "New Assistant",
-    Capability = AiCapability.Chat,
-    Model = new AiModelRef("openai", "gpt-4o"),
+    Capability = AICapability.Chat,
+    Model = new AIModelRef("openai", "gpt-4o"),
     ConnectionId = connectionId,
-    Settings = new AiChatProfileSettings
+    Settings = new AIChatProfileSettings
     {
         Temperature = 0.7f,
         MaxTokens = 4096

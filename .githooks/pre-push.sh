@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pre-push hook to validate branch naming conventions for Umbraco.Ai monorepo
+# Pre-push hook to validate branch naming conventions for Umbraco.AI monorepo
 # Valid patterns:
 #   - main
 #   - dev
@@ -22,7 +22,7 @@ fi
 
 # Check if branch matches valid patterns
 valid_branch=false
-if [[ $current_branch =~ ^(feature|release|hotfix)/.+ ]]; then
+if [[ $current_branch =~ ^(feature|claude|release|hotfix)/.+ ]]; then
     valid_branch=true
 fi
 

@@ -3,22 +3,22 @@ description: >-
   Service for generating text embeddings.
 ---
 
-# IAiEmbeddingService
+# IAIEmbeddingService
 
 Service for generating text embeddings (vector representations). Acts as a thin layer over Microsoft.Extensions.AI.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Embeddings;
+using Umbraco.AI.Core.Embeddings;
 using Microsoft.Extensions.AI;
 ```
 
 ## Interface
 
-{% code title="IAiEmbeddingService" %}
+{% code title="IAIEmbeddingService" %}
 ```csharp
-public interface IAiEmbeddingService
+public interface IAIEmbeddingService
 {
     Task<Embedding<float>> GenerateEmbeddingAsync(
         string value,

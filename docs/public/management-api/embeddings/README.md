@@ -24,7 +24,7 @@ Embeddings convert text into numerical vectors that capture semantic meaning. Si
 
 ## Authentication
 
-All endpoints require backoffice authentication with the `Umb.Ai.Management.Api` authorization policy.
+All endpoints require backoffice authentication with the `Umb.AI.Management.Api` authorization policy.
 
 ## Endpoints
 

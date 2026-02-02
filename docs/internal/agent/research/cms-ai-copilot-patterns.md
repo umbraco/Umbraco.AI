@@ -691,7 +691,7 @@ AI generates semantic JSON, transformer converts to property editor format.
 - Con: Need transformers per property editor type
 
 #### 4. Property Editor AI Contracts
-Each property editor exposes `GetAiInputSchema()` and `TransformAiOutput()`.
+Each property editor exposes `GetAIInputSchema()` and `TransformAIOutput()`.
 - Pro: Property editors own their AI integration
 - Con: Requires updating all editors, third-party issues
 
@@ -745,13 +745,13 @@ LLM is in control -> Agent applies via tools
 
 ## Package Architecture
 
-Based on this research, the Umbraco.Ai ecosystem can be cleanly separated:
+Based on this research, the Umbraco.AI ecosystem can be cleanly separated:
 
 ```
 +------------------------------------------------------------------+
 |  LAYER 1: Foundation                                              |
 +------------------------------------------------------------------+
-|  Umbraco.Ai (Core)                                                |
+|  Umbraco.AI (Core)                                                |
 |  +-- Connections (API keys, endpoints)                            |
 |  +-- Profiles (model settings)                                    |
 |  +-- Simple Chat API (for basic integrations)                     |
@@ -762,7 +762,7 @@ Based on this research, the Umbraco.Ai ecosystem can be cleanly separated:
 +----------------------------+    +------------------------------+
 |  LAYER 2A: One-Shot        |    |  LAYER 2B: Agentic           |
 +----------------------------+    +------------------------------+
-|  Umbraco.Ai.Prompt         |    |  Umbraco.Ai.Agent            |
+|  Umbraco.AI.Prompt         |    |  Umbraco.AI.Agent            |
 |                            |    |                              |
 |  * Fixed prompts           |    |  * Agent definitions         |
 |  * Custom prompts          |    |  * Tool registry             |
@@ -779,7 +779,7 @@ Based on this research, the Umbraco.Ai ecosystem can be cleanly separated:
               +-------------------------------+
               |  LAYER 3: Orchestration       |
               +-------------------------------+
-              |  Umbraco.Ai.Workflow          |
+              |  Umbraco.AI.Workflow          |
               |                               |
               |  * Chain prompt executions    |
               |  * Chain agent executions     |
@@ -795,14 +795,14 @@ Based on this research, the Umbraco.Ai ecosystem can be cleanly separated:
 
 | Package | Execution Model | Who Applies Result | Use Case |
 |---------|-----------------|-------------------|----------|
-| **Umbraco.Ai** | N/A (foundation) | N/A | Connect to AI providers |
-| **Umbraco.Ai.Prompt** | Model A (one-shot) | System | "Do this specific thing" |
-| **Umbraco.Ai.Agent** | Model B (agentic) | Agent via tools | "Help me with this" |
-| **Umbraco.Ai.Workflow** | Orchestrates A & B | Varies | Complex multi-step tasks |
+| **Umbraco.AI** | N/A (foundation) | N/A | Connect to AI providers |
+| **Umbraco.AI.Prompt** | Model A (one-shot) | System | "Do this specific thing" |
+| **Umbraco.AI.Agent** | Model B (agentic) | Agent via tools | "Help me with this" |
+| **Umbraco.AI.Workflow** | Orchestrates A & B | Varies | Complex multi-step tasks |
 
 ### Prompt vs Agent: Clear Boundaries
 
-| Aspect | Umbraco.Ai.Prompt | Umbraco.Ai.Agent |
+| Aspect | Umbraco.AI.Prompt | Umbraco.AI.Agent |
 |--------|-------------------|------------------|
 | **Prompts** | Fixed, custom, saved | Agent system prompts |
 | **Execution** | Single LLM call | Tool loop until complete |
@@ -922,7 +922,7 @@ This is becoming the mental model users expect from AI assistants.
 
 ### Feature Coverage Matrix
 
-| Industry Feature | Example Platforms | Umbraco.Ai Package | Notes |
+| Industry Feature | Example Platforms | Umbraco.AI Package | Notes |
 |------------------|-------------------|-------------------|-------|
 | **AI Buttons (per-field)** | Storyblok, Jetpack, Sitecore | **Prompt** | Fixed prompts, one-shot |
 | **Custom Instructions** | Sanity AI Assist | **Prompt** | Custom prompts with field refs |
@@ -939,7 +939,7 @@ This is becoming the mental model users expect from AI assistants.
 
 ### Package Capability Summary
 
-#### Umbraco.Ai.Prompt
+#### Umbraco.AI.Prompt
 Covers industry patterns:
 - AI Buttons (Storyblok, Jetpack, Sitecore style)
 - Custom Instructions (Sanity style)
@@ -952,7 +952,7 @@ Covers industry patterns:
 
 **Execution:** Model A (template-based, system applies result)
 
-#### Umbraco.Ai.Agent
+#### Umbraco.AI.Agent
 Covers industry patterns:
 - Conversational Copilot (rare in CMS - differentiator)
 - Tool-based execution
@@ -964,7 +964,7 @@ Covers industry patterns:
 
 **Execution:** Model B (agentic, agent applies via tools)
 
-#### Umbraco.Ai.Workflow
+#### Umbraco.AI.Workflow
 Covers industry patterns:
 - Bulk operations (Contentful AI Actions style)
 - Multi-step workflows (Contentstack Agent OS style)
@@ -983,18 +983,18 @@ Covers industry patterns:
 |  INDUSTRY PATTERNS              ->    UMBRACO.AI COVERAGE         |
 +------------------------------------------------------------------+
 |                                                                   |
-|  AI Buttons (most CMS)          ->    Umbraco.Ai.Prompt           |
-|  Custom Instructions (Sanity)   ->    Umbraco.Ai.Prompt           |
+|  AI Buttons (most CMS)          ->    Umbraco.AI.Prompt           |
+|  Custom Instructions (Sanity)   ->    Umbraco.AI.Prompt           |
 |                                                                   |
-|  Assistive AI (Kontent.ai '24)  ->    Umbraco.Ai.Prompt           |
-|  Content Copilot (Sitecore)     ->    Umbraco.Ai.Agent            |
+|  Assistive AI (Kontent.ai '24)  ->    Umbraco.AI.Prompt           |
+|  Content Copilot (Sitecore)     ->    Umbraco.AI.Agent            |
 |                                                                   |
-|  AI Actions (Contentful)        ->    Umbraco.Ai.Workflow         |
-|  Agent Actions (Sanity '25)     ->    Umbraco.Ai.Workflow         |
-|  Agentic CMS (Kontent.ai '25)   ->    Umbraco.Ai.Workflow         |
+|  AI Actions (Contentful)        ->    Umbraco.AI.Workflow         |
+|  Agent Actions (Sanity '25)     ->    Umbraco.AI.Workflow         |
+|  Agentic CMS (Kontent.ai '25)   ->    Umbraco.AI.Workflow         |
 |                                                                   |
-|  Agent Orchestration (Optimizely) ->  Umbraco.Ai.Workflow         |
-|  Governance Agents (Acquia)     ->    Umbraco.Ai.Workflow         |
+|  Agent Orchestration (Optimizely) ->  Umbraco.AI.Workflow         |
+|  Governance Agents (Acquia)     ->    Umbraco.AI.Workflow         |
 |                                                                   |
 +------------------------------------------------------------------+
 ```
@@ -1015,7 +1015,7 @@ Covers industry patterns:
 
 ### Competitive Positioning
 
-| Capability | Industry Status | Umbraco.Ai Coverage |
+| Capability | Industry Status | Umbraco.AI Coverage |
 |------------|-----------------|---------------------|
 | Per-field AI buttons | Common | Prompt |
 | Custom instructions | Sanity only | Prompt |
@@ -1029,7 +1029,7 @@ Covers industry patterns:
 
 | Industry Feature | Platform | Potential Package |
 |------------------|----------|-------------------|
-| Adaptive Content (runtime) | Wix | Future: Umbraco.Ai.Personalization? |
+| Adaptive Content (runtime) | Wix | Future: Umbraco.AI.Personalization? |
 | GEO Optimization | Optimizely | Future: Workflow recipes? |
 | Mobile Companion | Kentico | Future: Mobile app? |
 | Connected Context (Slack, etc.) | Notion | Future: Integrations? |

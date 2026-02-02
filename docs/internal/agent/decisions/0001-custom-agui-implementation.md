@@ -10,7 +10,7 @@
 
 ## Context
 
-Umbraco.Ai.Agent requires an AG-UI (Agent-User Interface) protocol implementation to enable streaming communication between AI agents and frontend clients. AG-UI is an emerging protocol for real-time agent-to-UI communication using Server-Sent Events (SSE).
+Umbraco.AI.Agent requires an AG-UI (Agent-User Interface) protocol implementation to enable streaming communication between AI agents and frontend clients. AG-UI is an emerging protocol for real-time agent-to-UI communication using Server-Sent Events (SSE).
 
 Microsoft's Agent Framework (MAF) includes an AG-UI implementation, which we evaluated for potential reuse.
 
@@ -18,11 +18,11 @@ Microsoft's Agent Framework (MAF) includes an AG-UI implementation, which we eva
 
 1. **Use Microsoft's AG-UI implementation directly** - Reference MAF types and inherit their AG-UI infrastructure
 2. **Fork Microsoft's AG-UI code** - Copy and modify their implementation
-3. **Implement our own AG-UI library** - Create `Umbraco.Ai.Agui` as a pure protocol package
+3. **Implement our own AG-UI library** - Create `Umbraco.AI.AGUI` as a pure protocol package
 
 ## Decision
 
-**We chose Option 3: Implement our own AG-UI library (`Umbraco.Ai.Agui`).**
+**We chose Option 3: Implement our own AG-UI library (`Umbraco.AI.AGUI`).**
 
 ## Rationale
 
@@ -61,7 +61,7 @@ While the issue is assigned, it remains unresolved. This validates our decision 
 | Feature | Microsoft | Umbraco | Purpose |
 |---------|-----------|---------|---------|
 | Frontend Tool Interception | No | Yes | Intercepts tool calls to terminate agent loop and delegate execution to frontend |
-| HITL Interrupts | No | Yes | Human-in-the-loop workflow with `AguiInterruptInfo` and `AguiResumeInfo` |
+| HITL Interrupts | No | Yes | Human-in-the-loop workflow with `AGUIInterruptInfo` and `AGUIResumeInfo` |
 | Chunk Events | No | Yes | `TextMessageChunkEvent`, `ToolCallChunkEvent` - simpler than START/CONTENT/END triplets |
 | Activity Events | No | Yes | `ActivitySnapshotEvent`, `ActivityDeltaEvent` for frontend-only UI state |
 | Messages Snapshot | No | Yes | `MessagesSnapshotEvent` for full message history synchronization |
@@ -75,22 +75,22 @@ These features are core to Umbraco's agent architecture and cannot be added with
 Our implementation maintains clear boundaries:
 
 ```
-Umbraco.Ai.Agui (Pure Protocol Package)
-├── Events/* (IAguiEvent, BaseAguiEvent, all event types)
-├── Models/* (AguiMessage, AguiTool, AguiRunRequest, etc.)
-└── Streaming/* (AguiEventEmitter, AguiStreamResult, serialization)
+Umbraco.AI.AGUI (Pure Protocol Package)
+├── Events/* (IAGUIEvent, BaseAGUIEvent, all event types)
+├── Models/* (AGUIMessage, AGUITool, AGUIRunRequest, etc.)
+└── Streaming/* (AGUIEventEmitter, AGUIStreamResult, serialization)
          │
          ▼ (references)
-Umbraco.Ai.Agent.Core (Agent + MAF Integration)
+Umbraco.AI.Agent.Core (Agent + MAF Integration)
 ├── Chat/FrontendToolFunction.cs
-└── Agui/AguiStreamingService.cs
+└── AGUI/AGUIStreamingService.cs
          │
          ▼ (references)
-Umbraco.Ai.Agent.Web (HTTP Layer)
+Umbraco.AI.Agent.Web (HTTP Layer)
 └── Controllers/RunAgentController.cs
 ```
 
-`Umbraco.Ai.Agui` has no dependency on Microsoft Agent Framework, making it a pure protocol implementation that could theoretically be used outside the agent context.
+`Umbraco.AI.AGUI` has no dependency on Microsoft Agent Framework, making it a pure protocol implementation that could theoretically be used outside the agent context.
 
 ### 4. We Can Still Adopt Microsoft's Patterns
 
@@ -99,7 +99,7 @@ While we can't reuse their types, we adopted valuable architectural patterns:
 | Pattern | Description | Adopted |
 |---------|-------------|---------|
 | Direct streaming | No `Task.Run()`, preserves `AsyncLocal` context | Yes |
-| Builder pattern | Centralized event emission via `AguiEventEmitter` | Yes |
+| Builder pattern | Centralized event emission via `AGUIEventEmitter` | Yes |
 | Thin controller | Controller as routing layer, logic in services | Yes |
 
 ## Consequences

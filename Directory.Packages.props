@@ -25,43 +25,43 @@
 
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.2.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="[10.0.0, 10.999.999)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="[10.0.0, 10.999.999)" />
   </ItemGroup>
 
   <!-- Inter-product dependencies (version ranges for NuGet packages) -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Ai.Core" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.Ai.Agui" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.Ai.Startup" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.Ai.Agent" Version="[1.0.0, 1.999.999)" />
-    <PackageVersion Include="Umbraco.Ai.Agent.Copilot" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.AGUI" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[1.0.0, 1.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[1.0.0, 1.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Agents.AI" Version="1.0.0-preview.260121.1" />
-    <PackageVersion Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.0.0-preview.260121.1" />
+    <PackageVersion Include="Microsoft.Agents.AI" Version="1.0.0-preview.260128.1" />
   </ItemGroup>
 
   <!-- Provider packages -->
   <ItemGroup>
-    <PackageVersion Include="Anthropic" Version="12.2.0" />
-    <PackageVersion Include="AWSSDK.Bedrock" Version="4.0.1" />
-    <PackageVersion Include="AWSSDK.BedrockRuntime" Version="4.0.1" />
-    <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="4.0.2" />
+    <PackageVersion Include="Anthropic" Version="12.3.0" />
+    <PackageVersion Include="AWSSDK.Bedrock" Version="4.0.19.3" />
+    <PackageVersion Include="AWSSDK.BedrockRuntime" Version="4.0.15.1" />
+    <PackageVersion Include="AWSSDK.Extensions.Bedrock.MEAI" Version="4.0.5.7" />
     <PackageVersion Include="Azure.AI.Inference" Version="1.0.0-beta.5" />
-    <PackageVersion Include="Google.GenAI" Version="0.12.0" />
+    <PackageVersion Include="Google.GenAI" Version="0.13.1" />
     <PackageVersion Include="Microsoft.Extensions.AI.AzureAIInference" Version="10.0.0-preview.1.25559.3" />
-    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.0.1-preview.1.25571.5" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.2.0-preview.1.26063.2" />
   </ItemGroup>
 
   <!-- Shared dependencies -->
   <ItemGroup>
-    <PackageVersion Include="Humanizer.Core" Version="2.14.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="[10.0.0, 10.999.999)" />
-    <PackageVersion Include="SmartReader" Version="0.9.6" />
+    <PackageVersion Include="SmartReader" Version="0.11.0" />
   </ItemGroup>
 
   <!-- Test dependencies -->
@@ -69,10 +69,8 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="[10.0.0, 10.999.999)" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Shouldly" Version="4.2.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="[10.0.0, 10.999.999)" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
-    <PackageVersion Include="Verify.Xunit" Version="28.8.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>

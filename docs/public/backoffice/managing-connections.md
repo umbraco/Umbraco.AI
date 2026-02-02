@@ -54,7 +54,7 @@ Instead of storing API keys directly in the database, use configuration referenc
 
 2. In the connection settings, enter `$OpenAI:ApiKey` as the API Key value
 
-The `$` prefix tells Umbraco.Ai to resolve the value from configuration at runtime.
+The `$` prefix tells Umbraco.AI to resolve the value from configuration at runtime.
 
 {% hint style="success" %}
 Configuration references keep sensitive values out of the database and allow different values per environment.

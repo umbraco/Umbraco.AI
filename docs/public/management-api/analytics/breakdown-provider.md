@@ -71,7 +71,7 @@ var to = DateTime.UtcNow;
 var response = await httpClient.GetAsync(
     $"/umbraco/ai/management/api/v1/analytics/breakdown/provider?from={from:O}&to={to:O}");
 
-var breakdown = await response.Content.ReadFromJsonAsync<AiUsageBreakdownResult>();
+var breakdown = await response.Content.ReadFromJsonAsync<AIUsageBreakdownResult>();
 
 foreach (var item in breakdown.Items)
 {

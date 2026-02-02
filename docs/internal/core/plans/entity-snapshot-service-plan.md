@@ -1,8 +1,8 @@
-# AiEntitySnapshotService Design Plan
+# AIEntitySnapshotService Design Plan
 
 ## Overview
 
-The `AiEntitySnapshotService` creates simplified, consistent snapshots of Umbraco entities (Content, Media, Member) to provide context for AI requests. These snapshots support mustache-style placeholder templates that allow dynamic property access via dot notation.
+The `AIEntitySnapshotService` creates simplified, consistent snapshots of Umbraco entities (Content, Media, Member) to provide context for AI requests. These snapshots support mustache-style placeholder templates that allow dynamic property access via dot notation.
 
 ## Goals
 
@@ -39,62 +39,62 @@ The core property value conversion pipeline already returns fully-typed models:
 Following the project's feature-sliced architecture, create a new feature folder:
 
 ```
-src/Umbraco.Ai.Core/
+src/Umbraco.AI.Core/
 ├── Snapshots/
-│   ├── IAiEntitySnapshotService.cs
-│   ├── AiEntitySnapshotService.cs
-│   ├── IAiPropertyValueSerializer.cs
-│   ├── AiPropertyValueSerializerCollection.cs
-│   ├── AiPropertyValueSerializerCollectionBuilder.cs
-│   ├── AiEntitySnapshot.cs
-│   ├── AiSnapshotOptions.cs
-│   ├── AiRequestContext.cs
+│   ├── IAIEntitySnapshotService.cs
+│   ├── AIEntitySnapshotService.cs
+│   ├── IAIPropertyValueSerializer.cs
+│   ├── AIPropertyValueSerializerCollection.cs
+│   ├── AIPropertyValueSerializerCollectionBuilder.cs
+│   ├── AIEntitySnapshot.cs
+│   ├── AISnapshotOptions.cs
+│   ├── AIRequestContext.cs
 │   ├── Serializers/
-│   │   ├── DefaultAiPropertyValueSerializer.cs
-│   │   ├── BlockEditorAiPropertyValueSerializer.cs
-│   │   ├── RichTextAiPropertyValueSerializer.cs
-│   │   ├── MediaPickerAiPropertyValueSerializer.cs
-│   │   └── ContentPickerAiPropertyValueSerializer.cs
+│   │   ├── DefaultAIPropertyValueSerializer.cs
+│   │   ├── BlockEditorAIPropertyValueSerializer.cs
+│   │   ├── RichTextAIPropertyValueSerializer.cs
+│   │   ├── MediaPickerAIPropertyValueSerializer.cs
+│   │   └── ContentPickerAIPropertyValueSerializer.cs
 ```
 
 ### Core Interfaces
 
-#### IAiEntitySnapshotService
+#### IAIEntitySnapshotService
 
 ```csharp
-public interface IAiEntitySnapshotService
+public interface IAIEntitySnapshotService
 {
     /// <summary>
     /// Creates a snapshot from published content by key.
     /// </summary>
-    Task<AiEntitySnapshot?> CreateSnapshotAsync(
+    Task<AIEntitySnapshot?> CreateSnapshotAsync(
         Guid entityKey,
         PublishedItemType entityType,
-        AiSnapshotOptions? options = null,
+        AISnapshotOptions? options = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a snapshot from an IPublishedContent instance.
     /// </summary>
-    AiEntitySnapshot CreateSnapshot(
+    AIEntitySnapshot CreateSnapshot(
         IPublishedContent content,
-        AiSnapshotOptions? options = null);
+        AISnapshotOptions? options = null);
 
     /// <summary>
     /// Creates a snapshot from an IPublishedElement (for nested content like blocks).
     /// </summary>
-    AiEntitySnapshot CreateSnapshot(
+    AIEntitySnapshot CreateSnapshot(
         IPublishedElement element,
-        AiSnapshotOptions? options = null);
+        AISnapshotOptions? options = null);
 }
 ```
 
-#### IAiPropertyValueSerializer
+#### IAIPropertyValueSerializer
 
 Extensible property value serialization using Umbraco's collection builder pattern:
 
 ```csharp
-public interface IAiPropertyValueSerializer
+public interface IAIPropertyValueSerializer
 {
     /// <summary>
     /// Returns true if this serializer handles the given property type.
@@ -112,28 +112,28 @@ public interface IAiPropertyValueSerializer
     object? Serialize(
         IPublishedProperty property,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializerCollection);
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializerCollection);
 }
 ```
 
 #### Collection Builder
 
 ```csharp
-public class AiPropertyValueSerializerCollectionBuilder
+public class AIPropertyValueSerializerCollectionBuilder
     : OrderedCollectionBuilderBase<
-        AiPropertyValueSerializerCollectionBuilder,
-        AiPropertyValueSerializerCollection,
-        IAiPropertyValueSerializer>
+        AIPropertyValueSerializerCollectionBuilder,
+        AIPropertyValueSerializerCollection,
+        IAIPropertyValueSerializer>
 {
-    protected override AiPropertyValueSerializerCollectionBuilder This => this;
+    protected override AIPropertyValueSerializerCollectionBuilder This => this;
 }
 
-public class AiPropertyValueSerializerCollection
-    : BuilderCollectionBase<IAiPropertyValueSerializer>
+public class AIPropertyValueSerializerCollection
+    : BuilderCollectionBase<IAIPropertyValueSerializer>
 {
-    public AiPropertyValueSerializerCollection(
-        Func<IEnumerable<IAiPropertyValueSerializer>> items)
+    public AIPropertyValueSerializerCollection(
+        Func<IEnumerable<IAIPropertyValueSerializer>> items)
         : base(items)
     {
     }
@@ -144,7 +144,7 @@ public class AiPropertyValueSerializerCollection
     public object? Serialize(
         IPublishedProperty property,
         string? culture,
-        AiSnapshotOptions options)
+        AISnapshotOptions options)
     {
         var serializer = this.FirstOrDefault(s => s.CanSerialize(property.PropertyType));
         return serializer?.Serialize(property, culture, options, this);
@@ -156,12 +156,12 @@ public class AiPropertyValueSerializerCollection
 
 ## Models
 
-### AiEntitySnapshot
+### AIEntitySnapshot
 
 A snapshot represents a single entity at a specific culture/variant:
 
 ```csharp
-public class AiEntitySnapshot
+public class AIEntitySnapshot
 {
     /// <summary>
     /// The entity's unique key (GUID).
@@ -220,10 +220,10 @@ public class AiEntitySnapshot
 }
 ```
 
-### AiSnapshotOptions
+### AISnapshotOptions
 
 ```csharp
-public class AiSnapshotOptions
+public class AISnapshotOptions
 {
     /// <summary>
     /// The culture to serialize. If null, uses the current variation context.
@@ -249,17 +249,17 @@ public class AiSnapshotOptions
 }
 ```
 
-### AiRequestContext
+### AIRequestContext
 
 For property-specific AI assistance with a "current value":
 
 ```csharp
-public class AiRequestContext
+public class AIRequestContext
 {
     /// <summary>
     /// The entity snapshot providing context.
     /// </summary>
-    public AiEntitySnapshot? EntitySnapshot { get; init; }
+    public AIEntitySnapshot? EntitySnapshot { get; init; }
 
     /// <summary>
     /// The property alias being edited (if applicable).
@@ -287,24 +287,24 @@ public class AiRequestContext
 Using core `IPublishedProperty.GetValue()` which returns fully-converted objects:
 
 ```csharp
-public class AiEntitySnapshotService : IAiEntitySnapshotService
+public class AIEntitySnapshotService : IAIEntitySnapshotService
 {
     private readonly IPublishedContentCache _contentCache;
     private readonly IPublishedMediaCache _mediaCache;
     private readonly IVariationContextAccessor _variationContextAccessor;
     private readonly IPublishedUrlProvider _urlProvider;
-    private readonly AiPropertyValueSerializerCollection _serializers;
+    private readonly AIPropertyValueSerializerCollection _serializers;
 
-    public AiEntitySnapshot CreateSnapshot(
+    public AIEntitySnapshot CreateSnapshot(
         IPublishedContent content,
-        AiSnapshotOptions? options = null)
+        AISnapshotOptions? options = null)
     {
-        options ??= new AiSnapshotOptions();
+        options ??= new AISnapshotOptions();
         var culture = ResolveCulture(options);
         var properties = SerializeProperties(content, culture, options);
         var name = content.Name(culture);
 
-        return new AiEntitySnapshot
+        return new AIEntitySnapshot
         {
             Key = content.Key,
             ItemType = content.ItemType,
@@ -319,15 +319,15 @@ public class AiEntitySnapshotService : IAiEntitySnapshotService
         };
     }
 
-    public AiEntitySnapshot CreateSnapshot(
+    public AIEntitySnapshot CreateSnapshot(
         IPublishedElement element,
-        AiSnapshotOptions? options = null)
+        AISnapshotOptions? options = null)
     {
-        options ??= new AiSnapshotOptions();
+        options ??= new AISnapshotOptions();
         var culture = ResolveCulture(options);
         var properties = SerializeProperties(element, culture, options);
 
-        return new AiEntitySnapshot
+        return new AIEntitySnapshot
         {
             Key = element.Key,
             ItemType = PublishedItemType.Element,
@@ -351,7 +351,7 @@ public class AiEntitySnapshotService : IAiEntitySnapshotService
     private Dictionary<string, object?> SerializeProperties(
         IPublishedElement element,
         string? culture,
-        AiSnapshotOptions options)
+        AISnapshotOptions options)
     {
         var result = new Dictionary<string, object?>();
 
@@ -367,7 +367,7 @@ public class AiEntitySnapshotService : IAiEntitySnapshotService
         return result;
     }
 
-    private string? ResolveCulture(AiSnapshotOptions options)
+    private string? ResolveCulture(AISnapshotOptions options)
     {
         if (!string.IsNullOrEmpty(options.Culture))
             return options.Culture;
@@ -452,15 +452,15 @@ Built-in serializers that handle core `IPublishedProperty.GetValue()` return typ
 #### Default Serializer (Fallback)
 
 ```csharp
-public class DefaultAiPropertyValueSerializer : IAiPropertyValueSerializer
+public class DefaultAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     public bool CanSerialize(IPublishedPropertyType propertyType) => true;
 
     public object? Serialize(
         IPublishedProperty property,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializerCollection)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializerCollection)
     {
         var value = property.GetValue(culture);
 
@@ -495,7 +495,7 @@ public class DefaultAiPropertyValueSerializer : IAiPropertyValueSerializer
 #### Block Editor Serializer
 
 ```csharp
-public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
+public class BlockEditorAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     public bool CanSerialize(IPublishedPropertyType propertyType)
         => propertyType.EditorAlias is
@@ -505,8 +505,8 @@ public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
     public object? Serialize(
         IPublishedProperty property,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializerCollection)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializerCollection)
     {
         if (options.CurrentDepth >= options.MaxDepth)
             return "[Block content - max depth reached]";
@@ -526,8 +526,8 @@ public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
     private object SerializeBlockGrid(
         BlockGridModel grid,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializers)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializers)
     {
         return new
         {
@@ -539,8 +539,8 @@ public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
     private object SerializeBlockGridItem(
         BlockGridItem item,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializers)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializers)
     {
         return new
         {
@@ -563,8 +563,8 @@ public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
     private object SerializeBlockList(
         BlockListModel list,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializers)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializers)
     {
         return new
         {
@@ -575,8 +575,8 @@ public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
     private object SerializeBlockItem(
         BlockListItem item,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializers)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializers)
     {
         return new
         {
@@ -591,8 +591,8 @@ public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
     private Dictionary<string, object?> SerializeElement(
         IPublishedElement element,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializers)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializers)
     {
         var result = new Dictionary<string, object?>();
 
@@ -612,7 +612,7 @@ public class BlockEditorAiPropertyValueSerializer : IAiPropertyValueSerializer
 #### Rich Text Serializer
 
 ```csharp
-public class RichTextAiPropertyValueSerializer : IAiPropertyValueSerializer
+public class RichTextAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     public bool CanSerialize(IPublishedPropertyType propertyType)
         => propertyType.EditorAlias == Constants.PropertyEditors.Aliases.TinyMce ||
@@ -621,8 +621,8 @@ public class RichTextAiPropertyValueSerializer : IAiPropertyValueSerializer
     public object? Serialize(
         IPublishedProperty property,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializerCollection)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializerCollection)
     {
         var value = property.GetValue(culture);
 
@@ -662,11 +662,11 @@ public class RichTextAiPropertyValueSerializer : IAiPropertyValueSerializer
 Returns a simple reference model (no expansion):
 
 ```csharp
-public class MediaPickerAiPropertyValueSerializer : IAiPropertyValueSerializer
+public class MediaPickerAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     private readonly IPublishedUrlProvider _urlProvider;
 
-    public MediaPickerAiPropertyValueSerializer(IPublishedUrlProvider urlProvider)
+    public MediaPickerAIPropertyValueSerializer(IPublishedUrlProvider urlProvider)
     {
         _urlProvider = urlProvider;
     }
@@ -677,8 +677,8 @@ public class MediaPickerAiPropertyValueSerializer : IAiPropertyValueSerializer
     public object? Serialize(
         IPublishedProperty property,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializerCollection)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializerCollection)
     {
         var value = property.GetValue(culture);
 
@@ -712,11 +712,11 @@ public class MediaPickerAiPropertyValueSerializer : IAiPropertyValueSerializer
 Returns a simple reference model (no expansion):
 
 ```csharp
-public class ContentPickerAiPropertyValueSerializer : IAiPropertyValueSerializer
+public class ContentPickerAIPropertyValueSerializer : IAIPropertyValueSerializer
 {
     private readonly IPublishedUrlProvider _urlProvider;
 
-    public ContentPickerAiPropertyValueSerializer(IPublishedUrlProvider urlProvider)
+    public ContentPickerAIPropertyValueSerializer(IPublishedUrlProvider urlProvider)
     {
         _urlProvider = urlProvider;
     }
@@ -728,8 +728,8 @@ public class ContentPickerAiPropertyValueSerializer : IAiPropertyValueSerializer
     public object? Serialize(
         IPublishedProperty property,
         string? culture,
-        AiSnapshotOptions options,
-        AiPropertyValueSerializerCollection serializerCollection)
+        AISnapshotOptions options,
+        AIPropertyValueSerializerCollection serializerCollection)
     {
         var value = property.GetValue(culture);
 
@@ -758,18 +758,18 @@ public class ContentPickerAiPropertyValueSerializer : IAiPropertyValueSerializer
 ### Phase 3: Template Integration
 
 ```csharp
-public interface IAiTemplateResolver
+public interface IAITemplateResolver
 {
     /// <summary>
     /// Resolves mustache placeholders in a template string.
     /// </summary>
-    string Resolve(string template, AiTemplateContext context);
+    string Resolve(string template, AITemplateContext context);
 }
 
-public class AiTemplateContext
+public class AITemplateContext
 {
-    public AiEntitySnapshot? Content { get; init; }
-    public AiRequestContext? Context { get; init; }
+    public AIEntitySnapshot? Content { get; init; }
+    public AIRequestContext? Context { get; init; }
     public string? Culture { get; init; }
     public IReadOnlyDictionary<string, object?>? CustomData { get; init; }
 }
@@ -778,11 +778,11 @@ public class AiTemplateContext
 Using [Stubble](https://github.com/StubbleOrg/Stubble) for mustache template rendering:
 
 ```csharp
-public class AiTemplateResolver : IAiTemplateResolver
+public class AITemplateResolver : IAITemplateResolver
 {
     private readonly StubbleVisitorRenderer _renderer;
 
-    public AiTemplateResolver()
+    public AITemplateResolver()
     {
         _renderer = new StubbleBuilder()
             .Configure(settings =>
@@ -793,7 +793,7 @@ public class AiTemplateResolver : IAiTemplateResolver
             .Build();
     }
 
-    public string Resolve(string template, AiTemplateContext context)
+    public string Resolve(string template, AITemplateContext context)
     {
         var data = new Dictionary<string, object?>
         {
@@ -816,20 +816,20 @@ public class AiTemplateResolver : IAiTemplateResolver
 ### Phase 4: DI Registration
 
 ```csharp
-public static class AiSnapshotComposerExtensions
+public static class AISnapshotComposerExtensions
 {
-    public static IUmbracoBuilder AddAiSnapshots(this IUmbracoBuilder builder)
+    public static IUmbracoBuilder AddAISnapshots(this IUmbracoBuilder builder)
     {
         // Register serializer collection with default serializers
-        builder.AiPropertyValueSerializers()
-            .Append<BlockEditorAiPropertyValueSerializer>()
-            .Append<RichTextAiPropertyValueSerializer>()
-            .Append<MediaPickerAiPropertyValueSerializer>()
-            .Append<ContentPickerAiPropertyValueSerializer>()
-            .Append<DefaultAiPropertyValueSerializer>(); // Fallback last
+        builder.AIPropertyValueSerializers()
+            .Append<BlockEditorAIPropertyValueSerializer>()
+            .Append<RichTextAIPropertyValueSerializer>()
+            .Append<MediaPickerAIPropertyValueSerializer>()
+            .Append<ContentPickerAIPropertyValueSerializer>()
+            .Append<DefaultAIPropertyValueSerializer>(); // Fallback last
 
-        builder.Services.AddSingleton<IAiEntitySnapshotService, AiEntitySnapshotService>();
-        builder.Services.AddSingleton<IAiTemplateResolver, AiTemplateResolver>();
+        builder.Services.AddSingleton<IAIEntitySnapshotService, AIEntitySnapshotService>();
+        builder.Services.AddSingleton<IAITemplateResolver, AITemplateResolver>();
 
         return builder;
     }

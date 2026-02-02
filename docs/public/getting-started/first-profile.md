@@ -62,13 +62,13 @@ See [Managing Settings](../backoffice/managing-settings.md) for more details on 
 {% code title="ContentController.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Chat;
+using Umbraco.AI.Core.Chat;
 
 public class ContentController : UmbracoApiController
 {
-    private readonly IAiChatService _chatService;
+    private readonly IAIChatService _chatService;
 
-    public ContentController(IAiChatService chatService)
+    public ContentController(IAIChatService chatService)
     {
         _chatService = chatService;
     }
@@ -98,7 +98,7 @@ To use a specific profile, pass the profile ID:
 ```csharp
 public async Task<IActionResult> GenerateSummary(
     [FromBody] string content,
-    [FromServices] IAiProfileService profileService)
+    [FromServices] IAIProfileService profileService)
 {
     var profile = await profileService.GetProfileByAliasAsync("content-assistant");
 

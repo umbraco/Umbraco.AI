@@ -24,7 +24,7 @@ The client is included in the Agent package:
 
 {% code title="Package Manager Console" %}
 ```powershell
-Install-Package Umbraco.Ai.Agent
+Install-Package Umbraco.AI.Agent
 ```
 {% endcode %}
 
@@ -32,7 +32,7 @@ Or via .NET CLI:
 
 {% code title="Terminal" %}
 ```bash
-dotnet add package Umbraco.Ai.Agent
+dotnet add package Umbraco.AI.Agent
 ```
 {% endcode %}
 
@@ -207,7 +207,7 @@ Sends messages to the agent and starts a new run.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `messages` | `UaiChatMessage[]` | Yes | Conversation messages |
-| `tools` | `AguiTool[]` | No | Available tools for the agent |
+| `tools` | `AGUITool[]` | No | Available tools for the agent |
 | `context` | `Array<{description: string, value: string}>` | No | Context items for LLM awareness |
 
 **Returns:** `void`
@@ -597,7 +597,7 @@ import type {
   AgentClientCallbacks,
   AgentTransport,
   RunFinishedEvent,
-  AguiTool,
+  AGUITool,
 } from '@umbraco-ai/agent';
 ```
 

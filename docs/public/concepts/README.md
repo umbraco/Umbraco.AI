@@ -1,11 +1,11 @@
 ---
 description: >-
-  Understand the core concepts that make up Umbraco.Ai's architecture.
+  Understand the core concepts that make up Umbraco.AI's architecture.
 ---
 
 # Core Concepts
 
-Umbraco.Ai is built around a hierarchical configuration model that separates concerns and enables flexibility. Understanding these concepts helps you make the most of the platform.
+Umbraco.AI is built around a hierarchical configuration model that separates concerns and enables flexibility. Understanding these concepts helps you make the most of the platform.
 
 ## The Configuration Hierarchy
 
@@ -53,14 +53,14 @@ Each level adds configuration that flows down to the actual AI request.
 
 ## Built on Microsoft.Extensions.AI
 
-Umbraco.Ai is built on [Microsoft.Extensions.AI](https://learn.microsoft.com/en-us/dotnet/ai/ai-extensions), Microsoft's official abstraction for AI services. This means:
+Umbraco.AI is built on [Microsoft.Extensions.AI](https://learn.microsoft.com/en-us/dotnet/ai/ai-extensions), Microsoft's official abstraction for AI services. This means:
 
 * Standard types like `IChatClient`, `ChatMessage`, and `ChatResponse`
 * Familiar patterns for .NET developers
 * Compatibility with the broader M.E.AI ecosystem
 * Future-proof as M.E.AI evolves
 
-The service layer in Umbraco.Ai is intentionally thin - it adds Umbraco-specific features (profiles, connections, backoffice UI) while exposing standard M.E.AI types.
+The service layer in Umbraco.AI is intentionally thin - it adds Umbraco-specific features (profiles, connections, backoffice UI) while exposing standard M.E.AI types.
 
 ## In This Section
 

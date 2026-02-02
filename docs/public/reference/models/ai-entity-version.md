@@ -3,21 +3,21 @@ description: >-
   Model representing an entity version history record.
 ---
 
-# AiEntityVersion
+# AIEntityVersion
 
 Represents a version history record for a versioned AI entity.
 
 ## Namespace
 
 ```csharp
-using Umbraco.Ai.Core.Versioning;
+using Umbraco.AI.Core.Versioning;
 ```
 
 ## Definition
 
-{% code title="AiEntityVersion" %}
+{% code title="AIEntityVersion" %}
 ```csharp
-public class AiEntityVersion
+public class AIEntityVersion
 {
     public Guid Id { get; set; }
     public Guid EntityId { get; set; }
@@ -48,11 +48,11 @@ public class AiEntityVersion
 
 | Type String | Entity | Package |
 |-------------|--------|---------|
-| `"connection"` | `AiConnection` | Umbraco.Ai |
-| `"profile"` | `AiProfile` | Umbraco.Ai |
-| `"context"` | `AiContext` | Umbraco.Ai |
-| `"prompt"` | `AiPrompt` | Umbraco.Ai.Prompt |
-| `"agent"` | `AiAgent` | Umbraco.Ai.Agent |
+| `"connection"` | `AIConnection` | Umbraco.AI |
+| `"profile"` | `AIProfile` | Umbraco.AI |
+| `"context"` | `AIContext` | Umbraco.AI |
+| `"prompt"` | `AIPrompt` | Umbraco.AI.Prompt |
+| `"agent"` | `AIAgent` | Umbraco.AI.Agent |
 
 ## Example
 
@@ -76,13 +76,13 @@ foreach (var version in versions)
 
 ---
 
-# AiVersionComparison
+# AIVersionComparison
 
 Result of comparing two entity versions.
 
-{% code title="AiVersionComparison" %}
+{% code title="AIVersionComparison" %}
 ```csharp
-public class AiVersionComparison
+public class AIVersionComparison
 {
     public Guid EntityId { get; set; }
     public string EntityType { get; set; } = string.Empty;
@@ -90,7 +90,7 @@ public class AiVersionComparison
     public int ToVersion { get; set; }
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
-    public IReadOnlyList<AiVersionChange> Changes { get; set; } = Array.Empty<AiVersionChange>();
+    public IReadOnlyList<AIVersionChange> Changes { get; set; } = Array.Empty<AIVersionChange>();
     public string? FromSnapshot { get; set; }
     public string? ToSnapshot { get; set; }
 }
@@ -99,21 +99,21 @@ public class AiVersionComparison
 
 ---
 
-# AiVersionChange
+# AIVersionChange
 
 Represents a single change between two versions.
 
-{% code title="AiVersionChange" %}
+{% code title="AIVersionChange" %}
 ```csharp
-public class AiVersionChange
+public class AIVersionChange
 {
     public string Path { get; set; } = string.Empty;
-    public AiVersionChangeType ChangeType { get; set; }
+    public AIVersionChangeType ChangeType { get; set; }
     public string? FromValue { get; set; }
     public string? ToValue { get; set; }
 }
 
-public enum AiVersionChangeType
+public enum AIVersionChangeType
 {
     Added = 0,
     Removed = 1,
@@ -124,13 +124,13 @@ public enum AiVersionChangeType
 
 ---
 
-# AiVersionCleanupResult
+# AIVersionCleanupResult
 
 Result of version cleanup operation.
 
-{% code title="AiVersionCleanupResult" %}
+{% code title="AIVersionCleanupResult" %}
 ```csharp
-public class AiVersionCleanupResult
+public class AIVersionCleanupResult
 {
     public int DeletedCount { get; set; }
     public DateTime? OldestRetained { get; set; }
@@ -140,13 +140,13 @@ public class AiVersionCleanupResult
 
 ---
 
-# IAiVersionableEntity
+# IAIVersionableEntity
 
 Interface implemented by entities that support versioning.
 
-{% code title="IAiVersionableEntity" %}
+{% code title="IAIVersionableEntity" %}
 ```csharp
-public interface IAiVersionableEntity : IAiAuditableEntity
+public interface IAIVersionableEntity : IAIAuditableEntity
 {
     int Version { get; }
 }
@@ -155,5 +155,5 @@ public interface IAiVersionableEntity : IAiAuditableEntity
 
 ## Related
 
-* [IAiEntityVersionService](../services/ai-entity-version-service.md) - Version service
+* [IAIEntityVersionService](../services/ai-entity-version-service.md) - Version service
 * [Version History Concept](../../concepts/versioning.md) - Versioning concepts

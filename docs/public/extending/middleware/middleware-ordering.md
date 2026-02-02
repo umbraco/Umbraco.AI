@@ -38,14 +38,14 @@ The collection builder provides methods to control ordering:
 
 {% code title="MyComposer.cs" %}
 ```csharp
-using Umbraco.Ai.Extensions;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
 
 public class MyComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Append<TracingMiddleware>()      // Runs first
             .Append<LoggingMiddleware>()      // Runs second
             .Append<CachingMiddleware>();     // Runs third
@@ -65,11 +65,11 @@ public class ExtendingComposer : IComposer
     public void Compose(IUmbracoBuilder builder)
     {
         // Insert metrics before logging (so metrics include logging time)
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .InsertBefore<LoggingMiddleware, MetricsMiddleware>();
 
         // Insert rate limiting after authentication
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .InsertAfter<AuthMiddleware, RateLimitMiddleware>();
     }
 }
@@ -86,7 +86,7 @@ public class CustomComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Remove<DefaultLoggingMiddleware>()
             .Append<MyCustomLoggingMiddleware>();
     }
@@ -104,7 +104,7 @@ public class MyComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiEmbeddingMiddleware()
+        builder.AIEmbeddingMiddleware()
             .Append<MetricsEmbeddingMiddleware>()
             .Append<CachingEmbeddingMiddleware>()
             .Append<NormalizationEmbeddingMiddleware>();
@@ -120,7 +120,7 @@ public class MyComposer : IComposer
 Put logging middleware early so it captures the full request lifecycle:
 
 ```csharp
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<LoggingMiddleware>()       // First - logs everything
     .Append<RetryMiddleware>()         // Second - logging sees retries
     .Append<CachingMiddleware>();      // Third - logging sees cache hits
@@ -131,7 +131,7 @@ builder.AiChatMiddleware()
 Put caching close to the client so cached responses skip other middleware:
 
 ```csharp
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<MetricsMiddleware>()       // First - tracks all requests
     .Append<RateLimitMiddleware>()     // Second - applies rate limiting
     .Append<CachingMiddleware>();      // Third - cache hits skip rate limiting
@@ -142,7 +142,7 @@ builder.AiChatMiddleware()
 Put error handling early to catch exceptions from all middleware:
 
 ```csharp
-builder.AiChatMiddleware()
+builder.AIChatMiddleware()
     .Append<ErrorHandlingMiddleware>() // First - catches all errors
     .Append<LoggingMiddleware>()       // Second
     .Append<BusinessLogicMiddleware>();// Third
@@ -154,12 +154,12 @@ When multiple composers add middleware, they combine in composer execution order
 
 {% code title="ComposerA.cs" %}
 ```csharp
-[ComposeAfter(typeof(UmbracoAiComposer))]
+[ComposeAfter(typeof(UmbracoAIComposer))]
 public class ComposerA : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Append<MiddlewareA>();
     }
 }
@@ -173,7 +173,7 @@ public class ComposerB : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AiChatMiddleware()
+        builder.AIChatMiddleware()
             .Append<MiddlewareB>()
             .InsertBefore<MiddlewareA, MiddlewareC>(); // Insert before A
     }

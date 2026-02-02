@@ -1,0 +1,36 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "AuthorDetails": {
+    "Name": "Umbraco HQ",
+    "Description": "Umbraco HQ",
+    "Url": "https://umbraco.com",
+    "ImageUrl": "https://avatars.githubusercontent.com/u/1419552?s=200&v=4"
+  },
+  "Category": "Artificial Intelligence",
+  "LicenseTypes": ["Free"],
+  "DocumentationUrl": "https://github.com/umbraco/Umbraco.AI/tree/main/Umbraco.AI.Prompt",
+  "IssueTrackerUrl": "https://github.com/umbraco/Umbraco.AI/issues",
+  "PackageType": "Package",
+  "PackagesByAuthor": [
+    "Umbraco.Forms",
+    "Umbraco.Workflow",
+    "Umbraco.Deploy.OnPrem",
+    "Umbraco.Commerce",
+    "Umbraco.Engage"
+  ],
+  "RelatedPackages": [
+    {
+      "PackageId": "Umbraco.AI",
+      "Description": "Core AI integration layer for Umbraco CMS"
+    },
+    {
+      "PackageId": "Umbraco.AI.Agent",
+      "Description": "AI agent management add-on for Umbraco.AI"
+    },
+    {
+      "PackageId": "Umbraco.AI.OpenAI",
+      "Description": "OpenAI provider for Umbraco.AI"
+    }
+  ],
+  "Tags": ["umbraco", "ai", "prompt", "templates"]
+}

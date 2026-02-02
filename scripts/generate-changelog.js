@@ -11,12 +11,12 @@ const conventionalChangelog = conventionalChangelogModule.default || conventiona
 function discoverProducts(rootDir) {
   const products = {};
 
-  // Find all directories matching Umbraco.Ai* pattern
+  // Find all directories matching Umbraco.AI* pattern
   const entries = fs.readdirSync(rootDir, { withFileTypes: true });
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-    if (!entry.name.startsWith('Umbraco.Ai')) continue;
+    if (!entry.name.startsWith('Umbraco.AI')) continue;
 
     const productDir = path.join(rootDir, entry.name);
     const configPath = path.join(productDir, 'changelog.config.json');
@@ -174,8 +174,8 @@ async function generateChangelog(product, version, options = {}) {
     version: version,
     host: 'https://github.com',
     owner: 'umbraco',
-    repository: 'Umbraco.Ai',
-    repoUrl: 'https://github.com/umbraco/Umbraco.Ai',
+    repository: 'Umbraco.AI',
+    repoUrl: 'https://github.com/umbraco/Umbraco.AI',
     linkCompare: true,
     packageName: product
   };
@@ -281,14 +281,14 @@ async function generateChangelog(product, version, options = {}) {
         ...commit,
         breaking: commit.notes && commit.notes.length > 0,
         shortHash: commit.hash ? commit.hash.substring(0, 7) : undefined,
-        hashUrl: commit.hash ? `https://github.com/umbraco/Umbraco.Ai/commit/${commit.hash}` : undefined
+        hashUrl: commit.hash ? `https://github.com/umbraco/Umbraco.AI/commit/${commit.hash}` : undefined
       };
 
       // Process references (PR/issue links)
       if (transformedCommit.references && transformedCommit.references.length > 0) {
         transformedCommit.references = transformedCommit.references.map(ref => ({
           ...ref,
-          url: ref.issue ? `https://github.com/umbraco/Umbraco.Ai/pull/${ref.issue}` : ref.url
+          url: ref.issue ? `https://github.com/umbraco/Umbraco.AI/pull/${ref.issue}` : ref.url
         }));
       }
 
@@ -378,8 +378,8 @@ if (require.main === module) {
   if (!product) {
     console.error('❌ Error: --product is required');
     console.log('\nUsage:');
-    console.log('  node scripts/generate-changelog.js --product=Umbraco.Ai --version=17.1.0');
-    console.log('  node scripts/generate-changelog.js --product=Umbraco.Ai --unreleased');
+    console.log('  node scripts/generate-changelog.js --product=Umbraco.AI --version=17.1.0');
+    console.log('  node scripts/generate-changelog.js --product=Umbraco.AI --unreleased');
     console.log('  node scripts/generate-changelog.js --list  # List available products');
     console.log('\nAvailable products:');
     try {

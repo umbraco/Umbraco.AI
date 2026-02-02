@@ -1,11 +1,11 @@
 ---
 description: >-
-  Extend Umbraco.Ai with custom providers, middleware, and tools.
+  Extend Umbraco.AI with custom providers, middleware, and tools.
 ---
 
-# Extending Umbraco.Ai
+# Extending Umbraco.AI
 
-Umbraco.Ai is designed to be extensible. You can add support for new AI providers, customize the request pipeline with middleware, and create custom tools for AI agents.
+Umbraco.AI is designed to be extensible. You can add support for new AI providers, customize the request pipeline with middleware, and create custom tools for AI agents.
 
 ## Extension Points
 
@@ -58,7 +58,7 @@ Umbraco.Ai is designed to be extensible. You can add support for new AI provider
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Your Code                            │
-│         IAiChatService / IAiEmbeddingService                │
+│         IAIChatService / IAIEmbeddingService                │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼

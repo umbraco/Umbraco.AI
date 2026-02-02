@@ -5,7 +5,7 @@ description: >-
 
 # Management API
 
-The Umbraco.Ai Management API provides REST endpoints for managing connections and profiles, as well as performing chat completions and embedding generation.
+The Umbraco.AI Management API provides REST endpoints for managing connections and profiles, as well as performing chat completions and embedding generation.
 
 ## Base URL
 

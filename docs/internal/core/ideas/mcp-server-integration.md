@@ -2,7 +2,7 @@
 
 ## Status: Under Consideration
 
-This document explores integrating external MCP (Model Context Protocol) servers with Umbraco.Ai, particularly the existing [Umbraco Developer MCP Server](https://docs.umbraco.com/umbraco-cms/reference/developer-mcp).
+This document explores integrating external MCP (Model Context Protocol) servers with Umbraco.AI, particularly the existing [Umbraco Developer MCP Server](https://docs.umbraco.com/umbraco-cms/reference/developer-mcp).
 
 ---
 
@@ -16,7 +16,7 @@ Umbraco already has an MCP Server ([umbraco/Umbraco-CMS-MCP-Dev](https://github.
 - Content structure synchronization
 - Log interpretation and debugging
 
-**Instead of re-implementing these as native Umbraco.Ai tools, we could consume them via MCP.**
+**Instead of re-implementing these as native Umbraco.AI tools, we could consume them via MCP.**
 
 ---
 
@@ -55,16 +55,16 @@ var response = await chatClient.GetResponseAsync(
 Agents could pull tools from multiple sources:
 
 ```csharp
-public interface IAiToolSource
+public interface IAIToolSource
 {
     Task<IEnumerable<AITool>> GetToolsAsync(CancellationToken ct = default);
 }
 
-// Native tools from IAiToolRegistry
-public class NativeToolSource : IAiToolSource { ... }
+// Native tools from IAIToolRegistry
+public class NativeToolSource : IAIToolSource { ... }
 
 // Tools from MCP servers
-public class McpToolSource : IAiToolSource
+public class McpToolSource : IAIToolSource
 {
     private readonly McpClient _mcpClient;
 
@@ -78,7 +78,7 @@ public class McpToolSource : IAiToolSource
 Agent configuration could specify which sources to use:
 
 ```csharp
-public sealed class AiAgent
+public sealed class AIAgent
 {
     // Native tools
     public IReadOnlyList<string> EnabledToolIds { get; init; } = [];
@@ -116,12 +116,12 @@ public sealed class McpServerConnection
 }
 ```
 
-### Option C: Wrap MCP Tools as IAiTool
+### Option C: Wrap MCP Tools as IAITool
 
-Create adapters that expose MCP tools through our `IAiTool` interface:
+Create adapters that expose MCP tools through our `IAITool` interface:
 
 ```csharp
-internal class McpToolAdapter : IAiTool
+internal class McpToolAdapter : IAITool
 {
     private readonly McpClientTool _mcpTool;
 
@@ -168,7 +168,7 @@ Each tool call goes through:
 1. Agent → MCP Client → MCP Server → Management API → Umbraco
 
 vs. native tools:
-1. Agent → IAiTool → Umbraco Services
+1. Agent → IAITool → Umbraco Services
 
 **Question**: Is the overhead acceptable? Does it matter for AI-driven operations?
 
@@ -204,7 +204,7 @@ No need to implement content/media/schema operations - they exist!
 The MCP Server is an official Umbraco product, kept up to date.
 
 ### 3. Consistency
-Same operations available via Claude Desktop, Cursor, Copilot AND Umbraco.Ai Agents.
+Same operations available via Claude Desktop, Cursor, Copilot AND Umbraco.AI Agents.
 
 ### 4. Extensibility
 Other MCP servers (e.g., [Umbraco Commerce MCP](https://github.com/umbraco/Umbraco.Commerce.Mcp)) could also be integrated.
@@ -235,12 +235,12 @@ MCP uses API user permissions; Agents use user group restrictions. Reconciling t
 **Explore as a Phase 2 feature**, after core Agents functionality is working.
 
 ### Phase 1 (Current Plan)
-- Build core tool infrastructure in Umbraco.Ai.Core
+- Build core tool infrastructure in Umbraco.AI.Core
 - Build Agents with native tools (content only for MVP)
 - Prove the model works with hand-built tools
 
 ### Phase 2 (MCP Integration)
-- Add MCP client support to Umbraco.Ai.Agents
+- Add MCP client support to Umbraco.AI.Agents
 - Allow Agents to connect to MCP servers as tool sources
 - Wrap MCP tools for governance (approval workflow)
 - Consider Option C (McpToolAdapter) to unify the model
@@ -266,6 +266,6 @@ MCP uses API user permissions; Agents use user group restrictions. Reconciling t
 
 | Decision | Current Choice |
 |----------|----------------|
-| Phase 1 tools | Native IAiTool implementations only |
+| Phase 1 tools | Native IAITool implementations only |
 | MCP integration | Deferred to Phase 2 |
-| Tool source model | Single source (IAiToolRegistry) for now |
+| Tool source model | Single source (IAIToolRegistry) for now |

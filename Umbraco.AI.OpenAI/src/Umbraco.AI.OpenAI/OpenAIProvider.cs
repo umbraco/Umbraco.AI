@@ -1,0 +1,93 @@
+using System.ClientModel;
+using Microsoft.Extensions.Caching.Memory;
+using OpenAI;
+using Umbraco.AI.Core.Providers;
+
+namespace Umbraco.AI.OpenAI;
+
+/// <summary>
+/// AI provider for OpenAI services.
+/// </summary>
+[AIProvider("openai", "OpenAI")]
+public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
+{
+    private const string CacheKeyPrefix = "OpenAI_Models_";
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
+
+    private readonly IMemoryCache _cache;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OpenAIProvider"/> class.
+    /// </summary>
+    /// <param name="infrastructure">The provider infrastructure.</param>
+    /// <param name="cache">The memory cache.</param>
+    public OpenAIProvider(IAIProviderInfrastructure infrastructure, IMemoryCache cache)
+        : base(infrastructure)
+    {
+        _cache = cache;
+        WithCapability<OpenAIChatCapability>();
+        WithCapability<OpenAIEmbeddingCapability>();
+    }
+
+    /// <summary>
+    /// Gets all available models from the OpenAI API with caching.
+    /// </summary>
+    /// <param name="settings">The provider settings containing API credentials.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of all available model IDs.</returns>
+    internal async Task<IReadOnlyList<string>> GetAvailableModelIdsAsync(
+        OpenAIProviderSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        {
+            throw new InvalidOperationException("OpenAI API key is required.");
+        }
+
+        var cacheKey = GetCacheKey(settings);
+
+        if (_cache.TryGetValue<IReadOnlyList<string>>(cacheKey, out var cachedModels) && cachedModels is not null)
+        {
+            return cachedModels;
+        }
+
+        var client = CreateOpenAIClient(settings).GetOpenAIModelClient();
+        var result = await client.GetModelsAsync(cancellationToken);
+
+        var modelIds = result.Value
+            .Select(m => m.Id)
+            .OrderBy(id => id)
+            .ToList();
+
+        _cache.Set(cacheKey, (IReadOnlyList<string>)modelIds, CacheDuration);
+
+        return modelIds;
+    }
+
+    /// <summary>
+    /// Creates an OpenAI client configured with the provided settings.
+    /// </summary>
+    internal static OpenAIClient CreateOpenAIClient(OpenAIProviderSettings settings)
+    {
+        if (string.IsNullOrWhiteSpace(settings.ApiKey))
+        {
+            throw new InvalidOperationException("OpenAI API key is required.");
+        }
+
+        var credential = new ApiKeyCredential(settings.ApiKey);
+
+        return string.IsNullOrWhiteSpace(settings.Endpoint)
+            ? new OpenAIClient(credential)
+            : new OpenAIClient(credential, new OpenAIClientOptions
+            {
+                Endpoint = new Uri(settings.Endpoint)
+            });
+    }
+
+    private static string GetCacheKey(OpenAIProviderSettings settings)
+    {
+        // Cache per API key + endpoint combination
+        var endpoint = settings.Endpoint ?? "default";
+        return $"{CacheKeyPrefix}{settings.ApiKey?.GetHashCode()}:{endpoint}";
+    }
+}

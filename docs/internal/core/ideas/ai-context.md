@@ -180,7 +180,7 @@ AI Context provides *brand and editorial guidance* (tone, voice, reference mater
 ### Core Context Model
 
 ```csharp
-public sealed class AiContext
+public sealed class AIContext
 {
     public Guid Id { get; internal set; }
     public required string Alias { get; init; }         // "corporate-brand-voice" (immutable)
@@ -190,10 +190,10 @@ public sealed class AiContext
     public DateTime DateModified { get; set; } = DateTime.UtcNow;
 
     // Resources (generic, extensible)
-    public IList<AiContextResource> Resources { get; set; } = [];
+    public IList<AIContextResource> Resources { get; set; } = [];
 }
 
-public sealed class AiContextResource
+public sealed class AIContextResource
 {
     public Guid Id { get; internal set; }
     public required string ResourceType { get; init; }  // "brand-voice", "document", "text" (immutable)
@@ -210,28 +210,28 @@ Context can be assigned to content, profiles, prompts, and agents:
 
 ```csharp
 // Content → Context (stored separately, used by property editor)
-public class AiContentContextAssignment
+public class AIContentContextAssignment
 {
     public Guid ContentId { get; set; }                 // Umbraco content node
     public Guid ContextId { get; set; }                 // Assigned context
 }
 
-// Profile → Context(s) (on AiProfile entity)
-public class AiProfile
+// Profile → Context(s) (on AIProfile entity)
+public class AIProfile
 {
     // ... existing profile properties ...
     public IList<Guid> ContextIds { get; set; } = [];   // Multiple contexts allowed
 }
 
-// Prompt → Context(s) (on AiPrompt entity in Umbraco.Ai.Prompt)
-public class AiPrompt
+// Prompt → Context(s) (on AIPrompt entity in Umbraco.AI.Prompt)
+public class AIPrompt
 {
     // ... existing prompt properties ...
     public IList<Guid> ContextIds { get; set; } = [];   // Multiple contexts allowed
 }
 
-// Agent → Context(s) (on AiAgent entity in Umbraco.Ai.Agent)
-public class AiAgent
+// Agent → Context(s) (on AIAgent entity in Umbraco.AI.Agent)
+public class AIAgent
 {
     // ... existing agent properties ...
     public IList<Guid> ContextIds { get; set; } = [];   // Multiple contexts allowed
@@ -282,29 +282,29 @@ public class TextResourceData
 Resource types are discovered and registered using Umbraco's collection builder pattern, following the same approach used for providers and tools:
 
 ```csharp
-// Resource type definition attribute (mirrors AiProviderAttribute, AiToolAttribute)
+// Resource type definition attribute (mirrors AIProviderAttribute, AIToolAttribute)
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-public sealed class AiContextResourceTypeAttribute : Attribute
+public sealed class AIContextResourceTypeAttribute : Attribute
 {
     public string Alias { get; }
     public string Name { get; }
 
-    public AiContextResourceTypeAttribute(string alias, string name)
+    public AIContextResourceTypeAttribute(string alias, string name)
     {
         Alias = alias;
         Name = name;
     }
 }
 
-// Infrastructure for resource types (mirrors IAiProviderInfrastructure)
-public interface IAiContextResourceTypeInfrastructure
+// Infrastructure for resource types (mirrors IAIProviderInfrastructure)
+public interface IAIContextResourceTypeInfrastructure
 {
     IJsonSerializer JsonSerializer { get; }
     ILogger Logger { get; }
 }
 
 // Interface for the collection
-public interface IAiContextResourceType
+public interface IAIContextResourceType
 {
     string Alias { get; }
     string Name { get; }
@@ -315,20 +315,20 @@ public interface IAiContextResourceType
     ValidationResult Validate(object data);
 }
 
-// Base class for resource type definitions (mirrors AiProviderBase pattern)
-public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
+// Base class for resource type definitions (mirrors AIProviderBase pattern)
+public abstract class AIContextResourceTypeBase<TData> : IAIContextResourceType
     where TData : class
 {
-    protected readonly IAiContextResourceTypeInfrastructure Infrastructure;
+    protected readonly IAIContextResourceTypeInfrastructure Infrastructure;
 
-    protected AiContextResourceTypeBase(IAiContextResourceTypeInfrastructure infrastructure)
+    protected AIContextResourceTypeBase(IAIContextResourceTypeInfrastructure infrastructure)
     {
         Infrastructure = infrastructure;
 
-        var attribute = GetType().GetCustomAttribute<AiContextResourceTypeAttribute>(inherit: false);
+        var attribute = GetType().GetCustomAttribute<AIContextResourceTypeAttribute>(inherit: false);
         if (attribute == null)
             throw new InvalidOperationException(
-                $"Resource type '{GetType().FullName}' is missing AiContextResourceTypeAttribute.");
+                $"Resource type '{GetType().FullName}' is missing AIContextResourceTypeAttribute.");
 
         Alias = attribute.Alias;
         Name = attribute.Name;
@@ -347,13 +347,13 @@ public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
     public virtual ValidationResult Validate(TData data) => ValidationResult.Success;
 
     // Interface implementation with safe casting
-    string IAiContextResourceType.Format(object data)
+    string IAIContextResourceType.Format(object data)
     {
         ArgumentNullException.ThrowIfNull(data);
         return Format((TData)data);
     }
 
-    ValidationResult IAiContextResourceType.Validate(object data)
+    ValidationResult IAIContextResourceType.Validate(object data)
     {
         ArgumentNullException.ThrowIfNull(data);
         return Validate((TData)data);
@@ -364,10 +364,10 @@ public abstract class AiContextResourceTypeBase<TData> : IAiContextResourceType
 **Built-in Resource Type Example:**
 
 ```csharp
-[AiContextResourceType("brand-voice", "Brand Voice")]
-public class BrandVoiceResourceType : AiContextResourceTypeBase<BrandVoiceResourceData>
+[AIContextResourceType("brand-voice", "Brand Voice")]
+public class BrandVoiceResourceType : AIContextResourceTypeBase<BrandVoiceResourceData>
 {
-    public BrandVoiceResourceType(IAiContextResourceTypeInfrastructure infrastructure)
+    public BrandVoiceResourceType(IAIContextResourceTypeInfrastructure infrastructure)
         : base(infrastructure) { }
 
     public override string Description => "Define tone, audience, style guidelines, and patterns to avoid";
@@ -395,10 +395,10 @@ public class BrandVoiceResourceType : AiContextResourceTypeBase<BrandVoiceResour
 
 ```csharp
 // Custom resource type for glossary terms
-[AiContextResourceType("glossary", "Glossary")]
-public class GlossaryResourceType : AiContextResourceTypeBase<GlossaryResourceData>
+[AIContextResourceType("glossary", "Glossary")]
+public class GlossaryResourceType : AIContextResourceTypeBase<GlossaryResourceData>
 {
-    public GlossaryResourceType(IAiContextResourceTypeInfrastructure infrastructure)
+    public GlossaryResourceType(IAIContextResourceTypeInfrastructure infrastructure)
         : base(infrastructure) { }
 
     public override string Description => "Define terms and their approved definitions for consistent language";
@@ -432,56 +432,56 @@ public class GlossaryTerm
 
 ```csharp
 // Collection (injected via DI for runtime access)
-public class AiContextResourceTypeCollection : BuilderCollectionBase<IAiContextResourceType>
+public class AIContextResourceTypeCollection : BuilderCollectionBase<IAIContextResourceType>
 {
-    public AiContextResourceTypeCollection(Func<IEnumerable<IAiContextResourceType>> items)
+    public AIContextResourceTypeCollection(Func<IEnumerable<IAIContextResourceType>> items)
         : base(items) { }
 
-    public IAiContextResourceType? GetByAlias(string alias)
+    public IAIContextResourceType? GetByAlias(string alias)
         => this.FirstOrDefault(t => t.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase));
 }
 
 // Collection Builder (used in Composers for registration)
-public class AiContextResourceTypeCollectionBuilder
-    : LazyCollectionBuilderBase<AiContextResourceTypeCollectionBuilder, AiContextResourceTypeCollection, IAiContextResourceType>
+public class AIContextResourceTypeCollectionBuilder
+    : LazyCollectionBuilderBase<AIContextResourceTypeCollectionBuilder, AIContextResourceTypeCollection, IAIContextResourceType>
 {
-    protected override AiContextResourceTypeCollectionBuilder This => this;
+    protected override AIContextResourceTypeCollectionBuilder This => this;
 }
 ```
 
 **Auto-Discovery Registration (in UmbracoBuilderExtensions.cs):**
 
 ```csharp
-public static IUmbracoBuilder AddUmbracoAi(this IUmbracoBuilder builder)
+public static IUmbracoBuilder AddUmbracoAI(this IUmbracoBuilder builder)
 {
     // ... existing registrations ...
 
     // Auto-discover resource types via attribute (mirrors provider/tool discovery)
-    builder.AiContextResourceTypes()
-        .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAiContextResourceType, AiContextResourceTypeAttribute>(cache: true));
+    builder.AIContextResourceTypes()
+        .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIContextResourceType, AIContextResourceTypeAttribute>(cache: true));
 
     return builder;
 }
 
 // Extension method for collection builder access
-public static AiContextResourceTypeCollectionBuilder AiContextResourceTypes(this IUmbracoBuilder builder)
-    => builder.WithCollectionBuilder<AiContextResourceTypeCollectionBuilder>();
+public static AIContextResourceTypeCollectionBuilder AIContextResourceTypes(this IUmbracoBuilder builder)
+    => builder.WithCollectionBuilder<AIContextResourceTypeCollectionBuilder>();
 ```
 
 **Manual Registration via Composer (for custom types):**
 
 ```csharp
-public class MyAiComposer : IComposer
+public class MyAIComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
         // Add custom resource types (built-in types are auto-discovered)
-        builder.AiContextResourceTypes()
+        builder.AIContextResourceTypes()
             .Add<GlossaryResourceType>()
             .Add<CompetitorInfoResourceType>();
 
         // Or exclude unwanted built-in types
-        builder.AiContextResourceTypes()
+        builder.AIContextResourceTypes()
             .Exclude<ExternalLinkResourceType>();
     }
 }
@@ -498,7 +498,7 @@ Each resource type needs a corresponding UI editor in the backoffice. This uses 
   "extensions": [
     {
       "type": "aiContextResourceEditor",
-      "alias": "My.AiContextResourceEditor.Glossary",
+      "alias": "My.AIContextResourceEditor.Glossary",
       "name": "Glossary Resource Editor",
       "meta": {
         "resourceType": "glossary",
@@ -568,22 +568,22 @@ export class GlossaryResourceEditor extends LitElement {
 The formatter uses the resource type collection to convert resolved resources to AI-injectable text:
 
 ```csharp
-public interface IAiContextFormatter
+public interface IAIContextFormatter
 {
-    string Format(ResolvedAiContext context);
+    string Format(ResolvedAIContext context);
 }
 
 // Implementation uses the collection (injected via DI)
-public class AiContextFormatter : IAiContextFormatter
+public class AIContextFormatter : IAIContextFormatter
 {
-    private readonly AiContextResourceTypeCollection _resourceTypes;
+    private readonly AIContextResourceTypeCollection _resourceTypes;
 
-    public AiContextFormatter(AiContextResourceTypeCollection resourceTypes)
+    public AIContextFormatter(AIContextResourceTypeCollection resourceTypes)
     {
         _resourceTypes = resourceTypes;
     }
 
-    public string Format(ResolvedAiContext context)
+    public string Format(ResolvedAIContext context)
     {
         if (context.Resources.Count == 0)
             return string.Empty;
@@ -618,10 +618,10 @@ public class AiContextFormatter : IAiContextFormatter
 When an AI operation executes, the system resolves and merges contexts from all applicable levels:
 
 ```csharp
-public class AiContextResolver
+public class AIContextResolver
 {
-    public async Task<ResolvedAiContext> ResolveAsync(
-        AiContextResolutionRequest request,
+    public async Task<ResolvedAIContext> ResolveAsync(
+        AIContextResolutionRequest request,
         CancellationToken ct = default)
     {
         var allResources = new List<ResolvedResource>();
@@ -695,14 +695,14 @@ public class AiContextResolver
             }
         }
 
-        return new ResolvedAiContext
+        return new ResolvedAIContext
         {
             Resources = allResources,
             Sources = sourceContexts
         };
     }
 
-    private async Task<AiContext?> ResolveContentContextAsync(Guid contentId, CancellationToken ct)
+    private async Task<AIContext?> ResolveContentContextAsync(Guid contentId, CancellationToken ct)
     {
         // Walk up the content tree looking for assigned context
         var currentId = contentId;
@@ -723,7 +723,7 @@ public class AiContextResolver
     }
 }
 
-public class AiContextResolutionRequest
+public class AIContextResolutionRequest
 {
     public Guid? ContentId { get; set; }
     public string? ContentPath { get; set; }
@@ -738,12 +738,12 @@ public class AiContextResolutionRequest
 ### Resolved Context Model
 
 ```csharp
-public class ResolvedAiContext
+public class ResolvedAIContext
 {
     public IReadOnlyList<ResolvedResource> Resources { get; set; } = [];
     public IReadOnlyList<ContextSource> Sources { get; set; } = [];  // For debugging/UI
 
-    public static ResolvedAiContext Empty => new();
+    public static ResolvedAIContext Empty => new();
 
     // Convenience accessors
     public BrandVoiceResourceData? BrandVoice =>
@@ -768,29 +768,29 @@ public record ContextSource(string Level, string? EntityName, string ContextName
 
 ## Repository Interfaces
 
-Repositories follow the same patterns as `EfCoreAiProfileRepository` and `EfCoreAiConnectionRepository`, using `IEFCoreScopeProvider<UmbracoAiDbContext>` with explicit scope completion:
+Repositories follow the same patterns as `EfCoreAIProfileRepository` and `EfCoreAIConnectionRepository`, using `IEFCoreScopeProvider<UmbracoAIDbContext>` with explicit scope completion:
 
 ```csharp
-public interface IAiContextRepository
+public interface IAIContextRepository
 {
-    Task<AiContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<AiContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
-    Task<AiContext?> GetGlobalDefaultAsync(CancellationToken cancellationToken = default);
-    Task<IEnumerable<AiContext>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<(IEnumerable<AiContext> Items, int Total)> GetPagedAsync(
+    Task<AIContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetGlobalDefaultAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIContext>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<(IEnumerable<AIContext> Items, int Total)> GetPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);
-    Task<AiContext> SaveAsync(AiContext context, CancellationToken cancellationToken = default);
+    Task<AIContext> SaveAsync(AIContext context, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task SetGlobalDefaultAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
-public interface IAiContentContextAssignmentRepository
+public interface IAIContentContextAssignmentRepository
 {
-    Task<AiContentContextAssignment?> GetByContentIdAsync(Guid contentId, CancellationToken cancellationToken = default);
-    Task SaveAsync(AiContentContextAssignment assignment, CancellationToken cancellationToken = default);
+    Task<AIContentContextAssignment?> GetByContentIdAsync(Guid contentId, CancellationToken cancellationToken = default);
+    Task SaveAsync(AIContentContextAssignment assignment, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid contentId, CancellationToken cancellationToken = default);
 }
 ```
@@ -798,52 +798,52 @@ public interface IAiContentContextAssignmentRepository
 **Example EF Core Repository Implementation:**
 
 ```csharp
-internal class EfCoreAiContextRepository : IAiContextRepository
+internal class EfCoreAIContextRepository : IAIContextRepository
 {
-    private readonly IEFCoreScopeProvider<UmbracoAiDbContext> _scopeProvider;
+    private readonly IEFCoreScopeProvider<UmbracoAIDbContext> _scopeProvider;
 
-    public EfCoreAiContextRepository(IEFCoreScopeProvider<UmbracoAiDbContext> scopeProvider)
+    public EfCoreAIContextRepository(IEFCoreScopeProvider<UmbracoAIDbContext> scopeProvider)
     {
         _scopeProvider = scopeProvider;
     }
 
-    public async Task<AiContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<AIContext?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+        AIContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Contexts
                 .Include(c => c.Resources.OrderBy(r => r.SortOrder))
                 .FirstOrDefaultAsync(c => c.Id == id, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiContextFactory.BuildDomain(entity);
+        return entity is null ? null : AIContextFactory.BuildDomain(entity);
     }
 
-    public async Task<AiContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
+    public async Task<AIContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
+        AIContextEntity? entity = await scope.ExecuteWithContextAsync(async db =>
             await db.Contexts
                 .Include(c => c.Resources.OrderBy(r => r.SortOrder))
                 .FirstOrDefaultAsync(c => c.Alias == alias, cancellationToken));
 
         scope.Complete();
-        return entity is null ? null : AiContextFactory.BuildDomain(entity);
+        return entity is null ? null : AIContextFactory.BuildDomain(entity);
     }
 
-    public async Task<(IEnumerable<AiContext> Items, int Total)> GetPagedAsync(
+    public async Task<(IEnumerable<AIContext> Items, int Total)> GetPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AiContextEntity> query = db.Contexts
+            IQueryable<AIContextEntity> query = db.Contexts
                 .Include(c => c.Resources.OrderBy(r => r.SortOrder));
 
             if (!string.IsNullOrWhiteSpace(filter))
@@ -864,29 +864,29 @@ internal class EfCoreAiContextRepository : IAiContextRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AiContextFactory.BuildDomain), result.total);
+        return (result.items.Select(AIContextFactory.BuildDomain), result.total);
     }
 
-    public async Task<AiContext> SaveAsync(AiContext context, CancellationToken cancellationToken = default)
+    public async Task<AIContext> SaveAsync(AIContext context, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
-        AiContextEntity entity = await scope.ExecuteWithContextAsync(async db =>
+        AIContextEntity entity = await scope.ExecuteWithContextAsync(async db =>
         {
-            AiContextEntity? existing = await db.Contexts
+            AIContextEntity? existing = await db.Contexts
                 .Include(c => c.Resources)
                 .FirstOrDefaultAsync(c => c.Id == context.Id, cancellationToken);
 
             if (existing is null)
             {
                 // Insert
-                existing = AiContextFactory.BuildEntity(context);
+                existing = AIContextFactory.BuildEntity(context);
                 db.Contexts.Add(existing);
             }
             else
             {
                 // Update
-                AiContextFactory.UpdateEntity(existing, context);
+                AIContextFactory.UpdateEntity(existing, context);
             }
 
             await db.SaveChangesAsync(cancellationToken);
@@ -894,12 +894,12 @@ internal class EfCoreAiContextRepository : IAiContextRepository
         });
 
         scope.Complete();
-        return AiContextFactory.BuildDomain(entity);
+        return AIContextFactory.BuildDomain(entity);
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using IEfCoreScope<UmbracoAiDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         var deleted = await scope.ExecuteWithContextAsync(async db =>
         {
@@ -922,14 +922,14 @@ internal class EfCoreAiContextRepository : IAiContextRepository
 
 ## How Context is Injected
 
-Context injection uses the `IAiContextFormatter` (see "Context Formatter" section above) to convert resolved resources into text for AI consumption. The formatter uses the `AiContextResourceTypeCollection` to look up each resource type and call its `Format()` method.
+Context injection uses the `IAIContextFormatter` (see "Context Formatter" section above) to convert resolved resources into text for AI consumption. The formatter uses the `AIContextResourceTypeCollection` to look up each resource type and call its `Format()` method.
 
 ### Into AI Prompts
 
 ```csharp
-public class AiPromptExecutor
+public class AIPromptExecutor
 {
-    public async Task<PromptResult> ExecuteAsync(AiPrompt prompt, PropertyContext propertyCtx)
+    public async Task<PromptResult> ExecuteAsync(AIPrompt prompt, PropertyContext propertyCtx)
     {
         // Resolve AI Context for this content's site
         var aiContext = await _contextResolver.ResolveAsync(propertyCtx.ContentId);
@@ -953,9 +953,9 @@ public class AiPromptExecutor
 ### Into AI Workflows
 
 ```csharp
-public class AiWorkflowExecutor
+public class AIWorkflowExecutor
 {
-    public async Task<WorkflowResult> ExecuteAsync(AiWorkflow workflow, IContent content)
+    public async Task<WorkflowResult> ExecuteAsync(AIWorkflow workflow, IContent content)
     {
         // Resolve context once for the workflow
         var aiContext = await _contextResolver.ResolveAsync(content.Id);
@@ -1061,24 +1061,24 @@ public class AgentExecutor
 
 #### Option B: Middleware Approach (Automatic)
 
-Context injection happens automatically via chat middleware, following the existing `IAiChatMiddleware` pattern used in `LoggingChatMiddleware`. This requires no explicit handling in agent code.
+Context injection happens automatically via chat middleware, following the existing `IAIChatMiddleware` pattern used in `LoggingChatMiddleware`. This requires no explicit handling in agent code.
 
 ```csharp
 // Middleware registration (in UmbracoBuilderExtensions.cs or a Composer)
-builder.AiChatMiddleware()
-    .Append<AiContextInjectionMiddleware>();
+builder.AIChatMiddleware()
+    .Append<AIContextInjectionMiddleware>();
 
 // Middleware implementation follows existing pattern
-[AiChatMiddleware("context-injection")]
-public class AiContextInjectionMiddleware : IAiChatMiddleware
+[AIChatMiddleware("context-injection")]
+public class AIContextInjectionMiddleware : IAIChatMiddleware
 {
-    private readonly IAiContextResolver _contextResolver;
-    private readonly IAiContextFormatter _contextFormatter;
+    private readonly IAIContextResolver _contextResolver;
+    private readonly IAIContextFormatter _contextFormatter;
     private readonly IAgentSessionAccessor _sessionAccessor;
 
-    public AiContextInjectionMiddleware(
-        IAiContextResolver contextResolver,
-        IAiContextFormatter contextFormatter,
+    public AIContextInjectionMiddleware(
+        IAIContextResolver contextResolver,
+        IAIContextFormatter contextFormatter,
         IAgentSessionAccessor sessionAccessor)
     {
         _contextResolver = contextResolver;
@@ -1102,14 +1102,14 @@ public class AiContextInjectionMiddleware : IAiChatMiddleware
 // Inner chat client that wraps the delegate
 internal class ContextInjectingChatClient : DelegatingChatClient
 {
-    private readonly IAiContextResolver _contextResolver;
-    private readonly IAiContextFormatter _contextFormatter;
+    private readonly IAIContextResolver _contextResolver;
+    private readonly IAIContextFormatter _contextFormatter;
     private readonly IAgentSessionAccessor _sessionAccessor;
 
     public ContextInjectingChatClient(
         IChatClient innerClient,
-        IAiContextResolver contextResolver,
-        IAiContextFormatter contextFormatter,
+        IAIContextResolver contextResolver,
+        IAIContextFormatter contextFormatter,
         IAgentSessionAccessor sessionAccessor)
         : base(innerClient)
     {
@@ -1127,7 +1127,7 @@ internal class ContextInjectingChatClient : DelegatingChatClient
         var session = _sessionAccessor.CurrentSession;
         if (session?.CurrentContentId != null && session.EnableContextInjection)
         {
-            var resolutionRequest = new AiContextResolutionRequest
+            var resolutionRequest = new AIContextResolutionRequest
             {
                 ContentId = session.CurrentContentId,
                 ProfileId = session.ProfileId,
@@ -1181,7 +1181,7 @@ internal class ContextInjectingChatClient : DelegatingChatClient
 **Opt-in per agent type**: Context injection should be opt-in. Some agents are general-purpose (e.g., "explain this code") and don't need brand context, while content assistants definitely do.
 
 ```csharp
-[AiAgent("content-assistant", "Content Assistant")]
+[AIAgent("content-assistant", "Content Assistant")]
 public class ContentAssistantAgent : AgentBase
 {
     public ContentAssistantAgent()
@@ -1191,7 +1191,7 @@ public class ContentAssistantAgent : AgentBase
     }
 }
 
-[AiAgent("code-helper", "Code Helper")]
+[AIAgent("code-helper", "Code Helper")]
 public class CodeHelperAgent : AgentBase
 {
     public CodeHelperAgent()
@@ -1215,7 +1215,7 @@ When should agent context be refreshed during a conversation?
 public class AgentSession
 {
     public Guid? CurrentContentId { get; private set; }
-    public ResolvedAiContext? CurrentContext { get; private set; }
+    public ResolvedAIContext? CurrentContext { get; private set; }
 
     public async Task SetWorkspaceAsync(Guid contentId)
     {
@@ -1435,38 +1435,38 @@ public class AgentSession
 
 ### Service Interfaces
 
-Services follow the same patterns as `IAiProfileService` and `IAiConnectionService` - using `SaveAsync` for insert-or-update operations and providing both single-item and paged retrieval methods:
+Services follow the same patterns as `IAIProfileService` and `IAIConnectionService` - using `SaveAsync` for insert-or-update operations and providing both single-item and paged retrieval methods:
 
 ```csharp
-public interface IAiContextService
+public interface IAIContextService
 {
     // Single-item retrieval
-    Task<AiContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<AiContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default);
-    Task<AiContext?> GetGlobalDefaultAsync(CancellationToken cancellationToken = default);
+    Task<AIContext?> GetContextAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetGlobalDefaultAsync(CancellationToken cancellationToken = default);
 
     // Collection retrieval
-    Task<IEnumerable<AiContext>> GetContextsAsync(CancellationToken cancellationToken = default);
-    Task<(IEnumerable<AiContext> Items, int Total)> GetContextsPagedAsync(
+    Task<IEnumerable<AIContext>> GetContextsAsync(CancellationToken cancellationToken = default);
+    Task<(IEnumerable<AIContext> Items, int Total)> GetContextsPagedAsync(
         string? filter = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default);
 
     // Mutations (insert-or-update pattern)
-    Task<AiContext> SaveContextAsync(AiContext context, CancellationToken cancellationToken = default);
+    Task<AIContext> SaveContextAsync(AIContext context, CancellationToken cancellationToken = default);
     Task<bool> DeleteContextAsync(Guid id, CancellationToken cancellationToken = default);
     Task SetGlobalDefaultAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
-public interface IAiContextResourceService
+public interface IAIContextResourceService
 {
     // Resource retrieval within a context
-    Task<AiContextResource?> GetResourceAsync(Guid contextId, Guid resourceId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<AiContextResource>> GetResourcesAsync(Guid contextId, CancellationToken cancellationToken = default);
+    Task<AIContextResource?> GetResourceAsync(Guid contextId, Guid resourceId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIContextResource>> GetResourcesAsync(Guid contextId, CancellationToken cancellationToken = default);
 
     // Resource mutations (insert-or-update pattern)
-    Task<AiContextResource> SaveResourceAsync(Guid contextId, AiContextResource resource, CancellationToken cancellationToken = default);
+    Task<AIContextResource> SaveResourceAsync(Guid contextId, AIContextResource resource, CancellationToken cancellationToken = default);
     Task<bool> DeleteResourceAsync(Guid contextId, Guid resourceId, CancellationToken cancellationToken = default);
     Task ReorderResourcesAsync(Guid contextId, IEnumerable<Guid> resourceIds, CancellationToken cancellationToken = default);
 
@@ -1474,30 +1474,30 @@ public interface IAiContextResourceService
     Task RefreshExternalLinkAsync(Guid contextId, Guid resourceId, CancellationToken cancellationToken = default);
 }
 
-public interface IAiContentContextAssignmentService
+public interface IAIContentContextAssignmentService
 {
     // Content → Context assignments
     Task<Guid?> GetAssignedContextIdAsync(Guid contentId, CancellationToken cancellationToken = default);
-    Task<AiContext?> GetAssignedContextAsync(Guid contentId, CancellationToken cancellationToken = default);
+    Task<AIContext?> GetAssignedContextAsync(Guid contentId, CancellationToken cancellationToken = default);
     Task AssignContextAsync(Guid contentId, Guid contextId, CancellationToken cancellationToken = default);
     Task<bool> RemoveAssignmentAsync(Guid contentId, CancellationToken cancellationToken = default);
 }
 
-public interface IAiContextResolver
+public interface IAIContextResolver
 {
     // Full resolution across all levels (profile, agent, prompt, content, global)
-    Task<ResolvedAiContext> ResolveAsync(AiContextResolutionRequest request, CancellationToken cancellationToken = default);
+    Task<ResolvedAIContext> ResolveAsync(AIContextResolutionRequest request, CancellationToken cancellationToken = default);
 }
 ```
 
 **IdOrAlias Support (following existing pattern):**
 
 ```csharp
-// Extension methods for IdOrAlias resolution (mirrors IAiProfileService extensions)
-public static class AiContextServiceExtensions
+// Extension methods for IdOrAlias resolution (mirrors IAIProfileService extensions)
+public static class AIContextServiceExtensions
 {
     public static async Task<Guid?> TryGetContextIdAsync(
-        this IAiContextService service,
+        this IAIContextService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -1517,7 +1517,7 @@ public static class AiContextServiceExtensions
     }
 
     public static async Task<Guid> GetContextIdAsync(
-        this IAiContextService service,
+        this IAIContextService service,
         IdOrAlias idOrAlias,
         CancellationToken cancellationToken = default)
     {
@@ -1571,13 +1571,13 @@ GET    /umbraco/ai/management/api/v1/context-resource-types       # List all reg
 
 ```csharp
 [ApiVersion("1.0")]
-public class AiContextController : AiContextControllerBase
+public class AIContextController : AIContextControllerBase
 {
-    private readonly IAiContextService _contextService;
+    private readonly IAIContextService _contextService;
     private readonly IUmbracoMapper _umbracoMapper;
 
-    public AiContextController(
-        IAiContextService contextService,
+    public AIContextController(
+        IAIContextService contextService,
         IUmbracoMapper umbracoMapper)
     {
         _contextService = contextService;
@@ -1586,7 +1586,7 @@ public class AiContextController : AiContextControllerBase
 
     [HttpGet("{idOrAlias}")]
     [MapToApiVersion("1.0")]
-    [ProducesResponseType(typeof(AiContextResponseModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AIContextResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetContext(
         IdOrAlias idOrAlias,
@@ -1602,12 +1602,12 @@ public class AiContextController : AiContextControllerBase
             });
 
         var context = await _contextService.GetContextAsync(contextId.Value, cancellationToken);
-        return Ok(_umbracoMapper.Map<AiContextResponseModel>(context));
+        return Ok(_umbracoMapper.Map<AIContextResponseModel>(context));
     }
 
     [HttpGet]
     [MapToApiVersion("1.0")]
-    [ProducesResponseType(typeof(PagedResponseModel<AiContextResponseModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResponseModel<AIContextResponseModel>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetContexts(
         [FromQuery] string? filter = null,
         [FromQuery] int skip = 0,
@@ -1615,8 +1615,8 @@ public class AiContextController : AiContextControllerBase
         CancellationToken cancellationToken = default)
     {
         var (items, total) = await _contextService.GetContextsPagedAsync(filter, skip, take, cancellationToken);
-        var mapped = _umbracoMapper.MapEnumerable<AiContext, AiContextResponseModel>(items);
-        return Ok(new PagedResponseModel<AiContextResponseModel>
+        var mapped = _umbracoMapper.MapEnumerable<AIContext, AIContextResponseModel>(items);
+        return Ok(new PagedResponseModel<AIContextResponseModel>
         {
             Items = mapped,
             Total = total
@@ -1625,15 +1625,15 @@ public class AiContextController : AiContextControllerBase
 
     [HttpPost]
     [MapToApiVersion("1.0")]
-    [ProducesResponseType(typeof(AiContextResponseModel), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(AIContextResponseModel), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateContext(
-        AiContextRequestModel requestModel,
+        AIContextRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var context = _umbracoMapper.Map<AiContext>(requestModel)!;
+        var context = _umbracoMapper.Map<AIContext>(requestModel)!;
         var saved = await _contextService.SaveContextAsync(context, cancellationToken);
-        var response = _umbracoMapper.Map<AiContextResponseModel>(saved);
+        var response = _umbracoMapper.Map<AIContextResponseModel>(saved);
         return CreatedAtAction(nameof(GetContext), new { idOrAlias = saved.Id }, response);
     }
 }
@@ -1660,11 +1660,11 @@ The `{context}` variable is automatically populated with all resolved resources 
 Workflow steps automatically receive resolved context:
 
 ```csharp
-public class LlmSummarizerStep : AiWorkflowStepTypeBase
+public class LlmSummarizerStep : AIWorkflowStepTypeBase
 {
     public override async Task<StepResult> ExecuteAsync(WorkflowStepContext ctx)
     {
-        var contextBlock = _contextFormatter.Format(ctx.AiContext);
+        var contextBlock = _contextFormatter.Format(ctx.AIContext);
 
         var prompt = $"""
             Summarize this content:
@@ -1742,7 +1742,7 @@ public enum ResourceInjectionMode
 **Updated Resource Model:**
 
 ```csharp
-public sealed class AiContextResource
+public sealed class AIContextResource
 {
     public Guid Id { get; internal set; }
     public required string ResourceType { get; init; }
@@ -1801,38 +1801,38 @@ Resources marked `Semantic` are included only when semantically relevant to the 
 This makes the system forgiving during setup - users can mark resources as Semantic before configuring embeddings, and they'll still work via tool retrieval.
 
 ```csharp
-public interface IAiContextEmbeddingService
+public interface IAIContextEmbeddingService
 {
     /// <summary>
     /// Generates and stores embedding for a resource.
     /// Called when resource is created or updated.
     /// </summary>
-    Task EmbedResourceAsync(AiContextResource resource, CancellationToken ct = default);
+    Task EmbedResourceAsync(AIContextResource resource, CancellationToken ct = default);
 
     /// <summary>
     /// Finds semantically relevant resources for a query.
     /// </summary>
     Task<IEnumerable<SemanticMatch>> FindRelevantResourcesAsync(
         string query,
-        IEnumerable<AiContextResource> candidates,
+        IEnumerable<AIContextResource> candidates,
         float similarityThreshold = 0.7f,
         int maxResults = 5,
         CancellationToken ct = default);
 }
 
-public record SemanticMatch(AiContextResource Resource, float Similarity);
+public record SemanticMatch(AIContextResource Resource, float Similarity);
 ```
 
 **Implementation Options:**
 
 ```csharp
 // Option A: Use existing embedding profile
-public class AiContextEmbeddingService : IAiContextEmbeddingService
+public class AIContextEmbeddingService : IAIContextEmbeddingService
 {
-    private readonly IAiEmbeddingService _embeddingService;
-    private readonly IAiContextRepository _contextRepository;
+    private readonly IAIEmbeddingService _embeddingService;
+    private readonly IAIContextRepository _contextRepository;
 
-    public async Task EmbedResourceAsync(AiContextResource resource, CancellationToken ct)
+    public async Task EmbedResourceAsync(AIContextResource resource, CancellationToken ct)
     {
         // Get text content from resource
         var resourceType = _resourceTypes.GetByAlias(resource.ResourceType);
@@ -1850,7 +1850,7 @@ public class AiContextEmbeddingService : IAiContextEmbeddingService
 
     public async Task<IEnumerable<SemanticMatch>> FindRelevantResourcesAsync(
         string query,
-        IEnumerable<AiContextResource> candidates,
+        IEnumerable<AIContextResource> candidates,
         float similarityThreshold = 0.7f,
         int maxResults = 5,
         CancellationToken ct = default)
@@ -1901,49 +1901,49 @@ Resources marked `OnDemand` are exposed as tools the LLM can invoke when it dete
 
 ```csharp
 // Tool definition for OnDemand resources
-[AiTool("get_context_resource", "Retrieve detailed content from a context resource")]
-public class GetContextResourceTool : AiToolBase
+[AITool("get_context_resource", "Retrieve detailed content from a context resource")]
+public class GetContextResourceTool : AIToolBase
 {
-    private readonly IAiContextService _contextService;
-    private readonly AiContextResourceTypeCollection _resourceTypes;
+    private readonly IAIContextService _contextService;
+    private readonly AIContextResourceTypeCollection _resourceTypes;
 
     public GetContextResourceTool(
-        IAiToolInfrastructure infrastructure,
-        IAiContextService contextService,
-        AiContextResourceTypeCollection resourceTypes)
+        IAIToolInfrastructure infrastructure,
+        IAIContextService contextService,
+        AIContextResourceTypeCollection resourceTypes)
         : base(infrastructure)
     {
         _contextService = contextService;
         _resourceTypes = resourceTypes;
     }
 
-    [AiToolParameter("resourceId", "The ID of the resource to retrieve", required: true)]
+    [AIToolParameter("resourceId", "The ID of the resource to retrieve", required: true)]
     public Guid ResourceId { get; set; }
 
-    public override async Task<AiToolResult> ExecuteAsync(CancellationToken ct)
+    public override async Task<AIToolResult> ExecuteAsync(CancellationToken ct)
     {
         var resource = await _contextService.GetResourceAsync(ResourceId, ct);
         if (resource is null)
-            return AiToolResult.Failure($"Resource {ResourceId} not found");
+            return AIToolResult.Failure($"Resource {ResourceId} not found");
 
         var resourceType = _resourceTypes.GetByAlias(resource.ResourceType);
         var content = resourceType?.Format(resource.Data) ?? resource.Data;
 
-        return AiToolResult.Success(content);
+        return AIToolResult.Success(content);
     }
 }
 
 // Tool to list available OnDemand resources
-[AiTool("list_context_resources", "List available context resources that can be retrieved")]
-public class ListContextResourcesTool : AiToolBase
+[AITool("list_context_resources", "List available context resources that can be retrieved")]
+public class ListContextResourcesTool : AIToolBase
 {
     private readonly IAgentSessionAccessor _sessionAccessor;
 
-    public override async Task<AiToolResult> ExecuteAsync(CancellationToken ct)
+    public override async Task<AIToolResult> ExecuteAsync(CancellationToken ct)
     {
         var session = _sessionAccessor.CurrentSession;
         if (session?.ResolvedContext is null)
-            return AiToolResult.Success("No context resources available");
+            return AIToolResult.Success("No context resources available");
 
         var onDemandResources = session.ResolvedContext.Resources
             .Where(r => r.InjectionMode == ResourceInjectionMode.OnDemand)
@@ -1954,7 +1954,7 @@ public class ListContextResourcesTool : AiToolBase
                 Description = r.Description ?? $"{r.ResourceType} resource"
             });
 
-        return AiToolResult.Success(JsonSerializer.Serialize(onDemandResources));
+        return AIToolResult.Success(JsonSerializer.Serialize(onDemandResources));
     }
 }
 ```
@@ -1962,9 +1962,9 @@ public class ListContextResourcesTool : AiToolBase
 **System prompt injection for OnDemand resources:**
 
 ```csharp
-public class AiContextFormatter : IAiContextFormatter
+public class AIContextFormatter : IAIContextFormatter
 {
-    public string Format(ResolvedAiContext context)
+    public string Format(ResolvedAIContext context)
     {
         var sb = new StringBuilder();
 
@@ -2021,13 +2021,13 @@ public class AiContextFormatter : IAiContextFormatter
 The enhanced resolver handles all injection modes:
 
 ```csharp
-public class AiContextResolver : IAiContextResolver
+public class AIContextResolver : IAIContextResolver
 {
-    private readonly IAiContextEmbeddingService _embeddingService;
-    private readonly IAiContextFormatter _formatter;
+    private readonly IAIContextEmbeddingService _embeddingService;
+    private readonly IAIContextFormatter _formatter;
 
-    public async Task<ResolvedAiContext> ResolveAsync(
-        AiContextResolutionRequest request,
+    public async Task<ResolvedAIContext> ResolveAsync(
+        AIContextResolutionRequest request,
         CancellationToken ct = default)
     {
         // 1. Collect all candidate resources (existing logic)
@@ -2047,8 +2047,8 @@ public class AiContextResolver : IAiContextResolver
             .ToList();
 
         // 3. Find semantically relevant resources (if query provided and embeddings available)
-        var matchingSemantic = new List<AiContextResource>();
-        var unmatchedSemantic = new List<AiContextResource>();
+        var matchingSemantic = new List<AIContextResource>();
+        var unmatchedSemantic = new List<AIContextResource>();
 
         if (semanticResources.Any())
         {
@@ -2074,7 +2074,7 @@ public class AiContextResolver : IAiContextResolver
         }
 
         // 4. Build resolved context
-        return new ResolvedAiContext
+        return new ResolvedAIContext
         {
             // Resources to inject into system prompt
             InjectedResources = alwaysResources
@@ -2098,7 +2098,7 @@ public class AiContextResolver : IAiContextResolver
 **Updated Resolution Request:**
 
 ```csharp
-public class AiContextResolutionRequest
+public class AIContextResolutionRequest
 {
     // Existing fields
     public Guid? ContentId { get; set; }
@@ -2119,7 +2119,7 @@ public class AiContextResolutionRequest
 **Updated Resolved Context:**
 
 ```csharp
-public class ResolvedAiContext
+public class ResolvedAIContext
 {
     /// <summary>
     /// Resources to inject directly into the system prompt.
@@ -2143,7 +2143,7 @@ public class ResolvedAiContext
     /// </summary>
     public IReadOnlyList<ContextSource> Sources { get; set; } = [];
 
-    public static ResolvedAiContext Empty => new();
+    public static ResolvedAIContext Empty => new();
 }
 ```
 
@@ -2166,7 +2166,7 @@ internal class ContextInjectingChatClient : DelegatingChatClient
             var lastUserMessage = messages.LastOrDefault(m => m.Role == ChatRole.User);
             var query = lastUserMessage?.Text;
 
-            var resolutionRequest = new AiContextResolutionRequest
+            var resolutionRequest = new AIContextResolutionRequest
             {
                 ContentId = session.CurrentContentId,
                 ProfileId = session.ProfileId,
@@ -2253,7 +2253,7 @@ With dynamic injection, token budgets become more predictable:
 ```csharp
 public class TokenBudgetManager
 {
-    public TokenBudgetResult CalculateBudget(ResolvedAiContext context, int maxTokens)
+    public TokenBudgetResult CalculateBudget(ResolvedAIContext context, int maxTokens)
     {
         var alwaysTokens = EstimateTokens(context.InjectedResources
             .Where(r => r.InjectionMode == ResourceInjectionMode.Always));
@@ -2291,7 +2291,7 @@ public class TokenBudgetManager
 **Phase 3: Semantic Mode**
 - Add `Embedding` field to resource model
 - Integrate embedding generation on resource save
-- Implement similarity search via `IAiContextEmbeddingService`
+- Implement similarity search via `IAIContextEmbeddingService`
 - Background job to embed existing resources
 - Configure embedding profile for context resources
 
@@ -2372,32 +2372,32 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 
 ### Implementation Order
 
-**Phase 1: Core Infrastructure (Umbraco.Ai)**
-1. `AiContext` and `AiContextResource` domain models (sealed, internal set on Id, required init on Alias)
-2. `AiContextResourceTypeCollectionBuilder` and `AiContextResourceTypeCollection` (LazyCollectionBuilderBase)
-3. `IAiContextResourceType` interface and `AiContextResourceTypeBase<T>` base class
+**Phase 1: Core Infrastructure (Umbraco.AI)**
+1. `AIContext` and `AIContextResource` domain models (sealed, internal set on Id, required init on Alias)
+2. `AIContextResourceTypeCollectionBuilder` and `AIContextResourceTypeCollection` (LazyCollectionBuilderBase)
+3. `IAIContextResourceType` interface and `AIContextResourceTypeBase<T>` base class
 4. Built-in resource types: `BrandVoiceResourceType`, `DocumentResourceType`, `ExternalLinkResourceType`, `TextResourceType`
-5. Resource type auto-discovery via `[AiContextResourceTypeAttribute]`
-6. `IAiContextRepository` and `EfCoreAiContextRepository` (with scope provider pattern)
-7. `IAiContentContextAssignmentRepository` and EF Core implementation
-8. `IAiContextService` and `IAiContentContextAssignmentService` (SaveAsync pattern)
-9. `IAiContextResolver` for multi-level resolution
-10. `IAiContextFormatter` using `AiContextResourceTypeCollection`
+5. Resource type auto-discovery via `[AIContextResourceTypeAttribute]`
+6. `IAIContextRepository` and `EfCoreAIContextRepository` (with scope provider pattern)
+7. `IAIContentContextAssignmentRepository` and EF Core implementation
+8. `IAIContextService` and `IAIContentContextAssignmentService` (SaveAsync pattern)
+9. `IAIContextResolver` for multi-level resolution
+10. `IAIContextFormatter` using `AIContextResourceTypeCollection`
 11. API controllers with `IdOrAlias` support and versioning
 12. Content context property editor for assignment
 13. Management UI in backoffice
-14. Add `ContextIds` to `AiProfile` model
+14. Add `ContextIds` to `AIProfile` model
 
-**Phase 2: Prompt Integration (Umbraco.Ai.Prompt)**
-15. Add `ContextIds` to `AiPrompt` model
+**Phase 2: Prompt Integration (Umbraco.AI.Prompt)**
+15. Add `ContextIds` to `AIPrompt` model
 16. Context picker UI in prompt editor
 17. Inject formatted context block into prompt templates
 18. `{context}` variable support in template engine
 
-**Phase 3: Agent Integration (Umbraco.Ai.Agent)**
-19. Add `ContextIds` to `AiAgent` model
+**Phase 3: Agent Integration (Umbraco.AI.Agent)**
+19. Add `ContextIds` to `AIAgent` model
 20. Context picker UI in agent editor
-21. `AiContextInjectionMiddleware` for automatic context injection
+21. `AIContextInjectionMiddleware` for automatic context injection
 22. Session-level context resolution with merge
 23. Context refresh on workspace navigation
 
@@ -2411,7 +2411,7 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 
 - [AI Prompts](./ai-prompts.md) - Human-initiated single-step operations
 - [AI Workflows](./ai-workflows.md) - Automatic multi-step automation
-- [Umbraco.Ai.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants
+- [Umbraco.AI.Agents](../umbraco-ai-agents-design.md) - Conversational AI assistants
 
 ---
 
@@ -2429,16 +2429,16 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 | Content inheritance | Walk up tree until assignment found, then global default |
 | **Domain models** | `sealed` classes with `internal set` on Id, `required init` on Alias |
 | **Service pattern** | `SaveAsync` for insert-or-update, paged queries for lists |
-| **Repository pattern** | `IEFCoreScopeProvider<UmbracoAiDbContext>` with explicit scope completion |
+| **Repository pattern** | `IEFCoreScopeProvider<UmbracoAIDbContext>` with explicit scope completion |
 | **API pattern** | `IdOrAlias` for dual ID/alias lookups, `[ApiVersion]` for versioning |
-| Resource type extensibility | `AiContextResourceTypeBase<T>` with `IAiContextResourceTypeInfrastructure` injection |
-| Resource type discovery | `LazyCollectionBuilderBase` + `[AiContextResourceTypeAttribute]` auto-discovery |
-| Resource type access | `AiContextResourceTypeCollection` (injected via DI, not a Registry) |
+| Resource type extensibility | `AIContextResourceTypeBase<T>` with `IAIContextResourceTypeInfrastructure` injection |
+| Resource type discovery | `LazyCollectionBuilderBase` + `[AIContextResourceTypeAttribute]` auto-discovery |
+| Resource type access | `AIContextResourceTypeCollection` (injected via DI, not a Registry) |
 | Resource type components | Definition (C#) + Format method (C#) + UI Editor (TypeScript/Lit) |
 | Built-in resource types | brand-voice, document, external-link, text |
 | Resource ordering | User-defined sort order within each context |
-| **Context formatting** | `IAiContextFormatter` using `AiContextResourceTypeCollection` |
-| **Middleware integration** | `IAiChatMiddleware` pattern with `AiContextInjectionMiddleware` |
+| **Context formatting** | `IAIContextFormatter` using `AIContextResourceTypeCollection` |
+| **Middleware integration** | `IAIChatMiddleware` pattern with `AIContextInjectionMiddleware` |
 | Property constraints | Out of scope - schema-level concern, not context |
 | Agent context injection | Opt-in via session, controlled by `EnableContextInjection` flag |
 | Agent context refresh | Session start + workspace change |

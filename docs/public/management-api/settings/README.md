@@ -5,7 +5,7 @@ description: >-
 
 # Settings API
 
-The Settings API allows you to configure system-wide defaults for Umbraco.Ai.
+The Settings API allows you to configure system-wide defaults for Umbraco.AI.
 
 ## Endpoints
 

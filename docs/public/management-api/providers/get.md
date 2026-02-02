@@ -217,6 +217,6 @@ public bool ValidateSettings(ProviderResponseModel provider, Dictionary<string, 
 
 ## Notes
 
-- Settings schema is defined by the provider using `[AiSetting]` attributes
+- Settings schema is defined by the provider using `[AISetting]` attributes
 - Sensitive settings (like API keys) should support config references (`$Config:Path`)
 - The schema enables dynamic UI generation without hardcoding provider details

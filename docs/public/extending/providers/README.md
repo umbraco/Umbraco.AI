@@ -5,20 +5,20 @@ description: >-
 
 # Custom Providers
 
-Providers are plugins that connect Umbraco.Ai to AI services. Create a custom provider to add support for AI services not included out of the box.
+Providers are plugins that connect Umbraco.AI to AI services. Create a custom provider to add support for AI services not included out of the box.
 
 ## Provider Architecture
 
 A provider consists of:
 
-1. **Provider class** - Main class with `[AiProvider]` attribute
-2. **Settings class** - Configuration properties with `[AiSetting]` attributes
+1. **Provider class** - Main class with `[AIProvider]` attribute
+2. **Settings class** - Configuration properties with `[AISetting]` attributes
 3. **Capability classes** - Implementations for Chat, Embedding, and so on
 
 ```
 MyProvider/
 ├── MyProvider.cs              # Main provider class
-├── MyProviderSettings.cs      # Settings with [AiSetting] attributes
+├── MyProviderSettings.cs      # Settings with [AISetting] attributes
 ├── MyChatCapability.cs        # Chat capability implementation
 └── MyEmbeddingCapability.cs   # Embedding capability (optional)
 ```
@@ -29,14 +29,14 @@ MyProvider/
 
 {% code title="MyProviderSettings.cs" %}
 ```csharp
-using Umbraco.Ai.Core.Settings;
+using Umbraco.AI.Core.Settings;
 
 public class MyProviderSettings
 {
-    [AiSetting(Label = "API Key", Description = "Your API key")]
+    [AISetting(Label = "API Key", Description = "Your API key")]
     public required string ApiKey { get; set; }
 
-    [AiSetting(Label = "Endpoint", Description = "API endpoint URL")]
+    [AISetting(Label = "Endpoint", Description = "API endpoint URL")]
     public string? Endpoint { get; set; }
 }
 ```
@@ -47,12 +47,12 @@ public class MyProviderSettings
 {% code title="MyChatCapability.cs" %}
 ```csharp
 using Microsoft.Extensions.AI;
-using Umbraco.Ai.Core.Models;
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
-public class MyChatCapability : AiChatCapabilityBase<MyProviderSettings>
+public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
 {
-    public MyChatCapability(IAiProvider provider) : base(provider) { }
+    public MyChatCapability(IAIProvider provider) : base(provider) { }
 
     protected override IChatClient CreateClient(MyProviderSettings settings, string? modelId)
     {
@@ -60,17 +60,17 @@ public class MyChatCapability : AiChatCapabilityBase<MyProviderSettings>
         return new MyChatClient(settings.ApiKey, settings.Endpoint, modelId);
     }
 
-    protected override Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+    protected override Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(
         MyProviderSettings settings,
         CancellationToken cancellationToken = default)
     {
         // Return available models
-        var models = new List<AiModelDescriptor>
+        var models = new List<AIModelDescriptor>
         {
             new("my-model-1", "My Model 1"),
             new("my-model-2", "My Model 2")
         };
-        return Task.FromResult<IReadOnlyList<AiModelDescriptor>>(models);
+        return Task.FromResult<IReadOnlyList<AIModelDescriptor>>(models);
     }
 }
 ```
@@ -80,12 +80,12 @@ public class MyChatCapability : AiChatCapabilityBase<MyProviderSettings>
 
 {% code title="MyProvider.cs" %}
 ```csharp
-using Umbraco.Ai.Core.Providers;
+using Umbraco.AI.Core.Providers;
 
-[AiProvider("myprovider", "My AI Provider")]
-public class MyProvider : AiProviderBase<MyProviderSettings>
+[AIProvider("myprovider", "My AI Provider")]
+public class MyProvider : AIProviderBase<MyProviderSettings>
 {
-    public MyProvider(IAiProviderInfrastructure infrastructure)
+    public MyProvider(IAIProviderInfrastructure infrastructure)
         : base(infrastructure)
     {
         WithCapability<MyChatCapability>();
@@ -97,8 +97,8 @@ public class MyProvider : AiProviderBase<MyProviderSettings>
 ## How It Works
 
 1. Providers are discovered automatically via assembly scanning
-2. The `[AiProvider]` attribute registers the provider with an ID and name
-3. Settings are rendered in the backoffice using `[AiSetting]` metadata
+2. The `[AIProvider]` attribute registers the provider with an ID and name
+3. Settings are rendered in the backoffice using `[AISetting]` metadata
 4. Capabilities are registered in the constructor with `WithCapability<T>()`
 
 ## In This Section

@@ -146,7 +146,7 @@ import {
 } from '@umbraco-ai/backoffice';
 
 @customElement('ai-assistant')
-export class AiAssistantElement extends LitElement {
+export class AIAssistantElement extends LitElement {
     static styles = css`
         :host { display: block; padding: 1rem; }
         .loading { opacity: 0.5; }
@@ -239,7 +239,7 @@ export class AiAssistantElement extends LitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        'ai-assistant': AiAssistantElement;
+        'ai-assistant': AIAssistantElement;
     }
 }
 ```

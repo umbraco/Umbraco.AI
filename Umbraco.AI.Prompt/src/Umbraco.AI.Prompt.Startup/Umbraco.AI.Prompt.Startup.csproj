@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..MBRACO.AI.Startup.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
@@ -17,10 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..MBRACO.AI.Prompt.Core.csproj" />
-        <ProjectReference Include="..MBRACO.AI.Prompt.Persistence.csproj" />
-        <ProjectReference Include="..MBRACO.AI.Prompt.Persistence.SqlServer.csproj" />
-        <ProjectReference Include="..MBRACO.AI.Prompt.Persistence.Sqlite.csproj" />
-        <ProjectReference Include="..MBRACO.AI.Prompt.Web.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.SqlServer.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Web.csproj" />
     </ItemGroup>
 </Project>

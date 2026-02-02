@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..MBRACO.AI.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -9,7 +9,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..MBRACO.AI.Prompt.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

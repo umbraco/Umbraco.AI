@@ -11,7 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..MBRACO.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">

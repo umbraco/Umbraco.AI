@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..MBRACO.AI.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
@@ -30,7 +30,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..MBRACO.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Agent.Core.csproj" />
     </ItemGroup>
 
 </Project>

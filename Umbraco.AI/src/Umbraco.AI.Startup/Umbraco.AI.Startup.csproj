@@ -10,11 +10,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..MBRACO.AI.Core.csproj" />
-      <ProjectReference Include="..MBRACO.AI.Persistence.csproj" />
-      <ProjectReference Include="..MBRACO.AI.Persistence.SqlServer.csproj" />
-      <ProjectReference Include="..MBRACO.AI.Persistence.Sqlite.csproj" />
-      <ProjectReference Include="..MBRACO.AI.Web.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence\Umbraco.AI.Persistence.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence.SqlServer\Umbraco.AI.Persistence.SqlServer.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Persistence.Sqlite\Umbraco.AI.Persistence.Sqlite.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Web\Umbraco.AI.Web.csproj" />
     </ItemGroup>
 
 

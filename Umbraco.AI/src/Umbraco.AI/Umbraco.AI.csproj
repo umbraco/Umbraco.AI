@@ -14,8 +14,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..MBRACO.AI.Startup.csproj" />
-      <ProjectReference Include="..MBRACO.AI.Web.StaticAssets.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Startup\Umbraco.AI.Startup.csproj" />
+      <ProjectReference Include="..\Umbraco.AI.Web.StaticAssets\Umbraco.AI.Web.StaticAssets.csproj" />
     </ItemGroup>
 
 </Project>

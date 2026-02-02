@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..MBRACO.AI.Core.csproj" />
-    <ProjectReference Include="..MBRACO.AI.Tests.Common.csproj" />
+    <ProjectReference Include="..\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+    <ProjectReference Include="..\Umbraco.AI.Tests.Common\Umbraco.AI.Tests.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

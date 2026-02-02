@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..MBRACO.AI.Prompt.Startup.csproj" />
-        <ProjectReference Include="..MBRACO.AI.Prompt.Web.StaticAssets.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Startup.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
     </ItemGroup>
 </Project>

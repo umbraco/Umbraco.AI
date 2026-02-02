@@ -19,7 +19,7 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
                     Alias = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    ProfileId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ProfileId = table.Column<Guid>(type: "TEXT", nullable: true),
                     Instructions = table.Column<string>(type: "TEXT", nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: true)
                 },

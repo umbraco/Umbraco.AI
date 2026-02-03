@@ -1,0 +1,121 @@
+name: 🔄 Sync to Azure DevOps
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  sync-to-devops:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'state/sprint-candidate'
+
+    steps:
+      - name: Create work item in Azure DevOps
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const issueUrl = issue.html_url;
+            const issueTitle = issue.title;
+            const issueBody = issue.body || '';
+            const issueNumber = issue.number;
+            const issueLabels = issue.labels.map(l => l.name);
+
+            // Azure DevOps configuration
+            const organization = 'umbraco';
+            const project = 'D-Team%20Tracker';  // URL encoded
+            const teamName = 'AI%20Team';         // URL encoded
+            const apiVersion = '7.1-preview.3';
+
+            // Determine work item type based on GitHub labels
+            const workItemType = issueLabels.includes('bug') ? 'Bug' : 'User Story';
+
+            // Build work item description with GitHub link
+            const description = `
+              <div>
+                <p><strong>GitHub Issue:</strong> <a href="${issueUrl}">#${issueNumber}</a></p>
+                <p>${issueBody.replace(/\n/g, '<br/>')}</p>
+              </div>
+            `;
+
+            // Create work item payload
+            const workItemData = [
+              {
+                op: 'add',
+                path: '/fields/System.Title',
+                value: issueTitle
+              },
+              {
+                op: 'add',
+                path: '/fields/System.Description',
+                value: description
+              },
+              {
+                op: 'add',
+                path: '/fields/System.Tags',
+                value: 'Umbraco AI'
+              },
+              {
+                op: 'add',
+                path: '/fields/System.AreaPath',
+                value: 'D-Team Tracker\\AI Team'
+              },
+              {
+                op: 'add',
+                path: '/relations/-',
+                value: {
+                  rel: 'Hyperlink',
+                  url: issueUrl,
+                  attributes: {
+                    comment: 'GitHub Issue'
+                  }
+                }
+              }
+            ];
+
+            // Call Azure DevOps API
+            const pat = process.env.AZURE_DEVOPS_PAT;
+            if (!pat) {
+              core.setFailed('AZURE_DEVOPS_PAT secret not configured');
+              return;
+            }
+
+            const auth = Buffer.from(`:${pat}`).toString('base64');
+            const workItemTypeEncoded = encodeURIComponent(workItemType);
+            const url = `https://dev.azure.com/${organization}/${project}/_apis/wit/workitems/$${workItemTypeEncoded}?api-version=${apiVersion}`;
+
+            try {
+              const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Basic ${auth}`,
+                  'Content-Type': 'application/json-patch+json',
+                  'Accept': 'application/json'
+                },
+                body: JSON.stringify(workItemData)
+              });
+
+              if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Azure DevOps API error: ${response.status} - ${errorText}`);
+              }
+
+              const workItem = await response.json();
+              const workItemId = workItem.id;
+              const workItemUrl = workItem._links.html.href;
+
+              // Comment on GitHub issue
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `✅ **This issue has been approved and added to our backlog for consideration in a future sprint.**\n\nAzure DevOps Work Item: [#${workItemId}](${workItemUrl}) (${workItemType})`
+              });
+
+              console.log(`Created ${workItemType} work item ${workItemId}: ${workItemUrl}`);
+
+            } catch (error) {
+              core.setFailed(`Failed to create work item: ${error.message}`);
+            }
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}

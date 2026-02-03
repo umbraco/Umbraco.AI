@@ -30,7 +30,7 @@ jobs:
             const apiVersion = '7.1-preview.3';
 
             // Determine work item type based on GitHub labels
-            const workItemType = issueLabels.includes('bug') ? 'Bug' : 'User Story';
+            const workItemType = issueLabels.includes('bug') ? 'Bug' : 'Product Backlog Item';
 
             // Build work item description with GitHub link
             const description = `

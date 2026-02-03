@@ -21,7 +21,7 @@ Syncs GitHub issues to Azure DevOps backlog when labeled with `state/sprint-cand
 1. Triggers when an issue is labeled with `state/sprint-candidate`
 2. Creates a work item in Azure DevOps (D-Team Tracker / AI Team):
    - **Bug** if the GitHub issue has a `bug` label
-   - **User Story** otherwise
+   - **Product Backlog Item** otherwise
 3. Tags the work item with `Umbraco AI`
 4. Links the GitHub issue to the work item
 5. Posts a comment on the GitHub issue with the work item link

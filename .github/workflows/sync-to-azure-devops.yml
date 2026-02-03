@@ -16,9 +16,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // Import core for error handling
-            const core = require('@actions/core');
-
             const issue = context.payload.issue;
             const issueUrl = issue.html_url;
             const issueTitle = issue.title;

@@ -134,7 +134,9 @@ cat > nuget.config << NUGET_EOF
   </packageSources>
   <packageSourceMapping>
     <packageSource key="$FEED_NAME">
-      <package pattern="Umbraco.AI*" />
+      <package pattern="Umbraco.AI" />
+      <package pattern="Umbraco.AI.*" />
+      <package pattern="Umbraco" />
       <package pattern="Umbraco.*" />
       <package pattern="Clean" />
     </packageSource>

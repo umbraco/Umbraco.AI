@@ -88,7 +88,9 @@ $configContent = @"
   </packageSources>
   <packageSourceMapping>
     <packageSource key="$feedName">
-      <package pattern="Umbraco.AI*" />
+      <package pattern="Umbraco.AI" />
+      <package pattern="Umbraco.AI.*" />
+      <package pattern="Umbraco" />
       <package pattern="Umbraco.*" />
       <package pattern="Clean" />
     </packageSource>

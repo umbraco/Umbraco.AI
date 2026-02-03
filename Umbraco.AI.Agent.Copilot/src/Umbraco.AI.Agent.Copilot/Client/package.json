@@ -14,8 +14,8 @@
     "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)"
   },
   "peerDependencies": {
-    "@umbraco-ai/core": "^17.0.0",
-    "@umbraco-ai/agent": "^17.0.0",
+    "@umbraco-ai/core": "^1.0.0",
+    "@umbraco-ai/agent": "^1.0.0",
     "@umbraco-cms/backoffice": "^17.1.0"
   },
   "dependencies": {

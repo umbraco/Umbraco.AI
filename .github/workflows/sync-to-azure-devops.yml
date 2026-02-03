@@ -23,6 +23,23 @@ jobs:
             const issueNumber = issue.number;
             const issueLabels = issue.labels.map(l => l.name);
 
+            // Check if this issue was already synced
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const alreadySynced = comments.data.some(comment =>
+              comment.body.includes('Azure DevOps Work Item:') &&
+              comment.user.type === 'Bot'
+            );
+
+            if (alreadySynced) {
+              console.log('Issue already synced to Azure DevOps, skipping...');
+              return;
+            }
+
             // Azure DevOps configuration
             const organization = 'umbraco';
             const project = 'D-Team%20Tracker';  // URL encoded

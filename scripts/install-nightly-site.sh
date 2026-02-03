@@ -122,11 +122,26 @@ else
     FEED_NAME="UmbracoPreReleases"
 fi
 
+# Create or ensure nuget.config exists
+if [ ! -f "nuget.config" ]; then
+    echo "Creating nuget.config..."
+    cat > nuget.config << 'NUGET_EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+  </packageSources>
+</configuration>
+NUGET_EOF
+fi
+
 # Add test feed
-dotnet nuget add source "$FEED_URL" --name "$FEED_NAME" 2>/dev/null || true
+echo "Adding $FEED_NAME feed..."
+dotnet nuget add source "$FEED_URL" --name "$FEED_NAME" 2>&1 > /dev/null || true
 
 # Add nuget.org for external dependencies (Microsoft.Extensions.AI, provider SDKs, etc.)
-dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org" 2>/dev/null || true
+echo "Adding nuget.org feed..."
+dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org" 2>&1 > /dev/null || true
 
 # Configure PackageSourceMapping to route packages to correct sources
 echo "Configuring PackageSourceMapping..."

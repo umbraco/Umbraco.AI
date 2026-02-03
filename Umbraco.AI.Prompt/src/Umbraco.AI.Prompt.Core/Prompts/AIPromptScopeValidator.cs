@@ -156,8 +156,12 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
             _ => null
         };
 
-        var propertyType = contentType?.PropertyTypes.FirstOrDefault(
-            pt => pt.Alias.Equals(propertyAlias, StringComparison.OrdinalIgnoreCase));
+        var propertyType = contentType is IContentTypeComposition compositionContentType
+            ? compositionContentType.CompositionPropertyTypes.FirstOrDefault(
+                pt => pt.Alias.Equals(propertyAlias, StringComparison.OrdinalIgnoreCase))
+            : contentType?.PropertyTypes.FirstOrDefault(
+                pt => pt.Alias.Equals(propertyAlias, StringComparison.OrdinalIgnoreCase));
+
         if (propertyType is null)
         {
             return null;

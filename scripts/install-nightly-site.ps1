@@ -87,6 +87,7 @@ $configContent = @"
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>
   <packageSourceMapping>
+    <clear />
     <packageSource key="$feedName">
       <package pattern="Umbraco.AI" />
       <package pattern="Umbraco.AI.*" />

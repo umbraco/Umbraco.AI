@@ -156,38 +156,38 @@ pushd "demo/$SITE_NAME" > /dev/null
 
 # Install Core first to establish the version baseline
 echo "  Installing Umbraco.AI.Core..."
-dotnet add package Umbraco.AI.Core --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.Core --prerelease
 
 # Core meta-package (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI..."
-dotnet add package Umbraco.AI --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI --prerelease
 
 # Provider packages
 echo "  Installing Umbraco.AI.OpenAI..."
-dotnet add package Umbraco.AI.OpenAI --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.OpenAI --prerelease
 
 echo "  Installing Umbraco.AI.Anthropic..."
-dotnet add package Umbraco.AI.Anthropic --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.Anthropic --prerelease
 
 echo "  Installing Umbraco.AI.Google..."
-dotnet add package Umbraco.AI.Google --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.Google --prerelease
 
 echo "  Installing Umbraco.AI.Amazon..."
-dotnet add package Umbraco.AI.Amazon --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.Amazon --prerelease
 
 echo "  Installing Umbraco.AI.MicrosoftFoundry..."
-dotnet add package Umbraco.AI.MicrosoftFoundry --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.MicrosoftFoundry --prerelease
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI.Prompt..."
-dotnet add package Umbraco.AI.Prompt --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.Prompt --prerelease
 
 echo "  Installing Umbraco.AI.Agent..."
-dotnet add package Umbraco.AI.Agent --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.Agent --prerelease
 
 # Agent Copilot (frontend-only static assets)
 echo "  Installing Umbraco.AI.Agent.Copilot..."
-dotnet add package Umbraco.AI.Agent.Copilot --source "$FEED_URL" --prerelease
+dotnet add package Umbraco.AI.Agent.Copilot --prerelease
 
 popd > /dev/null
 

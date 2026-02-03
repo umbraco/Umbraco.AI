@@ -112,38 +112,38 @@ Push-Location "demo\$SiteName"
 
 # Install Core first to establish the version baseline
 Write-Host "  Installing Umbraco.AI.Core..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Core --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.Core --prerelease
 
 # Core meta-package (includes Startup + Web.StaticAssets)
 Write-Host "  Installing Umbraco.AI..." -ForegroundColor Gray
-dotnet add package Umbraco.AI --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI --prerelease
 
 # Provider packages
 Write-Host "  Installing Umbraco.AI.OpenAI..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.OpenAI --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.OpenAI --prerelease
 
 Write-Host "  Installing Umbraco.AI.Anthropic..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Anthropic --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.Anthropic --prerelease
 
 Write-Host "  Installing Umbraco.AI.Google..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Google --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.Google --prerelease
 
 Write-Host "  Installing Umbraco.AI.Amazon..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Amazon --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.Amazon --prerelease
 
 Write-Host "  Installing Umbraco.AI.MicrosoftFoundry..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.MicrosoftFoundry --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.MicrosoftFoundry --prerelease
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 Write-Host "  Installing Umbraco.AI.Prompt..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Prompt --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.Prompt --prerelease
 
 Write-Host "  Installing Umbraco.AI.Agent..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Agent --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.Agent --prerelease
 
 # Agent Copilot (frontend-only static assets)
 Write-Host "  Installing Umbraco.AI.Agent.Copilot..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Agent.Copilot --source $FeedUrl --prerelease
+dotnet add package Umbraco.AI.Agent.Copilot --prerelease
 
 Pop-Location
 

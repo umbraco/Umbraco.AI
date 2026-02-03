@@ -4,9 +4,10 @@
         <Title>Umbraco AI</Title>
         <Description>Umbraco AI</Description>
         <PackageReadmeFile>docs\README.md</PackageReadmeFile>
-        <PackageTags>umbraco commerce umbraco-marketplace</PackageTags>
+        <PackageTags>umbraco ai umbraco-marketplace</PackageTags>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <IncludeSymbols>false</IncludeSymbols>
+        <IncludeReferencedProjects>true</IncludeReferencedProjects>
     </PropertyGroup>
 
     <ItemGroup>

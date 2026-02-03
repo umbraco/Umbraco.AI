@@ -6,14 +6,15 @@
         <PackageTags>umbraco ai prompt umbraco-marketplace</PackageTags>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <IncludeSymbols>false</IncludeSymbols>
+        <IncludeReferencedProjects>true</IncludeReferencedProjects>
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="..\..\README.md" Pack="true" PackagePath="docs\" Visible="false" />
+        <Content Include="..\..\README.md" Pack="true" PackagePath="docs" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Startup.csproj" />
-        <ProjectReference Include="..\Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Startup\Umbraco.AI.Prompt.Startup.csproj" />
+        <ProjectReference Include="..\Umbraco.AI.Prompt.Web.StaticAssets\Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
     </ItemGroup>
 </Project>

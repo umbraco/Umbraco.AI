@@ -41,7 +41,7 @@ export class UaiSettingsEditorElement extends UmbLitElement {
     #onPropertyChange(e: UmbChangeEvent): void {
         e.stopPropagation();
         const target = e.target as HTMLElement & { name?: string; value?: string | string[] };
-        const name = target.name as keyof UaiSettingsModel | undefined;
+        const name = target.getAttribute("name") as keyof UaiSettingsModel | undefined;
         if (!name) return;
         const value = typeof target.value === 'string' ? target.value : null;
         this.#workspaceContext?.handleCommand(

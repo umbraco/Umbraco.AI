@@ -5,6 +5,7 @@ import { PromptsService } from "../../../api/index.js";
 import { UaiPromptTypeMapper } from "../../type-mapper.js";
 import type { UaiPromptDetailModel } from "../../types.js";
 import { UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
+import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../property-actions/constants.js";
 
 const UAI_EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -32,7 +33,14 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             profileId: null,
             contextIds: [],
             tags: [],
-            scope: null,
+            scope: {
+                allowRules: [{
+                    propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
+                    propertyAliases: null,
+                    contentTypeAliases: null,
+                }],
+                denyRules: [],
+            },
             isActive: true,
             includeEntityContext: true,
             dateCreated: null,

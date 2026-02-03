@@ -272,6 +272,8 @@ stages:
           - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: Umbraco.AI
+              # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
+              useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
 
           - template: .azure-pipelines/templates/upload-packages.yml
             parameters:
@@ -321,6 +323,8 @@ stages:
           - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: $(product)
+              # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
+              useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
               condition: eq(variables['check.shouldPack'], 'true')
 
           - template: .azure-pipelines/templates/upload-packages.yml
@@ -376,6 +380,8 @@ stages:
           - template: .azure-pipelines/templates/pack-product.yml
             parameters:
               product: $(product)
+              # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
+              useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
               condition: eq(variables['check.shouldPack'], 'true')
 
           - template: .azure-pipelines/templates/upload-packages.yml

@@ -48,7 +48,7 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ProfileId")
+                    b.Property<Guid?>("ProfileId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

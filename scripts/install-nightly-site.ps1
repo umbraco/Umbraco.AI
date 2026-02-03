@@ -67,11 +67,62 @@ Push-Location "demo\$SiteName"
 dotnet add package Clean
 Pop-Location
 
-# Step 5: Add feed source
-Write-Host "Adding feed source..." -ForegroundColor Green
+# Step 5: Add feed sources and configure PackageSourceMapping
+Write-Host "Configuring NuGet sources..." -ForegroundColor Green
 Push-Location "demo\$SiteName"
+
+# Add test feed
 $feedName = if ($Feed -eq "nightly") { "UmbracoNightly" } else { "UmbracoPreReleases" }
 dotnet nuget add source $FeedUrl --name $feedName 2>$null
+
+# Add nuget.org for external dependencies (Microsoft.Extensions.AI, provider SDKs, etc.)
+dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org" 2>$null
+
+# Configure PackageSourceMapping to route packages to correct sources
+# Umbraco.AI.* and Umbraco.* from test feed, everything else from nuget.org
+Write-Host "Configuring PackageSourceMapping..." -ForegroundColor Gray
+
+# Clear existing packageSourceMapping section if present
+$nugetConfig = "nuget.config"
+[xml]$xml = Get-Content $nugetConfig
+$packageSourceMapping = $xml.configuration.packageSourceMapping
+if ($packageSourceMapping -ne $null) {
+    $xml.configuration.RemoveChild($packageSourceMapping) | Out-Null
+}
+
+# Add new packageSourceMapping configuration
+$packageSourceMapping = $xml.CreateElement("packageSourceMapping")
+
+# Umbraco.AI packages from test feed
+$umbracoAI = $xml.CreateElement("packageSource")
+$umbracoAI.SetAttribute("key", $feedName)
+$pattern1 = $xml.CreateElement("package")
+$pattern1.SetAttribute("pattern", "Umbraco.AI*")
+$umbracoAI.AppendChild($pattern1) | Out-Null
+$packageSourceMapping.AppendChild($umbracoAI) | Out-Null
+
+# All other Umbraco packages from test feed (Umbraco.*, Clean, etc.)
+$umbraco = $xml.CreateElement("packageSource")
+$umbraco.SetAttribute("key", $feedName)
+$pattern2 = $xml.CreateElement("package")
+$pattern2.SetAttribute("pattern", "Umbraco.*")
+$umbraco.AppendChild($pattern2) | Out-Null
+$pattern3 = $xml.CreateElement("package")
+$pattern3.SetAttribute("pattern", "Clean")
+$umbraco.AppendChild($pattern3) | Out-Null
+$packageSourceMapping.AppendChild($umbraco) | Out-Null
+
+# Everything else from nuget.org (Microsoft.*, Anthropic, Google.*, AWSSDK.*, Azure.*, etc.)
+$nugetOrg = $xml.CreateElement("packageSource")
+$nugetOrg.SetAttribute("key", "nuget.org")
+$pattern4 = $xml.CreateElement("package")
+$pattern4.SetAttribute("pattern", "*")
+$nugetOrg.AppendChild($pattern4) | Out-Null
+$packageSourceMapping.AppendChild($nugetOrg) | Out-Null
+
+$xml.configuration.AppendChild($packageSourceMapping) | Out-Null
+$xml.Save((Resolve-Path $nugetConfig).Path)
+
 Pop-Location
 
 # Step 6: Install Umbraco.AI packages from feed

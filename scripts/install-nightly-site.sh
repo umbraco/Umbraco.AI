@@ -111,15 +111,72 @@ pushd "demo/$SITE_NAME" > /dev/null
 dotnet add package Clean
 popd > /dev/null
 
-# Step 5: Add feed source
-echo "Adding feed source..."
+# Step 5: Add feed sources and configure PackageSourceMapping
+echo "Configuring NuGet sources..."
 pushd "demo/$SITE_NAME" > /dev/null
+
+# Determine feed name
 if [ "$FEED" = "nightly" ]; then
     FEED_NAME="UmbracoNightly"
 else
     FEED_NAME="UmbracoPreReleases"
 fi
+
+# Add test feed
 dotnet nuget add source "$FEED_URL" --name "$FEED_NAME" 2>/dev/null || true
+
+# Add nuget.org for external dependencies (Microsoft.Extensions.AI, provider SDKs, etc.)
+dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org" 2>/dev/null || true
+
+# Configure PackageSourceMapping to route packages to correct sources
+echo "Configuring PackageSourceMapping..."
+
+# Read existing nuget.config, remove packageSourceMapping if present, and add new configuration
+# Using python for XML manipulation as it's more portable than xmlstarlet
+python3 << EOF
+import xml.etree.ElementTree as ET
+import sys
+
+try:
+    tree = ET.parse('nuget.config')
+    root = tree.getroot()
+
+    # Remove existing packageSourceMapping if present
+    for psm in root.findall('packageSourceMapping'):
+        root.remove(psm)
+
+    # Create new packageSourceMapping element
+    psm = ET.Element('packageSourceMapping')
+
+    # Umbraco.AI packages from test feed
+    ps1 = ET.SubElement(psm, 'packageSource', key='$FEED_NAME')
+    ET.SubElement(ps1, 'package', pattern='Umbraco.AI*')
+
+    # All other Umbraco packages from test feed (Umbraco.*, Clean, etc.)
+    ps2 = ET.SubElement(psm, 'packageSource', key='$FEED_NAME')
+    ET.SubElement(ps2, 'package', pattern='Umbraco.*')
+    ET.SubElement(ps2, 'package', pattern='Clean')
+
+    # Everything else from nuget.org (Microsoft.*, Anthropic, Google.*, AWSSDK.*, Azure.*, etc.)
+    ps3 = ET.SubElement(psm, 'packageSource', key='nuget.org')
+    ET.SubElement(ps3, 'package', pattern='*')
+
+    root.append(psm)
+
+    # Write back with proper formatting
+    ET.indent(tree, space='  ')
+    tree.write('nuget.config', encoding='utf-8', xml_declaration=True)
+    sys.exit(0)
+except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
+
+if [ $? -ne 0 ]; then
+    echo "Warning: Failed to configure PackageSourceMapping. Python3 may not be available."
+    echo "You may need to manually configure nuget.config for external dependencies."
+fi
+
 popd > /dev/null
 
 # Step 6: Install Umbraco.AI packages from feed

@@ -67,80 +67,39 @@ Push-Location "demo\$SiteName"
 dotnet add package Clean
 Pop-Location
 
-# Step 5: Add feed sources and configure PackageSourceMapping
-Write-Host "Configuring NuGet sources..." -ForegroundColor Green
+# Step 5: Configure NuGet sources and PackageSourceMapping
+Write-Host "Configuring NuGet sources and package routing..." -ForegroundColor Green
 Push-Location "demo\$SiteName"
 
 # Determine feed name
 $feedName = if ($Feed -eq "nightly") { "UmbracoNightly" } else { "UmbracoPreReleases" }
 
-# Create or ensure nuget.config exists
+# Create complete nuget.config with sources and PackageSourceMapping
 $nugetConfig = "nuget.config"
-if (-not (Test-Path $nugetConfig)) {
-    Write-Host "Creating nuget.config..." -ForegroundColor Gray
-    # Create a basic nuget.config file
-    @"
+Write-Host "Creating nuget.config with package source mapping..." -ForegroundColor Gray
+
+$configContent = @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
     <clear />
+    <add key="$feedName" value="$FeedUrl" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>
+  <packageSourceMapping>
+    <packageSource key="$feedName">
+      <package pattern="Umbraco.AI*" />
+      <package pattern="Umbraco.*" />
+      <package pattern="Clean" />
+    </packageSource>
+    <packageSource key="nuget.org">
+      <package pattern="*" />
+    </packageSource>
+  </packageSourceMapping>
 </configuration>
-"@ | Out-File -FilePath $nugetConfig -Encoding utf8
-}
+"@
 
-# Add test feed
-Write-Host "Adding $feedName feed..." -ForegroundColor Gray
-dotnet nuget add source $FeedUrl --name $feedName 2>&1 | Out-Null
-
-# Add nuget.org for external dependencies (Microsoft.Extensions.AI, provider SDKs, etc.)
-Write-Host "Adding nuget.org feed..." -ForegroundColor Gray
-dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org" 2>&1 | Out-Null
-
-# Configure PackageSourceMapping to route packages to correct sources
-Write-Host "Configuring PackageSourceMapping..." -ForegroundColor Gray
-
-# Load and modify nuget.config
-[xml]$xml = Get-Content $nugetConfig
-
-# Clear existing packageSourceMapping section if present
-$packageSourceMapping = $xml.configuration.packageSourceMapping
-if ($packageSourceMapping -ne $null) {
-    $xml.configuration.RemoveChild($packageSourceMapping) | Out-Null
-}
-
-# Add new packageSourceMapping configuration
-$packageSourceMapping = $xml.CreateElement("packageSourceMapping")
-
-# Umbraco.AI packages from test feed
-$umbracoAI = $xml.CreateElement("packageSource")
-$umbracoAI.SetAttribute("key", $feedName)
-$pattern1 = $xml.CreateElement("package")
-$pattern1.SetAttribute("pattern", "Umbraco.AI*")
-$umbracoAI.AppendChild($pattern1) | Out-Null
-$packageSourceMapping.AppendChild($umbracoAI) | Out-Null
-
-# All other Umbraco packages from test feed (Umbraco.*, Clean, etc.)
-$umbraco = $xml.CreateElement("packageSource")
-$umbraco.SetAttribute("key", $feedName)
-$pattern2 = $xml.CreateElement("package")
-$pattern2.SetAttribute("pattern", "Umbraco.*")
-$umbraco.AppendChild($pattern2) | Out-Null
-$pattern3 = $xml.CreateElement("package")
-$pattern3.SetAttribute("pattern", "Clean")
-$umbraco.AppendChild($pattern3) | Out-Null
-$packageSourceMapping.AppendChild($umbraco) | Out-Null
-
-# Everything else from nuget.org (Microsoft.*, Anthropic, Google.*, AWSSDK.*, Azure.*, etc.)
-$nugetOrg = $xml.CreateElement("packageSource")
-$nugetOrg.SetAttribute("key", "nuget.org")
-$pattern4 = $xml.CreateElement("package")
-$pattern4.SetAttribute("pattern", "*")
-$nugetOrg.AppendChild($pattern4) | Out-Null
-$packageSourceMapping.AppendChild($nugetOrg) | Out-Null
-
-$xml.configuration.AppendChild($packageSourceMapping) | Out-Null
-$xml.Save((Resolve-Path $nugetConfig).Path)
+$configContent | Out-File -FilePath $nugetConfig -Encoding utf8 -Force
 
 Pop-Location
 

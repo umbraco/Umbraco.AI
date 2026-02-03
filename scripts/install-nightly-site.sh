@@ -111,8 +111,8 @@ pushd "demo/$SITE_NAME" > /dev/null
 dotnet add package Clean
 popd > /dev/null
 
-# Step 5: Add feed sources and configure PackageSourceMapping
-echo "Configuring NuGet sources..."
+# Step 5: Configure NuGet sources and PackageSourceMapping
+echo "Configuring NuGet sources and package routing..."
 pushd "demo/$SITE_NAME" > /dev/null
 
 # Determine feed name
@@ -122,75 +122,28 @@ else
     FEED_NAME="UmbracoPreReleases"
 fi
 
-# Create or ensure nuget.config exists
-if [ ! -f "nuget.config" ]; then
-    echo "Creating nuget.config..."
-    cat > nuget.config << 'NUGET_EOF'
+# Create complete nuget.config with sources and PackageSourceMapping
+echo "Creating nuget.config with package source mapping..."
+cat > nuget.config << NUGET_EOF
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
     <clear />
+    <add key="$FEED_NAME" value="$FEED_URL" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>
+  <packageSourceMapping>
+    <packageSource key="$FEED_NAME">
+      <package pattern="Umbraco.AI*" />
+      <package pattern="Umbraco.*" />
+      <package pattern="Clean" />
+    </packageSource>
+    <packageSource key="nuget.org">
+      <package pattern="*" />
+    </packageSource>
+  </packageSourceMapping>
 </configuration>
 NUGET_EOF
-fi
-
-# Add test feed
-echo "Adding $FEED_NAME feed..."
-dotnet nuget add source "$FEED_URL" --name "$FEED_NAME" 2>&1 > /dev/null || true
-
-# Add nuget.org for external dependencies (Microsoft.Extensions.AI, provider SDKs, etc.)
-echo "Adding nuget.org feed..."
-dotnet nuget add source "https://api.nuget.org/v3/index.json" --name "nuget.org" 2>&1 > /dev/null || true
-
-# Configure PackageSourceMapping to route packages to correct sources
-echo "Configuring PackageSourceMapping..."
-
-# Read existing nuget.config, remove packageSourceMapping if present, and add new configuration
-# Using python for XML manipulation as it's more portable than xmlstarlet
-python3 << EOF
-import xml.etree.ElementTree as ET
-import sys
-
-try:
-    tree = ET.parse('nuget.config')
-    root = tree.getroot()
-
-    # Remove existing packageSourceMapping if present
-    for psm in root.findall('packageSourceMapping'):
-        root.remove(psm)
-
-    # Create new packageSourceMapping element
-    psm = ET.Element('packageSourceMapping')
-
-    # Umbraco.AI packages from test feed
-    ps1 = ET.SubElement(psm, 'packageSource', key='$FEED_NAME')
-    ET.SubElement(ps1, 'package', pattern='Umbraco.AI*')
-
-    # All other Umbraco packages from test feed (Umbraco.*, Clean, etc.)
-    ps2 = ET.SubElement(psm, 'packageSource', key='$FEED_NAME')
-    ET.SubElement(ps2, 'package', pattern='Umbraco.*')
-    ET.SubElement(ps2, 'package', pattern='Clean')
-
-    # Everything else from nuget.org (Microsoft.*, Anthropic, Google.*, AWSSDK.*, Azure.*, etc.)
-    ps3 = ET.SubElement(psm, 'packageSource', key='nuget.org')
-    ET.SubElement(ps3, 'package', pattern='*')
-
-    root.append(psm)
-
-    # Write back with proper formatting
-    ET.indent(tree, space='  ')
-    tree.write('nuget.config', encoding='utf-8', xml_declaration=True)
-    sys.exit(0)
-except Exception as e:
-    print(f"Error: {e}", file=sys.stderr)
-    sys.exit(1)
-EOF
-
-if [ $? -ne 0 ]; then
-    echo "Warning: Failed to configure PackageSourceMapping. Python3 may not be available."
-    echo "You may need to manually configure nuget.config for external dependencies."
-fi
 
 popd > /dev/null
 

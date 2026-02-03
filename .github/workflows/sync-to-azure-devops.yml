@@ -64,6 +64,16 @@ jobs:
               },
               {
                 op: 'add',
+                path: '/fields/System.IterationPath',
+                value: 'D-Team Tracker'
+              },
+              {
+                op: 'add',
+                path: '/fields/System.State',
+                value: 'New'
+              },
+              {
+                op: 'add',
                 path: '/relations/-',
                 value: {
                   rel: 'Hyperlink',

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Title>Umbraco AI OpenAI Provider</Title>
     <Description>OpenAI provider for Umbraco AI</Description>
+    <PackageTags>umbraco ai openai umbraco-marketplace</PackageTags>
     <StaticWebAssetBasePath>App_Plugins/UmbracoAIOpenAI</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>

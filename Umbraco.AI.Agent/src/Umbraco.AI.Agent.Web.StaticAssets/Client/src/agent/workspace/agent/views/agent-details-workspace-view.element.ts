@@ -78,6 +78,30 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onEnabledToolScopeIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
+                { enabledToolScopeIds: picker.value ?? [] },
+                "enabledToolScopeIds"
+            )
+        );
+    }
+
+    #onEnabledToolIdsChange(event: Event) {
+        event.stopPropagation();
+        const value = (event.target as HTMLInputElement).value;
+        // Parse comma-separated tool IDs
+        const toolIds = value ? value.split(',').map(id => id.trim()).filter(id => id) : [];
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
+                { enabledToolIds: toolIds },
+                "enabledToolIds"
+            )
+        );
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -125,6 +149,28 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                             .value=${this._model.scopeIds}
                             @change=${this.#onScopeIdsChange}
                     ></uai-scope-picker>
+                </umb-property-layout>
+            </uui-box>
+            <uui-box headline="Tool Permissions">
+                <umb-property-layout
+                    label="Enabled Tool Scopes"
+                    description="Select which tool scopes this agent can access. Tools belonging to these scopes will be enabled automatically. System tools are always available.">
+                    <uai-tool-scope-picker
+                        slot="editor"
+                        multiple
+                        .value=${this._model.enabledToolScopeIds}
+                        @change=${this.#onEnabledToolScopeIdsChange}
+                    ></uai-tool-scope-picker>
+                </umb-property-layout>
+                <umb-property-layout
+                    label="Additional Tool IDs"
+                    description="Enter comma-separated tool IDs to enable specific tools beyond those included in the selected scopes">
+                    <uui-input
+                        slot="editor"
+                        .value=${this._model.enabledToolIds.join(', ')}
+                        @input=${this.#onEnabledToolIdsChange}
+                        placeholder="e.g., custom_tool_1, custom_tool_2"
+                    ></uui-input>
                 </umb-property-layout>
             </uui-box>
         `;

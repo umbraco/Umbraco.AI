@@ -69,7 +69,6 @@ export class UaiPromptRegistrarServerDataSource {
                             contentTypeAliases: r.contentTypeAliases ?? null,
                         })) ?? [],
                     } : null,
-                    uiMode: detail.uiMode,
                     isActive: detail.isActive,
                 } satisfies UaiPromptRegistrationModel;
             })
@@ -111,7 +110,6 @@ export class UaiPromptRegistrarServerDataSource {
                         contentTypeAliases: r.contentTypeAliases ?? null,
                     })) ?? [],
                 } : null,
-                uiMode: detail.uiMode,
                 isActive: detail.isActive,
             }
         };

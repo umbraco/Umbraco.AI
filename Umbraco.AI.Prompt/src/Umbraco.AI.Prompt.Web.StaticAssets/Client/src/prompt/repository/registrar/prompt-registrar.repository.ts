@@ -5,7 +5,7 @@ import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
 import { UMB_ACTION_EVENT_CONTEXT } from '@umbraco-cms/backoffice/action';
 import { UaiEntityActionEvent } from '@umbraco-ai/core';
 import { UaiPromptRegistrarServerDataSource } from "./prompt-registrar.server.data-source.js";
-import type { UaiPromptRegistrationModel, PromptManifestEntry } from "../../property-actions/types.js";
+import type { PromptManifestEntry } from "../../property-actions/types.js";
 import { generatePromptPropertyActionManifest } from "../../property-actions/generate-prompt-property-action-manifest.js";
 import { UAI_PROMPT_ENTITY_TYPE } from "../../constants.js";
 
@@ -25,9 +25,21 @@ export class UaiPromptRegistrarRepository extends UmbRepositoryBase {
         // Repository listens to events directly and manages state
         this.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
             if (!context) return;
-            context.addEventListener(UaiEntityActionEvent.CREATED, this.#onPromptCreatedOrUpdated as EventListener);
-            context.addEventListener(UaiEntityActionEvent.UPDATED, this.#onPromptCreatedOrUpdated as EventListener);
-            context.addEventListener(UaiEntityActionEvent.DELETED, this.#onPromptDeleted as EventListener);
+            context.addEventListener(UaiEntityActionEvent.CREATED, ((event: Event) => {
+                if (event instanceof UaiEntityActionEvent) {
+                    this.#onPromptCreatedOrUpdated(event);
+                }
+            }) as EventListener);
+            context.addEventListener(UaiEntityActionEvent.UPDATED, ((event: Event) => {
+                if (event instanceof UaiEntityActionEvent) {
+                    this.#onPromptCreatedOrUpdated(event);
+                }
+            }) as EventListener);
+            context.addEventListener(UaiEntityActionEvent.DELETED, ((event: Event) => {
+                if (event instanceof UaiEntityActionEvent) {
+                    this.#onPromptDeleted(event);
+                }
+            }) as EventListener);
         });
     }
 
@@ -72,6 +84,8 @@ export class UaiPromptRegistrarRepository extends UmbRepositoryBase {
         if (!this.#isInitialized || event.getEntityType() !== UAI_PROMPT_ENTITY_TYPE) return;
 
         const unique = event.getUnique();
+        if (!unique) return;
+
         const { data: prompt, error } = await this.#dataSource.getPromptById(unique);
 
         if (error || !prompt) return;
@@ -106,6 +120,8 @@ export class UaiPromptRegistrarRepository extends UmbRepositoryBase {
         if (!this.#isInitialized || event.getEntityType() !== UAI_PROMPT_ENTITY_TYPE) return;
 
         const unique = event.getUnique();
+        if (!unique) return;
+
         this.#removeEntry(unique);
     };
 

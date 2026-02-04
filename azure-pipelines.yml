@@ -58,9 +58,13 @@ pr:
       - dev
 
 variables:
-  NODE_VERSION: '22.x'
-  DOTNET_NOLOGO: 'true'
-  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  - group: dependency-track
+  - name: NODE_VERSION
+    value: '22.x'
+  - name: DOTNET_NOLOGO
+    value: 'true'
+  - name: DOTNET_CLI_TELEMETRY_OPTOUT
+    value: 'true'
 
 stages:
   # ============================================================
@@ -117,16 +121,99 @@ stages:
               publishLocation: pipeline
 
   # ============================================================
+  # Generate & Upload SBOMs - Only runs on push to main/dev/hotfix/release
+  # Generates per-product SBOMs and uploads to Dependency-Track
+  # ============================================================
+  - stage: GenerateSBOM
+    displayName: Generate & Upload SBOMs
+    dependsOn: Build
+    condition: |
+      and(
+        succeeded(),
+        ne(variables['Build.Reason'], 'PullRequest')
+      )
+    jobs:
+      # Core product
+      - job: GenerateSBOM_Core
+        displayName: Generate SBOM - Umbraco.AI
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: NodeTool@0
+            displayName: Setup Node.js
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          - template: .azure-pipelines/templates/generate-sbom.yml
+            parameters:
+              product: Umbraco.AI
+
+      # Level 1 products (matrix)
+      - job: GenerateSBOM_Level1
+        displayName: Generate SBOM - Level 1
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          matrix:
+            ${{ each product in parameters.level1Products }}:
+              ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
+                product: ${{ product.name }}
+          maxParallel: 10
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: NodeTool@0
+            displayName: Setup Node.js
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          - template: .azure-pipelines/templates/generate-sbom.yml
+            parameters:
+              product: $(product)
+
+      # Level 2 products (matrix)
+      - job: GenerateSBOM_Level2
+        displayName: Generate SBOM - Level 2
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          matrix:
+            ${{ each product in parameters.level2Products }}:
+              ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
+                product: ${{ product.name }}
+          maxParallel: 10
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: NodeTool@0
+            displayName: Setup Node.js
+            inputs:
+              versionSpec: $(NODE_VERSION)
+
+          - template: .azure-pipelines/templates/generate-sbom.yml
+            parameters:
+              product: $(product)
+
+  # ============================================================
   # Validate Changelogs - Only runs on release and hotfix branches
   # Ensures CHANGELOGs are present and match version.json
   # ============================================================
   - stage: ValidateChangelogs
     displayName: Validate Changelogs
-    dependsOn: Build
+    dependsOn:
+      - Build
+      - GenerateSBOM
     # Only validate on release and hotfix branches (not main or dev)
+    # Allow GenerateSBOM to be skipped (PR builds)
     condition: |
       and(
-        succeeded(),
+        in(dependencies.Build.result, 'Succeeded'),
+        in(dependencies.GenerateSBOM.result, 'Succeeded', 'Skipped'),
         ne(variables['Build.Reason'], 'PullRequest'),
         or(
           startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
@@ -157,12 +244,14 @@ stages:
     displayName: Pack NuGet Packages
     dependsOn:
       - Build
+      - GenerateSBOM
       - ValidateChangelogs
     # Only pack on push (not PR) to main/dev/hotfix/release branches
-    # ValidateChangelogs may be skipped on non-release branches, which is OK
+    # GenerateSBOM and ValidateChangelogs may be skipped, which is OK
     condition: |
       and(
         in(dependencies.Build.result, 'Succeeded'),
+        in(dependencies.GenerateSBOM.result, 'Succeeded', 'Skipped'),
         in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
         ne(variables['Build.Reason'], 'PullRequest'),
         or(

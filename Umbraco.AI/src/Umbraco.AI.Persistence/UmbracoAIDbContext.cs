@@ -7,6 +7,7 @@ using Umbraco.AI.Persistence.Analytics;
 using Umbraco.AI.Persistence.Analytics.Usage;
 using Umbraco.AI.Persistence.Settings;
 using Umbraco.AI.Persistence.Versioning;
+using Umbraco.AI.Persistence.Tests;
 
 namespace Umbraco.AI.Persistence;
 
@@ -64,6 +65,21 @@ public class UmbracoAIDbContext : DbContext
     /// AI settings (key-value store).
     /// </summary>
     internal DbSet<AISettingsEntity> Settings { get; set; } = null!;
+
+    /// <summary>
+    /// AI tests (test definitions).
+    /// </summary>
+    internal DbSet<AITestEntity> Tests { get; set; } = null!;
+
+    /// <summary>
+    /// AI test runs (execution results).
+    /// </summary>
+    internal DbSet<AITestRunEntity> TestRuns { get; set; } = null!;
+
+    /// <summary>
+    /// AI test transcripts (execution traces).
+    /// </summary>
+    internal DbSet<AITestTranscriptEntity> TestTranscripts { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of <see cref="UmbracoAIDbContext"/>.
@@ -574,6 +590,146 @@ public class UmbracoAIDbContext : DbContext
 
             // Unique constraint on Key to ensure only one value per setting
             entity.HasIndex(e => e.Key)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<AITestEntity>(entity =>
+        {
+            entity.ToTable("umbracoAITest");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Alias)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.TestTypeId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.TargetId)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.TargetIsAlias)
+                .IsRequired();
+
+            entity.Property(e => e.TestCaseJson)
+                .IsRequired();
+
+            entity.Property(e => e.GradersJson);
+
+            entity.Property(e => e.RunCount)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.Property(e => e.Tags)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.IsEnabled)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.BaselineRunId);
+
+            entity.Property(e => e.Version)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.Property(e => e.DateCreated)
+                .IsRequired();
+
+            entity.Property(e => e.DateModified)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedByUserId);
+            entity.Property(e => e.ModifiedByUserId);
+
+            entity.HasIndex(e => e.Alias)
+                .IsUnique();
+
+            entity.HasIndex(e => e.TestTypeId);
+            entity.HasIndex(e => e.IsEnabled);
+        });
+
+        modelBuilder.Entity<AITestRunEntity>(entity =>
+        {
+            entity.ToTable("umbracoAITestRun");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.TestId)
+                .IsRequired();
+
+            entity.Property(e => e.TestVersion)
+                .IsRequired();
+
+            entity.Property(e => e.RunNumber)
+                .IsRequired()
+                .HasDefaultValue(1);
+
+            entity.Property(e => e.ProfileId);
+
+            entity.Property(e => e.ContextIds)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.ExecutedAt)
+                .IsRequired();
+
+            entity.Property(e => e.ExecutedByUserId);
+
+            entity.Property(e => e.Status)
+                .IsRequired();
+
+            entity.Property(e => e.DurationMs)
+                .IsRequired();
+
+            entity.Property(e => e.TranscriptId);
+
+            entity.Property(e => e.OutcomeType)
+                .IsRequired();
+
+            entity.Property(e => e.OutcomeValue);
+
+            entity.Property(e => e.OutcomeFinishReason)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.OutcomeTokenUsageJson);
+
+            entity.Property(e => e.GraderResultsJson);
+
+            entity.Property(e => e.MetadataJson);
+
+            entity.Property(e => e.BatchId);
+
+            entity.HasIndex(e => e.TestId);
+            entity.HasIndex(e => e.ExecutedAt);
+            entity.HasIndex(e => e.BatchId);
+            entity.HasIndex(e => new { e.TestId, e.ExecutedAt });
+        });
+
+        modelBuilder.Entity<AITestTranscriptEntity>(entity =>
+        {
+            entity.ToTable("umbracoAITestTranscript");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.RunId)
+                .IsRequired();
+
+            entity.Property(e => e.MessagesJson);
+            entity.Property(e => e.ToolCallsJson);
+            entity.Property(e => e.ReasoningJson);
+            entity.Property(e => e.TimingJson);
+
+            entity.Property(e => e.FinalOutputJson)
+                .IsRequired();
+
+            entity.HasIndex(e => e.RunId)
                 .IsUnique();
         });
     }

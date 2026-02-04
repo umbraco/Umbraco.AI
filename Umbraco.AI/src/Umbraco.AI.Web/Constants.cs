@@ -216,6 +216,22 @@ public class Constants
                 /// </summary>
                 public const string GroupName = "Versions";
             }
+
+            /// <summary>
+            /// Defines constants for Tool Scope features.
+            /// </summary>
+            public static class ToolScope
+            {
+                /// <summary>
+                /// The route segment for Tool Scope features.
+                /// </summary>
+                public const string RouteSegment = "tool-scopes";
+
+                /// <summary>
+                /// The Swagger group name for Tool Scope features.
+                /// </summary>
+                public const string GroupName = "Tool Scopes";
+            }
         }
     }
 }

@@ -3,6 +3,10 @@ on:
   issues:
     types: [opened, edited]
 
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   label-by-component:
     runs-on: ubuntu-latest
@@ -19,6 +23,7 @@ jobs:
               "Umbraco.AI.OpenAI": "component/provider-openai",
               "Umbraco.AI.Anthropic": "component/provider-anthropic",
               "Umbraco.AI.Prompt": "component/prompt",
+              "Umbraco.AI.Agent.Copilot": "component/copilot",
               "Umbraco.AI.Agent": "component/agent",
               "Other / Not sure": "component/other"
             };

@@ -14,6 +14,7 @@ body:
       - Umbraco.AI.Anthropic
       - Umbraco.AI.Prompt
       - Umbraco.AI.Agent
+      - Umbraco.AI.Agent.Copilot
       - Other / Not sure
   validations:
     required: true

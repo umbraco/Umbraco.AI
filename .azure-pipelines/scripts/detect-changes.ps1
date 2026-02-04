@@ -296,6 +296,29 @@ function Get-BuildLevels {
 # CHANGE DETECTION
 # ============================================================================
 
+function Test-SubstantiveChange {
+    <#
+    .SYNOPSIS
+    Determines if a file change is substantive (code/config) or non-substantive (docs/version).
+
+    .DESCRIPTION
+    On release/hotfix branches, some file changes represent release preparation
+    rather than actual code changes (e.g., updating CHANGELOG dates, bumping versions).
+    This function identifies such non-substantive changes.
+    #>
+    param([string]$FilePath)
+
+    $fileName = Split-Path $FilePath -Leaf
+
+    # Non-substantive files (release prep artifacts)
+    $nonSubstantiveFiles = @(
+        "CHANGELOG.md",  # Changelog updates (often batch date changes)
+        "version.json"   # Version bumps without code changes
+    )
+
+    return $nonSubstantiveFiles -notcontains $fileName
+}
+
 function Get-ChangedProducts {
     <#
     .SYNOPSIS
@@ -348,10 +371,92 @@ function Get-ChangedProducts {
             $changedFiles = git diff --name-only HEAD~1 HEAD 2>&1
         }
     }
+    elseif ($SourceBranch -match '^refs/heads/hotfix/') {
+        # Hotfix branches: per-product tag-based comparison
+        # Each product compares against its own latest release tag
+        Write-Host "  Hotfix branch detected - using per-product tag comparison" -ForegroundColor Cyan
+
+        # Process each product independently
+        foreach ($productKey in $Products.Keys) {
+            $product = $Products[$productKey]
+
+            # Find latest tag for this product
+            $latestTag = git describe --tags --abbrev=0 --match="$($product.DisplayName)@*" 2>&1
+
+            if ($LASTEXITCODE -ne 0 -or -not ($latestTag -is [string])) {
+                Write-Host "  ! $($product.DisplayName): No release tag found, falling back to merge-base with main" -ForegroundColor Yellow
+
+                # Fallback: use merge-base with main for this product
+                $mergeBase = git merge-base "origin/main" HEAD 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    $comparisonBase = $mergeBase.Trim()
+                    $productChangedFiles = git diff --name-only "$comparisonBase..HEAD" -- $product.Path 2>&1
+                }
+                else {
+                    Write-Host "  ! $($product.DisplayName): Merge-base failed, assuming changed" -ForegroundColor Yellow
+                    $changed[$productKey] = $true
+                    continue
+                }
+            }
+            else {
+                $latestTag = $latestTag.Trim()
+                Write-Host "  $($product.DisplayName): Comparing against tag $latestTag" -ForegroundColor Cyan
+
+                # Get changes for this product since its tag
+                $productChangedFiles = git diff --name-only "$latestTag..HEAD" -- $product.Path 2>&1
+            }
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "  ! $($product.DisplayName): git diff failed, assuming changed" -ForegroundColor Yellow
+                $changed[$productKey] = $true
+                continue
+            }
+
+            # Filter to string paths only
+            $productChangedFiles = $productChangedFiles | Where-Object { $_ -is [string] }
+
+            # Check for substantive changes
+            $hasSubstantiveChange = $false
+            foreach ($file in $productChangedFiles) {
+                if (Test-SubstantiveChange -FilePath $file) {
+                    $changed[$productKey] = $true
+                    $hasSubstantiveChange = $true
+                    Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
+                    break  # One substantive change is enough
+                }
+                else {
+                    Write-Host "  ~ $productKey non-substantive change (file: $file)" -ForegroundColor DarkGray
+                }
+            }
+
+            # Log if only non-substantive changes
+            if (-not $hasSubstantiveChange -and $productChangedFiles.Count -gt 0) {
+                Write-Host "  ⊘ $productKey skipped (only non-substantive changes)" -ForegroundColor Yellow
+            }
+        }
+
+        # Check root-level files (use most recent tag of any product)
+        $anyTag = git describe --tags --abbrev=0 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $anyTag = $anyTag.Trim()
+            $rootChangedFiles = git diff --name-only "$anyTag..HEAD" 2>&1 | Where-Object { $_ -is [string] }
+            $globalFiles = @("Directory.Packages.props", "Directory.Build.props", "global.json", ".gitignore")
+
+            foreach ($file in $rootChangedFiles) {
+                if ($globalFiles -contains $file) {
+                    Write-Host "  ✓ Root file changed: $file (affects all products)" -ForegroundColor Yellow
+                    $Products.Keys | ForEach-Object { $changed[$_] = $true }
+                    break
+                }
+            }
+        }
+
+        return $changed
+    }
     else {
-        # For feature/release/hotfix branches: compare with merge-base against appropriate base
-        $baseBranch = if ($SourceBranch -match '^refs/heads/(release|hotfix)/') { "main" } else { "dev" }
-        Write-Host "  Feature/release/hotfix branch detected, comparing against $baseBranch" -ForegroundColor Cyan
+        # For feature/release branches: compare with merge-base against appropriate base
+        $baseBranch = if ($SourceBranch -match '^refs/heads/release/') { "main" } else { "dev" }
+        Write-Host "  Feature/release branch detected, comparing against $baseBranch" -ForegroundColor Cyan
 
         $mergeBase = git merge-base "origin/$baseBranch" HEAD 2>&1
         if ($LASTEXITCODE -eq 0) {
@@ -386,12 +491,41 @@ function Get-ChangedProducts {
     $changedFiles = $changedFiles | Where-Object { $_ -is [string] }
 
     # Check product folders
+    # For release branches, track files per product to filter non-substantive changes
+    $isRelease = $SourceBranch -match '^refs/heads/release/'
+    $productFiles = @{}
+    $Products.Keys | ForEach-Object { $productFiles[$_] = @() }
+
     foreach ($file in $changedFiles) {
         foreach ($productKey in $Products.Keys) {
             if ($file.StartsWith($Products[$productKey].Path)) {
-                $changed[$productKey] = $true
-                Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
+                $productFiles[$productKey] += $file
+
+                if ($isRelease) {
+                    # On release branches, only mark as changed if substantive
+                    if (Test-SubstantiveChange -FilePath $file) {
+                        $changed[$productKey] = $true
+                        Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
+                    }
+                    else {
+                        Write-Host "  ~ $productKey non-substantive change (file: $file)" -ForegroundColor DarkGray
+                    }
+                }
+                else {
+                    # On other branches, any change counts
+                    $changed[$productKey] = $true
+                    Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
+                }
                 break
+            }
+        }
+    }
+
+    # Log products with only non-substantive changes
+    if ($isRelease) {
+        foreach ($productKey in $Products.Keys) {
+            if ($productFiles[$productKey].Count -gt 0 -and -not $changed[$productKey]) {
+                Write-Host "  ⊘ $productKey skipped (only non-substantive changes: CHANGELOG.md, version.json)" -ForegroundColor Yellow
             }
         }
     }

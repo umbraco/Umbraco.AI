@@ -42,7 +42,6 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             throw new ArgumentException("ModelId must be set in the AIAuditContext.", nameof(context));
 
         var user = _securityAccessor.BackOfficeSecurity?.CurrentUser;
-        var detailLevel = _options.CurrentValue.DetailLevel;
 
         var auditLog = new AIAuditLog
         {
@@ -64,8 +63,7 @@ internal sealed class AIAuditLogFactory : IAIAuditLogFactory
             Metadata = metadata != null
                 ? new Dictionary<string, string>(metadata)
                 : null,
-            DetailLevel = detailLevel,
-            
+
             // Set initial run state
             Status = AIAuditLogStatus.Running,
             StartTime = DateTime.UtcNow,

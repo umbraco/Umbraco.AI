@@ -27,6 +27,9 @@ export default {
         testConnectionFailed: "Connection test failed",
     },
     uaiProfile: {
+        selectProfile: "Select AI profile",
+        addProfile: "Add profile",
+        noProfilesAvailable: "No AI profiles available. Create one in the AI section.",
         deleteConfirm: "Are you sure you want to delete this profile?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} profile(s)?`,
     },

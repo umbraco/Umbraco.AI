@@ -30,9 +30,8 @@ These are persisted using the `[AISetting]` attribute pattern which stores setti
 |---------|------|---------|-------------|
 | `AuditLogEnabled` | bool | true | Enable/disable audit logging |
 | `AuditLogRetentionDays` | int | 14 | Days to retain audit records |
-| `AuditLogDetailLevel` | enum | FailuresOnly | Detail level (FailuresOnly/Sampled/Full) |
-| `AuditLogPersistPrompts` | bool | false | Store prompt snapshots (privacy) |
-| `AuditLogPersistResponses` | bool | false | Store response snapshots (privacy) |
+| `AuditLogPersistPrompts` | bool | true | Store prompt snapshots |
+| `AuditLogPersistResponses` | bool | true | Store response snapshots |
 
 ### Implementation
 
@@ -43,9 +42,6 @@ public bool? AuditLogEnabled { get; init; }
 
 [AISetting]
 public int? AuditLogRetentionDays { get; init; }
-
-[AISetting]
-public AIAuditLogDetailLevel? AuditLogDetailLevel { get; init; }
 
 [AISetting]
 public bool? AuditLogPersistPrompts { get; init; }
@@ -229,7 +225,6 @@ public class AIAuditLogOptionsResolver : IOptionsResolver<AIAuditLogOptions>
         {
             Enabled = settings.AuditLogEnabled ?? config.Enabled,
             RetentionDays = settings.AuditLogRetentionDays ?? config.RetentionDays,
-            DetailLevel = settings.AuditLogDetailLevel ?? config.DetailLevel,
             PersistPrompts = settings.AuditLogPersistPrompts ?? config.PersistPrompts,
             PersistResponses = settings.AuditLogPersistResponses ?? config.PersistResponses,
             // Non-UI settings remain from config only

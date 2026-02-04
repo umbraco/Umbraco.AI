@@ -57,10 +57,9 @@ public class AIAuditLog
     public int? OutputTokens { get; set; }
     public int? TotalTokens { get; set; }
 
-    // Content snapshots (if detail level allows)
+    // Content snapshots (if configured to persist)
     public string? PromptSnapshot { get; set; }
     public string? ResponseSnapshot { get; set; }
-    public AIAuditLogDetailLevel DetailLevel { get; set; }
 
     // Relationships
     public Guid? ParentAuditLogId { get; set; }
@@ -128,9 +127,8 @@ public class AIAuditLog
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `PromptSnapshot` | `string?` | Request content (if captured) |
-| `ResponseSnapshot` | `string?` | Response content (if captured) |
-| `DetailLevel` | `AIAuditLogDetailLevel` | Level of detail captured |
+| `PromptSnapshot` | `string?` | Request content (if configured to persist) |
+| `ResponseSnapshot` | `string?` | Response content (if configured to persist) |
 
 ---
 
@@ -164,21 +162,6 @@ public enum AIAuditLogErrorCategory
     InvalidRequest = 4,
     ModelError = 5,
     NetworkError = 6
-}
-```
-{% endcode %}
-
----
-
-# AIAuditLogDetailLevel
-
-{% code title="AIAuditLogDetailLevel" %}
-```csharp
-public enum AIAuditLogDetailLevel
-{
-    Minimal = 0,   // Timing and status only
-    Standard = 1,  // Above + profile, model, user
-    Full = 2       // Above + prompt/response snapshots
 }
 ```
 {% endcode %}

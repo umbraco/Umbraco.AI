@@ -31,7 +31,6 @@ export type AuditLogDetailResponseModel = {
     totalTokens?: number | null;
     promptSnapshot?: string | null;
     responseSnapshot?: string | null;
-    detailLevel: string;
     metadata?: Array<KeyValuePair2> | null;
 };
 

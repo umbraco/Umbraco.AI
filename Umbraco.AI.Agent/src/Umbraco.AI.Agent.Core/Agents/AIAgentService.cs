@@ -6,6 +6,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
@@ -26,6 +27,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAGUIToolConverter _toolConverter;
     private readonly IAGUIContextConverter _contextConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly AIToolCollection _toolCollection;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -34,6 +36,7 @@ internal sealed class AIAgentService : IAIAgentService
         IAGUIStreamingService streamingService,
         IAGUIToolConverter toolConverter,
         IAGUIContextConverter contextConverter,
+        AIToolCollection toolCollection,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -42,6 +45,7 @@ internal sealed class AIAgentService : IAIAgentService
         _streamingService = streamingService;
         _toolConverter = toolConverter;
         _contextConverter = contextConverter;
+        _toolCollection = toolCollection;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -111,6 +115,70 @@ internal sealed class AIAgentService : IAIAgentService
     /// <inheritdoc />
     public Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
+        AIAgent agent,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(agent);
+
+        var enabledTools = new List<string>();
+
+        // 1. Always include system tools
+        var systemToolIds = _toolCollection
+            .Where(t => t is IAISystemTool)
+            .Select(t => t.Id);
+        enabledTools.AddRange(systemToolIds);
+
+        // 2. Add explicitly enabled tool IDs
+        if (agent.EnabledToolIds.Count > 0)
+        {
+            enabledTools.AddRange(agent.EnabledToolIds);
+        }
+
+        // 3. Add tools from enabled scopes
+        if (agent.EnabledToolScopeIds.Count > 0)
+        {
+            foreach (var scope in agent.EnabledToolScopeIds)
+            {
+                var scopeToolIds = _toolCollection.GetByScope(scope)
+                    .Where(t => t is not IAISystemTool) // Don't duplicate system tools
+                    .Select(t => t.Id);
+                enabledTools.AddRange(scopeToolIds);
+            }
+        }
+
+        // 4. Deduplicate and return
+        var result = enabledTools
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<string>>(result);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsToolEnabledAsync(
+        AIAgent agent,
+        string toolId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(agent);
+        ArgumentException.ThrowIfNullOrWhiteSpace(toolId);
+
+        // System tools are always enabled
+        var tool = _toolCollection.FirstOrDefault(t =>
+            t.Id.Equals(toolId, StringComparison.OrdinalIgnoreCase));
+
+        if (tool is IAISystemTool)
+        {
+            return true;
+        }
+
+        // Check if tool is in enabled list
+        var enabledToolIds = await GetEnabledToolIdsAsync(agent, cancellationToken);
+        return enabledToolIds.Contains(toolId, StringComparer.OrdinalIgnoreCase);
+    }
 
     /// <inheritdoc />
     public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(

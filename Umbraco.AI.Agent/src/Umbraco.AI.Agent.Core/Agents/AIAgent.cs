@@ -49,6 +49,27 @@ public sealed class AIAgent : IAIVersionableEntity
     public IReadOnlyList<string> ScopeIds { get; set; } = [];
 
     /// <summary>
+    /// Tool IDs explicitly enabled for this agent.
+    /// Empty list means no specific tools are enabled (only scopes apply).
+    /// </summary>
+    /// <remarks>
+    /// Tool permissions control which tools are available to the agent during execution.
+    /// System tools are always included regardless of this setting.
+    /// </remarks>
+    public IReadOnlyList<string> EnabledToolIds { get; set; } = [];
+
+    /// <summary>
+    /// Tool scopes enabled for this agent.
+    /// Tools matching these scopes will be included automatically.
+    /// System tools are always included regardless of this setting.
+    /// </summary>
+    /// <remarks>
+    /// Tool scopes provide bulk enablement of related tools (e.g., "content-read", "search").
+    /// Both EnabledToolIds and EnabledToolScopeIds are combined when resolving available tools.
+    /// </remarks>
+    public IReadOnlyList<string> EnabledToolScopeIds { get; set; } = [];
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

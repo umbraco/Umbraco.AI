@@ -87,6 +87,29 @@ public interface IAIAgentService
     Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the tools that are enabled for the specified agent.
+    /// Includes system tools (always) + user tools matching agent configuration.
+    /// </summary>
+    /// <param name="agent">The agent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Collection of enabled tool IDs.</returns>
+    Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
+        AIAgent agent,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validates that a specific tool call is permitted for the agent.
+    /// </summary>
+    /// <param name="agent">The agent.</param>
+    /// <param name="toolId">The tool ID being called.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if tool is enabled, false otherwise.</returns>
+    Task<bool> IsToolEnabledAsync(
+        AIAgent agent,
+        string toolId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Streams an agent execution with AG-UI events.
     /// </summary>
     /// <remarks>

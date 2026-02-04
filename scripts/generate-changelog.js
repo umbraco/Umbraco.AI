@@ -165,8 +165,9 @@ async function generateChangelog(product, version, options = {}) {
       ]
     },
     tagPrefix: tagPrefix,
-    releaseCount: options.unreleased ? 0 : 1,
-    outputUnreleased: options.unreleased
+    // Always output unreleased when generating (we'll format the version header ourselves)
+    releaseCount: 0,
+    outputUnreleased: true
   };
 
   // Context for template
@@ -320,29 +321,89 @@ async function generateChangelog(product, version, options = {}) {
         process.stderr.write(`  Processed ${processedCommits} commits (${includedCommits} included)...done\n`);
       }
 
-      // Prepend to existing changelog or create new
+      // Load existing changelog if it exists
       let existingChangelog = '';
       if (fs.existsSync(changelogPath) && !options.overwrite) {
         existingChangelog = fs.readFileSync(changelogPath, 'utf-8');
-
-        // Remove header from existing if present
-        const headerMatch = existingChangelog.match(/^# Changelog[\s\S]*?(?=\n## )/);
-        if (headerMatch) {
-          existingChangelog = existingChangelog.substring(headerMatch[0].length);
-        }
       }
 
       // Build header
       const header = `# Changelog - ${product}\n\nAll notable changes to ${product} will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n`;
 
-      // If no changes, add a note
+      // Format the changelog section
+      let formattedChangelog = '';
+
       if (!changelog || changelog.trim() === '') {
-        changelog = '## [Unreleased]\n\nNo changes yet.\n\n';
+        // No changes found
+        if (options.unreleased) {
+          formattedChangelog = '## [Unreleased]\n\nNo changes yet.\n\n';
+        } else if (version) {
+          // Even with no changes, create the version section for tracking
+          const date = new Date().toISOString().split('T')[0];
+          const previousVersionTag = previousTag ? previousTag.replace(tagPrefix, '') : null;
+          const compareUrl = previousVersionTag
+            ? `https://github.com/umbraco/Umbraco.AI/compare/${tagPrefix}${previousVersionTag}...${tagPrefix}${version}`
+            : `https://github.com/umbraco/Umbraco.AI/releases/tag/${tagPrefix}${version}`;
+
+          formattedChangelog = `## [${version}](${compareUrl}) (${date})\n\nNo changes.\n\n`;
+        }
+      } else {
+        // Format the changes with proper version header
+        if (options.unreleased) {
+          // Keep as [Unreleased] section
+          formattedChangelog = changelog.replace(/^##\s*\[[\d.a-z-]+\].*$/m, '## [Unreleased]');
+        } else if (version) {
+          // Replace the auto-generated header with proper version header
+          const date = new Date().toISOString().split('T')[0];
+          const previousVersionTag = previousTag ? previousTag.replace(tagPrefix, '') : null;
+          const compareUrl = previousVersionTag
+            ? `https://github.com/umbraco/Umbraco.AI/compare/${tagPrefix}${previousVersionTag}...${tagPrefix}${version}`
+            : `https://github.com/umbraco/Umbraco.AI/releases/tag/${tagPrefix}${version}`;
+
+          // Replace the header that conventional-changelog generates
+          formattedChangelog = changelog.replace(
+            /^##\s*\[[\d.a-z-]+\].*$/m,
+            `## [${version}](${compareUrl}) (${date})`
+          );
+        } else {
+          formattedChangelog = changelog;
+        }
       }
 
-      const fullChangelog = header + changelog + existingChangelog;
+      // If we have an existing changelog, handle version section replacement
+      let finalChangelog = '';
+      if (existingChangelog) {
+        // Extract header
+        const headerMatch = existingChangelog.match(/^(# Changelog[\s\S]*?)(?=\n## )/);
+        const extractedHeader = headerMatch ? headerMatch[1] + '\n' : '';
 
-      fs.writeFileSync(changelogPath, fullChangelog);
+        // Extract all sections after header
+        const sectionsMatch = existingChangelog.match(/\n## .+[\s\S]*/);
+        const sections = sectionsMatch ? sectionsMatch[0] : '';
+
+        if (version && !options.unreleased) {
+          // Check if this version already exists in the changelog
+          const versionSectionRegex = new RegExp(`\\n## \\[${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\][\\s\\S]*?(?=\\n## |$)`);
+
+          if (versionSectionRegex.test(sections)) {
+            // Replace existing version section
+            console.log(`  Replacing existing [${version}] section`);
+            const updatedSections = sections.replace(versionSectionRegex, '\n' + formattedChangelog.trim());
+            finalChangelog = header + updatedSections;
+          } else {
+            // Add new version section at the top
+            finalChangelog = header + formattedChangelog + sections;
+          }
+        } else {
+          // For unreleased, always prepend
+          finalChangelog = header + formattedChangelog + sections;
+        }
+      } else {
+        // No existing changelog, create new
+        finalChangelog = header + formattedChangelog;
+      }
+
+      fs.writeFileSync(changelogPath, finalChangelog);
       console.log(`✅ Changelog generated at: ${changelogPath}`);
       resolve(changelogPath);
     });

@@ -42,4 +42,10 @@ public sealed class AITestGraderResult
     /// Can store additional analysis data.
     /// </summary>
     public string? MetadataJson { get; set; }
+
+    /// <summary>
+    /// Severity level of this grader result (inherited from grader configuration).
+    /// Determines whether this result affects overall test pass/fail.
+    /// </summary>
+    public AITestGraderSeverity Severity { get; set; } = AITestGraderSeverity.Error;
 }

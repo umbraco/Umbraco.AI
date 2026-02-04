@@ -24,6 +24,7 @@ using Umbraco.AI.Core.RuntimeContext.Contributors;
 using Umbraco.AI.Core.RuntimeContext.Middleware;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.TaskQueue;
+using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Web;
@@ -223,6 +224,11 @@ public static partial class UmbracoBuilderExtensions
             .Add<ToolCallGrader>()
             .Add<LLMJudgeGrader>()
             .Add<SemanticSimilarityGrader>();
+
+        // Register test infrastructure services
+        // Note: IAITestRepository and IAITestRunRepository are registered by persistence layer
+        services.AddSingleton<IAITestRunner, AITestRunner>();
+        services.AddSingleton<IAITestService, AITestService>();
 
         return builder;
     }

@@ -1,3 +1,5 @@
+import type { ManifestPropertyAction } from '@umbraco-cms/backoffice/property-action';
+
 /**
  * UI mode for prompt property actions.
  * - 'modal': Shows a centered dialog (default)
@@ -112,4 +114,14 @@ export interface UaiPromptPreviewModalValue {
     content?: string;
     /** Property changes to apply to the entity. */
     propertyChanges?: UaiPromptPropertyChange[];
+}
+
+/**
+ * Entry for a prompt manifest pending registration.
+ * Weights are assigned at sync time based on alphabetical order.
+ */
+export interface PromptManifestEntry {
+    unique: string;
+    alias: string;
+    manifest: ManifestPropertyAction<UaiPromptPropertyActionMeta>;
 }

@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Agent.Core" />
+        <PackageReference Include="Umbraco.AI.Agent" />
     </ItemGroup>
 
     <ItemGroup>

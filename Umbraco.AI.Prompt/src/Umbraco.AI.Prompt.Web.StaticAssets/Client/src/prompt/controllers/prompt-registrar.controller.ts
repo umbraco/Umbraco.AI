@@ -11,6 +11,7 @@ import type { PromptManifestEntry } from "../property-actions/types.js";
  */
 export class UmbPromptRegistrarController extends UmbControllerBase {
     #repository: UaiPromptRegistrarRepository;
+    #registeredAliases = new Set<string>();
 
     constructor(host: UmbControllerHost) {
         super(host);
@@ -33,15 +34,22 @@ export class UmbPromptRegistrarController extends UmbControllerBase {
     /**
      * Syncs prompt manifest entries to the extension registry.
      * Sorts alphabetically by alias and assigns weights.
+     * Unregisters any prompts that are no longer in the state.
      */
     #syncToRegistry(entries: Map<string, PromptManifestEntry>): void {
+        const currentAliases = new Set<string>();
+
         // Sort alphabetically by alias and assign weights
         const sorted = Array.from(entries.values())
             .sort((a, b) => a.alias.localeCompare(b.alias));
 
+        // Register/update all current entries
         sorted.forEach((entry, index) => {
             // Assign weight based on alphabetical position
             entry.manifest.weight = 100 - index;
+
+            // Track this alias
+            currentAliases.add(entry.manifest.alias);
 
             // Unregister if already registered, then re-register
             if (umbExtensionsRegistry.isRegistered(entry.manifest.alias)) {
@@ -49,6 +57,16 @@ export class UmbPromptRegistrarController extends UmbControllerBase {
             }
             umbExtensionsRegistry.register(entry.manifest);
         });
+
+        // Unregister any prompts that are no longer in the state
+        for (const alias of this.#registeredAliases) {
+            if (!currentAliases.has(alias)) {
+                umbExtensionsRegistry.unregister(alias);
+            }
+        }
+
+        // Update tracked aliases
+        this.#registeredAliases = currentAliases;
 
         console.log(`[UmbracoAIPrompt] Synced ${sorted.length} prompt property actions to registry`);
     }

@@ -42,6 +42,16 @@ internal class AIAgentEntity
     public string? ScopeIds { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of enabled tool IDs.
+    /// </summary>
+    public string? EnabledToolIds { get; set; }
+
+    /// <summary>
+    /// JSON-serialized array of enabled tool scope IDs.
+    /// </summary>
+    public string? EnabledToolScopeIds { get; set; }
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

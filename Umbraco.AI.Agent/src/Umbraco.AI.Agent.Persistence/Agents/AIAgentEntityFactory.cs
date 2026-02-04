@@ -27,6 +27,8 @@ internal static class AIAgentEntityFactory
             ProfileId = entity.ProfileId,
             ContextIds = DeserializeContextIds(entity.ContextIds),
             ScopeIds = DeserializeScopeIds(entity.ScopeIds),
+            EnabledToolIds = DeserializeEnabledToolIds(entity.EnabledToolIds),
+            EnabledToolScopeIds = DeserializeEnabledToolScopeIds(entity.EnabledToolScopeIds),
             Instructions = entity.Instructions,
             IsActive = entity.IsActive,
             DateCreated = entity.DateCreated,
@@ -51,6 +53,8 @@ internal static class AIAgentEntityFactory
             ProfileId = aiAgent.ProfileId,
             ContextIds = SerializeContextIds(aiAgent.ContextIds),
             ScopeIds = SerializeScopeIds(aiAgent.ScopeIds),
+            EnabledToolIds = SerializeEnabledToolIds(aiAgent.EnabledToolIds),
+            EnabledToolScopeIds = SerializeEnabledToolScopeIds(aiAgent.EnabledToolScopeIds),
             Instructions = aiAgent.Instructions,
             IsActive = aiAgent.IsActive,
             DateCreated = aiAgent.DateCreated,
@@ -72,6 +76,8 @@ internal static class AIAgentEntityFactory
         entity.ProfileId = aiAgent.ProfileId;
         entity.ContextIds = SerializeContextIds(aiAgent.ContextIds);
         entity.ScopeIds = SerializeScopeIds(aiAgent.ScopeIds);
+        entity.EnabledToolIds = SerializeEnabledToolIds(aiAgent.EnabledToolIds);
+        entity.EnabledToolScopeIds = SerializeEnabledToolScopeIds(aiAgent.EnabledToolScopeIds);
         entity.Instructions = aiAgent.Instructions;
         entity.IsActive = aiAgent.IsActive;
         entity.DateModified = aiAgent.DateModified;
@@ -118,6 +124,60 @@ internal static class AIAgentEntityFactory
     }
 
     private static IReadOnlyList<string> DeserializeScopeIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static string? SerializeEnabledToolIds(IReadOnlyList<string> toolIds)
+    {
+        if (toolIds.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(toolIds, JsonOptions);
+    }
+
+    private static IReadOnlyList<string> DeserializeEnabledToolIds(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private static string? SerializeEnabledToolScopeIds(IReadOnlyList<string> scopeIds)
+    {
+        if (scopeIds.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(scopeIds, JsonOptions);
+    }
+
+    private static IReadOnlyList<string> DeserializeEnabledToolScopeIds(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {

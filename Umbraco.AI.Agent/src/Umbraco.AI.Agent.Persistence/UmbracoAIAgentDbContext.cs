@@ -51,6 +51,12 @@ public class UmbracoAIAgentDbContext : DbContext
             entity.Property(e => e.ScopeIds)
                 .HasMaxLength(2000);
 
+            entity.Property(e => e.EnabledToolIds)
+                .HasMaxLength(4000);
+
+            entity.Property(e => e.EnabledToolScopeIds)
+                .HasMaxLength(2000);
+
             entity.Property(e => e.Instructions);
 
             entity.Property(e => e.IsActive)

@@ -296,6 +296,29 @@ function Get-BuildLevels {
 # CHANGE DETECTION
 # ============================================================================
 
+function Test-SubstantiveChange {
+    <#
+    .SYNOPSIS
+    Determines if a file change is substantive (code/config) or non-substantive (docs/version).
+
+    .DESCRIPTION
+    On release/hotfix branches, some file changes represent release preparation
+    rather than actual code changes (e.g., updating CHANGELOG dates, bumping versions).
+    This function identifies such non-substantive changes.
+    #>
+    param([string]$FilePath)
+
+    $fileName = Split-Path $FilePath -Leaf
+
+    # Non-substantive files (release prep artifacts)
+    $nonSubstantiveFiles = @(
+        "CHANGELOG.md",  # Changelog updates (often batch date changes)
+        "version.json"   # Version bumps without code changes
+    )
+
+    return $nonSubstantiveFiles -notcontains $fileName
+}
+
 function Get-ChangedProducts {
     <#
     .SYNOPSIS
@@ -386,12 +409,41 @@ function Get-ChangedProducts {
     $changedFiles = $changedFiles | Where-Object { $_ -is [string] }
 
     # Check product folders
+    # For hotfix/release branches, track files per product to filter non-substantive changes
+    $isReleaseOrHotfix = $SourceBranch -match '^refs/heads/(release|hotfix)/'
+    $productFiles = @{}
+    $Products.Keys | ForEach-Object { $productFiles[$_] = @() }
+
     foreach ($file in $changedFiles) {
         foreach ($productKey in $Products.Keys) {
             if ($file.StartsWith($Products[$productKey].Path)) {
-                $changed[$productKey] = $true
-                Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
+                $productFiles[$productKey] += $file
+
+                if ($isReleaseOrHotfix) {
+                    # On release/hotfix branches, only mark as changed if substantive
+                    if (Test-SubstantiveChange -FilePath $file) {
+                        $changed[$productKey] = $true
+                        Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
+                    }
+                    else {
+                        Write-Host "  ~ $productKey non-substantive change (file: $file)" -ForegroundColor DarkGray
+                    }
+                }
+                else {
+                    # On other branches, any change counts
+                    $changed[$productKey] = $true
+                    Write-Host "  ✓ $productKey changed (file: $file)" -ForegroundColor Green
+                }
                 break
+            }
+        }
+    }
+
+    # Log products with only non-substantive changes
+    if ($isReleaseOrHotfix) {
+        foreach ($productKey in $Products.Keys) {
+            if ($productFiles[$productKey].Count -gt 0 -and -not $changed[$productKey]) {
+                Write-Host "  ⊘ $productKey skipped (only non-substantive changes: CHANGELOG.md, version.json)" -ForegroundColor Yellow
             }
         }
     }

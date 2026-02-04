@@ -67,14 +67,14 @@ export function generatePromptPropertyActionManifest(
             icon: "icon-wand",
             label: prompt.name,
             promptUnique: prompt.unique,
-            promptDescription: prompt.description,
-            promptScope: prompt.scope,
+            promptDescription: prompt.description ?? null,
+            promptScope: prompt.scope ?? null,
             uiMode: prompt.uiMode ?? 'modal',
         },
         conditions: [
             {
                 alias: UAI_PROMPT_SCOPE_CONDITION_ALIAS,
-                scope: prompt.scope,
+                scope: prompt.scope ?? null,
             } as UaiPromptScopeConditionConfig,
         ],
     };

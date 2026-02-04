@@ -6,6 +6,9 @@ import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 // Re-export everything from the main index
 export * from './index.js';
 
+// Keep registrar alive for the lifetime of the app (prevents garbage collection)
+let promptRegistrar: UmbPromptRegistrarController | null = null;
+
 // Initialize the entry point
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
     console.log("Umbraco AI Prompt Entrypoint initialized");
@@ -19,8 +22,9 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
         });
 
         // Register prompt property actions after authentication is established
-        const registrar = new UmbPromptRegistrarController(_host);
-        await registrar.registerPrompts();
+        // Store in module variable to prevent garbage collection
+        promptRegistrar = new UmbPromptRegistrarController(_host);
+        await promptRegistrar.registerPrompts();
     });
 };
 

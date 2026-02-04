@@ -1,25 +1,19 @@
 # Template: Generate SBOM for a product and upload to Dependency-Track
 # Parameters:
 #   product: Product name (e.g., "Umbraco.AI", "Umbraco.AI.OpenAI")
-#   condition: Optional condition expression (default: 'true')
 parameters:
   - name: product
     type: string
-  - name: condition
-    type: string
-    default: 'true'
 
 steps:
   - task: Npm@1
     displayName: Install cdxgen
-    condition: ${{ parameters.condition }}
     inputs:
       command: custom
       customCommand: install --global @cyclonedx/cdxgen
 
   - task: PowerShell@2
     displayName: Generate SBOM for ${{ parameters.product }}
-    condition: ${{ parameters.condition }}
     inputs:
       targetType: inline
       pwsh: true
@@ -71,7 +65,6 @@ steps:
 
   - task: PublishPipelineArtifact@1
     displayName: Upload SBOM artifact
-    condition: ${{ parameters.condition }}
     inputs:
       targetPath: $(Build.ArtifactStagingDirectory)/sbom
       artifact: ${{ parameters.product }}-sbom

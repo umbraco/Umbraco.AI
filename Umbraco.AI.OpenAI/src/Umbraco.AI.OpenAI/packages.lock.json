@@ -28,21 +28,6 @@
         "resolved": "3.8.118",
         "contentHash": "cRaG+ICcECG+CzbtQyUV2WftH7yl2B02AjYGGNScXx8TwYavZYwhCewBTiC0qTcsac7m6AzBUYna5xzBWmTGYw=="
       },
-      "Umbraco.AI.Core": {
-        "type": "Direct",
-        "requested": "[1.0.0, 1.999.999)",
-        "resolved": "1.0.0",
-        "contentHash": "JGRPXZcaICIPxGqf53NcE95f+kD2THZ8vyudART0u5GyTmc22akehbHSjKz4NqKAWcdpT1Qu1hkagUBF6JAPjg==",
-        "dependencies": {
-          "Microsoft.Extensions.AI": "10.2.0",
-          "Microsoft.Extensions.Caching.Memory": "[10.0.0, 10.999.999)",
-          "Microsoft.Extensions.Options": "[10.0.0, 10.999.999)",
-          "SmartReader": "0.11.0",
-          "Umbraco.Cms.Core": "[17.1.0, 17.999.999)",
-          "Umbraco.Cms.Infrastructure": "[17.1.0, 17.999.999)",
-          "Umbraco.Cms.Web.Common": "[17.1.0, 17.999.999)"
-        }
-      },
       "Umbraco.Code": {
         "type": "Direct",
         "requested": "[2.4.0, )",
@@ -1000,6 +985,18 @@
           "Microsoft.Extensions.Caching.Hybrid": "10.0.0",
           "Umbraco.Cms.Core": "[17.1.0, 18.0.0)",
           "Umbraco.Cms.Infrastructure": "[17.1.0, 18.0.0)"
+        }
+      },
+      "umbraco.ai.core": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.Extensions.AI": "[10.2.0, )",
+          "Microsoft.Extensions.Caching.Memory": "[10.0.0, 10.999.999)",
+          "Microsoft.Extensions.Options": "[10.0.0, 10.999.999)",
+          "SmartReader": "[0.11.0, )",
+          "Umbraco.Cms.Core": "[17.1.0, 17.999.999)",
+          "Umbraco.Cms.Infrastructure": "[17.1.0, 17.999.999)",
+          "Umbraco.Cms.Web.Common": "[17.1.0, 17.999.999)"
         }
       },
       "Microsoft.Extensions.AI": {

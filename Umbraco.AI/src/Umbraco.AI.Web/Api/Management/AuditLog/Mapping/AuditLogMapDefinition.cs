@@ -98,7 +98,6 @@ public class AuditLogMapDefinition : IMapDefinition
         target.TotalTokens = source.TotalTokens;
         target.PromptSnapshot = source.PromptSnapshot;
         target.ResponseSnapshot = source.ResponseSnapshot;
-        target.DetailLevel = source.DetailLevel.ToString();
         target.Metadata = source.Metadata is not null ? new Dictionary<string, string>(source.Metadata) : null;
     }
 }

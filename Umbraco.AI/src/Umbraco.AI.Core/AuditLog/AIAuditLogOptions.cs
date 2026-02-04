@@ -18,22 +18,16 @@ public class AIAuditLogOptions
     public int RetentionDays { get; set; } = 14;
 
     /// <summary>
-    /// Gets or sets the detail level for capturing audit-log information.
-    /// Default is FailuresOnly.
-    /// </summary>
-    public AIAuditLogDetailLevel DetailLevel { get; set; } = AIAuditLogDetailLevel.FailuresOnly;
-
-    /// <summary>
     /// Gets or sets a value indicating whether to persist prompt snapshots.
-    /// Default is false for privacy reasons.
+    /// Default is true.
     /// </summary>
-    public bool PersistPrompts { get; set; } = false;
+    public bool PersistPrompts { get; set; } = true;
 
     /// <summary>
     /// Gets or sets a value indicating whether to persist response snapshots.
-    /// Default is false for privacy reasons.
+    /// Default is true.
     /// </summary>
-    public bool PersistResponses { get; set; } = false;
+    public bool PersistResponses { get; set; } = true;
 
     /// <summary>
     /// Gets or sets a value indicating whether to persist detailed failure information.

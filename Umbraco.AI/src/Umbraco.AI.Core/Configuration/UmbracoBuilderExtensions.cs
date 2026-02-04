@@ -24,6 +24,7 @@ using Umbraco.AI.Core.RuntimeContext.Contributors;
 using Umbraco.AI.Core.RuntimeContext.Middleware;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.TaskQueue;
+using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Web;
 using Umbraco.AI.Core.Versioning;
@@ -212,6 +213,16 @@ public static partial class UmbracoBuilderExtensions
         services.AddHostedService<AIUsageHourlyAggregationJob>();
         services.AddHostedService<AIUsageDailyRollupJob>();
         services.AddHostedService<AIUsageStatisticsCleanupJob>();
+
+        // Register built-in test graders
+        builder.AITestGraders()
+            .Add<ExactMatchGrader>()
+            .Add<ContainsGrader>()
+            .Add<RegexGrader>()
+            .Add<JSONSchemaGrader>()
+            .Add<ToolCallGrader>()
+            .Add<LLMJudgeGrader>()
+            .Add<SemanticSimilarityGrader>();
 
         return builder;
     }

@@ -167,6 +167,29 @@ Providers expose discrete capabilities:
 
 Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<string, Embedding<float>>`).
 
+### Tool Scope System
+
+Tool scopes provide operation-level permission grouping for AI tools. Each scope represents a category of operations (e.g., "content-read", "media-write") and allows fine-grained access control.
+
+**Core Components:**
+- `IAIToolScope` - Interface defining a tool scope with:
+  - `Id` - Unique scope identifier (e.g., "content-read")
+  - `Name` - Display name
+  - `Description` - Human-readable description
+  - `Icon` - Umbraco icon for UI
+  - `Domain` - Categorization domain (e.g., "Content", "Media")
+  - `IsDestructive` - Whether operations in this scope modify data
+
+- `AIToolScopeCollection` - Collection of registered tool scopes
+  - Sealed class (not a builder - scopes are registered via DI)
+  - Scopes are resolved via `IEnumerable<IAIToolScope>` from DI
+
+**Management API:**
+- `GET /umbraco/ai/management/api/v1/tool-scopes` - Returns all registered tool scopes
+
+**Usage in Agents:**
+Tool scopes are used by Umbraco.AI.Agent to control which tools an agent can access. See the Agent add-on documentation for details on permission validation.
+
 ### Collection Builder Pattern
 
 Umbraco.AI uses Umbraco's collection builder pattern for extensibility:
@@ -219,6 +242,12 @@ Provider settings use `[AIField]` attributes for UI generation. Values prefixed 
 - Root path: `/umbraco/ai/management/api`
 - Uses Umbraco backoffice security
 - OpenAPI/Swagger documentation auto-generated
+
+**Key Endpoints:**
+- `/v1/profile` - Profile management (connections, models, settings)
+- `/v1/connection` - Connection management (API keys, provider settings)
+- `/v1/tool-scope` - Tool scope discovery (GET all registered scopes)
+  - Used by agents to discover available permission scopes
 
 ### IdOrAlias Pattern
 
@@ -357,6 +386,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 - `Umbraco.AI.Core.Models` - Shared domain models (`AICapability`, `AIModelRef`, `AIOptions`)
 - `Umbraco.AI.Core.Registry` - Provider registry (`IAIRegistry`)
 - `Umbraco.AI.Core.EditableModels` - Editable model infrastructure (`AIFieldAttribute`, `AIEditableModelSchema`, `IAIEditableModelResolver`)
+- `Umbraco.AI.Core.Tools.Scopes` - Tool scope system (`IAIToolScope`, `AIToolScopeCollection`)
 
 **Persistence namespaces:**
 - `Umbraco.AI.Persistence.Connections` - EF Core connection repository and entity

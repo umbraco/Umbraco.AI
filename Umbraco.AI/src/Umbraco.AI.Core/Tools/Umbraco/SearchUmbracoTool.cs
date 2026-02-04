@@ -30,7 +30,7 @@ public record SearchUmbracoArgs(
 /// <summary>
 /// Tool that searches Umbraco content and media using Examine.
 /// </summary>
-[AITool("search_umbraco", "Search Umbraco", Category = "Umbraco")]
+[AITool("search_umbraco", "Search Umbraco", ScopeId = "search")]
 public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 {
     private const string ExternalIndexName = "ExternalIndex";

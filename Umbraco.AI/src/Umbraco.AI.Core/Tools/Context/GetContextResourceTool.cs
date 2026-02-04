@@ -18,7 +18,7 @@ public record GetContextResourceArgs(
 /// This tool is dynamically injected when OnDemand resources are available.
 /// Use list_context_resources first to see what's available.
 /// </remarks>
-[AITool("get_context_resource", "Get Context Resource", Category = "Context")]
+[AITool("get_context_resource", "Get Context Resource", ScopeId = "navigation")]
 public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISystemTool
 {
     private readonly IAIContextAccessor _contextAccessor;

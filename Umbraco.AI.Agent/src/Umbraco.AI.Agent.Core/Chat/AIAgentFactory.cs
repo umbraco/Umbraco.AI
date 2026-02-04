@@ -64,29 +64,10 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         var tools = new List<AITool>();
         tools.AddRange(_toolCollection.ToAIFunctions(enabledToolIds, _functionFactory));
 
-        // Frontend tools - filter through permissions
-        var frontendTools = additionalTools?.ToList() ?? [];
-        if (frontendTools.Count > 0)
+        // Frontend tools - already filtered by service layer, just add them
+        if (additionalTools is not null)
         {
-            var allowedFrontendTools = frontendTools
-                .Where(t =>
-                {
-                    var toolName = t.Metadata?.Name ?? string.Empty;
-
-                    // Check if tool ID is explicitly enabled
-                    if (enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase))
-                        return true;
-
-                    // Check if tool is AIFrontendTool with scope metadata
-                    if (t is Agent.Core.Tools.AIFrontendTool frontendTool &&
-                        frontendTool.Scope != null &&
-                        agent.EnabledToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase))
-                        return true;
-
-                    return false;
-                });
-
-            tools.AddRange(allowedFrontendTools);
+            tools.AddRange(additionalTools);
         }
 
         // Get profile - use default Chat profile if not specified
@@ -116,7 +97,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
             innerAgent,
             agent,
             contextItems ?? [],
-            frontendTools,
+            additionalTools,
             additionalProperties,
             _runtimeContextScopeProvider,
             _contextContributors);

@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
-using Umbraco.AI.Agent.Core.Tools;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
@@ -25,7 +24,6 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAIEntityVersionService _versionService;
     private readonly IAIAgentFactory _agentFactory;
     private readonly IAGUIStreamingService _streamingService;
-    private readonly IAGUIToolConverter _toolConverter;
     private readonly IAGUIContextConverter _contextConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly AIToolCollection _toolCollection;
@@ -35,7 +33,6 @@ internal sealed class AIAgentService : IAIAgentService
         IAIEntityVersionService versionService,
         IAIAgentFactory agentFactory,
         IAGUIStreamingService streamingService,
-        IAGUIToolConverter toolConverter,
         IAGUIContextConverter contextConverter,
         AIToolCollection toolCollection,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
@@ -44,7 +41,6 @@ internal sealed class AIAgentService : IAIAgentService
         _versionService = versionService;
         _agentFactory = agentFactory;
         _streamingService = streamingService;
-        _toolConverter = toolConverter;
         _contextConverter = contextConverter;
         _toolCollection = toolCollection;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
@@ -211,29 +207,54 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
-        // 2. Convert AG-UI context and frontend tools
+        // 2. Convert AG-UI context and create frontend tools with metadata
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
-        var convertedTools = _toolConverter.ConvertToFrontendTools(frontendToolDefinitions);
 
-        // 3. Wrap frontend tools with metadata for permission checks
-        IList<AITool>? frontendTools = null;
-        if (convertedTools is not null && toolMetadata is not null)
+        // Get enabled tool IDs for permission checking
+        var enabledToolIds = await GetEnabledToolIdsAsync(agent, cancellationToken);
+
+        // Convert AGUITools to AIFrontendToolFunction with metadata and filter by permissions
+        IList<AITool>? convertedFrontendTools = null;
+        if (frontendToolDefinitions is not null)
         {
-            frontendTools = convertedTools
-                .Select(tool =>
+            var tools = new List<AITool>();
+
+            foreach (var tool in frontendToolDefinitions)
+            {
+                // Get metadata for this tool
+                string? scope = null;
+                bool isDestructive = false;
+                if (toolMetadata?.TryGetValue(tool.Name, out var metadata) == true)
                 {
-                    var toolName = tool.Metadata?.Name ?? string.Empty;
-                    if (toolMetadata.TryGetValue(toolName, out var metadata))
-                    {
-                        return (AITool)new AIFrontendTool(tool, metadata.Scope, metadata.IsDestructive);
-                    }
-                    return tool;
-                })
-                .ToList();
-        }
-        else
-        {
-            frontendTools = convertedTools;
+                    scope = metadata.Scope;
+                    isDestructive = metadata.IsDestructive;
+                }
+
+                // Create AIFrontendToolFunction with metadata
+                var frontendTool = new Chat.AIFrontendToolFunction(tool, scope, isDestructive);
+
+                // Check if tool is permitted
+                bool isPermitted = false;
+
+                // Check if tool ID is explicitly enabled
+                if (enabledToolIds.Contains(tool.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    isPermitted = true;
+                }
+                // Check if tool has scope and scope is enabled
+                else if (scope is not null &&
+                         agent.EnabledToolScopeIds.Contains(scope, StringComparer.OrdinalIgnoreCase))
+                {
+                    isPermitted = true;
+                }
+
+                if (isPermitted)
+                {
+                    tools.Add(frontendTool);
+                }
+            }
+
+            convertedFrontendTools = tools.Count > 0 ? tools : null;
         }
 
         // 3. Build additional properties for telemetry/logging
@@ -253,13 +274,13 @@ internal sealed class AIAgentService : IAIAgentService
         var agentInst = await _agentFactory.CreateAgentAsync(
             agent,
             contextItems,
-            frontendTools,
+            convertedFrontendTools,
             additionalProperties,
             cancellationToken);
 
         // 5. Stream via AG-UI streaming service
         //    No additionalSystemPrompt needed - ScopedAIAgent handles it
-        await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, frontendTools, cancellationToken))
+        await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
         {
             yield return evt;
         }

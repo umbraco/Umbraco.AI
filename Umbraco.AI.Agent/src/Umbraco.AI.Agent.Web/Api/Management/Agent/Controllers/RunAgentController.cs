@@ -2,9 +2,7 @@ using System.Text.Json;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.Tools;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
@@ -87,25 +85,24 @@ public class RunAgentController : AgentControllerBase
         }
 
         // Extract tool metadata from ForwardedProps
-        var toolMetadataLookup = ExtractToolMetadata(request.ForwardedProps);
+        var toolMetadata = ExtractToolMetadata(request.ForwardedProps);
 
         // Convert to the format expected by the service
-        IReadOnlyDictionary<string, (string? Scope, bool IsDestructive)>? toolMetadata = null;
-        if (toolMetadataLookup.Count > 0)
+        IReadOnlyDictionary<string, (string? Scope, bool IsDestructive)>? toolMetadataDict = null;
+        if (toolMetadata.Count > 0)
         {
-            toolMetadata = toolMetadataLookup.ToDictionary(
+            toolMetadataDict = toolMetadata.ToDictionary(
                 kvp => kvp.Key,
                 kvp => (kvp.Value.Scope, kvp.Value.IsDestructive),
                 StringComparer.OrdinalIgnoreCase);
         }
 
-        // Delegate to service - handles runtime context, MAF agent creation, and streaming
-        // Service will convert AGUITools and wrap with metadata for permission checks
+        // Delegate to service - handles tool creation with metadata, permission filtering, and streaming
         var events = _agentService.StreamAgentAsync(
             agentId.Value,
             request,
             request.Tools,
-            toolMetadata,
+            toolMetadataDict,
             cancellationToken);
 
         return new AGUIEventStreamResult(events);

@@ -69,12 +69,51 @@ export class UaiPromptRegistrarServerDataSource {
                             contentTypeAliases: r.contentTypeAliases ?? null,
                         })) ?? [],
                     } : null,
+                    uiMode: detail.uiMode,
+                    isActive: detail.isActive,
                 } satisfies UaiPromptRegistrationModel;
             })
         );
 
         return {
             data: promptDetails.filter((p): p is UaiPromptRegistrationModel => p !== null),
+        };
+    }
+
+    /**
+     * Gets a single prompt by ID for registration.
+     */
+    async getPromptById(unique: string): Promise<{ data?: UaiPromptRegistrationModel; error?: unknown }> {
+        const { data: detail, error } = await tryExecute(
+            this.#host,
+            PromptsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } })
+        );
+
+        if (error || !detail) return { error };
+
+        return {
+            data: {
+                unique: detail.id,
+                alias: detail.alias,
+                name: detail.name,
+                description: detail.description ?? null,
+                instructions: detail.instructions,
+                profileId: detail.profileId ?? null,
+                scope: detail.scope ? {
+                    allowRules: detail.scope.allowRules?.map(r => ({
+                        propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
+                        propertyAliases: r.propertyAliases ?? null,
+                        contentTypeAliases: r.contentTypeAliases ?? null,
+                    })) ?? [],
+                    denyRules: detail.scope.denyRules?.map(r => ({
+                        propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
+                        propertyAliases: r.propertyAliases ?? null,
+                        contentTypeAliases: r.contentTypeAliases ?? null,
+                    })) ?? [],
+                } : null,
+                uiMode: detail.uiMode,
+                isActive: detail.isActive,
+            }
         };
     }
 }

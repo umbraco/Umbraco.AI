@@ -44,6 +44,8 @@ export interface UaiPromptRegistrationModel {
     scope: UaiPromptScope | null;
     /** UI mode for the property action. Defaults to 'modal'. */
     uiMode?: UaiPromptUiMode;
+    /** Whether the prompt is active and should be registered. */
+    isActive: boolean;
 }
 
 /**

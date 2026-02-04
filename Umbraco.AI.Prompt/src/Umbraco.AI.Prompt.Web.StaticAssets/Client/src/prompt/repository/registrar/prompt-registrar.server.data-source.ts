@@ -50,27 +50,19 @@ export class UaiPromptRegistrarServerDataSource {
                     return null;
                 }
 
-                return {
-                    unique: detail.id,
-                    alias: detail.alias,
-                    name: detail.name,
-                    description: detail.description ?? null,
-                    instructions: detail.instructions,
-                    profileId: detail.profileId ?? null,
-                    scope: detail.scope ? {
-                        allowRules: detail.scope.allowRules?.map(r => ({
-                            propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
-                            propertyAliases: r.propertyAliases ?? null,
-                            contentTypeAliases: r.contentTypeAliases ?? null,
-                        })) ?? [],
-                        denyRules: detail.scope.denyRules?.map(r => ({
-                            propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
-                            propertyAliases: r.propertyAliases ?? null,
-                            contentTypeAliases: r.contentTypeAliases ?? null,
-                        })) ?? [],
-                    } : null,
-                    isActive: detail.isActive,
-                } satisfies UaiPromptRegistrationModel;
+                // Destructure only the properties needed for registration
+                const { id, alias, name, description, instructions, profileId, scope, isActive } = detail;
+                const model: UaiPromptRegistrationModel = {
+                    unique: id,
+                    alias,
+                    name,
+                    description,
+                    instructions,
+                    profileId,
+                    scope,
+                    isActive,
+                };
+                return model;
             })
         );
 
@@ -90,27 +82,18 @@ export class UaiPromptRegistrarServerDataSource {
 
         if (error || !detail) return { error };
 
+        // Destructure only the properties needed for registration
+        const { id, alias, name, description, instructions, profileId, scope, isActive } = detail;
         return {
             data: {
-                unique: detail.id,
-                alias: detail.alias,
-                name: detail.name,
-                description: detail.description ?? null,
-                instructions: detail.instructions,
-                profileId: detail.profileId ?? null,
-                scope: detail.scope ? {
-                    allowRules: detail.scope.allowRules?.map(r => ({
-                        propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
-                        propertyAliases: r.propertyAliases ?? null,
-                        contentTypeAliases: r.contentTypeAliases ?? null,
-                    })) ?? [],
-                    denyRules: detail.scope.denyRules?.map(r => ({
-                        propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
-                        propertyAliases: r.propertyAliases ?? null,
-                        contentTypeAliases: r.contentTypeAliases ?? null,
-                    })) ?? [],
-                } : null,
-                isActive: detail.isActive,
+                unique: id,
+                alias,
+                name,
+                description,
+                instructions,
+                profileId,
+                scope,
+                isActive,
             }
         };
     }

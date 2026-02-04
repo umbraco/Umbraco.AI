@@ -79,6 +79,7 @@ demo/
 nul
 tmpclaude*
 .auto-claude/
+*.local.md
 
 # References
 refs/

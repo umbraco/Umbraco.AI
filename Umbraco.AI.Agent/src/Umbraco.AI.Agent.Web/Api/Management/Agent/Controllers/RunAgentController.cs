@@ -1,7 +1,10 @@
+using System.Text.Json;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Tools;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
@@ -83,13 +86,61 @@ public class RunAgentController : AgentControllerBase
             });
         }
 
+        // Extract tool metadata from ForwardedProps
+        var toolMetadataLookup = ExtractToolMetadata(request.ForwardedProps);
+
+        // Convert to the format expected by the service
+        IReadOnlyDictionary<string, (string? Scope, bool IsDestructive)>? toolMetadata = null;
+        if (toolMetadataLookup.Count > 0)
+        {
+            toolMetadata = toolMetadataLookup.ToDictionary(
+                kvp => kvp.Key,
+                kvp => (kvp.Value.Scope, kvp.Value.IsDestructive),
+                StringComparer.OrdinalIgnoreCase);
+        }
+
         // Delegate to service - handles runtime context, MAF agent creation, and streaming
+        // Service will convert AGUITools and wrap with metadata for permission checks
         var events = _agentService.StreamAgentAsync(
             agentId.Value,
             request,
             request.Tools,
+            toolMetadata,
             cancellationToken);
 
         return new AGUIEventStreamResult(events);
+    }
+
+    private Dictionary<string, ToolMetadata> ExtractToolMetadata(JsonElement? forwardedProps)
+    {
+        if (forwardedProps is null ||
+            !forwardedProps.Value.TryGetProperty("toolMetadata", out var metadataElement))
+        {
+            return new Dictionary<string, ToolMetadata>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        try
+        {
+            var metadataList = JsonSerializer.Deserialize<List<ToolMetadataDto>>(
+                metadataElement.GetRawText()) ?? [];
+
+            return metadataList.ToDictionary(
+                m => m.ToolName,
+                m => new ToolMetadata(m.Scope, m.IsDestructive),
+                StringComparer.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return new Dictionary<string, ToolMetadata>(StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    private record ToolMetadata(string? Scope, bool IsDestructive);
+
+    private class ToolMetadataDto
+    {
+        public string ToolName { get; set; } = string.Empty;
+        public string? Scope { get; set; }
+        public bool IsDestructive { get; set; }
     }
 }

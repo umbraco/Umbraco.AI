@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.Tools;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
@@ -185,6 +186,7 @@ internal sealed class AIAgentService : IAIAgentService
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AGUITool>? frontendToolDefinitions,
+        IReadOnlyDictionary<string, (string? Scope, bool IsDestructive)>? toolMetadata = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // 1. Resolve agent
@@ -211,7 +213,28 @@ internal sealed class AIAgentService : IAIAgentService
 
         // 2. Convert AG-UI context and frontend tools
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
-        var frontendTools = _toolConverter.ConvertToFrontendTools(frontendToolDefinitions);
+        var convertedTools = _toolConverter.ConvertToFrontendTools(frontendToolDefinitions);
+
+        // 3. Wrap frontend tools with metadata for permission checks
+        IList<AITool>? frontendTools = null;
+        if (convertedTools is not null && toolMetadata is not null)
+        {
+            frontendTools = convertedTools
+                .Select(tool =>
+                {
+                    var toolName = tool.Metadata?.Name ?? string.Empty;
+                    if (toolMetadata.TryGetValue(toolName, out var metadata))
+                    {
+                        return (AITool)new AIFrontendTool(tool, metadata.Scope, metadata.IsDestructive);
+                    }
+                    return tool;
+                })
+                .ToList();
+        }
+        else
+        {
+            frontendTools = convertedTools;
+        }
 
         // 3. Build additional properties for telemetry/logging
         var additionalProperties = new Dictionary<string, object?>

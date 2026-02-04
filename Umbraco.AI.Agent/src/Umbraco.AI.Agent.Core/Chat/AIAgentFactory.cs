@@ -24,6 +24,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIToolCollection _toolCollection;
     private readonly IAIFunctionFactory _functionFactory;
+    private readonly IAIAgentService _agentService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentFactory"/> class.
@@ -34,7 +35,8 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         IAIProfileService profileService,
         IAIChatClientFactory chatClientFactory,
         AIToolCollection toolCollection,
-        IAIFunctionFactory functionFactory)
+        IAIFunctionFactory functionFactory,
+        IAIAgentService agentService)
     {
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
         _contextContributors = contextContributors ?? throw new ArgumentNullException(nameof(contextContributors));
@@ -42,6 +44,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
         _toolCollection = toolCollection ?? throw new ArgumentNullException(nameof(toolCollection));
         _functionFactory = functionFactory ?? throw new ArgumentNullException(nameof(functionFactory));
+        _agentService = agentService ?? throw new ArgumentNullException(nameof(agentService));
     }
 
     /// <inheritdoc />
@@ -54,15 +57,36 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        // Build tool list
-        var tools = new List<AITool>();
-        tools.AddRange(_toolCollection.ToSystemToolFunctions(_functionFactory));
-        tools.AddRange(_toolCollection.ToUserToolFunctions(_functionFactory));
+        // Get enabled tools for this agent
+        var enabledToolIds = await _agentService.GetEnabledToolIdsAsync(agent, cancellationToken);
 
+        // Build tool list using only enabled tools
+        var tools = new List<AITool>();
+        tools.AddRange(_toolCollection.ToAIFunctions(enabledToolIds, _functionFactory));
+
+        // Frontend tools - filter through permissions
         var frontendTools = additionalTools?.ToList() ?? [];
         if (frontendTools.Count > 0)
         {
-            tools.AddRange(frontendTools);
+            var allowedFrontendTools = frontendTools
+                .Where(t =>
+                {
+                    var toolName = t.Metadata?.Name ?? string.Empty;
+
+                    // Check if tool ID is explicitly enabled
+                    if (enabledToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase))
+                        return true;
+
+                    // Check if tool is AIFrontendTool with scope metadata
+                    if (t is Agent.Core.Tools.AIFrontendTool frontendTool &&
+                        frontendTool.Scope != null &&
+                        agent.EnabledToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase))
+                        return true;
+
+                    return false;
+                });
+
+            tools.AddRange(allowedFrontendTools);
         }
 
         // Get profile - use default Chat profile if not specified

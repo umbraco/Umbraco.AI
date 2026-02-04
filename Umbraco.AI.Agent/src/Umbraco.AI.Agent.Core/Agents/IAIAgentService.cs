@@ -127,11 +127,13 @@ public interface IAIAgentService
     /// <param name="agentId">The agent ID.</param>
     /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
     /// <param name="frontendToolDefinitions">Frontend tool definitions from the request.</param>
+    /// <param name="toolMetadata">Optional tool metadata for permission checks (scope, destructiveness).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
     IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
         AGUIRunRequest request,
         IEnumerable<AGUITool>? frontendToolDefinitions,
+        IReadOnlyDictionary<string, (string? Scope, bool IsDestructive)>? toolMetadata = null,
         CancellationToken cancellationToken = default);
 }

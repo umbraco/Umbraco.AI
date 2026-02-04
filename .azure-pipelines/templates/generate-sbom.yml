@@ -37,10 +37,8 @@ steps:
         Write-Host "Version: $version"
         Write-Host "Server URL: $env:DT_BASE_URL"
 
-        # Create output directory
-        $outputDir = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY "sbom"
-        New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
-        $outputFile = Join-Path $outputDir "${{ parameters.product }}-bom.json"
+        # Create output file directly in staging directory (no subdirectory)
+        $outputFile = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY "${{ parameters.product }}-bom.json"
 
         # Generate SBOM and upload to Dependency-Track
         cdxgen --recurse `
@@ -64,8 +62,8 @@ steps:
       DT_API_KEY: $(DT_API_KEY)
 
   - task: PublishPipelineArtifact@1
-    displayName: Upload SBOM artifact
+    displayName: Upload SBOM to shared artifact
     inputs:
-      targetPath: $(Build.ArtifactStagingDirectory)/sbom
-      artifact: ${{ parameters.product }}-sbom
+      targetPath: $(Build.ArtifactStagingDirectory)/${{ parameters.product }}-bom.json
+      artifact: all-sboms
       publishLocation: pipeline

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **prompt:** Fixed prompt package being too liberal with the umbraco-marketplace tag ([93280bc](https://github.com/umbraco/Umbraco.AI/commit/93280bcb1f0fd6c0a413aaf1aca684dc56e6125f))
 
-## [1.0.0] - TBC
+## [1.0.0] - 2026-02-03
 
 Initial release.
 

@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### fix
 
 * **core:** Fixed core package being too liberal with the umbraco-marketplace tag ([5c660a0](https://github.com/umbraco/Umbraco.AI/commit/5c660a07e6352df18265eac43f52bf47ea660cb9))
-## [1.0.0] - TBC
+
+## [1.0.0] - 2026-02-03
 
 Initial release.
 

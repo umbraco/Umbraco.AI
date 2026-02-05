@@ -1,3 +1,4 @@
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { BehaviorSubject, Observable } from '@umbraco-cms/backoffice/external/rxjs';
@@ -29,27 +30,24 @@ export interface UaiAgentRepositoryOptions {
  * Provides observable state management with automatic updates via entity action events.
  * @public
  */
-export class UaiAgentRepository {
-	#host: UmbControllerHost;
+export class UaiAgentRepository extends UmbControllerBase {
 	#agentItems$ = new BehaviorSubject<Map<string, UaiAgentItemModel>>(new Map());
 	#isInitialized = false;
 
 	constructor(host: UmbControllerHost) {
-		this.#host = host;
+		super(host);
 
 		// Listen to entity action events
-		this.#host.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
-			if (!context) return;
-
-			context.addEventListener(
+		this.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
+			context?.addEventListener(
 				UaiEntityActionEvent.CREATED,
 				this.#onAgentCreatedOrUpdated as EventListener
 			);
-			context.addEventListener(
+			context?.addEventListener(
 				UaiEntityActionEvent.UPDATED,
 				this.#onAgentCreatedOrUpdated as EventListener
 			);
-			context.addEventListener(
+			context?.addEventListener(
 				UaiEntityActionEvent.DELETED,
 				this.#onAgentDeleted as EventListener
 			);
@@ -93,7 +91,7 @@ export class UaiAgentRepository {
 	 */
 	async fetchActiveAgents(options?: UaiAgentRepositoryOptions) {
 		const { data, error } = await tryExecute(
-			this.#host,
+			this,
 			AgentsService.getAllAgents({
 				query: {
 					skip: 0,
@@ -123,13 +121,24 @@ export class UaiAgentRepository {
 	 * Unified handler for CREATE and UPDATE events.
 	 * Fetches the agent and adds/updates if active, removes otherwise.
 	 */
-	#onAgentCreatedOrUpdated = async (event: UaiEntityActionEvent) => {
+	#onAgentCreatedOrUpdated = (event: UaiEntityActionEvent) => {
 		if (!this.#isInitialized || event.getEntityType() !== UAI_AGENT_ENTITY_TYPE) {
 			return;
 		}
 
 		const unique = event.getUnique();
+		if (!unique) {
+			return;
+		}
 
+		// Async operation - fire and forget
+		this.#handleAgentUpdate(unique);
+	};
+
+	/**
+	 * Async helper to fetch and update agent state.
+	 */
+	async #handleAgentUpdate(unique: string): Promise<void> {
 		// Fetch all agents to find the updated one
 		const { data, error } = await this.fetchActiveAgents({ take: 100 });
 
@@ -149,7 +158,7 @@ export class UaiAgentRepository {
 
 		// Add or update entry
 		this.#addOrUpdateEntry(agent);
-	};
+	}
 
 	/**
 	 * Handler for DELETE events.
@@ -161,6 +170,9 @@ export class UaiAgentRepository {
 		}
 
 		const unique = event.getUnique();
+		if (!unique) {
+			return;
+		}
 		this.#removeEntry(unique);
 	};
 

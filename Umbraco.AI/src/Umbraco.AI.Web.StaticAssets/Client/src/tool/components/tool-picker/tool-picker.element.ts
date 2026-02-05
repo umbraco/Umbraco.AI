@@ -83,6 +83,15 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
 
     #toolRepository = new UaiToolRepository(this);
 
+    override updated(changedProperties: Map<PropertyKey, unknown>) {
+        super.updated(changedProperties);
+
+        // Reload items when frontendTools changes and we have a selection
+        if (changedProperties.has('frontendTools') && this._selection.length > 0) {
+            this.#loadItems();
+        }
+    }
+
     #setValue(val: string[] | undefined) {
         const newSelection = val ?? [];
 

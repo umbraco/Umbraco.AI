@@ -135,6 +135,25 @@ export class UaiCopilotContext extends UmbControllerBase {
     this.#runController = new UaiCopilotRunController(host, this.#hitlContext);
     this.#entityAdapterContext = new UaiEntityAdapterContext(host);
 
+    // Subscribe to agent repository observable
+    this.observe(
+      this.#agentRepository.agentItems$,
+      (agents) => {
+        this.#agents.setValue(agents);
+
+        // Auto-select first agent if none selected
+        if (!this.#selectedAgent.getValue() && agents.length > 0) {
+          this.#selectedAgent.setValue(agents[0]);
+        }
+
+        // Clear selection if selected agent is no longer available
+        const currentSelected = this.#selectedAgent.getValue();
+        if (currentSelected && !agents.find(a => a.id === currentSelected.id)) {
+          this.#selectedAgent.setValue(undefined);
+        }
+      }
+    );
+
     // Sync selected agent to run controller
     this.observe(this.selectedAgent, (agent) => {
       if (agent) {
@@ -151,18 +170,7 @@ export class UaiCopilotContext extends UmbControllerBase {
   /** Load available agents from the server. Auto-selects first agent if none selected. */
   async loadAgents(): Promise<void> {
     this.#agentsLoading.setValue(true);
-
-    const { data } = await this.#agentRepository.fetchActiveAgents();
-
-    if (data) {
-      this.#agents.setValue(data);
-
-      // Auto-select first agent if none selected
-      if (!this.#selectedAgent.getValue() && data.length > 0) {
-        this.#selectedAgent.setValue(data[0]);
-      }
-    }
-
+    await this.#agentRepository.initialize();
     this.#agentsLoading.setValue(false);
   }
 

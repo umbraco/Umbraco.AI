@@ -44,12 +44,12 @@ internal class AIAgentEntity
     /// <summary>
     /// JSON-serialized array of enabled tool IDs.
     /// </summary>
-    public string? EnabledToolIds { get; set; }
+    public string? AllowedToolIds { get; set; }
 
     /// <summary>
     /// JSON-serialized array of enabled tool scope IDs.
     /// </summary>
-    public string? EnabledToolScopeIds { get; set; }
+    public string? AllowedToolScopeIds { get; set; }
 
     /// <summary>
     /// Instructions that define how the agent behaves.

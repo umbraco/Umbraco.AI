@@ -64,15 +64,15 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         enabledTools.AddRange(systemToolIds);
 
         // 2. Add explicitly enabled tool IDs
-        if (agent.EnabledToolIds.Count > 0)
+        if (agent.AllowedToolIds.Count > 0)
         {
-            enabledTools.AddRange(agent.EnabledToolIds);
+            enabledTools.AddRange(agent.AllowedToolIds);
         }
 
         // 3. Add tools from enabled scopes
-        if (agent.EnabledToolScopeIds.Count > 0)
+        if (agent.AllowedToolScopeIds.Count > 0)
         {
-            foreach (var scope in agent.EnabledToolScopeIds)
+            foreach (var scope in agent.AllowedToolScopeIds)
             {
                 var scopeToolIds = _toolCollection.GetByScope(scope)
                     .Where(t => t is not IAISystemTool) // Don't duplicate system tools

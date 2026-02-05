@@ -27,8 +27,8 @@ internal static class AIAgentEntityFactory
             ProfileId = entity.ProfileId,
             ContextIds = DeserializeContextIds(entity.ContextIds),
             ScopeIds = DeserializeScopeIds(entity.ScopeIds),
-            EnabledToolIds = DeserializeEnabledToolIds(entity.EnabledToolIds),
-            EnabledToolScopeIds = DeserializeEnabledToolScopeIds(entity.EnabledToolScopeIds),
+            AllowedToolIds = DeserializeAllowedToolIds(entity.AllowedToolIds),
+            AllowedToolScopeIds = DeserializeAllowedToolScopeIds(entity.AllowedToolScopeIds),
             Instructions = entity.Instructions,
             IsActive = entity.IsActive,
             DateCreated = entity.DateCreated,
@@ -53,8 +53,8 @@ internal static class AIAgentEntityFactory
             ProfileId = aiAgent.ProfileId,
             ContextIds = SerializeContextIds(aiAgent.ContextIds),
             ScopeIds = SerializeScopeIds(aiAgent.ScopeIds),
-            EnabledToolIds = SerializeEnabledToolIds(aiAgent.EnabledToolIds),
-            EnabledToolScopeIds = SerializeEnabledToolScopeIds(aiAgent.EnabledToolScopeIds),
+            AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds),
+            AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds),
             Instructions = aiAgent.Instructions,
             IsActive = aiAgent.IsActive,
             DateCreated = aiAgent.DateCreated,
@@ -76,8 +76,8 @@ internal static class AIAgentEntityFactory
         entity.ProfileId = aiAgent.ProfileId;
         entity.ContextIds = SerializeContextIds(aiAgent.ContextIds);
         entity.ScopeIds = SerializeScopeIds(aiAgent.ScopeIds);
-        entity.EnabledToolIds = SerializeEnabledToolIds(aiAgent.EnabledToolIds);
-        entity.EnabledToolScopeIds = SerializeEnabledToolScopeIds(aiAgent.EnabledToolScopeIds);
+        entity.AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds);
+        entity.AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds);
         entity.Instructions = aiAgent.Instructions;
         entity.IsActive = aiAgent.IsActive;
         entity.DateModified = aiAgent.DateModified;
@@ -140,7 +140,7 @@ internal static class AIAgentEntityFactory
         }
     }
 
-    private static string? SerializeEnabledToolIds(IReadOnlyList<string> toolIds)
+    private static string? SerializeAllowedToolIds(IReadOnlyList<string> toolIds)
     {
         if (toolIds.Count == 0)
         {
@@ -150,7 +150,7 @@ internal static class AIAgentEntityFactory
         return JsonSerializer.Serialize(toolIds, JsonOptions);
     }
 
-    private static IReadOnlyList<string> DeserializeEnabledToolIds(string? json)
+    private static IReadOnlyList<string> DeserializeAllowedToolIds(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -167,7 +167,7 @@ internal static class AIAgentEntityFactory
         }
     }
 
-    private static string? SerializeEnabledToolScopeIds(IReadOnlyList<string> scopeIds)
+    private static string? SerializeAllowedToolScopeIds(IReadOnlyList<string> scopeIds)
     {
         if (scopeIds.Count == 0)
         {
@@ -177,7 +177,7 @@ internal static class AIAgentEntityFactory
         return JsonSerializer.Serialize(scopeIds, JsonOptions);
     }
 
-    private static IReadOnlyList<string> DeserializeEnabledToolScopeIds(string? json)
+    private static IReadOnlyList<string> DeserializeAllowedToolScopeIds(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {

@@ -49,13 +49,13 @@ public class CreateAgentRequestModel
     /// Tools must be explicitly enabled or belong to an enabled scope.
     /// System tools are always enabled.
     /// </summary>
-    public IEnumerable<string>? EnabledToolIds { get; init; }
+    public IEnumerable<string>? AllowedToolIds { get; init; }
 
     /// <summary>
     /// Optional enabled tool scope IDs for this agent.
     /// Tools belonging to these scopes are automatically enabled.
     /// </summary>
-    public IEnumerable<string>? EnabledToolScopeIds { get; init; }
+    public IEnumerable<string>? AllowedToolScopeIds { get; init; }
 
     /// <summary>
     /// Instructions that define how the agent behaves.

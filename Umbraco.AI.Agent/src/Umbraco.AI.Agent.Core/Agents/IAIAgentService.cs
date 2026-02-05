@@ -93,7 +93,7 @@ public interface IAIAgentService
     /// <param name="agent">The agent.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Collection of enabled tool IDs.</returns>
-    Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
+    Task<IReadOnlyList<string>> GetAllowedToolIdsAsync(
         AIAgent agent,
         CancellationToken cancellationToken = default);
 

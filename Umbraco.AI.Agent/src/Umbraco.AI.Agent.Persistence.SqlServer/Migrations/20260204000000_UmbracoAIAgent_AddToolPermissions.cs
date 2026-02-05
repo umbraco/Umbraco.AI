@@ -11,14 +11,14 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "EnabledToolIds",
+                name: "AllowedToolIds",
                 table: "umbracoAIAgent",
                 type: "nvarchar(4000)",
                 maxLength: 4000,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "EnabledToolScopeIds",
+                name: "AllowedToolScopeIds",
                 table: "umbracoAIAgent",
                 type: "nvarchar(2000)",
                 maxLength: 2000,
@@ -27,19 +27,19 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
             // Set default scopes for existing agents (backward compatibility)
             migrationBuilder.Sql(
                 @"UPDATE umbracoAIAgent
-                  SET EnabledToolScopeIds = '[""search"",""navigation"",""translation"",""web""]'
-                  WHERE EnabledToolScopeIds IS NULL;");
+                  SET AllowedToolScopeIds = '[""search"",""navigation"",""translation"",""web""]'
+                  WHERE AllowedToolScopeIds IS NULL;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "EnabledToolIds",
+                name: "AllowedToolIds",
                 table: "umbracoAIAgent");
 
             migrationBuilder.DropColumn(
-                name: "EnabledToolScopeIds",
+                name: "AllowedToolScopeIds",
                 table: "umbracoAIAgent");
         }
     }

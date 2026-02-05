@@ -83,8 +83,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const picker = event.target as HTMLElement & { value: string[] | undefined };
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { enabledToolScopeIds: picker.value ?? [] },
-                "enabledToolScopeIds"
+                { allowedToolScopeIds: picker.value ?? [] },
+                "allowedToolScopeIds"
             )
         );
     }
@@ -96,8 +96,8 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         const toolIds = value ? value.split(',').map(id => id.trim()).filter(id => id) : [];
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { enabledToolIds: toolIds },
-                "enabledToolIds"
+                { allowedToolIds: toolIds },
+                "allowedToolIds"
             )
         );
     }
@@ -158,7 +158,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     <uai-tool-scope-picker
                         slot="editor"
                         multiple
-                        .value=${this._model.enabledToolScopeIds}
+                        .value=${this._model.allowedToolScopeIds}
                         @change=${this.#onEnabledToolScopeIdsChange}
                     ></uai-tool-scope-picker>
                 </umb-property-layout>
@@ -167,7 +167,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     description="Enter comma-separated tool IDs to enable specific tools beyond those included in the selected scopes">
                     <uui-input
                         slot="editor"
-                        .value=${this._model.enabledToolIds.join(', ')}
+                        .value=${this._model.allowedToolIds.join(', ')}
                         @input=${this.#onEnabledToolIdsChange}
                         placeholder="e.g., custom_tool_1, custom_tool_2"
                     ></uui-input>

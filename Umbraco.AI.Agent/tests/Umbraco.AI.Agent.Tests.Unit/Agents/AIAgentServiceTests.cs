@@ -38,16 +38,16 @@ public class AIAgentServiceTests
         );
     }
 
-    #region GetEnabledToolIdsAsync
+    #region GetAllowedToolIdsAsync
 
     [Fact]
-    public async Task GetEnabledToolIdsAsync_WithAgent_ReturnsEnabledToolIds()
+    public async Task GetAllowedToolIdsAsync_WithAgent_ReturnsAllowedToolIds()
     {
         // Arrange
         var agent = CreateAgent(Guid.NewGuid(), enabledToolIds: ["tool1", "tool2"]);
 
         // Act
-        var result = await _service.GetEnabledToolIdsAsync(agent);
+        var result = await _service.GetAllowedToolIdsAsync(agent);
 
         // Assert
         result.ShouldNotBeNull();
@@ -57,13 +57,13 @@ public class AIAgentServiceTests
     }
 
     [Fact]
-    public async Task GetEnabledToolIdsAsync_WithAgentHavingNoTools_ReturnsEmptyList()
+    public async Task GetAllowedToolIdsAsync_WithAgentHavingNoTools_ReturnsEmptyList()
     {
         // Arrange
         var agent = CreateAgent(Guid.NewGuid(), enabledToolIds: []);
 
         // Act
-        var result = await _service.GetEnabledToolIdsAsync(agent);
+        var result = await _service.GetAllowedToolIdsAsync(agent);
 
         // Assert
         result.ShouldNotBeNull();
@@ -71,13 +71,13 @@ public class AIAgentServiceTests
     }
 
     [Fact]
-    public async Task GetEnabledToolIdsAsync_WithEnabledScopes_ReturnsToolsInThoseScopes()
+    public async Task GetAllowedToolIdsAsync_WithEnabledScopes_ReturnsToolsInThoseScopes()
     {
         // Arrange
         var agent = CreateAgent(Guid.NewGuid(), enabledToolScopeIds: ["content-read", "search"]);
 
         // Act
-        var result = await _service.GetEnabledToolIdsAsync(agent);
+        var result = await _service.GetAllowedToolIdsAsync(agent);
 
         // Assert
         result.ShouldNotBeNull();
@@ -91,7 +91,7 @@ public class AIAgentServiceTests
     #region IsToolEnabledAsync
 
     [Fact]
-    public async Task IsToolEnabledAsync_ToolInEnabledToolIds_ReturnsTrue()
+    public async Task IsToolEnabledAsync_ToolInAllowedToolIds_ReturnsTrue()
     {
         // Arrange
         var agent = CreateAgent(Guid.NewGuid(), enabledToolIds: ["tool1", "another-tool"]);
@@ -179,8 +179,8 @@ public class AIAgentServiceTests
             Id = id,
             Alias = "test-agent",
             Name = "Test Agent",
-            EnabledToolIds = enabledToolIds ?? [],
-            EnabledToolScopeIds = enabledToolScopeIds ?? [],
+            AllowedToolIds = enabledToolIds ?? [],
+            AllowedToolScopeIds = enabledToolScopeIds ?? [],
             IsActive = true
         };
     }

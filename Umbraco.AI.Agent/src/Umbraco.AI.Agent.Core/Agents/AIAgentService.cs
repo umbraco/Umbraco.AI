@@ -114,7 +114,7 @@ internal sealed class AIAgentService : IAIAgentService
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<string>> GetEnabledToolIdsAsync(
+    public Task<IReadOnlyList<string>> GetAllowedToolIdsAsync(
         AIAgent agent,
         CancellationToken cancellationToken = default)
     {
@@ -129,15 +129,15 @@ internal sealed class AIAgentService : IAIAgentService
         enabledTools.AddRange(systemToolIds);
 
         // 2. Add explicitly enabled tool IDs
-        if (agent.EnabledToolIds.Count > 0)
+        if (agent.AllowedToolIds.Count > 0)
         {
-            enabledTools.AddRange(agent.EnabledToolIds);
+            enabledTools.AddRange(agent.AllowedToolIds);
         }
 
         // 3. Add tools from enabled scopes
-        if (agent.EnabledToolScopeIds.Count > 0)
+        if (agent.AllowedToolScopeIds.Count > 0)
         {
-            foreach (var scope in agent.EnabledToolScopeIds)
+            foreach (var scope in agent.AllowedToolScopeIds)
             {
                 var scopeToolIds = _toolCollection.GetByScope(scope)
                     .Where(t => t is not IAISystemTool) // Don't duplicate system tools
@@ -173,7 +173,7 @@ internal sealed class AIAgentService : IAIAgentService
         }
 
         // Check if tool is in enabled list
-        var enabledToolIds = await GetEnabledToolIdsAsync(agent, cancellationToken);
+        var enabledToolIds = await GetAllowedToolIdsAsync(agent, cancellationToken);
         return enabledToolIds.Contains(toolId, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -211,7 +211,7 @@ internal sealed class AIAgentService : IAIAgentService
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
 
         // Get enabled tool IDs for permission checking
-        var enabledToolIds = await GetEnabledToolIdsAsync(agent, cancellationToken);
+        var enabledToolIds = await GetAllowedToolIdsAsync(agent, cancellationToken);
 
         // Convert AGUITools to AIFrontendToolFunction with metadata and filter by permissions
         IList<AITool>? convertedFrontendTools = null;
@@ -243,7 +243,7 @@ internal sealed class AIAgentService : IAIAgentService
                 }
                 // Check if tool has scope and scope is enabled
                 else if (scope is not null &&
-                         agent.EnabledToolScopeIds.Contains(scope, StringComparer.OrdinalIgnoreCase))
+                         agent.AllowedToolScopeIds.Contains(scope, StringComparer.OrdinalIgnoreCase))
                 {
                     isPermitted = true;
                 }

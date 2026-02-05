@@ -55,8 +55,8 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.ScopeIds = source.ScopeIds?.ToList() ?? [];
-        target.EnabledToolIds = source.EnabledToolIds?.ToList() ?? [];
-        target.EnabledToolScopeIds = source.EnabledToolScopeIds?.ToList() ?? [];
+        target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
+        target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
         target.Instructions = source.Instructions;
         target.IsActive = true;
     }
@@ -70,8 +70,8 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.ScopeIds = source.ScopeIds?.ToList() ?? [];
-        target.EnabledToolIds = source.EnabledToolIds?.ToList() ?? [];
-        target.EnabledToolScopeIds = source.EnabledToolScopeIds?.ToList() ?? [];
+        target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
+        target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
     }
@@ -86,8 +86,8 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
         target.ScopeIds = source.ScopeIds;
-        target.EnabledToolIds = source.EnabledToolIds;
-        target.EnabledToolScopeIds = source.EnabledToolScopeIds;
+        target.AllowedToolIds = source.AllowedToolIds;
+        target.AllowedToolScopeIds = source.AllowedToolScopeIds;
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;

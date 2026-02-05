@@ -49,8 +49,8 @@ Umbraco.AI.Agent is an agent management plugin for Umbraco.AI. It provides stora
 ### Key Services
 
 - `IAIAgentService` - Primary interface for agent CRUD operations and tool permission validation
-  - `GetEnabledToolIdsAsync(agent)` - Returns all tool IDs enabled for an agent (both direct and scope-based)
-  - `IsToolEnabledAsync(agent, toolId)` - Checks if a specific tool is enabled for an agent
+  - `GetAllowedToolIdsAsync(agent)` - Returns all tool IDs allowed for an agent (both direct and scope-based)
+  - `IsToolEnabledAsync(agent, toolId)` - Checks if a specific tool is allowed for an agent
 - `IAIAgentRepository` - Repository interface for agent persistence
 
 ### Domain Model
@@ -64,35 +64,35 @@ The `AIAgent` entity represents a stored agent definition:
 - `ProfileId` - Optional link to Umbraco.AI profile (soft FK)
 - `Tags` - Categorization tags
 - `IsActive` - Active status
-- `EnabledToolIds` - List of specific tool IDs enabled for this agent
-- `EnabledToolScopeIds` - List of tool scope IDs enabled for this agent (grants access to all tools in those scopes)
+- `AllowedToolIds` - List of specific tool IDs allowed for this agent
+- `AllowedToolScopeIds` - List of tool scope IDs allowed for this agent (grants access to all tools in those scopes)
 - `DateCreated` / `DateModified` - Timestamps
 
 ### Agent Tool Permissions
 
 Agents can have fine-grained control over which tools they can access through two mechanisms:
 
-**1. Direct Tool Access** (`EnabledToolIds`)
+**1. Direct Tool Access** (`AllowedToolIds`)
 - Explicitly grant access to specific tools by their ID
 - Example: `["umbraco-content-get", "umbraco-media-upload"]`
 
-**2. Scope-Based Access** (`EnabledToolScopeIds`)
+**2. Scope-Based Access** (`AllowedToolScopeIds`)
 - Grant access to all tools within a scope
 - Scopes represent categories of operations (e.g., "content-read", "media-write")
 - Example: `["content-read", "search"]` grants access to all tools in those scopes
 
 **Permission Resolution:**
-- A tool is enabled if it appears in `EnabledToolIds` OR if its scope appears in `EnabledToolScopeIds`
+- A tool is enabled if it appears in `AllowedToolIds` OR if its scope appears in `AllowedToolScopeIds`
 - Case-insensitive comparison for both tool IDs and scope IDs
 - Permission checks are performed via `IAIAgentService.IsToolEnabledAsync(agent, toolId)`
 
 **Usage Example:**
 ```csharp
-// Check if a specific tool is enabled for an agent
+// Check if a specific tool is allowed for an agent
 bool canUseContentGet = await agentService.IsToolEnabledAsync(agent, "umbraco-content-get");
 
 // Get all enabled tool IDs for an agent
-IReadOnlyList<string> enabledTools = await agentService.GetEnabledToolIdsAsync(agent);
+IReadOnlyList<string> allowedTools = await agentService.GetAllowedToolIdsAsync(agent);
 ```
 
 ### Management API

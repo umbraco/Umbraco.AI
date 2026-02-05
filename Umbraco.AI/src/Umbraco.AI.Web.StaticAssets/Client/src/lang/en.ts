@@ -40,6 +40,11 @@ export default {
         deleteConfirm: "Are you sure you want to delete this context?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} context(s)?`,
     },
+    uaiTool: {
+        selectTool: "Select Tools",
+        addTool: "Add tool",
+        noToolsAvailable: "No tools available",
+    },
     uaiAuditLog: {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,
     },

@@ -89,14 +89,12 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onEnabledToolIdsChange(event: Event) {
+    #onEnabledToolIdsChange(event: UmbChangeEvent) {
         event.stopPropagation();
-        const value = (event.target as HTMLInputElement).value;
-        // Parse comma-separated tool IDs
-        const toolIds = value ? value.split(',').map(id => id.trim()).filter(id => id) : [];
+        const picker = event.target as HTMLElement & { value: string[] | undefined };
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { allowedToolIds: toolIds },
+                { allowedToolIds: picker.value ?? [] },
                 "allowedToolIds"
             )
         );
@@ -163,14 +161,13 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-tool-scope-permissions>
                 </umb-property-layout>
                 <umb-property-layout
-                    label="Additional Tool IDs"
-                    description="Enter comma-separated tool IDs to enable specific tools beyond those included in the selected scopes">
-                    <uui-input
+                    label="Allowed Tools"
+                    description="Select specific tools to enable for this agent beyond those included in the selected scopes. System tools are always available.">
+                    <uai-tool-picker
                         slot="editor"
-                        .value=${this._model.allowedToolIds.join(', ')}
-                        @input=${this.#onEnabledToolIdsChange}
-                        placeholder="e.g., custom_tool_1, custom_tool_2"
-                    ></uui-input>
+                        .value=${this._model.allowedToolIds}
+                        @change=${this.#onEnabledToolIdsChange}
+                    ></uai-tool-picker>
                 </umb-property-layout>
             </uui-box>
         `;

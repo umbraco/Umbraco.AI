@@ -1,3 +1,4 @@
+using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Web.Api.Management.Tool.Models;
 using Umbraco.Cms.Core.Mapping;
@@ -14,15 +15,30 @@ public class ToolMapDefinition : IMapDefinition
     {
         mapper.Define<IAIToolScope, ToolScopeItemResponseModel>(
             (_, _) => new ToolScopeItemResponseModel(),
-            MapToItemResponse);
+            MapToolScopeToItemResponse);
+
+        mapper.Define<IAITool, ToolItemResponseModel>(
+            (_, _) => new ToolItemResponseModel(),
+            MapToolToItemResponse);
     }
 
     // Umbraco.Code.MapAll
-    private static void MapToItemResponse(IAIToolScope source, ToolScopeItemResponseModel target, MapperContext context)
+    private static void MapToolScopeToItemResponse(IAIToolScope source, ToolScopeItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;
         target.Icon = source.Icon;
         target.IsDestructive = source.IsDestructive;
         target.Domain = source.Domain;
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToolToItemResponse(IAITool source, ToolItemResponseModel target, MapperContext context)
+    {
+        target.Id = source.Id;
+        target.Name = source.Name;
+        target.Description = source.Description;
+        target.ScopeId = source.ScopeId;
+        target.IsDestructive = source.IsDestructive;
+        target.Tags = source.Tags;
     }
 }

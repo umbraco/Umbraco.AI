@@ -2,7 +2,7 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
-import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import { createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-registry";
 import type { UaiFrontendToolRepositoryApi, UaiFrontendToolData } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
@@ -37,23 +37,13 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
 
     async #loadFrontendTools() {
         try {
-            // Find the repository manifest
-            const manifests = umbExtensionsRegistry.getByType('repository');
-            const repositoryManifest = manifests.find(m => m.alias === 'Uai.Repository.FrontendTool');
+            // Use Umbraco's built-in method to instantiate the repository API
+            const repository = await createExtensionApiByAlias<UaiFrontendToolRepositoryApi>(
+                this,
+                'Uai.Repository.FrontendTool'
+            );
 
-            if (repositoryManifest && 'api' in repositoryManifest && repositoryManifest.api) {
-                // Load and instantiate the repository
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const module = await (repositoryManifest.api as any)();
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const RepositoryClass = (module as any).api || (module as any).default;
-
-                if (RepositoryClass) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const repository = new RepositoryClass(this) as UaiFrontendToolRepositoryApi;
-                    this._frontendTools = await repository.getTools();
-                }
-            }
+            this._frontendTools = await repository.getTools();
         } catch {
             // Repository not available (e.g., Copilot not installed)
             this._frontendTools = [];

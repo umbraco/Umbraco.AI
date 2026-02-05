@@ -44,6 +44,21 @@ export default {
         selectTool: "Select Tools",
         addTool: "Add tool",
         noToolsAvailable: "No tools available",
+
+        // Tool names and descriptions
+        // Context tools (system tools - navigation scope)
+        getContextResourceLabel: "Get Context Resource",
+        getContextResourceDescription: "Retrieve a specific context resource by ID",
+        listContextResourcesLabel: "List Context Resources",
+        listContextResourcesDescription: "List available context resources that can be retrieved on demand",
+
+        // Search tools (search scope)
+        searchUmbracoLabel: "Search Umbraco",
+        searchUmbracoDescription: "Search Umbraco content and media using Examine",
+
+        // Web tools (web scope)
+        fetchWebpageLabel: "Fetch Web Page",
+        fetchWebpageDescription: "Fetch and extract text content from a web page",
     },
     uaiAuditLog: {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,

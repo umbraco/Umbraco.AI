@@ -249,8 +249,8 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<
             }
 
             .group-items {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                display: flex;
+                flex-direction: column;
                 gap: var(--uui-size-space-4);
             }
 

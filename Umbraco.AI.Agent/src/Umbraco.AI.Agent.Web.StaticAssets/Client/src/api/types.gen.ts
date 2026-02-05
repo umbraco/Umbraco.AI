@@ -67,6 +67,8 @@ export type AgentItemResponseModel = {
     profileId?: string | null;
     contextIds: Array<string>;
     scopeIds: Array<string>;
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -80,6 +82,8 @@ export type AgentResponseModel = {
     profileId?: string | null;
     contextIds: Array<string>;
     scopeIds: Array<string>;
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
     instructions?: string | null;
     isActive: boolean;
     dateCreated: string;
@@ -99,6 +103,8 @@ export type CreateAgentRequestModel = {
     profileId?: string | null;
     contextIds?: Array<string> | null;
     scopeIds?: Array<string> | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
     instructions?: string | null;
 };
 
@@ -131,6 +137,8 @@ export type UpdateAgentRequestModel = {
     profileId?: string | null;
     contextIds?: Array<string> | null;
     scopeIds?: Array<string> | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
     instructions?: string | null;
     isActive: boolean;
 };

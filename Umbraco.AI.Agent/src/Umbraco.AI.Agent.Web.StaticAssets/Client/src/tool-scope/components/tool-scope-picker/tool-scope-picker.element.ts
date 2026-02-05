@@ -12,7 +12,7 @@ import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
 import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
 import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
 import { tryExecute } from '@umbraco-cms/backoffice/resources';
-import { ToolScopesService } from '../../../api/sdk.gen.js';
+import { AgentsService, type AgentScopeItemResponseModel } from '../../../api/index.js';
 import { UAI_ITEM_PICKER_MODAL, type UaiPickableItemModel } from '@umbraco-ai/core';
 
 const elementName = 'uai-tool-scope-picker';
@@ -22,7 +22,6 @@ interface UaiToolScopeItemModel {
     icon: string;
     name: string;
     description: string;
-    isDestructive: boolean;
 }
 
 @customElement(elementName)
@@ -85,21 +84,20 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<
         this._loading = true;
 
         // Fetch all tool scopes and filter to selected ones
-        const { data, error } = await tryExecute(
+        const response = await tryExecute(
             this,
-            ToolScopesService.getAllToolScopes()
+            AgentsService.getAgentScopes()
         );
 
-        if (!error && data) {
+        if (!response.error && response.data) {
             // Map to internal model with localized name/description
             this._items = this._selection
-                .map(id => {
-                    const scope = data.find(s => s.id === id);
+                .map((id: string) => {
+                    const scope = response.data!.find((s: AgentScopeItemResponseModel) => s.id === id);
                     if (!scope) return undefined;
                     return {
                         id: scope.id,
                         icon: scope.icon,
-                        isDestructive: scope.isDestructive,
                         name: this.localize.term(`uaiToolScope_${scope.id}Label`) || scope.id,
                         description: this.localize.term(`uaiToolScope_${scope.id}Description`) || '',
                     };
@@ -134,17 +132,17 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<
     }
 
     async #fetchAvailableToolScopes(): Promise<UaiPickableItemModel[]> {
-        const { data } = await tryExecute(
+        const response = await tryExecute(
             this,
-            ToolScopesService.getAllToolScopes()
+            AgentsService.getAgentScopes()
         );
 
-        if (!data) return [];
+        if (!response.data) return [];
 
         // Filter out already selected items
-        return data
-            .filter(scope => !this._selection.includes(scope.id))
-            .map(scope => ({
+        return response.data
+            .filter((scope: AgentScopeItemResponseModel) => !this._selection.includes(scope.id))
+            .map((scope: AgentScopeItemResponseModel) => ({
                 value: scope.id,
                 label: this.localize.term(`uaiToolScope_${scope.id}Label`) || scope.id,
                 description: this.localize.term(`uaiToolScope_${scope.id}Description`) || '',
@@ -205,10 +203,8 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<
     }
 
     #renderItem(item: UaiToolScopeItemModel) {
-        const styleClasses = item.isDestructive ? 'destructive' : '';
         return html`
             <uui-ref-node
-                class=${styleClasses}
                 name=${item.name}
                 detail=${item.description}
                 readonly>
@@ -275,10 +271,6 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<
             uui-ref-node::before {
                 border-radius: var(--uui-border-radius);
                 border: 1px solid var(--uui-color-divider-standalone);
-            }
-
-            uui-ref-node.destructive::before {
-                border-color: var(--uui-color-danger);
             }
         `,
     ];

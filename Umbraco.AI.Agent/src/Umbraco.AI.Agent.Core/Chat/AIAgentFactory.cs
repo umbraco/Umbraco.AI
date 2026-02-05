@@ -24,7 +24,6 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIToolCollection _toolCollection;
     private readonly IAIFunctionFactory _functionFactory;
-    private readonly IAIAgentService _agentService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentFactory"/> class.
@@ -35,8 +34,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         IAIProfileService profileService,
         IAIChatClientFactory chatClientFactory,
         AIToolCollection toolCollection,
-        IAIFunctionFactory functionFactory,
-        IAIAgentService agentService)
+        IAIFunctionFactory functionFactory)
     {
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
         _contextContributors = contextContributors ?? throw new ArgumentNullException(nameof(contextContributors));
@@ -44,7 +42,6 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
         _toolCollection = toolCollection ?? throw new ArgumentNullException(nameof(toolCollection));
         _functionFactory = functionFactory ?? throw new ArgumentNullException(nameof(functionFactory));
-        _agentService = agentService ?? throw new ArgumentNullException(nameof(agentService));
     }
 
     /// <inheritdoc />
@@ -57,8 +54,37 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        // Get enabled tools for this agent
-        var enabledToolIds = await _agentService.GetEnabledToolIdsAsync(agent, cancellationToken);
+        // Compute enabled tool IDs for this agent
+        var enabledTools = new List<string>();
+
+        // 1. Always include system tools
+        var systemToolIds = _toolCollection
+            .Where(t => t is IAISystemTool)
+            .Select(t => t.Id);
+        enabledTools.AddRange(systemToolIds);
+
+        // 2. Add explicitly enabled tool IDs
+        if (agent.EnabledToolIds.Count > 0)
+        {
+            enabledTools.AddRange(agent.EnabledToolIds);
+        }
+
+        // 3. Add tools from enabled scopes
+        if (agent.EnabledToolScopeIds.Count > 0)
+        {
+            foreach (var scope in agent.EnabledToolScopeIds)
+            {
+                var scopeToolIds = _toolCollection.GetByScope(scope)
+                    .Where(t => t is not IAISystemTool) // Don't duplicate system tools
+                    .Select(t => t.Id);
+                enabledTools.AddRange(scopeToolIds);
+            }
+        }
+
+        // 4. Deduplicate
+        var enabledToolIds = enabledTools
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
         // Build tool list using only enabled tools
         var tools = new List<AITool>();

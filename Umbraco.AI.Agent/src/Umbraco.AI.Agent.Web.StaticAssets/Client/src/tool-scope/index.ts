@@ -1,1 +1,1 @@
-export * from './components/tool-scope-picker/tool-scope-picker.element.js';
+export * from './components/tool-scope-permissions/tool-scope-permissions.element.js';

@@ -11,7 +11,7 @@ import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
 import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
 import { UaiToolRepository, type ToolScopeItemResponseModel } from '@umbraco-ai/core';
 
-const elementName = 'uai-tool-scope-picker';
+const elementName = 'uai-tool-scope-permissions';
 
 interface UaiToolScopeItemModel {
     id: string;
@@ -27,7 +27,7 @@ interface UaiToolScopeGroup {
 }
 
 @customElement(elementName)
-export class UaiToolScopePickerElement extends UmbFormControlMixin<
+export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
     string[] | undefined,
     typeof UmbLitElement,
     undefined
@@ -293,10 +293,10 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<
     ];
 }
 
-export default UaiToolScopePickerElement;
+export default UaiToolScopePermissionsElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        [elementName]: UaiToolScopePickerElement;
+        [elementName]: UaiToolScopePermissionsElement;
     }
 }

@@ -96,6 +96,17 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         this.#loadItems();
     }
 
+    #toCamelCase(str: string): string {
+        return str
+            .split(/[-_.\s]+/)
+            .map((word, index) =>
+                index === 0
+                    ? word.toLowerCase()
+                    : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            )
+            .join('');
+    }
+
     async #loadItems() {
         if (this._selection.length === 0) {
             this._items = [];
@@ -112,10 +123,15 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
                 .map(id => {
                     const tool = data.find(t => t.id.toLowerCase() === id.toLowerCase());
                     if (!tool) return undefined;
+
+                    const camelCaseId = this.#toCamelCase(tool.id);
+                    const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
+                    const localizedDescription = this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
+
                     return {
                         id: tool.id,
-                        name: tool.name,
-                        description: tool.description,
+                        name: localizedName,
+                        description: localizedDescription,
                         scopeId: tool.scopeId,
                         isDestructive: tool.isDestructive,
                     };
@@ -157,12 +173,18 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         // Filter out already selected items
         return data
             .filter(tool => !this._selection.some(id => id.toLowerCase() === tool.id.toLowerCase()))
-            .map(tool => ({
-                value: tool.id,
-                label: tool.name,
-                description: tool.description,
-                icon: tool.isDestructive ? 'icon-alert' : 'icon-wand',
-            }));
+            .map(tool => {
+                const camelCaseId = this.#toCamelCase(tool.id);
+                const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
+                const localizedDescription = this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
+
+                return {
+                    value: tool.id,
+                    label: localizedName,
+                    description: localizedDescription,
+                    icon: tool.isDestructive ? 'icon-alert' : 'icon-wand',
+                };
+            });
     }
 
     #addSelections(items: UaiPickableItemModel[]) {

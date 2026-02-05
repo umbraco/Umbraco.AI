@@ -33,6 +33,14 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("AllowedToolIds")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("AllowedToolScopeIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<string>("ContextIds")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");

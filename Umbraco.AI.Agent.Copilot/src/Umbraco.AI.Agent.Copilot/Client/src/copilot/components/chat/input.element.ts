@@ -33,6 +33,10 @@ export class UaiCopilotInputElement extends UmbLitElement {
   #copilotContext?: UaiCopilotContext;
   #textareaRef = createRef<HTMLElement>();
 
+  get #isDisabled(): boolean {
+    return this.disabled || this._agents.length === 0;
+  }
+
   constructor() {
     super();
     this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
@@ -103,14 +107,18 @@ export class UaiCopilotInputElement extends UmbLitElement {
   }
 
   override render() {
+    const hasNoAgents = this._agents.length === 0 && !this._agentsLoading;
+
     return html`
       <div class="input-wrapper">
         <div class="input-box">
           <uui-textarea
             ${ref(this.#textareaRef)}
             .value=${this._value}
-            placeholder=${this.placeholder}
-            ?disabled=${this.disabled}
+            placeholder=${hasNoAgents
+              ? "Create a copilot agent to start chatting"
+              : this.placeholder}
+            ?disabled=${this.#isDisabled}
             auto-height
             @input=${this.#handleInput}
             @keydown=${this.#handleKeydown}
@@ -120,19 +128,21 @@ export class UaiCopilotInputElement extends UmbLitElement {
             <div class="left-actions">
               ${this._agentsLoading
                 ? html`<span class="agent-loading">Loading...</span>`
-                : html`
-                    <uui-select
-                      class="agent-select"
-                      .value=${this._selectedAgentId}
-                      .options=${this.#getAgentOptions()}
-                      @change=${this.#handleAgentChange}
-                    ></uui-select>
-                  `}
+                : hasNoAgents
+                  ? html`<span class="no-agents-message">No agents configured</span>`
+                  : html`
+                      <uui-select
+                        class="agent-select"
+                        .value=${this._selectedAgentId}
+                        .options=${this.#getAgentOptions()}
+                        @change=${this.#handleAgentChange}
+                      ></uui-select>
+                    `}
             </div>
             <uui-button
               look="primary"
               compact
-              ?disabled=${this.disabled || !this._value.trim()}
+              ?disabled=${this.#isDisabled || !this._value.trim()}
               @click=${this.#send}
             >
               <uui-icon name="icon-navigation-right"></uui-icon>
@@ -198,6 +208,11 @@ export class UaiCopilotInputElement extends UmbLitElement {
     .agent-loading {
       font-size: var(--uui-type-small-size);
       color: var(--uui-color-text-alt);
+    }
+
+    .no-agents-message {
+      font-size: var(--uui-type-small-size);
+      color: var(--uui-color-danger);
     }
   `;
 }

@@ -52,6 +52,10 @@ export default {
         listContextResourcesLabel: "List Context Resources",
         listContextResourcesDescription: "List available context resources that can be retrieved on demand",
 
+        // Umbraco media tools (media-read scope)
+        getUmbracoMediaLabel: "Get Umbraco Media",
+        getUmbracoMediaDescription: "Retrieve a media item from Umbraco by ID",
+
         // Search tools (search scope)
         searchUmbracoLabel: "Search Umbraco",
         searchUmbracoDescription: "Search Umbraco content and media using Examine",

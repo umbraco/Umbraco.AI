@@ -88,36 +88,36 @@ public class AIAgentServiceTests
 
     #endregion
 
-    #region IsToolEnabledAsync
+    #region IsToolAllowedAsync
 
     [Fact]
-    public async Task IsToolEnabledAsync_ToolInAllowedToolIds_ReturnsTrue()
+    public async Task IsToolAllowedAsync_ToolInAllowedToolIds_ReturnsTrue()
     {
         // Arrange
         var agent = CreateAgent(Guid.NewGuid(), enabledToolIds: ["tool1", "another-tool"]);
 
         // Act
-        var result = await _service.IsToolEnabledAsync(agent, "tool1");
+        var result = await _service.IsToolAllowedAsync(agent, "tool1");
 
         // Assert
         result.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task IsToolEnabledAsync_ToolWithScopeInEnabledScopes_ReturnsTrue()
+    public async Task IsToolAllowedAsync_ToolWithScopeInEnabledScopes_ReturnsTrue()
     {
         // Arrange
         var agent = CreateAgent(Guid.NewGuid(), enabledToolScopeIds: ["content-read", "search"]);
 
         // Act
-        var result = await _service.IsToolEnabledAsync(agent, "tool1"); // tool1 has content-read scope
+        var result = await _service.IsToolAllowedAsync(agent, "tool1"); // tool1 has content-read scope
 
         // Assert
         result.ShouldBeTrue();
     }
 
     [Fact]
-    public async Task IsToolEnabledAsync_ToolNotInAnyEnabledList_ReturnsFalse()
+    public async Task IsToolAllowedAsync_ToolNotInAnyEnabledList_ReturnsFalse()
     {
         // Arrange
         var agent = CreateAgent(
@@ -127,27 +127,27 @@ public class AIAgentServiceTests
         );
 
         // Act
-        var result = await _service.IsToolEnabledAsync(agent, "tool1");
+        var result = await _service.IsToolAllowedAsync(agent, "tool1");
 
         // Assert
         result.ShouldBeFalse();
     }
 
     [Fact]
-    public async Task IsToolEnabledAsync_ToolNotFound_ReturnsFalse()
+    public async Task IsToolAllowedAsync_ToolNotFound_ReturnsFalse()
     {
         // Arrange
         var agent = CreateAgent(Guid.NewGuid(), enabledToolIds: ["tool1"]);
 
         // Act
-        var result = await _service.IsToolEnabledAsync(agent, "non-existent-tool");
+        var result = await _service.IsToolAllowedAsync(agent, "non-existent-tool");
 
         // Assert
         result.ShouldBeFalse();
     }
 
     [Fact]
-    public async Task IsToolEnabledAsync_CaseInsensitiveComparison()
+    public async Task IsToolAllowedAsync_CaseInsensitiveComparison()
     {
         // Arrange
         var agent = CreateAgent(
@@ -157,8 +157,8 @@ public class AIAgentServiceTests
         );
 
         // Act
-        var result1 = await _service.IsToolEnabledAsync(agent, "TOOL1");
-        var result2 = await _service.IsToolEnabledAsync(agent, "tool3"); // tool3 has search scope, but only content-read is enabled
+        var result1 = await _service.IsToolAllowedAsync(agent, "TOOL1");
+        var result2 = await _service.IsToolAllowedAsync(agent, "tool3"); // tool3 has search scope, but only content-read is enabled
 
         // Assert
         result1.ShouldBeTrue(); // Direct match via enabled tool IDs

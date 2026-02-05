@@ -42,15 +42,15 @@ public class AgentResponseModel
     public IEnumerable<string> ScopeIds { get; set; } = [];
 
     /// <summary>
-    /// Enabled tool IDs for this agent.
-    /// Tools must be explicitly enabled or belong to an enabled scope.
-    /// System tools are always enabled.
+    /// Allowed tool IDs for this agent.
+    /// Tools must be explicitly allowed or belong to an allowed scope.
+    /// System tools are always allowed.
     /// </summary>
     public IEnumerable<string> AllowedToolIds { get; set; } = [];
 
     /// <summary>
-    /// Enabled tool scope IDs for this agent.
-    /// Tools belonging to these scopes are automatically enabled.
+    /// Allowed tool scope IDs for this agent.
+    /// Tools belonging to these scopes are automatically allowed.
     /// </summary>
     public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
 

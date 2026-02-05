@@ -118,63 +118,18 @@ internal sealed class AIAgentService : IAIAgentService
         AIAgent agent,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(agent);
-
-        var enabledTools = new List<string>();
-
-        // 1. Always include system tools
-        var systemToolIds = _toolCollection
-            .Where(t => t is IAISystemTool)
-            .Select(t => t.Id);
-        enabledTools.AddRange(systemToolIds);
-
-        // 2. Add explicitly enabled tool IDs
-        if (agent.AllowedToolIds.Count > 0)
-        {
-            enabledTools.AddRange(agent.AllowedToolIds);
-        }
-
-        // 3. Add tools from enabled scopes
-        if (agent.AllowedToolScopeIds.Count > 0)
-        {
-            foreach (var scope in agent.AllowedToolScopeIds)
-            {
-                var scopeToolIds = _toolCollection.GetByScope(scope)
-                    .Where(t => t is not IAISystemTool) // Don't duplicate system tools
-                    .Select(t => t.Id);
-                enabledTools.AddRange(scopeToolIds);
-            }
-        }
-
-        // 4. Deduplicate and return
-        var result = enabledTools
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        return Task.FromResult<IReadOnlyList<string>>(result);
+        var result = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
+        return Task.FromResult(result);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsToolEnabledAsync(
+    public Task<bool> IsToolAllowedAsync(
         AIAgent agent,
         string toolId,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(agent);
-        ArgumentException.ThrowIfNullOrWhiteSpace(toolId);
-
-        // System tools are always enabled
-        var tool = _toolCollection.FirstOrDefault(t =>
-            t.Id.Equals(toolId, StringComparison.OrdinalIgnoreCase));
-
-        if (tool is IAISystemTool)
-        {
-            return true;
-        }
-
-        // Check if tool is in enabled list
-        var enabledToolIds = await GetAllowedToolIdsAsync(agent, cancellationToken);
-        return enabledToolIds.Contains(toolId, StringComparer.OrdinalIgnoreCase);
+        var result = AIAgentToolHelper.IsToolAllowed(agent, toolId, _toolCollection);
+        return Task.FromResult(result);
     }
 
     /// <inheritdoc />
@@ -210,8 +165,8 @@ internal sealed class AIAgentService : IAIAgentService
         // 2. Convert AG-UI context and create frontend tools with metadata
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
 
-        // Get enabled tool IDs for permission checking
-        var enabledToolIds = await GetAllowedToolIdsAsync(agent, cancellationToken);
+        // Get allowed tool IDs for permission checking
+        var allowedToolIds = await GetAllowedToolIdsAsync(agent, cancellationToken);
 
         // Convert AGUITools to AIFrontendToolFunction with metadata and filter by permissions
         IList<AITool>? convertedFrontendTools = null;
@@ -236,12 +191,12 @@ internal sealed class AIAgentService : IAIAgentService
                 // Check if tool is permitted
                 bool isPermitted = false;
 
-                // Check if tool ID is explicitly enabled
-                if (enabledToolIds.Contains(tool.Name, StringComparer.OrdinalIgnoreCase))
+                // Check if tool ID is explicitly allowed
+                if (allowedToolIds.Contains(tool.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     isPermitted = true;
                 }
-                // Check if tool has scope and scope is enabled
+                // Check if tool has scope and scope is allowed
                 else if (scope is not null &&
                          agent.AllowedToolScopeIds.Contains(scope, StringComparer.OrdinalIgnoreCase))
                 {

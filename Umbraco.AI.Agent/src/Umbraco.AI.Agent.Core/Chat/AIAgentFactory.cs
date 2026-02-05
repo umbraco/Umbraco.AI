@@ -54,41 +54,12 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        // Compute enabled tool IDs for this agent
-        var enabledTools = new List<string>();
+        // Get allowed tool IDs for this agent
+        var allowedToolIds = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
 
-        // 1. Always include system tools
-        var systemToolIds = _toolCollection
-            .Where(t => t is IAISystemTool)
-            .Select(t => t.Id);
-        enabledTools.AddRange(systemToolIds);
-
-        // 2. Add explicitly enabled tool IDs
-        if (agent.AllowedToolIds.Count > 0)
-        {
-            enabledTools.AddRange(agent.AllowedToolIds);
-        }
-
-        // 3. Add tools from enabled scopes
-        if (agent.AllowedToolScopeIds.Count > 0)
-        {
-            foreach (var scope in agent.AllowedToolScopeIds)
-            {
-                var scopeToolIds = _toolCollection.GetByScope(scope)
-                    .Where(t => t is not IAISystemTool) // Don't duplicate system tools
-                    .Select(t => t.Id);
-                enabledTools.AddRange(scopeToolIds);
-            }
-        }
-
-        // 4. Deduplicate
-        var enabledToolIds = enabledTools
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        // Build tool list using only enabled tools
+        // Build tool list using only allowed tools
         var tools = new List<AITool>();
-        tools.AddRange(_toolCollection.ToAIFunctions(enabledToolIds, _functionFactory));
+        tools.AddRange(_toolCollection.ToAIFunctions(allowedToolIds, _functionFactory));
 
         // Frontend tools - already filtered by service layer, just add them
         if (additionalTools is not null)

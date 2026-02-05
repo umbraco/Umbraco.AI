@@ -42,12 +42,12 @@ internal class AIAgentEntity
     public string? ScopeIds { get; set; }
 
     /// <summary>
-    /// JSON-serialized array of enabled tool IDs.
+    /// JSON-serialized array of allowed tool IDs.
     /// </summary>
     public string? AllowedToolIds { get; set; }
 
     /// <summary>
-    /// JSON-serialized array of enabled tool scope IDs.
+    /// JSON-serialized array of allowed tool scope IDs.
     /// </summary>
     public string? AllowedToolScopeIds { get; set; }
 

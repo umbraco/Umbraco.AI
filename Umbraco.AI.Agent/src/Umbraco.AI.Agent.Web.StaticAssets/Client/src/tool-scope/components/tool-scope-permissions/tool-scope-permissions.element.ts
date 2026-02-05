@@ -9,7 +9,7 @@ import {
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
 import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
-import { UaiToolRepository, type ToolScopeItemResponseModel } from '@umbraco-ai/core';
+import { UaiToolRepository, type ToolScopeItemResponseModel, toCamelCase } from '@umbraco-ai/core';
 
 const elementName = 'uai-tool-scope-permissions';
 
@@ -64,21 +64,6 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
         this.#loadScopes();
     }
 
-    /**
-     * Converts a scope ID with separators (-, _, ., etc.) to camelCase.
-     * Examples: "content-read" -> "contentRead", "media_write" -> "mediaWrite"
-     */
-    #toCamelCase(str: string): string {
-        return str
-            .split(/[-_.\s]+/)
-            .map((word, index) =>
-                index === 0
-                    ? word.toLowerCase()
-                    : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-            )
-            .join('');
-    }
-
     async #loadScopes() {
         this._loading = true;
 
@@ -87,7 +72,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
         if (!response.error && response.data) {
             // Map API scopes to internal model with localization
             const scopes: UaiToolScopeItemModel[] = response.data.map((scope: ToolScopeItemResponseModel) => {
-                const camelCaseId = this.#toCamelCase(scope.id);
+                const camelCaseId = toCamelCase(scope.id);
                 return {
                     id: scope.id,
                     icon: scope.icon,
@@ -183,7 +168,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
     }
 
     #renderGroup(group: UaiToolScopeGroup) {
-        const camelCaseDomain = this.#toCamelCase(group.domain);
+        const camelCaseDomain = toCamelCase(group.domain);
         const localizedDomain = this.localize.term(`uaiToolScopeDomain_${camelCaseDomain}`) || group.domain;
 
         return html`

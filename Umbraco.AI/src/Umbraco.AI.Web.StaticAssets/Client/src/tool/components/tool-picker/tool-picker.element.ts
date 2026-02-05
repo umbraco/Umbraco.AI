@@ -14,6 +14,7 @@ import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
 import { UaiToolRepository } from '../../repository/tool.repository.js';
 import { UAI_ITEM_PICKER_MODAL } from '../../../core/modals/item-picker/item-picker-modal.token.js';
 import type { UaiPickableItemModel } from '../../../core/modals/item-picker/types.js';
+import { toCamelCase } from '../../utils.js';
 
 const elementName = 'uai-tool-picker';
 
@@ -96,17 +97,6 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         this.#loadItems();
     }
 
-    #toCamelCase(str: string): string {
-        return str
-            .split(/[-_.\s]+/)
-            .map((word, index) =>
-                index === 0
-                    ? word.toLowerCase()
-                    : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-            )
-            .join('');
-    }
-
     async #loadItems() {
         if (this._selection.length === 0) {
             this._items = [];
@@ -124,7 +114,7 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
                     const tool = data.find(t => t.id.toLowerCase() === id.toLowerCase());
                     if (!tool) return undefined;
 
-                    const camelCaseId = this.#toCamelCase(tool.id);
+                    const camelCaseId = toCamelCase(tool.id);
                     const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
                     const localizedDescription = this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
 
@@ -174,7 +164,7 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         return data
             .filter(tool => !this._selection.some(id => id.toLowerCase() === tool.id.toLowerCase()))
             .map(tool => {
-                const camelCaseId = this.#toCamelCase(tool.id);
+                const camelCaseId = toCamelCase(tool.id);
                 const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
                 const localizedDescription = this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
 

@@ -332,6 +332,13 @@ export type SettingsResponseModel = {
     defaultEmbeddingProfileId?: string | null;
 };
 
+export type ToolScopeItemResponseModel = {
+    id: string;
+    icon: string;
+    isDestructive: boolean;
+    domain: string;
+};
+
 export type UpdateConnectionRequestModel = {
     alias: string;
     name: string;
@@ -1495,6 +1502,29 @@ export type UpdateSettingsResponses = {
 };
 
 export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
+
+export type GetAllToolScopesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tool-scopes';
+};
+
+export type GetAllToolScopesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllToolScopesResponses = {
+    /**
+     * OK
+     */
+    200: Array<ToolScopeItemResponseModel>;
+};
+
+export type GetAllToolScopesResponse = GetAllToolScopesResponses[keyof GetAllToolScopesResponses];
 
 export type GetVersionHistoryData = {
     body?: never;

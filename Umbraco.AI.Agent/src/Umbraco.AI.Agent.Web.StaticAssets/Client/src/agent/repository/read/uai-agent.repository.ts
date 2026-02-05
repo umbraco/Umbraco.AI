@@ -1,7 +1,12 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { BehaviorSubject, Observable } from '@umbraco-cms/backoffice/external/rxjs';
+import { UMB_ACTION_EVENT_CONTEXT } from '@umbraco-cms/backoffice/action';
+import { UaiEntityActionEvent } from '@umbraco-ai/core';
+import { UAI_AGENT_ENTITY_TYPE } from '../../constants.js';
 import { AgentsService } from "../../../api/index.js";
 import { UaiAgentTypeMapper } from "../../type-mapper.js";
+import type { UaiAgentItemModel } from '../../types.js';
 
 /**
  * Options for fetching agents.
@@ -20,15 +25,64 @@ export interface UaiAgentRepositoryOptions {
 }
 
 /**
- * Read-only repository for fetching active agents.
- * Provides a focused API for consumers that only need to read active agent data.
+ * Active repository for fetching and observing active agents.
+ * Provides observable state management with automatic updates via entity action events.
  * @public
  */
 export class UaiAgentRepository {
 	#host: UmbControllerHost;
+	#agentItems$ = new BehaviorSubject<Map<string, UaiAgentItemModel>>(new Map());
+	#isInitialized = false;
 
 	constructor(host: UmbControllerHost) {
 		this.#host = host;
+
+		// Listen to entity action events
+		this.#host.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
+			if (!context) return;
+
+			context.addEventListener(
+				UaiEntityActionEvent.CREATED,
+				this.#onAgentCreatedOrUpdated as EventListener
+			);
+			context.addEventListener(
+				UaiEntityActionEvent.UPDATED,
+				this.#onAgentCreatedOrUpdated as EventListener
+			);
+			context.addEventListener(
+				UaiEntityActionEvent.DELETED,
+				this.#onAgentDeleted as EventListener
+			);
+		});
+	}
+
+	/**
+	 * Observable of all active agent items.
+	 * Emits a new Map whenever agents are added, updated, or removed.
+	 */
+	get agentItems$(): Observable<Map<string, UaiAgentItemModel>> {
+		return this.#agentItems$.asObservable();
+	}
+
+	/**
+	 * Initialize the repository by loading all active agents.
+	 * Should be called once when the repository is first used.
+	 */
+	async initialize(): Promise<void> {
+		const { data, error } = await this.fetchActiveAgents();
+
+		if (error || !data) {
+			console.warn('[UaiAgentRepository] Failed to load agents:', error);
+			return;
+		}
+
+		const items = new Map<string, UaiAgentItemModel>();
+		data.items.forEach((agent) => {
+			items.set(agent.unique, agent);
+		});
+
+		this.#agentItems$.next(items);
+		this.#isInitialized = true;
 	}
 
 	/**
@@ -63,5 +117,71 @@ export class UaiAgentRepository {
 				total: data.total,
 			},
 		};
+	}
+
+	/**
+	 * Unified handler for CREATE and UPDATE events.
+	 * Fetches the agent and adds/updates if active, removes otherwise.
+	 */
+	#onAgentCreatedOrUpdated = async (event: UaiEntityActionEvent) => {
+		if (!this.#isInitialized || event.getEntityType() !== UAI_AGENT_ENTITY_TYPE) {
+			return;
+		}
+
+		const unique = event.getUnique();
+
+		// Fetch all agents to find the updated one
+		const { data, error } = await this.fetchActiveAgents({ take: 100 });
+
+		if (error || !data) {
+			console.warn('[UaiAgentRepository] Failed to fetch agent:', error);
+			return;
+		}
+
+		// Find the specific agent
+		const agent = data.items.find(a => a.unique === unique);
+
+		// Remove if not found or not active
+		if (!agent || !agent.isActive) {
+			this.#removeEntry(unique);
+			return;
+		}
+
+		// Add or update entry
+		this.#addOrUpdateEntry(agent);
+	};
+
+	/**
+	 * Handler for DELETE events.
+	 * Removes the agent from state.
+	 */
+	#onAgentDeleted = (event: UaiEntityActionEvent) => {
+		if (!this.#isInitialized || event.getEntityType() !== UAI_AGENT_ENTITY_TYPE) {
+			return;
+		}
+
+		const unique = event.getUnique();
+		this.#removeEntry(unique);
+	};
+
+	/**
+	 * Add or update an agent entry in state.
+	 * Creates a new Map to trigger observable emission.
+	 */
+	#addOrUpdateEntry(agent: UaiAgentItemModel): void {
+		const current = new Map(this.#agentItems$.value);
+		current.set(agent.unique, agent);
+		this.#agentItems$.next(current);
+	}
+
+	/**
+	 * Remove an agent entry from state.
+	 * Creates a new Map to trigger observable emission.
+	 */
+	#removeEntry(unique: string): void {
+		const current = new Map(this.#agentItems$.value);
+		if (current.delete(unique)) {
+			this.#agentItems$.next(current);
+		}
 	}
 }

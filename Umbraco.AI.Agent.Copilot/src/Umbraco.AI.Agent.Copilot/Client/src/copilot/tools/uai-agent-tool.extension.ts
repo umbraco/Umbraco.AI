@@ -149,6 +149,11 @@ export interface ManifestUaiAgentTool
     /** Icon to display with the tool */
     icon?: string;
     /**
+     * Tool scope for permission grouping (e.g., 'entity.write', 'navigation').
+     * Used to control which agents can access this tool.
+     */
+    scope?: string;
+    /**
      * HITL approval configuration.
      * When specified, tool pauses for user approval before execution.
      * - `true` - Use default approval element with localized defaults

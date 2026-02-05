@@ -11,7 +11,7 @@ const getCurrentTimeManifest: ManifestUaiAgentTool = {
   name: "Get Current Time Tool",
   api: () => import("./get-current-time.api.js"),
   meta: {
-    toolName: "getCurrentTime",
+    toolName: "get_current_time",
     label: "Get Current Time",
     description: "Get the current date and time in the user's timezone. Use this when you need to know the current time.",
     icon: "icon-time",
@@ -39,10 +39,11 @@ const getPageInfoManifest: ManifestUaiAgentTool = {
   name: "Get Page Info Tool",
   api: () => import("./get-page-info.api.js"),
   meta: {
-    toolName: "getPageInfo",
+    toolName: "get_page_info",
     label: "Get Page Info",
     description: "Get information about the current Umbraco backoffice page including URL, section, and context.",
     icon: "icon-info",
+    scope: "navigation",
     parameters: {
       type: "object",
       properties: {},
@@ -62,10 +63,11 @@ const showWeatherManifest: ManifestUaiAgentTool = {
   api: () => import("./show-weather.api.js"),
   element: () => import("./show-weather.element.js"),
   meta: {
-    toolName: "showWeather",
+    toolName: "show_weather",
     label: "Weather",
     description: "Get and display the current weather for a location. Shows a visual weather card with temperature, conditions, and details.",
     icon: "icon-cloud",
+    scope: "web",
     parameters: {
       type: "object",
       properties: {
@@ -91,7 +93,7 @@ const confirmActionManifest: ManifestUaiAgentTool = {
   name: "Confirm Action Tool",
   api: () => import("./confirm-action.api.js"),
   meta: {
-    toolName: "confirmAction",
+    toolName: "confirm_action",
     label: "Confirm Action",
     description:
       "Ask the user to confirm an action before executing it. Use this when you need explicit user approval for an operation.",

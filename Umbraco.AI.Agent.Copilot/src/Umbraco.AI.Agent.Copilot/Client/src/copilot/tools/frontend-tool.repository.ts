@@ -17,20 +17,22 @@ export class UaiFrontendToolRepository
     }
 
     /**
-     * Get all available frontend tools (tools with api property).
+     * Get all available frontend tools (tools with parameters defined).
+     * Backend tools don't define parameters - they come from the server.
      * @returns Array of frontend tool metadata
      */
     async getTools(): Promise<UaiFrontendToolData[]> {
-        const allManifests = umbExtensionsRegistry.getByType('uaiAgentTool') as ManifestUaiAgentTool[];
 
-        // Filter to only tools with api (frontend execution)
-        const frontendToolManifests = allManifests.filter((m) => m.api);
+        const frontendToolManifests = umbExtensionsRegistry.getByTypeAndFilter<
+          "uaiAgentTool",
+          ManifestUaiAgentTool
+        >("uaiAgentTool", (m) => Boolean(m.api));
 
         return frontendToolManifests.map((m) => ({
             id: m.meta.toolName,
             name: m.meta.label || m.meta.toolName,
             description: m.meta.description || '',
-            scopeId: 'frontend', // All copilot tools use 'frontend' scope
+            scopeId: m.meta.scope || 'general', // Read scope from manifest, default to 'general'
         }));
     }
 }

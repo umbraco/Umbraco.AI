@@ -21,6 +21,7 @@ const setPropertyValueManifest: ManifestUaiAgentTool = {
 			"Only supports TextBox and TextArea properties. " +
 			"Use the entity context to see available properties and their current values.",
 		icon: "icon-edit",
+		scope: "entity-write",
 		parameters: {
 			type: "object",
 			properties: {

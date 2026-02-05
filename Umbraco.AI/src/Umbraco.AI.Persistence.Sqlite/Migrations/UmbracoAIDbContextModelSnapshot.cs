@@ -278,9 +278,6 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.Property<int>("Capability")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("DetailLevel")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime?>("EndTime")
                         .HasColumnType("TEXT");
 
@@ -593,6 +590,41 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                     b.ToTable("umbracoAIProfile", (string)null);
                 });
 
+            modelBuilder.Entity("Umbraco.AI.Persistence.Settings.AISettingsEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("umbracoAISettings", (string)null);
+                });
+
             modelBuilder.Entity("Umbraco.AI.Persistence.Versioning.AIEntityVersionEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -632,41 +664,6 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("umbracoAIEntityVersion", (string)null);
-                });
-
-            modelBuilder.Entity("Umbraco.AI.Persistence.Settings.AISettingsEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("CreatedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("DateModified")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ModifiedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Key")
-                        .IsUnique();
-
-                    b.ToTable("umbracoAISettings", (string)null);
                 });
 
             modelBuilder.Entity("Umbraco.AI.Persistence.Context.AIContextResourceEntity", b =>

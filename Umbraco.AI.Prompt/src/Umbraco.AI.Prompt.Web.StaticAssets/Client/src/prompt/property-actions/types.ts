@@ -1,3 +1,5 @@
+import type { ManifestPropertyAction } from '@umbraco-cms/backoffice/property-action';
+
 /**
  * UI mode for prompt property actions.
  * - 'modal': Shows a centered dialog (default)
@@ -12,11 +14,11 @@ export type UaiPromptUiMode = 'modal' | 'panel';
  */
 export interface UaiScopeRule {
     /** Property Editor UI aliases to match (OR within array). Null/empty = any. */
-    propertyEditorUiAliases: string[] | null;
+    propertyEditorUiAliases?: string[] | null;
     /** Property aliases to match (OR within array). Null/empty = any. */
-    propertyAliases: string[] | null;
+    propertyAliases?: string[] | null;
     /** Content type aliases to match (OR within array). Null/empty = any. */
-    contentTypeAliases: string[] | null;
+    contentTypeAliases?: string[] | null;
 }
 
 /**
@@ -36,12 +38,14 @@ export interface UaiPromptRegistrationModel {
     unique: string;
     alias: string;
     name: string;
-    description: string | null;
+    description?: string | null;
     instructions: string;
-    profileId: string | null;
-    scope: UaiPromptScope | null;
+    profileId?: string | null;
+    scope?: UaiPromptScope | null;
     /** UI mode for the property action. Defaults to 'modal'. */
-    uiMode?: UaiPromptUiMode;
+    uiMode?: UaiPromptUiMode | null;
+    /** Whether the prompt is active and should be registered. */
+    isActive: boolean;
 }
 
 /**
@@ -112,4 +116,14 @@ export interface UaiPromptPreviewModalValue {
     content?: string;
     /** Property changes to apply to the entity. */
     propertyChanges?: UaiPromptPropertyChange[];
+}
+
+/**
+ * Entry for a prompt manifest pending registration.
+ * Weights are assigned at sync time based on alphabetical order.
+ */
+export interface PromptManifestEntry {
+    unique: string;
+    alias: string;
+    manifest: ManifestPropertyAction<UaiPromptPropertyActionMeta>;
 }

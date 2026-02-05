@@ -11,6 +11,7 @@ body:
       - Umbraco.AI.Anthropic
       - Umbraco.AI.Prompt
       - Umbraco.AI.Agent
+      - Umbraco.AI.Agent.Copilot
         - Other / Not sure
       description: "Select which product/add-on type that you'd like to see improvements on"
     validations:

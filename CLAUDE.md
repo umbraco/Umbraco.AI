@@ -281,6 +281,36 @@ On `hotfix/*` branches, the manifest is **optional**:
 - If present: Enforced the same way as release branches (explicit pack list)
 - If absent: Change detection is used automatically
 
+### Hotfix Change Detection
+
+On `hotfix/*` branches, the CI change detection uses **per-product tag-based comparison** to accurately identify which products have been hotfixed:
+
+**How it works:**
+- For each product, finds the most recent release tag (e.g., `Umbraco.AI@1.0.0`)
+- Compares changes in that product's folder since its own tag
+- Only substantive changes trigger a rebuild (excludes `CHANGELOG.md`, `version.json`)
+- Falls back to merge-base with main if no tag exists (new products)
+
+**Example workflow:**
+```bash
+# Hotfix an old version
+git checkout Umbraco.AI@1.0.0
+git checkout -b hotfix/fix-critical-bug
+# Make fix in Umbraco.AI/
+git commit -m "fix(core): Fix critical bug"
+
+# CI automatically detects:
+# - Umbraco.AI changed (diff since Umbraco.AI@1.0.0)
+# - Other products unchanged (diff since their respective tags)
+```
+
+**Multi-product hotfixes:**
+- If products were released together, use one hotfix branch
+- If products are at different points in history, use separate hotfix branches
+- Each product always compares against its own latest release tag
+
+This ensures hotfix builds only include changes since the last release of each product, regardless of unreleased changes on main.
+
 ### Release Pipeline Artifacts
 
 The CI build produces the following artifacts for deployment:

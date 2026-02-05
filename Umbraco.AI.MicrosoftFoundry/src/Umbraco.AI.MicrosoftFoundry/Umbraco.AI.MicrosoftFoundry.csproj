@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Title>Umbraco AI Microsoft Foundry Provider</Title>
     <Description>Microsoft AI Foundry provider for Umbraco AI</Description>
+    <PackageTags>umbraco ai microsoft foundry umbraco-marketplace</PackageTags>
     <StaticWebAssetBasePath>App_Plugins/UmbracoAIMicrosoftFoundry</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>

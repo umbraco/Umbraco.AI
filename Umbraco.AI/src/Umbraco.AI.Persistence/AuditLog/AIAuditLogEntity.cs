@@ -126,11 +126,6 @@ internal class AIAuditLogEntity
     public string? ResponseSnapshot { get; set; }
 
     /// <summary>
-    /// Gets or sets the detail level.
-    /// </summary>
-    public int DetailLevel { get; set; }
-
-    /// <summary>
     /// Gets or sets the parent audit-log ID if this audit-log was triggered within another audit-log context.
     /// </summary>
     public Guid? ParentAuditLogId { get; set; }

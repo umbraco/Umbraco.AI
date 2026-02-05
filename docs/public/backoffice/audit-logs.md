@@ -72,13 +72,13 @@ Click a log entry to view full details:
 
 ### Content (if captured)
 
-Depending on the detail level configuration:
+Depending on the configuration:
 
-- **Prompt snapshot** - The actual request sent
-- **Response snapshot** - The AI's response
+- **Prompt snapshot** - The actual request sent (if `PersistPrompts` is enabled)
+- **Response snapshot** - The AI's response (if `PersistResponses` is enabled)
 
 {% hint style="info" %}
-Content snapshots are only available when the detail level is set to "Full" in configuration.
+Content snapshots are controlled by the `PersistPrompts` and `PersistResponses` configuration options. Both default to true.
 {% endhint %}
 
 ## Status Values

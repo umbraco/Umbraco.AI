@@ -137,11 +137,6 @@ public sealed class AIAuditLog
     public string? ResponseSnapshot { get; set; }
 
     /// <summary>
-    /// Gets the detail level configured for this audit-log.
-    /// </summary>
-    public AIAuditLogDetailLevel DetailLevel { get; init; }
-
-    /// <summary>
     /// Gets the parent audit-log ID if this audit-log was triggered within another audit-log context (e.g., agent calling another agent).
     /// </summary>
     public Guid? ParentAuditLogId { get; internal set; }

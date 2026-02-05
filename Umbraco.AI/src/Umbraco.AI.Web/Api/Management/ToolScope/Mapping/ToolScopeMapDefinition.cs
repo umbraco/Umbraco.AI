@@ -7,7 +7,7 @@ namespace Umbraco.AI.Web.Api.Management.ToolScope.Mapping;
 /// <summary>
 /// UmbracoMapper definitions for tool scope models.
 /// </summary>
-internal class ToolScopeMapDefinition : IMapDefinition
+public class ToolScopeMapDefinition : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)

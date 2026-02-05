@@ -14,6 +14,7 @@ import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
 import { UaiToolRepository } from '../../repository/tool.repository.js';
 import { UAI_ITEM_PICKER_MODAL } from '../../../core/modals/item-picker/item-picker-modal.token.js';
 import type { UaiPickableItemModel } from '../../../core/modals/item-picker/types.js';
+import type { UaiFrontendToolData } from '../../frontend-tool-repository.js';
 import { toCamelCase } from '../../utils.js';
 
 const elementName = 'uai-tool-picker';
@@ -52,6 +53,13 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
      */
     @property({ type: Boolean, reflect: true })
     public readonly = false;
+
+    /**
+     * Optional frontend tools to include alongside server-fetched tools.
+     * These tools will be combined with the backend tools when displaying the picker.
+     */
+    @property({ type: Array, attribute: false })
+    public frontendTools?: UaiFrontendToolData[];
 
     /**
      * The selected tool ID(s).
@@ -108,10 +116,19 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         const { data, error } = await this.#toolRepository.getTools();
 
         if (!error && data) {
+            // Combine backend and frontend tools
+            const allTools = [...data, ...(this.frontendTools ?? []).map(ft => ({
+                id: ft.id,
+                name: ft.name,
+                description: ft.description,
+                scopeId: ft.scopeId,
+                isDestructive: false,
+            }))];
+
             // Preserve selection order
             this._items = this._selection
                 .map(id => {
-                    const tool = data.find(t => t.id.toLowerCase() === id.toLowerCase());
+                    const tool = allTools.find(t => t.id.toLowerCase() === id.toLowerCase());
                     if (!tool) return undefined;
 
                     const camelCaseId = toCamelCase(tool.id);
@@ -160,8 +177,17 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
 
         if (!data) return [];
 
+        // Combine backend and frontend tools
+        const allTools = [...data, ...(this.frontendTools ?? []).map(ft => ({
+            id: ft.id,
+            name: ft.name,
+            description: ft.description,
+            scopeId: ft.scopeId,
+            isDestructive: false,
+        }))];
+
         // Filter out already selected items
-        return data
+        return allTools
             .filter(tool => !this._selection.some(id => id.toLowerCase() === tool.id.toLowerCase()))
             .map(tool => {
                 const camelCaseId = toCamelCase(tool.id);

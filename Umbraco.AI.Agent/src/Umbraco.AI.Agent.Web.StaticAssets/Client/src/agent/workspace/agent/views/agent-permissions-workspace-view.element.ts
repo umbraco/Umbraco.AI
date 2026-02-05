@@ -2,6 +2,8 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
+import type { UaiFrontendToolRepositoryApi, UaiFrontendToolData } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
@@ -17,6 +19,9 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
     @state()
     private _model?: UaiAgentDetailModel;
 
+    @state()
+    private _frontendTools: UaiFrontendToolData[] = [];
+
     constructor() {
         super();
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
@@ -27,6 +32,32 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                 });
             }
         });
+        this.#loadFrontendTools();
+    }
+
+    async #loadFrontendTools() {
+        try {
+            // Find the repository manifest
+            const manifests = umbExtensionsRegistry.getByType('repository');
+            const repositoryManifest = manifests.find(m => m.alias === 'Uai.Repository.FrontendTool');
+
+            if (repositoryManifest && 'api' in repositoryManifest && repositoryManifest.api) {
+                // Load and instantiate the repository
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const module = await (repositoryManifest.api as any)();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const RepositoryClass = (module as any).api || (module as any).default;
+
+                if (RepositoryClass) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const repository = new RepositoryClass(this) as UaiFrontendToolRepositoryApi;
+                    this._frontendTools = await repository.getTools();
+                }
+            }
+        } catch {
+            // Repository not available (e.g., Copilot not installed)
+            this._frontendTools = [];
+        }
     }
 
     #onAllowedToolScopeIdsChange(event: UmbChangeEvent) {
@@ -72,6 +103,7 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                     <uai-tool-picker
                         slot="editor"
                         .value=${this._model.allowedToolIds}
+                        .frontendTools=${this._frontendTools}
                         @change=${this.#onAllowedToolIdsChange}
                     ></uai-tool-picker>
                 </umb-property-layout>

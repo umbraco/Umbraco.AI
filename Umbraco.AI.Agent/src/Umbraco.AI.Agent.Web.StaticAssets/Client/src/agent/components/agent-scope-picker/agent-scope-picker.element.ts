@@ -15,9 +15,9 @@ import { tryExecute } from '@umbraco-cms/backoffice/resources';
 import { AgentsService } from '../../../api/sdk.gen.js';
 import { UAI_ITEM_PICKER_MODAL, type UaiPickableItemModel } from '@umbraco-ai/core';
 
-const elementName = 'uai-scope-picker';
+const elementName = 'uai-agent-scope-picker';
 
-interface UaiScopeItemModel {
+interface UaiAgentScopeItemModel {
     id: string;
     icon: string;
     name: string;
@@ -25,7 +25,7 @@ interface UaiScopeItemModel {
 }
 
 @customElement(elementName)
-export class UaiScopePickerElement extends UmbFormControlMixin<
+export class UaiAgentScopePickerElement extends UmbFormControlMixin<
     string | string[] | undefined,
     typeof UmbLitElement,
     undefined
@@ -43,7 +43,7 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
     public readonly = false;
 
     /**
-     * The selected scope ID(s).
+     * The selected agent scope ID(s).
      * - Single mode: string | undefined
      * - Multiple mode: string[] | undefined
      */
@@ -59,7 +59,7 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
     private _selection: string[] = [];
 
     @state()
-    private _items: UaiScopeItemModel[] = [];
+    private _items: UaiAgentScopeItemModel[] = [];
 
     @state()
     private _loading = false;
@@ -115,7 +115,7 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
                         description: this.localize.term(`uaiAgentScope_${scope.id}Description`) || '',
                     };
                 })
-                .filter((item): item is UaiScopeItemModel => item !== undefined);
+                .filter((item): item is UaiAgentScopeItemModel => item !== undefined);
         }
 
         this._loading = false;
@@ -215,7 +215,7 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
         `;
     }
 
-    #renderItem(item: UaiScopeItemModel) {
+    #renderItem(item: UaiAgentScopeItemModel) {
         return html`
             <uui-ref-node
                 name=${item.name}
@@ -289,10 +289,10 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
     ];
 }
 
-export default UaiScopePickerElement;
+export default UaiAgentScopePickerElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        [elementName]: UaiScopePickerElement;
+        [elementName]: UaiAgentScopePickerElement;
     }
 }

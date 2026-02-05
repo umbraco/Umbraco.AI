@@ -1507,7 +1507,7 @@ export type GetAllToolScopesData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/tool-scopes';
+    url: '/umbraco/ai/management/api/v1/tools/scopes';
 };
 
 export type GetAllToolScopesErrors = {

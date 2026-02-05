@@ -555,7 +555,7 @@ export class SettingsService {
     }
 }
 
-export class ToolScopesService {
+export class ToolsService {
     public static getAllToolScopes<ThrowOnError extends boolean = false>(options?: Options<GetAllToolScopesData, ThrowOnError>) {
         return (options?.client ?? client).get<GetAllToolScopesResponses, GetAllToolScopesErrors, ThrowOnError>({
             security: [
@@ -564,7 +564,7 @@ export class ToolScopesService {
                     type: 'http'
                 }
             ],
-            url: '/umbraco/ai/management/api/v1/tool-scopes',
+            url: '/umbraco/ai/management/api/v1/tools/scopes',
             ...options
         });
     }

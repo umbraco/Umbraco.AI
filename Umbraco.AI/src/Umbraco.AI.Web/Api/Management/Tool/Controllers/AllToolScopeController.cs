@@ -1,20 +1,22 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Umbraco.AI.Core.Tools.Scopes;
-using Umbraco.AI.Web.Api.Management.ToolScope.Models;
+using Umbraco.AI.Web.Api.Management.Tool.Models;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.Cms.Web.Common.Authorization;
 
-namespace Umbraco.AI.Web.Api.Management.ToolScope.Controllers;
+namespace Umbraco.AI.Web.Api.Management.Tool.Controllers;
 
 /// <summary>
 /// Controller to get all registered tool scopes.
 /// </summary>
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
-public class AllToolScopeController : ToolScopeControllerBase
+public class AllToolScopeController : ToolControllerBase
 {
     private readonly AIToolScopeCollection _toolScopes;
     private readonly IUmbracoMapper _umbracoMapper;
@@ -40,7 +42,7 @@ public class AllToolScopeController : ToolScopeControllerBase
     /// </remarks>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A list of all registered tool scopes.</returns>
-    [HttpGet]
+    [HttpGet("scopes")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<ToolScopeItemResponseModel>), StatusCodes.Status200OK)]
     public Task<ActionResult<IEnumerable<ToolScopeItemResponseModel>>> GetAllToolScopes(

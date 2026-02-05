@@ -1,13 +1,13 @@
 using Umbraco.AI.Core.Tools.Scopes;
-using Umbraco.AI.Web.Api.Management.ToolScope.Models;
+using Umbraco.AI.Web.Api.Management.Tool.Models;
 using Umbraco.Cms.Core.Mapping;
 
-namespace Umbraco.AI.Web.Api.Management.ToolScope.Mapping;
+namespace Umbraco.AI.Web.Api.Management.Tool.Mapping;
 
 /// <summary>
-/// UmbracoMapper definitions for tool scope models.
+/// UmbracoMapper definitions for tool models.
 /// </summary>
-public class ToolScopeMapDefinition : IMapDefinition
+public class ToolMapDefinition : IMapDefinition
 {
     /// <inheritdoc />
     public void DefineMaps(IUmbracoMapper mapper)

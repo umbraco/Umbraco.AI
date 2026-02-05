@@ -22,7 +22,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     constructor() {
         super();
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
-            if (context) { 
+            if (context) {
                 this.#workspaceContext = context;
                 this.observe(context.model, (model) => {
                     this._model = model;
@@ -153,7 +153,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             </uui-box>
             <uui-box headline="Tool Permissions">
                 <umb-property-layout
-                    label="Enabled Tool Scopes"
+                    label="Allowed Tool Scopes"
                     description="Select which tool scopes this agent can access. Tools belonging to these scopes will be enabled automatically. System tools are always available.">
                     <uai-tool-scope-picker
                         slot="editor"

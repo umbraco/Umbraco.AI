@@ -65,13 +65,26 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
     private _loading = false;
 
     #setValue(val: string | string[] | undefined) {
-        if (!val) {
-            this._selection = [];
+        // Normalize to array for comparison
+        const newSelection = !val ? [] : (Array.isArray(val) ? val : [val]);
+
+        // Check if selection actually changed
+        const hasChanged =
+            newSelection.length !== this._selection.length ||
+            newSelection.some((id, index) => id !== this._selection[index]);
+
+        if (!hasChanged) {
+            // Value hasn't changed, skip update
+            return;
+        }
+
+        this._selection = newSelection;
+
+        if (newSelection.length === 0) {
             this._items = [];
             return;
         }
-        // Normalize to array internally
-        this._selection = Array.isArray(val) ? val : [val];
+
         this.#loadItems();
     }
 

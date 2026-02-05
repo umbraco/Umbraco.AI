@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Umbraco.AI.Web.Api.Management.ToolScope.Models;
+namespace Umbraco.AI.Web.Api.Management.Tool.Models;
 
 /// <summary>
 /// Lightweight response model for a tool scope (used in lists).

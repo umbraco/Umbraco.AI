@@ -18,7 +18,7 @@ using Umbraco.AI.Web.Api.Management.Embedding.Mapping;
 using Umbraco.AI.Web.Api.Management.Profile.Mapping;
 using Umbraco.AI.Web.Api.Management.Provider.Mapping;
 using Umbraco.AI.Web.Api.Management.Settings.Mapping;
-using Umbraco.AI.Web.Api.Management.ToolScope.Mapping;
+using Umbraco.AI.Web.Api.Management.Tool.Mapping;
 using Umbraco.Cms.Api.Common.OpenApi;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
@@ -57,7 +57,7 @@ public static class UmbracoBuilderExtensions
             .Add<AuditLogMapDefinition>()
             .Add<UsageMapDefinition>()
             .Add<SettingsMapDefinition>()
-            .Add<ToolScopeMapDefinition>();
+            .Add<ToolMapDefinition>();
 
         return builder;
     }

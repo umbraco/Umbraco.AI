@@ -279,7 +279,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 									<uui-ref-node
 										name=${this._userGroupNames.get(id) ?? id}
 										detail=${this.config.display.renderSummary(settings)}
-										@click=${this.readonly ? undefined : () => this._editUserGroup(id)}>
+										@open=${this.readonly ? undefined : () => this._editUserGroup(id)}>
 										<umb-icon slot="icon" name="icon-users"></umb-icon>
 										<div slot="tag" class="tags">
                                             ${this.config.display.renderTags ? this.config.display.renderTags(settings) : nothing}
@@ -327,15 +327,6 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 		css`
 			:host {
 				display: block;
-			}
-
-			uui-box {
-				margin-bottom: var(--uui-size-space-4);
-			}
-
-			p {
-				margin: var(--uui-size-space-4) 0;
-				color: var(--uui-color-text-alt);
 			}
 
             .tags {

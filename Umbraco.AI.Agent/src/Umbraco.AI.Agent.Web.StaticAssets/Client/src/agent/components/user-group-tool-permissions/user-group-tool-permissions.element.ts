@@ -87,6 +87,96 @@ export class UaiUserGroupToolPermissionsElement extends UmbLitElement {
 	}
 
 	/**
+	 * Lifecycle hook to clean up orphaned overrides when agent defaults change.
+	 */
+	override updated(changedProperties: Map<string, unknown>): void {
+		super.updated(changedProperties);
+
+		// Clean up orphaned overrides when agent defaults change
+		if (changedProperties.has("agentDefaults")) {
+			const oldDefaults = changedProperties.get("agentDefaults") as typeof this.agentDefaults | undefined;
+			if (oldDefaults) {
+				const cleaned = this._cleanupOrphanedOverrides(this.value, oldDefaults, this.agentDefaults);
+				if (cleaned) {
+					this.value = cleaned.value;
+					if (cleaned.changed) {
+						this.dispatchEvent(new UmbChangeEvent());
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Clean up orphaned overrides when agent defaults change.
+	 * Returns { value, changed } where changed indicates if any cleanup occurred.
+	 */
+	private _cleanupOrphanedOverrides(
+		permissions: UaiUserGroupPermissionsMap,
+		_oldDefaults: typeof this.agentDefaults,
+		newDefaults: typeof this.agentDefaults
+	): { value: UaiUserGroupPermissionsMap; changed: boolean } | null {
+		let hasChanges = false;
+		const cleaned: UaiUserGroupPermissionsMap = {};
+
+		// Get sets for efficient lookup
+		const newAllowedToolIds = new Set(newDefaults.allowedToolIds.map((id) => id.toLowerCase()));
+		const newAllowedScopeIds = new Set(newDefaults.allowedToolScopeIds.map((id) => id.toLowerCase()));
+
+		for (const [userGroupId, userGroupPerms] of Object.entries(permissions)) {
+			const cleanedPerms: UaiUserGroupPermissionsModel = { ...userGroupPerms };
+
+			// Clean up denied tool IDs (remove if no longer in base allowed list)
+			if (cleanedPerms.deniedToolIds && cleanedPerms.deniedToolIds.length > 0) {
+				const filteredDenied = cleanedPerms.deniedToolIds.filter((toolId) =>
+					newAllowedToolIds.has(toolId.toLowerCase())
+				);
+				if (filteredDenied.length !== cleanedPerms.deniedToolIds.length) {
+					cleanedPerms.deniedToolIds = filteredDenied;
+					hasChanges = true;
+				}
+			}
+
+			// Clean up denied scope IDs (remove if no longer in base allowed list)
+			if (cleanedPerms.deniedToolScopeIds && cleanedPerms.deniedToolScopeIds.length > 0) {
+				const filteredDenied = cleanedPerms.deniedToolScopeIds.filter((scopeId) =>
+					newAllowedScopeIds.has(scopeId.toLowerCase())
+				);
+				if (filteredDenied.length !== cleanedPerms.deniedToolScopeIds.length) {
+					cleanedPerms.deniedToolScopeIds = filteredDenied;
+					hasChanges = true;
+				}
+			}
+
+			// Clean up allowed tool IDs (remove if now in base allowed list - they're inherited)
+			if (cleanedPerms.allowedToolIds && cleanedPerms.allowedToolIds.length > 0) {
+				const filteredAllowed = cleanedPerms.allowedToolIds.filter(
+					(toolId) => !newAllowedToolIds.has(toolId.toLowerCase())
+				);
+				if (filteredAllowed.length !== cleanedPerms.allowedToolIds.length) {
+					cleanedPerms.allowedToolIds = filteredAllowed;
+					hasChanges = true;
+				}
+			}
+
+			// Clean up allowed scope IDs (remove if now in base allowed list - they're inherited)
+			if (cleanedPerms.allowedToolScopeIds && cleanedPerms.allowedToolScopeIds.length > 0) {
+				const filteredAllowed = cleanedPerms.allowedToolScopeIds.filter(
+					(scopeId) => !newAllowedScopeIds.has(scopeId.toLowerCase())
+				);
+				if (filteredAllowed.length !== cleanedPerms.allowedToolScopeIds.length) {
+					cleanedPerms.allowedToolScopeIds = filteredAllowed;
+					hasChanges = true;
+				}
+			}
+
+			cleaned[userGroupId] = cleanedPerms;
+		}
+
+		return hasChanges ? { value: cleaned, changed: true } : null;
+	}
+
+	/**
 	 * Handle change event from user-group-settings-list.
 	 */
 	private _onChange(event: UmbChangeEvent): void {

@@ -4,7 +4,6 @@ import {
 	html,
 	nothing,
 	state,
-	when,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import type {

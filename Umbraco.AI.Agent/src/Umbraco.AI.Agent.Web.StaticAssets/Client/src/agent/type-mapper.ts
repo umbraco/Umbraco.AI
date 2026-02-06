@@ -20,6 +20,7 @@ export const UaiAgentTypeMapper = {
             scopeIds: response.scopeIds ?? [],
             allowedToolIds: response.allowedToolIds ?? [],
             allowedToolScopeIds: response.allowedToolScopeIds ?? [],
+            userGroupPermissions: response.userGroupPermissions ?? {},
             instructions: response.instructions ?? null,
             isActive: response.isActive,
             dateCreated: response.dateCreated,
@@ -56,6 +57,7 @@ export const UaiAgentTypeMapper = {
             scopeIds: model.scopeIds,
             allowedToolIds: model.allowedToolIds,
             allowedToolScopeIds: model.allowedToolScopeIds,
+            userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
         };
     },
@@ -70,6 +72,7 @@ export const UaiAgentTypeMapper = {
             scopeIds: model.scopeIds,
             allowedToolIds: model.allowedToolIds,
             allowedToolScopeIds: model.allowedToolScopeIds,
+            userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
             isActive: model.isActive,
         };

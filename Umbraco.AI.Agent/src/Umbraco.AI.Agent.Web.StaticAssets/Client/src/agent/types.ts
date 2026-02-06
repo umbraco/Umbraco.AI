@@ -1,4 +1,5 @@
 import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
+import type { UaiUserGroupPermissionsMap } from "./user-group-permissions.js";
 
 /**
  * Detail model for workspace editing.
@@ -14,6 +15,7 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     scopeIds: string[];
     allowedToolIds: string[];
     allowedToolScopeIds: string[];
+    userGroupPermissions: UaiUserGroupPermissionsMap;
     instructions: string | null;
     isActive: boolean;
     dateCreated: string | null;

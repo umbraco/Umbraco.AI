@@ -69,6 +69,17 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onUserGroupPermissionsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const component = event.target as any;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
+                { userGroupPermissions: component.value },
+                "userGroupPermissions"
+            )
+        );
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -96,6 +107,14 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                         @change=${this.#onAllowedToolIdsChange}
                     ></uai-tool-picker>
                 </umb-property-layout>
+                <uai-user-group-tool-permissions
+                    .value=${this._model.userGroupPermissions}
+                    .agentDefaults=${{
+                        allowedToolIds: this._model.allowedToolIds,
+                        allowedToolScopeIds: this._model.allowedToolScopeIds
+                    }}
+                    @change=${this.#onUserGroupPermissionsChange}
+                ></uai-user-group-tool-permissions>
             </uui-box>
         `;
     }

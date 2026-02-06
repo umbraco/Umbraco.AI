@@ -57,6 +57,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ScopeIds = source.ScopeIds?.ToList() ?? [];
         target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
         target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
+        target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
         target.Instructions = source.Instructions;
         target.IsActive = true;
     }
@@ -72,6 +73,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ScopeIds = source.ScopeIds?.ToList() ?? [];
         target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
         target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
+        target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
     }
@@ -88,6 +90,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ScopeIds = source.ScopeIds;
         target.AllowedToolIds = source.AllowedToolIds;
         target.AllowedToolScopeIds = source.AllowedToolScopeIds;
+        target.UserGroupPermissions = MapUserGroupPermissionsToResponse(source.UserGroupPermissions);
         target.Instructions = source.Instructions;
         target.IsActive = source.IsActive;
         target.DateCreated = source.DateCreated;
@@ -116,5 +119,49 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
     {
         target.Id = source.Id;
         target.Icon = source.Icon;
+    }
+
+    /// <summary>
+    /// Maps user group permissions from request models to domain models.
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> MapUserGroupPermissionsFromRequest(
+        Dictionary<Guid, AIAgentUserGroupPermissionsModel>? source)
+    {
+        if (source is null || source.Count == 0)
+        {
+            return new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        }
+
+        return source.ToDictionary(
+            kvp => kvp.Key,
+            kvp => new AIAgentUserGroupPermissions
+            {
+                AllowedToolIds = kvp.Value.AllowedToolIds.ToList(),
+                AllowedToolScopeIds = kvp.Value.AllowedToolScopeIds.ToList(),
+                DeniedToolIds = kvp.Value.DeniedToolIds.ToList(),
+                DeniedToolScopeIds = kvp.Value.DeniedToolScopeIds.ToList()
+            });
+    }
+
+    /// <summary>
+    /// Maps user group permissions from domain models to response models.
+    /// </summary>
+    private static Dictionary<Guid, AIAgentUserGroupPermissionsModel> MapUserGroupPermissionsToResponse(
+        IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> source)
+    {
+        if (source.Count == 0)
+        {
+            return [];
+        }
+
+        return source.ToDictionary(
+            kvp => kvp.Key,
+            kvp => new AIAgentUserGroupPermissionsModel
+            {
+                AllowedToolIds = kvp.Value.AllowedToolIds,
+                AllowedToolScopeIds = kvp.Value.AllowedToolScopeIds,
+                DeniedToolIds = kvp.Value.DeniedToolIds,
+                DeniedToolScopeIds = kvp.Value.DeniedToolScopeIds
+            });
     }
 }

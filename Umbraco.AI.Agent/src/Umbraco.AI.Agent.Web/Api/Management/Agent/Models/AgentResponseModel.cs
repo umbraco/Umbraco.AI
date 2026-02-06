@@ -55,6 +55,12 @@ public class AgentResponseModel
     public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
 
     /// <summary>
+    /// User group-specific permission overrides.
+    /// Dictionary key is UserGroupId (Guid).
+    /// </summary>
+    public Dictionary<Guid, AIAgentUserGroupPermissionsModel> UserGroupPermissions { get; set; } = [];
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

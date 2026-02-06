@@ -58,6 +58,12 @@ public class UpdateAgentRequestModel
     public IEnumerable<string>? AllowedToolScopeIds { get; init; }
 
     /// <summary>
+    /// User group-specific permission overrides.
+    /// Dictionary key is UserGroupId (Guid).
+    /// </summary>
+    public Dictionary<Guid, AIAgentUserGroupPermissionsModel>? UserGroupPermissions { get; init; }
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; init; }

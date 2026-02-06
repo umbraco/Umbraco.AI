@@ -130,19 +130,33 @@ export class UaiAgentRepository extends UmbControllerBase {
      * Async helper to fetch and update agent state.
      */
     async #handleAgentUpdate(unique: string): Promise<void> {
-        // Fetch all agents to find the updated one
-        const { data, error } = await this.fetchActiveAgents({ take: 100 });
+        // Fetch the specific agent by ID
+        const { data, error } = await tryExecute(
+            this,
+            AgentsService.getAgentByIdOrAlias({
+                path: {
+                    agentIdOrAlias: unique,
+                },
+            }),
+        );
 
-        if (error || !data) {
+        if (error) {
             console.warn("[UaiAgentRepository] Failed to fetch agent:", error);
+            // If agent not found (404), remove from state
+            this.#removeEntry(unique);
             return;
         }
 
-        // Find the specific agent
-        const agent = data.items.find((a) => a.unique === unique);
+        if (!data) {
+            this.#removeEntry(unique);
+            return;
+        }
 
-        // Remove if not found or not active
-        if (!agent || !agent.isActive) {
+        // Map to item model
+        const agent = UaiAgentTypeMapper.toItemModel(data);
+
+        // Remove if not active
+        if (!agent.isActive) {
             this.#removeEntry(unique);
             return;
         }

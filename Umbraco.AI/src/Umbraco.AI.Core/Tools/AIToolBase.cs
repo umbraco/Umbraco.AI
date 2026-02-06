@@ -41,7 +41,7 @@ public abstract class AIToolBasic
     /// Gets the arguments model type, if the tool uses strongly-typed args.
     /// </summary>
     public virtual Type? ArgsType => null;
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AIToolBase"/> class.
     /// </summary>

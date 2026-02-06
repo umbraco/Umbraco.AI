@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -84,36 +86,67 @@ public class RunAgentController : AgentControllerBase
             });
         }
 
-        // Extract tool metadata from ForwardedProps
-        var toolMetadata = ExtractToolMetadata(request.ForwardedProps);
+        // Extract tool metadata from ForwardedProps and rejoin with tools
+        var frontendTools = CombineToolsWithMetadata(request.Tools, request.ForwardedProps);
 
-        // Convert to the format expected by the service
-        IReadOnlyDictionary<string, (string? Scope, bool IsDestructive)>? toolMetadataDict = null;
-        if (toolMetadata.Count > 0)
-        {
-            toolMetadataDict = toolMetadata.ToDictionary(
-                kvp => kvp.Key,
-                kvp => (kvp.Value.Scope, kvp.Value.IsDestructive),
-                StringComparer.OrdinalIgnoreCase);
-        }
-
-        // Delegate to service - handles tool creation with metadata, permission filtering, and streaming
+        // Delegate to service - handles tool creation, permission filtering, and streaming
         var events = _agentService.StreamAgentAsync(
             agentId.Value,
             request,
-            request.Tools,
-            toolMetadataDict,
+            frontendTools,
             cancellationToken);
 
         return new AGUIEventStreamResult(events);
     }
 
-    private Dictionary<string, ToolMetadata> ExtractToolMetadata(JsonElement? forwardedProps)
+    /// <summary>
+    /// Combines AG-UI tools with their metadata from ForwardedProps.
+    /// Extracts tool metadata (scope, isDestructive) from forwardedProps and rejoins with tool definitions.
+    /// </summary>
+    /// <param name="tools">AG-UI tool definitions from the request.</param>
+    /// <param name="forwardedProps">Forwarded properties containing tool metadata.</param>
+    /// <returns>List of frontend tools with metadata attached, or null if no tools provided.</returns>
+    private IEnumerable<AIFrontendTool>? CombineToolsWithMetadata(
+        IEnumerable<AGUITool>? tools,
+        JsonElement? forwardedProps)
+    {
+        if (tools is null)
+        {
+            return null;
+        }
+
+        // Extract metadata lookup
+        var metadataLookup = ExtractToolMetadataLookup(forwardedProps);
+
+        // Combine tools with their metadata
+        var frontendTools = new List<AIFrontendTool>();
+        foreach (var tool in tools)
+        {
+            // Get metadata for this tool (if available)
+            string? scope = null;
+            bool isDestructive = false;
+
+            if (metadataLookup.TryGetValue(tool.Name, out var metadata))
+            {
+                scope = metadata.Scope;
+                isDestructive = metadata.IsDestructive;
+            }
+
+            frontendTools.Add(new AIFrontendTool(tool, scope, isDestructive));
+        }
+
+        return frontendTools;
+    }
+
+    /// <summary>
+    /// Extracts tool metadata from ForwardedProps into a lookup dictionary.
+    /// </summary>
+    private Dictionary<string, ToolMetadataDto> ExtractToolMetadataLookup(JsonElement? forwardedProps)
     {
         if (forwardedProps is null ||
             !forwardedProps.Value.TryGetProperty("toolMetadata", out var metadataElement))
         {
-            return new Dictionary<string, ToolMetadata>(StringComparer.OrdinalIgnoreCase);
+            return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
         }
 
         try
@@ -123,21 +156,24 @@ public class RunAgentController : AgentControllerBase
 
             return metadataList.ToDictionary(
                 m => m.ToolName,
-                m => new ToolMetadata(m.Scope, m.IsDestructive),
+                m => m,
                 StringComparer.OrdinalIgnoreCase);
         }
         catch
         {
-            return new Dictionary<string, ToolMetadata>(StringComparer.OrdinalIgnoreCase);
+            return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
         }
     }
 
-    private record ToolMetadata(string? Scope, bool IsDestructive);
-
     private class ToolMetadataDto
     {
+        [JsonPropertyName("toolName")]
         public string ToolName { get; set; } = string.Empty;
+
+        [JsonPropertyName("scope")]
         public string? Scope { get; set; }
+
+        [JsonPropertyName("isDestructive")]
         public bool IsDestructive { get; set; }
     }
 }

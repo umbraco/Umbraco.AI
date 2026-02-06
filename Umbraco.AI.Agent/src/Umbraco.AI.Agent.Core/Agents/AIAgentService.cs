@@ -161,8 +161,7 @@ internal sealed class AIAgentService : IAIAgentService
     public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
         AGUIRunRequest request,
-        IEnumerable<AGUITool>? frontendToolDefinitions,
-        IReadOnlyDictionary<string, (string? Scope, bool IsDestructive)>? toolMetadata = null,
+        IEnumerable<AIFrontendTool>? frontendTools,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // 1. Resolve agent
@@ -187,50 +186,43 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
-        // 2. Convert AG-UI context and create frontend tools with metadata
+        // 2. Convert AG-UI context and create frontend tools with permission filtering
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
 
         // Get allowed tool IDs for permission checking (uses current user's groups)
         var allowedToolIds = await GetAllowedToolIdsAsync(agent, userGroupIds: null, cancellationToken);
 
-        // Convert AGUITools to AIFrontendToolFunction with metadata and filter by permissions
+        // Convert AIFrontendTools to AIFrontendToolFunction and filter by permissions
         IList<AITool>? convertedFrontendTools = null;
-        if (frontendToolDefinitions is not null)
+        if (frontendTools is not null)
         {
             var tools = new List<AITool>();
 
-            foreach (var tool in frontendToolDefinitions)
+            foreach (var frontendTool in frontendTools)
             {
-                // Get metadata for this tool
-                string? scope = null;
-                bool isDestructive = false;
-                if (toolMetadata?.TryGetValue(tool.Name, out var metadata) == true)
-                {
-                    scope = metadata.Scope;
-                    isDestructive = metadata.IsDestructive;
-                }
-
-                // Create AIFrontendToolFunction with metadata
-                var frontendTool = new Chat.AIFrontendToolFunction(tool, scope, isDestructive);
+                // Create AIFrontendToolFunction with metadata already attached
+                var toolFunction = new Chat.AIFrontendToolFunction(
+                    frontendTool.Tool,
+                    frontendTool.Scope,
+                    frontendTool.IsDestructive);
 
                 // Check if tool is permitted
                 bool isPermitted = false;
 
                 // Check if tool ID is explicitly allowed
-                if (allowedToolIds.Contains(tool.Name, StringComparer.OrdinalIgnoreCase))
+                if (allowedToolIds.Contains(frontendTool.Tool.Name, StringComparer.OrdinalIgnoreCase))
                 {
                     isPermitted = true;
                 }
                 // Check if tool has scope and scope is allowed
-                else if (scope is not null &&
-                         agent.AllowedToolScopeIds.Contains(scope, StringComparer.OrdinalIgnoreCase))
+                else if (frontendTool.Scope is not null && agent.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase))
                 {
                     isPermitted = true;
                 }
 
                 if (isPermitted)
                 {
-                    tools.Add(frontendTool);
+                    tools.Add(toolFunction);
                 }
             }
 

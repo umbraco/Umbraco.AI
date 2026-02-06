@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Tools.Scopes;
 
 namespace Umbraco.AI.Core.Tools.Context;
 
@@ -18,7 +19,7 @@ public record GetContextResourceArgs(
 /// This tool is dynamically injected when OnDemand resources are available.
 /// Use list_context_resources first to see what's available.
 /// </remarks>
-[AITool("get_context_resource", "Get Context Resource", ScopeId = "navigation")]
+[AITool("get_context_resource", "Get Context Resource", ScopeId = NavigationScope.ScopeId)]
 public class GetContextResourceTool : AIToolBase<GetContextResourceArgs>, IAISystemTool
 {
     private readonly IAIContextAccessor _contextAccessor;

@@ -1,4 +1,5 @@
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Tools.Scopes;
 
 namespace Umbraco.AI.Core.Tools.Context;
 
@@ -9,7 +10,7 @@ namespace Umbraco.AI.Core.Tools.Context;
 /// This tool is dynamically injected when OnDemand resources are available.
 /// It lists resources that the LLM can retrieve using the GetContextResource tool.
 /// </remarks>
-[AITool("list_context_resources", "List Context Resources", ScopeId = "navigation")]
+[AITool("list_context_resources", "List Context Resources", ScopeId = NavigationScope.ScopeId)]
 public class ListContextResourcesTool : AIToolBase, IAISystemTool
 {
     private readonly IAIContextAccessor _contextAccessor;

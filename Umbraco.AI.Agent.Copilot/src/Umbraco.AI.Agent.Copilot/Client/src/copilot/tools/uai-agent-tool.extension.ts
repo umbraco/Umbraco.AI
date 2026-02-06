@@ -149,6 +149,11 @@ export interface ManifestUaiAgentTool extends ManifestElementAndApi<UaiAgentTool
          */
         scope?: string;
         /**
+         * Whether the tool performs destructive operations (e.g., delete, publish, modify data).
+         * Used for permission filtering - agents can be configured to block destructive tools.
+         */
+        isDestructive?: boolean;
+        /**
          * HITL approval configuration.
          * When specified, tool pauses for user approval before execution.
          * - `true` - Use default approval element with localized defaults

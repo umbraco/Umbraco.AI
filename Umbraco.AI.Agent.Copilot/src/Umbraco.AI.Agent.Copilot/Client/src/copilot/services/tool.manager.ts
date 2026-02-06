@@ -5,7 +5,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { BehaviorSubject } from "@umbraco-cms/backoffice/external/rxjs";
 import type { UaiToolCallInfo } from "../types.js";
 import { ManifestUaiAgentTool, UaiAgentToolApi, UaiAgentToolElement } from "../tools";
-import { type AGUITool } from "@umbraco-ai/agent";
+import { type UaiFrontendTool } from "@umbraco-ai/agent";
 
 /** Element constructor type for tool UI components */
 type UaiToolElementConstructor = new () => UaiAgentToolElement;
@@ -25,7 +25,7 @@ export class UaiToolManager extends UmbControllerBase {
     #toolManifests = new BehaviorSubject<Map<string, ManifestUaiAgentTool>>(new Map());
     #apiCache: Map<string, UaiAgentToolApi> = new Map();
     #elementCache: Map<string, UaiToolElementConstructor> = new Map();
-    #frontendTools = new BehaviorSubject<AGUITool[]>([]);
+    #frontendTools = new BehaviorSubject<UaiFrontendTool[]>([]);
 
     /**
      * Observable stream of frontend-executable tools.
@@ -34,11 +34,11 @@ export class UaiToolManager extends UmbControllerBase {
     readonly frontendTools$ = this.#frontendTools.asObservable();
 
     /**
-     * Get the current snapshot of frontend-executable tools in AG-UI format.
+     * Get the current snapshot of frontend-executable tools with metadata.
      * These are tools with an `api` property that can be executed in the browser.
-     * @returns Array of AG-UI tool definitions for the LLM
+     * @returns Array of UaiFrontendTool definitions with scope and permission metadata
      */
-    get frontendTools(): AGUITool[] {
+    get frontendTools(): UaiFrontendTool[] {
         return [...this.#frontendTools.value];
     }
 
@@ -57,18 +57,21 @@ export class UaiToolManager extends UmbControllerBase {
      */
     #updateTools(manifests: ManifestUaiAgentTool[]) {
         const manifestMap = new Map<string, ManifestUaiAgentTool>();
-        const frontendTools: AGUITool[] = [];
+        const frontendTools: UaiFrontendTool[] = [];
 
         for (const manifest of manifests) {
             // Store ALL manifests (for rendering and element lookup)
             manifestMap.set(manifest.meta.toolName, manifest);
 
-            // Only add frontend-executable tools (with api) to AG-UI tools list
+            // Only add frontend-executable tools (with api) to frontend tools list
             if (manifest.api !== undefined) {
                 frontendTools.push({
                     name: manifest.meta.toolName,
                     description: manifest.meta.description ?? "",
                     parameters: manifest.meta.parameters ?? { type: "object", properties: {} },
+                    // Add metadata fields for permission filtering
+                    scope: manifest.meta.scope,
+                    isDestructive: manifest.meta.isDestructive ?? false,
                 });
             }
         }

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using Examine;
 using Examine.Search;
+
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
@@ -30,7 +32,7 @@ public record SearchUmbracoArgs(
 /// <summary>
 /// Tool that searches Umbraco content and media using Examine.
 /// </summary>
-[AITool("search_umbraco", "Search Umbraco", ScopeId = "search")]
+[AITool("search_umbraco", "Search Umbraco", ScopeId = SearchScope.ScopeId)]
 public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 {
     private const string ExternalIndexName = "ExternalIndex";

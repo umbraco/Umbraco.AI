@@ -238,12 +238,12 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
                 grid-template-columns: auto 1fr;
                 gap: var(--uui-size-space-4);
                 align-items: start;
+                margin-bottom: var(--uui-size-space-2);
             }
 
             .scope-label {
                 display: flex;
                 flex-direction: column;
-                gap: var(--uui-size-space-1);
                 cursor: pointer;
             }
 

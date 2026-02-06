@@ -1,6 +1,6 @@
 ---
 description: >-
-  REST API endpoints for generating text embeddings.
+    REST API endpoints for generating text embeddings.
 ---
 
 # Embeddings API
@@ -28,9 +28,9 @@ All endpoints require backoffice authentication with the `Umb.AI.Management.Api`
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/embedding/generate` | [Generate embeddings](generate.md) |
+| Method | Endpoint              | Description                        |
+| ------ | --------------------- | ---------------------------------- |
+| POST   | `/embedding/generate` | [Generate embeddings](generate.md) |
 
 ## Response Model
 
@@ -51,21 +51,21 @@ All endpoints require backoffice authentication with the `Umb.AI.Management.Api`
 }
 ```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `embeddings` | array | List of embedding results |
-| `embeddings[].index` | int | Index of the input value (0-based) |
-| `embeddings[].vector` | float[] | The embedding vector |
+| Property              | Type    | Description                        |
+| --------------------- | ------- | ---------------------------------- |
+| `embeddings`          | array   | List of embedding results          |
+| `embeddings[].index`  | int     | Index of the input value (0-based) |
+| `embeddings[].vector` | float[] | The embedding vector               |
 
 ## Vector Dimensions
 
 The vector size depends on the embedding model configured in your profile:
 
-| Model | Dimensions |
-|-------|------------|
-| text-embedding-3-small | 1536 |
-| text-embedding-3-large | 3072 |
-| text-embedding-ada-002 | 1536 |
+| Model                  | Dimensions |
+| ---------------------- | ---------- |
+| text-embedding-3-small | 1536       |
+| text-embedding-3-large | 3072       |
+| text-embedding-ada-002 | 1536       |
 
 ## Working with Embeddings
 
@@ -74,6 +74,7 @@ The vector size depends on the embedding model configured in your profile:
 Use cosine similarity to compare embedding vectors:
 
 {% code title="Example" %}
+
 ```csharp
 public static double CosineSimilarity(float[] a, float[] b)
 {
@@ -94,6 +95,7 @@ public static double CosineSimilarity(float[] a, float[] b)
 // Similarity ranges from -1 to 1 (higher = more similar)
 var similarity = CosineSimilarity(embedding1.Vector, embedding2.Vector);
 ```
+
 {% endcode %}
 
 ### Storing Embeddings

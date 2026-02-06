@@ -1,11 +1,11 @@
-import type { ManifestPropertyAction } from '@umbraco-cms/backoffice/property-action';
+import type { ManifestPropertyAction } from "@umbraco-cms/backoffice/property-action";
 
 /**
  * UI mode for prompt property actions.
  * - 'modal': Shows a centered dialog (default)
  * - 'panel': Shows a slide-in side panel
  */
-export type UaiPromptUiMode = 'modal' | 'panel';
+export type UaiPromptUiMode = "modal" | "panel";
 
 /**
  * A single scope rule that determines where a prompt can run.
@@ -112,7 +112,7 @@ export interface UaiPromptPropertyChange {
  * Value returned from the prompt preview modal.
  */
 export interface UaiPromptPreviewModalValue {
-    action: 'insert' | 'copy' | 'cancel';
+    action: "insert" | "copy" | "cancel";
     content?: string;
     /** Property changes to apply to the entity. */
     propertyChanges?: UaiPromptPropertyChange[];

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for managing and executing prompts.
+    Service for managing and executing prompts.
 ---
 
 # IAIPromptService
@@ -16,6 +16,7 @@ using Umbraco.AI.Prompt.Core.Prompts;
 ## Interface
 
 {% code title="IAIPromptService" %}
+
 ```csharp
 public interface IAIPromptService
 {
@@ -44,6 +45,7 @@ public interface IAIPromptService
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Methods
@@ -52,9 +54,9 @@ public interface IAIPromptService
 
 Gets a prompt by its unique identifier.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The prompt ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The prompt ID      |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The prompt if found, otherwise `null`.
@@ -63,9 +65,9 @@ Gets a prompt by its unique identifier.
 
 Gets a prompt by its alias.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `alias` | `string` | The prompt alias |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `alias`             | `string`            | The prompt alias   |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The prompt if found, otherwise `null`.
@@ -80,12 +82,12 @@ Gets all prompts.
 
 Gets prompts with pagination and filtering.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `skip` | `int` | Items to skip |
-| `take` | `int` | Items to take |
-| `filter` | `string?` | Filter by name |
-| `profileId` | `Guid?` | Filter by profile |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `skip`              | `int`               | Items to skip      |
+| `take`              | `int`               | Items to take      |
+| `filter`            | `string?`           | Filter by name     |
+| `profileId`         | `Guid?`             | Filter by profile  |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: Paged result with items and total count.
@@ -94,9 +96,9 @@ Gets prompts with pagination and filtering.
 
 Creates or updates a prompt.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `prompt` | `AIPrompt` | The prompt to save |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `prompt`            | `AIPrompt`          | The prompt to save |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The saved prompt with ID and version.
@@ -105,9 +107,9 @@ Creates or updates a prompt.
 
 Deletes a prompt by ID.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The prompt ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The prompt ID      |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: `true` if deleted, `false` if not found.
@@ -116,11 +118,11 @@ Deletes a prompt by ID.
 
 Checks if an alias is in use.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `alias` | `string` | The alias to check |
-| `excludeId` | `Guid?` | Optional ID to exclude |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description            |
+| ------------------- | ------------------- | ---------------------- |
+| `alias`             | `string`            | The alias to check     |
+| `excludeId`         | `Guid?`             | Optional ID to exclude |
+| `cancellationToken` | `CancellationToken` | Cancellation token     |
 
 **Returns**: `true` if alias exists.
 
@@ -128,15 +130,16 @@ Checks if an alias is in use.
 
 Executes a prompt with variables.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `promptId` | `Guid` | The prompt ID |
-| `request` | `AIPromptExecutionRequest` | Execution parameters |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                       | Description          |
+| ------------------- | -------------------------- | -------------------- |
+| `promptId`          | `Guid`                     | The prompt ID        |
+| `request`           | `AIPromptExecutionRequest` | Execution parameters |
+| `cancellationToken` | `CancellationToken`        | Cancellation token   |
 
 **Returns**: Execution result with response.
 
 {% code title="Example" %}
+
 ```csharp
 var result = await _promptService.ExecutePromptAsync(
     promptId,
@@ -152,6 +155,7 @@ var result = await _promptService.ExecutePromptAsync(
 Console.WriteLine($"Response: {result.Response}");
 Console.WriteLine($"Tokens used: {result.Usage.TotalTokens}");
 ```
+
 {% endcode %}
 
 ## Related Models
@@ -159,6 +163,7 @@ Console.WriteLine($"Tokens used: {result.Usage.TotalTokens}");
 ### AIPromptExecutionRequest
 
 {% code title="AIPromptExecutionRequest" %}
+
 ```csharp
 public class AIPromptExecutionRequest
 {
@@ -168,11 +173,13 @@ public class AIPromptExecutionRequest
     public string? EntityContext { get; set; }
 }
 ```
+
 {% endcode %}
 
 ### AIPromptExecutionResult
 
 {% code title="AIPromptExecutionResult" %}
+
 ```csharp
 public class AIPromptExecutionResult
 {
@@ -185,9 +192,10 @@ public class AIPromptExecutionResult
     public Guid AuditLogId { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Related
 
-* [AIPrompt Model](ai-prompt.md) - Prompt model reference
-* [Prompt Concepts](../concepts.md) - Concepts overview
+- [AIPrompt Model](ai-prompt.md) - Prompt model reference
+- [Prompt Concepts](../concepts.md) - Concepts overview

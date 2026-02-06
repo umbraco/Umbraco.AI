@@ -1,6 +1,6 @@
 ---
 description: >-
-  Capabilities represent the types of AI operations that providers can support.
+    Capabilities represent the types of AI operations that providers can support.
 ---
 
 # Capabilities
@@ -9,24 +9,25 @@ A capability represents a type of AI operation. Providers implement capabilities
 
 ## Available Capabilities
 
-| Capability | Description | M.E.AI Interface |
-|------------|-------------|------------------|
-| **Chat** | Conversational AI, text generation, completions | `IChatClient` |
-| **Embedding** | Vector embeddings for semantic search | `IEmbeddingGenerator<string, Embedding<float>>` |
-| **Media** | Image generation (future) | TBD |
-| **Moderation** | Content safety checks (future) | TBD |
+| Capability     | Description                                     | M.E.AI Interface                                |
+| -------------- | ----------------------------------------------- | ----------------------------------------------- |
+| **Chat**       | Conversational AI, text generation, completions | `IChatClient`                                   |
+| **Embedding**  | Vector embeddings for semantic search           | `IEmbeddingGenerator<string, Embedding<float>>` |
+| **Media**      | Image generation (future)                       | TBD                                             |
+| **Moderation** | Content safety checks (future)                  | TBD                                             |
 
 ## Chat Capability
 
 The Chat capability provides conversational AI features:
 
-* Text completion and generation
-* Multi-turn conversations
-* System prompts and instructions
-* Streaming responses
-* Tool/function calling
+- Text completion and generation
+- Multi-turn conversations
+- System prompts and instructions
+- Streaming responses
+- Tool/function calling
 
 {% code title="Example.cs" %}
+
 ```csharp
 var messages = new List<ChatMessage>
 {
@@ -36,24 +37,27 @@ var messages = new List<ChatMessage>
 
 var response = await _chatService.GetChatResponseAsync(messages);
 ```
+
 {% endcode %}
 
 ## Embedding Capability
 
 The Embedding capability generates vector representations of text:
 
-* Semantic search indexing
-* Document similarity
-* Clustering and classification
-* Retrieval-augmented generation (RAG)
+- Semantic search indexing
+- Document similarity
+- Clustering and classification
+- Retrieval-augmented generation (RAG)
 
 {% code title="Example.cs" %}
+
 ```csharp
 var embedding = await _embeddingService.GenerateEmbeddingAsync(
     "Umbraco is a content management system");
 
 // embedding.Vector contains the float array
 ```
+
 {% endcode %}
 
 ## Capability and Profile Relationship
@@ -82,6 +86,7 @@ Embedding Profile
 Not all providers support all capabilities. You can check what a provider supports:
 
 {% code title="Example.cs" %}
+
 ```csharp
 var provider = _registry.GetProvider("openai");
 
@@ -95,6 +100,7 @@ if (provider.HasCapability<IAIEmbeddingCapability>())
     // Provider supports embeddings
 }
 ```
+
 {% endcode %}
 
 ## Capability Interfaces
@@ -102,6 +108,7 @@ if (provider.HasCapability<IAIEmbeddingCapability>())
 Capabilities are defined by interfaces in `Umbraco.AI.Core`:
 
 {% code title="IAIChatCapability.cs" %}
+
 ```csharp
 public interface IAIChatCapability : IAICapability
 {
@@ -111,9 +118,11 @@ public interface IAIChatCapability : IAICapability
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 {% code title="IAIEmbeddingCapability.cs" %}
+
 ```csharp
 public interface IAIEmbeddingCapability : IAICapability
 {
@@ -123,6 +132,7 @@ public interface IAIEmbeddingCapability : IAICapability
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Future Capabilities
@@ -154,7 +164,7 @@ if (result.IsFlagged)
 
 ## Related
 
-* [Providers](providers.md) - Implement capabilities
-* [Profiles](profiles.md) - Configure capability-specific settings
-* [Chat API](../using-the-api/chat/README.md) - Use the Chat capability
-* [Embeddings API](../using-the-api/embeddings/README.md) - Use the Embedding capability
+- [Providers](providers.md) - Implement capabilities
+- [Profiles](profiles.md) - Configure capability-specific settings
+- [Chat API](../using-the-api/chat/README.md) - Use the Chat capability
+- [Embeddings API](../using-the-api/embeddings/README.md) - Use the Embedding capability

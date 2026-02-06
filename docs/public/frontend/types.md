@@ -1,6 +1,6 @@
 ---
 description: >-
-  TypeScript type definitions for chat operations.
+    TypeScript type definitions for chat operations.
 ---
 
 # Types
@@ -10,6 +10,7 @@ The Umbraco.AI frontend exports TypeScript types for type-safe chat integration.
 ## Import
 
 {% code title="Import" %}
+
 ```typescript
 import type {
     UaiChatRole,
@@ -18,9 +19,10 @@ import type {
     UaiChatResult,
     UaiChatStreamChunk,
     UaiChatOptions,
-    UaiChatRequest
-} from '@umbraco-ai/backoffice';
+    UaiChatRequest,
+} from "@umbraco-ai/backoffice";
 ```
+
 {% endcode %}
 
 ## Message Types
@@ -30,22 +32,25 @@ import type {
 The role of a message participant.
 
 {% code title="UaiChatRole" %}
+
 ```typescript
-type UaiChatRole = 'user' | 'assistant' | 'system';
+type UaiChatRole = "user" | "assistant" | "system";
 ```
+
 {% endcode %}
 
-| Value | Description |
-|-------|-------------|
-| `'user'` | Message from the user |
-| `'assistant'` | Message from the AI |
-| `'system'` | System instructions |
+| Value         | Description           |
+| ------------- | --------------------- |
+| `'user'`      | Message from the user |
+| `'assistant'` | Message from the AI   |
+| `'system'`    | System instructions   |
 
 ### UaiChatMessage
 
 Represents a single message in the conversation.
 
 {% code title="UaiChatMessage" %}
+
 ```typescript
 interface UaiChatMessage {
     /** The role of the message author. */
@@ -54,17 +59,20 @@ interface UaiChatMessage {
     content: string;
 }
 ```
+
 {% endcode %}
 
 {% code title="Example" %}
+
 ```typescript
 const messages: UaiChatMessage[] = [
-    { role: 'system', content: 'You are a helpful assistant.' },
-    { role: 'user', content: 'What is Umbraco?' },
-    { role: 'assistant', content: 'Umbraco is an open-source CMS built on .NET.' },
-    { role: 'user', content: 'Tell me more about its features.' }
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "What is Umbraco?" },
+    { role: "assistant", content: "Umbraco is an open-source CMS built on .NET." },
+    { role: "user", content: "Tell me more about its features." },
 ];
 ```
+
 {% endcode %}
 
 ## Response Types
@@ -74,6 +82,7 @@ const messages: UaiChatMessage[] = [
 Token usage statistics from a completion.
 
 {% code title="UaiChatUsage" %}
+
 ```typescript
 interface UaiChatUsage {
     /** Number of tokens in the input/prompt. */
@@ -84,6 +93,7 @@ interface UaiChatUsage {
     totalTokens?: number | null;
 }
 ```
+
 {% endcode %}
 
 ### UaiChatResult
@@ -91,6 +101,7 @@ interface UaiChatUsage {
 The result of a chat completion.
 
 {% code title="UaiChatResult" %}
+
 ```typescript
 interface UaiChatResult {
     /** The assistant's response message. */
@@ -101,19 +112,22 @@ interface UaiChatResult {
     usage?: UaiChatUsage | null;
 }
 ```
+
 {% endcode %}
 
 {% code title="Example" %}
+
 ```typescript
 const { data } = await chat.complete(messages);
 
 if (data) {
-    console.log('Response:', data.message.content);
-    console.log('Role:', data.message.role); // 'assistant'
-    console.log('Finish reason:', data.finishReason); // 'stop'
-    console.log('Total tokens:', data.usage?.totalTokens);
+    console.log("Response:", data.message.content);
+    console.log("Role:", data.message.role); // 'assistant'
+    console.log("Finish reason:", data.finishReason); // 'stop'
+    console.log("Total tokens:", data.usage?.totalTokens);
 }
 ```
+
 {% endcode %}
 
 ### UaiChatStreamChunk
@@ -121,6 +135,7 @@ if (data) {
 A chunk from a streaming response.
 
 {% code title="UaiChatStreamChunk" %}
+
 ```typescript
 interface UaiChatStreamChunk {
     /** The content fragment. */
@@ -129,6 +144,7 @@ interface UaiChatStreamChunk {
     finishReason?: string | null;
 }
 ```
+
 {% endcode %}
 
 ## Request Types
@@ -138,6 +154,7 @@ interface UaiChatStreamChunk {
 Options for the `UaiChatController` methods.
 
 {% code title="UaiChatOptions" %}
+
 ```typescript
 interface UaiChatOptions {
     /** Profile ID (GUID) or alias. If omitted, uses the default chat profile. */
@@ -146,28 +163,31 @@ interface UaiChatOptions {
     signal?: AbortSignal;
 }
 ```
+
 {% endcode %}
 
 {% code title="Example" %}
+
 ```typescript
 // Using default profile
 await chat.complete(messages);
 
 // Using specific profile
 await chat.complete(messages, {
-    profileIdOrAlias: 'content-assistant'
+    profileIdOrAlias: "content-assistant",
 });
 
 // With cancellation support
 const controller = new AbortController();
 await chat.complete(messages, {
-    profileIdOrAlias: 'content-assistant',
-    signal: controller.signal
+    profileIdOrAlias: "content-assistant",
+    signal: controller.signal,
 });
 
 // Cancel the request
 controller.abort();
 ```
+
 {% endcode %}
 
 ### UaiChatRequest
@@ -175,6 +195,7 @@ controller.abort();
 Internal request type used by `UaiChatRepository`.
 
 {% code title="UaiChatRequest" %}
+
 ```typescript
 interface UaiChatRequest {
     /** Profile ID or alias. Null uses default profile. */
@@ -185,25 +206,27 @@ interface UaiChatRequest {
     signal?: AbortSignal;
 }
 ```
+
 {% endcode %}
 
 ## Finish Reasons
 
 Common values for `finishReason`:
 
-| Value | Description |
-|-------|-------------|
-| `'stop'` | Model finished naturally |
-| `'length'` | Hit max tokens limit |
-| `'content_filter'` | Content was filtered |
-| `null` | Reason not provided |
+| Value              | Description              |
+| ------------------ | ------------------------ |
+| `'stop'`           | Model finished naturally |
+| `'length'`         | Hit max tokens limit     |
+| `'content_filter'` | Content was filtered     |
+| `null`             | Reason not provided      |
 
 ## Type Guards
 
 {% code title="Type Guard Examples" %}
+
 ```typescript
 function isUserMessage(msg: UaiChatMessage): boolean {
-    return msg.role === 'user';
+    return msg.role === "user";
 }
 
 function hasUsage(result: UaiChatResult): result is UaiChatResult & { usage: UaiChatUsage } {
@@ -217,30 +240,32 @@ if (data && hasUsage(data)) {
     console.log(`Used ${data.usage.totalTokens} tokens`);
 }
 ```
+
 {% endcode %}
 
 ## Building Conversations
 
 {% code title="Conversation Helper" %}
+
 ```typescript
-import type { UaiChatMessage } from '@umbraco-ai/backoffice';
+import type { UaiChatMessage } from "@umbraco-ai/backoffice";
 
 class Conversation {
     #messages: UaiChatMessage[] = [];
 
     constructor(systemPrompt?: string) {
         if (systemPrompt) {
-            this.#messages.push({ role: 'system', content: systemPrompt });
+            this.#messages.push({ role: "system", content: systemPrompt });
         }
     }
 
     addUser(content: string): this {
-        this.#messages.push({ role: 'user', content });
+        this.#messages.push({ role: "user", content });
         return this;
     }
 
     addAssistant(content: string): this {
-        this.#messages.push({ role: 'assistant', content });
+        this.#messages.push({ role: "assistant", content });
         return this;
     }
 
@@ -254,15 +279,15 @@ class Conversation {
 }
 
 // Usage
-const convo = new Conversation('You are a helpful assistant.')
-    .addUser('What is Umbraco?');
+const convo = new Conversation("You are a helpful assistant.").addUser("What is Umbraco?");
 
 const { data } = await chat.complete(convo.messages);
 
 if (data) {
     convo.addAssistant(data.message.content);
     // Continue conversation...
-    convo.addUser('Tell me more');
+    convo.addUser("Tell me more");
 }
 ```
+
 {% endcode %}

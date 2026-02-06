@@ -24,10 +24,7 @@
  */
 
 // Context and token
-export {
-	UaiWorkspaceRegistryContext,
-	UAI_WORKSPACE_REGISTRY_CONTEXT,
-} from "./workspace-registry.context.js";
+export { UaiWorkspaceRegistryContext, UAI_WORKSPACE_REGISTRY_CONTEXT } from "./workspace-registry.context.js";
 
 // Types
 export type { WorkspaceEntry, WorkspaceChangeEvent } from "./types.js";

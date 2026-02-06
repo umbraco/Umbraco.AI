@@ -1,6 +1,6 @@
 ---
 description: >-
-  Send chat messages and receive complete responses from AI models.
+    Send chat messages and receive complete responses from AI models.
 ---
 
 # Basic Chat
@@ -10,6 +10,7 @@ Send messages and receive a complete response from AI models. This is suitable f
 ## Basic Request
 
 {% code title="SimpleChat.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
@@ -41,20 +42,22 @@ public class ChatController : UmbracoApiController
     }
 }
 ```
+
 {% endcode %}
 
 ## Understanding ChatResponse
 
 The `ChatResponse` object contains:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Message` | `ChatMessage` | The AI's response message |
-| `FinishReason` | `ChatFinishReason?` | Why the response ended |
-| `Usage` | `UsageDetails?` | Token usage statistics |
-| `ModelId` | `string?` | The model that generated the response |
+| Property       | Type                | Description                           |
+| -------------- | ------------------- | ------------------------------------- |
+| `Message`      | `ChatMessage`       | The AI's response message             |
+| `FinishReason` | `ChatFinishReason?` | Why the response ended                |
+| `Usage`        | `UsageDetails?`     | Token usage statistics                |
+| `ModelId`      | `string?`           | The model that generated the response |
 
 {% code title="ResponseDetails.cs" %}
+
 ```csharp
 var response = await _chatService.GetChatResponseAsync(messages);
 
@@ -73,6 +76,7 @@ if (response.Usage is { } usage)
     int? total = usage.TotalTokenCount;
 }
 ```
+
 {% endcode %}
 
 ## With System Prompt
@@ -80,6 +84,7 @@ if (response.Usage is { } usage)
 Add a system message to set the AI's behavior:
 
 {% code title="WithSystemPrompt.cs" %}
+
 ```csharp
 var messages = new List<ChatMessage>
 {
@@ -90,6 +95,7 @@ var messages = new List<ChatMessage>
 
 var response = await _chatService.GetChatResponseAsync(messages);
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -101,6 +107,7 @@ System prompts can also be configured in the profile settings, so they're applie
 Include previous messages to maintain context:
 
 {% code title="Conversation.cs" %}
+
 ```csharp
 public class ConversationService
 {
@@ -129,6 +136,7 @@ public class ConversationService
     }
 }
 ```
+
 {% endcode %}
 
 ## Using a Specific Profile
@@ -136,6 +144,7 @@ public class ConversationService
 ### By Profile ID
 
 {% code title="ByProfileId.cs" %}
+
 ```csharp
 public async Task<string> GetResponse(Guid profileId, string question)
 {
@@ -149,11 +158,13 @@ public async Task<string> GetResponse(Guid profileId, string question)
     return response.Message.Text ?? string.Empty;
 }
 ```
+
 {% endcode %}
 
 ### By Profile Alias
 
 {% code title="ByProfileAlias.cs" %}
+
 ```csharp
 public class ProfiledChatService
 {
@@ -187,6 +198,7 @@ public class ProfiledChatService
     }
 }
 ```
+
 {% endcode %}
 
 ## Overriding Profile Settings
@@ -194,6 +206,7 @@ public class ProfiledChatService
 Pass `ChatOptions` to override profile defaults:
 
 {% code title="WithOptions.cs" %}
+
 ```csharp
 var messages = new List<ChatMessage>
 {
@@ -208,11 +221,13 @@ var options = new ChatOptions
 
 var response = await _chatService.GetChatResponseAsync(messages, options);
 ```
+
 {% endcode %}
 
 ## Error Handling
 
 {% code title="ErrorHandling.cs" %}
+
 ```csharp
 public async Task<string?> SafeGetResponse(string question)
 {
@@ -240,6 +255,7 @@ public async Task<string?> SafeGetResponse(string question)
     }
 }
 ```
+
 {% endcode %}
 
 ## Next Steps

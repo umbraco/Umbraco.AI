@@ -48,11 +48,11 @@ dotnet test Umbraco.AI.sln --collect:"XPlat Code Coverage" --results-directory .
 
 ### Test Projects
 
-| Project | Purpose |
-|---------|---------|
-| `Umbraco.AI.Tests.Unit` | Unit tests for core services, providers, middleware, registry, API controllers, and EF Core repositories |
-| `Umbraco.AI.Tests.Integration` | Integration tests for DI resolution and end-to-end service flows |
-| `Umbraco.AI.Tests.Common` | Shared test utilities, builders, fakes, and fixtures (not executable) |
+| Project                        | Purpose                                                                                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `Umbraco.AI.Tests.Unit`        | Unit tests for core services, providers, middleware, registry, API controllers, and EF Core repositories |
+| `Umbraco.AI.Tests.Integration` | Integration tests for DI resolution and end-to-end service flows                                         |
+| `Umbraco.AI.Tests.Common`      | Shared test utilities, builders, fakes, and fixtures (not executable)                                    |
 
 ### Test Stack
 
@@ -65,6 +65,7 @@ dotnet test Umbraco.AI.sln --collect:"XPlat Code Coverage" --results-directory .
 ### Test Utilities (Umbraco.AI.Tests.Common)
 
 **Builders** - Fluent test data construction:
+
 ```csharp
 var profile = new AIProfileBuilder()
     .WithAlias("chat-1")
@@ -77,17 +78,20 @@ var connection = new AIConnectionBuilder()
 ```
 
 **Fakes** - Test doubles for isolated testing:
+
 - `FakeAIProvider` - Configurable provider for testing
 - `FakeChatCapability` / `FakeChatClient` - Chat without real API calls
 - `FakeEmbeddingCapability` - Embedding capability implementation
 - `FakeProviderSettings` - Provider settings for testing
 
 **Fixtures** - Test infrastructure:
+
 - `EfCoreTestFixture` - In-memory SQLite database for EF Core repository tests
 
 ### Test Patterns
 
 Tests follow Arrange-Act-Assert with Shouldly assertions:
+
 ```csharp
 [Fact]
 public async Task GetProfileAsync_WithExistingId_ReturnsProfile()
@@ -123,16 +127,16 @@ Umbraco.AI is a provider-agnostic AI integration layer for Umbraco CMS built on 
 
 ### Project Structure
 
-| Project | Purpose |
-|---------|---------|
-| `Umbraco.AI.Core` | Core abstractions, services, and models. All interfaces and base classes. |
-| `Umbraco.AI.Persistence` | EF Core DbContext, entities, and repository implementations |
-| `Umbraco.AI.Persistence.SqlServer` | SQL Server migrations for persistence layer |
-| `Umbraco.AI.Persistence.Sqlite` | SQLite migrations for persistence layer |
-| `Umbraco.AI.Web` | Management API layer for backoffice integration |
-| `Umbraco.AI.Web.StaticAssets` | TypeScript/Lit frontend components for backoffice UI |
-| `Umbraco.AI.Startup` | Umbraco Composer for auto-discovery and DI registration |
-| `Umbraco.AI` | Meta-package that bundles all components |
+| Project                            | Purpose                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| `Umbraco.AI.Core`                  | Core abstractions, services, and models. All interfaces and base classes. |
+| `Umbraco.AI.Persistence`           | EF Core DbContext, entities, and repository implementations               |
+| `Umbraco.AI.Persistence.SqlServer` | SQL Server migrations for persistence layer                               |
+| `Umbraco.AI.Persistence.Sqlite`    | SQLite migrations for persistence layer                                   |
+| `Umbraco.AI.Web`                   | Management API layer for backoffice integration                           |
+| `Umbraco.AI.Web.StaticAssets`      | TypeScript/Lit frontend components for backoffice UI                      |
+| `Umbraco.AI.Startup`               | Umbraco Composer for auto-discovery and DI registration                   |
+| `Umbraco.AI`                       | Meta-package that bundles all components                                  |
 
 Provider packages are maintained separately (e.g., `Umbraco.AI.OpenAI`).
 
@@ -161,6 +165,7 @@ Provider (plugin with capabilities)
 ### Capability System
 
 Providers expose discrete capabilities:
+
 - `IAIChatCapability` - Chat completions (conversational AI)
 - `IAIEmbeddingCapability` - Text embeddings (vector representations)
 - Future: Media (image generation), Moderation (content safety)
@@ -172,6 +177,7 @@ Each capability creates M.E.AI clients (`IChatClient`, `IEmbeddingGenerator<stri
 Umbraco.AI uses Umbraco's collection builder pattern for extensibility:
 
 **Provider Collection** (`LazyCollectionBuilderBase`):
+
 - Providers are auto-discovered via `[AIProvider]` attribute and `IDiscoverable`
 - Use `AIProviders()` extension to add/exclude providers in a Composer
 
@@ -183,6 +189,7 @@ builder.AIProviders()
 ```
 
 **Middleware Collections** (`OrderedCollectionBuilderBase`):
+
 - Middleware ordering is explicit via `Append()`, `InsertBefore<T>()`, `InsertAfter<T>()`
 - No `Order` property on middleware interfaces - ordering is purely via collection builder
 
@@ -234,12 +241,14 @@ new IdOrAlias("my-chat-profile")  // By alias
 ```
 
 The `IdOrAlias` class:
+
 - Implements `IParsable<IdOrAlias>` for model binding
 - Has a custom JSON converter for serialization
 - Provides `IsId` and `IsAlias` properties to check which format was provided
 - Located in `Umbraco.AI.Web.Api.Common.Models`
 
 Resolution is handled via extension methods on `IAIProfileService`:
+
 ```csharp
 // Returns Guid? - null if not found
 await profileService.TryGetProfileIdAsync(idOrAlias, cancellationToken);
@@ -253,36 +262,36 @@ await profileService.GetProfileIdAsync(idOrAlias, cancellationToken);
 ### Core Principles
 
 1. **Feature folders are flat** - All files for a feature live at the folder root
-   - NO `Services/`, `Repositories/`, `Factories/` subfolders within features
-   - Interfaces and implementations live side-by-side
+    - NO `Services/`, `Repositories/`, `Factories/` subfolders within features
+    - Interfaces and implementations live side-by-side
 
 2. **Only create subfolders for conceptually different content**
-   - `Examples/` for sample code is acceptable
-   - NOT for grouping by implementation type
+    - `Examples/` for sample code is acceptable
+    - NOT for grouping by implementation type
 
 3. **Shared code lives at the project root level**
-   - `Models/` - Shared domain models used across features
-   - `Providers/` - Provider SDK (base classes, interfaces, collections)
-   - `Registry/` - Provider discovery
-   - `EditableModels/` - Editable model infrastructure (schemas, field definitions, resolution)
-   - `Extensions/` - Utility extensions
-   - `Configuration/` - DI registration
+    - `Models/` - Shared domain models used across features
+    - `Providers/` - Provider SDK (base classes, interfaces, collections)
+    - `Registry/` - Provider discovery
+    - `EditableModels/` - Editable model infrastructure (schemas, field definitions, resolution)
+    - `Extensions/` - Utility extensions
+    - `Configuration/` - DI registration
 
 4. **Feature folders contain everything for that feature**
-   - Domain models specific to the feature
-   - Service interfaces and implementations
-   - Repository interfaces and implementations
-   - Factory interfaces and implementations
-   - Middleware interfaces, collections, and builders
+    - Domain models specific to the feature
+    - Service interfaces and implementations
+    - Repository interfaces and implementations
+    - Factory interfaces and implementations
+    - Middleware interfaces, collections, and builders
 
 ### When to Create a New Folder
 
-| Scenario | Action |
-|----------|--------|
-| New capability (e.g., Media generation) | Create new feature folder: `Media/` |
-| New shared infrastructure | Create root-level folder |
-| Sample/example code within a feature | Create `Examples/` subfolder |
-| More files of same type in a feature | Keep flat - do NOT create subfolders |
+| Scenario                                | Action                               |
+| --------------------------------------- | ------------------------------------ |
+| New capability (e.g., Media generation) | Create new feature folder: `Media/`  |
+| New shared infrastructure               | Create root-level folder             |
+| Sample/example code within a feature    | Create `Examples/` subfolder         |
+| More files of same type in a feature    | Keep flat - do NOT create subfolders |
 
 ### Naming Conventions
 
@@ -293,11 +302,13 @@ await profileService.GetProfileIdAsync(idOrAlias, cancellationToken);
 ### Exception: API Projects (Umbraco.AI.Web)
 
 Web follows Umbraco CMS Management API conventions with subfolders:
+
 - `Controllers/` - API endpoints
 - `Models/` - Request/response DTOs
 - `Mapping/` - UmbracoMapper definitions
 
 This is acceptable because:
+
 - Higher file counts per feature
 - Matches CMS patterns developers expect
 - Not a direct code extension point
@@ -305,6 +316,7 @@ This is acceptable because:
 ### Exception: Test Projects
 
 Test projects use **layer-based organization**, not feature-sliced:
+
 - `Services/` - Service tests (AIChatServiceTests, AIProfileServiceTests)
 - `Repositories/` - EF Core repository tests
 - `Factories/` - Factory tests
@@ -312,7 +324,8 @@ Test projects use **layer-based organization**, not feature-sliced:
 - `Api/Management/{Feature}/` - API controller tests (grouped by feature within Api)
 
 This is intentional because:
-- Tests are located by *what they test* (class type), not by domain feature
+
+- Tests are located by _what they test_ (class type), not by domain feature
 - When builds fail, developers look for "ServiceTests" not "ChatTests"
 - Direct mapping: `Services/AIChatServiceTests.cs` tests `AIChatService`
 - API tests are the exception - they mirror the Web project's feature structure
@@ -320,6 +333,7 @@ This is intentional because:
 ## Frontend Architecture
 
 Located in `src/Umbraco.AI.Web.StaticAssets/Client/`:
+
 - Uses Lit web components with `@umbraco-cms/backoffice` package
 - Compiled to `wwwroot/` and served from `App_Plugins/UmbracoAI`
 - API client generated from OpenAPI spec using `@hey-api/openapi-ts`
@@ -333,6 +347,7 @@ Located in `src/Umbraco.AI.Web.StaticAssets/Client/`:
 5. Implement capability classes extending `AIChatCapabilityBase<TSettings>` or `AIEmbeddingCapabilityBase<TSettings>`
 
 Example:
+
 ```csharp
 [AIProvider("myprovider", "My Provider")]
 public class MyProvider : AIProviderBase<MyProviderSettings>
@@ -347,18 +362,21 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 ## Key Namespaces
 
 **Feature namespaces (Umbraco.AI.Core):**
+
 - `Umbraco.AI.Core.Chat` - Chat service, factory, middleware (`IAIChatService`, `IAIChatClientFactory`)
 - `Umbraco.AI.Core.Embeddings` - Embedding service, factory, middleware (`IAIEmbeddingService`)
 - `Umbraco.AI.Core.Connections` - Connection model, service, repository (`AIConnection`, `IAIConnectionService`)
 - `Umbraco.AI.Core.Profiles` - Profile model, service, repository (`AIProfile`, `IAIProfileService`)
 
 **Shared namespaces (Umbraco.AI.Core):**
+
 - `Umbraco.AI.Core.Providers` - Provider SDK (base classes, capabilities, collections)
 - `Umbraco.AI.Core.Models` - Shared domain models (`AICapability`, `AIModelRef`, `AIOptions`)
 - `Umbraco.AI.Core.Registry` - Provider registry (`IAIRegistry`)
 - `Umbraco.AI.Core.EditableModels` - Editable model infrastructure (`AIFieldAttribute`, `AIEditableModelSchema`, `IAIEditableModelResolver`)
 
 **Persistence namespaces:**
+
 - `Umbraco.AI.Persistence.Connections` - EF Core connection repository and entity
 - `Umbraco.AI.Persistence.Profiles` - EF Core profile repository and entity
 
@@ -366,12 +384,12 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "DefaultChatProfileAlias": "default-chat",
-      "DefaultEmbeddingProfileAlias": "default-embedding"
+    "Umbraco": {
+        "AI": {
+            "DefaultChatProfileAlias": "default-chat",
+            "DefaultEmbeddingProfileAlias": "default-embedding"
+        }
     }
-  }
 }
 ```
 
@@ -409,6 +427,7 @@ Documentation is organized into two categories:
 For deeper understanding, read these docs files:
 
 **Core Documentation:**
+
 - `docs/internal/core-concepts.md` - Providers, Connections, Profiles, and Middleware explained
 - `docs/internal/integration-philosophy.md` - Why M.E.AI was chosen and the "thin wrapper" approach
 - `docs/internal/capabilities-feature.md` - Chat, Embedding, and planned capabilities (Media, Moderation)
@@ -417,9 +436,11 @@ For deeper understanding, read these docs files:
 - `docs/internal/umbraco-ai-agents-design.md` - Future Agents feature design (tools, approval workflow, backoffice integration)
 
 **Planning Documents:**
+
 - `docs/internal/plans/v1-core-implementation-plan.md` - V1 implementation roadmap
 - `docs/internal/plans/testing-strategy.md` - Testing approach and strategy
 - `docs/internal/plans/tools-and-agents-architecture.md` - Tools and agents system design
 
 **Ideas (Future Exploration):**
+
 - `docs/internal/ideas/` - Exploratory design documents for future features (toolsets, MCP integration, workflows, etc.)

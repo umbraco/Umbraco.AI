@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configure Microsoft AI Foundry as an AI provider for chat and embedding capabilities.
+    Configure Microsoft AI Foundry as an AI provider for chat and embedding capabilities.
 ---
 
 # Microsoft AI Foundry
@@ -10,32 +10,36 @@ Microsoft AI Foundry (formerly Azure AI Studio) provides a unified endpoint for 
 ## Installation
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 Install-Package Umbraco.AI.MicrosoftFoundry
 ```
+
 {% endcode %}
 
 Or via .NET CLI:
 
 {% code title="Terminal" %}
+
 ```bash
 dotnet add package Umbraco.AI.MicrosoftFoundry
 ```
+
 {% endcode %}
 
 ## Capabilities
 
-| Capability | Supported | Description |
-|------------|-----------|-------------|
-| Chat | Yes | GPT, Phi, Llama, Mistral models |
-| Embedding | Yes | Azure OpenAI embeddings |
+| Capability | Supported | Description                     |
+| ---------- | --------- | ------------------------------- |
+| Chat       | Yes       | GPT, Phi, Llama, Mistral models |
+| Embedding  | Yes       | Azure OpenAI embeddings         |
 
 ## Connection Settings
 
-| Setting | Required | Description |
-|---------|----------|-------------|
-| Endpoint | Yes | Your AI Foundry endpoint URL |
-| API Key | Yes | Your AI Foundry API key |
+| Setting  | Required | Description                  |
+| -------- | -------- | ---------------------------- |
+| Endpoint | Yes      | Your AI Foundry endpoint URL |
+| API Key  | Yes      | Your AI Foundry API key      |
 
 ### Getting Your Credentials
 
@@ -55,20 +59,20 @@ Microsoft AI Foundry provides access to models from multiple providers through a
 
 ### Chat Models
 
-| Model Family | Example Models | Notes |
-|--------------|---------------|-------|
-| Azure OpenAI | GPT-4o, GPT-4, GPT-3.5-turbo | Microsoft-hosted OpenAI |
-| Microsoft Phi | Phi-3-medium, Phi-3-mini | Microsoft's small language models |
-| Meta Llama | Llama-3.1-405B, Llama-3.1-70B | Open source, hosted on Azure |
-| Mistral | Mistral Large, Mistral Small | Open source, Azure-hosted |
+| Model Family  | Example Models                | Notes                             |
+| ------------- | ----------------------------- | --------------------------------- |
+| Azure OpenAI  | GPT-4o, GPT-4, GPT-3.5-turbo  | Microsoft-hosted OpenAI           |
+| Microsoft Phi | Phi-3-medium, Phi-3-mini      | Microsoft's small language models |
+| Meta Llama    | Llama-3.1-405B, Llama-3.1-70B | Open source, hosted on Azure      |
+| Mistral       | Mistral Large, Mistral Small  | Open source, Azure-hosted         |
 
 ### Embedding Models
 
-| Model | Dimensions | Notes |
-|-------|-----------|-------|
-| text-embedding-ada-002 | 1536 | Azure OpenAI embeddings |
-| text-embedding-3-small | 1536 | Latest Azure OpenAI |
-| text-embedding-3-large | 3072 | Highest quality |
+| Model                  | Dimensions | Notes                   |
+| ---------------------- | ---------- | ----------------------- |
+| text-embedding-ada-002 | 1536       | Azure OpenAI embeddings |
+| text-embedding-3-small | 1536       | Latest Azure OpenAI     |
+| text-embedding-3-large | 3072       | Highest quality         |
 
 {% hint style="info" %}
 Available models depend on your Azure subscription, region, and deployed models in AI Foundry.
@@ -87,6 +91,7 @@ Available models depend on your Azure subscription, region, and deployed models 
 ### Via Code
 
 {% code title="Example.cs" %}
+
 ```csharp
 var connection = new AIConnection
 {
@@ -102,6 +107,7 @@ var connection = new AIConnection
 
 await _connectionService.SaveConnectionAsync(connection);
 ```
+
 {% endcode %}
 
 ## Creating Profiles
@@ -109,6 +115,7 @@ await _connectionService.SaveConnectionAsync(connection);
 ### Chat Profile
 
 {% code title="Example.cs" %}
+
 ```csharp
 var profile = new AIProfile
 {
@@ -127,11 +134,13 @@ var profile = new AIProfile
 
 await _profileService.SaveProfileAsync(profile);
 ```
+
 {% endcode %}
 
 ### Embedding Profile
 
 {% code title="Example.cs" %}
+
 ```csharp
 var profile = new AIProfile
 {
@@ -144,6 +153,7 @@ var profile = new AIProfile
 
 await _profileService.SaveProfileAsync(profile);
 ```
+
 {% endcode %}
 
 ## Enterprise Features
@@ -159,6 +169,7 @@ Microsoft AI Foundry provides regional deployments for data residency requiremen
 ### Network Security
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Use private endpoints for enhanced security
 var connection = new AIConnection
@@ -171,6 +182,7 @@ var connection = new AIConnection
     }
 };
 ```
+
 {% endcode %}
 
 ### Azure Integration
@@ -209,10 +221,10 @@ AI Foundry integrates with Azure services:
 
 Pricing depends on the model deployed:
 
-| Model Type | Pricing Model |
-|------------|---------------|
-| Azure OpenAI | Pay-per-token |
-| Phi models | Pay-per-token (lower cost) |
+| Model Type    | Pricing Model               |
+| ------------- | --------------------------- |
+| Azure OpenAI  | Pay-per-token               |
+| Phi models    | Pay-per-token (lower cost)  |
 | Llama/Mistral | Pay-per-token or throughput |
 
 {% hint style="info" %}
@@ -228,6 +240,7 @@ Error: 401 Unauthorized
 ```
 
 Verify:
+
 - API key is correct
 - Key hasn't expired or been rotated
 - Endpoint URL matches your deployment
@@ -239,6 +252,7 @@ Error: Model deployment not found
 ```
 
 Ensure:
+
 - The model name matches your deployment name
 - The deployment is active
 - You're connecting to the correct project
@@ -250,12 +264,13 @@ Error: Connection refused
 ```
 
 Check:
+
 - Endpoint URL is correct
 - Network allows outbound connections
 - Private endpoint configuration (if applicable)
 
 ## Related
 
-* [Providers Overview](README.md) - Compare all providers
-* [Connections](../concepts/connections.md) - Managing credentials
-* [Profiles](../concepts/profiles.md) - Configuring models
+- [Providers Overview](README.md) - Compare all providers
+- [Connections](../concepts/connections.md) - Managing credentials
+- [Profiles](../concepts/profiles.md) - Configuring models

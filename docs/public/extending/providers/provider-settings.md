@@ -1,6 +1,6 @@
 ---
 description: >-
-  Define provider settings with automatic UI generation.
+    Define provider settings with automatic UI generation.
 ---
 
 # Provider Settings
@@ -12,6 +12,7 @@ Provider settings define the configuration properties needed to connect to an AI
 The `[AISetting]` attribute decorates setting properties with UI metadata:
 
 {% code title="AISettingAttribute Properties" %}
+
 ```csharp
 [AISetting(
     Label = "Display Label",           // Shown in the UI
@@ -22,32 +23,34 @@ The `[AISetting]` attribute decorates setting properties with UI metadata:
 )]
 public string? MyProperty { get; set; }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Label` | string | Display label in the UI |
-| `Description` | string | Help text shown below the field |
-| `EditorUiAlias` | string | Umbraco property editor UI alias |
-| `DefaultValue` | object | Default value for the setting |
-| `SortOrder` | int | Order in which settings are displayed |
+| Property        | Type   | Description                           |
+| --------------- | ------ | ------------------------------------- |
+| `Label`         | string | Display label in the UI               |
+| `Description`   | string | Help text shown below the field       |
+| `EditorUiAlias` | string | Umbraco property editor UI alias      |
+| `DefaultValue`  | object | Default value for the setting         |
+| `SortOrder`     | int    | Order in which settings are displayed |
 
 ## Automatic Type Inference
 
 If `EditorUiAlias` is not specified, the editor is inferred from the property type:
 
-| C# Type | Inferred Editor |
-|---------|-----------------|
-| `string` | `Umb.PropertyEditorUi.TextBox` |
-| `int` | `Umb.PropertyEditorUi.Integer` |
-| `bool` | `Umb.PropertyEditorUi.Toggle` |
+| C# Type                      | Inferred Editor                |
+| ---------------------------- | ------------------------------ |
+| `string`                     | `Umb.PropertyEditorUi.TextBox` |
+| `int`                        | `Umb.PropertyEditorUi.Integer` |
+| `bool`                       | `Umb.PropertyEditorUi.Toggle`  |
 | `decimal`, `float`, `double` | `Umb.PropertyEditorUi.Decimal` |
 
 ## Example Settings Class
 
 {% code title="MyProviderSettings.cs" %}
+
 ```csharp
 using System.ComponentModel.DataAnnotations;
 using Umbraco.AI.Core.Settings;
@@ -90,6 +93,7 @@ public class MyProviderSettings
     public double TimeoutSeconds { get; set; } = 30.0;
 }
 ```
+
 {% endcode %}
 
 ## Validation Attributes
@@ -97,6 +101,7 @@ public class MyProviderSettings
 Use standard .NET validation attributes alongside `[AISetting]`:
 
 {% code title="Validation Example" %}
+
 ```csharp
 public class ValidatedSettings
 {
@@ -117,6 +122,7 @@ public class ValidatedSettings
     public string? CustomEndpoint { get; set; }
 }
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -131,13 +137,15 @@ Settings values starting with `$` are resolved from `appsettings.json`:
 
 **In appsettings.json:**
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "MyProvider": {
-    "ApiKey": "sk-actual-key-here"
-  }
+    "MyProvider": {
+        "ApiKey": "sk-actual-key-here"
+    }
 }
 ```
+
 {% endcode %}
 
 This keeps secrets out of the database and supports environment-specific values.
@@ -147,6 +155,7 @@ This keeps secrets out of the database and supports environment-specific values.
 For API keys and secrets, don't use a special editor - use a regular text field. The value will be masked when displayed back to the user.
 
 {% code title="Sensitive Settings" %}
+
 ```csharp
 [AISetting(
     Label = "API Key",
@@ -159,6 +168,7 @@ public required string ApiKey { get; set; }
     Description = "Authentication token")]
 public string? SecretToken { get; set; }
 ```
+
 {% endcode %}
 
 ## Custom Editors
@@ -166,6 +176,7 @@ public string? SecretToken { get; set; }
 Use Umbraco property editor UI aliases for specialized input:
 
 {% code title="Custom Editors" %}
+
 ```csharp
 // Textarea for longer text
 [AISetting(
@@ -179,6 +190,7 @@ public string? SystemPrompt { get; set; }
     EditorUiAlias = "Umb.PropertyEditorUi.Integer")]
 public int? MaxTokens { get; set; }
 ```
+
 {% endcode %}
 
 ## Accessing Settings in Capabilities
@@ -186,6 +198,7 @@ public int? MaxTokens { get; set; }
 Settings are passed to capability methods after being resolved:
 
 {% code title="Using Settings" %}
+
 ```csharp
 public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
 {
@@ -206,4 +219,5 @@ public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
     }
 }
 ```
+
 {% endcode %}

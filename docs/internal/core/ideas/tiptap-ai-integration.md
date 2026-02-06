@@ -30,6 +30,7 @@ TipTap Editor Toolbar
 ```
 
 **Example Use Cases**:
+
 - Improve selected paragraph's clarity and readability
 - Fix grammar and spelling in selected text
 - Summarize a long section
@@ -54,6 +55,7 @@ Umbraco.AI.Tiptap (RCL with embedded client code)
 ```
 
 **Rationale**: Not all Umbraco.AI users need RTE integration. Keeping it separate allows:
+
 - Smaller core package size
 - Optional installation
 - Independent versioning
@@ -74,6 +76,7 @@ var prompts = await _promptService.GetApplicablePromptsAsync(
 The panel displays all prompts where `ApplicablePropertyEditors` includes `"Umbraco.RichText"` (or is null for "all editors").
 
 **Benefits**:
+
 - Single source of truth for prompt definitions
 - Administrators configure prompts in one place
 - RTE automatically gets new prompts when added
@@ -100,6 +103,7 @@ AI responses stream in real-time via Server-Sent Events (SSE):
 ```
 
 **Rationale**:
+
 - Better UX for longer operations (users see progress)
 - Can cancel mid-generation
 - Perceived performance improvement
@@ -108,14 +112,15 @@ AI responses stream in real-time via Server-Sent Events (SSE):
 
 The extension detects whether text is selected:
 
-| Context | Behavior |
-|---------|----------|
-| Text selected | AI operates on selection only |
-| No selection | AI operates on full editor content |
+| Context       | Behavior                           |
+| ------------- | ---------------------------------- |
+| Text selected | AI operates on selection only      |
+| No selection  | AI operates on full editor content |
 
 This is communicated clearly in the UI:
-- "Working with: *Selected text...* (47 words)"
-- "Working with: *Entire document* (523 words)"
+
+- "Working with: _Selected text..._ (47 words)"
+- "Working with: _Entire document_ (523 words)"
 
 ### 5. Preview Before Apply
 
@@ -138,6 +143,7 @@ All prompt results show in a preview state before application:
 ```
 
 **Actions**:
+
 - **Apply Changes**: Replaces selection/content with AI result
 - **Regenerate**: Runs the same prompt again for different output
 - **Cancel**: Discards result and returns to editor
@@ -323,24 +329,24 @@ src/Umbraco.AI.Tiptap/
 
 ```typescript
 export const manifests: Array<UmbExtensionManifest> = [
-  {
-    type: 'tiptapToolbarExtension',
-    kind: 'button',
-    alias: 'UmbracoAI.Tiptap.Toolbar.AIAssistant',
-    name: 'AI Assistant TipTap Toolbar Extension',
-    api: () => import('./ai.tiptap-toolbar-api.js'),
-    meta: {
-      alias: 'aiAssistant',
-      icon: 'icon-wand',
-      label: 'AI Assistant',
+    {
+        type: "tiptapToolbarExtension",
+        kind: "button",
+        alias: "UmbracoAI.Tiptap.Toolbar.AIAssistant",
+        name: "AI Assistant TipTap Toolbar Extension",
+        api: () => import("./ai.tiptap-toolbar-api.js"),
+        meta: {
+            alias: "aiAssistant",
+            icon: "icon-wand",
+            label: "AI Assistant",
+        },
     },
-  },
-  {
-    type: 'modal',
-    alias: 'UmbracoAI.Modal.TiptapAIPanel',
-    name: 'AI Panel Modal',
-    element: () => import('../ui/modals/ai-panel-modal.element.js'),
-  },
+    {
+        type: "modal",
+        alias: "UmbracoAI.Modal.TiptapAIPanel",
+        name: "AI Panel Modal",
+        element: () => import("../ui/modals/ai-panel-modal.element.js"),
+    },
 ];
 ```
 
@@ -348,33 +354,31 @@ export const manifests: Array<UmbExtensionManifest> = [
 
 ```typescript
 export default class AITiptapToolbarApi extends UmbTiptapToolbarElementApiBase {
-  override async execute(editor?: Editor): Promise<void> {
-    if (!editor) return;
+    override async execute(editor?: Editor): Promise<void> {
+        if (!editor) return;
 
-    const { from, to, empty } = editor.state.selection;
-    const selectedText = empty
-      ? editor.getText()
-      : editor.state.doc.textBetween(from, to, ' ');
+        const { from, to, empty } = editor.state.selection;
+        const selectedText = empty ? editor.getText() : editor.state.doc.textBetween(from, to, " ");
 
-    const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
-    const modal = modalManager.open(this, AI_PANEL_MODAL, {
-      data: {
-        selectedText,
-        hasSelection: !empty,
-        propertyEditorAlias: 'Umbraco.RichText'
-      }
-    });
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        const modal = modalManager.open(this, AI_PANEL_MODAL, {
+            data: {
+                selectedText,
+                hasSelection: !empty,
+                propertyEditorAlias: "Umbraco.RichText",
+            },
+        });
 
-    const result = await modal.onSubmit().catch(() => undefined);
-    if (!result?.text) return;
+        const result = await modal.onSubmit().catch(() => undefined);
+        if (!result?.text) return;
 
-    // Apply based on output mode and selection state
-    if (empty || result.outputMode === 'replace') {
-      editor.chain().focus().setContent(result.text).run();
-    } else {
-      editor.chain().focus().deleteSelection().insertContent(result.text).run();
+        // Apply based on output mode and selection state
+        if (empty || result.outputMode === "replace") {
+            editor.chain().focus().setContent(result.text).run();
+        } else {
+            editor.chain().focus().deleteSelection().insertContent(result.text).run();
+        }
     }
-  }
 }
 ```
 
@@ -404,24 +408,25 @@ data: {"done": true}
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+A` | Open AI panel |
-| `Escape` | Close panel / Cancel operation |
-| `Enter` | Submit / Apply (when button focused) |
-| `Arrow keys` | Navigate action grid |
+| Shortcut       | Action                               |
+| -------------- | ------------------------------------ |
+| `Ctrl+Shift+A` | Open AI panel                        |
+| `Escape`       | Close panel / Cancel operation       |
+| `Enter`        | Submit / Apply (when button focused) |
+| `Arrow keys`   | Navigate action grid                 |
 
 ---
 
 ## Relationship to Other Features
 
-| Feature | Relationship |
-|---------|-------------|
-| **AI Prompts** | This feature *consumes* AI Prompts. Prompts applicable to RTE appear in the panel. |
-| **AI Context** | When AI Context is built, it will be injected into prompt execution automatically. |
-| **AI Agents** | Agents are for complex, multi-turn conversations. This is for quick, single-shot operations. |
+| Feature        | Relationship                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------------- |
+| **AI Prompts** | This feature _consumes_ AI Prompts. Prompts applicable to RTE appear in the panel.           |
+| **AI Context** | When AI Context is built, it will be injected into prompt execution automatically.           |
+| **AI Agents**  | Agents are for complex, multi-turn conversations. This is for quick, single-shot operations. |
 
 **When to use which**:
+
 - **TipTap AI**: "Improve this paragraph" (quick, in-context)
 - **AI Prompts (on other editors)**: "Generate SEO meta description" (field-level)
 - **AI Agents**: "Help me rewrite this entire article for a different audience" (conversation)
@@ -441,6 +446,7 @@ A floating bubble menu could appear when text is selected, offering quick AI act
 TipTap content is HTML. Should AI responses include HTML formatting?
 
 **Recommendation**:
+
 - For "improve/grammar/simplify" type prompts: Return plain text, preserve original formatting
 - For "expand/generate" prompts: Return HTML if the prompt specifies it
 - Make this configurable per prompt via a new `OutputFormat` property
@@ -456,6 +462,7 @@ Should AI changes integrate with TipTap's undo stack?
 Should there be safeguards for large selections?
 
 **Recommendation**:
+
 - Show word count in UI
 - Warn if selection > 5000 words
 - Backend should enforce profile token limits
@@ -467,11 +474,13 @@ Should there be safeguards for large selections?
 **Consider for Phase 2**, after AI Prompts is implemented.
 
 ### Prerequisites
+
 1. AI Prompts feature complete and stable
 2. Streaming chat endpoint available
 3. Profile system supporting token limits
 
 ### Implementation Order
+
 1. Create `Umbraco.AI.Tiptap` RCL project
 2. Implement toolbar extension and manifest
 3. Build modal with action selection grid

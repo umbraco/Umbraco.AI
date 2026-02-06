@@ -18,10 +18,7 @@ export class UaiConnectionCapabilityServerDataSource {
      * Gets all available capabilities from configured connections.
      */
     async getAvailableCapabilities() {
-        const { data, error } = await tryExecute(
-            this.#host,
-            ConnectionsService.getAllCapabilities()
-        );
+        const { data, error } = await tryExecute(this.#host, ConnectionsService.getAllCapabilities());
 
         if (error) {
             return { error };
@@ -33,14 +30,16 @@ export class UaiConnectionCapabilityServerDataSource {
     /**
      * Gets connections that support a specific capability.
      */
-    async getConnectionsByCapability(capability: string): Promise<{ data?: UaiConnectionItemModel[]; error?: unknown }> {
+    async getConnectionsByCapability(
+        capability: string,
+    ): Promise<{ data?: UaiConnectionItemModel[]; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
             ConnectionsService.getAllConnections({
                 query: {
                     capability,
                 },
-            })
+            }),
         );
 
         if (error || !data) {

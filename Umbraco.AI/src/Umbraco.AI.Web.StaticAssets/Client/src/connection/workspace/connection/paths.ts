@@ -10,10 +10,10 @@ export const UAI_CONNECTION_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generate
 
 export const UAI_CREATE_CONNECTION_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ providerAlias: string }>(
     "create/:providerAlias",
-    UAI_CONNECTION_WORKSPACE_PATH
+    UAI_CONNECTION_WORKSPACE_PATH,
 );
 
 export const UAI_EDIT_CONNECTION_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ unique: string }>(
     "edit/:unique",
-    UAI_CONNECTION_WORKSPACE_PATH
+    UAI_CONNECTION_WORKSPACE_PATH,
 );

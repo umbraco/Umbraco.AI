@@ -1,4 +1,3 @@
-
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
 import { UAI_AUDIT_LOG_COLLECTION_ALIAS, UAI_AUDIT_LOG_ROOT_WORKSPACE_ALIAS } from "../../constants.js";
 import { UAI_AUDIT_LOG_ROOT_ENTITY_TYPE } from "../../entity.js";

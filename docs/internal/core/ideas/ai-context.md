@@ -8,7 +8,7 @@ This document explores **AI Context**, a system for attaching contextual resourc
 
 ## The Idea
 
-AI Context provides a centralized place to define *how* AI should behave when generating content. Instead of repeating brand guidelines in every prompt, you define them once and they're automatically injected into all AI operations.
+AI Context provides a centralized place to define _how_ AI should behave when generating content. Instead of repeating brand guidelines in every prompt, you define them once and they're automatically injected into all AI operations.
 
 **Core Concept**: Define once, apply everywhere.
 
@@ -73,12 +73,12 @@ AI Contexts (defined in settings):
 
 Context can be assigned at four levels, each serving a different purpose:
 
-| Level | How Assigned | Purpose | Example |
-|-------|--------------|---------|---------|
-| **Content** | Property editor on content nodes | Site/section brand voice | "Corporate Site uses Corporate Brand Voice" |
-| **Profile** | UI picker in profile settings | Default baseline for profile | "Content Writing profile includes Brand Basics" |
-| **Prompt** | UI picker in prompt settings | Task-specific guidance | "SEO Meta Description prompt uses SEO Guidelines" |
-| **Agent** | UI picker in agent settings | Specialized expertise | "Legal Reviewer agent uses Legal Compliance" |
+| Level       | How Assigned                     | Purpose                      | Example                                           |
+| ----------- | -------------------------------- | ---------------------------- | ------------------------------------------------- |
+| **Content** | Property editor on content nodes | Site/section brand voice     | "Corporate Site uses Corporate Brand Voice"       |
+| **Profile** | UI picker in profile settings    | Default baseline for profile | "Content Writing profile includes Brand Basics"   |
+| **Prompt**  | UI picker in prompt settings     | Task-specific guidance       | "SEO Meta Description prompt uses SEO Guidelines" |
+| **Agent**   | UI picker in agent settings      | Specialized expertise        | "Legal Reviewer agent uses Legal Compliance"      |
 
 ### 3. Content Context Inheritance
 
@@ -148,6 +148,7 @@ Resource Type Plugin:
 ```
 
 **Built-in Resource Types:**
+
 ```
 ├── brand-voice     → Structured tone, audience, style, avoid patterns
 ├── document        → Attached files (style guides, brand books)
@@ -156,6 +157,7 @@ Resource Type Plugin:
 ```
 
 **Custom Resource Types (examples):**
+
 ```
 ├── rag-collection  → Reference to vector store for retrieval
 ├── mcp-server      → MCP server connection for dynamic context
@@ -171,7 +173,7 @@ AI Context is automatically injected into all AI operations - Prompts, Workflows
 
 Property-specific hints (e.g., "max 160 chars for meta descriptions") are **not** part of AI Context. These are schema-level concerns that belong with content type/property editor configuration.
 
-AI Context provides *brand and editorial guidance* (tone, voice, reference materials), not *field validation rules*. Property constraints can be inferred from existing Umbraco property editor configuration (max length, validation regex, JSON schema) - that's a separate concern.
+AI Context provides _brand and editorial guidance_ (tone, voice, reference materials), not _field validation rules_. Property constraints can be inferred from existing Umbraco property editor configuration (max length, validation regex, JSON schema) - that's a separate concern.
 
 ---
 
@@ -514,10 +516,10 @@ Each resource type needs a corresponding UI editor in the backoffice. This uses 
 
 ```typescript
 // glossary-resource-editor.ts
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-@customElement('glossary-resource-editor')
+@customElement("glossary-resource-editor")
 export class GlossaryResourceEditor extends LitElement {
     @property({ type: Object })
     data: GlossaryResourceData = { terms: [] };
@@ -526,21 +528,23 @@ export class GlossaryResourceEditor extends LitElement {
         return html`
             <div class="glossary-editor">
                 <h4>Glossary Terms</h4>
-                ${this.data.terms.map((term, index) => html`
-                    <div class="term-row">
-                        <input
-                            .value=${term.term}
-                            @input=${(e) => this.updateTerm(index, 'term', e.target.value)}
-                            placeholder="Term"
-                        />
-                        <input
-                            .value=${term.definition}
-                            @input=${(e) => this.updateTerm(index, 'definition', e.target.value)}
-                            placeholder="Definition"
-                        />
-                        <button @click=${() => this.removeTerm(index)}>×</button>
-                    </div>
-                `)}
+                ${this.data.terms.map(
+                    (term, index) => html`
+                        <div class="term-row">
+                            <input
+                                .value=${term.term}
+                                @input=${(e) => this.updateTerm(index, "term", e.target.value)}
+                                placeholder="Term"
+                            />
+                            <input
+                                .value=${term.definition}
+                                @input=${(e) => this.updateTerm(index, "definition", e.target.value)}
+                                placeholder="Definition"
+                            />
+                            <button @click=${() => this.removeTerm(index)}>×</button>
+                        </div>
+                    `,
+                )}
                 <button @click=${this.addTerm}>+ Add Term</button>
             </div>
         `;
@@ -548,17 +552,17 @@ export class GlossaryResourceEditor extends LitElement {
 
     private updateTerm(index: number, field: string, value: string) {
         this.data.terms[index][field] = value;
-        this.dispatchEvent(new CustomEvent('change', { detail: this.data }));
+        this.dispatchEvent(new CustomEvent("change", { detail: this.data }));
     }
 
     private addTerm() {
-        this.data.terms = [...this.data.terms, { term: '', definition: '' }];
+        this.data.terms = [...this.data.terms, { term: "", definition: "" }];
         this.requestUpdate();
     }
 
     private removeTerm(index: number) {
         this.data.terms = this.data.terms.filter((_, i) => i !== index);
-        this.dispatchEvent(new CustomEvent('change', { detail: this.data }));
+        this.dispatchEvent(new CustomEvent("change", { detail: this.data }));
     }
 }
 ```
@@ -1001,12 +1005,12 @@ Agents present unique challenges for AI Context compared to Prompts. While Promp
 
 ### Key Differences: Prompts vs Agents
 
-| Aspect | Prompts | Agents |
-|--------|---------|--------|
-| **Scope** | Single content item | Conversational, may span multiple content items |
-| **Context timing** | Fully known at execution | Dynamic, changes during conversation |
-| **Context injection** | Injected into prompt template | Injected into system prompt |
-| **"Current content"** | Explicit (the content being edited) | Implicit (workspace view, last referenced) |
+| Aspect                | Prompts                             | Agents                                          |
+| --------------------- | ----------------------------------- | ----------------------------------------------- |
+| **Scope**             | Single content item                 | Conversational, may span multiple content items |
+| **Context timing**    | Fully known at execution            | Dynamic, changes during conversation            |
+| **Context injection** | Injected into prompt template       | Injected into system prompt                     |
+| **"Current content"** | Explicit (the content being edited) | Implicit (workspace view, last referenced)      |
 
 ### Where Context Makes Sense for Agents
 
@@ -1205,10 +1209,10 @@ public class CodeHelperAgent : AgentBase
 
 When should agent context be refreshed during a conversation?
 
-| Event | Action |
-|-------|--------|
-| Session starts | Resolve context from initial workspace |
-| User navigates to different content | Refresh context (if agent is workspace-aware) |
+| Event                                   | Action                                          |
+| --------------------------------------- | ----------------------------------------------- |
+| Session starts                          | Resolve context from initial workspace          |
+| User navigates to different content     | Refresh context (if agent is workspace-aware)   |
 | User explicitly mentions different site | Consider refreshing (may require NLP detection) |
 
 ```csharp
@@ -1530,6 +1534,7 @@ public static class AIContextServiceExtensions
 ### API Endpoints
 
 API endpoints follow the same patterns as existing Management API controllers, using:
+
 - `[ApiVersion("1.0")]` attribute for versioning
 - `IdOrAlias` type for dual ID/alias lookups in route parameters
 - `IUmbracoMapper` for request/response model mapping
@@ -2234,17 +2239,17 @@ The resource editor needs to support injection mode configuration:
 
 ### Recommendations by Resource Type
 
-| Resource Type | Typical Injection Mode | Rationale |
-|---------------|------------------------|-----------|
-| Brand Voice | Always | Core identity, applies to everything |
-| Target Audience | Always | Fundamental context for all content |
-| Tone Guidelines | Always | Essential for voice consistency |
-| Style Guide | OnDemand | Large document, let LLM decide when to retrieve |
-| Legal Disclaimers | Semantic | Include when query relates to compliance |
-| Product Specs | Semantic | Include when query relates to products |
-| SEO Guidelines | Semantic | Include when query relates to SEO |
-| Reference Docs | OnDemand | Let LLM decide when to retrieve |
-| FAQs | Semantic | Include when query is similar |
+| Resource Type     | Typical Injection Mode | Rationale                                       |
+| ----------------- | ---------------------- | ----------------------------------------------- |
+| Brand Voice       | Always                 | Core identity, applies to everything            |
+| Target Audience   | Always                 | Fundamental context for all content             |
+| Tone Guidelines   | Always                 | Essential for voice consistency                 |
+| Style Guide       | OnDemand               | Large document, let LLM decide when to retrieve |
+| Legal Disclaimers | Semantic               | Include when query relates to compliance        |
+| Product Specs     | Semantic               | Include when query relates to products          |
+| SEO Guidelines    | Semantic               | Include when query relates to SEO               |
+| Reference Docs    | OnDemand               | Let LLM decide when to retrieve                 |
+| FAQs              | Semantic               | Include when query is similar                   |
 
 ### Token Budget Management
 
@@ -2279,16 +2284,19 @@ public class TokenBudgetManager
 ### Implementation Phases
 
 **Phase 1: Always Mode (V1)**
+
 - Implement basic static injection
 - All resources treated as `Always` by default
 
 **Phase 2: OnDemand Mode**
+
 - Add `InjectionMode` to resource model
 - Implement context resource tools (`get_context_resource`, `list_context_resources`)
 - Session storage for resolved context
 - UI for injection mode selection
 
 **Phase 3: Semantic Mode**
+
 - Add `Embedding` field to resource model
 - Integrate embedding generation on resource save
 - Implement similarity search via `IAIContextEmbeddingService`
@@ -2349,6 +2357,7 @@ When should agent context be refreshed during a conversation?
 How do we handle contexts with many resources or large documents?
 
 **Recommendation**:
+
 - Sum resource sizes and warn when context exceeds a threshold
 - Consider chunking large documents or summarizing them
 - For very large reference materials, consider RAG approach in future
@@ -2358,6 +2367,7 @@ How do we handle contexts with many resources or large documents?
 How often should external links be refreshed?
 
 **Recommendation**:
+
 - Manual refresh button in UI for on-demand updates
 - Background job for periodic refresh (configurable, e.g., daily)
 - Show last-fetched timestamp to users
@@ -2373,6 +2383,7 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 ### Implementation Order
 
 **Phase 1: Core Infrastructure (Umbraco.AI)**
+
 1. `AIContext` and `AIContextResource` domain models (sealed, internal set on Id, required init on Alias)
 2. `AIContextResourceTypeCollectionBuilder` and `AIContextResourceTypeCollection` (LazyCollectionBuilderBase)
 3. `IAIContextResourceType` interface and `AIContextResourceTypeBase<T>` base class
@@ -2388,22 +2399,11 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 13. Management UI in backoffice
 14. Add `ContextIds` to `AIProfile` model
 
-**Phase 2: Prompt Integration (Umbraco.AI.Prompt)**
-15. Add `ContextIds` to `AIPrompt` model
-16. Context picker UI in prompt editor
-17. Inject formatted context block into prompt templates
-18. `{context}` variable support in template engine
+**Phase 2: Prompt Integration (Umbraco.AI.Prompt)** 15. Add `ContextIds` to `AIPrompt` model 16. Context picker UI in prompt editor 17. Inject formatted context block into prompt templates 18. `{context}` variable support in template engine
 
-**Phase 3: Agent Integration (Umbraco.AI.Agent)**
-19. Add `ContextIds` to `AIAgent` model
-20. Context picker UI in agent editor
-21. `AIContextInjectionMiddleware` for automatic context injection
-22. Session-level context resolution with merge
-23. Context refresh on workspace navigation
+**Phase 3: Agent Integration (Umbraco.AI.Agent)** 19. Add `ContextIds` to `AIAgent` model 20. Context picker UI in agent editor 21. `AIContextInjectionMiddleware` for automatic context injection 22. Session-level context resolution with merge 23. Context refresh on workspace navigation
 
-**Phase 4: Workflow Integration**
-24. Workflow step context enrichment
-25. Context formatter available in step execution
+**Phase 4: Workflow Integration** 24. Workflow step context enrichment 25. Context formatter available in step execution
 
 ---
 
@@ -2417,40 +2417,40 @@ AI Context should be built first or alongside AI Prompts, as it provides the bra
 
 ## Related Decisions
 
-| Decision | Current Choice |
-|----------|----------------|
-| Naming | "AI Context" |
-| Architecture | Resource-based (generic, extensible) |
-| Context identity | Standalone entities with alias (immutable), reusable across assignments |
-| Assignment levels | Content, Profile, Prompt, Agent |
-| Content assignment | Via property editor, inherits down tree |
-| Profile/Prompt/Agent assignment | Multiple contexts allowed, via UI picker |
-| Merge order | Profile → Agent → Prompt → Content (most specific wins) |
-| Content inheritance | Walk up tree until assignment found, then global default |
-| **Domain models** | `sealed` classes with `internal set` on Id, `required init` on Alias |
-| **Service pattern** | `SaveAsync` for insert-or-update, paged queries for lists |
-| **Repository pattern** | `IEFCoreScopeProvider<UmbracoAIDbContext>` with explicit scope completion |
-| **API pattern** | `IdOrAlias` for dual ID/alias lookups, `[ApiVersion]` for versioning |
-| Resource type extensibility | `AIContextResourceTypeBase<T>` with `IAIContextResourceTypeInfrastructure` injection |
-| Resource type discovery | `LazyCollectionBuilderBase` + `[AIContextResourceTypeAttribute]` auto-discovery |
-| Resource type access | `AIContextResourceTypeCollection` (injected via DI, not a Registry) |
-| Resource type components | Definition (C#) + Format method (C#) + UI Editor (TypeScript/Lit) |
-| Built-in resource types | brand-voice, document, external-link, text |
-| Resource ordering | User-defined sort order within each context |
-| **Context formatting** | `IAIContextFormatter` using `AIContextResourceTypeCollection` |
-| **Middleware integration** | `IAIChatMiddleware` pattern with `AIContextInjectionMiddleware` |
-| Property constraints | Out of scope - schema-level concern, not context |
-| Agent context injection | Opt-in via session, controlled by `EnableContextInjection` flag |
-| Agent context refresh | Session start + workspace change |
-| External link caching | Manual refresh + optional background job |
-| Debugging support | `ContextSource` tracking shows where each resource came from |
-| **Dynamic injection (V2+)** | |
-| Injection modes | `Always`, `Semantic`, `OnDemand` |
-| Default injection mode | `Always` (backwards compatible with V1) |
-| Semantic matching | Embedding-based similarity with configurable threshold (default 0.7) |
-| Semantic fallback | Unmatched Semantic resources automatically available as OnDemand |
-| OnDemand implementation | Tools (`get_context_resource`, `list_context_resources`) |
-| Embedding storage | Stored on resource entity, generated on save |
-| Embedding unavailable | Semantic gracefully degrades to OnDemand |
-| Token budget | Calculated per injection mode, warnings for overbudget |
-| Implementation order | V1: Always only → V2: +OnDemand → V3: +Semantic |
+| Decision                        | Current Choice                                                                       |
+| ------------------------------- | ------------------------------------------------------------------------------------ |
+| Naming                          | "AI Context"                                                                         |
+| Architecture                    | Resource-based (generic, extensible)                                                 |
+| Context identity                | Standalone entities with alias (immutable), reusable across assignments              |
+| Assignment levels               | Content, Profile, Prompt, Agent                                                      |
+| Content assignment              | Via property editor, inherits down tree                                              |
+| Profile/Prompt/Agent assignment | Multiple contexts allowed, via UI picker                                             |
+| Merge order                     | Profile → Agent → Prompt → Content (most specific wins)                              |
+| Content inheritance             | Walk up tree until assignment found, then global default                             |
+| **Domain models**               | `sealed` classes with `internal set` on Id, `required init` on Alias                 |
+| **Service pattern**             | `SaveAsync` for insert-or-update, paged queries for lists                            |
+| **Repository pattern**          | `IEFCoreScopeProvider<UmbracoAIDbContext>` with explicit scope completion            |
+| **API pattern**                 | `IdOrAlias` for dual ID/alias lookups, `[ApiVersion]` for versioning                 |
+| Resource type extensibility     | `AIContextResourceTypeBase<T>` with `IAIContextResourceTypeInfrastructure` injection |
+| Resource type discovery         | `LazyCollectionBuilderBase` + `[AIContextResourceTypeAttribute]` auto-discovery      |
+| Resource type access            | `AIContextResourceTypeCollection` (injected via DI, not a Registry)                  |
+| Resource type components        | Definition (C#) + Format method (C#) + UI Editor (TypeScript/Lit)                    |
+| Built-in resource types         | brand-voice, document, external-link, text                                           |
+| Resource ordering               | User-defined sort order within each context                                          |
+| **Context formatting**          | `IAIContextFormatter` using `AIContextResourceTypeCollection`                        |
+| **Middleware integration**      | `IAIChatMiddleware` pattern with `AIContextInjectionMiddleware`                      |
+| Property constraints            | Out of scope - schema-level concern, not context                                     |
+| Agent context injection         | Opt-in via session, controlled by `EnableContextInjection` flag                      |
+| Agent context refresh           | Session start + workspace change                                                     |
+| External link caching           | Manual refresh + optional background job                                             |
+| Debugging support               | `ContextSource` tracking shows where each resource came from                         |
+| **Dynamic injection (V2+)**     |                                                                                      |
+| Injection modes                 | `Always`, `Semantic`, `OnDemand`                                                     |
+| Default injection mode          | `Always` (backwards compatible with V1)                                              |
+| Semantic matching               | Embedding-based similarity with configurable threshold (default 0.7)                 |
+| Semantic fallback               | Unmatched Semantic resources automatically available as OnDemand                     |
+| OnDemand implementation         | Tools (`get_context_resource`, `list_context_resources`)                             |
+| Embedding storage               | Stored on resource entity, generated on save                                         |
+| Embedding unavailable           | Semantic gracefully degrades to OnDemand                                             |
+| Token budget                    | Calculated per injection mode, warnings for overbudget                               |
+| Implementation order            | V1: Always only → V2: +OnDemand → V3: +Semantic                                      |

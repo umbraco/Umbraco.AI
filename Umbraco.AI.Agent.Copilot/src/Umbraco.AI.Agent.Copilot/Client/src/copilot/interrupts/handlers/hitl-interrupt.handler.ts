@@ -10,18 +10,18 @@ import type UaiHitlContext from "../../hitl.context.js";
  * Delegates to UaiHitlContext to show the interrupt UI.
  */
 export class UaiHitlInterruptHandler extends UmbControllerBase implements UaiInterruptHandler {
-  readonly reason = "human_approval";
+    readonly reason = "human_approval";
 
-  #hitlContext?: UaiHitlContext;
+    #hitlContext?: UaiHitlContext;
 
-  constructor(host: UmbControllerHost) {
-    super(host);
-    this.consumeContext(UAI_HITL_CONTEXT, (hitlContext) => {
-      this.#hitlContext = hitlContext;
-    });
-  }
+    constructor(host: UmbControllerHost) {
+        super(host);
+        this.consumeContext(UAI_HITL_CONTEXT, (hitlContext) => {
+            this.#hitlContext = hitlContext;
+        });
+    }
 
-  handle(interrupt: UaiInterruptInfo, context: UaiInterruptContext): void {
-    this.#hitlContext?.setInterrupt(interrupt, context);
-  }
+    handle(interrupt: UaiInterruptInfo, context: UaiInterruptContext): void {
+        this.#hitlContext?.setInterrupt(interrupt, context);
+    }
 }

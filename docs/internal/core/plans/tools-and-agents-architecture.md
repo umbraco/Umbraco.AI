@@ -6,12 +6,12 @@ Add tool infrastructure to Umbraco.AI.Core and implement the full Umbraco.AI.Age
 
 ### Design Decisions Made
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Safety Mode | No enforcement in Core | Governance is consumer's responsibility; Agents provides it |
-| Profile Tools | No profile-level tool config | Tools pass via ChatOptions; Agents controls capabilities |
-| Tool Execution | Auto-enable `UseFunctionInvocation()` | When tools present in ChatOptions, middleware is applied |
-| System Prompt | Optional/layered | Profile can have template, Agent/caller can override |
+| Decision       | Choice                                | Rationale                                                   |
+| -------------- | ------------------------------------- | ----------------------------------------------------------- |
+| Safety Mode    | No enforcement in Core                | Governance is consumer's responsibility; Agents provides it |
+| Profile Tools  | No profile-level tool config          | Tools pass via ChatOptions; Agents controls capabilities    |
+| Tool Execution | Auto-enable `UseFunctionInvocation()` | When tools present in ChatOptions, middleware is applied    |
+| System Prompt  | Optional/layered                      | Profile can have template, Agent/caller can override        |
 
 ---
 
@@ -20,6 +20,7 @@ Add tool infrastructure to Umbraco.AI.Core and implement the full Umbraco.AI.Age
 ### 1.1 New Files to Create
 
 #### `src/Umbraco.AI.Core/Tools/IAITool.cs`
+
 ```csharp
 namespace Umbraco.AI.Core.Tools;
 
@@ -43,6 +44,7 @@ public interface IAITool
 ```
 
 #### `src/Umbraco.AI.Core/Tools/AIToolAttribute.cs`
+
 ```csharp
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class AIToolAttribute : Attribute
@@ -57,9 +59,11 @@ public sealed class AIToolAttribute : Attribute
 ```
 
 #### `src/Umbraco.AI.Core/Tools/AIToolBase.cs`
+
 Base class for implementing tools with automatic `AIFunction` creation via reflection on an `Execute`/`ExecuteAsync` method.
 
 #### `src/Umbraco.AI.Core/Tools/IAIToolRegistry.cs`
+
 ```csharp
 public interface IAIToolRegistry
 {
@@ -73,11 +77,13 @@ public interface IAIToolRegistry
 ```
 
 #### `src/Umbraco.AI.Core/Tools/AIToolRegistry.cs`
+
 Implementation using dictionary lookup, following `AIRegistry` pattern.
 
 ### 1.2 Files to Modify
 
 #### `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs`
+
 - Add `UseFunctionInvocation()` middleware to enable automatic tool execution when tools are present
 - This should be applied as the innermost middleware (closest to provider)
 
@@ -103,6 +109,7 @@ private IChatClient BuildClient(IChatClient baseClient, bool hasTools)
 ```
 
 **Issue**: The factory doesn't know if tools will be used at client creation time. Options:
+
 1. Always add `UseFunctionInvocation()` (safe, slight overhead)
 2. Create client lazily when options are known
 3. Add a parameter to `CreateClientAsync` indicating tool usage
@@ -110,7 +117,9 @@ private IChatClient BuildClient(IChatClient baseClient, bool hasTools)
 **Recommendation**: Always add `UseFunctionInvocation()` - it's a no-op when no tools are in options.
 
 #### `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs`
+
 Add tool registration:
+
 ```csharp
 // Tool infrastructure
 services.AddSingleton<IAIToolRegistry, AIToolRegistry>();
@@ -186,6 +195,7 @@ src/Umbraco.AI.Agents/
 ### 2.2 Core Models
 
 #### `AIAgent.cs`
+
 ```csharp
 public sealed class AIAgent
 {
@@ -223,6 +233,7 @@ public sealed class AIAgent
 ```
 
 #### `AgentSession.cs`
+
 ```csharp
 public sealed class AgentSession
 {
@@ -249,6 +260,7 @@ public sealed class AgentContext
 ```
 
 #### `ToolApproval.cs`
+
 ```csharp
 public sealed class ToolApproval
 {
@@ -274,6 +286,7 @@ public enum ApprovalStatus
 ### 2.3 Key Services
 
 #### `IAIAgentService.cs`
+
 ```csharp
 public interface IAIAgentService
 {
@@ -287,6 +300,7 @@ public interface IAIAgentService
 ```
 
 #### `IAIAgentExecutor.cs`
+
 ```csharp
 public interface IAIAgentExecutor
 {
@@ -344,9 +358,9 @@ The approval workflow intercepts destructive tool calls:
 1. Agent requests tool invocation via MEAI function calling
 2. `AIAgentExecutor` intercepts before execution
 3. If tool is destructive (`IsDestructive = true`):
-   - Create `ToolApproval` record with `Pending` status
-   - Return response with `PendingApprovals` list
-   - Do NOT execute the tool yet
+    - Create `ToolApproval` record with `Pending` status
+    - Return response with `PendingApprovals` list
+    - Do NOT execute the tool yet
 4. Frontend shows approval UI
 5. User approves/rejects via `ApproveToolAsync`/`RejectToolAsync`
 6. On approve: Execute tool, continue conversation with result
@@ -471,11 +485,13 @@ public record ToolApprovalResponse(
 ## Part 4: Frontend Components
 
 ### 4.1 Header App (AI Button)
+
 - Button in backoffice header bar
 - Opens sidebar panel
 - Shows agent selector dropdown
 
 ### 4.2 AI Sidebar
+
 - Agent selection dropdown
 - Context banner (current content item)
 - Chat message history
@@ -483,12 +499,14 @@ public record ToolApprovalResponse(
 - Approval widgets inline with messages
 
 ### 4.3 Approval Widget
+
 - Shows tool name and description
 - Displays parameters being passed
 - Approve/Reject buttons
 - Loading state during execution
 
 ### 4.4 Entity Actions
+
 - Context menu items on content tree
 - Quick actions: Generate Summary, Translate, AI Suggestions
 - Opens focused modals for specific tasks
@@ -498,6 +516,7 @@ public record ToolApprovalResponse(
 ## Part 5: Implementation Phases
 
 ### Phase 1: Core Tool Infrastructure
+
 1. Create `Tools/` folder in Umbraco.AI.Core
 2. Implement `IAITool`, `AIToolAttribute`, `AIToolBase`
 3. Implement `IAIToolRegistry`, `AIToolRegistry`
@@ -506,6 +525,7 @@ public record ToolApprovalResponse(
 6. Add unit tests
 
 ### Phase 2: Agents Foundation
+
 1. Create `Umbraco.AI.Agents` project (combined services + API)
 2. Implement models: `AIAgent`, `AgentSession`, `ToolApproval`
 3. Implement `IAIAgentService`, `IAgentSessionService`
@@ -513,12 +533,14 @@ public record ToolApprovalResponse(
 5. Add unit tests
 
 ### Phase 3: Agent Execution
+
 1. Implement `IAIAgentExecutor`
 2. Implement approval workflow with `ApprovalInterceptingChatClient`
 3. Implement `IToolApprovalService`
 4. Integration tests
 
 ### Phase 4: Built-in Tools (Content Only for MVP)
+
 1. Implement `ContentSearchTool` - search content by text
 2. Implement `ContentGetTool` - get content by ID/key
 3. Implement `ContentCreateTool` (destructive) - create new content
@@ -526,11 +548,13 @@ public record ToolApprovalResponse(
 5. Additional tools (media, navigation, search) deferred to later phases
 
 ### Phase 5: Web API (in Umbraco.AI.Agents project)
+
 1. Implement API controllers in the Agents project
 2. Add OpenAPI documentation
 3. Integration tests
 
 ### Phase 6: Frontend
+
 1. Header app component
 2. Sidebar component with chat UI
 3. Approval widget component
@@ -542,11 +566,13 @@ public record ToolApprovalResponse(
 ## Critical Files to Modify
 
 ### Umbraco.AI.Core
+
 - `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs` - Add `UseFunctionInvocation()`
 - `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Register tool services
 - `src/Umbraco.AI.Core/Services/AIChatService.cs` - No changes needed (tools flow via ChatOptions)
 
 ### Reference Files (Patterns to Follow)
+
 - `src/Umbraco.AI.Core/Registry/AIRegistry.cs` - Pattern for tool registry
 - `src/Umbraco.AI.Core/Providers/AIProviderBase.cs` - Pattern for tool base class
 - `src/Umbraco.AI.Core/Middleware/IAIChatMiddleware.cs` - Pattern for middleware
@@ -556,12 +582,12 @@ public record ToolApprovalResponse(
 
 ## Final Decisions
 
-| Question | Decision |
-|----------|----------|
-| Session Storage | In-memory with repository pattern (DB-ready for later) |
-| Project Structure | Combined `Umbraco.AI.Agents` project (services + API) |
-| Initial Tools | Content only (search, get, create, update) |
-| Safety Mode | No enforcement in Core - governance is consumer responsibility |
-| Profile Tools | No profile-level tool config - tools via ChatOptions only |
-| Tool Execution | Auto-enable `UseFunctionInvocation()` when tools present |
-| System Prompt | Optional/layered - Profile can have template, Agent/caller overrides |
+| Question          | Decision                                                             |
+| ----------------- | -------------------------------------------------------------------- |
+| Session Storage   | In-memory with repository pattern (DB-ready for later)               |
+| Project Structure | Combined `Umbraco.AI.Agents` project (services + API)                |
+| Initial Tools     | Content only (search, get, create, update)                           |
+| Safety Mode       | No enforcement in Core - governance is consumer responsibility       |
+| Profile Tools     | No profile-level tool config - tools via ChatOptions only            |
+| Tool Execution    | Auto-enable `UseFunctionInvocation()` when tools present             |
+| System Prompt     | Optional/layered - Profile can have template, Agent/caller overrides |

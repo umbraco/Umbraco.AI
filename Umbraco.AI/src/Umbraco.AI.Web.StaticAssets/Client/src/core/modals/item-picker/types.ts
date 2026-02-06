@@ -1,8 +1,8 @@
 export type UaiPickableItemModel = {
-    value:string
-    label:string
-    description?:string
-    icon?:string
-    color?:string
-    meta?: any
-}
+    value: string;
+    label: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    meta?: any;
+};

@@ -27,7 +27,7 @@ export class UaiContextCollectionServerDataSource implements UmbCollectionDataSo
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },
-            })
+            }),
         );
 
         if (error || !data) {

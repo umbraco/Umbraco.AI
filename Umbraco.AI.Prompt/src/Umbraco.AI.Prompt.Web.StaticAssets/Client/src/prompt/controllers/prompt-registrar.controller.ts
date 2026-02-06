@@ -18,10 +18,7 @@ export class UmbPromptRegistrarController extends UmbControllerBase {
         this.#repository = new UaiPromptRegistrarRepository(this);
 
         // Subscribe to repository state and sync to registry
-        this.observe(
-            this.#repository.promptEntries$,
-            (entries) => this.#syncToRegistry(entries)
-        );
+        this.observe(this.#repository.promptEntries$, (entries) => this.#syncToRegistry(entries));
     }
 
     /**
@@ -40,8 +37,7 @@ export class UmbPromptRegistrarController extends UmbControllerBase {
         const currentAliases = new Set<string>();
 
         // Sort alphabetically by alias and assign weights
-        const sorted = Array.from(entries.values())
-            .sort((a, b) => a.alias.localeCompare(b.alias));
+        const sorted = Array.from(entries.values()).sort((a, b) => a.alias.localeCompare(b.alias));
 
         // Register/update all current entries
         sorted.forEach((entry, index) => {

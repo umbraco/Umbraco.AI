@@ -1,20 +1,18 @@
-
 import { css, customElement, html, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 
 @customElement("uai-analytics-summary-card")
 export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
+    @property({ type: String })
+    icon: string = "icon-activity";
 
     @property({ type: String })
-    icon: string = 'icon-activity';
-    
-    @property({ type: String })
-    value: string = '';
+    value: string = "";
 
     @property({ type: String })
-    label: string = '';
-    
+    label: string = "";
+
     constructor() {
         super();
     }
@@ -26,7 +24,7 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
                 <div class="card-value">${this.value}</div>
                 <div class="card-label">${this.label}</div>
             </div>
-        </uui-card>`
+        </uui-card>`;
     }
 
     static override styles = [
@@ -35,7 +33,7 @@ export class UaiAnalyticsSummaryCardElement extends UmbLitElement {
             :host {
                 display: block;
             }
-            
+
             .summary-card {
                 display: flex;
                 gap: var(--uui-size-space-2);
@@ -88,5 +86,3 @@ declare global {
         "uai-analytics-summary-card": UaiAnalyticsSummaryCardElement;
     }
 }
-
-

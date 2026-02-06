@@ -1,7 +1,15 @@
-import { css, html, customElement, property, query, state, type PropertyValues } from "@umbraco-cms/backoffice/external/lit";
+import {
+    css,
+    html,
+    customElement,
+    property,
+    query,
+    state,
+    type PropertyValues,
+} from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { Chart, ChartConfiguration, registerables } from "chart.js";
 
 /**
  * Generic time series data point
@@ -32,7 +40,6 @@ export interface AnalyticsTimeSeriesTab {
 
 @customElement("uai-analytics-time-series-chart")
 export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
-
     @property({ type: Array })
     data?: AnalyticsTimeSeriesDataPoint[];
 
@@ -43,10 +50,10 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
     datasets?: AnalyticsTimeSeriesDataset[];
 
     @property({ type: String })
-    headline = 'Time Series';
+    headline = "Time Series";
 
     @property({ type: Object })
-    chartOptions?: Partial<ChartConfiguration['options']>;
+    chartOptions?: Partial<ChartConfiguration["options"]>;
 
     @property({ type: Function })
     valueFormatter?: (value: number) => string;
@@ -55,7 +62,7 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
     timestampFormatter?: (date: Date) => string;
 
     @property({ type: String })
-    dateRangeType?: 'last24h' | 'last7d' | 'last30d';
+    dateRangeType?: "last24h" | "last7d" | "last30d";
 
     @property({ type: String })
     fromDate?: string;
@@ -69,7 +76,7 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
     @state()
     private _chart?: Chart;
 
-    @query('#chart-canvas')
+    @query("#chart-canvas")
     private _canvasElement?: HTMLCanvasElement;
 
     constructor() {
@@ -88,10 +95,12 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
     override updated(changedProperties: PropertyValues) {
         super.updated(changedProperties);
 
-        if (changedProperties.has('data') ||
-            changedProperties.has('_activeTab') ||
-            changedProperties.has('datasets') ||
-            changedProperties.has('tabs')) {
+        if (
+            changedProperties.has("data") ||
+            changedProperties.has("_activeTab") ||
+            changedProperties.has("datasets") ||
+            changedProperties.has("tabs")
+        ) {
             this._updateChart();
         }
     }
@@ -104,7 +113,7 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
     private _initializeChart() {
         if (!this._canvasElement) return;
 
-        const ctx = this._canvasElement.getContext('2d');
+        const ctx = this._canvasElement.getContext("2d");
         if (!ctx) return;
 
         const config = this._getChartConfig();
@@ -123,17 +132,17 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
     }
 
     private _getChartConfig(): ChartConfiguration {
-        const defaultOptions: ChartConfiguration['options'] = {
+        const defaultOptions: ChartConfiguration["options"] = {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
             interaction: {
-                mode: 'index',
+                mode: "index",
                 intersect: false,
             },
             plugins: {
                 legend: {
-                    position: 'top',
+                    position: "top",
                     labels: {
                         usePointStyle: true,
                         boxWidth: 8,
@@ -144,32 +153,32 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
                         generateLabels: (chart) => {
                             const datasets = chart.data.datasets;
                             return datasets.map((dataset, i) => ({
-                                text: '  ' + dataset.label,
+                                text: "  " + dataset.label,
                                 fillStyle: dataset.backgroundColor as string,
                                 hidden: !chart.isDatasetVisible(i),
-                                lineCap: 'round',
+                                lineCap: "round",
                                 lineDash: [],
                                 lineDashOffset: 0,
-                                lineJoin: 'round',
+                                lineJoin: "round",
                                 lineWidth: 0,
                                 strokeStyle: dataset.borderColor as string,
-                                pointStyle: 'circle',
-                                datasetIndex: i
+                                pointStyle: "circle",
+                                datasetIndex: i,
                             }));
-                        }
-                    }
+                        },
+                    },
                 },
                 tooltip: {
                     callbacks: {
                         label: (context) => {
-                            const label = context.dataset.label || '';
+                            const label = context.dataset.label || "";
                             const value = this.valueFormatter
                                 ? this.valueFormatter(context.parsed.y!)
                                 : this._defaultValueFormatter(context.parsed.y!);
                             return `${label}: ${value}`;
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             scales: {
                 x: {
@@ -182,11 +191,9 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
                             const index = context.index;
                             const totalTicks = context.chart.scales.x.ticks.length;
                             const skipInterval = Math.ceil(totalTicks / 12);
-                            return index % skipInterval === 0
-                                ? 'rgba(0, 0, 0, 0.1)'
-                                : 'rgba(0, 0, 0, 0.03)';
+                            return index % skipInterval === 0 ? "rgba(0, 0, 0, 0.1)" : "rgba(0, 0, 0, 0.03)";
                         },
-                        tickLength: 8
+                        tickLength: 8,
                     },
                     ticks: {
                         maxRotation: 45,
@@ -195,22 +202,23 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
                         callback: (_value, index, ticks) => {
                             const skipInterval = Math.ceil(ticks.length / 12);
                             if (index % skipInterval === 0) {
-                                return (this._chart?.data.labels?.[index] as string) || '';
+                                return (this._chart?.data.labels?.[index] as string) || "";
                             }
-                            return '';
-                        }
-                    }
+                            return "";
+                        },
+                    },
                 },
                 y: {
                     stacked: true,
                     beginAtZero: true,
                     ticks: {
-                        callback: (value) => this.valueFormatter
-                            ? this.valueFormatter(Number(value))
-                            : this._defaultValueFormatter(Number(value))
-                    }
-                }
-            }
+                        callback: (value) =>
+                            this.valueFormatter
+                                ? this.valueFormatter(Number(value))
+                                : this._defaultValueFormatter(Number(value)),
+                    },
+                },
+            },
         };
 
         // Merge with custom options if provided
@@ -219,9 +227,9 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
             : defaultOptions;
 
         return {
-            type: 'bar',
+            type: "bar",
             data: this._prepareChartData(),
-            options: mergedOptions
+            options: mergedOptions,
         };
     }
 
@@ -238,7 +246,7 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
 
         // Sort by timestamp
         const sortedData = [...this.data].sort(
-            (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
         );
 
         // Determine granularity (hourly vs daily)
@@ -248,7 +256,7 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
         const filledData = this._fillTimeSeriesGaps(sortedData, isHourly);
 
         // Extract labels (x-axis: timestamps)
-        const labels = filledData.map(point => {
+        const labels = filledData.map((point) => {
             const date = new Date(point.timestamp);
             return this.timestampFormatter
                 ? this.timestampFormatter(date)
@@ -256,12 +264,12 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
         });
 
         // Create datasets based on configuration
-        const datasets = activeDatasets.map(config => ({
+        const datasets = activeDatasets.map((config) => ({
             label: config.label,
-            data: filledData.map(point => (point[config.dataKey] as number) || 0),
+            data: filledData.map((point) => (point[config.dataKey] as number) || 0),
             backgroundColor: config.backgroundColor,
             borderColor: config.borderColor,
-            borderWidth: 1
+            borderWidth: 1,
         }));
 
         return { labels, datasets };
@@ -269,7 +277,7 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
 
     private _getActiveDatasets(): AnalyticsTimeSeriesDataset[] {
         if (this.tabs && this.tabs.length > 0) {
-            const activeTab = this.tabs.find(t => t.id === this._activeTab);
+            const activeTab = this.tabs.find((t) => t.id === this._activeTab);
             return activeTab?.datasets || [];
         }
         return this.datasets || [];
@@ -277,10 +285,10 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
 
     private _isHourly(sortedData: AnalyticsTimeSeriesDataPoint[]): boolean {
         // First, check if dateRangeType is provided (most reliable)
-        if (this.dateRangeType === 'last24h' || this.dateRangeType === 'last7d') {
+        if (this.dateRangeType === "last24h" || this.dateRangeType === "last7d") {
             return true; // Both 24h and 7d use hourly buckets
         }
-        if (this.dateRangeType === 'last30d') {
+        if (this.dateRangeType === "last30d") {
             return false; // 30d uses daily buckets
         }
 
@@ -296,29 +304,31 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
         if (sortedData.length < 2) {
             return true; // Default to hourly for single data point
         }
-        const diff = new Date(sortedData[1].timestamp).getTime() -
-                     new Date(sortedData[0].timestamp).getTime();
+        const diff = new Date(sortedData[1].timestamp).getTime() - new Date(sortedData[0].timestamp).getTime();
         return diff < 2 * 60 * 60 * 1000; // Less than 2 hours = hourly
     }
 
-    private _fillTimeSeriesGaps(sortedData: AnalyticsTimeSeriesDataPoint[], isHourly: boolean): AnalyticsTimeSeriesDataPoint[] {
+    private _fillTimeSeriesGaps(
+        sortedData: AnalyticsTimeSeriesDataPoint[],
+        isHourly: boolean,
+    ): AnalyticsTimeSeriesDataPoint[] {
         const startDate = this.fromDate
             ? this._normalizeDate(new Date(this.fromDate), isHourly)
             : sortedData.length > 0
-                ? this._normalizeDate(new Date(sortedData[0].timestamp), isHourly)
-                : new Date();
+              ? this._normalizeDate(new Date(sortedData[0].timestamp), isHourly)
+              : new Date();
 
         const endDate = this.toDate
             ? this._normalizeDate(new Date(this.toDate), isHourly)
             : sortedData.length > 0
-                ? this._normalizeDate(new Date(sortedData[sortedData.length - 1].timestamp), isHourly)
-                : new Date();
+              ? this._normalizeDate(new Date(sortedData[sortedData.length - 1].timestamp), isHourly)
+              : new Date();
 
         const result: AnalyticsTimeSeriesDataPoint[] = [];
         const dataMap = new Map<number, AnalyticsTimeSeriesDataPoint>();
 
         // Create a map of existing data points by normalized timestamp
-        sortedData.forEach(point => {
+        sortedData.forEach((point) => {
             const date = new Date(point.timestamp);
             const normalizedTime = this._normalizeDate(date, isHourly).getTime();
             dataMap.set(normalizedTime, point);
@@ -335,12 +345,12 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
             } else {
                 // Create a zero-value point for missing period
                 const zeroPoint: AnalyticsTimeSeriesDataPoint = {
-                    timestamp: currentDate.toISOString()
+                    timestamp: currentDate.toISOString(),
                 };
 
                 // Initialize all data keys with 0
                 const activeDatasets = this._getActiveDatasets();
-                activeDatasets.forEach(dataset => {
+                activeDatasets.forEach((dataset) => {
                     zeroPoint[dataset.dataKey] = 0;
                 });
 
@@ -370,15 +380,15 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
 
     private _defaultTimestampFormatter(date: Date, isHourly: boolean): string {
         if (isHourly) {
-            return date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric'
+            return date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
             });
         } else {
-            return date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
+            return date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
             });
         }
     }
@@ -399,10 +409,10 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
         const result = { ...target };
 
         for (const key in source) {
-            if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+            if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
                 result[key] = this._deepMerge(
                     (result[key] || {}) as Record<string, any>,
-                    source[key] as Record<string, any>
+                    source[key] as Record<string, any>,
                 ) as T[Extract<keyof T, string>];
             } else {
                 result[key] = source[key] as T[Extract<keyof T, string>];
@@ -422,15 +432,17 @@ export class UaiAnalyticsTimeSeriesChartElement extends UmbLitElement {
         return html`
             <div class="chart-controls" slot="header-actions">
                 <uui-button-group>
-                    ${this.tabs.map(tab => html`
-                        <uui-button
-                            look=${this._activeTab === tab.id ? 'primary' : 'default'}
-                            label=${tab.label}
-                            @click=${() => this._handleTabChange(tab.id)}
-                        >
-                            ${tab.label}
-                        </uui-button>
-                    `)}
+                    ${this.tabs.map(
+                        (tab) => html`
+                            <uui-button
+                                look=${this._activeTab === tab.id ? "primary" : "default"}
+                                label=${tab.label}
+                                @click=${() => this._handleTabChange(tab.id)}
+                            >
+                                ${tab.label}
+                            </uui-button>
+                        `,
+                    )}
                 </uui-button-group>
             </div>
         `;

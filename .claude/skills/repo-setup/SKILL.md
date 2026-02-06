@@ -15,28 +15,28 @@ Perform initial repository setup by running the appropriate setup scripts based 
 ## Available Setup Tasks
 
 1. **Git Hooks** - Install git hooks for branch naming enforcement
-   - Windows: `.\scripts\setup-git-hooks.ps1`
-   - Linux/Mac: `./scripts/setup-git-hooks.sh`
+    - Windows: `.\scripts\setup-git-hooks.ps1`
+    - Linux/Mac: `./scripts/setup-git-hooks.sh`
 
 2. **Demo Site** - Create unified solution with demo Umbraco instance
-   - Windows: `.\scripts\install-demo-site.ps1`
-   - Linux/Mac: `./scripts/install-demo-site.sh`
-   - Options: `-SkipTemplateInstall` / `-Force` (PowerShell) or `--skip-template-install` / `--force` (Bash)
+    - Windows: `.\scripts\install-demo-site.ps1`
+    - Linux/Mac: `./scripts/install-demo-site.sh`
+    - Options: `-SkipTemplateInstall` / `-Force` (PowerShell) or `--skip-template-install` / `--force` (Bash)
 
 3. **Dependencies** - Install npm workspace dependencies
-   - Command: `npm install`
+    - Command: `npm install`
 
 4. **Initial Build** - Build the unified solution
-   - Command: `dotnet build Umbraco.AI.local.sln`
+    - Command: `dotnet build Umbraco.AI.local.sln`
 
 ## Workflow
 
 1. **Detect platform** - Check if Windows (PowerShell) or Linux/Mac (Bash)
 2. **Ask user what to set up** - Use AskUserQuestion with options:
-   - "Git hooks only"
-   - "Git hooks + demo site"
-   - "Full setup (hooks + demo + dependencies + build)"
-   - Allow custom selections
+    - "Git hooks only"
+    - "Git hooks + demo site"
+    - "Full setup (hooks + demo + dependencies + build)"
+    - Allow custom selections
 3. **Execute selected tasks** in order
 4. **Report results** - Show what was completed and any errors
 

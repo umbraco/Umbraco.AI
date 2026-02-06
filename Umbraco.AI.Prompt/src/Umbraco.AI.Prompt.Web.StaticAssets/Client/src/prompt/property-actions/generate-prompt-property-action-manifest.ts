@@ -1,7 +1,11 @@
-import type { ManifestPropertyAction } from '@umbraco-cms/backoffice/property-action';
-import { TEXT_BASED_PROPERTY_EDITOR_UIS, UAI_PROMPT_PROPERTY_ACTION_PREFIX, UAI_PROMPT_SCOPE_CONDITION_ALIAS } from './constants.js';
-import type { UaiPromptRegistrationModel, UaiPromptPropertyActionMeta } from './types.js';
-import type { UaiPromptScopeConditionConfig } from './prompt-scope.condition.js';
+import type { ManifestPropertyAction } from "@umbraco-cms/backoffice/property-action";
+import {
+    TEXT_BASED_PROPERTY_EDITOR_UIS,
+    UAI_PROMPT_PROPERTY_ACTION_PREFIX,
+    UAI_PROMPT_SCOPE_CONDITION_ALIAS,
+} from "./constants.js";
+import type { UaiPromptRegistrationModel, UaiPromptPropertyActionMeta } from "./types.js";
+import type { UaiPromptScopeConditionConfig } from "./prompt-scope.condition.js";
 
 /**
  * Gets the property editor UIs that a prompt should appear on based on its scope.
@@ -46,7 +50,7 @@ function getPropertyEditorUisForScope(prompt: UaiPromptRegistrationModel): strin
  */
 export function generatePromptPropertyActionManifest(
     prompt: UaiPromptRegistrationModel,
-    weight: number = 100
+    weight: number = 100,
 ): ManifestPropertyAction<UaiPromptPropertyActionMeta> | null {
     const propertyEditorUis = getPropertyEditorUisForScope(prompt);
 
@@ -56,12 +60,12 @@ export function generatePromptPropertyActionManifest(
     }
 
     return {
-        type: 'propertyAction',
-        kind: 'default',
+        type: "propertyAction",
+        kind: "default",
         alias: `${UAI_PROMPT_PROPERTY_ACTION_PREFIX}.${prompt.alias}`,
         name: `Insert Prompt: ${prompt.name}`,
         forPropertyEditorUis: propertyEditorUis,
-        api: () => import('./prompt-insert.property-action.js'),
+        api: () => import("./prompt-insert.property-action.js"),
         weight,
         meta: {
             icon: "icon-wand",
@@ -69,7 +73,7 @@ export function generatePromptPropertyActionManifest(
             promptUnique: prompt.unique,
             promptDescription: prompt.description ?? null,
             promptScope: prompt.scope ?? null,
-            uiMode: prompt.uiMode ?? 'modal',
+            uiMode: prompt.uiMode ?? "modal",
         },
         conditions: [
             {

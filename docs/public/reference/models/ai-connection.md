@@ -1,6 +1,6 @@
 ---
 description: >-
-  Connection to an AI provider with credentials.
+    Connection to an AI provider with credentials.
 ---
 
 # AIConnection
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Connections;
 ## Class Definition
 
 {% code title="AIConnection" %}
+
 ```csharp
 public class AIConnection
 {
@@ -29,20 +30,21 @@ public class AIConnection
     public DateTime DateModified { get; set; } = DateTime.UtcNow;
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Unique identifier (assigned on save) |
-| `Alias` | `string` | Unique alias for lookups |
-| `Name` | `string` | Display name |
-| `ProviderId` | `string` | ID of the provider (for example, `"openai"`) |
-| `Settings` | `object?` | Provider-specific settings |
-| `IsActive` | `bool` | Whether connection is enabled |
-| `DateCreated` | `DateTime` | Creation timestamp (UTC) |
-| `DateModified` | `DateTime` | Last modification timestamp (UTC) |
+| Property       | Type       | Description                                  |
+| -------------- | ---------- | -------------------------------------------- |
+| `Id`           | `Guid`     | Unique identifier (assigned on save)         |
+| `Alias`        | `string`   | Unique alias for lookups                     |
+| `Name`         | `string`   | Display name                                 |
+| `ProviderId`   | `string`   | ID of the provider (for example, `"openai"`) |
+| `Settings`     | `object?`  | Provider-specific settings                   |
+| `IsActive`     | `bool`     | Whether connection is enabled                |
+| `DateCreated`  | `DateTime` | Creation timestamp (UTC)                     |
+| `DateModified` | `DateTime` | Last modification timestamp (UTC)            |
 
 ## Settings
 
@@ -51,6 +53,7 @@ Settings are provider-specific. Each provider defines its own settings class.
 ### OpenAI Example
 
 {% code title="OpenAI Settings" %}
+
 ```csharp
 public class OpenAIProviderSettings
 {
@@ -59,6 +62,7 @@ public class OpenAIProviderSettings
     public string? BaseUrl { get; set; }
 }
 ```
+
 {% endcode %}
 
 ### Configuration References
@@ -66,6 +70,7 @@ public class OpenAIProviderSettings
 Settings values starting with `$` are resolved from configuration:
 
 {% code title="Using Config References" %}
+
 ```csharp
 var connection = new AIConnection
 {
@@ -78,21 +83,25 @@ var connection = new AIConnection
     }
 };
 ```
+
 {% endcode %}
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "OpenAI": {
-    "ApiKey": "sk-actual-key-here"
-  }
+    "OpenAI": {
+        "ApiKey": "sk-actual-key-here"
+    }
 }
 ```
+
 {% endcode %}
 
 ## Creating a Connection
 
 {% code title="Example" %}
+
 ```csharp
 using Umbraco.AI.Core.Connections;
 
@@ -112,6 +121,7 @@ var connection = new AIConnection
 var saved = await connectionService.SaveConnectionAsync(connection);
 Console.WriteLine($"Connection ID: {saved.Id}");
 ```
+
 {% endcode %}
 
 ## Notes

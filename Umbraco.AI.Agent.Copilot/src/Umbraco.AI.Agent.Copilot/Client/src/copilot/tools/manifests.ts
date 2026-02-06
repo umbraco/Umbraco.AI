@@ -4,8 +4,8 @@ import { manifests as exampleToolManifests } from "./examples/manifests.js";
 import { manifests as umbracoToolManifests } from "./umbraco/manifests.js";
 
 export const manifests = [
-	UAI_AGENT_TOOL_DEFAULT_KIND_MANIFEST,
-	...entityToolManifests,
-	...exampleToolManifests,
-	...umbracoToolManifests,
+    UAI_AGENT_TOOL_DEFAULT_KIND_MANIFEST,
+    ...entityToolManifests,
+    ...exampleToolManifests,
+    ...umbracoToolManifests,
 ];

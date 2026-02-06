@@ -1,6 +1,6 @@
 ---
 description: >-
-  Get up and running with Umbraco.AI in your Umbraco CMS installation.
+    Get up and running with Umbraco.AI in your Umbraco CMS installation.
 ---
 
 # Getting Started
@@ -11,9 +11,9 @@ This guide walks you through installing Umbraco.AI, configuring your first AI co
 
 Before you begin, ensure you have:
 
-* Umbraco CMS 17.0 or later installed
-* .NET 10.0 SDK or later
-* An API key from your AI provider (for example, OpenAI)
+- Umbraco CMS 17.0 or later installed
+- .NET 10.0 SDK or later
+- An API key from your AI provider (for example, OpenAI)
 
 ## Steps
 

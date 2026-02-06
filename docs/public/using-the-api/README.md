@@ -1,6 +1,6 @@
 ---
 description: >-
-  Learn how to use Umbraco.AI services in your code for chat, embeddings, and more.
+    Learn how to use Umbraco.AI services in your code for chat, embeddings, and more.
 ---
 
 # Using the API
@@ -9,16 +9,17 @@ Umbraco.AI provides a service layer that wraps Microsoft.Extensions.AI types wit
 
 ## Primary Services
 
-| Service | Purpose |
-|---------|---------|
-| `IAIChatService` | Chat completions and conversational AI |
-| `IAIEmbeddingService` | Generate vector embeddings for text |
+| Service               | Purpose                                |
+| --------------------- | -------------------------------------- |
+| `IAIChatService`      | Chat completions and conversational AI |
+| `IAIEmbeddingService` | Generate vector embeddings for text    |
 
 ## Dependency Injection
 
 All services are registered automatically and can be injected into your controllers, services, and components:
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class MyController : UmbracoApiController
 {
@@ -34,21 +35,23 @@ public class MyController : UmbracoApiController
     }
 }
 ```
+
 {% endcode %}
 
 ## Using M.E.AI Types
 
 Umbraco.AI uses standard Microsoft.Extensions.AI types:
 
-| Type | Namespace | Purpose |
-|------|-----------|---------|
-| `ChatMessage` | `Microsoft.Extensions.AI` | A message in a conversation |
-| `ChatRole` | `Microsoft.Extensions.AI` | User, Assistant, System, Tool |
-| `ChatResponse` | `Microsoft.Extensions.AI` | Complete response from chat |
-| `ChatResponseUpdate` | `Microsoft.Extensions.AI` | Streaming response chunk |
-| `ChatOptions` | `Microsoft.Extensions.AI` | Request options (temperature, and so on) |
+| Type                 | Namespace                 | Purpose                                  |
+| -------------------- | ------------------------- | ---------------------------------------- |
+| `ChatMessage`        | `Microsoft.Extensions.AI` | A message in a conversation              |
+| `ChatRole`           | `Microsoft.Extensions.AI` | User, Assistant, System, Tool            |
+| `ChatResponse`       | `Microsoft.Extensions.AI` | Complete response from chat              |
+| `ChatResponseUpdate` | `Microsoft.Extensions.AI` | Streaming response chunk                 |
+| `ChatOptions`        | `Microsoft.Extensions.AI` | Request options (temperature, and so on) |
 
 {% code title="Example.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 
@@ -58,6 +61,7 @@ var messages = new List<ChatMessage>
     new(ChatRole.User, "Hello!")
 };
 ```
+
 {% endcode %}
 
 ## Quick Examples
@@ -65,6 +69,7 @@ var messages = new List<ChatMessage>
 ### Chat Completion
 
 {% code title="ChatExample.cs" %}
+
 ```csharp
 var messages = new List<ChatMessage>
 {
@@ -74,11 +79,13 @@ var messages = new List<ChatMessage>
 var response = await _chatService.GetChatResponseAsync(messages);
 var answer = response.Message.Text;
 ```
+
 {% endcode %}
 
 ### Streaming Chat
 
 {% code title="StreamingExample.cs" %}
+
 ```csharp
 var messages = new List<ChatMessage>
 {
@@ -90,17 +97,20 @@ await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages
     Console.Write(update.Text);
 }
 ```
+
 {% endcode %}
 
 ### Generate Embedding
 
 {% code title="EmbeddingExample.cs" %}
+
 ```csharp
 var embedding = await _embeddingService.GenerateEmbeddingAsync(
     "Umbraco is a content management system");
 
 float[] vector = embedding.Vector.ToArray();
 ```
+
 {% endcode %}
 
 ## In This Section

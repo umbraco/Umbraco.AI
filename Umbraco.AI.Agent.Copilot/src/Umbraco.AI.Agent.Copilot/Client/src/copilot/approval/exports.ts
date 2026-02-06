@@ -4,7 +4,7 @@
 
 // Approval extension types
 export type {
-  UaiAgentApprovalElementProps,
-  UaiAgentApprovalElement,
-  ManifestUaiAgentApprovalElement,
-} from './uai-agent-approval-element.extension.js';
+    UaiAgentApprovalElementProps,
+    UaiAgentApprovalElement,
+    ManifestUaiAgentApprovalElement,
+} from "./uai-agent-approval-element.extension.js";

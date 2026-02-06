@@ -22,8 +22,8 @@ Umbraco.AI.MicrosoftFoundry is a provider plugin for Umbraco.AI that enables int
 
 This provider uses a simplified structure (single project):
 
-| Project | Purpose |
-|---------|---------|
+| Project                       | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
 | `Umbraco.AI.MicrosoftFoundry` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
@@ -46,12 +46,14 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
 ### Capabilities
 
 **Chat Capability** (`MicrosoftFoundryChatCapability`):
+
 - Extends `AIChatCapabilityBase<MicrosoftFoundryProviderSettings>`
 - Creates `IChatClient` instances using Azure.AI.Inference with Microsoft.Extensions.AI.AzureAIInference
 - Returns empty model list (users specify model names in profiles)
 - Default model: `gpt-4o`
 
 **Embedding Capability** (`MicrosoftFoundryEmbeddingCapability`):
+
 - Extends `AIEmbeddingCapabilityBase<MicrosoftFoundryProviderSettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
 - Returns empty model list (users specify model names in profiles)
@@ -79,7 +81,8 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$MicrosoftF
 ### Microsoft AI Foundry Model Access
 
 Microsoft AI Foundry provides a unified endpoint for multiple model providers:
-- **OpenAI models**: GPT-4o, GPT-4, GPT-3.5-turbo, text-embedding-3-*
+
+- **OpenAI models**: GPT-4o, GPT-4, GPT-3.5-turbo, text-embedding-3-\*
 - **Mistral models**: mistral-large, mistral-small
 - **Llama models**: llama-3-70b, llama-3-8b
 - **Cohere models**: command-r, embed-v3
@@ -98,10 +101,10 @@ One endpoint + one API key provides access to all deployed models. Users specify
 
 ```json
 {
-  "MicrosoftFoundry": {
-    "Endpoint": "https://your-resource.services.ai.azure.com/",
-    "ApiKey": "..."
-  }
+    "MicrosoftFoundry": {
+        "Endpoint": "https://your-resource.services.ai.azure.com/",
+        "ApiKey": "..."
+    }
 }
 ```
 
@@ -121,6 +124,7 @@ One endpoint + one API key provides access to all deployed models. Users specify
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
+
 1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
 3. Registration in the `AIProvidersCollectionBuilder`

@@ -1,1 +1,1 @@
-export * from './embeddings.controller.ts';
+export * from "./embeddings.controller.ts";

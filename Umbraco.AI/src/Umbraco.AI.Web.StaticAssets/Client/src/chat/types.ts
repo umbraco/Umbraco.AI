@@ -2,7 +2,7 @@
  * Chat message role.
  * @public
  */
-export type UaiChatRole = 'user' | 'assistant' | 'system';
+export type UaiChatRole = "user" | "assistant" | "system";
 
 /**
  * Represents a chat message.

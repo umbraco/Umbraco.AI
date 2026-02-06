@@ -8,12 +8,9 @@ export const UAI_CONTEXT_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generateAbs
     entityType: UAI_CONTEXT_ENTITY_TYPE,
 });
 
-export const UAI_CREATE_CONTEXT_WORKSPACE_PATH_PATTERN = new UmbPathPattern(
-    "create",
-    UAI_CONTEXT_WORKSPACE_PATH
-);
+export const UAI_CREATE_CONTEXT_WORKSPACE_PATH_PATTERN = new UmbPathPattern("create", UAI_CONTEXT_WORKSPACE_PATH);
 
 export const UAI_EDIT_CONTEXT_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ unique: string }>(
     "edit/:unique",
-    UAI_CONTEXT_WORKSPACE_PATH
+    UAI_CONTEXT_WORKSPACE_PATH,
 );

@@ -21,10 +21,13 @@ export class UaiAuditLogDetailRepository extends UmbDetailRepositoryBase<UaiAudi
         if (!result.error) {
             // Notify that a trace was deleted so collections can refresh
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_AUDIT_LOG_ENTITY_TYPE));
-            dispatchActionEvent(this, new UmbRequestReloadChildrenOfEntityEvent({
-                entityType: UAI_AUDIT_LOG_ROOT_ENTITY_TYPE,
-                unique: null,
-            }));
+            dispatchActionEvent(
+                this,
+                new UmbRequestReloadChildrenOfEntityEvent({
+                    entityType: UAI_AUDIT_LOG_ROOT_ENTITY_TYPE,
+                    unique: null,
+                }),
+            );
         }
         return result;
     }

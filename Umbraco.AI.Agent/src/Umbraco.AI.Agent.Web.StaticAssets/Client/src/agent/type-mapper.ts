@@ -1,7 +1,11 @@
-import type { AgentResponseModel, AgentItemResponseModel, CreateAgentRequestModel, UpdateAgentRequestModel } from "../api/types.gen.js";
+import type {
+    AgentResponseModel,
+    AgentItemResponseModel,
+    CreateAgentRequestModel,
+    UpdateAgentRequestModel,
+} from "../api/types.gen.js";
 import { UAI_AGENT_ENTITY_TYPE } from "./constants.js";
 import type { UaiAgentDetailModel, UaiAgentItemModel } from "./types.js";
-
 
 export const UaiAgentTypeMapper = {
     toDetailModel(response: AgentResponseModel): UaiAgentDetailModel {

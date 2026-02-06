@@ -21,14 +21,11 @@ export class UaiEmbeddingsController extends UmbControllerBase {
      * @param options - Optional configuration (profile ID/alias, abort signal).
      * @returns The embedding vector or error.
      */
-    async generate(
-        value: string,
-        options?: UaiEmbeddingOptions
-    ): Promise<{ data?: number[]; error?: unknown }> {
+    async generate(value: string, options?: UaiEmbeddingOptions): Promise<{ data?: number[]; error?: unknown }> {
         const result = await this.#repository.generate({
             profileId: options?.profile,
             values: [value],
-            signal: options?.signal
+            signal: options?.signal,
         });
 
         if (result.error || !result.data) {
@@ -46,12 +43,12 @@ export class UaiEmbeddingsController extends UmbControllerBase {
      */
     async generateMany(
         values: string[],
-        options?: UaiEmbeddingOptions
+        options?: UaiEmbeddingOptions,
     ): Promise<{ data?: UaiEmbeddingResult; error?: unknown }> {
         return this.#repository.generate({
             profileId: options?.profile,
             values,
-            signal: options?.signal
+            signal: options?.signal,
         });
     }
 }

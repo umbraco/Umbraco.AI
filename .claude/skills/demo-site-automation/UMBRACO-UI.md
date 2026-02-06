@@ -12,47 +12,50 @@ Reference guide for Umbraco backoffice UI patterns and navigation URLs.
 
 All AI sections are under the Settings area:
 
-| Section | URL Path |
-|---------|----------|
+| Section     | URL Path                                                  |
+| ----------- | --------------------------------------------------------- |
 | Connections | `/umbraco/section/settings/workspace/uai:connection-root` |
-| Profiles | `/umbraco/section/settings/workspace/uai:profile-root` |
-| Prompts | `/umbraco/section/settings/workspace/uai:prompt-root` |
-| Agents | `/umbraco/section/settings/workspace/uai:agent-root` |
-| Contexts | `/umbraco/section/settings/workspace/uai:context-root` |
-| Analytics | `/umbraco/section/settings/workspace/ai-analytics-root` |
-| Logs | `/umbraco/section/settings/workspace/uai:trace-root` |
-| AI Settings | `/umbraco/section/settings/workspace/uai:settings-root` |
-| Copilot | Via "AI Assistant" button in top toolbar |
+| Profiles    | `/umbraco/section/settings/workspace/uai:profile-root`    |
+| Prompts     | `/umbraco/section/settings/workspace/uai:prompt-root`     |
+| Agents      | `/umbraco/section/settings/workspace/uai:agent-root`      |
+| Contexts    | `/umbraco/section/settings/workspace/uai:context-root`    |
+| Analytics   | `/umbraco/section/settings/workspace/ai-analytics-root`   |
+| Logs        | `/umbraco/section/settings/workspace/uai:trace-root`      |
+| AI Settings | `/umbraco/section/settings/workspace/uai:settings-root`   |
+| Copilot     | Via "AI Assistant" button in top toolbar                  |
 
 ## Element Patterns
 
 Umbraco backoffice uses Umbraco UI Library (Lit components):
 
-| Element Type | HTML Tag | Key Attribute |
-|--------------|----------|---------------|
-| Buttons | `<uui-button>` | `label` |
-| Inputs | `<uui-input>` | `name` |
-| Selects | `<uui-select>` | Custom dropdowns |
-| Dialogs | `<umb-modal-dialog>` | Modal containers |
-| Tables | `<uui-table>` | With rows/cells |
-| Navigation | `<umb-section-sidebar>` | Sidebar navigation |
-| Workspace | `<umb-workspace>` | Main content area |
+| Element Type | HTML Tag                | Key Attribute      |
+| ------------ | ----------------------- | ------------------ |
+| Buttons      | `<uui-button>`          | `label`            |
+| Inputs       | `<uui-input>`           | `name`             |
+| Selects      | `<uui-select>`          | Custom dropdowns   |
+| Dialogs      | `<umb-modal-dialog>`    | Modal containers   |
+| Tables       | `<uui-table>`           | With rows/cells    |
+| Navigation   | `<umb-section-sidebar>` | Sidebar navigation |
+| Workspace    | `<umb-workspace>`       | Main content area  |
 
 ### Common Interaction Patterns
 
 **Finding buttons:**
+
 ```
 Look for <uui-button label="Create"> or similar
 Use the ref attribute from browser_snapshot for clicks
 ```
 
 **Finding form fields:**
+
 ```
 Look for <uui-input name="fieldName"> elements
 Use browser_fill_form with field refs
 ```
 
 **Finding list items:**
+
 ```
 Look for <uui-table-row> elements within <uui-table>
 Each row typically has action buttons (edit, delete)

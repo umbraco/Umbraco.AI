@@ -1,6 +1,6 @@
 ---
 description: >-
-  Core concepts for Agent Runtime.
+    Core concepts for Agent Runtime.
 ---
 
 # Agent Concepts
@@ -16,16 +16,16 @@ An agent is a configured AI assistant that can:
 
 ## Agent Properties
 
-| Property | Description |
-|----------|-------------|
-| `Alias` | Unique identifier for code references |
-| `Name` | Display name in the backoffice |
-| `Description` | Optional description |
-| `Instructions` | System prompt defining agent behavior |
-| `ProfileId` | Associated AI profile (or uses default) |
-| `ContextIds` | AI Contexts to inject |
-| `ScopeIds` | Scopes for categorization (e.g., "copilot") |
-| `IsActive` | Whether the agent is available |
+| Property       | Description                                 |
+| -------------- | ------------------------------------------- |
+| `Alias`        | Unique identifier for code references       |
+| `Name`         | Display name in the backoffice              |
+| `Description`  | Optional description                        |
+| `Instructions` | System prompt defining agent behavior       |
+| `ProfileId`    | Associated AI profile (or uses default)     |
+| `ContextIds`   | AI Contexts to inject                       |
+| `ScopeIds`     | Scopes for categorization (e.g., "copilot") |
+| `IsActive`     | Whether the agent is available              |
 
 ## AG-UI Protocol
 
@@ -51,45 +51,45 @@ Agents communicate using the AG-UI (Agent UI) protocol, a standardized event for
 
 ### Lifecycle Events
 
-| Event | Description |
-|-------|-------------|
-| `run_started` | Agent run has begun |
+| Event          | Description                      |
+| -------------- | -------------------------------- |
+| `run_started`  | Agent run has begun              |
 | `run_finished` | Agent run completed successfully |
-| `run_error` | Agent run failed with error |
+| `run_error`    | Agent run failed with error      |
 
 ### Text Message Events
 
-| Event | Description |
-|-------|-------------|
-| `text_message_start` | Beginning of a text message |
-| `text_message_content` | Text content chunk |
-| `text_message_end` | End of a text message |
+| Event                  | Description                 |
+| ---------------------- | --------------------------- |
+| `text_message_start`   | Beginning of a text message |
+| `text_message_content` | Text content chunk          |
+| `text_message_end`     | End of a text message       |
 
 ### Tool Events
 
-| Event | Description |
-|-------|-------------|
-| `tool_call_start` | Tool call initiated |
-| `tool_call_args` | Tool argument chunk |
-| `tool_call_end` | Tool call complete |
+| Event              | Description           |
+| ------------------ | --------------------- |
+| `tool_call_start`  | Tool call initiated   |
+| `tool_call_args`   | Tool argument chunk   |
+| `tool_call_end`    | Tool call complete    |
 | `tool_call_result` | Tool execution result |
 
 ### State Events
 
-| Event | Description |
-|-------|-------------|
-| `state_snapshot` | Complete state update |
-| `state_delta` | Incremental state change |
+| Event            | Description              |
+| ---------------- | ------------------------ |
+| `state_snapshot` | Complete state update    |
+| `state_delta`    | Incremental state change |
 
 ## Agent vs Prompt
 
-| Aspect | Prompt | Agent |
-|--------|--------|-------|
-| **Execution** | Single request/response | Streaming conversation |
-| **Protocol** | Simple HTTP | SSE with AG-UI events |
-| **Tools** | No tool support | Frontend tool definitions |
-| **Use Case** | One-shot generation | Interactive assistance |
-| **Complexity** | Simple | More complex |
+| Aspect         | Prompt                  | Agent                     |
+| -------------- | ----------------------- | ------------------------- |
+| **Execution**  | Single request/response | Streaming conversation    |
+| **Protocol**   | Simple HTTP             | SSE with AG-UI events     |
+| **Tools**      | No tool support         | Frontend tool definitions |
+| **Use Case**   | One-shot generation     | Interactive assistance    |
+| **Complexity** | Simple                  | More complex              |
 
 ## How Agents Work
 
@@ -108,22 +108,24 @@ When you run an agent:
 Agents can define tools that execute in the browser:
 
 {% code title="Tool Definition" %}
+
 ```json
 {
-  "name": "insert_content",
-  "description": "Insert content at the cursor position",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "content": {
-        "type": "string",
-        "description": "The content to insert"
-      }
-    },
-    "required": ["content"]
-  }
+    "name": "insert_content",
+    "description": "Insert content at the cursor position",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "content": {
+                "type": "string",
+                "description": "The content to insert"
+            }
+        },
+        "required": ["content"]
+    }
 }
 ```
+
 {% endcode %}
 
 When the agent calls this tool, the frontend receives the event and executes the action.
@@ -161,7 +163,7 @@ Every change to an agent creates a new version:
 
 ## Related
 
-* [Instructions](instructions.md) - Configuring agent behavior
-* [Streaming](streaming.md) - SSE event handling
-* [Scopes](scopes.md) - Categorizing agents
-* [Frontend Tools](frontend-tools.md) - Defining tools
+- [Instructions](instructions.md) - Configuring agent behavior
+- [Streaming](streaming.md) - SSE event handling
+- [Scopes](scopes.md) - Categorizing agents
+- [Frontend Tools](frontend-tools.md) - Defining tools

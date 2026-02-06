@@ -35,16 +35,16 @@ Umbraco.AI.Prompt is a prompt management plugin for Umbraco.AI. It provides stor
 
 ### Project Structure
 
-| Project | Purpose |
-|---------|---------|
-| `Umbraco.AI.Prompt.Core` | Core domain models, services, and repository interfaces |
-| `Umbraco.AI.Prompt.Persistence` | EF Core DbContext, entities, and repository implementations |
-| `Umbraco.AI.Prompt.Persistence.SqlServer` | SQL Server migrations |
-| `Umbraco.AI.Prompt.Persistence.Sqlite` | SQLite migrations |
-| `Umbraco.AI.Prompt.Web` | Management API controllers, models, and mapping |
-| `Umbraco.AI.Prompt.Web.StaticAssets` | TypeScript/Lit frontend components |
-| `Umbraco.AI.Prompt.Startup` | Umbraco Composer for auto-discovery and DI registration |
-| `Umbraco.AI.Prompt` | Meta-package that bundles all components |
+| Project                                   | Purpose                                                     |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `Umbraco.AI.Prompt.Core`                  | Core domain models, services, and repository interfaces     |
+| `Umbraco.AI.Prompt.Persistence`           | EF Core DbContext, entities, and repository implementations |
+| `Umbraco.AI.Prompt.Persistence.SqlServer` | SQL Server migrations                                       |
+| `Umbraco.AI.Prompt.Persistence.Sqlite`    | SQLite migrations                                           |
+| `Umbraco.AI.Prompt.Web`                   | Management API controllers, models, and mapping             |
+| `Umbraco.AI.Prompt.Web.StaticAssets`      | TypeScript/Lit frontend components                          |
+| `Umbraco.AI.Prompt.Startup`               | Umbraco Composer for auto-discovery and DI registration     |
+| `Umbraco.AI.Prompt`                       | Meta-package that bundles all components                    |
 
 ### Key Services
 
@@ -54,6 +54,7 @@ Umbraco.AI.Prompt is a prompt management plugin for Umbraco.AI. It provides stor
 ### Domain Model
 
 The `Prompt` entity represents a stored prompt template:
+
 - `Id` - Unique identifier
 - `Alias` - URL-safe unique identifier
 - `Name` - Display name
@@ -68,14 +69,14 @@ The `Prompt` entity represents a stored prompt template:
 
 Endpoints are under `/umbraco/ai/management/api/v1/prompts/`:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/prompts` | Get all prompts (paged) |
-| GET | `/prompts/{promptIdOrAlias}` | Get prompt by ID or alias |
-| GET | `/prompts/profile/{profileId}` | Get prompts by profile |
-| POST | `/prompts` | Create prompt |
-| PUT | `/prompts/{promptIdOrAlias}` | Update prompt by ID or alias |
-| DELETE | `/prompts/{promptIdOrAlias}` | Delete prompt by ID or alias |
+| Method | Endpoint                       | Description                  |
+| ------ | ------------------------------ | ---------------------------- |
+| GET    | `/prompts`                     | Get all prompts (paged)      |
+| GET    | `/prompts/{promptIdOrAlias}`   | Get prompt by ID or alias    |
+| GET    | `/prompts/profile/{profileId}` | Get prompts by profile       |
+| POST   | `/prompts`                     | Create prompt                |
+| PUT    | `/prompts/{promptIdOrAlias}`   | Update prompt by ID or alias |
+| DELETE | `/prompts/{promptIdOrAlias}`   | Delete prompt by ID or alias |
 
 The `{promptIdOrAlias}` parameter accepts either a GUID (e.g., `550e8400-e29b-41d4-a716-446655440000`) or a string alias (e.g., `my-prompt-alias`). This pattern matches Umbraco.AI's `IdOrAlias` convention.
 
@@ -110,6 +111,7 @@ dotnet ef migrations add UmbracoAIPrompt_<MigrationName> \
 ### Web Layer (Layer-Based Organization)
 
 Web follows Umbraco CMS Management API conventions:
+
 - `Controllers/` - API endpoints
 - `Models/` - Request/response DTOs
 - `Mapping/` - UmbracoMapper definitions
@@ -125,13 +127,13 @@ Web follows Umbraco CMS Management API conventions:
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "Prompt": {
-        // Future configuration options
-      }
+    "Umbraco": {
+        "AI": {
+            "Prompt": {
+                // Future configuration options
+            }
+        }
     }
-  }
 }
 ```
 

@@ -10,91 +10,85 @@ import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 
 @customElement("uai-agent-workspace-editor")
 export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
-  #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
+    #workspaceContext?: typeof UAI_AGENT_WORKSPACE_CONTEXT.TYPE;
 
-  @state()
-  private _model?: UaiAgentDetailModel;
+    @state()
+    private _model?: UaiAgentDetailModel;
 
-  @state()
-  private _isNew?: boolean;
+    @state()
+    private _isNew?: boolean;
 
-  @state()
-  private _aliasLocked = true;
+    @state()
+    private _aliasLocked = true;
 
-  constructor() {
-    super();
+    constructor() {
+        super();
 
-    this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
-      if (!context) return;
-      this.#workspaceContext = context;
-      this.observe(context.model, (model) => {
-        this._model = model;
-      });
-      this.observe(context.isNew, (isNew) => {
-        this._isNew = isNew;
-        if (isNew) {
-          requestAnimationFrame(() => {
-            (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
-          });
-        }
-      });
-    });
-  }
-
-  #onNameChange(event: UUIInputEvent) {
-    event.stopPropagation();
-    const target = event.composedPath()[0] as UUIInputElement;
-    const name = target.value.toString();
-
-    // If alias is locked and creating new, generate alias from name
-    if (this._aliasLocked && this._isNew) {
-      const alias = this.#generateAlias(name);
-      this.#workspaceContext?.handleCommand(
-        new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name, alias }, "name-alias")
-      );
-    } else {
-      this.#workspaceContext?.handleCommand(
-        new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name }, "name")
-      );
+        this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
+            if (!context) return;
+            this.#workspaceContext = context;
+            this.observe(context.model, (model) => {
+                this._model = model;
+            });
+            this.observe(context.isNew, (isNew) => {
+                this._isNew = isNew;
+                if (isNew) {
+                    requestAnimationFrame(() => {
+                        (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
+                    });
+                }
+            });
+        });
     }
-  }
 
-  #onAliasChange(event: UUIInputEvent) {
-    event.stopPropagation();
-    const target = event.composedPath()[0] as UUIInputElement;
-    this.#workspaceContext?.handleCommand(
-      new UaiPartialUpdateCommand<UaiAgentDetailModel>({ alias: target.value.toString() }, "alias")
-    );
-  }
+    #onNameChange(event: UUIInputEvent) {
+        event.stopPropagation();
+        const target = event.composedPath()[0] as UUIInputElement;
+        const name = target.value.toString();
 
-  #onToggleAliasLock() {
-    this._aliasLocked = !this._aliasLocked;
-  }
+        // If alias is locked and creating new, generate alias from name
+        if (this._aliasLocked && this._isNew) {
+            const alias = this.#generateAlias(name);
+            this.#workspaceContext?.handleCommand(
+                new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name, alias }, "name-alias"),
+            );
+        } else {
+            this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name }, "name"));
+        }
+    }
 
-  #generateAlias(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
+    #onAliasChange(event: UUIInputEvent) {
+        event.stopPropagation();
+        const target = event.composedPath()[0] as UUIInputElement;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ alias: target.value.toString() }, "alias"),
+        );
+    }
 
-  #onActiveChange(e: CustomEvent<{ value: boolean }>) {
-    this.#workspaceContext?.handleCommand(
-      new UaiPartialUpdateCommand<UaiAgentDetailModel>({ isActive: e.detail.value }, "isActive")
-    );
-  }
+    #onToggleAliasLock() {
+        this._aliasLocked = !this._aliasLocked;
+    }
 
-  render() {
-    if (!this._model) return html`<uui-loader></uui-loader>`;
+    #generateAlias(name: string): string {
+        return name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+    }
 
-    return html`
+    #onActiveChange(e: CustomEvent<{ value: boolean }>) {
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ isActive: e.detail.value }, "isActive"),
+        );
+    }
+
+    render() {
+        if (!this._model) return html`<uui-loader></uui-loader>`;
+
+        return html`
             <umb-workspace-editor alias="${UAI_AGENT_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_AGENT_ROOT_WORKSPACE_PATH}
-                        label="Back to Agents"
-                        compact
-                    >
+                    <uui-button href=${UAI_AGENT_ROOT_WORKSPACE_PATH} label="Back to Agents" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -126,9 +120,10 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
                 </div>
 
                 ${when(
-      !this._isNew && this._model,
-      () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
-    )}
+                    !this._isNew && this._model,
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
+                )}
 
                 <div slot="footer-info" id="footer">
                     <a href=${UAI_AGENT_ROOT_WORKSPACE_PATH}>Agents</a>
@@ -136,11 +131,11 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
                 </div>
             </umb-workspace-editor>
         `;
-  }
+    }
 
-  static styles = [
-    UmbTextStyles,
-    css`
+    static styles = [
+        UmbTextStyles,
+        css`
             :host {
                 display: block;
                 width: 100%;
@@ -172,13 +167,13 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
                 transform: translate(-50%, -50%);
             }
         `,
-  ];
+    ];
 }
 
 export default UaiAgentWorkspaceEditorElement;
 
 declare global {
-  interface HTMLElementTagNameMap {
-    "uai-agent-workspace-editor": UaiAgentWorkspaceEditorElement;
-  }
+    interface HTMLElementTagNameMap {
+        "uai-agent-workspace-editor": UaiAgentWorkspaceEditorElement;
+    }
 }

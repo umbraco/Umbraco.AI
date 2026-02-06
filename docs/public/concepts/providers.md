@@ -1,6 +1,6 @@
 ---
 description: >-
-  Providers are installable plugins that connect Umbraco.AI to AI services.
+    Providers are installable plugins that connect Umbraco.AI to AI services.
 ---
 
 # Providers
@@ -26,12 +26,12 @@ Providers are discovered automatically when you install their NuGet package. The
 
 ## Available Providers
 
-| Provider | Package | Capabilities |
-|----------|---------|--------------|
-| OpenAI | `Umbraco.AI.OpenAI` | Chat, Embedding |
-| Anthropic | `Umbraco.AI.Anthropic` | Chat |
-| Google Gemini | `Umbraco.AI.Google` | Chat |
-| Amazon Bedrock | `Umbraco.AI.Amazon` | Chat, Embedding |
+| Provider             | Package                       | Capabilities    |
+| -------------------- | ----------------------------- | --------------- |
+| OpenAI               | `Umbraco.AI.OpenAI`           | Chat, Embedding |
+| Anthropic            | `Umbraco.AI.Anthropic`        | Chat            |
+| Google Gemini        | `Umbraco.AI.Google`           | Chat            |
+| Amazon Bedrock       | `Umbraco.AI.Amazon`           | Chat, Embedding |
 | Microsoft AI Foundry | `Umbraco.AI.MicrosoftFoundry` | Chat, Embedding |
 
 {% hint style="info" %}
@@ -43,6 +43,7 @@ For detailed configuration instructions for each provider, see the [Providers](.
 Providers are discovered at application startup through assembly scanning. Any class with the `[AIProvider]` attribute that implements `IAIProvider` is automatically registered.
 
 {% code title="OpenAIProvider.cs" %}
+
 ```csharp
 [AIProvider("openai", "OpenAI")]
 public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
@@ -55,21 +56,23 @@ public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
     }
 }
 ```
+
 {% endcode %}
 
 ## Provider Settings
 
 Each provider defines its own settings class. Common settings include:
 
-| Setting | Description |
-|---------|-------------|
-| API Key | Authentication credential |
-| Endpoint | API URL (for custom endpoints) |
+| Setting      | Description                             |
+| ------------ | --------------------------------------- |
+| API Key      | Authentication credential               |
+| Endpoint     | API URL (for custom endpoints)          |
 | Organization | Organization identifier (if applicable) |
 
 Settings are defined using the `[AISetting]` attribute:
 
 {% code title="OpenAIProviderSettings.cs" %}
+
 ```csharp
 public class OpenAIProviderSettings
 {
@@ -80,16 +83,17 @@ public class OpenAIProviderSettings
     public string? Organization { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Provider Capabilities
 
 A provider can support multiple capabilities:
 
-* **Chat** - Conversational AI and text generation
-* **Embedding** - Vector embeddings for semantic search
-* **Media** - Image generation (future)
-* **Moderation** - Content safety checks (future)
+- **Chat** - Conversational AI and text generation
+- **Embedding** - Vector embeddings for semantic search
+- **Media** - Image generation (future)
+- **Moderation** - Content safety checks (future)
 
 Each capability is implemented as a separate class and registered in the provider constructor.
 
@@ -100,6 +104,7 @@ You rarely need to interact with providers directly. The service layer handles p
 If you need to access provider information:
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class ProviderInfo
 {
@@ -116,6 +121,7 @@ public class ProviderInfo
     }
 }
 ```
+
 {% endcode %}
 
 ## Creating Custom Providers
@@ -128,5 +134,5 @@ You can create providers for AI services not yet supported. See:
 
 ## Related
 
-* [Connections](connections.md) - Store credentials for a provider
-* [Capabilities](capabilities.md) - The operations a provider supports
+- [Connections](connections.md) - Store credentials for a provider
+- [Capabilities](capabilities.md) - The operations a provider supports

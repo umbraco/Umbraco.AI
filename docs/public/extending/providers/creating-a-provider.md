@@ -1,6 +1,6 @@
 ---
 description: >-
-  Step-by-step guide to creating a custom AI provider.
+    Step-by-step guide to creating a custom AI provider.
 ---
 
 # Creating a Provider
@@ -9,20 +9,22 @@ This guide walks through creating a complete custom AI provider from scratch.
 
 ## Prerequisites
 
-* A .NET class library project
-* Reference to `Umbraco.AI.Core`
-* Understanding of the AI service's API
+- A .NET class library project
+- Reference to `Umbraco.AI.Core`
+- Understanding of the AI service's API
 
 ## Step 1: Create the Project
 
 Create a new class library targeting .NET 10:
 
 {% code title="Terminal" %}
+
 ```bash
 dotnet new classlib -n MyCompany.Umbraco.AI.MyProvider -f net10.0
 cd MyCompany.Umbraco.AI.MyProvider
 dotnet add package Umbraco.AI.Core
 ```
+
 {% endcode %}
 
 ## Step 2: Create the Settings Class
@@ -30,6 +32,7 @@ dotnet add package Umbraco.AI.Core
 Define the configuration your provider needs:
 
 {% code title="MyProviderSettings.cs" %}
+
 ```csharp
 using System.ComponentModel.DataAnnotations;
 using Umbraco.AI.Core.Settings;
@@ -58,6 +61,7 @@ public class MyProviderSettings
     public string? OrganizationId { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Step 3: Create the Chat Capability
@@ -65,6 +69,7 @@ public class MyProviderSettings
 Implement the chat capability by extending `AIChatCapabilityBase<TSettings>`:
 
 {% code title="MyProviderChatCapability.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
@@ -105,6 +110,7 @@ public class MyProviderChatCapability : AIChatCapabilityBase<MyProviderSettings>
     }
 }
 ```
+
 {% endcode %}
 
 ## Step 4: Create the Provider Class
@@ -112,6 +118,7 @@ public class MyProviderChatCapability : AIChatCapabilityBase<MyProviderSettings>
 The provider class ties everything together:
 
 {% code title="MyProvider.cs" %}
+
 ```csharp
 using Umbraco.AI.Core.Providers;
 
@@ -131,6 +138,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
     }
 }
 ```
+
 {% endcode %}
 
 ## Step 5: Implement IChatClient (If Needed)
@@ -138,6 +146,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 If your AI service doesn't have an existing M.E.AI client, implement `IChatClient`:
 
 {% code title="MyProviderChatClient.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 
@@ -239,6 +248,7 @@ internal class UsageInfo
     public int OutputTokens { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Step 6: Package and Install
@@ -246,6 +256,7 @@ internal class UsageInfo
 Build your provider as a NuGet package:
 
 {% code title="MyCompany.Umbraco.AI.MyProvider.csproj" %}
+
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -260,6 +271,7 @@ Build your provider as a NuGet package:
   </ItemGroup>
 </Project>
 ```
+
 {% endcode %}
 
 Install in your Umbraco project:
@@ -283,6 +295,6 @@ After installation:
 
 ## Next Steps
 
-* [Provider Settings](provider-settings.md) - Learn about `[AISetting]` options
-* [Chat Capability](chat-capability.md) - Detailed chat implementation guide
-* [Embedding Capability](embedding-capability.md) - Add embedding support
+- [Provider Settings](provider-settings.md) - Learn about `[AISetting]` options
+- [Chat Capability](chat-capability.md) - Detailed chat implementation guide
+- [Embedding Capability](embedding-capability.md) - Add embedding support

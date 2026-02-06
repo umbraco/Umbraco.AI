@@ -1,6 +1,6 @@
 ---
 description: >-
-  The AI Copilot provides an interactive assistant sidebar in the Umbraco backoffice.
+    The AI Copilot provides an interactive assistant sidebar in the Umbraco backoffice.
 ---
 
 # Copilot
@@ -97,12 +97,14 @@ Agents power the Copilot's capabilities. Configure which agent handles Copilot i
 Set a default agent for Copilot in your application:
 
 {% code title="Example.cs" %}
+
 ```csharp
 services.Configure<AIAgentOptions>(options =>
 {
     options.DefaultCopilotAgentAlias = "content-assistant";
 });
 ```
+
 {% endcode %}
 
 ### Agent Instructions
@@ -170,21 +172,21 @@ This allows working with content different from what's currently open in the edi
 
 Each AI message includes action buttons:
 
-| Action | Description |
-|--------|-------------|
-| **Copy** | Copy the message text to clipboard |
-| **Regenerate** | Generate a new response |
+| Action         | Description                        |
+| -------------- | ---------------------------------- |
+| **Copy**       | Copy the message text to clipboard |
+| **Regenerate** | Generate a new response            |
 
 ## Status Indicators
 
 The Copilot shows the current agent status:
 
-| Status | Description |
-|--------|-------------|
-| **Ready** | Agent is waiting for input |
-| **Thinking** | Agent is processing |
-| **Executing** | Agent is running a tool |
-| **Awaiting Approval** | Needs human confirmation |
+| Status                | Description                |
+| --------------------- | -------------------------- |
+| **Ready**             | Agent is waiting for input |
+| **Thinking**          | Agent is processing        |
+| **Executing**         | Agent is running a tool    |
+| **Awaiting Approval** | Needs human confirmation   |
 
 ## Troubleshooting
 
@@ -208,7 +210,7 @@ The Copilot shows the current agent status:
 
 ## Related
 
-* [Agent Copilot](../agent-copilot/README.md) - Full Copilot package documentation
-* [Concepts](concepts.md) - Agent fundamentals
-* [Instructions](instructions.md) - Configuring agent behavior
-* [Frontend Tools](../agent-copilot/frontend-tools.md) - Custom tool integrations
+- [Agent Copilot](../agent-copilot/README.md) - Full Copilot package documentation
+- [Concepts](concepts.md) - Agent fundamentals
+- [Instructions](instructions.md) - Configuring agent behavior
+- [Frontend Tools](../agent-copilot/frontend-tools.md) - Custom tool integrations

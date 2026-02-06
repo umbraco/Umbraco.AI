@@ -57,7 +57,7 @@ export class UaiContextWorkspaceContext
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
-                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!
+                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!,
                     );
                 },
             },
@@ -119,7 +119,7 @@ export class UaiContextWorkspaceContext
                         this.setIsNew(false);
                     }
                 },
-                "_observeModel"
+                "_observeModel",
             );
         }
 
@@ -202,7 +202,6 @@ export class UaiContextWorkspaceContext
             this.#commandStore.unmute();
         }
     }
-
 }
 
 export { UaiContextWorkspaceContext as api };

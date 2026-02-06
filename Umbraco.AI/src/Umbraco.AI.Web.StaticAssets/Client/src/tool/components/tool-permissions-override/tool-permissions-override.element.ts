@@ -2,7 +2,6 @@ import {
 	css,
 	customElement,
 	html,
-	nothing,
 	property,
 	repeat,
 	state,

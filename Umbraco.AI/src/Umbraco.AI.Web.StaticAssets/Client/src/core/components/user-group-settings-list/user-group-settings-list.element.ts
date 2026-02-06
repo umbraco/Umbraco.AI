@@ -2,7 +2,6 @@ import {
 	css,
 	customElement,
 	html,
-	nothing,
 	property,
 	repeat,
 	state,
@@ -14,7 +13,7 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UMB_USER_GROUP_PICKER_MODAL } from "@umbraco-cms/backoffice/user-group";
-import type { UserGroupService } from "@umbraco-cms/backoffice/external/backend-api";
+import { UserGroupService } from "@umbraco-cms/backoffice/external/backend-api";
 import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
 
 /**
@@ -186,6 +185,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 	 */
 	private async _addUserGroup(): Promise<void> {
 		const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+		if (!modalManager) return;
 
 		// 1. Open user group picker
 		const pickerResult = await modalManager.open(this, UMB_USER_GROUP_PICKER_MODAL, {
@@ -194,11 +194,12 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 			},
 		});
 
-		if (!pickerResult || !pickerResult.selection || pickerResult.selection.length === 0) {
+		const pickerValue = await pickerResult?.onSubmit();
+		if (!pickerValue || !pickerValue.selection || pickerValue.selection.length === 0) {
 			return;
 		}
 
-		const userGroupId = pickerResult.selection[0];
+		const userGroupId = pickerValue.selection[0];
 
 		// Check if already configured
 		if (this.value[userGroupId]) {
@@ -211,10 +212,11 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 
 		// 3. Open editor modal
 		const modalData = this.config.editorModal.createData(userGroupId, userGroupName);
-		const modalResult = await modalManager.open(this, this.config.editorModal.token, {
+		const modal = modalManager.open(this, this.config.editorModal.token, {
 			data: modalData,
 		});
 
+		const modalResult = await modal.onSubmit();
 		if (!modalResult) {
 			return;
 		}
@@ -230,14 +232,17 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 	 */
 	private async _editUserGroup(userGroupId: string): Promise<void> {
 		const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+		if (!modalManager) return;
+
 		const userGroupName = (await this._getUserGroupName(userGroupId)) ?? userGroupId;
 		const existingSettings = this.value[userGroupId];
 
 		const modalData = this.config.editorModal.createData(userGroupId, userGroupName, existingSettings);
-		const modalResult = await modalManager.open(this, this.config.editorModal.token, {
+		const modal = modalManager.open(this, this.config.editorModal.token, {
 			data: modalData,
 		});
 
+		const modalResult = await modal.onSubmit();
 		if (!modalResult) {
 			return;
 		}

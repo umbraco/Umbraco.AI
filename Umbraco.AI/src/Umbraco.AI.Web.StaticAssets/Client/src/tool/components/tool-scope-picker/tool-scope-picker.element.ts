@@ -108,7 +108,7 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                     const camelCaseId = toCamelCase(scope.id);
                     const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
                     const localizedDescription =
-                        this.localize.term(`uaiToolScope_${camelCaseId}Description`) || scope.description || "";
+                        this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
 
                     return {
                         id: scope.id,
@@ -161,7 +161,7 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                 const camelCaseId = toCamelCase(scope.id);
                 const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
                 const localizedDescription =
-                    this.localize.term(`uaiToolScope_${camelCaseId}Description`) || scope.description || "";
+                    this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
 
                 return {
                     value: scope.id,

@@ -2,10 +2,8 @@ import {
 	css,
 	customElement,
 	html,
-	nothing,
 	property,
 	repeat,
-	state,
 	when,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
@@ -149,7 +147,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 				const camelCaseId = toCamelCase(scope.id);
 				const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
 				const localizedDescription =
-					this.localize.term(`uaiToolScope_${camelCaseId}Description`) || scope.description || "";
+					this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
 
 				return {
 					value: scope.id,

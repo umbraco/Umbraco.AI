@@ -3,6 +3,9 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiToolServerDataSource } from "./tool.server.data-source.js";
 import type { ToolScopeItemResponseModel, ToolItemResponseModel } from "../../api/types.gen.js";
 
+// Re-export types for use by other components
+export type { ToolScopeItemResponseModel, ToolItemResponseModel };
+
 /**
  * Repository for tool operations.
  */

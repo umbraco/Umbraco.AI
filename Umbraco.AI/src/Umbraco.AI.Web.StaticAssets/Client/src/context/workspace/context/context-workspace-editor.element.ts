@@ -10,78 +10,78 @@ import { UAI_CONTEXT_ROOT_WORKSPACE_PATH } from "../context-root/paths.js";
 
 @customElement("uai-context-workspace-editor")
 export class UaiContextWorkspaceEditorElement extends UmbLitElement {
-    #workspaceContext?: typeof UAI_CONTEXT_WORKSPACE_CONTEXT.TYPE;
+  #workspaceContext?: typeof UAI_CONTEXT_WORKSPACE_CONTEXT.TYPE;
 
-    @state()
-    private _model?: UaiContextDetailModel;
+  @state()
+  private _model?: UaiContextDetailModel;
 
-    @state()
-    private _isNew?: boolean;
+  @state()
+  private _isNew?: boolean;
 
-    @state()
-    private _aliasLocked = true;
+  @state()
+  private _aliasLocked = true;
 
-    constructor() {
-        super();
+  constructor() {
+    super();
 
-        this.consumeContext(UAI_CONTEXT_WORKSPACE_CONTEXT, (context) => {
-            if (!context) return;
-            this.#workspaceContext = context;
-            this.observe(context.model, (model) => {
-                this._model = model;
-            });
-            this.observe(context.isNew, (isNew) => {
-                this._isNew = isNew;
-                if (isNew) {
-                    requestAnimationFrame(() => {
-                        (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
-                    });
-                }
-            });
-        });
-    }
-
-    #onNameChange(event: UUIInputEvent) {
-        event.stopPropagation();
-        const target = event.composedPath()[0] as UUIInputElement;
-        const name = target.value.toString();
-
-        // If alias is locked and creating new, generate alias from name
-        if (this._aliasLocked && this._isNew) {
-            const alias = this.#generateAlias(name);
-            this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiContextDetailModel>({ name, alias }, "name-alias")
-            );
-        } else {
-            this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiContextDetailModel>({ name }, "name")
-            );
+    this.consumeContext(UAI_CONTEXT_WORKSPACE_CONTEXT, (context) => {
+      if (!context) return;
+      this.#workspaceContext = context;
+      this.observe(context.model, (model) => {
+        this._model = model;
+      });
+      this.observe(context.isNew, (isNew) => {
+        this._isNew = isNew;
+        if (isNew) {
+          requestAnimationFrame(() => {
+            (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
+          });
         }
+      });
+    });
+  }
+
+  #onNameChange(event: UUIInputEvent) {
+    event.stopPropagation();
+    const target = event.composedPath()[0] as UUIInputElement;
+    const name = target.value.toString();
+
+    // If alias is locked and creating new, generate alias from name
+    if (this._aliasLocked && this._isNew) {
+      const alias = this.#generateAlias(name);
+      this.#workspaceContext?.handleCommand(
+        new UaiPartialUpdateCommand<UaiContextDetailModel>({ name, alias }, "name-alias")
+      );
+    } else {
+      this.#workspaceContext?.handleCommand(
+        new UaiPartialUpdateCommand<UaiContextDetailModel>({ name }, "name")
+      );
     }
+  }
 
-    #onAliasChange(event: UUIInputEvent) {
-        event.stopPropagation();
-        const target = event.composedPath()[0] as UUIInputElement;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiContextDetailModel>({ alias: target.value.toString() }, "alias")
-        );
-    }
+  #onAliasChange(event: UUIInputEvent) {
+    event.stopPropagation();
+    const target = event.composedPath()[0] as UUIInputElement;
+    this.#workspaceContext?.handleCommand(
+      new UaiPartialUpdateCommand<UaiContextDetailModel>({ alias: target.value.toString() }, "alias")
+    );
+  }
 
-    #onToggleAliasLock() {
-        this._aliasLocked = !this._aliasLocked;
-    }
+  #onToggleAliasLock() {
+    this._aliasLocked = !this._aliasLocked;
+  }
 
-    #generateAlias(name: string): string {
-        return name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "");
-    }
+  #generateAlias(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
 
-    render() {
-        if (!this._model) return html`<uui-loader></uui-loader>`;
+  render() {
+    if (!this._model) return html`<uui-loader></uui-loader>`;
 
-        return html`
+    return html`
             <umb-workspace-editor alias="${UAI_CONTEXT_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
                     <uui-button
@@ -97,6 +97,7 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
                         @input="${this.#onNameChange}"
                         label="Name"
                         placeholder="Enter context name"
+                        required
                     >
                         <uui-input-lock
                             slot="append"
@@ -114,9 +115,9 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
                 </div>
 
                 ${when(
-                    !this._isNew && this._model,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
-                )}
+      !this._isNew && this._model,
+      () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
+    )}
 
                 <div slot="footer-info" id="footer">
                     <a href=${UAI_CONTEXT_ROOT_WORKSPACE_PATH}>Contexts</a>
@@ -124,11 +125,11 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
                 </div>
             </umb-workspace-editor>
         `;
-    }
+  }
 
-    static styles = [
-        UmbTextStyles,
-        css`
+  static styles = [
+    UmbTextStyles,
+    css`
             :host {
                 display: block;
                 width: 100%;
@@ -160,13 +161,13 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
                 transform: translate(-50%, -50%);
             }
         `,
-    ];
+  ];
 }
 
 export default UaiContextWorkspaceEditorElement;
 
 declare global {
-    interface HTMLElementTagNameMap {
-        "uai-context-workspace-editor": UaiContextWorkspaceEditorElement;
-    }
+  interface HTMLElementTagNameMap {
+    "uai-context-workspace-editor": UaiContextWorkspaceEditorElement;
+  }
 }

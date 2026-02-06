@@ -6,10 +6,10 @@ import { manifests as exampleToolManifests } from "./examples/manifests.js";
 import { manifests as umbracoToolManifests } from "./umbraco/manifests.js";
 
 const frontendToolRepositoryManifest: ManifestRepository<UaiFrontendToolRepositoryApi> = {
-	type: "repository",
-	alias: "Uai.Repository.FrontendTool",
-	name: "Frontend Tool Repository",
-	api: () => import("./frontend-tool.repository.js"),
+    type: "repository",
+    alias: "Uai.Repository.FrontendTool",
+    name: "Frontend Tool Repository",
+    api: () => import("./frontend-tool.repository.js"),
 };
 
 export const manifests = [

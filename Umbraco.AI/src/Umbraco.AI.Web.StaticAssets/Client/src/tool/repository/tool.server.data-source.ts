@@ -17,19 +17,13 @@ export class UaiToolServerDataSource {
      * Gets all registered tool scopes.
      */
     async getToolScopes(): Promise<{ data?: Array<ToolScopeItemResponseModel>; error?: unknown }> {
-        return await tryExecute(
-            this.#host,
-          ToolsService.getAllToolScopes()
-        );
+        return await tryExecute(this.#host, ToolsService.getAllToolScopes());
     }
 
     /**
      * Gets all registered tools.
      */
     async getTools(): Promise<{ data?: Array<ToolItemResponseModel>; error?: unknown }> {
-        return await tryExecute(
-            this.#host,
-            ToolsService.getAllTools()
-        );
+        return await tryExecute(this.#host, ToolsService.getAllTools());
     }
 }

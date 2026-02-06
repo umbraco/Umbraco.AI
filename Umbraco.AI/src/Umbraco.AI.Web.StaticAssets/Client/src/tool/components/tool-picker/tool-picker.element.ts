@@ -1,23 +1,15 @@
-import {
-    css,
-    customElement,
-    html,
-    nothing,
-    property,
-    repeat,
-    state,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
-import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
-import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
-import { UaiToolRepository } from '../../repository/tool.repository.js';
-import { UAI_ITEM_PICKER_MODAL } from '../../../core/modals/item-picker/item-picker-modal.token.js';
-import type { UaiPickableItemModel } from '../../../core/modals/item-picker/types.js';
-import type { UaiFrontendToolData } from '../../frontend-tool-repository.js';
-import { toCamelCase } from '../../utils.js';
+import { css, customElement, html, nothing, property, repeat, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import { UaiToolRepository } from "../../repository/tool.repository.js";
+import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
+import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
+import type { UaiFrontendToolData } from "../../frontend-tool-repository.js";
+import { toCamelCase } from "../../utils.js";
 
-const elementName = 'uai-tool-picker';
+const elementName = "uai-tool-picker";
 
 interface UaiToolItemModel {
     id: string;
@@ -43,11 +35,10 @@ interface UaiToolItemModel {
  * @public
  */
 @customElement(elementName)
-export class UaiToolPickerElement extends UmbFormControlMixin<
-    string[] | undefined,
-    typeof UmbLitElement,
-    undefined
->(UmbLitElement, undefined) {
+export class UaiToolPickerElement extends UmbFormControlMixin<string[] | undefined, typeof UmbLitElement, undefined>(
+    UmbLitElement,
+    undefined,
+) {
     /**
      * Readonly mode - cannot add or remove.
      */
@@ -87,7 +78,7 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         super.updated(changedProperties);
 
         // Reload items when frontendTools changes and we have a selection
-        if (changedProperties.has('frontendTools') && this._selection.length > 0) {
+        if (changedProperties.has("frontendTools") && this._selection.length > 0) {
             this.#loadItems();
         }
     }
@@ -126,23 +117,27 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
 
         if (!error && data) {
             // Combine backend and frontend tools
-            const allTools = [...data, ...(this.frontendTools ?? []).map(ft => ({
-                id: ft.id,
-                name: ft.name,
-                description: ft.description,
-                scopeId: ft.scopeId,
-                isDestructive: false,
-            }))];
+            const allTools = [
+                ...data,
+                ...(this.frontendTools ?? []).map((ft) => ({
+                    id: ft.id,
+                    name: ft.name,
+                    description: ft.description,
+                    scopeId: ft.scopeId,
+                    isDestructive: false,
+                })),
+            ];
 
             // Preserve selection order
             this._items = this._selection
-                .map(id => {
-                    const tool = allTools.find(t => t.id.toLowerCase() === id.toLowerCase());
+                .map((id) => {
+                    const tool = allTools.find((t) => t.id.toLowerCase() === id.toLowerCase());
                     if (!tool) return undefined;
 
                     const camelCaseId = toCamelCase(tool.id);
                     const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
-                    const localizedDescription = this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
+                    const localizedDescription =
+                        this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
 
                     return {
                         id: tool.id,
@@ -165,9 +160,9 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
                 fetchItems: () => this.#fetchAvailableTools(),
-                selectionMode: 'multiple',
-                title: this.localize.term('uaiTool_selectTool'),
-                noResultsMessage: this.localize.term('uaiTool_noToolsAvailable'),
+                selectionMode: "multiple",
+                title: this.localize.term("uaiTool_selectTool"),
+                noResultsMessage: this.localize.term("uaiTool_noToolsAvailable"),
             },
         });
 
@@ -187,27 +182,31 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
         if (!data) return [];
 
         // Combine backend and frontend tools
-        const allTools = [...data, ...(this.frontendTools ?? []).map(ft => ({
-            id: ft.id,
-            name: ft.name,
-            description: ft.description,
-            scopeId: ft.scopeId,
-            isDestructive: false,
-        }))];
+        const allTools = [
+            ...data,
+            ...(this.frontendTools ?? []).map((ft) => ({
+                id: ft.id,
+                name: ft.name,
+                description: ft.description,
+                scopeId: ft.scopeId,
+                isDestructive: false,
+            })),
+        ];
 
         // Filter out already selected items
         return allTools
-            .filter(tool => !this._selection.some(id => id.toLowerCase() === tool.id.toLowerCase()))
-            .map(tool => {
+            .filter((tool) => !this._selection.some((id) => id.toLowerCase() === tool.id.toLowerCase()))
+            .map((tool) => {
                 const camelCaseId = toCamelCase(tool.id);
                 const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name;
-                const localizedDescription = this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
+                const localizedDescription =
+                    this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description;
 
                 return {
                     value: tool.id,
                     label: localizedName,
                     description: localizedDescription,
-                    icon: tool.isDestructive ? 'icon-alert' : 'icon-wand',
+                    icon: tool.isDestructive ? "icon-alert" : "icon-wand",
                 };
             });
     }
@@ -215,8 +214,8 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
     #addSelections(items: UaiPickableItemModel[]) {
         // Filter out already selected items
         const newValues = items
-            .map(item => item.value)
-            .filter(value => !this._selection.some(id => id.toLowerCase() === value.toLowerCase()));
+            .map((item) => item.value)
+            .filter((value) => !this._selection.some((id) => id.toLowerCase() === value.toLowerCase()));
 
         if (newValues.length === 0) return;
 
@@ -227,18 +226,13 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
     }
 
     #onRemove(id: string) {
-        this._selection = this._selection.filter(x => x.toLowerCase() !== id.toLowerCase());
-        this._items = this._items.filter(x => x.id.toLowerCase() !== id.toLowerCase());
+        this._selection = this._selection.filter((x) => x.toLowerCase() !== id.toLowerCase());
+        this._items = this._items.filter((x) => x.id.toLowerCase() !== id.toLowerCase());
         this.dispatchEvent(new UmbChangeEvent());
     }
 
     override render() {
-        return html`
-            <div class="container">
-                ${this.#renderItems()}
-                ${this.#renderAddButton()}
-            </div>
-        `;
+        return html` <div class="container">${this.#renderItems()} ${this.#renderAddButton()}</div> `;
     }
 
     #renderItems() {
@@ -261,24 +255,24 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
 
     #renderItem(item: UaiToolItemModel) {
         return html`
-            <uui-ref-node
-                name=${item.name}
-                detail=${item.description}
-                readonly>
-                <umb-icon slot="icon" name=${item.isDestructive ? 'icon-alert' : 'icon-wand'}></umb-icon>
+            <uui-ref-node name=${item.name} detail=${item.description} readonly>
+                <umb-icon slot="icon" name=${item.isDestructive ? "icon-alert" : "icon-wand"}></umb-icon>
                 <uui-tag slot="tag" look="secondary">${item.scopeId}</uui-tag>
-                ${!this.readonly ? html`
-                    <uui-action-bar slot="actions">
-                        <uui-button
-                            label="Remove"
-                            @click=${(e: Event) => {
-                                e.stopPropagation();
-                                this.#onRemove(item.id);
-                            }}>
-                            <uui-icon name="icon-trash"></uui-icon>
-                        </uui-button>
-                    </uui-action-bar>
-                ` : nothing}
+                ${!this.readonly
+                    ? html`
+                          <uui-action-bar slot="actions">
+                              <uui-button
+                                  label="Remove"
+                                  @click=${(e: Event) => {
+                                      e.stopPropagation();
+                                      this.#onRemove(item.id);
+                                  }}
+                              >
+                                  <uui-icon name="icon-trash"></uui-icon>
+                              </uui-button>
+                          </uui-action-bar>
+                      `
+                    : nothing}
             </uui-ref-node>
         `;
     }
@@ -291,9 +285,10 @@ export class UaiToolPickerElement extends UmbFormControlMixin<
                 id="btn-add"
                 look="placeholder"
                 @click=${this.#openPicker}
-                label=${this.localize.term('uaiTool_addTool')}>
+                label=${this.localize.term("uaiTool_addTool")}
+            >
                 <uui-icon name="icon-add"></uui-icon>
-                ${this.localize.term('general_add')}
+                ${this.localize.term("general_add")}
             </uui-button>
         `;
     }

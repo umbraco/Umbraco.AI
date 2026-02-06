@@ -58,7 +58,7 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
 
     #setValue(val: string | string[] | undefined) {
         // Normalize to array for comparison
-        const newSelection = !val ? [] : (Array.isArray(val) ? val : [val]);
+        const newSelection = !val ? [] : Array.isArray(val) ? val : [val];
 
         // Check if selection actually changed
         const hasChanged =

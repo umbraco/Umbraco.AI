@@ -8,10 +8,7 @@ import type { ManifestUaiAgentTool } from "./uai-agent-tool.extension.js";
  * Repository for accessing frontend tool metadata.
  * Queries the extension registry for 'uaiAgentTool' manifests and extracts metadata.
  */
-export class UaiFrontendToolRepository
-    extends UmbControllerBase
-    implements UaiFrontendToolRepositoryApi
-{
+export class UaiFrontendToolRepository extends UmbControllerBase implements UaiFrontendToolRepositoryApi {
     constructor(host: UmbControllerHost) {
         super(host);
     }
@@ -22,17 +19,16 @@ export class UaiFrontendToolRepository
      * @returns Array of frontend tool metadata
      */
     async getTools(): Promise<UaiFrontendToolData[]> {
-
-        const frontendToolManifests = umbExtensionsRegistry.getByTypeAndFilter<
-          "uaiAgentTool",
-          ManifestUaiAgentTool
-        >("uaiAgentTool", (m) => Boolean(m.api));
+        const frontendToolManifests = umbExtensionsRegistry.getByTypeAndFilter<"uaiAgentTool", ManifestUaiAgentTool>(
+            "uaiAgentTool",
+            (m) => Boolean(m.api),
+        );
 
         return frontendToolManifests.map((m) => ({
             id: m.meta.toolName,
             name: m.meta.label || m.meta.toolName,
-            description: m.meta.description || '',
-            scopeId: m.meta.scope || 'general', // Read scope from manifest, default to 'general'
+            description: m.meta.description || "",
+            scopeId: m.meta.scope || "general", // Read scope from manifest, default to 'general'
         }));
     }
 }

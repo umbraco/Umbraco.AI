@@ -1,17 +1,10 @@
-import {
-    css,
-    customElement,
-    html,
-    property,
-    repeat,
-    state,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
-import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
-import { UaiToolRepository, type ToolScopeItemResponseModel, toCamelCase } from '@umbraco-ai/core';
+import { css, customElement, html, property, repeat, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
+import { UaiToolRepository, type ToolScopeItemResponseModel, toCamelCase } from "@umbraco-ai/core";
 
-const elementName = 'uai-tool-scope-permissions';
+const elementName = "uai-tool-scope-permissions";
 
 interface UaiToolScopeItemModel {
     id: string;
@@ -76,9 +69,9 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
                 return {
                     id: scope.id,
                     icon: scope.icon,
-                    domain: scope.domain || 'General',
+                    domain: scope.domain || "General",
                     name: this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id,
-                    description: this.localize.term(`uaiToolScope_${camelCaseId}Description`) || '',
+                    description: this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "",
                 };
             });
 
@@ -111,7 +104,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
 
         if (wasSelected) {
             // Remove from selection
-            this._selection = this._selection.filter(id => id !== scopeId);
+            this._selection = this._selection.filter((id) => id !== scopeId);
             changed = true;
         } else {
             // Add to selection
@@ -137,7 +130,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
             changed = true;
         } else if (!isChecked && wasSelected) {
             // Remove from selection (only if currently selected)
-            this._selection = this._selection.filter(id => id !== scopeId);
+            this._selection = this._selection.filter((id) => id !== scopeId);
             changed = true;
         }
 
@@ -153,7 +146,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
         }
 
         if (this._groups.length === 0) {
-            return html`<div class="empty">${this.localize.term('uaiAgent_noToolScopesAvailable')}</div>`;
+            return html`<div class="empty">${this.localize.term("uaiAgent_noToolScopesAvailable")}</div>`;
         }
 
         return html`
@@ -196,7 +189,8 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
                     ?checked=${isChecked}
                     ?disabled=${this.readonly}
                     @change=${(e: Event) => this.#onToggle(scope.id, e)}
-                    label=${scope.name}>
+                    label=${scope.name}
+                >
                 </uui-toggle>
                 <label for=${scopeId} class="scope-label" @click=${() => this.#toggleScope(scope.id)}>
                     <div class="scope-name">${scope.name}</div>

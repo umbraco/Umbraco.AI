@@ -40,7 +40,7 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
             // Use Umbraco's built-in method to instantiate the repository API
             const repository = await createExtensionApiByAlias<UaiFrontendToolRepositoryApi>(
                 this,
-                'Uai.Repository.FrontendTool'
+                "Uai.Repository.FrontendTool",
             );
 
             this._frontendTools = await repository.getTools();
@@ -56,8 +56,8 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>(
                 { allowedToolScopeIds: picker.value ?? [] },
-                "allowedToolScopeIds"
-            )
+                "allowedToolScopeIds",
+            ),
         );
     }
 
@@ -65,10 +65,7 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string[] | undefined };
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
-                { allowedToolIds: picker.value ?? [] },
-                "allowedToolIds"
-            )
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ allowedToolIds: picker.value ?? [] }, "allowedToolIds"),
         );
     }
 
@@ -79,7 +76,8 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
             <uui-box headline="Tool Permissions">
                 <umb-property-layout
                     label="Allowed Tool Scopes"
-                    description="Select which tool scopes this agent can access. Tools belonging to these scopes will be enabled automatically. System tools are always available.">
+                    description="Select which tool scopes this agent can access. Tools belonging to these scopes will be enabled automatically. System tools are always available."
+                >
                     <uai-tool-scope-permissions
                         slot="editor"
                         multiple
@@ -89,7 +87,8 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
                 <umb-property-layout
                     label="Allowed Tools"
-                    description="Select specific tools to enable for this agent beyond those included in the selected scopes. System tools are always available.">
+                    description="Select specific tools to enable for this agent beyond those included in the selected scopes. System tools are always available."
+                >
                     <uai-tool-picker
                         slot="editor"
                         .value=${this._model.allowedToolIds}

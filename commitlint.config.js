@@ -55,15 +55,35 @@ module.exports = {
                     }
                     return [true];
                 },
+                // Custom rule to validate multiple scopes (comma-separated)
+                "scope-enum-multiple": (parsed) => {
+                    const { scope } = parsed;
+                    if (!scope) {
+                        return [true]; // No scope is handled by scope-empty rule
+                    }
+
+                    const allowedScopes = loadScopes();
+                    const scopes = scope.split(",").map((s) => s.trim());
+
+                    // Validate each scope against the allowed list
+                    const invalidScopes = scopes.filter((s) => !allowedScopes.includes(s));
+
+                    if (invalidScopes.length > 0) {
+                        return [
+                            false,
+                            `Invalid scope(s): ${invalidScopes.join(", ")}. Allowed scopes: ${allowedScopes.join(", ")}`,
+                        ];
+                    }
+
+                    return [true];
+                },
             },
         },
     ],
     rules: {
-        "scope-enum": [
-            2,
-            "always",
-            loadScopes(), // Dynamically loaded from product changelog.config.json files!
-        ],
+        // Disable the default scope-enum rule (we use scope-enum-multiple instead)
+        "scope-enum": [0],
+        "scope-enum-multiple": [2, "always"], // Enable our custom multi-scope validation
         "scope-empty": [1, "never"], // Warn if scope is missing (don't fail)
         "scope-case": [2, "always", ["lower-case", "kebab-case"]],
         "scope-not-type": [2, "always"], // Enable the custom rule

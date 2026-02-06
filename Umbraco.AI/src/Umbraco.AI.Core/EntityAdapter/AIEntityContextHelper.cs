@@ -37,8 +37,9 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
         var sb = new StringBuilder();
 
         sb.AppendLine($"## Current Entity Context");
-        sb.AppendLine();
-        sb.AppendLine($"You are working with a {entity.EntityType} named \"{entity.Name}\".");
+        sb.AppendLine($"Key: `{entity.Unique}`");
+        sb.AppendLine($"Name: `{entity.Name}`");
+        sb.AppendLine($"Type: `{entity.EntityType}`");
         sb.AppendLine($"**IMPORTANT** When the user says 'this page', 'this document', 'this entity', 'this media item' or similar, you should use this context entry as the reference.");
 
         if (!string.IsNullOrEmpty(entity.ContentType))

@@ -1,12 +1,12 @@
 namespace Umbraco.AI.Core.Tools.Scopes;
 
 // Content scopes
-[AIToolScope("content-read", Icon = "icon-folder", Domain = "Content")]
+[AIToolScope("content-read", Icon = "icon-article", Domain = "Content")]
 public sealed class ContentReadScope : AIToolScopeBase
 {
 }
 
-[AIToolScope("content-write", Icon = "icon-edit", IsDestructive = true, Domain = "Content")]
+[AIToolScope("content-write", Icon = "icon-article", IsDestructive = true, Domain = "Content")]
 public sealed class ContentWriteScope : AIToolScopeBase
 {
 }
@@ -17,7 +17,7 @@ public sealed class MediaReadScope : AIToolScopeBase
 {
 }
 
-[AIToolScope("media-write", Icon = "icon-picture-add", IsDestructive = true, Domain = "Media")]
+[AIToolScope("media-write", Icon = "icon-picture", IsDestructive = true, Domain = "Media")]
 public sealed class MediaWriteScope : AIToolScopeBase
 {
 }
@@ -44,12 +44,12 @@ public sealed class WebScope : AIToolScopeBase
 }
 
 // Entity scopes
-[AIToolScope("entity-read", Icon = "icon-file-cabinet", Domain = "Entity")]
+[AIToolScope("entity-read", Icon = "icon-document", Domain = "Entity")]
 public sealed class EntityReadScope : AIToolScopeBase
 {
 }
 
-[AIToolScope("entity-write", Icon = "icon-file-cabinet-alt", IsDestructive = true, Domain = "Entity")]
+[AIToolScope("entity-write", Icon = "icon-document", IsDestructive = true, Domain = "Entity")]
 public sealed class EntityWriteScope : AIToolScopeBase
 {
 }

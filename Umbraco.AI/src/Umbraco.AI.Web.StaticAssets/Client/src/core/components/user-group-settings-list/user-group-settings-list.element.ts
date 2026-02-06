@@ -200,6 +200,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 		}
 
 		const userGroupId = pickerValue.selection[0];
+		if (!userGroupId) return;
 
 		// Check if already configured
 		if (this.value[userGroupId]) {

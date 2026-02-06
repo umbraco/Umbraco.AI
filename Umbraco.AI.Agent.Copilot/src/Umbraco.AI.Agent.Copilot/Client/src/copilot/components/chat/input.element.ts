@@ -1,4 +1,4 @@
-import { customElement, property, state, css, html, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state, css, html, ref, createRef, nothing } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
@@ -127,7 +127,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
                             ${this._agentsLoading
                                 ? html`<span class="agent-loading">Loading...</span>`
                                 : hasNoAgents
-                                  ? html`<span class="no-agents-message">No agents configured</span>`
+                                  ? nothing
                                   : html`
                                         <uui-select
                                             class="agent-select"
@@ -206,11 +206,6 @@ export class UaiCopilotInputElement extends UmbLitElement {
         .agent-loading {
             font-size: var(--uui-type-small-size);
             color: var(--uui-color-text-alt);
-        }
-
-        .no-agents-message {
-            font-size: var(--uui-type-small-size);
-            color: var(--uui-color-danger);
         }
     `;
 }

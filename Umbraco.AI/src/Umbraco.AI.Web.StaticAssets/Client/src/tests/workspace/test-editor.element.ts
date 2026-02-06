@@ -1,19 +1,19 @@
-import { LitElement, html, css } from '@umbraco-cms/backoffice/external/lit';
-import { customElement, state, property } from '@umbraco-cms/backoffice/external/lit';
-import { AITestRepository } from '../repository/test.repository.js';
+import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, state, property } from "@umbraco-cms/backoffice/external/lit";
+import { AITestRepository } from "../repository/test.repository.js";
 import type {
     TestResponseModel,
     CreateTestRequestModel,
     UpdateTestRequestModel,
     TestGraderModel,
     TestTargetModel,
-    TestCaseModel
-} from '../../api/client/index.js';
+    TestCaseModel,
+} from "../../api/client/index.js";
 
 /**
  * Test editor workspace for creating and editing AI tests.
  */
-@customElement('umbraco-ai-test-editor')
+@customElement("umbraco-ai-test-editor")
 export class UmbracoAITestEditorElement extends LitElement {
     @property({ type: String })
     testId?: string;
@@ -28,16 +28,16 @@ export class UmbracoAITestEditorElement extends LitElement {
     private _isSaving = false;
 
     @state()
-    private _name = '';
+    private _name = "";
 
     @state()
-    private _alias = '';
+    private _alias = "";
 
     @state()
-    private _description = '';
+    private _description = "";
 
     @state()
-    private _testTypeId = 'prompt';
+    private _testTypeId = "prompt";
 
     @state()
     private _runCount = 1;
@@ -46,7 +46,7 @@ export class UmbracoAITestEditorElement extends LitElement {
     private _tags: string[] = [];
 
     @state()
-    private _target: TestTargetModel = { profileIdOrAlias: '', contextIds: [] };
+    private _target: TestTargetModel = { profileIdOrAlias: "", contextIds: [] };
 
     @state()
     private _testCase: TestCaseModel = {};
@@ -75,17 +75,17 @@ export class UmbracoAITestEditorElement extends LitElement {
                 this._test = test;
                 this._name = test.name;
                 this._alias = test.alias;
-                this._description = test.description || '';
+                this._description = test.description || "";
                 this._testTypeId = test.testTypeId;
                 this._runCount = test.runCount;
                 this._tags = [...test.tags];
                 this._target = { ...test.target };
                 this._testCase = { ...test.testCase };
-                this._graders = test.graders.map(g => ({ ...g }));
+                this._graders = test.graders.map((g) => ({ ...g }));
             }
         } catch (error) {
-            console.error('Failed to load test:', error);
-            alert('Failed to load test. See console for details.');
+            console.error("Failed to load test:", error);
+            alert("Failed to load test. See console for details.");
         } finally {
             this._isLoading = false;
         }
@@ -95,8 +95,11 @@ export class UmbracoAITestEditorElement extends LitElement {
         const target = e.target as HTMLInputElement;
         this._name = target.value;
         // Auto-generate alias from name if creating new test
-        if (!this.testId && this._alias === '') {
-            this._alias = this._name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        if (!this.testId && this._alias === "") {
+            this._alias = this._name
+                .toLowerCase()
+                .replace(/\s+/g, "-")
+                .replace(/[^a-z0-9-]/g, "");
         }
     }
 
@@ -122,12 +125,15 @@ export class UmbracoAITestEditorElement extends LitElement {
 
     private _onTagsChange(e: InputEvent) {
         const target = e.target as HTMLInputElement;
-        this._tags = target.value.split(',').map(t => t.trim()).filter(t => t);
+        this._tags = target.value
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t);
     }
 
     private async _onSaveClick() {
         if (!this._name || !this._alias) {
-            alert('Name and alias are required.');
+            alert("Name and alias are required.");
             return;
         }
 
@@ -142,10 +148,10 @@ export class UmbracoAITestEditorElement extends LitElement {
                     testCase: this._testCase,
                     graders: this._graders,
                     runCount: this._runCount,
-                    tags: this._tags
+                    tags: this._tags,
                 };
                 await this._repository.update(this.testId, model);
-                alert('Test updated successfully!');
+                alert("Test updated successfully!");
             } else {
                 // Create new test
                 const model: CreateTestRequestModel = {
@@ -157,16 +163,16 @@ export class UmbracoAITestEditorElement extends LitElement {
                     testCase: this._testCase,
                     graders: this._graders,
                     runCount: this._runCount,
-                    tags: this._tags
+                    tags: this._tags,
                 };
                 const id = await this._repository.create(model);
-                alert('Test created successfully!');
+                alert("Test created successfully!");
                 // TODO: Navigate to the test list or the newly created test
-                console.log('Created test with ID:', id);
+                console.log("Created test with ID:", id);
             }
         } catch (error) {
-            console.error('Failed to save test:', error);
-            alert('Failed to save test. See console for details.');
+            console.error("Failed to save test:", error);
+            alert("Failed to save test. See console for details.");
         } finally {
             this._isSaving = false;
         }
@@ -174,19 +180,19 @@ export class UmbracoAITestEditorElement extends LitElement {
 
     private _onCancelClick() {
         // TODO: Navigate back to test list
-        console.log('Cancel clicked');
+        console.log("Cancel clicked");
     }
 
     private _onAddGraderClick() {
         this._graders = [
             ...this._graders,
             {
-                graderId: 'exact-match',
+                graderId: "exact-match",
                 config: {},
                 weight: 1.0,
-                severity: 'error',
-                negate: false
-            }
+                severity: "error",
+                negate: false,
+            },
         ];
     }
 
@@ -202,20 +208,17 @@ export class UmbracoAITestEditorElement extends LitElement {
         return html`
             <div class="test-editor">
                 <div class="header">
-                    <h1>${this.testId ? 'Edit Test' : 'Create Test'}</h1>
+                    <h1>${this.testId ? "Edit Test" : "Create Test"}</h1>
                     <div class="actions">
-                        <uui-button
-                            label="Cancel"
-                            @click=${this._onCancelClick}>
-                            Cancel
-                        </uui-button>
+                        <uui-button label="Cancel" @click=${this._onCancelClick}> Cancel </uui-button>
                         <uui-button
                             label="Save"
                             look="primary"
                             color="positive"
                             ?disabled=${this._isSaving}
-                            @click=${this._onSaveClick}>
-                            ${this._isSaving ? 'Saving...' : 'Save'}
+                            @click=${this._onSaveClick}
+                        >
+                            ${this._isSaving ? "Saving..." : "Save"}
                         </uui-button>
                     </div>
                 </div>
@@ -223,12 +226,7 @@ export class UmbracoAITestEditorElement extends LitElement {
                 <div class="form">
                     <div class="form-group">
                         <label>Name *</label>
-                        <uui-input
-                            label="Name"
-                            .value=${this._name}
-                            @input=${this._onNameChange}
-                            required>
-                        </uui-input>
+                        <uui-input label="Name" .value=${this._name} @input=${this._onNameChange} required> </uui-input>
                     </div>
 
                     <div class="form-group">
@@ -238,9 +236,10 @@ export class UmbracoAITestEditorElement extends LitElement {
                             .value=${this._alias}
                             @input=${this._onAliasChange}
                             ?readonly=${!!this.testId}
-                            required>
+                            required
+                        >
                         </uui-input>
-                        ${!this.testId ? html`<small>Auto-generated from name, can be customized</small>` : ''}
+                        ${!this.testId ? html`<small>Auto-generated from name, can be customized</small>` : ""}
                     </div>
 
                     <div class="form-group">
@@ -248,19 +247,22 @@ export class UmbracoAITestEditorElement extends LitElement {
                         <uui-textarea
                             label="Description"
                             .value=${this._description}
-                            @input=${this._onDescriptionChange}>
+                            @input=${this._onDescriptionChange}
+                        >
                         </uui-textarea>
                     </div>
 
-                    ${!this.testId ? html`
-                        <div class="form-group">
-                            <label>Test Type *</label>
-                            <select @change=${this._onTestTypeChange} .value=${this._testTypeId}>
-                                <option value="prompt">Prompt Test</option>
-                                <option value="agent">Agent Test</option>
-                            </select>
-                        </div>
-                    ` : ''}
+                    ${!this.testId
+                        ? html`
+                              <div class="form-group">
+                                  <label>Test Type *</label>
+                                  <select @change=${this._onTestTypeChange} .value=${this._testTypeId}>
+                                      <option value="prompt">Prompt Test</option>
+                                      <option value="agent">Agent Test</option>
+                                  </select>
+                              </div>
+                          `
+                        : ""}
 
                     <div class="form-group">
                         <label>Run Count</label>
@@ -270,7 +272,8 @@ export class UmbracoAITestEditorElement extends LitElement {
                             .value=${this._runCount.toString()}
                             @input=${this._onRunCountChange}
                             min="1"
-                            max="100">
+                            max="100"
+                        >
                         </uui-input>
                         <small>Number of times to run the test (for pass@k calculation)</small>
                     </div>
@@ -280,41 +283,41 @@ export class UmbracoAITestEditorElement extends LitElement {
                         <uui-input
                             label="Tags"
                             placeholder="tag1, tag2, tag3"
-                            .value=${this._tags.join(', ')}
-                            @input=${this._onTagsChange}>
+                            .value=${this._tags.join(", ")}
+                            @input=${this._onTagsChange}
+                        >
                         </uui-input>
                         <small>Comma-separated list of tags</small>
                     </div>
 
                     <div class="form-section">
                         <h2>Graders</h2>
-                        <uui-button
-                            label="Add Grader"
-                            @click=${this._onAddGraderClick}>
-                            Add Grader
-                        </uui-button>
+                        <uui-button label="Add Grader" @click=${this._onAddGraderClick}> Add Grader </uui-button>
 
                         ${this._graders.length === 0
                             ? html`<p>No graders added. Add at least one grader to evaluate test results.</p>`
                             : html`
-                                <div class="graders-list">
-                                    ${this._graders.map((grader, index) => html`
-                                        <div class="grader-item">
-                                            <div class="grader-info">
-                                                <span><strong>Grader:</strong> ${grader.graderId}</span>
-                                                <span><strong>Weight:</strong> ${grader.weight}</span>
-                                                <span><strong>Severity:</strong> ${grader.severity}</span>
-                                            </div>
-                                            <uui-button
-                                                label="Remove"
-                                                color="danger"
-                                                @click=${() => this._onRemoveGraderClick(index)}>
-                                                Remove
-                                            </uui-button>
-                                        </div>
-                                    `)}
-                                </div>
-                            `}
+                                  <div class="graders-list">
+                                      ${this._graders.map(
+                                          (grader, index) => html`
+                                              <div class="grader-item">
+                                                  <div class="grader-info">
+                                                      <span><strong>Grader:</strong> ${grader.graderId}</span>
+                                                      <span><strong>Weight:</strong> ${grader.weight}</span>
+                                                      <span><strong>Severity:</strong> ${grader.severity}</span>
+                                                  </div>
+                                                  <uui-button
+                                                      label="Remove"
+                                                      color="danger"
+                                                      @click=${() => this._onRemoveGraderClick(index)}
+                                                  >
+                                                      Remove
+                                                  </uui-button>
+                                              </div>
+                                          `,
+                                      )}
+                                  </div>
+                              `}
                     </div>
 
                     <div class="form-section">
@@ -420,6 +423,6 @@ export class UmbracoAITestEditorElement extends LitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        'umbraco-ai-test-editor': UmbracoAITestEditorElement;
+        "umbraco-ai-test-editor": UmbracoAITestEditorElement;
     }
 }

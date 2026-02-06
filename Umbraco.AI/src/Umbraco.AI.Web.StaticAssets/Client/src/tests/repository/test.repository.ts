@@ -1,14 +1,14 @@
-import { UmbControllerBase } from '@umbraco-cms/backoffice/class-api';
-import { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
-import type { 
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
+import { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import type {
     TestItemResponseModel,
-    TestResponseModel, 
+    TestResponseModel,
     CreateTestRequestModel,
     UpdateTestRequestModel,
     RunTestRequestModel,
-    TestRunResponseModel 
-} from '../../api/client/index.js';
-import { TestService } from '../../api/client/index.js';
+    TestRunResponseModel,
+} from "../../api/client/index.js";
+import { TestService } from "../../api/client/index.js";
 
 /**
  * Repository for managing AI tests.
@@ -26,12 +26,12 @@ export class AITestRepository extends UmbControllerBase {
         filter?: string,
         tags?: string,
         skip: number = 0,
-        take: number = 100
+        take: number = 100,
     ): Promise<{ items: TestItemResponseModel[]; total: number }> {
         const response = await TestService.getAllTests(filter, tags, skip, take);
         return {
             items: response.items ?? [],
-            total: response.total ?? 0
+            total: response.total ?? 0,
         };
     }
 
@@ -70,10 +70,7 @@ export class AITestRepository extends UmbControllerBase {
     /**
      * Run a test.
      */
-    async run(
-        idOrAlias: string, 
-        model?: RunTestRequestModel
-    ): Promise<TestRunResponseModel> {
+    async run(idOrAlias: string, model?: RunTestRequestModel): Promise<TestRunResponseModel> {
         return await TestService.runTest(idOrAlias, model);
     }
 }

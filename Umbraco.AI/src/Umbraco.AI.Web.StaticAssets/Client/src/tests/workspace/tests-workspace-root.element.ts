@@ -1,13 +1,13 @@
-import { LitElement, html, css } from '@umbraco-cms/backoffice/external/lit';
-import { customElement, state } from '@umbraco-cms/backoffice/external/lit';
-import { AITestRepository } from '../repository/test.repository.js';
-import type { TestItemResponseModel } from '../../api/client/index.js';
+import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { AITestRepository } from "../repository/test.repository.js";
+import type { TestItemResponseModel } from "../../api/client/index.js";
 
 /**
  * Root workspace element for AI Tests management.
  * Displays a list of tests with actions to create, edit, run, and delete.
  */
-@customElement('umbraco-ai-tests-workspace-root')
+@customElement("umbraco-ai-tests-workspace-root")
 export class UmbracoAITestsWorkspaceRootElement extends LitElement {
     @state()
     private _tests: TestItemResponseModel[] = [];
@@ -16,7 +16,7 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
     private _isLoading = true;
 
     @state()
-    private _filter = '';
+    private _filter = "";
 
     private _repository = new AITestRepository(this);
 
@@ -28,15 +28,10 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
     private async _loadTests() {
         this._isLoading = true;
         try {
-            const result = await this._repository.getAll(
-                this._filter || undefined,
-                undefined,
-                0,
-                100
-            );
+            const result = await this._repository.getAll(this._filter || undefined, undefined, 0, 100);
             this._tests = result.items;
         } catch (error) {
-            console.error('Failed to load tests:', error);
+            console.error("Failed to load tests:", error);
         } finally {
             this._isLoading = false;
         }
@@ -50,22 +45,22 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
 
     private _onCreateClick() {
         // TODO: Navigate to test create workspace
-        console.log('Create test clicked');
+        console.log("Create test clicked");
     }
 
     private _onEditClick(test: TestItemResponseModel) {
         // TODO: Navigate to test edit workspace
-        console.log('Edit test:', test.id);
+        console.log("Edit test:", test.id);
     }
 
     private async _onRunClick(test: TestItemResponseModel) {
         try {
             const result = await this._repository.run(test.id);
-            console.log('Test run result:', result);
+            console.log("Test run result:", result);
             alert(`Test completed! Pass@k: ${result.passAtK.toFixed(2)}, Avg Score: ${result.averageScore.toFixed(2)}`);
         } catch (error) {
-            console.error('Failed to run test:', error);
-            alert('Failed to run test. See console for details.');
+            console.error("Failed to run test:", error);
+            alert("Failed to run test. See console for details.");
         }
     }
 
@@ -77,7 +72,7 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
             await this._repository.delete(test.id);
             await this._loadTests();
         } catch (error) {
-            console.error('Failed to delete test:', error);
+            console.error("Failed to delete test:", error);
         }
     }
 
@@ -90,11 +85,7 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
             <div class="workspace-root">
                 <div class="header">
                     <h1>AI Tests</h1>
-                    <uui-button
-                        label="Create Test"
-                        look="primary"
-                        color="positive"
-                        @click=${this._onCreateClick}>
+                    <uui-button label="Create Test" look="primary" color="positive" @click=${this._onCreateClick}>
                         Create Test
                     </uui-button>
                 </div>
@@ -104,47 +95,46 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
                         label="Filter"
                         placeholder="Search tests..."
                         .value=${this._filter}
-                        @input=${this._onFilterChange}>
+                        @input=${this._onFilterChange}
+                    >
                     </uui-input>
                 </div>
 
                 <div class="test-list">
                     ${this._tests.length === 0
                         ? html`<p>No tests found. Create your first test!</p>`
-                        : this._tests.map(test => html`
-                            <div class="test-item">
-                                <div class="test-info">
-                                    <h3>${test.name}</h3>
-                                    <p>${test.description || 'No description'}</p>
-                                    <div class="test-meta">
-                                        <span>Type: ${test.testTypeId}</span>
-                                        <span>Runs: ${test.runCount}</span>
-                                        ${test.tags.length > 0
-                                            ? html`<span>Tags: ${test.tags.join(', ')}</span>`
-                                            : ''}
-                                    </div>
-                                </div>
-                                <div class="test-actions">
-                                    <uui-button
-                                        label="Run"
-                                        look="primary"
-                                        @click=${() => this._onRunClick(test)}>
-                                        Run
-                                    </uui-button>
-                                    <uui-button
-                                        label="Edit"
-                                        @click=${() => this._onEditClick(test)}>
-                                        Edit
-                                    </uui-button>
-                                    <uui-button
-                                        label="Delete"
-                                        color="danger"
-                                        @click=${() => this._onDeleteClick(test)}>
-                                        Delete
-                                    </uui-button>
-                                </div>
-                            </div>
-                        `)}
+                        : this._tests.map(
+                              (test) => html`
+                                  <div class="test-item">
+                                      <div class="test-info">
+                                          <h3>${test.name}</h3>
+                                          <p>${test.description || "No description"}</p>
+                                          <div class="test-meta">
+                                              <span>Type: ${test.testTypeId}</span>
+                                              <span>Runs: ${test.runCount}</span>
+                                              ${test.tags.length > 0
+                                                  ? html`<span>Tags: ${test.tags.join(", ")}</span>`
+                                                  : ""}
+                                          </div>
+                                      </div>
+                                      <div class="test-actions">
+                                          <uui-button label="Run" look="primary" @click=${() => this._onRunClick(test)}>
+                                              Run
+                                          </uui-button>
+                                          <uui-button label="Edit" @click=${() => this._onEditClick(test)}>
+                                              Edit
+                                          </uui-button>
+                                          <uui-button
+                                              label="Delete"
+                                              color="danger"
+                                              @click=${() => this._onDeleteClick(test)}
+                                          >
+                                              Delete
+                                          </uui-button>
+                                      </div>
+                                  </div>
+                              `,
+                          )}
                 </div>
             </div>
         `;
@@ -212,6 +202,6 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        'umbraco-ai-tests-workspace-root': UmbracoAITestsWorkspaceRootElement;
+        "umbraco-ai-tests-workspace-root": UmbracoAITestsWorkspaceRootElement;
     }
 }

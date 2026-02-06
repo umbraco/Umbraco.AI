@@ -1,16 +1,16 @@
-import { LitElement, html, css } from '@umbraco-cms/backoffice/external/lit';
-import { customElement, property, state } from '@umbraco-cms/backoffice/external/lit';
+import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import type {
     TestRunResponseModel,
     TestOutcomeResponseModel,
     TestTranscriptResponseModel,
-    TestGraderResultResponseModel
-} from '../../api/client/index.js';
+    TestGraderResultResponseModel,
+} from "../../api/client/index.js";
 
 /**
  * Test run results viewer displaying transcripts, outcomes, and metrics.
  */
-@customElement('umbraco-ai-test-run-results')
+@customElement("umbraco-ai-test-run-results")
 export class UmbracoAITestRunResultsElement extends LitElement {
     @property({ type: Object })
     testRun?: TestRunResponseModel;
@@ -28,7 +28,7 @@ export class UmbracoAITestRunResultsElement extends LitElement {
     }
 
     private _renderMetrics() {
-        if (!this.testRun) return '';
+        if (!this.testRun) return "";
 
         const passRate = (this.testRun.passAtK * 100).toFixed(1);
         const avgScore = this.testRun.averageScore.toFixed(2);
@@ -37,7 +37,7 @@ export class UmbracoAITestRunResultsElement extends LitElement {
             <div class="metrics">
                 <div class="metric">
                     <span class="metric-label">Pass@k</span>
-                    <span class="metric-value ${this.testRun.passAtK >= 0.8 ? 'success' : 'warning'}">
+                    <span class="metric-value ${this.testRun.passAtK >= 0.8 ? "success" : "warning"}">
                         ${passRate}%
                     </span>
                 </div>
@@ -47,9 +47,7 @@ export class UmbracoAITestRunResultsElement extends LitElement {
                 </div>
                 <div class="metric">
                     <span class="metric-label">Runs</span>
-                    <span class="metric-value">
-                        ${this.testRun.passedRuns} / ${this.testRun.totalRuns}
-                    </span>
+                    <span class="metric-value"> ${this.testRun.passedRuns} / ${this.testRun.totalRuns} </span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">Duration</span>
@@ -73,8 +71,8 @@ export class UmbracoAITestRunResultsElement extends LitElement {
 
     private _renderOutcome(outcome: TestOutcomeResponseModel, index: number) {
         const isExpanded = this._expandedOutcomes.has(index);
-        const statusIcon = outcome.passed ? '✓' : '✗';
-        const statusClass = outcome.passed ? 'passed' : 'failed';
+        const statusIcon = outcome.passed ? "✓" : "✗";
+        const statusClass = outcome.passed ? "passed" : "failed";
 
         return html`
             <div class="outcome-item ${statusClass}">
@@ -83,15 +81,17 @@ export class UmbracoAITestRunResultsElement extends LitElement {
                     <span class="outcome-title">Run ${index + 1}</span>
                     <span class="outcome-score">Score: ${outcome.averageScore.toFixed(2)}</span>
                     <span class="outcome-duration">${this._formatDuration(outcome.transcript.duration)}</span>
-                    <span class="expand-icon">${isExpanded ? '▼' : '▶'}</span>
+                    <span class="expand-icon">${isExpanded ? "▼" : "▶"}</span>
                 </div>
 
-                ${isExpanded ? html`
-                    <div class="outcome-details">
-                        ${this._renderTranscript(outcome.transcript)}
-                        ${this._renderGraderResults(outcome.graderResults)}
-                    </div>
-                ` : ''}
+                ${isExpanded
+                    ? html`
+                          <div class="outcome-details">
+                              ${this._renderTranscript(outcome.transcript)}
+                              ${this._renderGraderResults(outcome.graderResults)}
+                          </div>
+                      `
+                    : ""}
             </div>
         `;
     }
@@ -101,39 +101,49 @@ export class UmbracoAITestRunResultsElement extends LitElement {
             <div class="transcript">
                 <h4>Transcript</h4>
 
-                ${transcript.input ? html`
-                    <div class="transcript-section">
-                        <strong>Input:</strong>
-                        <pre>${this._formatJson(transcript.input)}</pre>
-                    </div>
-                ` : ''}
-
-                ${transcript.output ? html`
-                    <div class="transcript-section">
-                        <strong>Output:</strong>
-                        <pre>${this._formatJson(transcript.output)}</pre>
-                    </div>
-                ` : ''}
-
-                ${transcript.error ? html`
-                    <div class="transcript-section error">
-                        <strong>Error:</strong>
-                        <pre>${transcript.error}</pre>
-                    </div>
-                ` : ''}
-
-                ${transcript.metadata && Object.keys(transcript.metadata).length > 0 ? html`
-                    <div class="transcript-section">
-                        <strong>Metadata:</strong>
-                        <pre>${this._formatJson(transcript.metadata)}</pre>
-                    </div>
-                ` : ''}
+                ${transcript.input
+                    ? html`
+                          <div class="transcript-section">
+                              <strong>Input:</strong>
+                              <pre>${this._formatJson(transcript.input)}</pre>
+                          </div>
+                      `
+                    : ""}
+                ${transcript.output
+                    ? html`
+                          <div class="transcript-section">
+                              <strong>Output:</strong>
+                              <pre>${this._formatJson(transcript.output)}</pre>
+                          </div>
+                      `
+                    : ""}
+                ${transcript.error
+                    ? html`
+                          <div class="transcript-section error">
+                              <strong>Error:</strong>
+                              <pre>${transcript.error}</pre>
+                          </div>
+                      `
+                    : ""}
+                ${transcript.metadata && Object.keys(transcript.metadata).length > 0
+                    ? html`
+                          <div class="transcript-section">
+                              <strong>Metadata:</strong>
+                              <pre>${this._formatJson(transcript.metadata)}</pre>
+                          </div>
+                      `
+                    : ""}
 
                 <div class="transcript-meta">
                     <span>Duration: ${this._formatDuration(transcript.duration)}</span>
-                    ${transcript.tokenUsage ? html`
-                        <span>Tokens: ${transcript.tokenUsage.inputTokens}in / ${transcript.tokenUsage.outputTokens}out</span>
-                    ` : ''}
+                    ${transcript.tokenUsage
+                        ? html`
+                              <span
+                                  >Tokens: ${transcript.tokenUsage.inputTokens}in /
+                                  ${transcript.tokenUsage.outputTokens}out</span
+                              >
+                          `
+                        : ""}
                 </div>
             </div>
         `;
@@ -141,20 +151,20 @@ export class UmbracoAITestRunResultsElement extends LitElement {
 
     private _renderGraderResults(results: TestGraderResultResponseModel[]) {
         if (!results || results.length === 0) {
-            return '';
+            return "";
         }
 
         return html`
             <div class="grader-results">
                 <h4>Grader Results</h4>
-                ${results.map(result => this._renderGraderResult(result))}
+                ${results.map((result) => this._renderGraderResult(result))}
             </div>
         `;
     }
 
     private _renderGraderResult(result: TestGraderResultResponseModel) {
-        const statusIcon = result.passed ? '✓' : '✗';
-        const statusClass = result.passed ? 'passed' : 'failed';
+        const statusIcon = result.passed ? "✓" : "✗";
+        const statusClass = result.passed ? "passed" : "failed";
 
         return html`
             <div class="grader-result ${statusClass}">
@@ -165,18 +175,17 @@ export class UmbracoAITestRunResultsElement extends LitElement {
                     <span class="grader-severity severity-${result.severity}">${result.severity}</span>
                 </div>
 
-                ${result.reason ? html`
-                    <div class="grader-reason">
-                        <strong>Reason:</strong> ${result.reason}
-                    </div>
-                ` : ''}
-
-                ${result.details && Object.keys(result.details).length > 0 ? html`
-                    <div class="grader-details">
-                        <strong>Details:</strong>
-                        <pre>${this._formatJson(result.details)}</pre>
-                    </div>
-                ` : ''}
+                ${result.reason
+                    ? html` <div class="grader-reason"><strong>Reason:</strong> ${result.reason}</div> `
+                    : ""}
+                ${result.details && Object.keys(result.details).length > 0
+                    ? html`
+                          <div class="grader-details">
+                              <strong>Details:</strong>
+                              <pre>${this._formatJson(result.details)}</pre>
+                          </div>
+                      `
+                    : ""}
             </div>
         `;
     }
@@ -473,6 +482,6 @@ export class UmbracoAITestRunResultsElement extends LitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        'umbraco-ai-test-run-results': UmbracoAITestRunResultsElement;
+        "umbraco-ai-test-run-results": UmbracoAITestRunResultsElement;
     }
 }

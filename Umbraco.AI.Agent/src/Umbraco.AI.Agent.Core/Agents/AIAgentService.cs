@@ -114,22 +114,47 @@ internal sealed class AIAgentService : IAIAgentService
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<string>> GetAllowedToolIdsAsync(
+    public async Task<IReadOnlyList<string>> GetAllowedToolIdsAsync(
         AIAgent agent,
+        IEnumerable<Guid>? userGroupIds = null,
         CancellationToken cancellationToken = default)
     {
-        var result = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
-        return Task.FromResult(result);
+        // Resolve user groups if not provided
+        var resolvedUserGroupIds = userGroupIds ?? await GetCurrentUserGroupIdsAsync(cancellationToken);
+
+        var result = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection, resolvedUserGroupIds);
+        return result;
     }
 
     /// <inheritdoc />
-    public Task<bool> IsToolAllowedAsync(
+    public async Task<bool> IsToolAllowedAsync(
         AIAgent agent,
         string toolId,
+        IEnumerable<Guid>? userGroupIds = null,
         CancellationToken cancellationToken = default)
     {
-        var result = AIAgentToolHelper.IsToolAllowed(agent, toolId, _toolCollection);
-        return Task.FromResult(result);
+        // Resolve user groups if not provided
+        var resolvedUserGroupIds = userGroupIds ?? await GetCurrentUserGroupIdsAsync(cancellationToken);
+
+        var result = AIAgentToolHelper.IsToolAllowed(agent, toolId, _toolCollection, resolvedUserGroupIds);
+        return result;
+    }
+
+    /// <summary>
+    /// Gets the current user's user group IDs.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of user group IDs for the current user. Empty list if no user or no groups.</returns>
+    private Task<IReadOnlyList<Guid>> GetCurrentUserGroupIdsAsync(CancellationToken cancellationToken)
+    {
+        var user = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser;
+        if (user is null)
+        {
+            return Task.FromResult<IReadOnlyList<Guid>>([]);
+        }
+
+        var groupIds = user.Groups.Select(g => g.Key).ToList();
+        return Task.FromResult<IReadOnlyList<Guid>>(groupIds);
     }
 
     /// <inheritdoc />
@@ -165,8 +190,8 @@ internal sealed class AIAgentService : IAIAgentService
         // 2. Convert AG-UI context and create frontend tools with metadata
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
 
-        // Get allowed tool IDs for permission checking
-        var allowedToolIds = await GetAllowedToolIdsAsync(agent, cancellationToken);
+        // Get allowed tool IDs for permission checking (uses current user's groups)
+        var allowedToolIds = await GetAllowedToolIdsAsync(agent, userGroupIds: null, cancellationToken);
 
         // Convert AGUITools to AIFrontendToolFunction with metadata and filter by permissions
         IList<AITool>? convertedFrontendTools = null;

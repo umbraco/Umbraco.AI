@@ -70,6 +70,18 @@ public sealed class AIAgent : IAIVersionableEntity
     public IReadOnlyList<string> AllowedToolScopeIds { get; set; } = [];
 
     /// <summary>
+    /// User group-specific permission overrides.
+    /// Dictionary key is UserGroupId (Guid).
+    /// </summary>
+    /// <remarks>
+    /// User groups can override agent defaults by adding or removing tool permissions.
+    /// Resolution order: Agent Defaults + User Group Additions - User Group Restrictions.
+    /// System tools are always included and cannot be denied.
+    /// </remarks>
+    public IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> UserGroupPermissions { get; set; }
+        = new Dictionary<Guid, AIAgentUserGroupPermissions>();
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

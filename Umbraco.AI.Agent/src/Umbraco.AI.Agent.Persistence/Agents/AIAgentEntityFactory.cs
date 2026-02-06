@@ -29,6 +29,7 @@ internal static class AIAgentEntityFactory
             ScopeIds = DeserializeScopeIds(entity.ScopeIds),
             AllowedToolIds = DeserializeAllowedToolIds(entity.AllowedToolIds),
             AllowedToolScopeIds = DeserializeAllowedToolScopeIds(entity.AllowedToolScopeIds),
+            UserGroupPermissions = DeserializeUserGroupPermissions(entity.UserGroupPermissions),
             Instructions = entity.Instructions,
             IsActive = entity.IsActive,
             DateCreated = entity.DateCreated,
@@ -55,6 +56,7 @@ internal static class AIAgentEntityFactory
             ScopeIds = SerializeScopeIds(aiAgent.ScopeIds),
             AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds),
             AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds),
+            UserGroupPermissions = SerializeUserGroupPermissions(aiAgent.UserGroupPermissions),
             Instructions = aiAgent.Instructions,
             IsActive = aiAgent.IsActive,
             DateCreated = aiAgent.DateCreated,
@@ -78,6 +80,7 @@ internal static class AIAgentEntityFactory
         entity.ScopeIds = SerializeScopeIds(aiAgent.ScopeIds);
         entity.AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds);
         entity.AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds);
+        entity.UserGroupPermissions = SerializeUserGroupPermissions(aiAgent.UserGroupPermissions);
         entity.Instructions = aiAgent.Instructions;
         entity.IsActive = aiAgent.IsActive;
         entity.DateModified = aiAgent.DateModified;
@@ -191,6 +194,34 @@ internal static class AIAgentEntityFactory
         catch
         {
             return [];
+        }
+    }
+
+    private static string? SerializeUserGroupPermissions(IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> permissions)
+    {
+        if (permissions.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(permissions, JsonOptions);
+    }
+
+    private static IReadOnlyDictionary<Guid, AIAgentUserGroupPermissions> DeserializeUserGroupPermissions(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<Guid, AIAgentUserGroupPermissions>>(json, JsonOptions)
+                ?? new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        }
+        catch
+        {
+            return new Dictionary<Guid, AIAgentUserGroupPermissions>();
         }
     }
 }

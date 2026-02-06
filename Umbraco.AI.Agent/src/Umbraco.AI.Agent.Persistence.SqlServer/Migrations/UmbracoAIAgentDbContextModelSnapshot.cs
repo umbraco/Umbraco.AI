@@ -81,6 +81,9 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("UserGroupPermissions")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Version")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")

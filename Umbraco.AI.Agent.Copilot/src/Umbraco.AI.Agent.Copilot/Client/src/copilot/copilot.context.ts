@@ -57,206 +57,14 @@ export class UaiCopilotContext extends UmbControllerBase {
 
     // ─── Run State (delegated to RunController) ────────────────────────────────
 
-  /** Observable list of chat messages in the current conversation. */
-  get messages$() {
-    return this.#runController.messages$;
-  }
-
-  /** Observable for streaming text content during assistant response. */
-  get streamingContent$() {
-    return this.#runController.streamingContent$;
-  }
-
-  /** Observable for the current agent execution state (thinking, executing, etc.). */
-  get agentState$() {
-    return this.#runController.agentState$;
-  }
-
-  /** Observable indicating whether an agent run is in progress. */
-  get isRunning$() {
-    return this.#runController.isRunning$;
-  }
-
-  // ─── Tool Management ───────────────────────────────────────────────────────
-
-  /** Frontend tool manager for registering and rendering custom tool UI. */
-  get toolManager(): UaiToolManager {
-    return this.#runController.toolManager;
-  }
-
-  // ─── HITL (Human-in-the-Loop) ──────────────────────────────────────────────
-
-  /** Observable for HITL interrupt state. Emits when user approval is required. */
-  get hitlInterrupt$() {
-    return this.#hitlContext.interrupt$;
-  }
-
-  /** Observable for pending approval with target message ID for inline rendering. */
-  get pendingApproval$() {
-    return this.#hitlContext.pendingApproval$;
-  }
-
-  // ─── Entity Context ─────────────────────────────────────────────────────────
-
-  /** Observable of all detected entities with adapters. */
-  get detectedEntities$() {
-    return this.#entityAdapterContext.detectedEntities$;
-  }
-
-  /** Observable of the currently selected entity for context injection. */
-  get selectedEntity$() {
-    return this.#entityAdapterContext.selectedEntity$;
-  }
-
-  /**
-   * Set the selected entity by key.
-   * Called by UI when user selects a different entity context.
-   * @param key The entity key (entityType:unique) to select
-   */
-  setSelectedEntityKey(key: string | undefined): void {
-    this.#entityAdapterContext.setSelectedEntityKey(key);
-  }
-
-  /**
-   * Apply a property change to the currently selected entity.
-   * Changes are staged in the workspace - user must click Save to persist.
-   * @param change The property change to apply (alias, value, optional culture/segment)
-   * @returns Result indicating success or failure with error message
-   */
-  async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
-    return this.#entityAdapterContext.applyPropertyChange(change);
-  }
-
-  constructor(host: UmbControllerHost) {
-    super(host);
-
-    this.#agentRepository = new UaiCopilotAgentRepository(host);
-    this.#hitlContext = new UaiHitlContext(host);
-    this.#runController = new UaiCopilotRunController(host, this.#hitlContext);
-    this.#entityAdapterContext = new UaiEntityAdapterContext(host);
-
-    // Subscribe to agent repository observable
-    this.observe(
-      this.#agentRepository.agentItems$,
-      (agents) => {
-        this.#agents.setValue(agents);
-
-        // Auto-select first agent if none selected
-        if (!this.#selectedAgent.getValue() && agents.length > 0) {
-          this.#selectedAgent.setValue(agents[0]);
-        }
-
-        // Clear selection if selected agent is no longer available
-        const currentSelected = this.#selectedAgent.getValue();
-        if (currentSelected && !agents.find(a => a.id === currentSelected.id)) {
-          this.#selectedAgent.setValue(undefined);
-        }
-      }
-    );
-
-    // Sync selected agent to run controller
-    this.observe(this.selectedAgent, (agent) => {
-      if (agent) {
-        this.#runController.setAgent(agent);
-      }
-    });
-
-    this.provideContext(UAI_COPILOT_CONTEXT, this);
-    this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
-  }
-
-  // ─── Agent Catalog Actions ─────────────────────────────────────────────────
-
-  /** Load available agents from the server. Auto-selects first agent if none selected. */
-  async loadAgents(): Promise<void> {
-    this.#agentsLoading.setValue(true);
-    await this.#agentRepository.initialize();
-    this.#agentsLoading.setValue(false);
-  }
-
-  /** Check if an agent is currently selected. */
-  hasAgent(): boolean {
-    return !!this.#selectedAgent.getValue();
-  }
-
-  /** Get the currently selected agent ID. */
-  getAgentId(): string | undefined {
-    return this.#selectedAgent.getValue()?.id;
-  }
-
-  /** Get the currently selected agent name. */
-  getAgentName(): string | undefined {
-    return this.#selectedAgent.getValue()?.name;
-  }
-
-  /**
-   * Select an agent by its ID. Clears selection if agentId is undefined.
-   * @param agentId The unique identifier of the agent to select, or undefined to clear
-   */
-  selectAgent(agentId: string | undefined): void {
-    if (!agentId) {
-      this.#selectedAgent.setValue(undefined);
-      return;
+    /** Observable list of chat messages in the current conversation. */
+    get messages$() {
+        return this.#runController.messages$;
     }
-    const agent = this.#agents.getValue().find((a) => a.id === agentId);
-    if (agent) {
-      this.#selectedAgent.setValue(agent);
-    }
-  }
 
-  // ─── Panel Actions ─────────────────────────────────────────────────────────
-
-  /** Open the copilot panel. */
-  open(): void {
-    this.#isOpen.setValue(true);
-  }
-
-  /** Close the copilot panel and reset the conversation. */
-  close(): void {
-    this.#isOpen.setValue(false);
-    this.#runController.abortRun();
-    this.#runController.resetConversation();
-  }
-
-  /** Toggle the copilot panel visibility. Resets conversation when closing. */
-  toggle(): void {
-    const wasOpen = this.#isOpen.getValue();
-    this.#isOpen.setValue(!wasOpen);
-    if (wasOpen) {
-      // Closing - clear the conversation
-      this.#runController.abortRun();
-      this.#runController.resetConversation();
-    }
-  }
-
-  // ─── HITL Actions ──────────────────────────────────────────────────────────
-
-  /**
-   * Respond to a HITL interrupt with user input.
-   * @param response The user's response to the interrupt prompt
-   */
-  respondToHitl(response: string): void {
-    this.#hitlContext.respond(response);
-  }
-
-  // ─── Run Actions ───────────────────────────────────────────────────────────
-
-  /**
-   * Send a user message to the agent, starting or continuing a conversation.
-   * Automatically serializes the selected entity context and includes it in the request.
-   * @param content The message content to send
-   */
-  async sendUserMessage(content: string): Promise<void> {
-    // Serialize selected entity for context injection
-    const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
-
-    // Build context array for LLM (value must be JSON string for AG-UI protocol)
-    const context: Array<{ description: string; value: string }> = [];
-    if (entityContext) {
-      context.push({
-        description: `Currently editing ${entityContext.entityType}: ${entityContext.name}`,
-        value: JSON.stringify(entityContext),
-      });
+    /** Observable for streaming text content during assistant response. */
+    get streamingContent$() {
+        return this.#runController.streamingContent$;
     }
 
     /** Observable for the current agent execution state (thinking, executing, etc.). */
@@ -327,6 +135,22 @@ export class UaiCopilotContext extends UmbControllerBase {
         this.#runController = new UaiCopilotRunController(host, this.#hitlContext);
         this.#entityAdapterContext = new UaiEntityAdapterContext(host);
 
+        // Subscribe to agent repository observable
+        this.observe(this.#agentRepository.agentItems$, (agents) => {
+            this.#agents.setValue(agents);
+
+            // Auto-select first agent if none selected
+            if (!this.#selectedAgent.getValue() && agents.length > 0) {
+                this.#selectedAgent.setValue(agents[0]);
+            }
+
+            // Clear selection if selected agent is no longer available
+            const currentSelected = this.#selectedAgent.getValue();
+            if (currentSelected && !agents.find((a) => a.id === currentSelected.id)) {
+                this.#selectedAgent.setValue(undefined);
+            }
+        });
+
         // Sync selected agent to run controller
         this.observe(this.selectedAgent, (agent) => {
             if (agent) {
@@ -343,18 +167,7 @@ export class UaiCopilotContext extends UmbControllerBase {
     /** Load available agents from the server. Auto-selects first agent if none selected. */
     async loadAgents(): Promise<void> {
         this.#agentsLoading.setValue(true);
-
-        const { data } = await this.#agentRepository.fetchActiveAgents();
-
-        if (data) {
-            this.#agents.setValue(data);
-
-            // Auto-select first agent if none selected
-            if (!this.#selectedAgent.getValue() && data.length > 0) {
-                this.#selectedAgent.setValue(data[0]);
-            }
-        }
-
+        await this.#agentRepository.initialize();
         this.#agentsLoading.setValue(false);
     }
 

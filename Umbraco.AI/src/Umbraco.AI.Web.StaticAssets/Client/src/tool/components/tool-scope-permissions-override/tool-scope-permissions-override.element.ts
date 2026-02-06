@@ -258,7 +258,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 										label=${this.localize.term("uaiGeneral_deny")}
 										color="danger"
 										@click=${() => this._denyScope(scope.scopeId)}>
-										${this.localize.term("uaiGeneral_deny")}
+                                        <uui-icon name="icon-block"></uui-icon>
 									</uui-button>
 								</uui-action-bar>
 							`
@@ -268,7 +268,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 				${when(
 					scope.state === "allowed",
 					() => html`
-						<uui-tag slot="tag" look="positive">${this.localize.term("uaiGeneral_allowed")}</uui-tag>
+						<uui-tag slot="tag" look="primary" color="positive">${this.localize.term("uaiGeneral_allowed")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`
@@ -286,7 +286,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 				${when(
 					scope.state === "denied",
 					() => html`
-						<uui-tag slot="tag" look="negative">${this.localize.term("uaiGeneral_denied")}</uui-tag>
+						<uui-tag slot="tag" look="primary" color="danger">${this.localize.term("uaiGeneral_denied")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`
@@ -295,7 +295,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 										label=${this.localize.term("uaiGeneral_allow")}
 										color="positive"
 										@click=${() => this._allowScope(scope.scopeId)}>
-										${this.localize.term("uaiGeneral_allow")}
+                                        <uui-icon name="icon-check"></uui-icon>
 									</uui-button>
 								</uui-action-bar>
 							`

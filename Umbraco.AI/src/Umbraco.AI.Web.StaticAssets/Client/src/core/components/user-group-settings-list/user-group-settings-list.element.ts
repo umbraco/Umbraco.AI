@@ -278,21 +278,24 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 								([id, settings]) => html`
 									<uui-ref-node
 										name=${this._userGroupNames.get(id) ?? id}
-										detail=${this.config.display.renderSummary(settings)}>
+										detail=${this.config.display.renderSummary(settings)}
+										@click=${this.readonly ? undefined : () => this._editUserGroup(id)}>
 										<umb-icon slot="icon" name="icon-users"></umb-icon>
-										${when(this.config.display.renderTags, () => this.config.display.renderTags!(settings))}
+										<div slot="tag" class="tags">
+                                            ${this.config.display.renderTags ? this.config.display.renderTags(settings) : nothing}
+                                        </div>
 										${when(
 											!this.readonly,
 											() => html`
 												<uui-action-bar slot="actions">
 													<uui-button
 														label=${this.localize.term("general_edit")}
-														@click=${() => this._editUserGroup(id)}>
+														@click=${(e: Event) => { e.stopPropagation(); this._editUserGroup(id); }}>
 														<uui-icon name="icon-edit"></uui-icon>
 													</uui-button>
 													<uui-button
 														label=${this.localize.term("general_remove")}
-														@click=${() => this._removeUserGroup(id)}>
+														@click=${(e: Event) => { e.stopPropagation(); this._removeUserGroup(id); }}>
 														<uui-icon name="icon-trash"></uui-icon>
 													</uui-button>
 												</uui-action-bar>
@@ -334,6 +337,12 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 				margin: var(--uui-size-space-4) 0;
 				color: var(--uui-color-text-alt);
 			}
+
+            .tags {
+                display: flex;
+                gap: var(--uui-size-space-1);
+                margin-right: var(--uui-size-space-2);
+            }
 
 			uui-button[look="placeholder"] {
 				width: 100%;

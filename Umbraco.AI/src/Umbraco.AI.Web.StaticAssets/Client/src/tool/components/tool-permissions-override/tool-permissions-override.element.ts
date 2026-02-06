@@ -257,7 +257,7 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 										label=${this.localize.term("uaiGeneral_deny")}
 										color="danger"
 										@click=${() => this._denyTool(tool.toolId)}>
-										${this.localize.term("uaiGeneral_deny")}
+                                        <uui-icon name="icon-block"></uui-icon>
 									</uui-button>
 								</uui-action-bar>
 							`
@@ -267,7 +267,7 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 				${when(
 					tool.state === "allowed",
 					() => html`
-						<uui-tag slot="tag" look="positive">${this.localize.term("uaiGeneral_allowed")}</uui-tag>
+						<uui-tag slot="tag" look="primary" color="positive">${this.localize.term("uaiGeneral_allowed")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`
@@ -285,7 +285,7 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 				${when(
 					tool.state === "denied",
 					() => html`
-						<uui-tag slot="tag" look="negative">${this.localize.term("uaiGeneral_denied")}</uui-tag>
+						<uui-tag slot="tag" look="primary" color="danger">${this.localize.term("uaiGeneral_denied")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`
@@ -294,7 +294,7 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 										label=${this.localize.term("uaiGeneral_allow")}
 										color="positive"
 										@click=${() => this._allowTool(tool.toolId)}>
-										${this.localize.term("uaiGeneral_allow")}
+                                        <uui-icon name="icon-check"></uui-icon>
 									</uui-button>
 								</uui-action-bar>
 							`
@@ -327,9 +327,9 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 						<uui-button
 							look="placeholder"
 							@click=${this._addAllowedTool}
-							label=${this.localize.term("uaiAgent_addTool") || "Add Tools"}>
+							label=${this.localize.term("general_add")}>
 							<uui-icon name="icon-add"></uui-icon>
-							${this.localize.term("uaiAgent_addTool") || "Add Tools"}
+							${this.localize.term("general_add")}
 						</uui-button>
 					`
 				)}

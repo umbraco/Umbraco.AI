@@ -74,15 +74,14 @@ export class UaiUserGroupToolPermissionsElement extends UmbLitElement {
 			(settings.allowedToolIds?.length ?? 0) + (settings.allowedToolScopeIds?.length ?? 0);
 		const restrictions =
 			(settings.deniedToolIds?.length ?? 0) + (settings.deniedToolScopeIds?.length ?? 0);
-
 		return html`
 			${when(
 				additions > 0,
-				() => html` <uui-tag slot="tag" look="positive">+${additions}</uui-tag> `
+				() => html` <uui-tag color="positive">+${additions}</uui-tag> `
 			)}
 			${when(
 				restrictions > 0,
-				() => html` <uui-tag slot="tag" look="negative">-${restrictions}</uui-tag> `
+				() => html` <uui-tag color="danger">-${restrictions}</uui-tag> `
 			)}
 		`;
 	}

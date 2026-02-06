@@ -144,7 +144,7 @@ export class UaiCopilotChatElement extends UmbLitElement {
                         ? html`
                               <div class="empty-state">
                                   <uui-icon name="icon-chat"></uui-icon>
-                                  <p>Start a conversation with ${this._agentName || "the agent"}</p>
+                                  <p>Start a conversation with ${this._agentName || "an agent"}</p>
                               </div>
                           `
                         : this.#renderMessages()}

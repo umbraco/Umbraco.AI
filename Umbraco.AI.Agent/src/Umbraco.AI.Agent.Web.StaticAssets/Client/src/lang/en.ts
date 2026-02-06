@@ -11,6 +11,20 @@ export default {
         noScopesAvailable: "No scopes available. Scopes are registered by add-on packages.",
         scopesDescription: "Categorize this agent for specific purposes (e.g., Copilot chat)",
         noToolScopesAvailable: "No tool scopes available",
+
+        // Tool permissions
+        agentDefaults: "Agent Defaults",
+        agentDefaultsDescription: "These are the default permissions from the agent configuration",
+        toolScopeOverrides: "Tool Scope Overrides",
+        toolScopeOverridesDescription: "Add or remove tool scopes for this user group",
+        toolIdOverrides: "Tool ID Overrides",
+        toolIdOverridesDescription: "Add or remove specific tool IDs for this user group",
+        allowedToolScopes: "Allowed Tool Scopes",
+        allowedToolIds: "Allowed Tool IDs",
+        noDefaultPermissions: "No default permissions configured",
+        userGroupOverrides: "User Group Permission Overrides",
+        addUserGroupOverride: "Add User Group Override",
+        noUserGroupOverridesConfigured: "No user group permission overrides configured",
     },
     uaiToolScope: {
         // Content scopes

@@ -111,4 +111,9 @@ export default {
         amazonEndpointLabel: "Custom Endpoint",
         amazonEndpointDescription: "Custom endpoint URL for Bedrock services (optional)",
     },
+    uai: {
+        userGroupOverrides: "User Group Overrides",
+        addUserGroupOverride: "Add User Group Override",
+        noUserGroupOverridesConfigured: "No user group overrides configured.",
+    },
 } as UmbLocalizationDictionary;

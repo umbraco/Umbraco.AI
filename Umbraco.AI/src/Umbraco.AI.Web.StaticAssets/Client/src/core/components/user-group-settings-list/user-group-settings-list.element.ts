@@ -12,8 +12,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UMB_USER_GROUP_PICKER_MODAL } from "@umbraco-cms/backoffice/user-group";
-import { createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-registry";
+import { UMB_USER_GROUP_PICKER_MODAL, UmbUserGroupItemRepository } from "@umbraco-cms/backoffice/user-group";
 
 /**
  * Configuration for the user group settings list component.
@@ -108,6 +107,11 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 	private _userGroupNames: Map<string, string> = new Map();
 
 	/**
+	 * User group repository for fetching user group data.
+	 */
+	#userGroupRepository = new UmbUserGroupItemRepository(this);
+
+	/**
 	 * Computed labels with defaults.
 	 */
 	private get _labels() {
@@ -154,32 +158,26 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 	/**
 	 * Get user group name by ID.
 	 */
-	private async _getUserGroupName(userGroupId: string): Promise<string | null> {
+	private async _getUserGroupName(userGroupId: string): Promise<string> {
 		// Check cache first
 		if (this._userGroupNames.has(userGroupId)) {
-			return this._userGroupNames.get(userGroupId) ?? null;
+			return this._userGroupNames.get(userGroupId)!;
 		}
 
 		// Fetch from user group repository
 		try {
-			const repository = await createExtensionApiByAlias(
-				this,
-				"Umb.Repository.UserGroupItem"
-			);
-
-			if (repository && "requestItems" in repository) {
-				const { data } = await (repository as any).requestItems([userGroupId]);
-				if (data && data.length > 0) {
-					const name = data[0].name ?? userGroupId;
-					this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
-					return name;
-				}
+			const { data } = await this.#userGroupRepository.requestItems([userGroupId]);
+			if (data && data.length > 0 && data[0]) {
+				const name = data[0].name ?? userGroupId;
+				this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
+				return name;
 			}
 		} catch (error) {
 			console.error(`Failed to fetch user group name for ${userGroupId}:`, error);
 		}
 
-		return null;
+		// Fallback to ID if fetch fails
+		return userGroupId;
 	}
 
 	/**
@@ -210,7 +208,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 		}
 
 		// 2. Get user group name
-		const userGroupName = (await this._getUserGroupName(userGroupId)) ?? userGroupId;
+		const userGroupName = await this._getUserGroupName(userGroupId);
 
 		// 3. Open editor modal
 		const modalData = this.config.editorModal.createData(userGroupId, userGroupName);
@@ -236,7 +234,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 		const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
 		if (!modalManager) return;
 
-		const userGroupName = (await this._getUserGroupName(userGroupId)) ?? userGroupId;
+		const userGroupName = await this._getUserGroupName(userGroupId);
 		const existingSettings = this.value[userGroupId];
 
 		const modalData = this.config.editorModal.createData(userGroupId, userGroupName, existingSettings);

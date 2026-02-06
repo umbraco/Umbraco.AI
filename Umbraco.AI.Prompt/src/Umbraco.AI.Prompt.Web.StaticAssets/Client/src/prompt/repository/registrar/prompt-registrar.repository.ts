@@ -1,9 +1,9 @@
 import { UmbRepositoryBase } from "@umbraco-cms/backoffice/repository";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { BehaviorSubject } from '@umbraco-cms/backoffice/external/rxjs';
-import type { Observable } from '@umbraco-cms/backoffice/external/rxjs';
-import { UMB_ACTION_EVENT_CONTEXT } from '@umbraco-cms/backoffice/action';
-import { UaiEntityActionEvent } from '@umbraco-ai/core';
+import { BehaviorSubject } from "@umbraco-cms/backoffice/external/rxjs";
+import type { Observable } from "@umbraco-cms/backoffice/external/rxjs";
+import { UMB_ACTION_EVENT_CONTEXT } from "@umbraco-cms/backoffice/action";
+import { UaiEntityActionEvent } from "@umbraco-ai/core";
 import { UaiPromptRegistrarServerDataSource } from "./prompt-registrar.server.data-source.js";
 import type { PromptManifestEntry } from "../../property-actions/types.js";
 import { generatePromptPropertyActionManifest } from "../../property-actions/generate-prompt-property-action-manifest.js";
@@ -56,7 +56,7 @@ export class UaiPromptRegistrarRepository extends UmbRepositoryBase {
     async initialize(): Promise<void> {
         const { data, error } = await this.#dataSource.getActivePrompts();
         if (error || !data) {
-            console.warn('[UaiPromptRegistrarRepository] Failed to load prompts:', error);
+            console.warn("[UaiPromptRegistrarRepository] Failed to load prompts:", error);
             return;
         }
 

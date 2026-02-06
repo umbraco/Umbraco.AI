@@ -13,9 +13,9 @@ const frontendToolRepositoryManifest: ManifestRepository<UaiFrontendToolReposito
 };
 
 export const manifests = [
-	UAI_AGENT_TOOL_DEFAULT_KIND_MANIFEST,
-	frontendToolRepositoryManifest,
-	...entityToolManifests,
-	...exampleToolManifests,
-	...umbracoToolManifests,
+    UAI_AGENT_TOOL_DEFAULT_KIND_MANIFEST,
+    frontendToolRepositoryManifest,
+    ...entityToolManifests,
+    ...exampleToolManifests,
+    ...umbracoToolManifests,
 ];

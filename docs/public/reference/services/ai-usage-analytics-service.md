@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for AI usage analytics and reporting.
+    Service for AI usage analytics and reporting.
 ---
 
 # IAIUsageAnalyticsService
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Analytics.Usage;
 ## Interface
 
 {% code title="IAIUsageAnalyticsService" %}
+
 ```csharp
 public interface IAIUsageAnalyticsService
 {
@@ -58,6 +59,7 @@ public interface IAIUsageAnalyticsService
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Methods
@@ -66,17 +68,18 @@ public interface IAIUsageAnalyticsService
 
 Gets aggregated usage statistics for a time period.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `from` | `DateTime` | Start of period |
-| `to` | `DateTime` | End of period |
-| `requestedGranularity` | `AIUsageGranularity` | Data granularity |
-| `filter` | `AIUsageFilter?` | Optional filter |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter              | Type                 | Description        |
+| ---------------------- | -------------------- | ------------------ |
+| `from`                 | `DateTime`           | Start of period    |
+| `to`                   | `DateTime`           | End of period      |
+| `requestedGranularity` | `AIUsageGranularity` | Data granularity   |
+| `filter`               | `AIUsageFilter?`     | Optional filter    |
+| `cancellationToken`    | `CancellationToken`  | Cancellation token |
 
 **Returns**: `AIUsageSummary` with totals and averages.
 
 {% code title="Example" %}
+
 ```csharp
 var summary = await _analyticsService.GetSummaryAsync(
     from: DateTime.UtcNow.AddDays(-30),
@@ -87,23 +90,25 @@ Console.WriteLine($"Total Tokens: {summary.TotalTokens:N0}");
 Console.WriteLine($"Success Rate: {summary.SuccessRate:P1}");
 Console.WriteLine($"Avg Duration: {summary.AverageDurationMs}ms");
 ```
+
 {% endcode %}
 
 ### GetTimeSeriesAsync
 
 Gets usage metrics over time for trend analysis.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `from` | `DateTime` | Start of period |
-| `to` | `DateTime` | End of period |
-| `requestedGranularity` | `AIUsageGranularity` | Time interval |
-| `filter` | `AIUsageFilter?` | Optional filter |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter              | Type                 | Description        |
+| ---------------------- | -------------------- | ------------------ |
+| `from`                 | `DateTime`           | Start of period    |
+| `to`                   | `DateTime`           | End of period      |
+| `requestedGranularity` | `AIUsageGranularity` | Time interval      |
+| `filter`               | `AIUsageFilter?`     | Optional filter    |
+| `cancellationToken`    | `CancellationToken`  | Cancellation token |
 
 **Returns**: Time series data points.
 
 {% code title="Example" %}
+
 ```csharp
 var timeSeries = await _analyticsService.GetTimeSeriesAsync(
     from: DateTime.UtcNow.AddDays(-7),
@@ -115,6 +120,7 @@ foreach (var point in timeSeries)
     Console.WriteLine($"{point.Timestamp:d}: {point.RequestCount} requests, {point.TotalTokens:N0} tokens");
 }
 ```
+
 {% endcode %}
 
 ### GetBreakdownByProviderAsync
@@ -122,6 +128,7 @@ foreach (var point in timeSeries)
 Gets usage distribution by AI provider.
 
 {% code title="Example" %}
+
 ```csharp
 var byProvider = await _analyticsService.GetBreakdownByProviderAsync(
     from: DateTime.UtcNow.AddDays(-30),
@@ -132,6 +139,7 @@ foreach (var item in byProvider.OrderByDescending(x => x.Percentage))
     Console.WriteLine($"{item.DimensionName}: {item.Percentage:P0} ({item.TotalTokens:N0} tokens)");
 }
 ```
+
 {% endcode %}
 
 ### GetBreakdownByModelAsync
@@ -139,11 +147,13 @@ foreach (var item in byProvider.OrderByDescending(x => x.Percentage))
 Gets usage distribution by AI model.
 
 {% code title="Example" %}
+
 ```csharp
 var byModel = await _analyticsService.GetBreakdownByModelAsync(
     from: DateTime.UtcNow.AddDays(-30),
     to: DateTime.UtcNow);
 ```
+
 {% endcode %}
 
 ### GetBreakdownByProfileAsync
@@ -151,11 +161,13 @@ var byModel = await _analyticsService.GetBreakdownByModelAsync(
 Gets usage distribution by profile.
 
 {% code title="Example" %}
+
 ```csharp
 var byProfile = await _analyticsService.GetBreakdownByProfileAsync(
     from: DateTime.UtcNow.AddDays(-30),
     to: DateTime.UtcNow);
 ```
+
 {% endcode %}
 
 ### GetBreakdownByUserAsync
@@ -163,62 +175,65 @@ var byProfile = await _analyticsService.GetBreakdownByProfileAsync(
 Gets usage distribution by user.
 
 {% code title="Example" %}
+
 ```csharp
 var byUser = await _analyticsService.GetBreakdownByUserAsync(
     from: DateTime.UtcNow.AddDays(-30),
     to: DateTime.UtcNow);
 ```
+
 {% endcode %}
 
 ## Model Classes
 
 ### AIUsageSummary
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `TotalRequests` | `int` | Number of operations |
-| `InputTokens` | `long` | Total input tokens |
-| `OutputTokens` | `long` | Total output tokens |
-| `TotalTokens` | `long` | Combined tokens |
-| `SuccessCount` | `int` | Successful operations |
-| `FailureCount` | `int` | Failed operations |
-| `SuccessRate` | `double` | Success ratio (0.0-1.0) |
-| `AverageDurationMs` | `int` | Average operation time |
+| Property            | Type     | Description             |
+| ------------------- | -------- | ----------------------- |
+| `TotalRequests`     | `int`    | Number of operations    |
+| `InputTokens`       | `long`   | Total input tokens      |
+| `OutputTokens`      | `long`   | Total output tokens     |
+| `TotalTokens`       | `long`   | Combined tokens         |
+| `SuccessCount`      | `int`    | Successful operations   |
+| `FailureCount`      | `int`    | Failed operations       |
+| `SuccessRate`       | `double` | Success ratio (0.0-1.0) |
+| `AverageDurationMs` | `int`    | Average operation time  |
 
 ### AIUsageTimeSeriesPoint
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Timestamp` | `DateTime` | Interval start |
-| `RequestCount` | `int` | Requests in interval |
-| `InputTokens` | `long` | Input tokens |
-| `OutputTokens` | `long` | Output tokens |
-| `TotalTokens` | `long` | Total tokens |
-| `SuccessCount` | `int` | Successes |
-| `FailureCount` | `int` | Failures |
+| Property       | Type       | Description          |
+| -------------- | ---------- | -------------------- |
+| `Timestamp`    | `DateTime` | Interval start       |
+| `RequestCount` | `int`      | Requests in interval |
+| `InputTokens`  | `long`     | Input tokens         |
+| `OutputTokens` | `long`     | Output tokens        |
+| `TotalTokens`  | `long`     | Total tokens         |
+| `SuccessCount` | `int`      | Successes            |
+| `FailureCount` | `int`      | Failures             |
 
 ### AIUsageBreakdownItem
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Dimension` | `string` | Identifier |
-| `DimensionName` | `string?` | Display name |
-| `RequestCount` | `int` | Requests |
-| `TotalTokens` | `long` | Tokens used |
-| `Percentage` | `double` | Share of total |
+| Property        | Type      | Description    |
+| --------------- | --------- | -------------- |
+| `Dimension`     | `string`  | Identifier     |
+| `DimensionName` | `string?` | Display name   |
+| `RequestCount`  | `int`     | Requests       |
+| `TotalTokens`   | `long`    | Tokens used    |
+| `Percentage`    | `double`  | Share of total |
 
 ### AIUsageGranularity
 
-| Value | Description |
-|-------|-------------|
-| `Hour` | Hourly intervals |
-| `Day` | Daily intervals |
-| `Week` | Weekly intervals |
+| Value   | Description       |
+| ------- | ----------------- |
+| `Hour`  | Hourly intervals  |
+| `Day`   | Daily intervals   |
+| `Week`  | Weekly intervals  |
 | `Month` | Monthly intervals |
 
 ## Usage Example
 
 {% code title="UsageDashboard.cs" %}
+
 ```csharp
 public class UsageDashboard
 {
@@ -249,9 +264,10 @@ public class UsageDashboard
     }
 }
 ```
+
 {% endcode %}
 
 ## Related
 
-* [Usage Analytics Backoffice](../../backoffice/usage-analytics.md) - Viewing analytics
-* [Audit Logs](../services/ai-audit-log-service.md) - Raw audit data
+- [Usage Analytics Backoffice](../../backoffice/usage-analytics.md) - Viewing analytics
+- [Audit Logs](../services/ai-audit-log-service.md) - Raw audit data

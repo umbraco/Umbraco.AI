@@ -17,7 +17,7 @@ export const manifests: Array<UmbExtensionManifest> = [
         type: "workspaceView",
         alias: "UmbracoAI.WorkspaceView.AnalyticsRoot.Dashboard",
         name: "Analytics Dashboard Workspace View",
-        element: () => import('./analytics-dashboard.element.js'),
+        element: () => import("./analytics-dashboard.element.js"),
         weight: 1000,
         meta: {
             label: "Dashboard",

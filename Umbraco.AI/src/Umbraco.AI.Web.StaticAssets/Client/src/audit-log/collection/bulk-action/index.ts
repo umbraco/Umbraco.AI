@@ -1,1 +1,1 @@
-export * from './manifests.js';
+export * from "./manifests.js";

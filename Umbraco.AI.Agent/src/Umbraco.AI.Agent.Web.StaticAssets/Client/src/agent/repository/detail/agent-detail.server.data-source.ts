@@ -49,7 +49,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            AgentsService.getAgentByIdOrAlias({ path: { agentIdOrAlias: unique } })
+            AgentsService.getAgentByIdOrAlias({ path: { agentIdOrAlias: unique } }),
         );
 
         if (error || !data) {
@@ -65,10 +65,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
     async create(model: UaiAgentDetailModel, _parentUnique: string | null) {
         const requestBody = UaiAgentTypeMapper.toCreateRequest(model);
 
-        const { response, error } = await tryExecute(
-            this.#host,
-            AgentsService.createAgent({ body: requestBody })
-        );
+        const { response, error } = await tryExecute(this.#host, AgentsService.createAgent({ body: requestBody }));
 
         if (error) {
             return { error };
@@ -97,7 +94,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
             AgentsService.updateAgent({
                 path: { agentIdOrAlias: model.unique },
                 body: requestBody,
-            })
+            }),
         );
 
         if (error) {
@@ -112,10 +109,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
      * Deletes an agent by its unique identifier.
      */
     async delete(unique: string) {
-        const { error } = await tryExecute(
-            this.#host,
-            AgentsService.deleteAgent({ path: { agentIdOrAlias: unique } })
-        );
+        const { error } = await tryExecute(this.#host, AgentsService.deleteAgent({ path: { agentIdOrAlias: unique } }));
 
         if (error) {
             return { error };

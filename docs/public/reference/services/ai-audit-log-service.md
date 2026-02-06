@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for AI operation audit logging.
+    Service for AI operation audit logging.
 ---
 
 # IAIAuditLogService
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.AuditLog;
 ## Interface
 
 {% code title="IAIAuditLogService" %}
+
 ```csharp
 public interface IAIAuditLogService
 {
@@ -49,6 +50,7 @@ public interface IAIAuditLogService
     Task<int> CleanupOldAuditLogsAsync(CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Query Methods
@@ -57,14 +59,15 @@ public interface IAIAuditLogService
 
 Gets a specific audit log entry by ID.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The audit log ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The audit log ID   |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The audit log if found, otherwise `null`.
 
 {% code title="Example" %}
+
 ```csharp
 var log = await _auditLogService.GetAuditLogAsync(auditLogId);
 if (log != null)
@@ -74,22 +77,24 @@ if (log != null)
     Console.WriteLine($"Duration: {log.Duration}");
 }
 ```
+
 {% endcode %}
 
 ### GetAuditLogsPagedAsync
 
 Gets audit logs with filtering and pagination.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `filter` | `AIAuditLogFilter?` | Filter criteria |
-| `skip` | `int` | Records to skip |
-| `take` | `int` | Records to take (max 100) |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description               |
+| ------------------- | ------------------- | ------------------------- |
+| `filter`            | `AIAuditLogFilter?` | Filter criteria           |
+| `skip`              | `int`               | Records to skip           |
+| `take`              | `int`               | Records to take (max 100) |
+| `cancellationToken` | `CancellationToken` | Cancellation token        |
 
 **Returns**: Tuple of (logs, total count).
 
 {% code title="Example" %}
+
 ```csharp
 var filter = new AIAuditLogFilter
 {
@@ -106,22 +111,24 @@ var (logs, total) = await _auditLogService.GetAuditLogsPagedAsync(
 
 Console.WriteLine($"Found {total} failed chat operations");
 ```
+
 {% endcode %}
 
 ### GetEntityHistoryAsync
 
 Gets audit history for a specific content entity.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `entityId` | `string` | The entity ID |
-| `entityType` | `string` | The entity type (e.g., "document") |
-| `limit` | `int` | Maximum records to return |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description                        |
+| ------------------- | ------------------- | ---------------------------------- |
+| `entityId`          | `string`            | The entity ID                      |
+| `entityType`        | `string`            | The entity type (e.g., "document") |
+| `limit`             | `int`               | Maximum records to return          |
+| `cancellationToken` | `CancellationToken` | Cancellation token                 |
 
 **Returns**: Audit logs for the entity.
 
 {% code title="Example" %}
+
 ```csharp
 var history = await _auditLogService.GetEntityHistoryAsync(
     contentId.ToString(),
@@ -133,6 +140,7 @@ foreach (var log in history)
     Console.WriteLine($"{log.StartTime}: {log.ProfileAlias} - {log.Status}");
 }
 ```
+
 {% endcode %}
 
 ## Management Methods
@@ -141,9 +149,9 @@ foreach (var log in history)
 
 Deletes a specific audit log entry.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The audit log ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The audit log ID   |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: `true` if deleted, `false` if not found.
@@ -155,26 +163,28 @@ Removes audit logs older than the configured retention period.
 **Returns**: Number of deleted records.
 
 {% code title="Example" %}
+
 ```csharp
 var deletedCount = await _auditLogService.CleanupOldAuditLogsAsync();
 Console.WriteLine($"Cleaned up {deletedCount} old audit logs");
 ```
+
 {% endcode %}
 
 ## Filter Properties
 
 The `AIAuditLogFilter` class supports:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `From` | `DateTime?` | Start of date range |
-| `To` | `DateTime?` | End of date range |
-| `Status` | `AIAuditLogStatus?` | Filter by status |
-| `Capability` | `AICapability?` | Filter by capability |
-| `ProfileId` | `Guid?` | Filter by profile |
-| `ProviderId` | `string?` | Filter by provider |
-| `UserId` | `Guid?` | Filter by user |
-| `FeatureType` | `string?` | Filter by feature type |
+| Property      | Type                | Description            |
+| ------------- | ------------------- | ---------------------- |
+| `From`        | `DateTime?`         | Start of date range    |
+| `To`          | `DateTime?`         | End of date range      |
+| `Status`      | `AIAuditLogStatus?` | Filter by status       |
+| `Capability`  | `AICapability?`     | Filter by capability   |
+| `ProfileId`   | `Guid?`             | Filter by profile      |
+| `ProviderId`  | `string?`           | Filter by provider     |
+| `UserId`      | `Guid?`             | Filter by user         |
+| `FeatureType` | `string?`           | Filter by feature type |
 
 ## Notes
 
@@ -185,5 +195,5 @@ The `AIAuditLogFilter` class supports:
 
 ## Related
 
-* [AIAuditLog](../models/ai-audit-log.md) - The audit log model
-* [Audit Logs Backoffice](../../backoffice/audit-logs.md) - Viewing audit logs
+- [AIAuditLog](../models/ai-audit-log.md) - The audit log model
+- [Audit Logs Backoffice](../../backoffice/audit-logs.md) - Viewing audit logs

@@ -20,14 +20,14 @@ export class UaiChatServerDataSource {
         const { data, error } = await tryExecute(
             this.#host,
             ChatService.completeChat({
-                headers: { 
-                    profileIdOrAlias: request.profileIdOrAlias ?? undefined
+                headers: {
+                    profileIdOrAlias: request.profileIdOrAlias ?? undefined,
                 },
                 body: {
-                    messages: request.messages.map(m => ({ role: m.role, content: m.content }))
+                    messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
                 },
-                signal: request.signal
-            })
+                signal: request.signal,
+            }),
         );
 
         if (error || !data) {
@@ -38,11 +38,11 @@ export class UaiChatServerDataSource {
             data: {
                 message: {
                     role: data.message.role as UaiChatRole,
-                    content: data.message.content
+                    content: data.message.content,
                 },
                 finishReason: data.finishReason,
-                usage: data.usage
-            }
+                usage: data.usage,
+            },
         };
     }
 }

@@ -3,10 +3,10 @@ import { client } from "./api/client.gen.ts";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 
 // Ensure all exports from index are available from the bundle
-export * from './index.js';
+export * from "./index.js";
 
 // Re-export the public API
-export * from './exports.js';
+export * from "./exports.js";
 
 // Entry point initialization
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {

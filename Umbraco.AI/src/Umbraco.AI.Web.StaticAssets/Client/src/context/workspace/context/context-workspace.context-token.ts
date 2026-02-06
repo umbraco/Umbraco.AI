@@ -9,6 +9,5 @@ export const UAI_CONTEXT_WORKSPACE_CONTEXT = new UmbContextToken<
 >(
     "UmbWorkspaceContext",
     undefined,
-    (context): context is UaiContextWorkspaceContext =>
-        context.getEntityType?.() === UAI_CONTEXT_ENTITY_TYPE
+    (context): context is UaiContextWorkspaceContext => context.getEntityType?.() === UAI_CONTEXT_ENTITY_TYPE,
 );

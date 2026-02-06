@@ -1,6 +1,6 @@
 ---
 description: >-
-  REST API endpoints for querying registered AI providers.
+    REST API endpoints for querying registered AI providers.
 ---
 
 # Providers API
@@ -27,10 +27,10 @@ All endpoints require backoffice authentication with the `Umb.AI.Management.Api`
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/provider` | [List all providers](list.md) |
-| GET | `/provider/{id}` | [Get provider details](get.md) |
+| Method | Endpoint         | Description                    |
+| ------ | ---------------- | ------------------------------ |
+| GET    | `/provider`      | [List all providers](list.md)  |
+| GET    | `/provider/{id}` | [Get provider details](get.md) |
 
 ## Response Models
 
@@ -40,9 +40,9 @@ Lightweight model used in list responses:
 
 ```json
 {
-  "id": "openai",
-  "name": "OpenAI",
-  "capabilities": ["Chat", "Embedding"]
+    "id": "openai",
+    "name": "OpenAI",
+    "capabilities": ["Chat", "Embedding"]
 }
 ```
 
@@ -52,19 +52,19 @@ Full model with settings schema:
 
 ```json
 {
-  "id": "openai",
-  "name": "OpenAI",
-  "capabilities": ["Chat", "Embedding"],
-  "settings": [
-    {
-      "alias": "apiKey",
-      "name": "API Key",
-      "description": "Your OpenAI API key",
-      "type": "string",
-      "isRequired": true,
-      "isSensitive": true
-    }
-  ]
+    "id": "openai",
+    "name": "OpenAI",
+    "capabilities": ["Chat", "Embedding"],
+    "settings": [
+        {
+            "alias": "apiKey",
+            "name": "API Key",
+            "description": "Your OpenAI API key",
+            "type": "string",
+            "isRequired": true,
+            "isSensitive": true
+        }
+    ]
 }
 ```
 
@@ -72,16 +72,16 @@ Full model with settings schema:
 
 The `settings` array describes the configuration options for a provider:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `alias` | string | Setting identifier |
-| `name` | string | Display name |
-| `description` | string? | Help text |
-| `type` | string | Data type (`string`, `number`, `boolean`) |
-| `isRequired` | bool | Whether the setting must be provided |
-| `isSensitive` | bool | Whether to mask the value in UI |
-| `defaultValue` | string? | Default value if not specified |
-| `options` | string[]? | Valid options for selection |
+| Property       | Type      | Description                               |
+| -------------- | --------- | ----------------------------------------- |
+| `alias`        | string    | Setting identifier                        |
+| `name`         | string    | Display name                              |
+| `description`  | string?   | Help text                                 |
+| `type`         | string    | Data type (`string`, `number`, `boolean`) |
+| `isRequired`   | bool      | Whether the setting must be provided      |
+| `isSensitive`  | bool      | Whether to mask the value in UI           |
+| `defaultValue` | string?   | Default value if not specified            |
+| `options`      | string[]? | Valid options for selection               |
 
 ## In This Section
 

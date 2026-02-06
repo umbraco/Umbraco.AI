@@ -16,9 +16,11 @@ Execute the requested browser interaction with the demo site.
 ## Available Commands
 
 ### Authentication
+
 - **login**: Login to Umbraco backoffice with demo credentials
 
 ### Navigation
+
 - **navigate-to-connections**: Navigate to AI Connections section
 - **navigate-to-profiles**: Navigate to AI Profiles section
 - **navigate-to-prompts**: Navigate to AI Prompts section (Umbraco.AI.Prompt)
@@ -26,6 +28,7 @@ Execute the requested browser interaction with the demo site.
 - **navigate-to-copilot**: Open Copilot chat UI (Umbraco.AI.Agent.Copilot)
 
 ### Entity Operations
+
 - **create-connection [provider]**: Create new AI connection (e.g., OpenAI, Anthropic)
 - **edit-connection [name]**: Edit existing connection by name
 - **create-profile [capability]**: Create new AI profile (e.g., chat, embedding)
@@ -36,6 +39,7 @@ Execute the requested browser interaction with the demo site.
 - **edit-agent [name]**: Edit existing agent by name
 
 ### Utilities
+
 - **status**: Check browser connection and demo site availability
 - **snapshot**: Take accessibility snapshot of current page
 
@@ -57,6 +61,7 @@ Before any browser interaction, discover the demo site URL:
 ```
 
 If demo site is not running, start it first:
+
 ```bash
 /demo-site-management start
 ```
@@ -66,11 +71,13 @@ Extract the URL from the status output (format: `https://127.0.0.1:<port>` or `h
 ### Step 2: Initialize Browser (if needed)
 
 Check if browser page is already open:
+
 ```
 mcp__playwright__browser_snapshot
 ```
 
 If error indicates no page, navigate to the demo site:
+
 ```
 mcp__playwright__browser_navigate: url = <discovered-url>/umbraco
 ```
@@ -83,14 +90,15 @@ mcp__playwright__browser_navigate: url = <discovered-url>/umbraco
 2. Take snapshot to see current state
 3. If already logged in (dashboard visible), report and exit
 4. If login form visible:
-   - Fill email field: `admin@example.com`
-   - Fill password field: `password1234`
-   - Click login button
+    - Fill email field: `admin@example.com`
+    - Fill password field: `password1234`
+    - Click login button
 5. Wait for dashboard to load (2-3 seconds)
 6. Take snapshot to confirm login success
 7. Report: "Logged in successfully as admin@example.com"
 
 **Playwright sequence:**
+
 ```
 browser_snapshot (check state)
 browser_fill_form (email + password fields)
@@ -117,14 +125,15 @@ browser_snapshot (confirm)
 4. Wait for create dialog/form
 5. Take snapshot to see form fields
 6. Fill in fields based on provider:
-   - **Name**: Auto-generate or use argument
-   - **Provider**: Select from dropdown (OpenAI, Anthropic, etc.)
-   - **API Key**: Use placeholder or prompt user
+    - **Name**: Auto-generate or use argument
+    - **Provider**: Select from dropdown (OpenAI, Anthropic, etc.)
+    - **API Key**: Use placeholder or prompt user
 7. Click save button
 8. Wait for success notification
 9. Report: "Connection '[name]' created successfully"
 
 **Playwright pattern:**
+
 ```
 browser_navigate (to connections)
 browser_snapshot (find create button)
@@ -173,22 +182,22 @@ Navigate to `/umbraco#/ai-agent/agents` (requires Umbraco.AI.Agent package). Fol
 2. Try to connect browser to demo site URL
 3. Take snapshot if connected
 4. Report:
-   - Demo site status: running/not running
-   - Browser status: connected/not connected
-   - Current page: URL and title
-   - Suggestion: How to proceed
+    - Demo site status: running/not running
+    - Browser status: connected/not connected
+    - Current page: URL and title
+    - Suggestion: How to proceed
 
 ### Step 4: Error Handling
 
 Common errors and solutions:
 
-| Error | Solution |
-|-------|----------|
-| Browser not installed | Run `mcp__playwright__browser_install` |
-| Demo site not running | Run `/demo-site-management start` first |
-| Login failed | Check credentials, take snapshot for debugging |
-| Element not found | Take snapshot, update selectors based on actual HTML |
-| Navigation timeout | Increase wait time, check for loading indicators |
+| Error                 | Solution                                             |
+| --------------------- | ---------------------------------------------------- |
+| Browser not installed | Run `mcp__playwright__browser_install`               |
+| Demo site not running | Run `/demo-site-management start` first              |
+| Login failed          | Check credentials, take snapshot for debugging       |
+| Element not found     | Take snapshot, update selectors based on actual HTML |
+| Navigation timeout    | Increase wait time, check for loading indicators     |
 
 ## Reference Documentation
 

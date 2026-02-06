@@ -1,6 +1,6 @@
 ---
 description: >-
-  Create custom tools that AI models can invoke.
+    Create custom tools that AI models can invoke.
 ---
 
 # Custom Tools
@@ -47,6 +47,7 @@ MyTool/
 ### Tool Without Arguments
 
 {% code title="CurrentTimeTool.cs" %}
+
 ```csharp
 using Umbraco.AI.Core.Tools;
 
@@ -66,11 +67,13 @@ public class CurrentTimeTool : AIToolBase
     }
 }
 ```
+
 {% endcode %}
 
 ### Tool With Arguments
 
 {% code title="InventoryTool.cs" %}
+
 ```csharp
 using System.ComponentModel;
 using Umbraco.AI.Core.Tools;
@@ -109,6 +112,7 @@ public class InventoryTool : AIToolBase<InventoryArgs>
     }
 }
 ```
+
 {% endcode %}
 
 ## Registration
@@ -116,6 +120,7 @@ public class InventoryTool : AIToolBase<InventoryArgs>
 Tools are auto-discovered via the `[AITool]` attribute and `IDiscoverable` interface. To manually control registration:
 
 {% code title="MyComposer.cs" %}
+
 ```csharp
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
@@ -134,6 +139,7 @@ public class MyComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Key Concepts

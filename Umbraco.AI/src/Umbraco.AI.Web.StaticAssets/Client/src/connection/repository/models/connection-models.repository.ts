@@ -1,6 +1,9 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import { UaiConnectionModelsServerDataSource, type UaiConnectionModelsRequestArgs } from "./connection-models.server.data-source.js";
+import {
+    UaiConnectionModelsServerDataSource,
+    type UaiConnectionModelsRequestArgs,
+} from "./connection-models.server.data-source.js";
 import type { UaiModelDescriptorModel } from "../../types.js";
 
 /**
@@ -17,7 +20,9 @@ export class UaiConnectionModelsRepository extends UmbControllerBase {
     /**
      * Requests available models for a connection, optionally filtered by capability.
      */
-    async requestModels(args: UaiConnectionModelsRequestArgs): Promise<{ data?: UaiModelDescriptorModel[]; error?: unknown }> {
+    async requestModels(
+        args: UaiConnectionModelsRequestArgs,
+    ): Promise<{ data?: UaiModelDescriptorModel[]; error?: unknown }> {
         return this.#dataSource.getModels(args);
     }
 }

@@ -42,11 +42,7 @@ export class UaiConnectionCreateCollectionActionElement extends UmbLitElement {
 
     override render() {
         return html`
-            <uui-button
-                look="outline"
-                popovertarget="uai-create-popover"
-                @click=${this.#onToggle}
-            >
+            <uui-button look="outline" popovertarget="uai-create-popover" @click=${this.#onToggle}>
                 Create
                 <uui-symbol-expand .open=${this._popoverOpen}></uui-symbol-expand>
             </uui-button>
@@ -56,13 +52,10 @@ export class UaiConnectionCreateCollectionActionElement extends UmbLitElement {
                         ? html`<div class="empty">No providers available</div>`
                         : this._providers.map(
                               (provider) => html`
-                                  <uui-menu-item
-                                      label=${provider.name}
-                                      @click=${() => this.#onSelect(provider.id)}
-                                  >
+                                  <uui-menu-item label=${provider.name} @click=${() => this.#onSelect(provider.id)}>
                                       <umb-icon slot="icon" name="icon-cloud"></umb-icon>
                                   </uui-menu-item>
-                              `
+                              `,
                           )}
                 </umb-popover-layout>
             </uui-popover-container>

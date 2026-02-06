@@ -1,8 +1,4 @@
-import {
-    UAI_PROMPT_ROOT_WORKSPACE_ALIAS,
-    UAI_PROMPT_ROOT_ENTITY_TYPE,
-    UAI_PROMPT_ICON,
-} from "../../constants.js";
+import { UAI_PROMPT_ROOT_WORKSPACE_ALIAS, UAI_PROMPT_ROOT_ENTITY_TYPE, UAI_PROMPT_ICON } from "../../constants.js";
 import { UAI_PROMPT_COLLECTION_ALIAS } from "../../collection/constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
 

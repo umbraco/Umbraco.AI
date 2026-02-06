@@ -1,17 +1,12 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { usageRepository } from '../../repository';
-import type {
-    UsageSummaryResponseModel,
-    UsageTimeSeriesPointModel,
-    UsageBreakdownItemModel
-} from '../../../../api';
-import type { DateRangeType } from '../../../components';
+import { usageRepository } from "../../repository";
+import type { UsageSummaryResponseModel, UsageTimeSeriesPointModel, UsageBreakdownItemModel } from "../../../../api";
+import type { DateRangeType } from "../../../components";
 import type { UaiAnalyticsQueryParams } from "../../../types.js";
 
 @customElement("uai-usage-dashboard")
 export class UaiUsageDashboardElement extends UmbLitElement {
-
     @state()
     private _summary?: UsageSummaryResponseModel;
 
@@ -37,7 +32,7 @@ export class UaiUsageDashboardElement extends UmbLitElement {
     private _error?: string;
 
     @state()
-    private _dateRange: DateRangeType = 'last24h';
+    private _dateRange: DateRangeType = "last24h";
 
     constructor() {
         super();
@@ -52,20 +47,20 @@ export class UaiUsageDashboardElement extends UmbLitElement {
         const from = new Date();
 
         switch (this._dateRange) {
-            case 'last24h':
+            case "last24h":
                 from.setHours(from.getHours() - 24);
                 break;
-            case 'last7d':
+            case "last7d":
                 from.setDate(from.getDate() - 7);
                 break;
-            case 'last30d':
+            case "last30d":
                 from.setDate(from.getDate() - 30);
                 break;
         }
 
         return {
             from: from.toISOString(),
-            to
+            to,
         };
     }
 
@@ -87,14 +82,15 @@ export class UaiUsageDashboardElement extends UmbLitElement {
 
         try {
             const params = this._getDateRange();
-            const [summary, timeSeries, providerBreakdown, modelBreakdown, profileBreakdown, userBreakdown] = await Promise.all([
-                usageRepository.getSummary(params),
-                usageRepository.getTimeSeries(params),
-                usageRepository.getBreakdownByProvider(params),
-                usageRepository.getBreakdownByModel(params),
-                usageRepository.getBreakdownByProfile(params),
-                usageRepository.getBreakdownByUser(params)
-            ]);
+            const [summary, timeSeries, providerBreakdown, modelBreakdown, profileBreakdown, userBreakdown] =
+                await Promise.all([
+                    usageRepository.getSummary(params),
+                    usageRepository.getTimeSeries(params),
+                    usageRepository.getBreakdownByProvider(params),
+                    usageRepository.getBreakdownByModel(params),
+                    usageRepository.getBreakdownByProfile(params),
+                    usageRepository.getBreakdownByUser(params),
+                ]);
 
             this._summary = summary;
             this._timeSeries = timeSeries;
@@ -103,8 +99,8 @@ export class UaiUsageDashboardElement extends UmbLitElement {
             this._profileBreakdown = profileBreakdown;
             this._userBreakdown = userBreakdown;
         } catch (error) {
-            console.error('Failed to load usage analytics data:', error);
-            this._error = 'Failed to load usage analytics data. Please try again.';
+            console.error("Failed to load usage analytics data:", error);
+            this._error = "Failed to load usage analytics data. Please try again.";
         } finally {
             this._loading = false;
         }
@@ -146,39 +142,29 @@ export class UaiUsageDashboardElement extends UmbLitElement {
                 .data=${this._timeSeries}
                 .dateRangeType=${this._dateRange}
                 .fromDate=${dateRange.from}
-                .toDate=${dateRange.to}>
+                .toDate=${dateRange.to}
+            >
             </uai-usage-time-series-chart>
 
             <div class="breakdowns">
-                <uai-analytics-breakdown-table
-                    headline="By Provider"
-                    .data=${this._providerBreakdown}>
+                <uai-analytics-breakdown-table headline="By Provider" .data=${this._providerBreakdown}>
                 </uai-analytics-breakdown-table>
 
-                <uai-analytics-breakdown-table
-                    headline="By Model"
-                    .data=${this._modelBreakdown}>
+                <uai-analytics-breakdown-table headline="By Model" .data=${this._modelBreakdown}>
                 </uai-analytics-breakdown-table>
 
-                <uai-analytics-breakdown-table
-                    headline="By Profile"
-                    .data=${this._profileBreakdown}>
+                <uai-analytics-breakdown-table headline="By Profile" .data=${this._profileBreakdown}>
                 </uai-analytics-breakdown-table>
 
-                <uai-analytics-breakdown-table
-                    headline="By User"
-                    .data=${this._userBreakdown}>
+                <uai-analytics-breakdown-table headline="By User" .data=${this._userBreakdown}>
                 </uai-analytics-breakdown-table>
             </div>
-            </div>
-        `;
+        </div> `;
     }
 
     override render() {
         return html`
-            <uai-analytics-dashboard-layout
-                headline="Usage"
-                @change=${this._handleDateRangeChange}>
+            <uai-analytics-dashboard-layout headline="Usage" @change=${this._handleDateRangeChange}>
                 ${this._loading ? this._renderLoading() : this._error ? this._renderError() : this._renderContent()}
             </uai-analytics-dashboard-layout>
         `;
@@ -209,7 +195,7 @@ export class UaiUsageDashboardElement extends UmbLitElement {
                 font-size: 3rem;
                 margin-bottom: var(--uui-size-space-3);
             }
-            
+
             .usage-dashboard-content {
                 display: flex;
                 flex-direction: column;

@@ -26,11 +26,11 @@ import type { WorkspaceEntry, WorkspaceChangeEvent, WorkspaceContextLike } from 
  * Works across shadow DOM boundaries via Node.isConnected.
  */
 function isWorkspaceConnected(context: WorkspaceContextLike): boolean {
-	const host = context.getHostElement?.() ?? context._host ?? context.host;
-	if (host && typeof host === "object" && "isConnected" in host) {
-		return (host as Node).isConnected;
-	}
-	return true;
+    const host = context.getHostElement?.() ?? context._host ?? context.host;
+    if (host && typeof host === "object" && "isConnected" in host) {
+        return (host as Node).isConnected;
+    }
+    return true;
 }
 
 /**
@@ -38,131 +38,131 @@ function isWorkspaceConnected(context: WorkspaceContextLike): boolean {
  * Registered as a globalContext manifest - auto-instantiated at backoffice root.
  */
 export class UaiWorkspaceRegistryContext extends UmbControllerBase {
-	/** Type guard marker for context resolution. */
-	public readonly IS_WORKSPACE_REGISTRY_CONTEXT = true;
+    /** Type guard marker for context resolution. */
+    public readonly IS_WORKSPACE_REGISTRY_CONTEXT = true;
 
-	readonly #entries = new Map<string, WorkspaceEntry>();
-	readonly #changes$ = new Subject<WorkspaceChangeEvent>();
+    readonly #entries = new Map<string, WorkspaceEntry>();
+    readonly #changes$ = new Subject<WorkspaceChangeEvent>();
 
-	#navigationCleanupTimeout: ReturnType<typeof setTimeout> | null = null;
-	#isNavigationCleanupSetup = false;
+    #navigationCleanupTimeout: ReturnType<typeof setTimeout> | null = null;
+    #isNavigationCleanupSetup = false;
 
-	constructor(host: UmbControllerHost) {
-		super(host);
+    constructor(host: UmbControllerHost) {
+        super(host);
 
-		// Set up navigation cleanup
-		this.#setupNavigationCleanup();
+        // Set up navigation cleanup
+        this.#setupNavigationCleanup();
 
-		// Initialize the workspace decorator to track all workspaces
-		initWorkspaceDecorator(umbExtensionsRegistry, this);
+        // Initialize the workspace decorator to track all workspaces
+        initWorkspaceDecorator(umbExtensionsRegistry, this);
 
-		// Provide this context for consumers
-		this.provideContext(UAI_WORKSPACE_REGISTRY_CONTEXT, this);
-	}
+        // Provide this context for consumers
+        this.provideContext(UAI_WORKSPACE_REGISTRY_CONTEXT, this);
+    }
 
-	// ─────────────────────────────────────────────────────────────────────────────
-	// Public API
-	// ─────────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Public API
+    // ─────────────────────────────────────────────────────────────────────────────
 
-	/** Observable of workspace change events */
-	get changes$() {
-		return this.#changes$.asObservable();
-	}
+    /** Observable of workspace change events */
+    get changes$() {
+        return this.#changes$.asObservable();
+    }
 
-	/** Get a workspace by its entity type and unique ID */
-	getByEntity(entityType: string, unique: string): WorkspaceEntry | undefined {
-		return this.#entries.get(`${entityType}:${unique}`);
-	}
+    /** Get a workspace by its entity type and unique ID */
+    getByEntity(entityType: string, unique: string): WorkspaceEntry | undefined {
+        return this.#entries.get(`${entityType}:${unique}`);
+    }
 
-	/** Get all registered workspaces */
-	getAll(): WorkspaceEntry[] {
-		return Array.from(this.#entries.values());
-	}
+    /** Get all registered workspaces */
+    getAll(): WorkspaceEntry[] {
+        return Array.from(this.#entries.values());
+    }
 
-	// ─────────────────────────────────────────────────────────────────────────────
-	// Internal API (used by decorator)
-	// ─────────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Internal API (used by decorator)
+    // ─────────────────────────────────────────────────────────────────────────────
 
-	/** @internal */
-	_register(key: string, entry: WorkspaceEntry): void {
-		const eventType: WorkspaceChangeEvent["type"] = this.#entries.has(key) ? "updated" : "added";
-		this.#entries.set(key, entry);
-		this.#changes$.next({ type: eventType, key, entry });
-		console.debug(`[WorkspaceRegistry] ${eventType}: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
-	}
+    /** @internal */
+    _register(key: string, entry: WorkspaceEntry): void {
+        const eventType: WorkspaceChangeEvent["type"] = this.#entries.has(key) ? "updated" : "added";
+        this.#entries.set(key, entry);
+        this.#changes$.next({ type: eventType, key, entry });
+        console.debug(`[WorkspaceRegistry] ${eventType}: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
+    }
 
-	/** @internal */
-	_rekey(oldKey: string, newKey: string, entry: WorkspaceEntry): void {
-		const existing = this.#entries.get(newKey);
-		if (existing && existing.context !== entry.context) {
-			this.#entries.delete(newKey);
-		}
-		this.#entries.delete(oldKey);
-		this.#entries.set(newKey, entry);
-		this.#changes$.next({ type: "updated", key: newKey, entry });
-		console.debug(`[WorkspaceRegistry] rekey: ${oldKey} → ${newKey} [size: ${this.#entries.size}]`);
-	}
+    /** @internal */
+    _rekey(oldKey: string, newKey: string, entry: WorkspaceEntry): void {
+        const existing = this.#entries.get(newKey);
+        if (existing && existing.context !== entry.context) {
+            this.#entries.delete(newKey);
+        }
+        this.#entries.delete(oldKey);
+        this.#entries.set(newKey, entry);
+        this.#changes$.next({ type: "updated", key: newKey, entry });
+        console.debug(`[WorkspaceRegistry] rekey: ${oldKey} → ${newKey} [size: ${this.#entries.size}]`);
+    }
 
-	/** @internal */
-	_unregister(key: string): void {
-		const entry = this.#entries.get(key);
-		if (entry) {
-			this.#entries.delete(key);
-			this.#changes$.next({ type: "removed", key, entry });
-			console.debug(`[WorkspaceRegistry] removed: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
-		}
-	}
+    /** @internal */
+    _unregister(key: string): void {
+        const entry = this.#entries.get(key);
+        if (entry) {
+            this.#entries.delete(key);
+            this.#changes$.next({ type: "removed", key, entry });
+            console.debug(`[WorkspaceRegistry] removed: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
+        }
+    }
 
-	// ─────────────────────────────────────────────────────────────────────────────
-	// Private
-	// ─────────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Private
+    // ─────────────────────────────────────────────────────────────────────────────
 
-	#cleanupDisconnected(): void {
-		// Process in reverse (LIFO) order so children are removed before parents
-		const entries = Array.from(this.#entries.entries()).reverse();
-		const sizeBefore = this.#entries.size;
-		for (const [key, entry] of entries) {
-			if (!isWorkspaceConnected(entry.context as WorkspaceContextLike)) {
-				this.#entries.delete(key);
-				this.#changes$.next({ type: "removed", key, entry });
-				console.debug(`[WorkspaceRegistry] cleanup: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
-			}
-		}
-		if (sizeBefore !== this.#entries.size) {
-			console.debug(`[WorkspaceRegistry] cleanup complete: ${sizeBefore} → ${this.#entries.size}`);
-		}
-	}
+    #cleanupDisconnected(): void {
+        // Process in reverse (LIFO) order so children are removed before parents
+        const entries = Array.from(this.#entries.entries()).reverse();
+        const sizeBefore = this.#entries.size;
+        for (const [key, entry] of entries) {
+            if (!isWorkspaceConnected(entry.context as WorkspaceContextLike)) {
+                this.#entries.delete(key);
+                this.#changes$.next({ type: "removed", key, entry });
+                console.debug(`[WorkspaceRegistry] cleanup: ${entry.alias} (${key}) [size: ${this.#entries.size}]`);
+            }
+        }
+        if (sizeBefore !== this.#entries.size) {
+            console.debug(`[WorkspaceRegistry] cleanup complete: ${sizeBefore} → ${this.#entries.size}`);
+        }
+    }
 
-	#setupNavigationCleanup(): void {
-		if (this.#isNavigationCleanupSetup) return;
-		this.#isNavigationCleanupSetup = true;
+    #setupNavigationCleanup(): void {
+        if (this.#isNavigationCleanupSetup) return;
+        this.#isNavigationCleanupSetup = true;
 
-		const scheduleCleanup = () => {
-			if (this.#navigationCleanupTimeout) {
-				clearTimeout(this.#navigationCleanupTimeout);
-			}
-			this.#navigationCleanupTimeout = setTimeout(() => {
-				this.#cleanupDisconnected();
-				this.#navigationCleanupTimeout = null;
-			}, 500);
-		};
+        const scheduleCleanup = () => {
+            if (this.#navigationCleanupTimeout) {
+                clearTimeout(this.#navigationCleanupTimeout);
+            }
+            this.#navigationCleanupTimeout = setTimeout(() => {
+                this.#cleanupDisconnected();
+                this.#navigationCleanupTimeout = null;
+            }, 500);
+        };
 
-		window.addEventListener("popstate", scheduleCleanup);
-		window.addEventListener("hashchange", scheduleCleanup);
+        window.addEventListener("popstate", scheduleCleanup);
+        window.addEventListener("hashchange", scheduleCleanup);
 
-		const originalPushState = history.pushState.bind(history);
-		const originalReplaceState = history.replaceState.bind(history);
+        const originalPushState = history.pushState.bind(history);
+        const originalReplaceState = history.replaceState.bind(history);
 
-		history.pushState = (...args) => {
-			originalPushState(...args);
-			scheduleCleanup();
-		};
+        history.pushState = (...args) => {
+            originalPushState(...args);
+            scheduleCleanup();
+        };
 
-		history.replaceState = (...args) => {
-			originalReplaceState(...args);
-			scheduleCleanup();
-		};
-	}
+        history.replaceState = (...args) => {
+            originalReplaceState(...args);
+            scheduleCleanup();
+        };
+    }
 }
 
 /**
@@ -178,10 +178,10 @@ export class UaiWorkspaceRegistryContext extends UmbControllerBase {
  * ```
  */
 export const UAI_WORKSPACE_REGISTRY_CONTEXT = new UmbContextToken<UaiWorkspaceRegistryContext>(
-	"UaiWorkspaceRegistryContext",
-	undefined,
-	(context): context is UaiWorkspaceRegistryContext =>
-		(context as UaiWorkspaceRegistryContext).IS_WORKSPACE_REGISTRY_CONTEXT
+    "UaiWorkspaceRegistryContext",
+    undefined,
+    (context): context is UaiWorkspaceRegistryContext =>
+        (context as UaiWorkspaceRegistryContext).IS_WORKSPACE_REGISTRY_CONTEXT,
 );
 
 export default UaiWorkspaceRegistryContext;

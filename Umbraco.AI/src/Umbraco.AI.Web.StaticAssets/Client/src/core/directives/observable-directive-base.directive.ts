@@ -1,10 +1,8 @@
-
-import { noChange } from '@umbraco-cms/backoffice/external/lit';
-import { AsyncDirective } from 'lit/async-directive.js';
-import type { Observable, Subscription } from 'rxjs';
+import { noChange } from "@umbraco-cms/backoffice/external/lit";
+import { AsyncDirective } from "lit/async-directive.js";
+import type { Observable, Subscription } from "rxjs";
 
 export abstract class UaiObserveDirectiveBase<T> extends AsyncDirective {
-
     observable: Observable<T | undefined> | undefined;
     subscription: Subscription | undefined;
 

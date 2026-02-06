@@ -53,6 +53,7 @@ Agents reference existing **Profiles** for their AI model configuration, inherit
 ## What is an Agent?
 
 An **Agent** is a configured AI assistant that can:
+
 - Understand natural language requests
 - Access tools to gather information or perform actions
 - Execute multi-step workflows autonomously
@@ -60,16 +61,17 @@ An **Agent** is a configured AI assistant that can:
 
 ### Agent vs Profile
 
-| Aspect | Profile | Agent |
-|--------|---------|-------|
-| **Purpose** | Configure AI model settings | Define an AI assistant with capabilities |
-| **Contains** | Model, temperature, tokens, system prompt | Profile reference, enabled tools, permissions |
-| **Used for** | Direct chat, embeddings | Autonomous task execution |
-| **Example** | "Creative Writer" profile with GPT-4 | "Content Assistant" agent that can search and edit content |
+| Aspect       | Profile                                   | Agent                                                      |
+| ------------ | ----------------------------------------- | ---------------------------------------------------------- |
+| **Purpose**  | Configure AI model settings               | Define an AI assistant with capabilities                   |
+| **Contains** | Model, temperature, tokens, system prompt | Profile reference, enabled tools, permissions              |
+| **Used for** | Direct chat, embeddings                   | Autonomous task execution                                  |
+| **Example**  | "Creative Writer" profile with GPT-4      | "Content Assistant" agent that can search and edit content |
 
 ### Agent Definition
 
 An agent consists of:
+
 - **Name & Description**: Human-readable identification
 - **Profile Reference**: Which AI profile to use (inherits model, connection, settings)
 - **System Prompt**: Agent-specific instructions (extends profile's prompt)
@@ -84,19 +86,20 @@ Tools are the actions agents can perform. Each tool is a discrete capability tha
 
 ### Tool Categories
 
-| Category | Description | Examples |
-|----------|-------------|----------|
-| **Content** | Work with Umbraco content | Search, create, update, publish, delete |
-| **Media** | Work with media library | Search, upload, organize |
-| **Navigation** | Understand site structure | Get tree, find children, get ancestors |
-| **Search** | Find information | Full-text search, semantic search |
-| **Translation** | Language operations | Translate text, translate content properties |
-| **Users** | Member/user information | Search members, get user details |
-| **System** | Schema information | Get content types, property structures |
+| Category        | Description               | Examples                                     |
+| --------------- | ------------------------- | -------------------------------------------- |
+| **Content**     | Work with Umbraco content | Search, create, update, publish, delete      |
+| **Media**       | Work with media library   | Search, upload, organize                     |
+| **Navigation**  | Understand site structure | Get tree, find children, get ancestors       |
+| **Search**      | Find information          | Full-text search, semantic search            |
+| **Translation** | Language operations       | Translate text, translate content properties |
+| **Users**       | Member/user information   | Search members, get user details             |
+| **System**      | Schema information        | Get content types, property structures       |
 
 ### Built-in Umbraco Tools
 
 **Content Tools**
+
 - `content.search` - Search content by text, filter by type
 - `content.get` - Get content by ID or path
 - `content.create` - Create new content (requires approval)
@@ -106,23 +109,27 @@ Tools are the actions agents can perform. Each tool is a discrete capability tha
 - `content.delete` - Move to recycle bin (requires approval)
 
 **Media Tools**
+
 - `media.search` - Search media by name or type
 - `media.get` - Get media details
 - `media.upload` - Upload new media (requires approval)
 - `media.organize` - Move/rename media (requires approval)
 
 **Navigation Tools**
+
 - `navigation.tree` - Get site structure
 - `navigation.children` - Get children of a node
 - `navigation.ancestors` - Get breadcrumb path
 - `navigation.siblings` - Get items at same level
 
 **Search Tools**
+
 - `search.fulltext` - Lucene/Examine full-text search
 - `search.semantic` - AI-powered semantic search (using embeddings)
 - `search.similar` - Find content similar to a given item
 
 **Generation Tools**
+
 - `generate.text` - Generate text content
 - `generate.summary` - Summarize existing content
 - `generate.translate` - Translate text to another language
@@ -130,6 +137,7 @@ Tools are the actions agents can perform. Each tool is a discrete capability tha
 ### Custom Tools
 
 Developers can create custom tools for domain-specific needs:
+
 - E-commerce: Check inventory, create orders
 - Marketing: Schedule campaigns, analyze engagement
 - Integration: Query external APIs, sync data
@@ -226,6 +234,7 @@ A persistent AI button in the top navigation bar provides access to agents from 
 ```
 
 **Key Features:**
+
 - **Agent Selector**: Switch between configured agents (Content Assistant, Translator, etc.)
 - **Context Banner**: Shows what content/workspace is currently active
 - **Chat Interface**: Natural conversation with the agent
@@ -253,6 +262,7 @@ Content
 ```
 
 **Available Actions:**
+
 - **Generate Summary**: Create a summary of the content
 - **Translate**: Translate content to another language
 - **AI Suggestions**: Get improvement suggestions
@@ -284,6 +294,7 @@ AI assistance buttons appear directly in property editors for contextual help.
 ```
 
 **Inline Actions:**
+
 - **Write with AI**: Generate content from a prompt
 - **Improve**: Enhance existing text (clarity, engagement, SEO)
 - **Translate**: Translate to another language
@@ -334,6 +345,7 @@ Agent conversations persist during the user's session but are cleared on logout.
 ### Context Awareness
 
 The agent automatically understands what the user is working on:
+
 - Current content item being edited
 - Content type and available properties
 - User's permissions
@@ -361,6 +373,7 @@ app.MapGet("/api/search", async (string query, IAIAgentService agentService) =>
 ### Chatbots and Virtual Assistants
 
 Agents can be exposed via API to power:
+
 - Website chatbots for visitor support
 - Customer service automation
 - Interactive content recommendations
@@ -369,6 +382,7 @@ Agents can be exposed via API to power:
 ### Content Personalization
 
 Use agent capabilities to:
+
 - Generate personalized content variants
 - Create dynamic summaries
 - Translate content on-demand
@@ -381,6 +395,7 @@ Use agent capabilities to:
 ### User Group Permissions
 
 Agents respect Umbraco's permission system:
+
 - Agents can be restricted to specific user groups
 - Tool actions respect content permissions (can't edit content user can't access)
 - Audit trail of all agent actions
@@ -388,6 +403,7 @@ Agents respect Umbraco's permission system:
 ### Tool Authorization
 
 Each tool can specify permission requirements:
+
 - Read-only tools: Generally available to all users
 - Content modification: Requires appropriate content permissions
 - Publishing: Requires publish permissions
@@ -396,6 +412,7 @@ Each tool can specify permission requirements:
 ### Rate Limiting
 
 Protect against excessive usage:
+
 - Configurable requests per minute per user
 - Maximum tool calls per agent execution
 - Concurrent execution limits
@@ -500,21 +517,25 @@ GET    /umbraco/ai/api/v1/tools                     # List available tools
 ## Future Considerations
 
 ### Persistent Memory (Future Enhancement)
+
 - Store conversation history in database
 - Agents remember past interactions across sessions
 - Build knowledge over time
 
 ### Scheduled Agent Tasks
+
 - Agents that run automatically on schedules
 - Content audits, optimization suggestions
 - Automated translation of new content
 
 ### Multi-Agent Orchestration
+
 - Multiple agents working together
 - Specialized agents for different tasks
 - Agent handoffs (e.g., content agent to translation agent)
 
 ### Learning and Adaptation
+
 - Agents learn from user feedback
 - Custom training on organization's content
 - Improved suggestions over time
@@ -528,6 +549,7 @@ Umbraco.AI.Agents brings autonomous AI capabilities to Umbraco CMS while maintai
 The extension builds naturally on Umbraco.AI's foundation, reusing Providers, Connections, and Profiles while adding the new concepts of Agents and Tools. This consistent architecture makes it familiar to developers already using Umbraco.AI.
 
 Key differentiators:
+
 - **Human-in-the-loop**: Every change requires approval
 - **Context-aware**: Agents understand what you're working on
 - **Extensible**: Add custom tools for your specific needs

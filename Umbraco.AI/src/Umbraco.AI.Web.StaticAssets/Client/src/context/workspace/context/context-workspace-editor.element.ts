@@ -50,12 +50,10 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiContextDetailModel>({ name, alias }, "name-alias")
+                new UaiPartialUpdateCommand<UaiContextDetailModel>({ name, alias }, "name-alias"),
             );
         } else {
-            this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiContextDetailModel>({ name }, "name")
-            );
+            this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiContextDetailModel>({ name }, "name"));
         }
     }
 
@@ -63,7 +61,7 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiContextDetailModel>({ alias: target.value.toString() }, "alias")
+            new UaiPartialUpdateCommand<UaiContextDetailModel>({ alias: target.value.toString() }, "alias"),
         );
     }
 
@@ -84,11 +82,7 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
         return html`
             <umb-workspace-editor alias="${UAI_CONTEXT_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_CONTEXT_ROOT_WORKSPACE_PATH}
-                        label="Back to contexts"
-                        compact
-                    >
+                    <uui-button href=${UAI_CONTEXT_ROOT_WORKSPACE_PATH} label="Back to contexts" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -97,6 +91,7 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
                         @input="${this.#onNameChange}"
                         label="Name"
                         placeholder="Enter context name"
+                        required
                     >
                         <uui-input-lock
                             slot="append"
@@ -115,7 +110,8 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
 
                 ${when(
                     !this._isNew && this._model,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
                 )}
 
                 <div slot="footer-info" id="footer">

@@ -14,11 +14,7 @@ export class UaiContextCreateCollectionActionElement extends UmbLitElement {
     }
 
     override render() {
-        return html`
-            <uui-button look="outline" @click=${this.#onCreate}>
-                Create Context
-            </uui-button>
-        `;
+        return html` <uui-button look="outline" @click=${this.#onCreate}> Create Context </uui-button> `;
     }
 }
 

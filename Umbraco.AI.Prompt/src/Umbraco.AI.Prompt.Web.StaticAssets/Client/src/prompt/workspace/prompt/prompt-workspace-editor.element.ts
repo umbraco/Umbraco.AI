@@ -50,12 +50,10 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name, alias }, "name-alias")
+                new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name, alias }, "name-alias"),
             );
         } else {
-            this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name }, "name")
-            );
+            this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name }, "name"));
         }
     }
 
@@ -63,7 +61,7 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ alias: target.value.toString() }, "alias")
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ alias: target.value.toString() }, "alias"),
         );
     }
 
@@ -80,7 +78,7 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
 
     #onActiveChange(e: CustomEvent<{ value: boolean }>) {
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ isActive: e.detail.value }, "isActive")
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ isActive: e.detail.value }, "isActive"),
         );
     }
 
@@ -90,11 +88,7 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
         return html`
             <umb-workspace-editor alias="${UAI_PROMPT_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_PROMPT_ROOT_WORKSPACE_PATH}
-                        label="Back to prompts"
-                        compact
-                    >
+                    <uui-button href=${UAI_PROMPT_ROOT_WORKSPACE_PATH} label="Back to prompts" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -103,6 +97,7 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
                         @input="${this.#onNameChange}"
                         label="Name"
                         placeholder="Enter prompt name"
+                        required
                     >
                         <uui-input-lock
                             slot="append"
@@ -126,7 +121,8 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
 
                 ${when(
                     !this._isNew && this._model,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
                 )}
 
                 <div slot="footer-info" id="footer">

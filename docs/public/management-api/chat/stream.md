@@ -1,6 +1,6 @@
 ---
 description: >-
-  Stream chat responses in real-time via Server-Sent Events.
+    Stream chat responses in real-time via Server-Sent Events.
 ---
 
 # Stream Chat
@@ -9,33 +9,35 @@ Stream chat responses in real-time using Server-Sent Events (SSE). This provides
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/chat/stream` | Use default chat profile |
-| POST | `/chat/{profileIdOrAlias}/stream` | Use specific profile |
+| Method | Endpoint                          | Description              |
+| ------ | --------------------------------- | ------------------------ |
+| POST   | `/chat/stream`                    | Use default chat profile |
+| POST   | `/chat/{profileIdOrAlias}/stream` | Use specific profile     |
 
 ## Request
 
 ### Headers
 
-| Header | Value |
-|--------|-------|
-| Content-Type | `application/json` |
-| Accept | `text/event-stream` |
+| Header       | Value               |
+| ------------ | ------------------- |
+| Content-Type | `application/json`  |
+| Accept       | `text/event-stream` |
 
 ### Body
 
 {% code title="Request Body" %}
+
 ```json
 {
-  "messages": [
-    {
-      "role": "user",
-      "content": "Write a short poem about coding."
-    }
-  ]
+    "messages": [
+        {
+            "role": "user",
+            "content": "Write a short poem about coding."
+        }
+    ]
 }
 ```
+
 {% endcode %}
 
 ## Response
@@ -72,9 +74,9 @@ data: [DONE]
 
 ### Event Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `content` | string | Text chunk |
+| Property       | Type   | Description                 |
+| -------------- | ------ | --------------------------- |
+| `content`      | string | Text chunk                  |
 | `finishReason` | string | Present in final data event |
 
 ### Stream End
@@ -93,10 +95,10 @@ Errors that occur before streaming starts return standard JSON error responses. 
 
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "Messages cannot be empty"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "Messages cannot be empty"
 }
 ```
 
@@ -104,10 +106,10 @@ Errors that occur before streaming starts return standard JSON error responses. 
 
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "Profile 'non-existent' not found"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    "title": "Not Found",
+    "status": 404,
+    "detail": "Profile 'non-existent' not found"
 }
 ```
 
@@ -116,6 +118,7 @@ Errors that occur before streaming starts return standard JSON error responses. 
 ### cURL
 
 {% code title="cURL" %}
+
 ```bash
 curl -X POST "https://localhost:44331/umbraco/ai/management/api/v1/chat/stream" \
   -H "Content-Type: application/json" \
@@ -126,62 +129,65 @@ curl -X POST "https://localhost:44331/umbraco/ai/management/api/v1/chat/stream" 
     ]
   }'
 ```
+
 {% endcode %}
 
 ### JavaScript (Fetch + ReadableStream)
 
 {% code title="JavaScript" %}
+
 ```javascript
 async function streamChat(message) {
-  const response = await fetch('/umbraco/ai/management/api/v1/chat/stream', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'text/event-stream'
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-      messages: [{ role: 'user', content: message }]
-    })
-  });
+    const response = await fetch("/umbraco/ai/management/api/v1/chat/stream", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+            messages: [{ role: "user", content: message }],
+        }),
+    });
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let fullText = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-    const chunk = decoder.decode(value);
-    const lines = chunk.split('\n');
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
 
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const data = line.slice(6);
+        for (const line of lines) {
+            if (line.startsWith("data: ")) {
+                const data = line.slice(6);
 
-        if (data === '[DONE]') {
-          console.log('Stream complete');
-          return fullText;
+                if (data === "[DONE]") {
+                    console.log("Stream complete");
+                    return fullText;
+                }
+
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.content) {
+                        fullText += parsed.content;
+                        // Update UI with new content
+                        document.getElementById("output").textContent = fullText;
+                    }
+                } catch (e) {
+                    // Skip invalid JSON
+                }
+            }
         }
-
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.content) {
-            fullText += parsed.content;
-            // Update UI with new content
-            document.getElementById('output').textContent = fullText;
-          }
-        } catch (e) {
-          // Skip invalid JSON
-        }
-      }
     }
-  }
 
-  return fullText;
+    return fullText;
 }
 ```
+
 {% endcode %}
 
 ### JavaScript (EventSource Alternative)
@@ -191,6 +197,7 @@ For GET requests you could use EventSource, but since this is POST, use the fetc
 ### C# (HttpClient)
 
 {% code title="C#" %}
+
 ```csharp
 public async IAsyncEnumerable<string> StreamChat(
     string message,
@@ -235,11 +242,13 @@ public async IAsyncEnumerable<string> StreamChat(
 
 record StreamChunk(string? Content, string? FinishReason);
 ```
+
 {% endcode %}
 
 ### Usage in Blazor
 
 {% code title="Blazor" %}
+
 ```csharp
 @code {
     private string _output = "";
@@ -256,6 +265,7 @@ record StreamChunk(string? Content, string? FinishReason);
     }
 }
 ```
+
 {% endcode %}
 
 ## Best Practices

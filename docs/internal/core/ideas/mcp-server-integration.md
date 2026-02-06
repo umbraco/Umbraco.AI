@@ -144,6 +144,7 @@ This would allow MCP tools to participate in our governance model (approval work
 ### 1. Process Management
 
 The Umbraco MCP Server is a **Node.js process**. Questions:
+
 - Who starts/stops it? The Umbraco application? External process?
 - How do we handle process crashes/restarts?
 - Can it run in-process or must it be external?
@@ -151,6 +152,7 @@ The Umbraco MCP Server is a **Node.js process**. Questions:
 ### 2. Authentication
 
 The MCP Server uses an **API user** to authenticate with Umbraco's Management API:
+
 - How do we pass credentials securely?
 - Can we use the current user's context instead?
 - Does each Agent need its own API user for permission isolation?
@@ -158,16 +160,19 @@ The MCP Server uses an **API user** to authenticate with Umbraco's Management AP
 ### 3. Governance & Approval
 
 MCP tools are opaque - we don't know which are destructive:
-- Can we infer from tool names? (e.g., "delete_*", "update_*")
+
+- Can we infer from tool names? (e.g., "delete*\*", "update*\*")
 - Should we require explicit marking in configuration?
 - Do we trust the MCP server's own permission model?
 
 ### 4. Performance
 
 Each tool call goes through:
+
 1. Agent → MCP Client → MCP Server → Management API → Umbraco
 
 vs. native tools:
+
 1. Agent → IAITool → Umbraco Services
 
 **Question**: Is the overhead acceptable? Does it matter for AI-driven operations?
@@ -175,6 +180,7 @@ vs. native tools:
 ### 5. Tool Discovery & Filtering
 
 The Umbraco MCP Server has 195 tools. Questions:
+
 - Do we expose all of them to Agents?
 - How do we filter/curate which tools are available?
 - Can we group them into categories for easier management?
@@ -182,6 +188,7 @@ The Umbraco MCP Server has 195 tools. Questions:
 ### 6. Versioning & Compatibility
 
 The MCP Server is versioned separately from Umbraco:
+
 - `@umbraco-cms/mcp-dev@16` for Umbraco 16.x
 - How do we ensure compatibility?
 - What happens when they get out of sync?
@@ -189,6 +196,7 @@ The MCP Server is versioned separately from Umbraco:
 ### 7. Duplication vs. Reuse
 
 Should we:
+
 - **A) Use MCP exclusively** - No native tools, everything via MCP
 - **B) Native + MCP** - Build critical tools natively, use MCP for extras
 - **C) Native only** - Don't integrate MCP, build what we need
@@ -198,15 +206,19 @@ Should we:
 ## Benefits of MCP Integration
 
 ### 1. Immediate Access to 195 Tools
+
 No need to implement content/media/schema operations - they exist!
 
 ### 2. Maintained by Umbraco
+
 The MCP Server is an official Umbraco product, kept up to date.
 
 ### 3. Consistency
+
 Same operations available via Claude Desktop, Cursor, Copilot AND Umbraco.AI Agents.
 
 ### 4. Extensibility
+
 Other MCP servers (e.g., [Umbraco Commerce MCP](https://github.com/umbraco/Umbraco.Commerce.Mcp)) could also be integrated.
 
 ---
@@ -214,18 +226,23 @@ Other MCP servers (e.g., [Umbraco Commerce MCP](https://github.com/umbraco/Umbra
 ## Concerns with MCP Integration
 
 ### 1. External Process Dependency
+
 Requires Node.js and a running MCP server process.
 
 ### 2. Complexity
+
 Another moving part to configure, monitor, and troubleshoot.
 
 ### 3. Governance Gap
+
 MCP tools bypass our native governance model unless we wrap them.
 
 ### 4. Performance Overhead
+
 Additional network hop and process communication.
 
 ### 5. Different Permission Model
+
 MCP uses API user permissions; Agents use user group restrictions. Reconciling these could be confusing.
 
 ---
@@ -235,17 +252,20 @@ MCP uses API user permissions; Agents use user group restrictions. Reconciling t
 **Explore as a Phase 2 feature**, after core Agents functionality is working.
 
 ### Phase 1 (Current Plan)
+
 - Build core tool infrastructure in Umbraco.AI.Core
 - Build Agents with native tools (content only for MVP)
 - Prove the model works with hand-built tools
 
 ### Phase 2 (MCP Integration)
+
 - Add MCP client support to Umbraco.AI.Agents
 - Allow Agents to connect to MCP servers as tool sources
 - Wrap MCP tools for governance (approval workflow)
 - Consider Option C (McpToolAdapter) to unify the model
 
 ### Questions to Answer First
+
 1. Does the Umbraco MCP Server support HTTP transport? (Would simplify integration vs. stdio)
 2. Can we run MCP in-process? (Avoid external Node.js dependency)
 3. What's the overlap between MCP tools and what we'd build natively?
@@ -264,8 +284,8 @@ MCP uses API user permissions; Agents use user group restrictions. Reconciling t
 
 ## Related Decisions
 
-| Decision | Current Choice |
-|----------|----------------|
-| Phase 1 tools | Native IAITool implementations only |
-| MCP integration | Deferred to Phase 2 |
+| Decision          | Current Choice                          |
+| ----------------- | --------------------------------------- |
+| Phase 1 tools     | Native IAITool implementations only     |
+| MCP integration   | Deferred to Phase 2                     |
 | Tool source model | Single source (IAIToolRegistry) for now |

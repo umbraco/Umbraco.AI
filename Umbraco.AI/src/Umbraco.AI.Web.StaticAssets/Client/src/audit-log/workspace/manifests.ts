@@ -1,6 +1,3 @@
+import { manifests as auditLogRootManifests } from "./audit-log-root/manifests.js";
 
-import { manifests as auditLogRootManifests } from './audit-log-root/manifests.js';
-
-export const auditLogWorkspaceManifests: Array<UmbExtensionManifest> = [
-    ...auditLogRootManifests
-];
+export const auditLogWorkspaceManifests: Array<UmbExtensionManifest> = [...auditLogRootManifests];

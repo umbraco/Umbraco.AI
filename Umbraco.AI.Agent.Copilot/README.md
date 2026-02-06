@@ -23,10 +23,10 @@ dotnet add package Umbraco.AI.Agent.Copilot
 
 ## Dependencies
 
-| Package | Description |
-|---------|-------------|
+| Package            | Description                            |
+| ------------------ | -------------------------------------- |
 | `Umbraco.AI.Agent` | Agent definition management (required) |
-| `Umbraco.AI` | Core AI infrastructure (transitive) |
+| `Umbraco.AI`       | Core AI infrastructure (transitive)    |
 
 ## Architecture
 

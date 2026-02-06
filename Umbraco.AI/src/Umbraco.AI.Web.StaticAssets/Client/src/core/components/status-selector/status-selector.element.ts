@@ -27,7 +27,7 @@ export class UaiStatusSelectorElement extends UmbLitElement {
                 detail: { value: isActive },
                 bubbles: true,
                 composed: true,
-            })
+            }),
         );
     }
 

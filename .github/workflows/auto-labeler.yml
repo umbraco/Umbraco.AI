@@ -1,40 +1,40 @@
 name: 🏷️ Auto Labeler
 on:
-  issues:
-    types: [opened, edited]
+    issues:
+        types: [opened, edited]
 
 permissions:
-  issues: write
-  contents: read
+    issues: write
+    contents: read
 
 jobs:
-  label-by-component:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Extract component and apply label
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const componentField = context.payload.issue.body.match(/### Which component is this issue related to\?\n\n(.+)/);
-            if (!componentField) return;
+    label-by-component:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Extract component and apply label
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const componentField = context.payload.issue.body.match(/### Which component is this issue related to\?\n\n(.+)/);
+                      if (!componentField) return;
 
-            const componentMap = {
-              "Umbraco.AI (Core)": "component/core",
-              "Umbraco.AI.OpenAI": "component/provider-openai",
-              "Umbraco.AI.Anthropic": "component/provider-anthropic",
-              "Umbraco.AI.Prompt": "component/prompt",
-              "Umbraco.AI.Agent.Copilot": "component/copilot",
-              "Umbraco.AI.Agent": "component/agent",
-              "Other / Not sure": "component/other"
-            };
+                      const componentMap = {
+                        "Umbraco.AI (Core)": "component/core",
+                        "Umbraco.AI.OpenAI": "component/provider-openai",
+                        "Umbraco.AI.Anthropic": "component/provider-anthropic",
+                        "Umbraco.AI.Prompt": "component/prompt",
+                        "Umbraco.AI.Agent.Copilot": "component/copilot",
+                        "Umbraco.AI.Agent": "component/agent",
+                        "Other / Not sure": "component/other"
+                      };
 
-            const selected = componentField[1].trim();
-            const label = componentMap[selected];
-            if (label) {
-              await github.rest.issues.addLabels({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                labels: [label]
-              });
-            }
+                      const selected = componentField[1].trim();
+                      const label = componentMap[selected];
+                      if (label) {
+                        await github.rest.issues.addLabels({
+                          issue_number: context.issue.number,
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          labels: [label]
+                        });
+                      }

@@ -22,58 +22,59 @@ Generate `release-manifest.json` at the repository root by discovering available
 ## Workflow
 
 1. **Discover products** - Find all `Umbraco.AI*` directories at repository root:
-   ```bash
-   find . -maxdepth 1 -type d -name "Umbraco.AI*" | sed 's|^\./||' | sort
-   ```
+
+    ```bash
+    find . -maxdepth 1 -type d -name "Umbraco.AI*" | sed 's|^\./||' | sort
+    ```
 
 2. **Display numbered menu** - Show all products with numbers:
-   ```
-   Select products to include in this release:
 
-   1. Umbraco.AI
-   2. Umbraco.AI.Agent
-   3. Umbraco.AI.Agent.Copilot
-   4. Umbraco.AI.Amazon
-   5. Umbraco.AI.Anthropic
-   6. Umbraco.AI.Google
-   7. Umbraco.AI.MicrosoftFoundry
-   8. Umbraco.AI.OpenAI
-   9. Umbraco.AI.Prompt
-   ```
+    ```
+    Select products to include in this release:
+
+    1. Umbraco.AI
+    2. Umbraco.AI.Agent
+    3. Umbraco.AI.Agent.Copilot
+    4. Umbraco.AI.Amazon
+    5. Umbraco.AI.Anthropic
+    6. Umbraco.AI.Google
+    7. Umbraco.AI.MicrosoftFoundry
+    8. Umbraco.AI.OpenAI
+    9. Umbraco.AI.Prompt
+    ```
 
 3. **Get user selection** - Display the menu and wait for user response:
-   - After showing the numbered list, ask the user to provide their selection
-   - Do NOT use AskUserQuestion - just wait for the user to respond naturally
-   - The user will type their selection in the chat
-   - Parse their input, supporting multiple formats:
-     - Comma-separated: `1,3,5,8`
-     - Space-separated: `1 3 5 8`
-     - Range notation: `1-4,7,9`
-     - Special commands: `all`, `none`, `cancel`
-     - Product names: `Umbraco.AI, Umbraco.AI.OpenAI`
+    - After showing the numbered list, ask the user to provide their selection
+    - Do NOT use AskUserQuestion - just wait for the user to respond naturally
+    - The user will type their selection in the chat
+    - Parse their input, supporting multiple formats:
+        - Comma-separated: `1,3,5,8`
+        - Space-separated: `1 3 5 8`
+        - Range notation: `1-4,7,9`
+        - Special commands: `all`, `none`, `cancel`
+        - Product names: `Umbraco.AI, Umbraco.AI.OpenAI`
 
 4. **Validate selection** - Check that:
-   - Numbers are within valid range (1 to N)
-   - Product names exist (if names provided)
-   - At least one product selected (unless intentionally empty)
+    - Numbers are within valid range (1 to N)
+    - Product names exist (if names provided)
+    - At least one product selected (unless intentionally empty)
 
 5. **Generate manifest** - Write selected products to `release-manifest.json`:
-   ```json
-   [
-     "Umbraco.AI",
-     "Umbraco.AI.OpenAI"
-   ]
-   ```
-   - Use Write tool to create the file at repository root
-   - Format as pretty-printed JSON with 2-space indentation
-   - Sort products alphabetically
+
+    ```json
+    ["Umbraco.AI", "Umbraco.AI.OpenAI"]
+    ```
+
+    - Use Write tool to create the file at repository root
+    - Format as pretty-printed JSON with 2-space indentation
+    - Sort products alphabetically
 
 6. **Confirm creation** - Read and display the generated manifest
 
 7. **Remind about next steps**:
-   - Commit the manifest to version control
-   - CI will validate it against changed files on push
-   - Generate changelogs for included products using `/changelog-management`
+    - Commit the manifest to version control
+    - CI will validate it against changed files on push
+    - Generate changelogs for included products using `/changelog-management`
 
 ## Important Notes
 

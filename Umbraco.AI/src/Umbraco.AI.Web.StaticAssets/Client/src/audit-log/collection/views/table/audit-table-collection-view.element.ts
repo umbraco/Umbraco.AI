@@ -1,6 +1,13 @@
 import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEvent, UmbTableDeselectedEvent, UmbTableElement } from "@umbraco-cms/backoffice/components";
+import type {
+    UmbTableColumn,
+    UmbTableItem,
+    UmbTableConfig,
+    UmbTableSelectedEvent,
+    UmbTableDeselectedEvent,
+    UmbTableElement,
+} from "@umbraco-cms/backoffice/components";
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -47,14 +54,14 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
             this.#observeCollectionItems();
         });
     }
-    
+
     async onItemClick(unique: string, event: Event) {
         event.preventDefault();
         event.stopPropagation();
         await umbOpenModal(this, UAI_AUDIT_LOG_DETAILS_MODAL, {
-            data: { uniques: this._items.map(item => item.id) },
-            value: { unique }
-        });        
+            data: { uniques: this._items.map((item) => item.id) },
+            value: { unique },
+        });
     }
 
     #observeCollectionItems() {
@@ -63,7 +70,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
         this.observe(
             this.#collectionContext.items,
             (items) => this.#createTableItems(items as UaiAuditLogItemModel[]),
-            "umbCollectionItemsObserver"
+            "umbCollectionItemsObserver",
         );
 
         this.observe(
@@ -71,7 +78,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
             (selection) => {
                 this._selection = selection as string[];
             },
-            "umbCollectionSelectionObserver"
+            "umbCollectionSelectionObserver",
         );
     }
 
@@ -83,7 +90,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                 {
                     columnAlias: "timestamp",
                     value: html`
-                        <a href=# @click=${(e: Event) => this.onItemClick(item.unique, e)} style="color: inherit;">
+                        <a href="#" @click=${(e: Event) => this.onItemClick(item.unique, e)} style="color: inherit;">
                             ${this.#formatTimestamp(item.startTime)}
                         </a>
                     `,
@@ -96,12 +103,14 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                     columnAlias: "feature",
                     value: item.featureType
                         ? html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                            <div style="text-transform: capitalize;">
-                                ${item.featureType}
-                            </div>
-                            ${item.featureId ? html`<div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;">
-                                ${item.featureId}${item?.featureVersion ? html`/v${item?.featureVersion}` : ''}
-                            </div>` : ""}
+                              <div style="text-transform: capitalize;">${item.featureType}</div>
+                              ${item.featureId
+                                  ? html`<div
+                                        style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;"
+                                    >
+                                        ${item.featureId}${item?.featureVersion ? html`/v${item?.featureVersion}` : ""}
+                                    </div>`
+                                  : ""}
                           </div>`
                         : "—",
                 },
@@ -109,12 +118,14 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                     columnAlias: "profile",
                     value: item.profileAlias
                         ? html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
-                            <div style="text-transform: capitalize;">
-                                ${item.profileAlias}
-                            </div>
-                            ${item.profileId ? html`<div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;">
-                                ${item.profileId}${item?.profileVersion ? html`/v${item?.profileVersion}` : ''}
-                            </div>` : ""}
+                              <div style="text-transform: capitalize;">${item.profileAlias}</div>
+                              ${item.profileId
+                                  ? html`<div
+                                        style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px; font-family: monospace;"
+                                    >
+                                        ${item.profileId}${item?.profileVersion ? html`/v${item?.profileVersion}` : ""}
+                                    </div>`
+                                  : ""}
                           </div>`
                         : "—",
                 },
@@ -122,7 +133,9 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
                     columnAlias: "model",
                     value: html`<div style="font-size: 0.9em; line-height: 1.5; padding: 5px 0;">
                         <div>${item.modelId}</div>
-                        <div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px;">${item.providerId}</div>
+                        <div style="color: var(--uui-palette-dusty-grey-dark); font-size: 11px;">
+                            ${item.providerId}
+                        </div>
                     </div>`,
                 },
                 {
@@ -183,9 +196,7 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
     }
 
     #renderStatusBadge(status: UaiAuditLogStatus) {
-        return html`<uui-tag color=${this.#getStatusColor(status)} look="primary">
-            ${status}
-        </uui-tag>`;
+        return html`<uui-tag color=${this.#getStatusColor(status)} look="primary"> ${status} </uui-tag>`;
     }
 
     #handleSelect(event: UmbTableSelectedEvent) {
@@ -207,7 +218,8 @@ export class UaiAuditLogTableCollectionViewElement extends UmbLitElement {
             .items=${this._items}
             .selection=${this._selection}
             @selected=${this.#handleSelect}
-            @deselected=${this.#handleDeselect}></umb-table>`;
+            @deselected=${this.#handleDeselect}
+        ></umb-table>`;
     }
 
     static styles = [UmbTextStyles];

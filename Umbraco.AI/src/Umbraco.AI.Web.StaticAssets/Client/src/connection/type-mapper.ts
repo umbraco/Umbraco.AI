@@ -1,4 +1,8 @@
-import type { ConnectionResponseModel, ConnectionItemResponseModel, ModelDescriptorResponseModel } from "../api/types.gen.js";
+import type {
+    ConnectionResponseModel,
+    ConnectionItemResponseModel,
+    ModelDescriptorResponseModel,
+} from "../api/types.gen.js";
 import { UAI_CONNECTION_ENTITY_TYPE } from "./constants.js";
 import type { UaiConnectionDetailModel, UaiConnectionItemModel, UaiModelDescriptorModel } from "./types.js";
 

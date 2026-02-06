@@ -2,34 +2,34 @@
 # Determines if this specific product changed based on the changeVar from matrix
 
 steps:
-  - task: PowerShell@2
-    displayName: Check if $(product) changed
-    name: check
-    inputs:
-      targetType: inline
-      pwsh: true
-      script: |
-        $product = "$(product)"
-        $changeVarName = "$(changeVar)"
+    - task: PowerShell@2
+      displayName: Check if $(product) changed
+      name: check
+      inputs:
+          targetType: inline
+          pwsh: true
+          script: |
+              $product = "$(product)"
+              $changeVarName = "$(changeVar)"
 
-        # Azure DevOps variables are available as environment variables
-        # Variable names are converted: dots become underscores, uppercase
-        $envVarName = $changeVarName.ToUpper()
-        $changed = [Environment]::GetEnvironmentVariable($envVarName)
+              # Azure DevOps variables are available as environment variables
+              # Variable names are converted: dots become underscores, uppercase
+              $envVarName = $changeVarName.ToUpper()
+              $changed = [Environment]::GetEnvironmentVariable($envVarName)
 
-        # Also try the original case
-        if (-not $changed) {
-          $changed = [Environment]::GetEnvironmentVariable($changeVarName)
-        }
+              # Also try the original case
+              if (-not $changed) {
+                $changed = [Environment]::GetEnvironmentVariable($changeVarName)
+              }
 
-        Write-Host "Product: $product"
-        Write-Host "Change variable: $changeVarName (env: $envVarName)"
-        Write-Host "Changed value: '$changed'"
+              Write-Host "Product: $product"
+              Write-Host "Change variable: $changeVarName (env: $envVarName)"
+              Write-Host "Changed value: '$changed'"
 
-        if ($changed -eq "true") {
-          Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]true"
-          Write-Host "$product changed - will pack"
-        } else {
-          Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]false"
-          Write-Host "$product not changed - skipping (value was: $changed)"
-        }
+              if ($changed -eq "true") {
+                Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]true"
+                Write-Host "$product changed - will pack"
+              } else {
+                Write-Host "##vso[task.setvariable variable=shouldPack;isOutput=true]false"
+                Write-Host "$product not changed - skipping (value was: $changed)"
+              }

@@ -4,7 +4,7 @@ import { UmbPromptRegistrarController } from "./prompt/controllers";
 import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 
 // Re-export everything from the main index
-export * from './index.js';
+export * from "./index.js";
 
 // Keep registrar alive for the lifetime of the app (prevents garbage collection)
 let promptRegistrar: UmbPromptRegistrarController | null = null;

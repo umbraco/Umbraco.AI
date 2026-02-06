@@ -63,7 +63,7 @@ export class UaiAgentWorkspaceContext
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
-                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!
+                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!,
                     );
                 },
             },
@@ -118,13 +118,13 @@ export class UaiAgentWorkspaceContext
                         this.setIsNew(false);
                     }
                 },
-                "_observeModel"
+                "_observeModel",
             );
         }
 
         return data;
     }
-    
+
     /**
      * Reloads the current agent.
      */

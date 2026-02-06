@@ -1,5 +1,3 @@
 {
-  "scopes": [
-    "anthropic"
-  ]
+    "scopes": ["anthropic"]
 }

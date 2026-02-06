@@ -1,6 +1,6 @@
 ---
 description: >-
-  List all registered AI providers.
+    List all registered AI providers.
 ---
 
 # List Providers
@@ -15,8 +15,8 @@ GET /umbraco/ai/management/api/v1/provider
 
 ### Headers
 
-| Header | Value |
-|--------|-------|
+| Header          | Value                  |
+| --------------- | ---------------------- |
 | `Authorization` | Bearer token or cookie |
 
 ### Query Parameters
@@ -30,40 +30,42 @@ None.
 Returns an array of provider items.
 
 {% code title="Response" %}
+
 ```json
 [
-  {
-    "id": "openai",
-    "name": "OpenAI",
-    "capabilities": ["Chat", "Embedding"]
-  },
-  {
-    "id": "azure-openai",
-    "name": "Azure OpenAI",
-    "capabilities": ["Chat", "Embedding"]
-  }
+    {
+        "id": "openai",
+        "name": "OpenAI",
+        "capabilities": ["Chat", "Embedding"]
+    },
+    {
+        "id": "azure-openai",
+        "name": "Azure OpenAI",
+        "capabilities": ["Chat", "Embedding"]
+    }
 ]
 ```
+
 {% endcode %}
 
 ### Response Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | string | Unique provider identifier |
-| `name` | string | Display name |
-| `capabilities` | string[] | Supported capabilities |
+| Property       | Type     | Description                |
+| -------------- | -------- | -------------------------- |
+| `id`           | string   | Unique provider identifier |
+| `name`         | string   | Display name               |
+| `capabilities` | string[] | Supported capabilities     |
 
 ## Capabilities
 
 Possible capability values:
 
-| Value | Description |
-|-------|-------------|
-| `Chat` | Conversational AI / chat completions |
-| `Embedding` | Text to vector embeddings |
-| `Media` | Image/media generation (planned) |
-| `Moderation` | Content safety (planned) |
+| Value        | Description                          |
+| ------------ | ------------------------------------ |
+| `Chat`       | Conversational AI / chat completions |
+| `Embedding`  | Text to vector embeddings            |
+| `Media`      | Image/media generation (planned)     |
+| `Moderation` | Content safety (planned)             |
 
 ## Example
 
@@ -77,6 +79,7 @@ curl -X GET "https://localhost:44331/umbraco/ai/management/api/v1/provider" \
 ### C# HttpClient
 
 {% code title="Example" %}
+
 ```csharp
 using var client = new HttpClient();
 client.DefaultRequestHeaders.Authorization =
@@ -93,23 +96,26 @@ foreach (var provider in providers)
     Console.WriteLine($"{provider.Name}: {string.Join(", ", provider.Capabilities)}");
 }
 ```
+
 {% endcode %}
 
 ### JavaScript
 
 {% code title="Example" %}
+
 ```javascript
-const response = await fetch('/umbraco/ai/management/api/v1/provider', {
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
+const response = await fetch("/umbraco/ai/management/api/v1/provider", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
 });
 
 const providers = await response.json();
-providers.forEach(p => {
-  console.log(`${p.name}: ${p.capabilities.join(', ')}`);
+providers.forEach((p) => {
+    console.log(`${p.name}: ${p.capabilities.join(", ")}`);
 });
 ```
+
 {% endcode %}
 
 ## Notes

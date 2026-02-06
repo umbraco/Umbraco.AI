@@ -18,7 +18,7 @@ export const manifests: Array<UmbExtensionManifest> = [
         type: "workspaceView",
         alias: "UmbracoAI.WorkspaceView.SettingsRoot.Editor",
         name: "Settings Editor Workspace View",
-        element: () => import('./settings-editor.element.js'),
+        element: () => import("./settings-editor.element.js"),
         weight: 1000,
         meta: {
             label: "Settings",

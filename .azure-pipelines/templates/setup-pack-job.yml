@@ -4,56 +4,56 @@
 # Note: This template expects check.shouldPack variable to be set by check-should-pack.yml
 
 parameters:
-  - name: downloadCore
-    type: boolean
-    default: false
-  - name: downloadLevel1
-    type: boolean
-    default: false
-  - name: level1Products
-    type: object
-    default: []
-  - name: condition
-    type: string
-    default: eq(variables['check.shouldPack'], 'true')
+    - name: downloadCore
+      type: boolean
+      default: false
+    - name: downloadLevel1
+      type: boolean
+      default: false
+    - name: level1Products
+      type: object
+      default: []
+    - name: condition
+      type: string
+      default: eq(variables['check.shouldPack'], 'true')
 
 steps:
-  - task: UseDotNet@2
-    displayName: Setup .NET
-    condition: ${{ parameters.condition }}
-    inputs:
-      useGlobalJson: true
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download build outputs
-    condition: ${{ parameters.condition }}
-    inputs:
-      artifact: build-outputs
-      path: $(Build.SourcesDirectory)
-
-  # Download Core packages as local feed (if Core was packed)
-  - ${{ if eq(parameters.downloadCore, true) }}:
-    - task: DownloadPipelineArtifact@2
-      displayName: Download Core packages (local feed)
-      condition: |
-        and(
-          ${{ parameters.condition }},
-          eq(variables['CoreChanged'], 'true')
-        )
+    - task: UseDotNet@2
+      displayName: Setup .NET
+      condition: ${{ parameters.condition }}
       inputs:
-        artifact: Umbraco.AI-packages
-        path: $(Build.SourcesDirectory)/artifacts/nupkg
+          useGlobalJson: true
 
-  # Download Level 1 packages as local feed (if any Level 1 was packed)
-  - ${{ if eq(parameters.downloadLevel1, true) }}:
-    - ${{ each product in parameters.level1Products }}:
-      - task: DownloadPipelineArtifact@2
-        displayName: Download ${{ product.name }} packages (local feed)
-        condition: |
-          and(
-            ${{ parameters.condition }},
-            eq(variables['${{ product.changeVar }}'], 'true')
-          )
-        inputs:
-          artifact: ${{ product.name }}-packages
-          path: $(Build.SourcesDirectory)/artifacts/nupkg
+    - task: DownloadPipelineArtifact@2
+      displayName: Download build outputs
+      condition: ${{ parameters.condition }}
+      inputs:
+          artifact: build-outputs
+          path: $(Build.SourcesDirectory)
+
+    # Download Core packages as local feed (if Core was packed)
+    - ${{ if eq(parameters.downloadCore, true) }}:
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Core packages (local feed)
+            condition: |
+                and(
+                  ${{ parameters.condition }},
+                  eq(variables['CoreChanged'], 'true')
+                )
+            inputs:
+                artifact: Umbraco.AI-packages
+                path: $(Build.SourcesDirectory)/artifacts/nupkg
+
+    # Download Level 1 packages as local feed (if any Level 1 was packed)
+    - ${{ if eq(parameters.downloadLevel1, true) }}:
+          - ${{ each product in parameters.level1Products }}:
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download ${{ product.name }} packages (local feed)
+                  condition: |
+                      and(
+                        ${{ parameters.condition }},
+                        eq(variables['${{ product.changeVar }}'], 'true')
+                      )
+                  inputs:
+                      artifact: ${{ product.name }}-packages
+                      path: $(Build.SourcesDirectory)/artifacts/nupkg

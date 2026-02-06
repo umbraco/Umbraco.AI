@@ -1,19 +1,17 @@
-
 import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 
-export type DateRangeType = 'last24h' | 'last7d' | 'last30d';
+export type DateRangeType = "last24h" | "last7d" | "last30d";
 
 @customElement("uai-analytics-dashboard-layout")
 export class UaiAnalyticsDashboardLayout extends UmbLitElement {
-
     @property({ type: String })
-    headline = 'Analytics';
+    headline = "Analytics";
 
     @state()
-    protected _dateRange: DateRangeType = 'last24h';
-    
+    protected _dateRange: DateRangeType = "last24h";
+
     constructor() {
         super();
     }
@@ -24,7 +22,9 @@ export class UaiAnalyticsDashboardLayout extends UmbLitElement {
     protected _handleDateRangeChange(event: CustomEvent) {
         const select = event.target as any;
         this._dateRange = select.value as DateRangeType;
-        this.dispatchEvent(new CustomEvent('change', { detail: { dateRange: this._dateRange }, bubbles: true, composed: true }));
+        this.dispatchEvent(
+            new CustomEvent("change", { detail: { dateRange: this._dateRange }, bubbles: true, composed: true }),
+        );
     }
 
     /**
@@ -32,9 +32,9 @@ export class UaiAnalyticsDashboardLayout extends UmbLitElement {
      */
     protected _getDateRangeOptions(): Array<{ name: string; value: string; selected?: boolean }> {
         return [
-            { name: 'Last 24 Hours', value: 'last24h', selected: this._dateRange === 'last24h' },
-            { name: 'Last 7 Days', value: 'last7d', selected: this._dateRange === 'last7d' },
-            { name: 'Last 30 Days', value: 'last30d', selected: this._dateRange === 'last30d' }
+            { name: "Last 24 Hours", value: "last24h", selected: this._dateRange === "last24h" },
+            { name: "Last 7 Days", value: "last7d", selected: this._dateRange === "last7d" },
+            { name: "Last 30 Days", value: "last30d", selected: this._dateRange === "last30d" },
         ];
     }
 
@@ -49,7 +49,8 @@ export class UaiAnalyticsDashboardLayout extends UmbLitElement {
                     label="Time Range"
                     .value=${this._dateRange}
                     .options=${this._getDateRangeOptions()}
-                    @change=${this._handleDateRangeChange}>
+                    @change=${this._handleDateRangeChange}
+                >
                 </uui-select>
             </div>
         `;
@@ -101,5 +102,3 @@ declare global {
         "uai-analytics-dashboard-layout": UaiAnalyticsDashboardLayout;
     }
 }
-
-

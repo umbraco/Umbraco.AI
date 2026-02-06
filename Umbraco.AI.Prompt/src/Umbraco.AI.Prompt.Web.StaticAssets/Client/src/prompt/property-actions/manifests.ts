@@ -1,5 +1,5 @@
-import { UAI_PROMPT_PREVIEW_MODAL_ALIAS } from './prompt-preview-modal.token.js';
-import { UAI_PROMPT_SCOPE_CONDITION_ALIAS } from './constants.js';
+import { UAI_PROMPT_PREVIEW_MODAL_ALIAS } from "./prompt-preview-modal.token.js";
+import { UAI_PROMPT_SCOPE_CONDITION_ALIAS } from "./constants.js";
 
 /**
  * Static manifests for the prompt property actions feature.
@@ -7,15 +7,15 @@ import { UAI_PROMPT_SCOPE_CONDITION_ALIAS } from './constants.js';
  */
 export const promptPropertyActionManifests: Array<UmbExtensionManifest> = [
     {
-        type: 'modal',
+        type: "modal",
         alias: UAI_PROMPT_PREVIEW_MODAL_ALIAS,
-        name: 'Prompt Preview Modal',
-        element: () => import('./prompt-preview-modal.element.js'),
+        name: "Prompt Preview Modal",
+        element: () => import("./prompt-preview-modal.element.js"),
     },
     {
-        type: 'condition',
+        type: "condition",
         alias: UAI_PROMPT_SCOPE_CONDITION_ALIAS,
-        name: 'Prompt Scope Condition',
-        api: () => import('./prompt-scope.condition.js'),
+        name: "Prompt Scope Condition",
+        api: () => import("./prompt-scope.condition.js"),
     },
 ];

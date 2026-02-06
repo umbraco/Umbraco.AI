@@ -1,4 +1,4 @@
-import { UmbEntityActionEvent } from '@umbraco-cms/backoffice/entity-action';
+import { UmbEntityActionEvent } from "@umbraco-cms/backoffice/entity-action";
 
 /**
  * Custom event for Umbraco.AI entity actions.
@@ -6,9 +6,9 @@ import { UmbEntityActionEvent } from '@umbraco-cms/backoffice/entity-action';
  * @public
  */
 export class UaiEntityActionEvent extends UmbEntityActionEvent {
-    static readonly CREATED = 'uai-entity-created';
-    static readonly UPDATED = 'uai-entity-updated';
-    static readonly DELETED = 'uai-entity-deleted';
+    static readonly CREATED = "uai-entity-created";
+    static readonly UPDATED = "uai-entity-updated";
+    static readonly DELETED = "uai-entity-deleted";
 
     static created(unique: string, entityType: string) {
         return new UaiEntityActionEvent(UaiEntityActionEvent.CREATED, unique, entityType);

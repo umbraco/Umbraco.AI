@@ -10,10 +10,10 @@ export const UAI_PROFILE_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generateAbs
 
 export const UAI_CREATE_PROFILE_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ capability: string }>(
     "create/:capability",
-    UAI_PROFILE_WORKSPACE_PATH
+    UAI_PROFILE_WORKSPACE_PATH,
 );
 
 export const UAI_EDIT_PROFILE_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ unique: string }>(
     "edit/:unique",
-    UAI_PROFILE_WORKSPACE_PATH
+    UAI_PROFILE_WORKSPACE_PATH,
 );

@@ -1,22 +1,14 @@
-import {
-    css,
-    customElement,
-    html,
-    nothing,
-    property,
-    repeat,
-    state,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
-import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
-import type { UaiContextResourceModel } from '../../types.js';
-import type { UaiContextResourceTypeItemModel } from '../../../context-resource-type/types.js';
-import { UaiContextResourceTypeItemRepository } from '../../../context-resource-type/repository/item/context-resource-type-item.repository.js';
-import { UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL } from './context-resource-type-picker-modal.token.js';
-import { UAI_RESOURCE_OPTIONS_MODAL } from './resource-options-modal.token.js';
+import { css, customElement, html, nothing, property, repeat, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import type { UaiContextResourceModel } from "../../types.js";
+import type { UaiContextResourceTypeItemModel } from "../../../context-resource-type/types.js";
+import { UaiContextResourceTypeItemRepository } from "../../../context-resource-type/repository/item/context-resource-type-item.repository.js";
+import { UAI_CONTEXT_RESOURCE_TYPE_PICKER_MODAL } from "./context-resource-type-picker-modal.token.js";
+import { UAI_RESOURCE_OPTIONS_MODAL } from "./resource-options-modal.token.js";
 
-const elementName = 'uai-resource-list';
+const elementName = "uai-resource-list";
 
 export interface UaiResourceCardModel extends UaiContextResourceModel {
     resourceType?: UaiContextResourceTypeItemModel;
@@ -59,9 +51,9 @@ export class UaiResourceListElement extends UmbLitElement {
     }
 
     #updateCards() {
-        this._cards = this._items.map(item => ({
+        this._cards = this._items.map((item) => ({
             ...item,
-            resourceType: this.#contextResourceTypes.find(rt => rt.id === item.resourceTypeId),
+            resourceType: this.#contextResourceTypes.find((rt) => rt.id === item.resourceTypeId),
         }));
     }
 
@@ -117,16 +109,16 @@ export class UaiResourceListElement extends UmbLitElement {
             if (!optionsResult?.resource) return;
 
             // Update the existing resource
-            this._items = this._items.map(item =>
+            this._items = this._items.map((item) =>
                 item.id === card.id
                     ? {
-                        ...item,
-                        name: optionsResult.resource.name,
-                        description: optionsResult.resource.description ?? null,
-                        data: optionsResult.resource.data,
-                        injectionMode: optionsResult.resource.injectionMode,
-                    }
-                    : item
+                          ...item,
+                          name: optionsResult.resource.name,
+                          description: optionsResult.resource.description ?? null,
+                          data: optionsResult.resource.data,
+                          injectionMode: optionsResult.resource.injectionMode,
+                      }
+                    : item,
             );
             this.#updateCards();
             this.dispatchEvent(new UmbChangeEvent());
@@ -136,7 +128,7 @@ export class UaiResourceListElement extends UmbLitElement {
     }
 
     #onRemove(card: UaiResourceCardModel) {
-        this._items = this._items.filter(x => x.id !== card.id);
+        this._items = this._items.filter((x) => x.id !== card.id);
         this.#updateCards();
         this.dispatchEvent(new UmbChangeEvent());
     }
@@ -159,11 +151,7 @@ export class UaiResourceListElement extends UmbLitElement {
     #renderAddButton() {
         if (this.readonly) return nothing;
         return html`
-            <uui-button
-                id="btn-add"
-                look="placeholder"
-                @click=${this.#openPicker}
-                label="Add resource">
+            <uui-button id="btn-add" look="placeholder" @click=${this.#openPicker} label="Add resource">
                 <uui-icon name="icon-add"></uui-icon>
                 Add
             </uui-button>
@@ -171,18 +159,13 @@ export class UaiResourceListElement extends UmbLitElement {
     }
 
     #renderItem(card: UaiResourceCardModel) {
-        const injectionLabel = card.injectionMode === 'Always' ? 'Always' : 'On-Demand';
-        const tagColor = card.injectionMode === 'Always' ? 'positive' : 'default';
+        const injectionLabel = card.injectionMode === "Always" ? "Always" : "On-Demand";
+        const tagColor = card.injectionMode === "Always" ? "positive" : "default";
         return html`
-            <uui-card-block-type
-                name=${card.name}
-                @open=${() => this.#onEdit(card)}
-                ?readonly=${this.readonly}>
-                <umb-icon name=${card.resourceType?.icon ?? 'icon-document'}></umb-icon>
+            <uui-card-block-type name=${card.name} @open=${() => this.#onEdit(card)} ?readonly=${this.readonly}>
+                <umb-icon name=${card.resourceType?.icon ?? "icon-document"}></umb-icon>
                 <uui-tag slot="tag" color=${tagColor}>${injectionLabel}</uui-tag>
-                <uui-action-bar slot="actions">
-                    ${this.#renderRemoveAction(card)}
-                </uui-action-bar>
+                <uui-action-bar slot="actions"> ${this.#renderRemoveAction(card)} </uui-action-bar>
             </uui-card-block-type>
         `;
     }
@@ -196,7 +179,8 @@ export class UaiResourceListElement extends UmbLitElement {
                 @click=${(e: Event) => {
                     e.stopPropagation();
                     this.#onRemove(card);
-                }}>
+                }}
+            >
                 <uui-icon name="icon-trash"></uui-icon>
             </uui-button>
         `;

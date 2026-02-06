@@ -22,8 +22,8 @@ Umbraco.AI.Amazon is a provider plugin for Umbraco.AI that enables integration w
 
 This provider uses a simplified structure (single project):
 
-| Project | Purpose |
-|---------|---------|
+| Project             | Purpose                                             |
+| ------------------- | --------------------------------------------------- |
 | `Umbraco.AI.Amazon` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
@@ -46,11 +46,13 @@ public class AmazonProvider : AIProviderBase<AmazonProviderSettings>
 ### Capabilities
 
 **Chat Capability** (`AmazonChatCapability`):
+
 - Extends `AIChatCapabilityBase<AmazonProviderSettings>`
 - Creates `IChatClient` instances using AWS Bedrock SDK with M.E.AI integration
 - Supports Amazon Nova, Claude via Bedrock, Llama, Mistral models
 
 **Embedding Capability** (`AmazonEmbeddingCapability`):
+
 - Extends `AIEmbeddingCapabilityBase<AmazonProviderSettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
 - Supports Amazon Titan Embeddings and Cohere Embed models
@@ -84,12 +86,14 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$AWS:Access
 ### Supported Models
 
 **Chat Models:**
+
 - Amazon Nova family (`amazon.nova-*`)
 - Claude via Bedrock (`anthropic.claude-*`)
 - Mistral models (`mistral.*`)
 - Meta Llama models (`meta.llama*`)
 
 **Embedding Models:**
+
 - Amazon Titan Embeddings (`amazon.titan-embed-*`)
 - Cohere Embed models (`cohere.embed-*`)
 
@@ -101,11 +105,11 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$AWS:Access
 
 ```json
 {
-  "AWS": {
-    "Region": "us-east-1",
-    "AccessKeyId": "AKIA...",
-    "SecretAccessKey": "..."
-  }
+    "AWS": {
+        "Region": "us-east-1",
+        "AccessKeyId": "AKIA...",
+        "SecretAccessKey": "..."
+    }
 }
 ```
 
@@ -126,6 +130,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$AWS:Access
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
+
 1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
 3. Registration in the `AIProvidersCollectionBuilder`
@@ -133,6 +138,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
+
 - `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles

@@ -18,10 +18,7 @@ export class UaiContextResourceTypeItemServerDataSource {
      * Fetches all available contextResourceTypes.
      */
     async getItems(): Promise<{ data?: UaiContextResourceTypeItemModel[]; error?: unknown }> {
-        const { data, error } = await tryExecute(
-            this.#host,
-            ContextResourceTypesService.getAllContextResourceTypes()
-        );
+        const { data, error } = await tryExecute(this.#host, ContextResourceTypesService.getAllContextResourceTypes());
 
         if (error || !data) {
             return { error };

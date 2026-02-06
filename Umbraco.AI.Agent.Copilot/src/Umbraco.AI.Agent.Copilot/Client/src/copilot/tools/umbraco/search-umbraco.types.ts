@@ -3,9 +3,9 @@
  * Note: Properties are camelCase to match JSON serialization from backend.
  */
 export interface SearchUmbracoResult {
-	success: boolean;
-	results: UmbracoSearchResultItem[];
-	message?: string;
+    success: boolean;
+    results: UmbracoSearchResultItem[];
+    message?: string;
 }
 
 /**
@@ -13,14 +13,14 @@ export interface SearchUmbracoResult {
  * Note: Properties are camelCase to match JSON serialization from backend.
  */
 export interface UmbracoSearchResultItem {
-	id: string;
-	name: string;
-	type: "content" | "media";
-	contentType: string;
-	url?: string;
-	thumbnailUrl?: string;
-	score: number;
-	updateDate: string;
-	path: string;
-	metadata: Record<string, unknown>;
+    id: string;
+    name: string;
+    type: "content" | "media";
+    contentType: string;
+    url?: string;
+    thumbnailUrl?: string;
+    score: number;
+    updateDate: string;
+    path: string;
+    metadata: Record<string, unknown>;
 }

@@ -1,7 +1,7 @@
-import { UmbEntityActionBase } from '@umbraco-cms/backoffice/entity-action';
-import { umbConfirmModal } from '@umbraco-cms/backoffice/modal';
-import type { UmbDetailRepository } from '@umbraco-cms/backoffice/repository';
-import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
+import { UmbEntityActionBase } from "@umbraco-cms/backoffice/entity-action";
+import { umbConfirmModal } from "@umbraco-cms/backoffice/modal";
+import type { UmbDetailRepository } from "@umbraco-cms/backoffice/repository";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 
 /**
  * Configuration for the delete action.
@@ -31,7 +31,7 @@ export abstract class UaiDeleteActionBase extends UmbEntityActionBase<never> {
 
     async execute() {
         if (!this.args.unique) {
-            throw new Error('Cannot delete without unique identifier.');
+            throw new Error("Cannot delete without unique identifier.");
         }
 
         const { headline, confirmMessage, getRepository } = this.getArgs();
@@ -39,8 +39,8 @@ export abstract class UaiDeleteActionBase extends UmbEntityActionBase<never> {
         await umbConfirmModal(this, {
             headline,
             content: confirmMessage,
-            color: 'danger',
-            confirmLabel: '#actions_delete',
+            color: "danger",
+            confirmLabel: "#actions_delete",
         });
 
         const repository = getRepository(this);

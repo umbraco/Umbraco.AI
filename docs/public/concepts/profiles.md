@@ -1,6 +1,6 @@
 ---
 description: >-
-  Profiles combine a connection with model settings to create reusable AI configurations.
+    Profiles combine a connection with model settings to create reusable AI configurations.
 ---
 
 # Profiles
@@ -9,25 +9,25 @@ A profile is a named configuration that combines a connection with specific mode
 
 ## What Profiles Store
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Unique identifier (GUID) |
-| `Alias` | Unique string for programmatic lookup |
-| `Name` | Display name shown in the backoffice |
-| `Capability` | The type of AI capability (Chat, Embedding, and so on) |
-| `ConnectionId` | Which connection provides credentials |
-| `Model` | The specific AI model to use |
-| `Settings` | Capability-specific settings |
-| `Tags` | Optional tags for organization |
+| Property       | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| `Id`           | Unique identifier (GUID)                               |
+| `Alias`        | Unique string for programmatic lookup                  |
+| `Name`         | Display name shown in the backoffice                   |
+| `Capability`   | The type of AI capability (Chat, Embedding, and so on) |
+| `ConnectionId` | Which connection provides credentials                  |
+| `Model`        | The specific AI model to use                           |
+| `Settings`     | Capability-specific settings                           |
+| `Tags`         | Optional tags for organization                         |
 
 ## Profile Settings by Capability
 
 ### Chat Profiles
 
-| Setting | Description | Type |
-|---------|-------------|------|
-| `Temperature` | Controls randomness (0-2) | float |
-| `MaxTokens` | Maximum response length | int |
+| Setting                | Description                          | Type   |
+| ---------------------- | ------------------------------------ | ------ |
+| `Temperature`          | Controls randomness (0-2)            | float  |
+| `MaxTokens`            | Maximum response length              | int    |
 | `SystemPromptTemplate` | Instructions sent with every request | string |
 
 ### Embedding Profiles
@@ -45,12 +45,12 @@ Profiles provide these benefits:
 
 ## Example Profile Configurations
 
-| Profile | Use Case | Model | Temperature | System Prompt |
-|---------|----------|-------|-------------|---------------|
-| `content-writer` | Blog posts | gpt-4o | 0.8 | "You are a helpful content writer..." |
-| `code-assistant` | Code help | gpt-4o | 0.2 | "You are a code assistant..." |
-| `translator` | Translation | gpt-4o-mini | 0.3 | "Translate to {language}..." |
-| `embeddings` | Search indexing | text-embedding-3-small | - | - |
+| Profile          | Use Case        | Model                  | Temperature | System Prompt                         |
+| ---------------- | --------------- | ---------------------- | ----------- | ------------------------------------- |
+| `content-writer` | Blog posts      | gpt-4o                 | 0.8         | "You are a helpful content writer..." |
+| `code-assistant` | Code help       | gpt-4o                 | 0.2         | "You are a code assistant..."         |
+| `translator`     | Translation     | gpt-4o-mini            | 0.3         | "Translate to {language}..."          |
+| `embeddings`     | Search indexing | text-embedding-3-small | -           | -                                     |
 
 ## Using Profiles in Code
 
@@ -65,10 +65,12 @@ Configure a default profile through the backoffice:
 Then use the service without specifying a profile:
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Uses the default profile configured in Settings
 var response = await _chatService.GetChatResponseAsync(messages);
 ```
+
 {% endcode %}
 
 ### Named Profile
@@ -76,10 +78,12 @@ var response = await _chatService.GetChatResponseAsync(messages);
 Look up and use a specific profile:
 
 {% code title="Example.cs" %}
+
 ```csharp
 var profile = await _profileService.GetProfileByAliasAsync("code-assistant");
 var response = await _chatService.GetChatResponseAsync(profile!.Id, messages);
 ```
+
 {% endcode %}
 
 ### Override Settings
@@ -87,6 +91,7 @@ var response = await _chatService.GetChatResponseAsync(profile!.Id, messages);
 Profile settings are defaults that can be overridden per-request:
 
 {% code title="Example.cs" %}
+
 ```csharp
 var options = new ChatOptions
 {
@@ -96,6 +101,7 @@ var options = new ChatOptions
 
 var response = await _chatService.GetChatResponseAsync(messages, options);
 ```
+
 {% endcode %}
 
 ## Profile Resolution
@@ -120,6 +126,7 @@ When you make a request:
 ### Via Code
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class ProfileManagement
 {
@@ -149,10 +156,11 @@ public class ProfileManagement
     }
 }
 ```
+
 {% endcode %}
 
 ## Related
 
-* [Connections](connections.md) - Provide credentials for profiles
-* [Capabilities](capabilities.md) - Determine available profile types
-* [Using the Chat API](../using-the-api/chat/README.md) - Use profiles for chat
+- [Connections](connections.md) - Provide credentials for profiles
+- [Capabilities](capabilities.md) - Determine available profile types
+- [Using the Chat API](../using-the-api/chat/README.md) - Use profiles for chat

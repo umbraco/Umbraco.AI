@@ -1,14 +1,14 @@
-import { html, css, customElement, state, nothing } from '@umbraco-cms/backoffice/external/lit';
-import { UmbModalBaseElement } from '@umbraco-cms/backoffice/modal';
-import { UMB_NOTIFICATION_CONTEXT } from '@umbraco-cms/backoffice/notification';
-import { UaiPromptController } from '../controllers/prompt.controller.js';
-import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue, UaiPromptPropertyChange } from './types.js';
+import { html, css, customElement, state, nothing } from "@umbraco-cms/backoffice/external/lit";
+import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
+import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
+import { UaiPromptController } from "../controllers/prompt.controller.js";
+import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue, UaiPromptPropertyChange } from "./types.js";
 
 /**
  * Modal element for previewing prompt content with insert/copy options.
  * Automatically generates an AI response when opened.
  */
-@customElement('uai-prompt-preview-modal')
+@customElement("uai-prompt-preview-modal")
 export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     UaiPromptPreviewModalData,
     UaiPromptPreviewModalValue
@@ -23,7 +23,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     private _loading = false;
 
     @state()
-    private _response = '';
+    private _response = "";
 
     @state()
     private _error?: string;
@@ -49,28 +49,25 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
         this._loading = true;
         this._error = undefined;
-        this._response = '';
+        this._response = "";
 
         this.#abortController = new AbortController();
 
         // Call controller with prompt ID and entity context
         // Controller internally calls the server execute endpoint
-        const { data, error } = await this.#promptController.execute(
-            this.data.promptUnique,
-            {
-                signal: this.#abortController.signal,
-                entityId: this.data.entityId,
-                entityType: this.data.entityType,
-                propertyAlias: this.data.propertyAlias,
-                culture: this.data.culture,
-                segment: this.data.segment,
-                // Pass serialized entity context for AI processing
-                context: this.data.context,
-            }
-        );
+        const { data, error } = await this.#promptController.execute(this.data.promptUnique, {
+            signal: this.#abortController.signal,
+            entityId: this.data.entityId,
+            entityType: this.data.entityType,
+            propertyAlias: this.data.propertyAlias,
+            culture: this.data.culture,
+            segment: this.data.segment,
+            // Pass serialized entity context for AI processing
+            context: this.data.context,
+        });
 
         if (error) {
-            if (error.name !== 'AbortError') {
+            if (error.name !== "AbortError") {
                 this._error = error.message;
             }
         } else if (data) {
@@ -88,7 +85,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
     async #onInsert() {
         this.updateValue({
-            action: 'insert',
+            action: "insert",
             content: this._response,
             propertyChanges: this._propertyChanges,
         });
@@ -104,8 +101,8 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
             // Show notification
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
-            notificationContext?.peek('positive', {
-                data: { message: 'Response copied to clipboard' },
+            notificationContext?.peek("positive", {
+                data: { message: "Response copied to clipboard" },
             });
 
             // Reset copied state after 2 seconds
@@ -114,14 +111,14 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             }, 2000);
         } catch {
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
-            notificationContext?.peek('danger', {
-                data: { message: 'Failed to copy to clipboard' },
+            notificationContext?.peek("danger", {
+                data: { message: "Failed to copy to clipboard" },
             });
         }
     }
 
     #onCancel() {
-        this.updateValue({ action: 'cancel' });
+        this.updateValue({ action: "cancel" });
         this._rejectModal();
     }
 
@@ -141,8 +138,8 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
         // Show count vs max with status
         const isOverLimit = this._characterCount > maxChars;
-        const statusClass = isOverLimit ? 'over' : 'ok';
-        const statusText = isOverLimit ? 'Exceeds limit' : 'Within limit';
+        const statusClass = isOverLimit ? "over" : "ok";
+        const statusText = isOverLimit ? "Exceeds limit" : "Within limit";
 
         return html`
             <div class="character-indicator ${statusClass}">
@@ -158,13 +155,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 <div class="error-container">
                     <uui-icon name="icon-alert"></uui-icon>
                     <span>${this._error}</span>
-                    <uui-button
-                        label="Retry"
-                        look="secondary"
-                        compact
-                        @click=${this.#onRetry}>
-                        Retry
-                    </uui-button>
+                    <uui-button label="Retry" look="secondary" compact @click=${this.#onRetry}> Retry </uui-button>
                 </div>
             `;
         }
@@ -192,7 +183,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
     override render() {
         return html`
-            <umb-body-layout headline=${this.data?.promptName ?? 'Prompt Preview'}>
+            <umb-body-layout headline=${this.data?.promptName ?? "Prompt Preview"}>
                 <div id="content">
                     ${this.data?.promptDescription
                         ? html`<p class="description">${this.data.promptDescription}</p>`
@@ -206,15 +197,11 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                             </h4>
                             ${this._response && !this._loading
                                 ? html`
-                                    <uui-button
-                                        label="Regenerate"
-                                        look="secondary"
-                                        compact
-                                        @click=${this.#onRetry}>
-                                        <uui-icon name="icon-sync"></uui-icon>
-                                        Regenerate
-                                    </uui-button>
-                                `
+                                      <uui-button label="Regenerate" look="secondary" compact @click=${this.#onRetry}>
+                                          <uui-icon name="icon-sync"></uui-icon>
+                                          Regenerate
+                                      </uui-button>
+                                  `
                                 : nothing}
                         </div>
                         ${this.#renderResponse()}
@@ -222,24 +209,22 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 </div>
 
                 <div slot="actions">
+                    <uui-button label="Cancel" @click=${this.#onCancel}> Cancel </uui-button>
                     <uui-button
-                        label="Cancel"
-                        @click=${this.#onCancel}>
-                        Cancel
-                    </uui-button>
-                    <uui-button
-                        label=${this._copied ? 'Copied!' : 'Copy Response'}
+                        label=${this._copied ? "Copied!" : "Copy Response"}
                         look="secondary"
                         ?disabled=${!this._response || this._loading}
-                        @click=${this.#onCopy}>
-                        <uui-icon name=${this._copied ? 'icon-check' : 'icon-clipboard'}></uui-icon>
-                        ${this._copied ? 'Copied!' : 'Copy Response'}
+                        @click=${this.#onCopy}
+                    >
+                        <uui-icon name=${this._copied ? "icon-check" : "icon-clipboard"}></uui-icon>
+                        ${this._copied ? "Copied!" : "Copy Response"}
                     </uui-button>
                     <uui-button
                         label="Insert Response"
                         look="primary"
                         ?disabled=${!this._response || this._loading}
-                        @click=${this.#onInsert}>
+                        @click=${this.#onInsert}
+                    >
                         <uui-icon name="icon-enter"></uui-icon>
                         Insert Response
                     </uui-button>
@@ -384,7 +369,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 flex: 1;
             }
 
-            [slot='actions'] {
+            [slot="actions"] {
                 display: flex;
                 gap: var(--uui-size-space-2);
             }
@@ -400,6 +385,6 @@ export default UaiPromptPreviewModalElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        'uai-prompt-preview-modal': UaiPromptPreviewModalElement;
+        "uai-prompt-preview-modal": UaiPromptPreviewModalElement;
     }
 }

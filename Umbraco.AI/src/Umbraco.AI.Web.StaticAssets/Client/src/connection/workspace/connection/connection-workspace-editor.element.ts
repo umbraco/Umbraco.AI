@@ -67,11 +67,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias")
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias"),
             );
         } else {
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name")
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name"),
             );
         }
     }
@@ -80,7 +80,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias"),
         );
     }
 
@@ -97,7 +97,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
     #onActiveChange(e: CustomEvent<{ value: boolean }>) {
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: e.detail.value }, "isActive")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: e.detail.value }, "isActive"),
         );
     }
 
@@ -110,7 +110,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
         const { data, error } = await tryExecute(
             this,
-            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } })
+            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } }),
         );
 
         if (error || !data?.success) {
@@ -144,11 +144,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         return html`
             <umb-workspace-editor alias="${UAI_CONNECTION_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}
-                        label="Back to connections"
-                        compact
-                    >
+                    <uui-button href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} label="Back to connections" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -157,6 +153,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                         @input="${this.#onNameChange}"
                         label="Name"
                         placeholder="Enter connection name"
+                        required
                     >
                         <uui-input-lock
                             slot="append"
@@ -181,9 +178,9 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
                 ${when(
                     !this._isNew && this._model,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
                 )}
-
                 ${when(
                     !this._isNew && this._model,
                     () => html`
@@ -193,10 +190,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                             look="default"
                             .color=${this._testButtonColor}
                             .state=${this._testButtonState}
-                            @click=${this.#onTestConnection}>
+                            @click=${this.#onTestConnection}
+                        >
                             ${this.localize.string("#uaiConnection_testConnection")}
                         </uui-button>
-                    `
+                    `,
                 )}
 
                 <div slot="footer-info" id="footer">

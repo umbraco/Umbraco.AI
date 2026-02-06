@@ -28,7 +28,6 @@ export interface UaiModelEditorChangeEventDetail {
  */
 @customElement("uai-model-editor")
 export class UaiModelEditorElement extends UmbLitElement {
-
     /**
      * The schema defining the fields to render.
      */
@@ -65,10 +64,7 @@ export class UaiModelEditorElement extends UmbLitElement {
 
     override shouldUpdate(changedProperties: Map<string, unknown>): boolean {
         // After initial population, check if model change is just an echo of our own change
-        if (this.#isInitialized &&
-            changedProperties.size === 1 &&
-            changedProperties.has("model")) {
-
+        if (this.#isInitialized && changedProperties.size === 1 && changedProperties.has("model")) {
             // Compare with last emitted model - if it matches, skip re-render (echo update)
             // If it differs, allow re-render (external update like loading different data)
             if (this.#isModelEchoUpdate(this.model)) {
@@ -96,7 +92,7 @@ export class UaiModelEditorElement extends UmbLitElement {
             return false;
         }
 
-        return lastKeys.every(key => this.#lastEmittedModel![key] === incomingModel[key]);
+        return lastKeys.every((key) => this.#lastEmittedModel![key] === incomingModel[key]);
     }
 
     override updated(changedProperties: Map<string, unknown>) {
@@ -127,20 +123,19 @@ export class UaiModelEditorElement extends UmbLitElement {
         const dataset = e.target as UmbPropertyDatasetElement;
         const model = dataset.value.reduce(
             (acc, curr) => ({ ...acc, [curr.alias]: curr.value }),
-            {} as Record<string, unknown>
+            {} as Record<string, unknown>,
         );
 
         // Track emitted model to detect echo updates vs external changes
         this.#lastEmittedModel = model;
 
-        this.dispatchEvent(new CustomEvent<UaiModelEditorChangeEventDetail>(
-            "change",
-            {
+        this.dispatchEvent(
+            new CustomEvent<UaiModelEditorChangeEventDetail>("change", {
                 detail: { model },
                 bubbles: true,
-                composed: true
-            }
-        ));
+                composed: true,
+            }),
+        );
     }
 
     #toPropertyConfig(config: unknown): Array<{ alias: string; value: unknown }> {
@@ -158,11 +153,7 @@ export class UaiModelEditorElement extends UmbLitElement {
         }
 
         if (this.schema.fields.length === 0) {
-            return html`
-                <p class="placeholder-text">
-                    ${this.emptyMessage ?? "No configurable fields."}
-                </p>
-            `;
+            return html` <p class="placeholder-text">${this.emptyMessage ?? "No configurable fields."}</p> `;
         }
 
         return html`
@@ -175,9 +166,15 @@ export class UaiModelEditorElement extends UmbLitElement {
                             alias=${field.key}
                             property-editor-ui-alias=${field.editorUiAlias ?? "Umb.PropertyEditorUi.TextBox"}
                             .config=${field.editorConfig ? this.#toPropertyConfig(field.editorConfig) : []}
-                            ?mandatory=${field.isRequired}>
+                            .validation=${{
+                                mandatory: field.isRequired,
+                                mandatoryMessage: field.isRequired
+                                    ? this.localize.string("This field is required")
+                                    : undefined,
+                            }}
+                        >
                         </umb-property>
-                    `
+                    `,
                 )}
             </umb-property-dataset>
         `;

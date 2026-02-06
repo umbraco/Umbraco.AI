@@ -5,10 +5,9 @@ import { UaiWithEntityBaseDirective } from "../../core/directives/with-entity-di
 import type { UaiProviderDetailModel } from "../types.ts";
 
 export class WithProviderDirective extends UaiWithEntityBaseDirective<UaiProviderDetailModel> {
-    async getEntity(host: UmbControllerHost, unique: string)
-    {
+    async getEntity(host: UmbControllerHost, unique: string) {
         const repository = new UaiProviderDetailRepository(host);
-        return repository.requestById(unique).then(({ data:provider }) => {
+        return repository.requestById(unique).then(({ data: provider }) => {
             return provider;
         });
     }

@@ -1,6 +1,6 @@
 ---
 description: >-
-  The AI Context Picker property editor enables dynamic context resolution based on content hierarchy.
+    The AI Context Picker property editor enables dynamic context resolution based on content hierarchy.
 ---
 
 # Context Picker
@@ -44,11 +44,11 @@ This allows you to set a context once at a parent level and have all descendants
 
 ### Configuration Options
 
-| Option | Description |
-|--------|-------------|
+| Option             | Description                           |
+| ------------------ | ------------------------------------- |
 | **Allow Multiple** | Enable selection of multiple contexts |
-| **Minimum Items** | Minimum contexts required (optional) |
-| **Maximum Items** | Maximum contexts allowed (optional) |
+| **Minimum Items**  | Minimum contexts required (optional)  |
+| **Maximum Items**  | Maximum contexts allowed (optional)   |
 
 ### Add to Document Type
 
@@ -67,10 +67,10 @@ Place the context picker on parent content types (like Site or Section) to enabl
 
 When an AI operation executes, contexts are resolved from multiple sources:
 
-| Source | Priority | Description |
-|--------|----------|-------------|
+| Source  | Priority    | Description                                            |
+| ------- | ----------- | ------------------------------------------------------ |
 | Content | 1 (highest) | Context picker property on content (inherited up tree) |
-| Profile | 2 | Context IDs configured on the AI profile |
+| Profile | 2           | Context IDs configured on the AI profile               |
 
 Contexts from all sources are merged, with content-level contexts taking precedence.
 
@@ -94,6 +94,7 @@ This enables powerful inheritance patterns:
 ### Reading Context from Content
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Single context
 var context = content.GetValue<AIContext>("aiContext");
@@ -101,11 +102,13 @@ var context = content.GetValue<AIContext>("aiContext");
 // Multiple contexts
 var contexts = content.GetValue<IEnumerable<AIContext>>("aiContext");
 ```
+
 {% endcode %}
 
 ### Manual Context Resolution
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class ContextExample
 {
@@ -130,18 +133,19 @@ public class ContextExample
     }
 }
 ```
+
 {% endcode %}
 
 ### Resolved Context Structure
 
 The `AIResolvedContext` contains:
 
-| Property | Description |
-|----------|-------------|
+| Property            | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
 | `InjectedResources` | Resources with `Always` injection mode (included in system prompt) |
-| `OnDemandResources` | Resources with `OnDemand` injection mode (available as tools) |
-| `AllResources` | All resolved resources |
-| `Sources` | Tracking information for debugging |
+| `OnDemandResources` | Resources with `OnDemand` injection mode (available as tools)      |
+| `AllResources`      | All resolved resources                                             |
+| `Sources`           | Tracking information for debugging                                 |
 
 ## Injection Modes
 
@@ -172,9 +176,9 @@ In **Settings** > **AI** > **Contexts**, create a context:
 - **Name**: Corporate Brand Voice
 - **Alias**: `corporate-brand`
 - **Resources**:
-  - Brand Voice Guidelines (Always)
-  - Style Guide (Always)
-  - Product Reference (OnDemand)
+    - Brand Voice Guidelines (Always)
+    - Style Guide (Always)
+    - Product Reference (OnDemand)
 
 ### 2. Create the Data Type
 
@@ -238,6 +242,6 @@ Keep contexts focused:
 
 ## Related
 
-* [Contexts](contexts.md) - Creating and managing AI contexts
-* [Managing Contexts](../backoffice/managing-contexts.md) - Backoffice guide
-* [Profiles](profiles.md) - Profile-level context assignment
+- [Contexts](contexts.md) - Creating and managing AI contexts
+- [Managing Contexts](../backoffice/managing-contexts.md) - Backoffice guide
+- [Profiles](profiles.md) - Profile-level context assignment

@@ -1,18 +1,18 @@
 import { UmbConditionBase } from "@umbraco-cms/backoffice/extension-registry";
 import type {
-  UmbConditionConfigBase,
-  UmbConditionControllerArguments,
-  UmbExtensionCondition,
+    UmbConditionConfigBase,
+    UmbConditionControllerArguments,
+    UmbExtensionCondition,
 } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { observeSectionChanges, isSectionAllowed } from "../../section-detector.js";
 
 export interface UaiCopilotSectionConditionConfig extends UmbConditionConfigBase {
-  /**
-   * The section pathnames where the copilot should be available.
-   * These are the URL path segments (e.g., "content", "media").
-   */
-  sectionPathnames: string[];
+    /**
+     * The section pathnames where the copilot should be available.
+     * These are the URL path segments (e.g., "content", "media").
+     */
+    sectionPathnames: string[];
 }
 
 /**
@@ -26,26 +26,23 @@ export interface UaiCopilotSectionConditionConfig extends UmbConditionConfigBase
  * replace this with the built-in Umb.Condition.SectionAlias condition.
  */
 export class UaiCopilotSectionCondition
-  extends UmbConditionBase<UaiCopilotSectionConditionConfig>
-  implements UmbExtensionCondition
+    extends UmbConditionBase<UaiCopilotSectionConditionConfig>
+    implements UmbExtensionCondition
 {
-  #cleanup: (() => void) | null = null;
+    #cleanup: (() => void) | null = null;
 
-  constructor(
-    host: UmbControllerHost,
-    args: UmbConditionControllerArguments<UaiCopilotSectionConditionConfig>
-  ) {
-    super(host, args);
+    constructor(host: UmbControllerHost, args: UmbConditionControllerArguments<UaiCopilotSectionConditionConfig>) {
+        super(host, args);
 
-    this.#cleanup = observeSectionChanges((pathname) => {
-      this.permitted = isSectionAllowed(pathname, this.config.sectionPathnames);
-    });
-  }
+        this.#cleanup = observeSectionChanges((pathname) => {
+            this.permitted = isSectionAllowed(pathname, this.config.sectionPathnames);
+        });
+    }
 
-  override hostDisconnected(): void {
-    super.hostDisconnected();
-    this.#cleanup?.();
-  }
+    override hostDisconnected(): void {
+        super.hostDisconnected();
+        this.#cleanup?.();
+    }
 }
 
 export { UaiCopilotSectionCondition as api };

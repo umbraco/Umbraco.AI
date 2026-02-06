@@ -23,12 +23,12 @@ export class UaiChatController extends UmbControllerBase {
      */
     async complete(
         messages: UaiChatMessage[],
-        options?: UaiChatOptions
+        options?: UaiChatOptions,
     ): Promise<{ data?: UaiChatResult; error?: unknown }> {
         return this.#repository.complete({
             profileIdOrAlias: options?.profileIdOrAlias,
             messages,
-            signal: options?.signal
+            signal: options?.signal,
         });
     }
 }

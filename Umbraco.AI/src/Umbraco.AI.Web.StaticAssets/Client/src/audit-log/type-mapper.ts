@@ -2,11 +2,7 @@
 // import type { AuditLogItemResponseModel, AuditLogDetailResponseModel, AuditLogActivityResponseModel } from "../api/types.gen.js";
 
 import { UAI_AUDIT_LOG_ENTITY_TYPE } from "./entity.js";
-import {
-    UaiAuditLogItemModel,
-    UaiAuditLogDetailModel,
-    UaiAuditLogStatus,
-} from "./types.js";
+import { UaiAuditLogItemModel, UaiAuditLogDetailModel, UaiAuditLogStatus } from "./types.js";
 
 /**
  * Type mapper for converting API response models to UI models.

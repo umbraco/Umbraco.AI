@@ -24,10 +24,7 @@ export interface UaiRollbackModalValue {
 /**
  * Modal token for the rollback confirmation modal.
  */
-export const UAI_ROLLBACK_MODAL = new UmbModalToken<
-    UaiRollbackModalData,
-    UaiRollbackModalValue
->("Uai.Modal.Rollback", {
+export const UAI_ROLLBACK_MODAL = new UmbModalToken<UaiRollbackModalData, UaiRollbackModalValue>("Uai.Modal.Rollback", {
     modal: {
         type: "sidebar",
         size: "medium",

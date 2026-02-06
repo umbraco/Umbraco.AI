@@ -14,15 +14,15 @@ import type { UaiAgentItemModel } from '../../types.js';
  * @public
  */
 export interface UaiAgentRepositoryOptions {
-	/**
-	 * Filter agents by scope ID (e.g., "copilot").
-	 */
-	scopeId?: string;
+    /**
+     * Filter agents by scope ID (e.g., "copilot").
+     */
+    scopeId?: string;
 
-	/**
-	 * Maximum number of agents to return.
-	 */
-	take?: number;
+    /**
+     * Maximum number of agents to return.
+     */
+    take?: number;
 }
 
 /**
@@ -102,12 +102,12 @@ export class UaiAgentRepository extends UmbControllerBase {
 			})
 		);
 
-		if (error || !data) {
-			return { error };
-		}
+        if (error || !data) {
+            return { error };
+        }
 
-		// Map to item model (filtering now happens server-side)
-		const items = data.items.map(UaiAgentTypeMapper.toItemModel);
+        // Map to item model (filtering now happens server-side)
+        const items = data.items.map(UaiAgentTypeMapper.toItemModel);
 
 		return {
 			data: {

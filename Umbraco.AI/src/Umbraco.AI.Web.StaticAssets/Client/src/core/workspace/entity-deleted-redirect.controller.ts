@@ -1,7 +1,7 @@
-import { UmbControllerBase } from '@umbraco-cms/backoffice/class-api';
-import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
-import { UMB_ACTION_EVENT_CONTEXT } from '@umbraco-cms/backoffice/action';
-import { UaiEntityActionEvent } from '../events/entity-action.event.js';
+import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { UMB_ACTION_EVENT_CONTEXT } from "@umbraco-cms/backoffice/action";
+import { UaiEntityActionEvent } from "../events/entity-action.event.js";
 
 /**
  * Configuration for the entity deleted redirect controller.
@@ -22,7 +22,7 @@ export interface UaiEntityDeletedRedirectArgs {
  * @public
  */
 export class UaiEntityDeletedRedirectController extends UmbControllerBase {
-    static readonly ALIAS = 'UaiEntityDeletedRedirectController';
+    static readonly ALIAS = "UaiEntityDeletedRedirectController";
 
     #args: UaiEntityDeletedRedirectArgs;
 
@@ -31,10 +31,7 @@ export class UaiEntityDeletedRedirectController extends UmbControllerBase {
         this.#args = args;
 
         this.consumeContext(UMB_ACTION_EVENT_CONTEXT, (context) => {
-            context?.addEventListener(
-                UaiEntityActionEvent.DELETED,
-                this.#onEntityDeleted as EventListener,
-            );
+            context?.addEventListener(UaiEntityActionEvent.DELETED, this.#onEntityDeleted as EventListener);
         });
     }
 
@@ -45,8 +42,8 @@ export class UaiEntityDeletedRedirectController extends UmbControllerBase {
         const currentEntityType = this.#args.getEntityType();
 
         if (unique === currentUnique && entityType === currentEntityType) {
-            window.history.pushState({}, '', this.#args.collectionPath);
-            window.dispatchEvent(new PopStateEvent('popstate'));
+            window.history.pushState({}, "", this.#args.collectionPath);
+            window.dispatchEvent(new PopStateEvent("popstate"));
         }
     };
 }

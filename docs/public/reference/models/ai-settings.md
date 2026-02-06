@@ -1,6 +1,6 @@
 ---
 description: >-
-  Model representing global AI settings.
+    Model representing global AI settings.
 ---
 
 # AISettings
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Settings;
 ## Definition
 
 {% code title="AISettings" %}
+
 ```csharp
 public class AISettings : IAIAuditableEntity
 {
@@ -37,19 +38,20 @@ public class AISettings : IAIAuditableEntity
     public Guid? ModifiedByUserId { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Fixed identifier (always the same value) |
-| `DefaultChatProfileId` | `Guid?` | Default profile for chat operations |
-| `DefaultEmbeddingProfileId` | `Guid?` | Default profile for embedding operations |
-| `DateCreated` | `DateTime` | When settings were first created |
-| `DateModified` | `DateTime` | When settings were last modified |
-| `CreatedByUserId` | `Guid?` | User who created |
-| `ModifiedByUserId` | `Guid?` | User who last modified |
+| Property                    | Type       | Description                              |
+| --------------------------- | ---------- | ---------------------------------------- |
+| `Id`                        | `Guid`     | Fixed identifier (always the same value) |
+| `DefaultChatProfileId`      | `Guid?`    | Default profile for chat operations      |
+| `DefaultEmbeddingProfileId` | `Guid?`    | Default profile for embedding operations |
+| `DateCreated`               | `DateTime` | When settings were first created         |
+| `DateModified`              | `DateTime` | When settings were last modified         |
+| `CreatedByUserId`           | `Guid?`    | User who created                         |
+| `ModifiedByUserId`          | `Guid?`    | User who last modified                   |
 
 ## Notes
 
@@ -60,6 +62,7 @@ public class AISettings : IAIAuditableEntity
 ## Example
 
 {% code title="Example" %}
+
 ```csharp
 // Get current settings
 var settings = await _settingsService.GetSettingsAsync();
@@ -71,9 +74,10 @@ settings.DefaultEmbeddingProfileId = embeddingProfileId;
 // Save
 await _settingsService.SaveSettingsAsync(settings);
 ```
+
 {% endcode %}
 
 ## Related
 
-* [IAISettingsService](../services/ai-settings-service.md) - Settings service
-* [Settings Concept](../../concepts/settings.md) - Settings concepts
+- [IAISettingsService](../services/ai-settings-service.md) - Settings service
+- [Settings Concept](../../concepts/settings.md) - Settings concepts

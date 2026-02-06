@@ -1,6 +1,6 @@
 ---
 description: >-
-  Core service interfaces for AI operations.
+    Core service interfaces for AI operations.
 ---
 
 # Services
@@ -9,18 +9,19 @@ Umbraco.AI provides core services for AI operations. All services are registered
 
 ## Available Services
 
-| Service | Purpose |
-|---------|---------|
-| [IAIChatService](ai-chat-service.md) | Chat completions (streaming and non-streaming) |
-| [IAIEmbeddingService](ai-embedding-service.md) | Text embedding generation |
-| [IAIProfileService](ai-profile-service.md) | Profile CRUD operations |
-| [IAIConnectionService](ai-connection-service.md) | Connection management |
+| Service                                          | Purpose                                        |
+| ------------------------------------------------ | ---------------------------------------------- |
+| [IAIChatService](ai-chat-service.md)             | Chat completions (streaming and non-streaming) |
+| [IAIEmbeddingService](ai-embedding-service.md)   | Text embedding generation                      |
+| [IAIProfileService](ai-profile-service.md)       | Profile CRUD operations                        |
+| [IAIConnectionService](ai-connection-service.md) | Connection management                          |
 
 ## Usage Pattern
 
 All services follow standard dependency injection patterns:
 
 {% code title="Using Services" %}
+
 ```csharp
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Profiles;
@@ -44,6 +45,7 @@ public class MyController : Controller
     }
 }
 ```
+
 {% endcode %}
 
 ## In This Section

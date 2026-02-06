@@ -12,26 +12,26 @@ import { UaiCopilotAgentItem } from "../../types.ts";
  */
 @customElement("uai-copilot-input")
 export class UaiCopilotInputElement extends UmbLitElement {
-  @property({ type: Boolean })
-  disabled = false;
+    @property({ type: Boolean })
+    disabled = false;
 
-  @property({ type: String })
-  placeholder = "Type a message...";
+    @property({ type: String })
+    placeholder = "Type a message...";
 
-  @state()
-  private _value = "";
+    @state()
+    private _value = "";
 
-  @state()
-  private _agents: UaiCopilotAgentItem[] = [];
+    @state()
+    private _agents: UaiCopilotAgentItem[] = [];
 
-  @state()
-  private _selectedAgentId = "";
+    @state()
+    private _selectedAgentId = "";
 
-  @state()
-  private _agentsLoading = true;
+    @state()
+    private _agentsLoading = true;
 
-  #copilotContext?: UaiCopilotContext;
-  #textareaRef = createRef<HTMLElement>();
+    #copilotContext?: UaiCopilotContext;
+    #textareaRef = createRef<HTMLElement>();
 
   get #isDisabled(): boolean {
     return this.disabled || this._agents.length === 0;
@@ -53,58 +53,42 @@ export class UaiCopilotInputElement extends UmbLitElement {
             }, 350); // Slightly longer than the 0.3s CSS transition
           }
         });
-      }
-    });
-  }
-
-  override updated(changedProperties: PropertyValues) {
-    super.updated(changedProperties);
-
-    // Re-focus textarea when it becomes enabled again
-    if (changedProperties.has("disabled") && !this.disabled) {
-      requestAnimationFrame(() => {
-        this.#textareaRef.value?.focus();
-      });
     }
-  }
 
-  #handleAgentChange(e: Event) {
-    const select = e.target as HTMLSelectElement;
-    this.#copilotContext?.selectAgent(select.value);
-  }
+    override updated(changedProperties: PropertyValues) {
+        super.updated(changedProperties);
 
-  #getAgentOptions(): Array<{ name: string; value: string; selected?: boolean }> {
-    return this._agents.map((agent) => ({
-      name: agent.name,
-      value: agent.id,
-      selected: agent.id === this._selectedAgentId,
-    }));
-  }
-
-  #handleKeydown(e: KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      this.#send();
+        // Re-focus textarea when it becomes enabled again
+        if (changedProperties.has("disabled") && !this.disabled) {
+            requestAnimationFrame(() => {
+                this.#textareaRef.value?.focus();
+            });
+        }
     }
-  }
 
-  #handleInput(e: Event) {
-    this._value = (e.target as HTMLTextAreaElement).value;
-  }
+    #handleAgentChange(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        this.#copilotContext?.selectAgent(select.value);
+    }
 
-  #send() {
-    if (!this._value.trim() || this.disabled) return;
+    #getAgentOptions(): Array<{ name: string; value: string; selected?: boolean }> {
+        return this._agents.map((agent) => ({
+            name: agent.name,
+            value: agent.id,
+            selected: agent.id === this._selectedAgentId,
+        }));
+    }
 
-    this.dispatchEvent(
-      new CustomEvent("send", {
-        detail: this._value,
-        bubbles: true,
-        composed: true,
-      })
-    );
+    #handleKeydown(e: KeyboardEvent) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            this.#send();
+        }
+    }
 
-    this._value = "";
-  }
+    #handleInput(e: Event) {
+        this._value = (e.target as HTMLTextAreaElement).value;
+    }
 
   override render() {
     const hasNoAgents = this._agents.length === 0 && !this._agentsLoading;
@@ -220,7 +204,7 @@ export class UaiCopilotInputElement extends UmbLitElement {
 export default UaiCopilotInputElement;
 
 declare global {
-  interface HTMLElementTagNameMap {
-    "uai-copilot-input": UaiCopilotInputElement;
-  }
+    interface HTMLElementTagNameMap {
+        "uai-copilot-input": UaiCopilotInputElement;
+    }
 }

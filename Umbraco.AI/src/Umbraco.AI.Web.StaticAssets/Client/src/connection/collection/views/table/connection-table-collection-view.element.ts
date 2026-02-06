@@ -1,6 +1,13 @@
 import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEvent, UmbTableDeselectedEvent, UmbTableElement } from "@umbraco-cms/backoffice/components";
+import type {
+    UmbTableColumn,
+    UmbTableItem,
+    UmbTableConfig,
+    UmbTableSelectedEvent,
+    UmbTableDeselectedEvent,
+    UmbTableElement,
+} from "@umbraco-cms/backoffice/components";
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -51,7 +58,7 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
         this.observe(
             this.#collectionContext.items,
             (items) => this.#createTableItems(items as UaiConnectionItemModel[]),
-            "umbCollectionItemsObserver"
+            "umbCollectionItemsObserver",
         );
 
         this.observe(
@@ -59,7 +66,7 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
             (selection) => {
                 this._selection = selection as string[];
             },
-            "umbCollectionSelectionObserver"
+            "umbCollectionSelectionObserver",
         );
     }
 
@@ -75,11 +82,11 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
                         >${item.name}</a
                     >`,
                 },
-                { 
-                    columnAlias: "provider", 
+                {
+                    columnAlias: "provider",
                     value: uaiWithProvider(this, item.providerId, (provider: UaiProviderDetailModel) => {
                         return provider.name;
-                    }) 
+                    }),
                 },
                 {
                     columnAlias: "status",
@@ -114,7 +121,8 @@ export class UaiConnectionTableCollectionViewElement extends UmbLitElement {
             .items=${this._items}
             .selection=${this._selection}
             @selected=${this.#handleSelect}
-            @deselected=${this.#handleDeselect}></umb-table>`;
+            @deselected=${this.#handleDeselect}
+        ></umb-table>`;
     }
 
     static styles = [UmbTextStyles];

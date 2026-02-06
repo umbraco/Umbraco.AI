@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configuration options for Umbraco.AI.
+    Configuration options for Umbraco.AI.
 ---
 
 # Configuration
@@ -19,16 +19,18 @@ The recommended way to configure default profiles is through the backoffice:
 For advanced scenarios (CI/CD, infrastructure-as-code), you can configure defaults in `appsettings.json` as a fallback:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "DefaultChatProfileAlias": "default-chat",
-      "DefaultEmbeddingProfileAlias": "default-embedding"
+    "Umbraco": {
+        "AI": {
+            "DefaultChatProfileAlias": "default-chat",
+            "DefaultEmbeddingProfileAlias": "default-embedding"
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -37,8 +39,8 @@ Database settings (configured via backoffice) take precedence over configuration
 
 ## Available Options
 
-| Class | Description |
-|-------|-------------|
+| Class                      | Description                            |
+| -------------------------- | -------------------------------------- |
 | [AIOptions](ai-options.md) | Configuration file settings (fallback) |
 
 ## Provider Credentials
@@ -46,17 +48,19 @@ Database settings (configured via backoffice) take precedence over configuration
 Store provider credentials in configuration and reference them in connections:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "OpenAI": {
-    "ApiKey": "sk-your-api-key-here"
-  },
-  "Azure": {
-    "ApiKey": "your-azure-key",
-    "Endpoint": "https://your-resource.openai.azure.com"
-  }
+    "OpenAI": {
+        "ApiKey": "sk-your-api-key-here"
+    },
+    "Azure": {
+        "ApiKey": "your-azure-key",
+        "Endpoint": "https://your-resource.openai.azure.com"
+    }
 }
 ```
+
 {% endcode %}
 
 Reference these in connection settings using the `$` prefix:
@@ -80,8 +84,8 @@ Never commit API keys to source control. Use environment variables, user secrets
 
 ## Related
 
-* [Settings Concept](../../concepts/settings.md) - Primary way to configure defaults
-* [Managing Settings](../../backoffice/managing-settings.md) - Backoffice configuration
+- [Settings Concept](../../concepts/settings.md) - Primary way to configure defaults
+- [Managing Settings](../../backoffice/managing-settings.md) - Backoffice configuration
 
 ## In This Section
 

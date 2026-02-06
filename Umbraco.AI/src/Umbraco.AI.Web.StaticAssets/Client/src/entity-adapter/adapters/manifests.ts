@@ -8,18 +8,18 @@ import type { ManifestEntityAdapter } from "../extension-type.js";
 import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE } from "../extension-type.js";
 
 export const entityAdapterManifests: ManifestEntityAdapter[] = [
-	{
-		type: UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
-		alias: "UmbracoAI.EntityAdapter.Document",
-		name: "Document Entity Adapter",
-		forEntityType: "document",
-		api: () => import("./document.adapter.js"),
-	},
-  {
-    type: UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
-    alias: "UmbracoAI.EntityAdapter.Media",
-    name: "Media Entity Adapter",
-    forEntityType: "media",
-    api: () => import("./document.adapter.js"),
-  },
+    {
+        type: UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
+        alias: "UmbracoAI.EntityAdapter.Document",
+        name: "Document Entity Adapter",
+        forEntityType: "document",
+        api: () => import("./document.adapter.js"),
+    },
+    {
+        type: UAI_ENTITY_ADAPTER_EXTENSION_TYPE,
+        alias: "UmbracoAI.EntityAdapter.Media",
+        name: "Media Entity Adapter",
+        forEntityType: "media",
+        api: () => import("./document.adapter.js"),
+    },
 ];

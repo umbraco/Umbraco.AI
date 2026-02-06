@@ -1,21 +1,13 @@
-import {
-    css,
-    customElement,
-    html,
-    nothing,
-    property,
-    repeat,
-    state,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
-import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
-import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
-import { tryExecute } from '@umbraco-cms/backoffice/resources';
-import { AgentsService } from '../../../api/sdk.gen.js';
-import { UAI_ITEM_PICKER_MODAL, type UaiPickableItemModel } from '@umbraco-ai/core';
+import { css, customElement, html, nothing, property, repeat, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { AgentsService } from "../../../api/sdk.gen.js";
+import { UAI_ITEM_PICKER_MODAL, type UaiPickableItemModel } from "@umbraco-ai/core";
 
-const elementName = 'uai-scope-picker';
+const elementName = "uai-scope-picker";
 
 interface UaiScopeItemModel {
     id: string;
@@ -84,22 +76,19 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
         this._loading = true;
 
         // Fetch all scopes and filter to selected ones
-        const { data, error } = await tryExecute(
-            this,
-            AgentsService.getAgentScopes()
-        );
+        const { data, error } = await tryExecute(this, AgentsService.getAgentScopes());
 
         if (!error && data) {
             // Map to internal model with localized name/description
             this._items = this._selection
-                .map(id => {
-                    const scope = data.find(s => s.id === id);
+                .map((id) => {
+                    const scope = data.find((s) => s.id === id);
                     if (!scope) return undefined;
                     return {
                         id: scope.id,
                         icon: scope.icon,
                         name: this.localize.term(`uaiAgentScope_${scope.id}Label`) || scope.id,
-                        description: this.localize.term(`uaiAgentScope_${scope.id}Description`) || '',
+                        description: this.localize.term(`uaiAgentScope_${scope.id}Description`) || "",
                     };
                 })
                 .filter((item): item is UaiScopeItemModel => item !== undefined);
@@ -115,9 +104,9 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
         const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
                 fetchItems: () => this.#fetchAvailableScopes(),
-                selectionMode: this.multiple ? 'multiple' : 'single',
-                title: this.localize.term('uaiAgent_selectScope'),
-                noResultsMessage: this.localize.term('uaiAgent_noScopesAvailable'),
+                selectionMode: this.multiple ? "multiple" : "single",
+                title: this.localize.term("uaiAgent_selectScope"),
+                noResultsMessage: this.localize.term("uaiAgent_noScopesAvailable"),
             },
         });
 
@@ -132,29 +121,24 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
     }
 
     async #fetchAvailableScopes(): Promise<UaiPickableItemModel[]> {
-        const { data } = await tryExecute(
-            this,
-            AgentsService.getAgentScopes()
-        );
+        const { data } = await tryExecute(this, AgentsService.getAgentScopes());
 
         if (!data) return [];
 
         // Filter out already selected items
         return data
-            .filter(scope => !this._selection.includes(scope.id))
-            .map(scope => ({
+            .filter((scope) => !this._selection.includes(scope.id))
+            .map((scope) => ({
                 value: scope.id,
                 label: this.localize.term(`uaiAgentScope_${scope.id}Label`) || scope.id,
-                description: this.localize.term(`uaiAgentScope_${scope.id}Description`) || '',
+                description: this.localize.term(`uaiAgentScope_${scope.id}Description`) || "",
                 icon: scope.icon,
             }));
     }
 
     #addSelections(items: UaiPickableItemModel[]) {
         // Filter out already selected items
-        const newValues = items
-            .map(item => item.value)
-            .filter(value => !this._selection.includes(value));
+        const newValues = items.map((item) => item.value).filter((value) => !this._selection.includes(value));
 
         if (newValues.length === 0) return;
 
@@ -170,18 +154,13 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
     }
 
     #onRemove(id: string) {
-        this._selection = this._selection.filter(x => x !== id);
-        this._items = this._items.filter(x => x.id !== id);
+        this._selection = this._selection.filter((x) => x !== id);
+        this._items = this._items.filter((x) => x.id !== id);
         this.dispatchEvent(new UmbChangeEvent());
     }
 
     override render() {
-        return html`
-            <div class="container">
-                ${this.#renderItems()}
-                ${this.#renderAddButton()}
-            </div>
-        `;
+        return html` <div class="container">${this.#renderItems()} ${this.#renderAddButton()}</div> `;
     }
 
     #renderItems() {
@@ -204,23 +183,23 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
 
     #renderItem(item: UaiScopeItemModel) {
         return html`
-            <uui-ref-node
-                name=${item.name}
-                detail=${item.description}
-                readonly>
+            <uui-ref-node name=${item.name} detail=${item.description} readonly>
                 <umb-icon slot="icon" name=${item.icon}></umb-icon>
-                ${!this.readonly ? html`
-                    <uui-action-bar slot="actions">
-                        <uui-button
-                            label="Remove"
-                            @click=${(e: Event) => {
-                                e.stopPropagation();
-                                this.#onRemove(item.id);
-                            }}>
-                            <uui-icon name="icon-trash"></uui-icon>
-                        </uui-button>
-                    </uui-action-bar>
-                ` : nothing}
+                ${!this.readonly
+                    ? html`
+                          <uui-action-bar slot="actions">
+                              <uui-button
+                                  label="Remove"
+                                  @click=${(e: Event) => {
+                                      e.stopPropagation();
+                                      this.#onRemove(item.id);
+                                  }}
+                              >
+                                  <uui-icon name="icon-trash"></uui-icon>
+                              </uui-button>
+                          </uui-action-bar>
+                      `
+                    : nothing}
             </uui-ref-node>
         `;
     }
@@ -235,9 +214,10 @@ export class UaiScopePickerElement extends UmbFormControlMixin<
                 id="btn-add"
                 look="placeholder"
                 @click=${this.#openPicker}
-                label=${this.localize.term('uaiAgent_addScope')}>
+                label=${this.localize.term("uaiAgent_addScope")}
+            >
                 <uui-icon name="icon-add"></uui-icon>
-                ${this.localize.term('general_add')}
+                ${this.localize.term("general_add")}
             </uui-button>
         `;
     }

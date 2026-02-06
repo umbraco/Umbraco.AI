@@ -51,12 +51,6 @@ public class AuditLogDetailResponseModel : AuditLogItemResponseModel
     public string? ResponseSnapshot { get; set; }
 
     /// <summary>
-    /// Detail level of this audit-log record.
-    /// </summary>
-    [Required]
-    public string DetailLevel { get; set; } = string.Empty;
-
-    /// <summary>
     /// Extensible metadata dictionary for feature-specific context (e.g., AgentRunId, ThreadId).
     /// </summary>
     public IEnumerable<KeyValuePair<string, string>>? Metadata { get; set; }

@@ -35,12 +35,14 @@ Support multiple AI connections and configurations for different use cases. Use 
 **Why they exist:** Different organizations have different needs. Some require OpenAI, others need Azure for compliance, and some want to run local models for privacy. Providers let you install only what you need and switch between services easily.
 
 **Examples:**
+
 - **OpenAI** - GPT-4, GPT-3.5, DALL-E, embeddings
 - **Azure OpenAI** - Enterprise-grade OpenAI with Azure security
 - **Anthropic** - Claude models
 - **Ollama** - Run open-source models locally
 
 Each provider can offer different **capabilities** - the types of AI features it supports:
+
 - **Chat** - Conversational AI for content assistance, Q&A, etc.
 - **Embeddings** - Convert text to vectors for semantic search
 - **Media** - Image generation and analysis
@@ -55,6 +57,7 @@ Each provider can offer different **capabilities** - the types of AI features it
 **Why they exist:** You need somewhere secure to store your API keys and configure how you connect to AI services. Connections provide this, and allow you to have multiple configurations for different purposes.
 
 **Use cases:**
+
 - **Multiple environments:** "Production OpenAI" with production API keys vs "Development OpenAI" with test keys
 - **Multiple providers:** Use OpenAI for chat and a different provider for embeddings
 - **Cost control:** Different connections with different rate limits or spending caps
@@ -70,11 +73,13 @@ Connections are configured through the Umbraco backoffice UI. Each connection be
 **Why they exist:** Different tasks need different AI configurations. Content writing benefits from creative, varied responses. Translation needs accuracy and consistency. Profiles let you define these configurations once and reuse them throughout your application.
 
 **Examples:**
+
 - **"Content Assistant"** - Uses GPT-4 with higher temperature (0.8) for creative content suggestions
 - **"Translation"** - Uses GPT-3.5-turbo with low temperature (0.2) for fast, consistent translations
 - **"Search Embeddings"** - Uses text-embedding-3-small for generating semantic search vectors
 
 **Profile settings include:**
+
 - Which connection to use
 - Which model to use
 - Temperature (creativity vs consistency)
@@ -90,6 +95,7 @@ Connections are configured through the Umbraco backoffice UI. Each connection be
 **Why it exists:** Many AI applications need cross-cutting functionality like logging, caching, rate limiting, or content filtering. Middleware lets you add these features without modifying your core application code.
 
 **Examples:**
+
 - **Logging** - Track all AI requests for debugging and auditing
 - **Caching** - Cache responses to reduce costs and improve speed
 - **Rate limiting** - Prevent excessive API usage
@@ -121,6 +127,7 @@ Provider (which AI service)
 **Example scenario:**
 
 You install the OpenAI provider and create a connection called "My OpenAI" with your API key. Then you create two profiles:
+
 - "Content Writer" - uses GPT-4 with creative settings
 - "Quick Translate" - uses GPT-3.5-turbo optimized for speed
 
@@ -158,6 +165,7 @@ public class MyContentService
 ```
 
 The service automatically:
+
 - Looks up the "content-assistant" profile
 - Uses the connection configured for that profile
 - Applies all the profile settings (model, temperature, etc.)
@@ -169,13 +177,14 @@ The service automatically:
 These services are also exposed via a Management API, making it easy to integrate AI features into the Umbraco backoffice UI or custom dashboards. Frontend developers can call the API endpoints to access AI functionality without needing to implement any backend code.
 
 This enables scenarios like:
+
 - AI-powered content suggestions in custom property editors
 - Backoffice dashboards with AI analytics
 - Custom admin tools that leverage AI capabilities
 
 ### Benefits for Developers
 
-**Separation of concerns:** Your code focuses on *what* you want the AI to do, not *how* to configure it. Configuration is managed separately in the backoffice.
+**Separation of concerns:** Your code focuses on _what_ you want the AI to do, not _how_ to configure it. Configuration is managed separately in the backoffice.
 
 **Easy testing:** Switch profiles between development and production without code changes.
 
@@ -190,15 +199,19 @@ This enables scenarios like:
 ## Benefits
 
 ### For Content Editors
+
 AI features simply work. No technical knowledge needed - just use the AI-powered tools that appear in the content editing experience.
 
 ### For Administrators
+
 Configure and manage AI through the familiar Umbraco backoffice. Control which AI services are used, manage API keys securely, and adjust settings without developer involvement.
 
 ### For Developers
+
 Clean, well-documented APIs make it easy to add AI features to your Umbraco solutions. The provider-agnostic design means no vendor lock-in - switch providers without rewriting code. Extend the system with custom providers or middleware when needed.
 
 ### For Organizations
+
 Centralized control over AI usage across your Umbraco installation. Monitor costs, ensure compliance, and maintain security with enterprise-ready features.
 
 ---

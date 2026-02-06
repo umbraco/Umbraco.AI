@@ -1,6 +1,6 @@
 ---
 description: >-
-  Get aggregated usage summary for a time period.
+    Get aggregated usage summary for a time period.
 ---
 
 # Get Usage Summary
@@ -15,31 +15,33 @@ GET /umbraco/ai/management/api/v1/analytics/summary
 
 ### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `from` | datetime | Yes | Start of period (inclusive) |
-| `to` | datetime | Yes | End of period (inclusive) |
-| `profileId` | guid | No | Filter by specific profile |
-| `providerId` | string | No | Filter by specific provider |
-| `capability` | string | No | Filter by capability (`Chat`, `Embedding`) |
+| Parameter    | Type     | Required | Description                                |
+| ------------ | -------- | -------- | ------------------------------------------ |
+| `from`       | datetime | Yes      | Start of period (inclusive)                |
+| `to`         | datetime | Yes      | End of period (inclusive)                  |
+| `profileId`  | guid     | No       | Filter by specific profile                 |
+| `providerId` | string   | No       | Filter by specific provider                |
+| `capability` | string   | No       | Filter by capability (`Chat`, `Embedding`) |
 
 ## Response
 
 ### Success
 
 {% code title="200 OK" %}
+
 ```json
 {
-  "totalRequests": 15420,
-  "inputTokens": 2450000,
-  "outputTokens": 890000,
-  "totalTokens": 3340000,
-  "successCount": 15210,
-  "failureCount": 210,
-  "successRate": 0.9864,
-  "averageDurationMs": 1245
+    "totalRequests": 15420,
+    "inputTokens": 2450000,
+    "outputTokens": 890000,
+    "totalTokens": 3340000,
+    "successCount": 15210,
+    "failureCount": 210,
+    "successRate": 0.9864,
+    "averageDurationMs": 1245
 }
 ```
+
 {% endcode %}
 
 ## Examples
@@ -47,22 +49,27 @@ GET /umbraco/ai/management/api/v1/analytics/summary
 ### Last 30 Days Summary
 
 {% code title="cURL" %}
+
 ```bash
 curl -X GET "https://your-site.com/umbraco/ai/management/api/v1/analytics/summary?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
+
 {% endcode %}
 
 ### Filtered by Provider
 
 {% code title="cURL" %}
+
 ```bash
 curl -X GET "https://your-site.com/umbraco/ai/management/api/v1/analytics/summary?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z&providerId=openai" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
+
 {% endcode %}
 
 {% code title="C#" %}
+
 ```csharp
 var from = DateTime.UtcNow.AddDays(-30);
 var to = DateTime.UtcNow;
@@ -76,20 +83,21 @@ Console.WriteLine($"Total Requests: {summary.TotalRequests}");
 Console.WriteLine($"Total Tokens: {summary.TotalTokens:N0}");
 Console.WriteLine($"Success Rate: {summary.SuccessRate:P1}");
 ```
+
 {% endcode %}
 
 ## Response Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `totalRequests` | int | Number of AI operations in the period |
-| `inputTokens` | long | Total tokens sent in requests |
-| `outputTokens` | long | Total tokens received in responses |
-| `totalTokens` | long | Combined input and output tokens |
-| `successCount` | int | Number of successful operations |
-| `failureCount` | int | Number of failed operations |
-| `successRate` | double | Success rate (0.0 to 1.0) |
-| `averageDurationMs` | int | Average operation time in milliseconds |
+| Property            | Type   | Description                            |
+| ------------------- | ------ | -------------------------------------- |
+| `totalRequests`     | int    | Number of AI operations in the period  |
+| `inputTokens`       | long   | Total tokens sent in requests          |
+| `outputTokens`      | long   | Total tokens received in responses     |
+| `totalTokens`       | long   | Combined input and output tokens       |
+| `successCount`      | int    | Number of successful operations        |
+| `failureCount`      | int    | Number of failed operations            |
+| `successRate`       | double | Success rate (0.0 to 1.0)              |
+| `averageDurationMs` | int    | Average operation time in milliseconds |
 
 ## Notes
 

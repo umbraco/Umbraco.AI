@@ -1,6 +1,6 @@
 ---
 description: >-
-  Global AI settings configure default profiles and system-wide behavior.
+    Global AI settings configure default profiles and system-wide behavior.
 ---
 
 # Settings
@@ -9,10 +9,10 @@ AI Settings provide a central place to configure system-wide defaults for Umbrac
 
 ## What Settings Store
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Fixed identifier (always the same GUID) |
-| `DefaultChatProfileId` | The profile used when no profile is specified for chat operations |
+| Property                    | Description                                                            |
+| --------------------------- | ---------------------------------------------------------------------- |
+| `Id`                        | Fixed identifier (always the same GUID)                                |
+| `DefaultChatProfileId`      | The profile used when no profile is specified for chat operations      |
 | `DefaultEmbeddingProfileId` | The profile used when no profile is specified for embedding operations |
 
 {% hint style="info" %}
@@ -35,6 +35,7 @@ See [Managing Settings](../backoffice/managing-settings.md) for detailed instruc
 ### Getting Current Settings
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class SettingsExample
 {
@@ -51,11 +52,13 @@ public class SettingsExample
     }
 }
 ```
+
 {% endcode %}
 
 ### Updating Settings
 
 {% code title="Example.cs" %}
+
 ```csharp
 public async Task UpdateDefaultProfile(Guid chatProfileId)
 {
@@ -64,6 +67,7 @@ public async Task UpdateDefaultProfile(Guid chatProfileId)
     await _settingsService.SaveSettingsAsync(settings);
 }
 ```
+
 {% endcode %}
 
 ## How Default Profiles Work
@@ -74,6 +78,7 @@ When you call an AI service without specifying a profile:
 2. If not found, an exception is thrown
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Uses the default chat profile from Settings
 var response = await _chatService.GetChatResponseAsync(messages);
@@ -81,6 +86,7 @@ var response = await _chatService.GetChatResponseAsync(messages);
 // Explicitly specifies a profile (overrides default)
 var response = await _chatService.GetChatResponseAsync(profileId, messages);
 ```
+
 {% endcode %}
 
 ## Configuration File Fallback
@@ -88,16 +94,18 @@ var response = await _chatService.GetChatResponseAsync(profileId, messages);
 For advanced scenarios like CI/CD pipelines or infrastructure-as-code, you can configure defaults via `appsettings.json`:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "DefaultChatProfileAlias": "content-writer",
-      "DefaultEmbeddingProfileAlias": "embeddings"
+    "Umbraco": {
+        "AI": {
+            "DefaultChatProfileAlias": "content-writer",
+            "DefaultEmbeddingProfileAlias": "embeddings"
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 {% hint style="warning" %}
@@ -133,5 +141,5 @@ See [Settings API](../management-api/settings/README.md) for details.
 
 ## Related
 
-* [Profiles](profiles.md) - The profiles that can be set as defaults
-* [Managing Settings](../backoffice/managing-settings.md) - Backoffice guide
+- [Profiles](profiles.md) - The profiles that can be set as defaults
+- [Managing Settings](../backoffice/managing-settings.md) - Backoffice guide

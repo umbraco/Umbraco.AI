@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configuration options for AI services (fallback mechanism).
+    Configuration options for AI services (fallback mechanism).
 ---
 
 # AIOptions
@@ -20,6 +20,7 @@ using Umbraco.AI.Core.Models;
 ## Class Definition
 
 {% code title="AIOptions" %}
+
 ```csharp
 public class AIOptions
 {
@@ -27,28 +28,31 @@ public class AIOptions
     public string? DefaultEmbeddingProfileAlias { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `DefaultChatProfileAlias` | `string?` | Fallback default profile alias for chat operations |
-| `DefaultEmbeddingProfileAlias` | `string?` | Fallback default profile alias for embeddings |
+| Property                       | Type      | Description                                        |
+| ------------------------------ | --------- | -------------------------------------------------- |
+| `DefaultChatProfileAlias`      | `string?` | Fallback default profile alias for chat operations |
+| `DefaultEmbeddingProfileAlias` | `string?` | Fallback default profile alias for embeddings      |
 
 ## Configuration
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "DefaultChatProfileAlias": "content-assistant",
-      "DefaultEmbeddingProfileAlias": "document-embeddings"
+    "Umbraco": {
+        "AI": {
+            "DefaultChatProfileAlias": "content-assistant",
+            "DefaultEmbeddingProfileAlias": "document-embeddings"
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 ## Precedence
@@ -65,6 +69,7 @@ Database settings (configured via backoffice) take precedence over configuration
 When you call `IAIChatService.GetChatResponseAsync()` without specifying a profile ID, it first checks for a default in database settings. If not found, it falls back to the profile with the alias specified in `DefaultChatProfileAlias`.
 
 {% code title="Example" %}
+
 ```csharp
 // Uses the default chat profile (database settings or appsettings.json fallback)
 var response = await _chatService.GetChatResponseAsync(messages);
@@ -72,6 +77,7 @@ var response = await _chatService.GetChatResponseAsync(messages);
 // Uses a specific profile
 var response = await _chatService.GetChatResponseAsync(specificProfileId, messages);
 ```
+
 {% endcode %}
 
 ### Accessing Options
@@ -79,6 +85,7 @@ var response = await _chatService.GetChatResponseAsync(specificProfileId, messag
 You can inject `IOptions<AIOptions>` to access configuration:
 
 {% code title="Example" %}
+
 ```csharp
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.Models;
@@ -99,6 +106,7 @@ public class MyService
     }
 }
 ```
+
 {% endcode %}
 
 ## Behavior When Not Set
@@ -125,5 +133,5 @@ Note the double underscores (`__`) as section separators.
 
 ## Related
 
-* [Settings Concept](../../concepts/settings.md) - Primary way to configure defaults
-* [Managing Settings](../../backoffice/managing-settings.md) - Backoffice configuration
+- [Settings Concept](../../concepts/settings.md) - Primary way to configure defaults
+- [Managing Settings](../../backoffice/managing-settings.md) - Backoffice configuration

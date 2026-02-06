@@ -41,13 +41,14 @@ After installation, create a connection in the Umbraco backoffice:
 
 ```json
 {
-  "ApiKey": "sk-ant-..."
+    "ApiKey": "sk-ant-..."
 }
 ```
 
 ## Supported Models
 
 **Chat Models:**
+
 - Claude 3.5 Sonnet
 - Claude 3 Opus
 - Claude 3 Sonnet

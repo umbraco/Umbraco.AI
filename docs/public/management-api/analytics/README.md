@@ -1,6 +1,6 @@
 ---
 description: >-
-  API endpoints for AI usage analytics and reporting.
+    API endpoints for AI usage analytics and reporting.
 ---
 
 # Analytics API
@@ -9,14 +9,14 @@ The Analytics API provides aggregated usage statistics derived from audit logs. 
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | [`/analytics/summary`](summary.md) | Get usage summary for a period |
-| GET | [`/analytics/timeseries`](timeseries.md) | Get usage over time |
-| GET | [`/analytics/breakdown/provider`](breakdown-provider.md) | Usage breakdown by provider |
-| GET | [`/analytics/breakdown/model`](breakdown-model.md) | Usage breakdown by model |
-| GET | [`/analytics/breakdown/profile`](breakdown-profile.md) | Usage breakdown by profile |
-| GET | [`/analytics/breakdown/user`](breakdown-user.md) | Usage breakdown by user |
+| Method | Endpoint                                                 | Description                    |
+| ------ | -------------------------------------------------------- | ------------------------------ |
+| GET    | [`/analytics/summary`](summary.md)                       | Get usage summary for a period |
+| GET    | [`/analytics/timeseries`](timeseries.md)                 | Get usage over time            |
+| GET    | [`/analytics/breakdown/provider`](breakdown-provider.md) | Usage breakdown by provider    |
+| GET    | [`/analytics/breakdown/model`](breakdown-model.md)       | Usage breakdown by model       |
+| GET    | [`/analytics/breakdown/profile`](breakdown-profile.md)   | Usage breakdown by profile     |
+| GET    | [`/analytics/breakdown/user`](breakdown-user.md)         | Usage breakdown by user        |
 
 ## Base URL
 
@@ -28,25 +28,25 @@ The Analytics API provides aggregated usage statistics derived from audit logs. 
 
 All analytics endpoints support these parameters:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `from` | datetime | Yes | Start of period (inclusive) |
-| `to` | datetime | Yes | End of period (inclusive) |
-| `granularity` | string | No | Data granularity: `hour`, `day`, `week`, `month` |
+| Parameter     | Type     | Required | Description                                      |
+| ------------- | -------- | -------- | ------------------------------------------------ |
+| `from`        | datetime | Yes      | Start of period (inclusive)                      |
+| `to`          | datetime | Yes      | End of period (inclusive)                        |
+| `granularity` | string   | No       | Data granularity: `hour`, `day`, `week`, `month` |
 
 ## Analytics Concepts
 
 ### Summary Metrics
 
-| Metric | Description |
-|--------|-------------|
-| `totalRequests` | Number of AI operations |
-| `inputTokens` | Total tokens in requests |
-| `outputTokens` | Total tokens in responses |
-| `totalTokens` | Combined token count |
-| `successCount` | Successful operations |
-| `failureCount` | Failed operations |
-| `successRate` | Success percentage (0.0-1.0) |
+| Metric              | Description                         |
+| ------------------- | ----------------------------------- |
+| `totalRequests`     | Number of AI operations             |
+| `inputTokens`       | Total tokens in requests            |
+| `outputTokens`      | Total tokens in responses           |
+| `totalTokens`       | Combined token count                |
+| `successCount`      | Successful operations               |
+| `failureCount`      | Failed operations                   |
+| `successRate`       | Success percentage (0.0-1.0)        |
 | `averageDurationMs` | Mean operation time in milliseconds |
 
 ### Time Series
@@ -67,6 +67,7 @@ Breakdowns show how usage is distributed across different dimensions:
 To populate a usage dashboard, you might call multiple endpoints:
 
 {% code title="C#" %}
+
 ```csharp
 var from = DateTime.UtcNow.AddDays(-30);
 var to = DateTime.UtcNow;
@@ -84,9 +85,10 @@ var timeSeries = await httpClient.GetFromJsonAsync<List<AIUsageTimeSeriesPoint>>
 var byProvider = await httpClient.GetFromJsonAsync<List<AIUsageBreakdownItem>>(
     $"/umbraco/ai/management/api/v1/analytics/breakdown/provider?{query}");
 ```
+
 {% endcode %}
 
 ## Related
 
-* [Audit Logs](../audit-logs/README.md) - Raw operation data
-* [Usage Analytics Backoffice](../../backoffice/usage-analytics.md)
+- [Audit Logs](../audit-logs/README.md) - Raw operation data
+- [Usage Analytics Backoffice](../../backoffice/usage-analytics.md)

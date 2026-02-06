@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Title>Umbraco AI Google Provider</Title>
     <Description>Google provider for Umbraco AI</Description>
+    <PackageTags>umbraco ai google gemini umbraco-marketplace</PackageTags>
     <StaticWebAssetBasePath>App_Plugins/UmbracoAIGoogle</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>

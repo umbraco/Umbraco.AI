@@ -18,5 +18,5 @@ export const UaiProviderTypeMapper = {
             capabilities: response.capabilities,
             settingsSchema: UaiCommonTypeMapper.toEditableModelSchemaModel(response.settingsSchema ?? { fields: [] }),
         };
-    }
+    },
 };

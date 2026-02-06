@@ -2,6 +2,7 @@
     <PropertyGroup>
         <Title>Umbraco AI Agent Copilot</Title>
         <Description>Copilot chat UI for Umbraco AI Agent</Description>
+        <PackageTags>umbraco ai agent copilot umbraco-marketplace</PackageTags>
         <StaticWebAssetBasePath>App_Plugins/UmbracoAIAgentCopilot</StaticWebAssetBasePath>
         <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     </PropertyGroup>

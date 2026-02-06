@@ -80,21 +80,21 @@ Tools are registered via the Umbraco extension registry:
 ```typescript
 // Register a frontend tool
 const manifest: ManifestUaiAgentTool = {
-  type: 'uaiAgentTool',
-  alias: 'MyTool',
-  name: 'My Custom Tool',
-  meta: {
-    toolName: 'my_tool',
-    description: 'Does something useful',
-    parameters: {
-      type: 'object',
-      properties: {
-        input: { type: 'string' }
-      }
-    }
-  },
-  api: () => import('./my-tool.api.js'),      // Execution logic
-  element: () => import('./my-tool.element.js') // Custom UI (optional)
+    type: "uaiAgentTool",
+    alias: "MyTool",
+    name: "My Custom Tool",
+    meta: {
+        toolName: "my_tool",
+        description: "Does something useful",
+        parameters: {
+            type: "object",
+            properties: {
+                input: { type: "string" },
+            },
+        },
+    },
+    api: () => import("./my-tool.api.js"), // Execution logic
+    element: () => import("./my-tool.element.js"), // Custom UI (optional)
 };
 ```
 
@@ -105,11 +105,11 @@ HITL approval elements for agent actions:
 ```typescript
 // Register an approval element
 const manifest: ManifestUaiAgentApprovalElement = {
-  type: 'uaiAgentApprovalElement',
-  alias: 'MyApproval',
-  name: 'My Approval Handler',
-  forToolName: 'my_tool',           // Tool this approves
-  element: () => import('./my-approval.element.js')
+    type: "uaiAgentApprovalElement",
+    alias: "MyApproval",
+    name: "My Approval Handler",
+    forToolName: "my_tool", // Tool this approves
+    element: () => import("./my-approval.element.js"),
 };
 ```
 
@@ -129,15 +129,15 @@ The copilot uses AG-UI (Agent UI) protocol for streaming communication:
 
 ```json
 {
-  "peerDependencies": {
-    "@umbraco-ai/core": "^17.0.0",
-    "@umbraco-ai/agent": "^17.0.0",
-    "@umbraco-cms/backoffice": "^17.1.0"
-  },
-  "dependencies": {
-    "@ag-ui/client": "^0.0.42",
-    "rxjs": "^7.8.2"
-  }
+    "peerDependencies": {
+        "@umbraco-ai/core": "^17.0.0",
+        "@umbraco-ai/agent": "^17.0.0",
+        "@umbraco-cms/backoffice": "^17.1.0"
+    },
+    "dependencies": {
+        "@ag-ui/client": "^0.0.42",
+        "rxjs": "^7.8.2"
+    }
 }
 ```
 
@@ -151,23 +151,25 @@ None - this is a frontend-only package. The .csproj is a Razor Class Library tha
 
 ```typescript
 // Import API client and types from agent package
-import { AgentsService } from '@umbraco-ai/agent';
-import type { AGUIRunRequestModel } from '@umbraco-ai/agent';
+import { AgentsService } from "@umbraco-ai/agent";
+import type { AGUIRunRequestModel } from "@umbraco-ai/agent";
 ```
 
 ### Importing from Core Package
 
 ```typescript
 // Import core utilities
-import { someUtil } from '@umbraco-ai/core';
+import { someUtil } from "@umbraco-ai/core";
 ```
 
 ## Build Output
 
 Frontend assets compile to:
+
 - `/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot.js`
 
 The import map in `umbraco-package.json` registers:
+
 - `@umbraco-ai/agent-copilot` -> `/App_Plugins/UmbracoAIAgentCopilot/umbraco-ai-agent-copilot.js`
 
 ## Testing

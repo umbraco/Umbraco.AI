@@ -1,6 +1,6 @@
 ---
 description: >-
-  Model representing an entity version history record.
+    Model representing an entity version history record.
 ---
 
 # AIEntityVersion
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Versioning;
 ## Definition
 
 {% code title="AIEntityVersion" %}
+
 ```csharp
 public class AIEntityVersion
 {
@@ -29,34 +30,36 @@ public class AIEntityVersion
     public string? ChangeDescription { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Version record identifier |
-| `EntityId` | `Guid` | ID of the versioned entity |
-| `EntityType` | `string` | Type discriminator |
-| `Version` | `int` | Sequential version number |
-| `Snapshot` | `string` | JSON serialization of entity state |
-| `DateCreated` | `DateTime` | When this version was created |
-| `CreatedByUserId` | `Guid?` | User who created this version |
-| `ChangeDescription` | `string?` | Optional description of changes |
+| Property            | Type       | Description                        |
+| ------------------- | ---------- | ---------------------------------- |
+| `Id`                | `Guid`     | Version record identifier          |
+| `EntityId`          | `Guid`     | ID of the versioned entity         |
+| `EntityType`        | `string`   | Type discriminator                 |
+| `Version`           | `int`      | Sequential version number          |
+| `Snapshot`          | `string`   | JSON serialization of entity state |
+| `DateCreated`       | `DateTime` | When this version was created      |
+| `CreatedByUserId`   | `Guid?`    | User who created this version      |
+| `ChangeDescription` | `string?`  | Optional description of changes    |
 
 ## Entity Types
 
-| Type String | Entity | Package |
-|-------------|--------|---------|
-| `"connection"` | `AIConnection` | Umbraco.AI |
-| `"profile"` | `AIProfile` | Umbraco.AI |
-| `"context"` | `AIContext` | Umbraco.AI |
-| `"prompt"` | `AIPrompt` | Umbraco.AI.Prompt |
-| `"agent"` | `AIAgent` | Umbraco.AI.Agent |
+| Type String    | Entity         | Package           |
+| -------------- | -------------- | ----------------- |
+| `"connection"` | `AIConnection` | Umbraco.AI        |
+| `"profile"`    | `AIProfile`    | Umbraco.AI        |
+| `"context"`    | `AIContext`    | Umbraco.AI        |
+| `"prompt"`     | `AIPrompt`     | Umbraco.AI.Prompt |
+| `"agent"`      | `AIAgent`      | Umbraco.AI.Agent  |
 
 ## Example
 
 {% code title="Example" %}
+
 ```csharp
 // Getting version history
 var (versions, total) = await _versionService.GetVersionHistoryAsync(
@@ -72,6 +75,7 @@ foreach (var version in versions)
     }
 }
 ```
+
 {% endcode %}
 
 ---
@@ -81,6 +85,7 @@ foreach (var version in versions)
 Result of comparing two entity versions.
 
 {% code title="AIVersionComparison" %}
+
 ```csharp
 public class AIVersionComparison
 {
@@ -95,6 +100,7 @@ public class AIVersionComparison
     public string? ToSnapshot { get; set; }
 }
 ```
+
 {% endcode %}
 
 ---
@@ -104,6 +110,7 @@ public class AIVersionComparison
 Represents a single change between two versions.
 
 {% code title="AIVersionChange" %}
+
 ```csharp
 public class AIVersionChange
 {
@@ -120,6 +127,7 @@ public enum AIVersionChangeType
     Modified = 2
 }
 ```
+
 {% endcode %}
 
 ---
@@ -129,6 +137,7 @@ public enum AIVersionChangeType
 Result of version cleanup operation.
 
 {% code title="AIVersionCleanupResult" %}
+
 ```csharp
 public class AIVersionCleanupResult
 {
@@ -136,6 +145,7 @@ public class AIVersionCleanupResult
     public DateTime? OldestRetained { get; set; }
 }
 ```
+
 {% endcode %}
 
 ---
@@ -145,15 +155,17 @@ public class AIVersionCleanupResult
 Interface implemented by entities that support versioning.
 
 {% code title="IAIVersionableEntity" %}
+
 ```csharp
 public interface IAIVersionableEntity : IAIAuditableEntity
 {
     int Version { get; }
 }
 ```
+
 {% endcode %}
 
 ## Related
 
-* [IAIEntityVersionService](../services/ai-entity-version-service.md) - Version service
-* [Version History Concept](../../concepts/versioning.md) - Versioning concepts
+- [IAIEntityVersionService](../services/ai-entity-version-service.md) - Version service
+- [Version History Concept](../../concepts/versioning.md) - Versioning concepts

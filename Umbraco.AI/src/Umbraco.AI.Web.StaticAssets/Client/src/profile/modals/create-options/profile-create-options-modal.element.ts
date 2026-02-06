@@ -52,7 +52,13 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
             return html`
                 <div class="empty-state">
                     <p>No capabilities available from your connections.</p>
-                    <p>Please <a href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} @click=${() => this.modalContext?.reject()}>create a connection</a> first.</p>
+                    <p>
+                        Please
+                        <a href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} @click=${() => this.modalContext?.reject()}
+                            >create a connection</a
+                        >
+                        first.
+                    </p>
                 </div>
             `;
         }
@@ -70,7 +76,7 @@ export class UaiProfileCreateOptionsModalElement extends UmbModalBaseElement<
                         >
                             <umb-icon slot="icon" name="icon-wand"></umb-icon>
                         </uui-ref-node>
-                    `
+                    `,
                 )}
             </uui-ref-list>
         `;

@@ -14,6 +14,7 @@ Claude Code web runs in a containerized environment that requires JWT-authentica
 ## Solution
 
 We use `px-proxy` as an intermediary proxy that:
+
 1. Accepts unauthenticated connections locally (port 3128)
 2. Forwards requests to the upstream proxy with proper JWT authentication
 3. Allows .NET to work normally by pointing it at the local proxy
@@ -23,6 +24,7 @@ We use `px-proxy` as an intermediary proxy that:
 ### `.claude/scripts/setup-dotnet-proxy.sh`
 
 This script:
+
 1. Detects if running in Claude Code web environment (checks for JWT in proxy URL)
 2. Installs `px-proxy` if not present
 3. Starts px-proxy on port 3128 with upstream auth
@@ -62,6 +64,7 @@ dotnet restore
 ## Local Development
 
 When running locally (not in Claude Code web), the script detects that no JWT proxy is configured and skips the setup entirely. This means:
+
 - Local development works normally without any proxy
 - The script is safe to run in any environment
 - No changes needed for local vs web development
@@ -71,6 +74,7 @@ When running locally (not in Claude Code web), the script detects that no JWT pr
 ### px-proxy fails to start
 
 Check the log file:
+
 ```bash
 cat /tmp/px-proxy.log
 ```
@@ -78,11 +82,13 @@ cat /tmp/px-proxy.log
 ### Still getting 401 errors
 
 Verify px-proxy is running:
+
 ```bash
 pgrep -f "px.*--port=3128"
 ```
 
 Verify the proxy works with curl:
+
 ```bash
 curl --proxy http://127.0.0.1:3128 -I https://api.nuget.org/v3/index.json
 ```

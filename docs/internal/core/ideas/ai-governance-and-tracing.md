@@ -7,10 +7,10 @@ All AI execution, orchestration, and tool usage is therefore already aligned wit
 
 What is missing is a **first-class Umbraco backoffice experience** that:
 
-* makes AI behaviour visible and understandable to editors and administrators,
-* supports governance, auditing, and debugging,
-* works **entirely inside Umbraco by default**, and
-* can later integrate with external observability platforms **without changing the implementation**.
+- makes AI behaviour visible and understandable to editors and administrators,
+- supports governance, auditing, and debugging,
+- works **entirely inside Umbraco by default**, and
+- can later integrate with external observability platforms **without changing the implementation**.
 
 This brief defines a **minimal, high-value scope** for such a capability.
 
@@ -18,11 +18,11 @@ This brief defines a **minimal, high-value scope** for such a capability.
 
 ## Goals
 
-* Surface **AI execution transparency** in the Umbraco 17 backoffice.
-* Provide **auditability and governance** for AI actions performed through Umbraco.AI.
-* Avoid duplicating or competing with Azure Monitor, App Insights, or AI Foundry.
-* Require **no external services** for baseline functionality.
-* Preserve OpenTelemetry correlation so enterprise customers can opt into advanced tooling.
+- Surface **AI execution transparency** in the Umbraco 17 backoffice.
+- Provide **auditability and governance** for AI actions performed through Umbraco.AI.
+- Avoid duplicating or competing with Azure Monitor, App Insights, or AI Foundry.
+- Require **no external services** for baseline functionality.
+- Preserve OpenTelemetry correlation so enterprise customers can opt into advanced tooling.
 
 ---
 
@@ -30,10 +30,10 @@ This brief defines a **minimal, high-value scope** for such a capability.
 
 This initiative does **not** aim to:
 
-* Build a general-purpose distributed tracing system.
-* Recreate Azure Monitor, Application Insights, or Foundry UIs.
-* Store or visualize every OpenTelemetry span or attribute.
-* Provide real-time performance dashboards or cost analytics at cloud scale.
+- Build a general-purpose distributed tracing system.
+- Recreate Azure Monitor, Application Insights, or Foundry UIs.
+- Store or visualize every OpenTelemetry span or attribute.
+- Provide real-time performance dashboards or cost analytics at cloud scale.
 
 The backoffice experience is intentionally **run-centric, governance-oriented, and human-readable**.
 
@@ -43,19 +43,19 @@ The backoffice experience is intentionally **run-centric, governance-oriented, a
 
 ### 1. Existing Foundation (Already in Place)
 
-* Umbraco.AI uses **MEAI** for model abstraction and **MAF** for agentic workflows.
-* AI execution already produces:
+- Umbraco.AI uses **MEAI** for model abstraction and **MAF** for agentic workflows.
+- AI execution already produces:
+    - Trace IDs
+    - Span hierarchies
+    - Tool/model invocation boundaries
 
-  * Trace IDs
-  * Span hierarchies
-  * Tool/model invocation boundaries
-* This foundation is reused without modification.
+- This foundation is reused without modification.
 
 ---
 
 ### 2. Local AI Execution Store (New, Minimal)
 
-Introduce a **local persistence layer** that captures a *curated subset* of AI execution data.
+Introduce a **local persistence layer** that captures a _curated subset_ of AI execution data.
 
 #### Design Principle
 
@@ -71,31 +71,30 @@ One record per AI action initiated from the Umbraco backoffice.
 
 **Data captured**
 
-* **Run identity**
+- **Run identity**
+    - RunId
+    - TraceId
+    - Timestamp, duration
+    - Status (success / failure / cancelled)
 
-  * RunId
-  * TraceId
-  * Timestamp, duration
-  * Status (success / failure / cancelled)
-* **Initiator context**
+- **Initiator context**
+    - Umbraco user
+    - Content/entity reference
+    - Operation type (e.g. summarize, generate, classify)
 
-  * Umbraco user
-  * Content/entity reference
-  * Operation type (e.g. summarize, generate, classify)
-* **Configuration context**
+- **Configuration context**
+    - Model + provider
+    - Agent / prompt version
 
-  * Model + provider
-  * Agent / prompt version
-* **Outcome summary**
-
-  * Token counts (in/out, if available)
-  * Error category + message (if failed)
+- **Outcome summary**
+    - Token counts (in/out, if available)
+    - Error category + message (if failed)
 
 **Why this matters**
 
-* Enables auditing (“who did what with AI, and when”)
-* Enables support and debugging without deep technical tools
-* Supports governance and change tracking
+- Enables auditing (“who did what with AI, and when”)
+- Enables support and debugging without deep technical tools
+- Supports governance and change tracking
 
 This tier alone delivers most of the value.
 
@@ -107,20 +106,20 @@ Captured only when enabled (default: failures only).
 
 **Examples**
 
-* Tool calls (name, duration, success/failure)
-* Model calls (duration, retry count)
-* Exceptions with stack context (summarized)
+- Tool calls (name, duration, success/failure)
+- Model calls (duration, retry count)
+- Exceptions with stack context (summarized)
 
 **Explicit exclusions**
 
-* No attempt to preserve full span trees
-* No arbitrary attribute dumps
-* No long-term high-volume storage
+- No attempt to preserve full span trees
+- No arbitrary attribute dumps
+- No long-term high-volume storage
 
 **Why this matters**
 
-* Allows root-cause analysis of failures
-* Keeps performance and storage predictable
+- Allows root-cause analysis of failures
+- Keeps performance and storage predictable
 
 ---
 
@@ -128,9 +127,9 @@ Captured only when enabled (default: failures only).
 
 ### Extension Model
 
-* Implemented using Umbraco 17’s **Bellissima extension registry**
-* Backed by **custom Management API endpoints**
-* Fully protected by backoffice authentication and authorization
+- Implemented using Umbraco 17’s **Bellissima extension registry**
+- Backed by **custom Management API endpoints**
+- Fully protected by backoffice authentication and authorization
 
 ---
 
@@ -138,54 +137,53 @@ Captured only when enabled (default: failures only).
 
 #### 1. AI Ops Dashboard (Admins)
 
-* Table of recent AI runs
-* Filters: status, user, operation, date
-* Failure highlights
-* Drill-in view per run:
-
-  * Summary
-  * Execution steps (if captured)
-  * TraceId (copy/export)
+- Table of recent AI runs
+- Filters: status, user, operation, date
+- Failure highlights
+- Drill-in view per run:
+    - Summary
+    - Execution steps (if captured)
+    - TraceId (copy/export)
 
 #### 2. AI History on Content (Editors)
 
-* Lightweight panel showing last N AI actions on the current item
-* Status + timestamp + TraceId
-* No deep diagnostics (role-appropriate visibility)
+- Lightweight panel showing last N AI actions on the current item
+- Status + timestamp + TraceId
+- No deep diagnostics (role-appropriate visibility)
 
 #### 3. AI Governance Settings (Admins)
 
-* Retention (days / max runs)
-* Detail level:
+- Retention (days / max runs)
+- Detail level:
+    - Audit only
+    - Failures only
+    - Sampled
 
-  * Audit only
-  * Failures only
-  * Sampled
-* Prompt/response storage toggles
-* Redaction controls
-* Model / provider allowlist
+- Prompt/response storage toggles
+- Redaction controls
+- Model / provider allowlist
 
 ---
 
 ## External Observability (Optional, Complementary)
 
-* Local store remains authoritative for governance.
-* OpenTelemetry correlation remains intact.
-* Enterprise customers may optionally:
+- Local store remains authoritative for governance.
+- OpenTelemetry correlation remains intact.
+- Enterprise customers may optionally:
+    - Export to Azure Application Insights
+    - Link TraceIds to Azure AI Foundry / Monitor
 
-  * Export to Azure Application Insights
-  * Link TraceIds to Azure AI Foundry / Monitor
-* Backoffice UI can conditionally surface “View in external system” links.
+- Backoffice UI can conditionally surface “View in external system” links.
 
 ---
 
 ## Default Configuration (Safe, Conservative)
 
-* Local AI Run records: **Enabled**
-* Execution steps: **Failures only**
-* Retention: **7–14 days**
-* Prompt/response persistence: **Off**
-* External telemetry: **Disabled**
+- Local AI Run records: **Enabled**
+- Execution steps: **Failures only**
+- Retention: **7–14 days**
+- Prompt/response persistence: **Off**
+- External telemetry: **Disabled**
 
 ---
 
@@ -195,6 +193,6 @@ This proposal builds on **existing MEAI + MAF integration in Umbraco.AI** to del
 
 By intentionally limiting scope to **run-level auditing and failure analysis**, the solution:
 
-* adds immediate value to editors and administrators,
-* avoids infrastructure and complexity overhead,
-* and remains compatible with advanced enterprise observability when needed.
+- adds immediate value to editors and administrators,
+- avoids infrastructure and complexity overhead,
+- and remains compatible with advanced enterprise observability when needed.

@@ -37,6 +37,7 @@ Umbraco.AI follows a deliberate architectural principle: **wrap, don't replace**
 Umbraco.AI uses M.E.AI's types directly. When you work with chat messages, you're working with `ChatMessage`. When you receive responses, you get `ChatResponse`. There are no Umbraco-specific equivalents that you need to convert to or from.
 
 This means:
+
 - Documentation and examples for M.E.AI apply directly to Umbraco.AI
 - Libraries built for M.E.AI work with Umbraco.AI
 - Skills you develop transfer outside of Umbraco contexts
@@ -86,6 +87,7 @@ Middleware lets you add cross-cutting concerns (logging, caching, content filter
 ```
 
 Each layer has a clear responsibility:
+
 - **Your application** focuses on what you want AI to do
 - **Umbraco.AI** handles configuration, management, and Umbraco integration
 - **M.E.AI** provides the standard interface for AI operations

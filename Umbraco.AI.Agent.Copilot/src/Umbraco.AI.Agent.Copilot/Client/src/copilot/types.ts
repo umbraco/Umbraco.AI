@@ -7,19 +7,19 @@
 
 // Re-export transport types from @umbraco-ai/agent
 export type {
-  UaiChatMessage,
-  UaiToolCallStatus,
-  UaiToolCallInfo,
-  UaiInterruptInfo,
-  UaiInterruptOption,
-  UaiAgentState,
+    UaiChatMessage,
+    UaiToolCallStatus,
+    UaiToolCallInfo,
+    UaiInterruptInfo,
+    UaiInterruptOption,
+    UaiAgentState,
 } from "@umbraco-ai/agent";
 
 /**
  * Agent item for copilot agent selector.
  */
 export interface UaiCopilotAgentItem {
-  id: string;
-  name: string;
-  alias: string;
+    id: string;
+    name: string;
+    alias: string;
 }

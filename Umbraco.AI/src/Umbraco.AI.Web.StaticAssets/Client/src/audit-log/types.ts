@@ -37,7 +37,7 @@ export interface UaiAuditLogItemModel extends UmbEntityModel {
  */
 export interface UaiAuditLogDetailModel extends UaiAuditLogItemModel {
     endTime: string | null;
-    entityTypeDetail: string | null;  // Renamed to avoid conflict with base type
+    entityTypeDetail: string | null; // Renamed to avoid conflict with base type
     profileId: string;
     profileAlias: string;
     errorCategory: string | null;
@@ -45,7 +45,7 @@ export interface UaiAuditLogDetailModel extends UaiAuditLogItemModel {
     promptSnapshot: string | null;
     responseSnapshot: string | null;
     detailLevel: string;
-    metadata: Array<{ key: string, value?:string | null}> | null;
+    metadata: Array<{ key: string; value?: string | null }> | null;
 }
 
 /**

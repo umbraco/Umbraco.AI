@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for AI chat completions.
+    Service for AI chat completions.
 ---
 
 # IAIChatService
@@ -17,6 +17,7 @@ using Microsoft.Extensions.AI;
 ## Interface
 
 {% code title="IAIChatService" %}
+
 ```csharp
 public interface IAIChatService
 {
@@ -47,6 +48,7 @@ public interface IAIChatService
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Methods
@@ -56,6 +58,7 @@ public interface IAIChatService
 Performs a chat completion and returns the full response.
 
 {% code title="Signature" %}
+
 ```csharp
 Task<ChatResponse> GetChatResponseAsync(
     IEnumerable<ChatMessage> messages,
@@ -68,18 +71,20 @@ Task<ChatResponse> GetChatResponseAsync(
     ChatOptions? options = null,
     CancellationToken cancellationToken = default);
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `profileId` | `Guid` | (Optional) Profile ID. Uses default if omitted. |
-| `messages` | `IEnumerable<ChatMessage>` | The conversation messages |
-| `options` | `ChatOptions?` | Options to override profile defaults |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                       | Description                                     |
+| ------------------- | -------------------------- | ----------------------------------------------- |
+| `profileId`         | `Guid`                     | (Optional) Profile ID. Uses default if omitted. |
+| `messages`          | `IEnumerable<ChatMessage>` | The conversation messages                       |
+| `options`           | `ChatOptions?`             | Options to override profile defaults            |
+| `cancellationToken` | `CancellationToken`        | Cancellation token                              |
 
 **Returns**: `ChatResponse` with the assistant's message, usage stats, and finish reason.
 
 {% code title="Example" %}
+
 ```csharp
 var messages = new[]
 {
@@ -92,6 +97,7 @@ var response = await _chatService.GetChatResponseAsync(messages);
 Console.WriteLine(response.Message.Text);
 Console.WriteLine($"Tokens: {response.Usage?.TotalTokenCount}");
 ```
+
 {% endcode %}
 
 ### GetStreamingChatResponseAsync
@@ -99,6 +105,7 @@ Console.WriteLine($"Tokens: {response.Usage?.TotalTokenCount}");
 Performs a streaming chat completion, yielding updates as they arrive.
 
 {% code title="Signature" %}
+
 ```csharp
 IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
     IEnumerable<ChatMessage> messages,
@@ -111,18 +118,20 @@ IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
     ChatOptions? options = null,
     CancellationToken cancellationToken = default);
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `profileId` | `Guid` | (Optional) Profile ID. Uses default if omitted. |
-| `messages` | `IEnumerable<ChatMessage>` | The conversation messages |
-| `options` | `ChatOptions?` | Options to override profile defaults |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                       | Description                                     |
+| ------------------- | -------------------------- | ----------------------------------------------- |
+| `profileId`         | `Guid`                     | (Optional) Profile ID. Uses default if omitted. |
+| `messages`          | `IEnumerable<ChatMessage>` | The conversation messages                       |
+| `options`           | `ChatOptions?`             | Options to override profile defaults            |
+| `cancellationToken` | `CancellationToken`        | Cancellation token                              |
 
 **Returns**: `IAsyncEnumerable<ChatResponseUpdate>` yielding content chunks.
 
 {% code title="Example" %}
+
 ```csharp
 var messages = new[]
 {
@@ -134,6 +143,7 @@ await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages
     Console.Write(update.Text);
 }
 ```
+
 {% endcode %}
 
 ### GetChatClientAsync
@@ -141,21 +151,24 @@ await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages
 Gets a configured `IChatClient` for advanced scenarios.
 
 {% code title="Signature" %}
+
 ```csharp
 Task<IChatClient> GetChatClientAsync(
     Guid? profileId = null,
     CancellationToken cancellationToken = default);
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `profileId` | `Guid?` | Profile ID. Uses default if null. |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description                       |
+| ------------------- | ------------------- | --------------------------------- |
+| `profileId`         | `Guid?`             | Profile ID. Uses default if null. |
+| `cancellationToken` | `CancellationToken` | Cancellation token                |
 
 **Returns**: Configured `IChatClient` with middleware applied.
 
 {% code title="Example" %}
+
 ```csharp
 // Get client for advanced usage
 var client = await _chatService.GetChatClientAsync();
@@ -165,6 +178,7 @@ var response = await client.GetChatResponseAsync(
     messages,
     new ChatOptions { Temperature = 0.5f });
 ```
+
 {% endcode %}
 
 ## ChatOptions
@@ -172,6 +186,7 @@ var response = await client.GetChatResponseAsync(
 Profile settings can be overridden via `ChatOptions`:
 
 {% code title="ChatOptions" %}
+
 ```csharp
 var options = new ChatOptions
 {
@@ -182,6 +197,7 @@ var options = new ChatOptions
 
 var response = await _chatService.GetChatResponseAsync(messages, options);
 ```
+
 {% endcode %}
 
 ## Related Types

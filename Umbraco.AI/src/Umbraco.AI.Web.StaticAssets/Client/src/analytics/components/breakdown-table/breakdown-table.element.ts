@@ -1,17 +1,16 @@
 import { css, html, customElement, property } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import type { UsageBreakdownItemModel } from '../../../api/types.gen.js';
+import type { UsageBreakdownItemModel } from "../../../api/types.gen.js";
 
 @customElement("uai-analytics-breakdown-table")
 export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
-
     @property({ type: String })
-    headline = '';
+    headline = "";
 
     @property({ type: Array })
     data?: UsageBreakdownItemModel[];
-    
+
     @property({ type: Function })
     nameTemplate: (name: string) => unknown = (name: string) => name;
 
@@ -41,14 +40,24 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
                         <uui-table-head-cell style="text-align: right;">Tokens</uui-table-head-cell>
                         <uui-table-head-cell style="text-align: right;">Share</uui-table-head-cell>
                     </uui-table-head>
-                    ${this.data.map(item => html`
-                        <uui-table-row>
-                            <uui-table-cell>${item.dimensionName ?? this.nameTemplate(item.dimension)}</uui-table-cell>
-                            <uui-table-cell style="text-align: right;">${this._formatNumber(item.requestCount)}</uui-table-cell>
-                            <uui-table-cell style="text-align: right;">${this._formatNumber(item.totalTokens)}</uui-table-cell>
-                            <uui-table-cell style="text-align: right;">${this._formatPercentage(item.percentage / 100)}</uui-table-cell>
-                        </uui-table-row>
-                    `)}
+                    ${this.data.map(
+                        (item) => html`
+                            <uui-table-row>
+                                <uui-table-cell
+                                    >${item.dimensionName ?? this.nameTemplate(item.dimension)}</uui-table-cell
+                                >
+                                <uui-table-cell style="text-align: right;"
+                                    >${this._formatNumber(item.requestCount)}</uui-table-cell
+                                >
+                                <uui-table-cell style="text-align: right;"
+                                    >${this._formatNumber(item.totalTokens)}</uui-table-cell
+                                >
+                                <uui-table-cell style="text-align: right;"
+                                    >${this._formatPercentage(item.percentage / 100)}</uui-table-cell
+                                >
+                            </uui-table-row>
+                        `,
+                    )}
                 </uui-table>
             </uui-box>
         `;
@@ -81,7 +90,7 @@ export class UaiAnalyticsBreakdownTableElement extends UmbLitElement {
             uui-table-head-cell {
                 padding-top: 0;
             }
-            
+
             uui-box {
                 height: 100%;
             }

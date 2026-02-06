@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for generating text embeddings.
+    Service for generating text embeddings.
 ---
 
 # IAIEmbeddingService
@@ -17,6 +17,7 @@ using Microsoft.Extensions.AI;
 ## Interface
 
 {% code title="IAIEmbeddingService" %}
+
 ```csharp
 public interface IAIEmbeddingService
 {
@@ -47,6 +48,7 @@ public interface IAIEmbeddingService
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Methods
@@ -56,6 +58,7 @@ public interface IAIEmbeddingService
 Generates an embedding for a single text value.
 
 {% code title="Signature" %}
+
 ```csharp
 Task<Embedding<float>> GenerateEmbeddingAsync(
     string value,
@@ -68,18 +71,20 @@ Task<Embedding<float>> GenerateEmbeddingAsync(
     EmbeddingGenerationOptions? options = null,
     CancellationToken cancellationToken = default);
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `profileId` | `Guid` | (Optional) Profile ID. Uses default if omitted. |
-| `value` | `string` | The text to embed |
-| `options` | `EmbeddingGenerationOptions?` | Generation options |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                          | Description                                     |
+| ------------------- | ----------------------------- | ----------------------------------------------- |
+| `profileId`         | `Guid`                        | (Optional) Profile ID. Uses default if omitted. |
+| `value`             | `string`                      | The text to embed                               |
+| `options`           | `EmbeddingGenerationOptions?` | Generation options                              |
+| `cancellationToken` | `CancellationToken`           | Cancellation token                              |
 
 **Returns**: `Embedding<float>` containing the vector representation.
 
 {% code title="Example" %}
+
 ```csharp
 var embedding = await _embeddingService.GenerateEmbeddingAsync(
     "Umbraco is a content management system.");
@@ -88,6 +93,7 @@ var embedding = await _embeddingService.GenerateEmbeddingAsync(
 float[] vector = embedding.Vector.ToArray();
 Console.WriteLine($"Dimensions: {vector.Length}");
 ```
+
 {% endcode %}
 
 ### GenerateEmbeddingsAsync
@@ -95,6 +101,7 @@ Console.WriteLine($"Dimensions: {vector.Length}");
 Generates embeddings for multiple text values in a batch.
 
 {% code title="Signature" %}
+
 ```csharp
 Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
     IEnumerable<string> values,
@@ -107,18 +114,20 @@ Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
     EmbeddingGenerationOptions? options = null,
     CancellationToken cancellationToken = default);
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `profileId` | `Guid` | (Optional) Profile ID. Uses default if omitted. |
-| `values` | `IEnumerable<string>` | The texts to embed |
-| `options` | `EmbeddingGenerationOptions?` | Generation options |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                          | Description                                     |
+| ------------------- | ----------------------------- | ----------------------------------------------- |
+| `profileId`         | `Guid`                        | (Optional) Profile ID. Uses default if omitted. |
+| `values`            | `IEnumerable<string>`         | The texts to embed                              |
+| `options`           | `EmbeddingGenerationOptions?` | Generation options                              |
+| `cancellationToken` | `CancellationToken`           | Cancellation token                              |
 
 **Returns**: `GeneratedEmbeddings<Embedding<float>>` containing embeddings for each input.
 
 {% code title="Example" %}
+
 ```csharp
 var texts = new[]
 {
@@ -139,6 +148,7 @@ for (int i = 0; i < embeddings.Count; i++)
     Console.WriteLine($"Document {i}: {vector.Length} dimensions");
 }
 ```
+
 {% endcode %}
 
 ### GetEmbeddingGeneratorAsync
@@ -146,21 +156,24 @@ for (int i = 0; i < embeddings.Count; i++)
 Gets a configured `IEmbeddingGenerator` for advanced scenarios.
 
 {% code title="Signature" %}
+
 ```csharp
 Task<IEmbeddingGenerator<string, Embedding<float>>> GetEmbeddingGeneratorAsync(
     Guid? profileId = null,
     CancellationToken cancellationToken = default);
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `profileId` | `Guid?` | Profile ID. Uses default if null. |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description                       |
+| ------------------- | ------------------- | --------------------------------- |
+| `profileId`         | `Guid?`             | Profile ID. Uses default if null. |
+| `cancellationToken` | `CancellationToken` | Cancellation token                |
 
 **Returns**: Configured `IEmbeddingGenerator` with middleware applied.
 
 {% code title="Example" %}
+
 ```csharp
 // Get generator for advanced usage
 var generator = await _embeddingService.GetEmbeddingGeneratorAsync();
@@ -170,6 +183,7 @@ var embeddings = await generator.GenerateAsync(
     new[] { "text1", "text2" },
     new EmbeddingGenerationOptions { ModelId = "text-embedding-3-large" });
 ```
+
 {% endcode %}
 
 ## Use Cases
@@ -177,6 +191,7 @@ var embeddings = await generator.GenerateAsync(
 ### Semantic Search
 
 {% code title="Semantic Search" %}
+
 ```csharp
 public async Task<List<Document>> SearchAsync(string query, IEnumerable<Document> documents)
 {
@@ -213,6 +228,7 @@ private static float CosineSimilarity(ReadOnlyMemory<float> a, float[] b)
     return dot / (MathF.Sqrt(normA) * MathF.Sqrt(normB));
 }
 ```
+
 {% endcode %}
 
 ## Related Types

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Create and manage AI contexts in the Umbraco backoffice.
+    Create and manage AI contexts in the Umbraco backoffice.
 ---
 
 # Managing Contexts
@@ -18,10 +18,10 @@ AI Contexts allow you to define reusable content collections like brand voice gu
 1. Click **Create Context** in the toolbar
 2. Fill in the required fields:
 
-| Field | Description |
-|-------|-------------|
+| Field | Description                                                 |
+| ----- | ----------------------------------------------------------- |
 | Alias | Unique identifier for code references (URL-safe, no spaces) |
-| Name | Display name shown in the backoffice |
+| Name  | Display name shown in the backoffice                        |
 
 3. Click **Create**
 
@@ -32,22 +32,22 @@ Contexts contain one or more resources. Each resource represents a piece of cont
 1. In the context editor, click **Add Resource**
 2. Configure the resource:
 
-| Field | Description |
-|-------|-------------|
-| Type | The type of resource (e.g., Text) |
-| Name | Display name for organization |
-| Description | Optional description |
-| Content | The actual content to inject |
+| Field          | Description                         |
+| -------------- | ----------------------------------- |
+| Type           | The type of resource (e.g., Text)   |
+| Name           | Display name for organization       |
+| Description    | Optional description                |
+| Content        | The actual content to inject        |
 | Injection Mode | When to inject: Always or On Demand |
 
 3. Click **Add**
 
 ### Resource Types
 
-| Type | Use Case |
-|------|----------|
-| **Text** | Plain text content like guidelines or terminology |
-| **Document** | Structured content with metadata |
+| Type         | Use Case                                          |
+| ------------ | ------------------------------------------------- |
+| **Text**     | Plain text content like guidelines or terminology |
+| **Document** | Structured content with metadata                  |
 
 ### Reordering Resources
 
@@ -88,30 +88,32 @@ A typical brand voice context might include:
 **Resources**:
 
 1. **Tone of Voice** (Always)
-   ```
-   Our brand voice is:
-   - Friendly and approachable
-   - Professional but not stuffy
-   - Clear and jargon-free
-   - Empowering and positive
-   ```
+
+    ```
+    Our brand voice is:
+    - Friendly and approachable
+    - Professional but not stuffy
+    - Clear and jargon-free
+    - Empowering and positive
+    ```
 
 2. **Writing Style** (Always)
-   ```
-   Writing guidelines:
-   - Use active voice
-   - Keep sentences short
-   - Address the reader as "you"
-   - Avoid technical jargon
-   ```
+
+    ```
+    Writing guidelines:
+    - Use active voice
+    - Keep sentences short
+    - Address the reader as "you"
+    - Avoid technical jargon
+    ```
 
 3. **Terminology** (Always)
-   ```
-   Preferred terms:
-   - Use "customers" not "users"
-   - Use "help" not "assist"
-   - Use "simple" not "easy"
-   ```
+    ```
+    Preferred terms:
+    - Use "customers" not "users"
+    - Use "help" not "assist"
+    - Use "simple" not "easy"
+    ```
 
 ## Using Contexts
 
@@ -136,5 +138,5 @@ See [Version History](version-history.md) for information on viewing and restori
 
 ## Related
 
-* [Contexts Concept](../concepts/contexts.md) - Understanding contexts
-* [Version History](version-history.md) - Tracking changes
+- [Contexts Concept](../concepts/contexts.md) - Understanding contexts
+- [Version History](version-history.md) - Tracking changes

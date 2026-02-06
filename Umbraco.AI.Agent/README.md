@@ -30,15 +30,15 @@ dotnet add package Umbraco.AI.Agent.Copilot
 
 This meta-package includes all required components. For more control, install individual packages:
 
-| Package | Description |
-|---------|-------------|
-| `Umbraco.AI.Agent.Core` | Domain models and service interfaces |
-| `Umbraco.AI.Agent.Web` | Management API controllers |
-| `Umbraco.AI.Agent.Web.StaticAssets` | Backoffice UI components |
-| `Umbraco.AI.Agent.Persistence` | EF Core persistence |
-| `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations |
-| `Umbraco.AI.Agent.Persistence.Sqlite` | SQLite migrations |
-| `Umbraco.AI.AGUI` | AG-UI protocol SDK |
+| Package                                  | Description                          |
+| ---------------------------------------- | ------------------------------------ |
+| `Umbraco.AI.Agent.Core`                  | Domain models and service interfaces |
+| `Umbraco.AI.Agent.Web`                   | Management API controllers           |
+| `Umbraco.AI.Agent.Web.StaticAssets`      | Backoffice UI components             |
+| `Umbraco.AI.Agent.Persistence`           | EF Core persistence                  |
+| `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations                |
+| `Umbraco.AI.Agent.Persistence.Sqlite`    | SQLite migrations                    |
+| `Umbraco.AI.AGUI`                        | AG-UI protocol SDK                   |
 
 ## Requirements
 
@@ -50,29 +50,29 @@ This meta-package includes all required components. For more control, install in
 
 An `AIAgent` represents a stored agent definition:
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Unique identifier (GUID) |
-| `Alias` | URL-safe unique identifier |
-| `Name` | Display name |
-| `Description` | Optional description |
-| `ProfileId` | Umbraco.AI profile for model configuration |
-| `ContextIds` | Context sources for RAG injection |
+| Property       | Description                                 |
+| -------------- | ------------------------------------------- |
+| `Id`           | Unique identifier (GUID)                    |
+| `Alias`        | URL-safe unique identifier                  |
+| `Name`         | Display name                                |
+| `Description`  | Optional description                        |
+| `ProfileId`    | Umbraco.AI profile for model configuration  |
+| `ContextIds`   | Context sources for RAG injection           |
 | `Instructions` | System instructions defining agent behavior |
-| `IsActive` | Whether the agent is available for use |
+| `IsActive`     | Whether the agent is available for use      |
 
 ## Management API
 
 All endpoints are under `/umbraco/ai/management/api/v1/agents/`:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | List all agents (paged) |
-| GET | `/{idOrAlias}` | Get agent by ID or alias |
-| POST | `/` | Create agent |
-| PUT | `/{idOrAlias}` | Update agent |
-| DELETE | `/{idOrAlias}` | Delete agent |
-| POST | `/{idOrAlias}/run` | Run agent with AG-UI streaming |
+| Method | Endpoint           | Description                    |
+| ------ | ------------------ | ------------------------------ |
+| GET    | `/`                | List all agents (paged)        |
+| GET    | `/{idOrAlias}`     | Get agent by ID or alias       |
+| POST   | `/`                | Create agent                   |
+| PUT    | `/{idOrAlias}`     | Update agent                   |
+| DELETE | `/{idOrAlias}`     | Delete agent                   |
+| POST   | `/{idOrAlias}/run` | Run agent with AG-UI streaming |
 
 The `{idOrAlias}` parameter accepts either a GUID or a string alias.
 

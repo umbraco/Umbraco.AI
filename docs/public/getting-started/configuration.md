@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configure default profiles and provider settings for Umbraco.AI.
+    Configure default profiles and provider settings for Umbraco.AI.
 ---
 
 # Configuration
@@ -25,6 +25,7 @@ See [Managing Settings](../backoffice/managing-settings.md) for detailed instruc
 When you call `IAIChatService.GetChatResponseAsync()` without specifying a profile ID, the service uses the default profile configured in settings.
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Uses the default chat profile configured in Settings
 var response = await _chatService.GetChatResponseAsync(messages);
@@ -32,6 +33,7 @@ var response = await _chatService.GetChatResponseAsync(messages);
 // Or explicitly specify a profile
 var response = await _chatService.GetChatResponseAsync(profileId, messages);
 ```
+
 {% endcode %}
 
 {% hint style="warning" %}
@@ -43,13 +45,15 @@ If you call a method without specifying a profile and no default is configured, 
 Some providers support reading API keys from configuration. Values prefixed with `$` in connection settings are resolved from configuration.
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "OpenAI": {
-    "ApiKey": "sk-..."
-  }
+    "OpenAI": {
+        "ApiKey": "sk-..."
+    }
 }
 ```
+
 {% endcode %}
 
 When creating a connection in the backoffice, you can enter `$OpenAI:ApiKey` as the API key value. This resolves to the actual key from configuration at runtime.
@@ -62,16 +66,17 @@ Using configuration references keeps sensitive values out of the database and al
 
 Use standard .NET configuration patterns for environment-specific settings:
 
-* `appsettings.Development.json` - Development settings
-* `appsettings.Production.json` - Production settings
-* Environment variables
-* User secrets (for local development)
+- `appsettings.Development.json` - Development settings
+- `appsettings.Production.json` - Production settings
+- Environment variables
+- User secrets (for local development)
 
 ## Programmatic Settings
 
 You can also configure default profiles programmatically:
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class SettingsExample
 {
@@ -90,6 +95,7 @@ public class SettingsExample
     }
 }
 ```
+
 {% endcode %}
 
 ## Next Steps

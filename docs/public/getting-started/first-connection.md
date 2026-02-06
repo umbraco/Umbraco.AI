@@ -1,6 +1,6 @@
 ---
 description: >-
-  Create your first AI connection to start using AI services in Umbraco.
+    Create your first AI connection to start using AI services in Umbraco.
 ---
 
 # Your First Connection
@@ -9,8 +9,8 @@ A connection stores the credentials and settings needed to communicate with an A
 
 ## Prerequisites
 
-* Umbraco.AI and a provider package installed
-* An API key from your AI provider
+- Umbraco.AI and a provider package installed
+- An API key from your AI provider
 
 ## Create a Connection
 
@@ -23,12 +23,12 @@ A connection stores the credentials and settings needed to communicate with an A
 
 Fill in the connection details:
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| **Name** | A display name for this connection | "OpenAI Production" |
-| **Alias** | A unique identifier for programmatic access | "openai-prod" |
-| **Provider** | The AI provider to use | "OpenAI" |
-| **API Key** | Your provider API key | "sk-..." or "$OpenAI:ApiKey" |
+| Field        | Description                                 | Example                      |
+| ------------ | ------------------------------------------- | ---------------------------- |
+| **Name**     | A display name for this connection          | "OpenAI Production"          |
+| **Alias**    | A unique identifier for programmatic access | "openai-prod"                |
+| **Provider** | The AI provider to use                      | "OpenAI"                     |
+| **API Key**  | Your provider API key                       | "sk-..." or "$OpenAI:ApiKey" |
 
 {% hint style="info" %}
 Use a configuration reference like `$OpenAI:ApiKey` to read the API key from `appsettings.json` instead of storing it in the database.
@@ -38,22 +38,22 @@ Use a configuration reference like `$OpenAI:ApiKey` to read the API key from `ap
 
 Each connection has the following properties:
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Unique GUID identifier |
-| `Alias` | Unique string alias for lookups |
-| `Name` | Display name |
-| `ProviderId` | Which provider this connection uses |
-| `Settings` | Provider-specific settings (API key, endpoint, and so on) |
-| `IsActive` | Whether the connection is enabled |
+| Property     | Description                                               |
+| ------------ | --------------------------------------------------------- |
+| `Id`         | Unique GUID identifier                                    |
+| `Alias`      | Unique string alias for lookups                           |
+| `Name`       | Display name                                              |
+| `ProviderId` | Which provider this connection uses                       |
+| `Settings`   | Provider-specific settings (API key, endpoint, and so on) |
+| `IsActive`   | Whether the connection is enabled                         |
 
 ## Multiple Connections
 
 You can create multiple connections to:
 
-* Separate development and production environments
-* Use different API keys for different teams or projects
-* Connect to multiple AI providers
+- Separate development and production environments
+- Use different API keys for different teams or projects
+- Connect to multiple AI providers
 
 ## Next Steps
 

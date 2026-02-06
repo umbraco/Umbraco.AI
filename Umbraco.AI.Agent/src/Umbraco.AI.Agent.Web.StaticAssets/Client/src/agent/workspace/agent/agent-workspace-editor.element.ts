@@ -50,12 +50,10 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name, alias }, "name-alias")
+                new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name, alias }, "name-alias"),
             );
         } else {
-            this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name }, "name")
-            );
+            this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name }, "name"));
         }
     }
 
@@ -63,7 +61,7 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ alias: target.value.toString() }, "alias")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ alias: target.value.toString() }, "alias"),
         );
     }
 
@@ -80,7 +78,7 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
 
     #onActiveChange(e: CustomEvent<{ value: boolean }>) {
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ isActive: e.detail.value }, "isActive")
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ isActive: e.detail.value }, "isActive"),
         );
     }
 
@@ -90,11 +88,7 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
         return html`
             <umb-workspace-editor alias="${UAI_AGENT_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_AGENT_ROOT_WORKSPACE_PATH}
-                        label="Back to Agents"
-                        compact
-                    >
+                    <uui-button href=${UAI_AGENT_ROOT_WORKSPACE_PATH} label="Back to Agents" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -103,6 +97,7 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
                         @input="${this.#onNameChange}"
                         label="Name"
                         placeholder="Enter agent name"
+                        required
                     >
                         <uui-input-lock
                             slot="append"
@@ -126,7 +121,8 @@ export class UaiAgentWorkspaceEditorElement extends UmbLitElement {
 
                 ${when(
                     !this._isNew && this._model,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
                 )}
 
                 <div slot="footer-info" id="footer">

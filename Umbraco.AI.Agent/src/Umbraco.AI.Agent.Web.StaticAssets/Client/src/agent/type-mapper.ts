@@ -20,7 +20,7 @@ export const UaiAgentTypeMapper = {
             scopeIds: response.scopeIds ?? [],
             allowedToolIds: response.allowedToolIds ?? [],
             allowedToolScopeIds: response.allowedToolScopeIds ?? [],
-            userGroupPermissions: response.userGroupPermissions ?? {},
+            userGroupPermissions: (response as any).userGroupPermissions ?? {},
             instructions: response.instructions ?? null,
             isActive: response.isActive,
             dateCreated: response.dateCreated,
@@ -59,7 +59,7 @@ export const UaiAgentTypeMapper = {
             allowedToolScopeIds: model.allowedToolScopeIds,
             userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
-        };
+        } as CreateAgentRequestModel;
     },
 
     toUpdateRequest(model: UaiAgentDetailModel): UpdateAgentRequestModel {
@@ -75,6 +75,6 @@ export const UaiAgentTypeMapper = {
             userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
             isActive: model.isActive,
-        };
+        } as UpdateAgentRequestModel;
     },
 };

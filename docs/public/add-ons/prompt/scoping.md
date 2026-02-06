@@ -1,6 +1,6 @@
 ---
 description: >-
-  Control which content types can use each prompt.
+    Control which content types can use each prompt.
 ---
 
 # Prompt Scoping
@@ -9,11 +9,11 @@ Scoping allows you to control which content types can use a prompt. This helps o
 
 ## Scope Modes
 
-| Mode | Description |
-|------|-------------|
-| **None** | Any content type can use the prompt (default) |
+| Mode      | Description                                     |
+| --------- | ----------------------------------------------- |
+| **None**  | Any content type can use the prompt (default)   |
 | **Allow** | Only specified content types can use the prompt |
-| **Deny** | All content types except those specified |
+| **Deny**  | All content types except those specified        |
 
 ## Configuring Scope
 
@@ -28,6 +28,7 @@ Scoping allows you to control which content types can use a prompt. This helps o
 ### Via Code
 
 {% code title="Example.cs" %}
+
 ```csharp
 var prompt = new AIPrompt
 {
@@ -43,27 +44,31 @@ var prompt = new AIPrompt
 
 await _promptService.SavePromptAsync(prompt);
 ```
+
 {% endcode %}
 
 ### Via API
 
 {% code title="Request" %}
+
 ```json
 {
-  "alias": "product-description",
-  "name": "Product Description",
-  "instructions": "Write a product description...",
-  "scope": {
-    "mode": "Allow",
-    "contentTypeAliases": ["product", "productVariant"]
-  }
+    "alias": "product-description",
+    "name": "Product Description",
+    "instructions": "Write a product description...",
+    "scope": {
+        "mode": "Allow",
+        "contentTypeAliases": ["product", "productVariant"]
+    }
 }
 ```
+
 {% endcode %}
 
 ## Scope Model
 
 {% code title="AIPromptScope" %}
+
 ```csharp
 public class AIPromptScope
 {
@@ -78,6 +83,7 @@ public enum AIPromptScopeMode
     Deny = 2    // All except specified types
 }
 ```
+
 {% endcode %}
 
 ## Use Cases
@@ -86,20 +92,20 @@ public enum AIPromptScopeMode
 
 Create prompts specific to content types:
 
-| Prompt | Scope Mode | Content Types |
-|--------|------------|---------------|
-| Product Description | Allow | `product` |
-| Blog Summary | Allow | `blogPost`, `article` |
-| Press Release | Allow | `pressRelease` |
-| Generic Rewrite | None | (all types) |
+| Prompt              | Scope Mode | Content Types         |
+| ------------------- | ---------- | --------------------- |
+| Product Description | Allow      | `product`             |
+| Blog Summary        | Allow      | `blogPost`, `article` |
+| Press Release       | Allow      | `pressRelease`        |
+| Generic Rewrite     | None       | (all types)           |
 
 ### Excluding Types
 
 Prevent certain prompts from being used on sensitive content:
 
-| Prompt | Scope Mode | Content Types |
-|--------|------------|---------------|
-| Auto-Generate | Deny | `legalNotice`, `termsOfService` |
+| Prompt        | Scope Mode | Content Types                   |
+| ------------- | ---------- | ------------------------------- |
+| Auto-Generate | Deny       | `legalNotice`, `termsOfService` |
 
 ## Enforcement
 
@@ -120,6 +126,7 @@ Scoping is enforced in the backoffice UI but **not** when executing prompts via 
 - Implement your own checks if needed:
 
 {% code title="Example.cs" %}
+
 ```csharp
 public async Task<string?> ExecuteWithScopeCheckAsync(
     Guid promptId,
@@ -140,9 +147,10 @@ public async Task<string?> ExecuteWithScopeCheckAsync(
     return result.Response;
 }
 ```
+
 {% endcode %}
 
 ## Related
 
-* [Concepts](concepts.md) - Prompt fundamentals
-* [Template Syntax](template-syntax.md) - Variable interpolation
+- [Concepts](concepts.md) - Prompt fundamentals
+- [Template Syntax](template-syntax.md) - Variable interpolation

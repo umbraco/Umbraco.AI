@@ -39,34 +39,34 @@ This prevents any direct reuse via NuGet reference. We cannot inherit, extend, o
 
 **Related Issue:** [microsoft/agent-framework#2988](https://github.com/microsoft/agent-framework/issues/2988) - ".NET: Support dynamic agent resolution in AG-UI endpoints (MapAGUI with factory delegate)"
 
-| Field | Value |
-|-------|-------|
-| Status | Open |
-| Author | mattbrailsford (Umbraco) |
-| Assignee | javiercn (Microsoft) |
-| Created | 2025-12-20 |
-| Reactions | 6 thumbs up |
+| Field     | Value                    |
+| --------- | ------------------------ |
+| Status    | Open                     |
+| Author    | mattbrailsford (Umbraco) |
+| Assignee  | javiercn (Microsoft)     |
+| Created   | 2025-12-20               |
+| Reactions | 6 thumbs up              |
 
 We filed this issue to request the changes needed for our use case. The issue documents our specific requirements:
 
 1. **Dynamic agent resolution** - `MapAGUI` only accepts a pre-created `AIAgent` instance, but Umbraco needs to resolve agents by ID/alias from a database at request time (e.g., `POST /agents/{agentId}/stream`)
 2. **Public types** - `RunAgentInput` and `AGUIServerSentEventsResult` are `internal`, preventing custom endpoint implementations
 
-The issue explicitly states: *"This forces consumers to reimplement AG-UI request/response handling"* - which is exactly what we've done.
+The issue explicitly states: _"This forces consumers to reimplement AG-UI request/response handling"_ - which is exactly what we've done.
 
 While the issue is assigned, it remains unresolved. This validates our decision to implement our own library rather than wait for upstream changes.
 
 ### 2. Umbraco Requires Features Microsoft Doesn't Provide
 
-| Feature | Microsoft | Umbraco | Purpose |
-|---------|-----------|---------|---------|
-| Frontend Tool Interception | No | Yes | Intercepts tool calls to terminate agent loop and delegate execution to frontend |
-| HITL Interrupts | No | Yes | Human-in-the-loop workflow with `AGUIInterruptInfo` and `AGUIResumeInfo` |
-| Chunk Events | No | Yes | `TextMessageChunkEvent`, `ToolCallChunkEvent` - simpler than START/CONTENT/END triplets |
-| Activity Events | No | Yes | `ActivitySnapshotEvent`, `ActivityDeltaEvent` for frontend-only UI state |
-| Messages Snapshot | No | Yes | `MessagesSnapshotEvent` for full message history synchronization |
-| Custom/Raw Events | No | Yes | `CustomEvent`, `RawEvent` for extensibility |
-| Outcome Enum | No | Yes | Clear run result indication (Success, Error, Interrupt) |
+| Feature                    | Microsoft | Umbraco | Purpose                                                                                 |
+| -------------------------- | --------- | ------- | --------------------------------------------------------------------------------------- |
+| Frontend Tool Interception | No        | Yes     | Intercepts tool calls to terminate agent loop and delegate execution to frontend        |
+| HITL Interrupts            | No        | Yes     | Human-in-the-loop workflow with `AGUIInterruptInfo` and `AGUIResumeInfo`                |
+| Chunk Events               | No        | Yes     | `TextMessageChunkEvent`, `ToolCallChunkEvent` - simpler than START/CONTENT/END triplets |
+| Activity Events            | No        | Yes     | `ActivitySnapshotEvent`, `ActivityDeltaEvent` for frontend-only UI state                |
+| Messages Snapshot          | No        | Yes     | `MessagesSnapshotEvent` for full message history synchronization                        |
+| Custom/Raw Events          | No        | Yes     | `CustomEvent`, `RawEvent` for extensibility                                             |
+| Outcome Enum               | No        | Yes     | Clear run result indication (Success, Error, Interrupt)                                 |
 
 These features are core to Umbraco's agent architecture and cannot be added without control over the implementation.
 
@@ -96,11 +96,11 @@ Umbraco.AI.Agent.Web (HTTP Layer)
 
 While we can't reuse their types, we adopted valuable architectural patterns:
 
-| Pattern | Description | Adopted |
-|---------|-------------|---------|
-| Direct streaming | No `Task.Run()`, preserves `AsyncLocal` context | Yes |
-| Builder pattern | Centralized event emission via `AGUIEventEmitter` | Yes |
-| Thin controller | Controller as routing layer, logic in services | Yes |
+| Pattern          | Description                                       | Adopted |
+| ---------------- | ------------------------------------------------- | ------- |
+| Direct streaming | No `Task.Run()`, preserves `AsyncLocal` context   | Yes     |
+| Builder pattern  | Centralized event emission via `AGUIEventEmitter` | Yes     |
+| Thin controller  | Controller as routing layer, logic in services    | Yes     |
 
 ## Consequences
 

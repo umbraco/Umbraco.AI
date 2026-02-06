@@ -7,13 +7,13 @@ import type { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension
  * specify a custom element (Generative UI).
  */
 export const UAI_AGENT_TOOL_DEFAULT_KIND_MANIFEST: UmbExtensionManifestKind = {
-  type: "kind",
-  alias: "Uai.Kind.AgentTool.Default",
-  matchKind: "default",
-  matchType: "uaiAgentTool",
-  manifest: {
-    type: "uaiAgentTool",
-    kind: "default",
-    element: () => import("../tool-status.element.js"),
-  },
+    type: "kind",
+    alias: "Uai.Kind.AgentTool.Default",
+    matchKind: "default",
+    matchType: "uaiAgentTool",
+    manifest: {
+        type: "uaiAgentTool",
+        kind: "default",
+        element: () => import("../tool-status.element.js"),
+    },
 };

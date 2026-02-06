@@ -22,11 +22,13 @@ Generate or update `CHANGELOG.md` files for products using the changelog generat
 ## Available Commands
 
 ### List Products
+
 ```bash
 npm run changelog:list
 ```
 
 ### Generate Changelog
+
 ```bash
 # For a specific version
 npm run changelog -- --product=Umbraco.AI --version=1.1.0
@@ -36,11 +38,13 @@ npm run changelog -- --product=Umbraco.AI --unreleased
 ```
 
 ### PowerShell Wrapper
+
 ```powershell
 .\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0
 ```
 
 ### Bash Wrapper
+
 ```bash
 ./scripts/generate-changelog.sh --product=Umbraco.AI --version=1.1.0
 ```
@@ -48,24 +52,25 @@ npm run changelog -- --product=Umbraco.AI --unreleased
 ## Workflow
 
 1. **Ask user for input**:
-   - List available products or let user specify
-   - Ask for version number (or use --unreleased flag)
-   - Platform preference (npm, PowerShell, or Bash)
+    - List available products or let user specify
+    - Ask for version number (or use --unreleased flag)
+    - Platform preference (npm, PowerShell, or Bash)
 
 2. **Run the appropriate command**
 
 3. **Verify the changelog was updated**:
-   - Read the generated CHANGELOG.md
-   - Show the new entry to the user
+    - Read the generated CHANGELOG.md
+    - Show the new entry to the user
 
 4. **Remind about next steps**:
-   - Review the generated changelog
-   - Edit if needed (add breaking changes details, etc.)
-   - Commit the changes
+    - Review the generated changelog
+    - Edit if needed (add breaking changes details, etc.)
+    - Commit the changes
 
 ## Available Products
 
 Products are auto-discovered by scanning for `changelog.config.json` files:
+
 - Umbraco.AI (core)
 - Umbraco.AI.OpenAI
 - Umbraco.AI.Anthropic

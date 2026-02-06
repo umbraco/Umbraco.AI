@@ -1,6 +1,6 @@
 ---
 description: >-
-  Add-on packages that extend Umbraco.AI with additional capabilities.
+    Add-on packages that extend Umbraco.AI with additional capabilities.
 ---
 
 # Add-ons
@@ -9,10 +9,10 @@ Umbraco.AI can be extended with add-on packages that provide specialized functio
 
 ## Available Add-ons
 
-| Add-on | Package | Description |
-|--------|---------|-------------|
-| [Prompt Management](prompt/README.md) | `Umbraco.AI.Prompt` | Create, manage, and execute reusable prompt templates |
-| [Agent Runtime](agent/README.md) | `Umbraco.AI.Agent` | Configure and run AI agents with streaming responses |
+| Add-on                                   | Package                    | Description                                            |
+| ---------------------------------------- | -------------------------- | ------------------------------------------------------ |
+| [Prompt Management](prompt/README.md)    | `Umbraco.AI.Prompt`        | Create, manage, and execute reusable prompt templates  |
+| [Agent Runtime](agent/README.md)         | `Umbraco.AI.Agent`         | Configure and run AI agents with streaming responses   |
 | [Agent Copilot](agent-copilot/README.md) | `Umbraco.AI.Agent.Copilot` | Chat sidebar UI for agent interaction (requires Agent) |
 
 ## Architecture
@@ -54,6 +54,7 @@ Add-ons depend on the core `Umbraco.AI` package and extend its capabilities:
 Add-ons are installed via NuGet alongside the core package:
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 # Install core (required)
 Install-Package Umbraco.AI
@@ -65,6 +66,7 @@ Install-Package Umbraco.AI.OpenAI
 Install-Package Umbraco.AI.Prompt
 Install-Package Umbraco.AI.Agent
 ```
+
 {% endcode %}
 
 ## Common Features
@@ -81,10 +83,10 @@ All add-ons share these features from the core package:
 
 Each add-on has its own database tables with a package-specific prefix:
 
-| Add-on | Migration Prefix |
-|--------|-----------------|
+| Add-on | Migration Prefix   |
+| ------ | ------------------ |
 | Prompt | `UmbracoAIPrompt_` |
-| Agent | `UmbracoAIAgent_` |
+| Agent  | `UmbracoAIAgent_`  |
 
 {% hint style="info" %}
 Agent Copilot is a frontend-only package with no database tables.
@@ -94,5 +96,5 @@ Migrations run automatically on application startup.
 
 ## Related
 
-* [Umbraco.AI Core](../getting-started/README.md) - Core package documentation
-* [Providers](../providers/README.md) - AI provider configuration
+- [Umbraco.AI Core](../getting-started/README.md) - Core package documentation
+- [Providers](../providers/README.md) - AI provider configuration

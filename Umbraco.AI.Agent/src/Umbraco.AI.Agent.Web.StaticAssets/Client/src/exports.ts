@@ -17,5 +17,5 @@
  * - Transport types and clients (from transport/exports.js)
  */
 
-export * from './agent/exports.js';
-export * from './transport/exports.js';
+export * from "./agent/exports.js";
+export * from "./transport/exports.js";

@@ -25,6 +25,7 @@ All migrations MUST use the `UmbracoAI_` prefix to clearly identify them as belo
 **Format:** `UmbracoAI_<DescriptiveName>`
 
 **Examples:**
+
 - `UmbracoAI_InitialCreate`
 - `UmbracoAI_AddUserPreferencesTable`
 - `UmbracoAI_AddIndexOnProfileAlias`
@@ -75,6 +76,7 @@ dotnet ef migrations remove -p src/Umbraco.AI.Persistence.Sqlite -c UmbracoAIDbC
 Each migrations project contains an `IDesignTimeDbContextFactory<UmbracoAIDbContext>` implementation. These factories are **only used by EF Core CLI tools** to generate migrations - they are never called at runtime.
 
 The connection strings in these factories are dummy values:
+
 - SQL Server: `Server=.;Database=UmbracoAI_Design;...`
 - SQLite: `Data Source=:memory:`
 
@@ -96,33 +98,33 @@ The persistence layer creates the following tables:
 
 Stores AI provider connection configurations (API keys, endpoints, etc.)
 
-| Column | Type | Description |
-|--------|------|-------------|
-| Id | GUID | Primary key |
-| Name | nvarchar(255) | Display name |
-| ProviderId | nvarchar(100) | Provider identifier (e.g., "openai") |
-| SettingsJson | nvarchar(max) | JSON-serialized provider settings |
-| IsActive | bit | Whether the connection is active |
-| DateCreated | datetime2 | Creation timestamp |
-| DateModified | datetime2 | Last modified timestamp |
+| Column       | Type          | Description                          |
+| ------------ | ------------- | ------------------------------------ |
+| Id           | GUID          | Primary key                          |
+| Name         | nvarchar(255) | Display name                         |
+| ProviderId   | nvarchar(100) | Provider identifier (e.g., "openai") |
+| SettingsJson | nvarchar(max) | JSON-serialized provider settings    |
+| IsActive     | bit           | Whether the connection is active     |
+| DateCreated  | datetime2     | Creation timestamp                   |
+| DateModified | datetime2     | Last modified timestamp              |
 
 ### umbracoAIProfile
 
 Stores AI profile configurations that link connections to specific models and settings.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| Id | GUID | Primary key |
-| Alias | nvarchar(100) | Unique profile alias |
-| Name | nvarchar(255) | Display name |
-| Capability | int | AI capability type (Chat, Embedding, etc.) |
-| ProviderId | nvarchar(100) | Provider identifier |
-| ModelId | nvarchar(255) | Model identifier (e.g., "gpt-4") |
-| ConnectionId | GUID | Foreign key to umbracoAIConnection |
-| Temperature | float | Optional temperature setting |
-| MaxTokens | int | Optional max tokens setting |
-| SystemPromptTemplate | nvarchar(max) | Optional system prompt |
-| TagsJson | nvarchar(2000) | JSON-serialized tags array |
+| Column               | Type           | Description                                |
+| -------------------- | -------------- | ------------------------------------------ |
+| Id                   | GUID           | Primary key                                |
+| Alias                | nvarchar(100)  | Unique profile alias                       |
+| Name                 | nvarchar(255)  | Display name                               |
+| Capability           | int            | AI capability type (Chat, Embedding, etc.) |
+| ProviderId           | nvarchar(100)  | Provider identifier                        |
+| ModelId              | nvarchar(255)  | Model identifier (e.g., "gpt-4")           |
+| ConnectionId         | GUID           | Foreign key to umbracoAIConnection         |
+| Temperature          | float          | Optional temperature setting               |
+| MaxTokens            | int            | Optional max tokens setting                |
+| SystemPromptTemplate | nvarchar(max)  | Optional system prompt                     |
+| TagsJson             | nvarchar(2000) | JSON-serialized tags array                 |
 
 ## Best Practices
 

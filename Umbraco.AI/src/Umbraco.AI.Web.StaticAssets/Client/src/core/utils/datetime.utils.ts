@@ -1,7 +1,4 @@
-export function formatDateTime(
-    input: string | Date,
-    locale: string = "en-US"
-): string {
+export function formatDateTime(input: string | Date, locale: string = "en-US"): string {
     const date = typeof input === "string" ? new Date(input) : input;
 
     if (isNaN(date.getTime())) {
@@ -15,7 +12,7 @@ export function formatDateTime(
         hour: "numeric",
         minute: "2-digit",
         second: "2-digit",
-        hour12: true
+        hour12: true,
     });
 
     const parts = formatter.formatToParts(date);

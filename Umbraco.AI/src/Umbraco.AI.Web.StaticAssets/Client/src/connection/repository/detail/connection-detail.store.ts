@@ -4,7 +4,7 @@ import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UaiConnectionDetailModel } from "../../types.js";
 
 export const UAI_CONNECTION_DETAIL_STORE_CONTEXT = new UmbContextToken<UaiConnectionDetailStore>(
-    "UaiConnectionDetailStore"
+    "UaiConnectionDetailStore",
 );
 
 /**

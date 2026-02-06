@@ -79,18 +79,18 @@ Umbraco.AI.OpenAI
 
 The core library containing all abstractions, services, and models:
 
-| Namespace | Purpose |
-|-----------|---------|
-| `Umbraco.AI.Core.Providers` | Provider and capability interfaces/base classes |
-| `Umbraco.AI.Core.Services` | High-level services (IAIChatService) |
-| `Umbraco.AI.Core.Factories` | Client and generator factories |
-| `Umbraco.AI.Core.Models` | Data models (AIConnection, AIProfile, etc.) |
-| `Umbraco.AI.Core.Connections` | Connection management |
-| `Umbraco.AI.Core.Profiles` | Profile management |
-| `Umbraco.AI.Core.Middleware` | Middleware pipeline system |
-| `Umbraco.AI.Core.Registry` | Provider registry |
-| `Umbraco.AI.Core.Settings` | Settings resolution and validation |
-| `Umbraco.AI.Extensions` | DI registration extensions |
+| Namespace                     | Purpose                                         |
+| ----------------------------- | ----------------------------------------------- |
+| `Umbraco.AI.Core.Providers`   | Provider and capability interfaces/base classes |
+| `Umbraco.AI.Core.Services`    | High-level services (IAIChatService)            |
+| `Umbraco.AI.Core.Factories`   | Client and generator factories                  |
+| `Umbraco.AI.Core.Models`      | Data models (AIConnection, AIProfile, etc.)     |
+| `Umbraco.AI.Core.Connections` | Connection management                           |
+| `Umbraco.AI.Core.Profiles`    | Profile management                              |
+| `Umbraco.AI.Core.Middleware`  | Middleware pipeline system                      |
+| `Umbraco.AI.Core.Registry`    | Provider registry                               |
+| `Umbraco.AI.Core.Settings`    | Settings resolution and validation              |
+| `Umbraco.AI.Extensions`       | DI registration extensions                      |
 
 ### Umbraco.AI.OpenAI
 
@@ -324,14 +324,14 @@ public interface IAIEmbeddingCapability : IAICapability
 
 Abstract base classes simplify capability implementation:
 
-| Base Class | Purpose |
-|------------|---------|
-| `AICapabilityBase` | Base for capabilities without typed settings |
-| `AICapabilityBase<TSettings>` | Base for capabilities with typed settings |
-| `AIChatCapabilityBase` | Chat capability without typed settings |
-| `AIChatCapabilityBase<TSettings>` | Chat capability with typed settings |
-| `AIEmbeddingCapabilityBase` | Embedding capability without typed settings |
-| `AIEmbeddingCapabilityBase<TSettings>` | Embedding capability with typed settings |
+| Base Class                             | Purpose                                      |
+| -------------------------------------- | -------------------------------------------- |
+| `AICapabilityBase`                     | Base for capabilities without typed settings |
+| `AICapabilityBase<TSettings>`          | Base for capabilities with typed settings    |
+| `AIChatCapabilityBase`                 | Chat capability without typed settings       |
+| `AIChatCapabilityBase<TSettings>`      | Chat capability with typed settings          |
+| `AIEmbeddingCapabilityBase`            | Embedding capability without typed settings  |
+| `AIEmbeddingCapabilityBase<TSettings>` | Embedding capability with typed settings     |
 
 ### Example: OpenAI Chat Capability
 
@@ -582,6 +582,7 @@ public interface IAIChatClientFactory
 ```
 
 The factory:
+
 1. Resolves the profile
 2. Loads the connection and validates provider match
 3. Resolves settings (including environment variables)
@@ -733,12 +734,12 @@ Configuration section: `Umbraco:AI`
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "DefaultChatProfileAlias": "default-chat",
-      "DefaultEmbeddingProfileAlias": "default-embedding"
+    "Umbraco": {
+        "AI": {
+            "DefaultChatProfileAlias": "default-chat",
+            "DefaultEmbeddingProfileAlias": "default-embedding"
+        }
     }
-  }
 }
 ```
 
@@ -818,34 +819,34 @@ Values prefixed with `$` are resolved from `IConfiguration`, allowing secrets to
 ### Registration Flow
 
 1. **UmbracoAIComposer** (discovered by Umbraco)
-   - Calls `builder.AddUmbracoAI()`
+    - Calls `builder.AddUmbracoAI()`
 
 2. **AddUmbracoAI()** (in Umbraco.AI.Startup)
-   - Calls `AddUmbracoAICore()` for core services
-   - Calls `AddUmbracoAIWeb()` for management API
+    - Calls `AddUmbracoAICore()` for core services
+    - Calls `AddUmbracoAIWeb()` for management API
 
 3. **AddUmbracoAICore()** (in Umbraco.AI.Core)
-   - Binds `AIOptions` from configuration
-   - Registers infrastructure services
-   - Scans and registers providers
-   - Registers repositories, services, and factories
+    - Binds `AIOptions` from configuration
+    - Registers infrastructure services
+    - Scans and registers providers
+    - Registers repositories, services, and factories
 
 ### Registered Services
 
-| Service | Implementation | Lifetime |
-|---------|---------------|----------|
-| `IAIRegistry` | `AIRegistry` | Singleton |
-| `IAICapabilityFactory` | `AICapabilityFactory` | Singleton |
-| `IAIEditableModelSchemaBuilder` | `AIEditableModelSchemaBuilder` | Singleton |
-| `IAIProviderInfrastructure` | `AIProviderInfrastructure` | Singleton |
-| `IAIEditableModelResolver` | `AIEditableModelResolver` | Singleton |
-| `IAIConnectionRepository` | `InMemoryAIConnectionRepository` | Singleton |
-| `IAIConnectionService` | `AIConnectionService` | Singleton |
-| `IAIProfileRepository` | `InMemoryAIProfileRepository` | Singleton |
-| `IAIProfileService` | `AIProfileService` | Singleton |
-| `IAIChatClientFactory` | `AIChatClientFactory` | Singleton |
-| `IAIEmbeddingGeneratorFactory` | `AIEmbeddingGeneratorFactory` | Singleton |
-| `IAIChatService` | `AIChatService` | Singleton |
+| Service                         | Implementation                   | Lifetime  |
+| ------------------------------- | -------------------------------- | --------- |
+| `IAIRegistry`                   | `AIRegistry`                     | Singleton |
+| `IAICapabilityFactory`          | `AICapabilityFactory`            | Singleton |
+| `IAIEditableModelSchemaBuilder` | `AIEditableModelSchemaBuilder`   | Singleton |
+| `IAIProviderInfrastructure`     | `AIProviderInfrastructure`       | Singleton |
+| `IAIEditableModelResolver`      | `AIEditableModelResolver`        | Singleton |
+| `IAIConnectionRepository`       | `InMemoryAIConnectionRepository` | Singleton |
+| `IAIConnectionService`          | `AIConnectionService`            | Singleton |
+| `IAIProfileRepository`          | `InMemoryAIProfileRepository`    | Singleton |
+| `IAIProfileService`             | `AIProfileService`               | Singleton |
+| `IAIChatClientFactory`          | `AIChatClientFactory`            | Singleton |
+| `IAIEmbeddingGeneratorFactory`  | `AIEmbeddingGeneratorFactory`    | Singleton |
+| `IAIChatService`                | `AIChatService`                  | Singleton |
 
 ### Provider Registration
 
@@ -858,6 +859,7 @@ builder.AIProviders()
 ```
 
 This approach:
+
 - Uses Umbraco's cached, efficient type discovery via `TypeLoader`
 - Allows providers to be added or excluded in Composers via `AIProviders().Add<T>()` / `AIProviders().Exclude<T>()`
 - Follows the standard Umbraco collection builder pattern
@@ -904,11 +906,11 @@ OpenAPI documentation is automatically generated:
 
 ### Planned Controllers
 
-| Controller | Purpose |
-|------------|---------|
-| Connection | CRUD for AI connections |
-| Profile | CRUD for AI profiles |
-| Provider | List available providers and capabilities |
+| Controller | Purpose                                   |
+| ---------- | ----------------------------------------- |
+| Connection | CRUD for AI connections                   |
+| Profile    | CRUD for AI profiles                      |
+| Provider   | List available providers and capabilities |
 
 ---
 
@@ -994,6 +996,7 @@ Umbraco.AI.Agents will extend Umbraco.AI with autonomous AI capabilities that ca
 ### Agent Concept
 
 An agent is a configured AI assistant that can:
+
 - Understand natural language requests
 - Access tools to gather information or perform actions
 - Execute multi-step workflows autonomously
@@ -1019,13 +1022,13 @@ public class AIAgent
 
 Tools are discrete actions that agents can invoke:
 
-| Category | Examples |
-|----------|----------|
-| **Content** | search, get, create, update, publish, delete |
-| **Media** | search, upload, organize |
-| **Navigation** | tree, children, ancestors, siblings |
-| **Search** | fulltext, semantic, similar |
-| **Generation** | text, summary, translate |
+| Category       | Examples                                     |
+| -------------- | -------------------------------------------- |
+| **Content**    | search, get, create, update, publish, delete |
+| **Media**      | search, upload, organize                     |
+| **Navigation** | tree, children, ancestors, siblings          |
+| **Search**     | fulltext, semantic, similar                  |
+| **Generation** | text, summary, translate                     |
 
 ### Approval Workflow
 

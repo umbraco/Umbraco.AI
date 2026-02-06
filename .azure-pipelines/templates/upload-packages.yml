@@ -1,46 +1,46 @@
 # Reusable template for uploading NuGet and npm packages
 
 parameters:
-  - name: product
-    type: string
-  - name: condition
-    type: string
-    default: 'true'
+    - name: product
+      type: string
+    - name: condition
+      type: string
+      default: "true"
 
 steps:
-  - task: PublishPipelineArtifact@1
-    displayName: Upload ${{ parameters.product }} NuGet packages
-    condition: ${{ parameters.condition }}
-    inputs:
-      targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
-      artifact: ${{ parameters.product }}-packages
-      publishLocation: pipeline
+    - task: PublishPipelineArtifact@1
+      displayName: Upload ${{ parameters.product }} NuGet packages
+      condition: ${{ parameters.condition }}
+      inputs:
+          targetPath: $(Build.SourcesDirectory)/artifacts/nupkg
+          artifact: ${{ parameters.product }}-packages
+          publishLocation: pipeline
 
-  # Upload npm packages if they were created
-  - task: Bash@3
-    displayName: Check for npm packages
-    condition: ${{ parameters.condition }}
-    name: checkNpm
-    inputs:
-      targetType: inline
-      script: |
-        if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
-          echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
-          echo "npm packages found:"
-          ls -la artifacts/npm/
-        else
-          echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
-          echo "No npm packages to upload"
-        fi
+    # Upload npm packages if they were created
+    - task: Bash@3
+      displayName: Check for npm packages
+      condition: ${{ parameters.condition }}
+      name: checkNpm
+      inputs:
+          targetType: inline
+          script: |
+              if [ -d "artifacts/npm" ] && [ "$(ls -A artifacts/npm 2>/dev/null)" ]; then
+                echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]true"
+                echo "npm packages found:"
+                ls -la artifacts/npm/
+              else
+                echo "##vso[task.setvariable variable=hasNpmPackages;isOutput=true]false"
+                echo "No npm packages to upload"
+              fi
 
-  - task: PublishPipelineArtifact@1
-    displayName: Upload ${{ parameters.product }} npm packages
-    condition: |
-      and(
-        ${{ parameters.condition }},
-        eq(variables['checkNpm.hasNpmPackages'], 'true')
-      )
-    inputs:
-      targetPath: $(Build.SourcesDirectory)/artifacts/npm
-      artifact: ${{ parameters.product }}-npm-packages
-      publishLocation: pipeline
+    - task: PublishPipelineArtifact@1
+      displayName: Upload ${{ parameters.product }} npm packages
+      condition: |
+          and(
+            ${{ parameters.condition }},
+            eq(variables['checkNpm.hasNpmPackages'], 'true')
+          )
+      inputs:
+          targetPath: $(Build.SourcesDirectory)/artifacts/npm
+          artifact: ${{ parameters.product }}-npm-packages
+          publishLocation: pipeline

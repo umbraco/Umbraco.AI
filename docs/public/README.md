@@ -1,7 +1,7 @@
 ---
 description: >-
-  Umbraco.AI is a provider-agnostic AI integration layer for Umbraco CMS,
-  built on Microsoft.Extensions.AI.
+    Umbraco.AI is a provider-agnostic AI integration layer for Umbraco CMS,
+    built on Microsoft.Extensions.AI.
 ---
 
 # Umbraco.AI
@@ -10,11 +10,11 @@ Umbraco.AI brings AI capabilities to your Umbraco CMS installation through a fle
 
 ## Key Features
 
-* **Provider-agnostic** - Install provider packages for the AI services you use
-* **Profile-based configuration** - Create reusable profiles for different use cases
-* **Built on Microsoft.Extensions.AI** - Uses standard M.E.AI types like `IChatClient` and `ChatMessage`
-* **Extensible middleware** - Add logging, caching, rate limiting, and custom behavior
-* **Backoffice integration** - Manage connections and profiles through the Umbraco UI
+- **Provider-agnostic** - Install provider packages for the AI services you use
+- **Profile-based configuration** - Create reusable profiles for different use cases
+- **Built on Microsoft.Extensions.AI** - Uses standard M.E.AI types like `IChatClient` and `ChatMessage`
+- **Extensible middleware** - Add logging, caching, rate limiting, and custom behavior
+- **Backoffice integration** - Manage connections and profiles through the Umbraco UI
 
 ## Getting Started
 
@@ -51,6 +51,7 @@ Create custom providers, middleware, and tools:
 ## Quick Example
 
 {% code title="ChatController.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
@@ -78,10 +79,11 @@ public class ChatController : UmbracoApiController
     }
 }
 ```
+
 {% endcode %}
 
 ## Requirements
 
-* Umbraco CMS 17.0 or later
-* .NET 10.0 or later
-* At least one AI provider package (for example, `Umbraco.AI.OpenAI`)
+- Umbraco CMS 17.0 or later
+- .NET 10.0 or later
+- At least one AI provider package (for example, `Umbraco.AI.OpenAI`)

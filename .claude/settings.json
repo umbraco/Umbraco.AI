@@ -1,15 +1,15 @@
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/scripts/setup-dotnet-proxy.sh"
-          }
+    "hooks": {
+        "SessionStart": [
+            {
+                "matcher": "",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash .claude/scripts/setup-dotnet-proxy.sh"
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  }
+    }
 }

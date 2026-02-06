@@ -1,6 +1,6 @@
 ---
 description: >-
-  Stream chat responses in real-time for a better user experience.
+    Stream chat responses in real-time for a better user experience.
 ---
 
 # Streaming
@@ -9,16 +9,17 @@ Streaming returns response chunks as they're generated, rather than waiting for 
 
 ## Why Use Streaming
 
-| Approach | Best For |
-|----------|----------|
-| Non-streaming | Short responses, background processing |
-| Streaming | User-facing chat, long responses, real-time feedback |
+| Approach      | Best For                                             |
+| ------------- | ---------------------------------------------------- |
+| Non-streaming | Short responses, background processing               |
+| Streaming     | User-facing chat, long responses, real-time feedback |
 
 Streaming lets users see the response as it's being generated, reducing perceived latency.
 
 ## Basic Streaming
 
 {% code title="BasicStreaming.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
@@ -49,19 +50,21 @@ public class StreamingExample
     }
 }
 ```
+
 {% endcode %}
 
 ## Understanding ChatResponseUpdate
 
 Each streamed chunk is a `ChatResponseUpdate`:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Text` | `string?` | The text content of this chunk |
-| `Role` | `ChatRole?` | The role (usually only in first chunk) |
-| `FinishReason` | `ChatFinishReason?` | Set in the final chunk |
+| Property       | Type                | Description                            |
+| -------------- | ------------------- | -------------------------------------- |
+| `Text`         | `string?`           | The text content of this chunk         |
+| `Role`         | `ChatRole?`         | The role (usually only in first chunk) |
+| `FinishReason` | `ChatFinishReason?` | Set in the final chunk                 |
 
 {% code title="UpdateDetails.cs" %}
+
 ```csharp
 await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
 {
@@ -78,6 +81,7 @@ await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages
     }
 }
 ```
+
 {% endcode %}
 
 ## Streaming in an API Controller
@@ -85,6 +89,7 @@ await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages
 Return a streaming response to the client:
 
 {% code title="StreamingController.cs" %}
+
 ```csharp
 [ApiController]
 [Route("api/chat")]
@@ -122,6 +127,7 @@ public class ChatController : UmbracoApiController
 
 public record ChatRequest(string Message);
 ```
+
 {% endcode %}
 
 ## Server-Sent Events (SSE)
@@ -129,6 +135,7 @@ public record ChatRequest(string Message);
 For proper SSE formatting:
 
 {% code title="SSEController.cs" %}
+
 ```csharp
 [HttpPost("stream-sse")]
 public async Task StreamChatSSE([FromBody] ChatRequest request)
@@ -156,6 +163,7 @@ public async Task StreamChatSSE([FromBody] ChatRequest request)
     await Response.WriteAsync("data: {\"done\":true}\n\n");
 }
 ```
+
 {% endcode %}
 
 ## Collecting the Full Response
@@ -163,6 +171,7 @@ public async Task StreamChatSSE([FromBody] ChatRequest request)
 If you need both streaming and the complete text:
 
 {% code title="CollectResponse.cs" %}
+
 ```csharp
 public async Task<(string FullText, ChatFinishReason? Reason)> StreamAndCollect(
     string question,
@@ -193,6 +202,7 @@ public async Task<(string FullText, ChatFinishReason? Reason)> StreamAndCollect(
     return (fullText.ToString(), finishReason);
 }
 ```
+
 {% endcode %}
 
 ## With Cancellation
@@ -200,6 +210,7 @@ public async Task<(string FullText, ChatFinishReason? Reason)> StreamAndCollect(
 Support user cancellation:
 
 {% code title="WithCancellation.cs" %}
+
 ```csharp
 public async Task StreamWithCancellation(
     string question,
@@ -225,11 +236,13 @@ public async Task StreamWithCancellation(
     }
 }
 ```
+
 {% endcode %}
 
 ## Using a Specific Profile
 
 {% code title="StreamWithProfile.cs" %}
+
 ```csharp
 // With profile ID
 await foreach (var update in _chatService.GetStreamingChatResponseAsync(
@@ -249,6 +262,7 @@ await foreach (var update in _chatService.GetStreamingChatResponseAsync(
     Console.Write(update.Text);
 }
 ```
+
 {% endcode %}
 
 ## Client-Side JavaScript
@@ -256,12 +270,13 @@ await foreach (var update in _chatService.GetStreamingChatResponseAsync(
 Consuming SSE in the browser:
 
 {% code title="client.js" %}
+
 ```javascript
 async function streamChat(message) {
-    const response = await fetch('/api/chat/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
+    const response = await fetch("/api/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
     });
 
     const reader = response.body.getReader();
@@ -272,22 +287,23 @@ async function streamChat(message) {
         if (done) break;
 
         const text = decoder.decode(value);
-        const lines = text.split('\n\n');
+        const lines = text.split("\n\n");
 
         for (const line of lines) {
-            if (line.startsWith('data: ')) {
+            if (line.startsWith("data: ")) {
                 const data = line.slice(6);
-                if (data === '[DONE]') {
-                    console.log('Stream complete');
+                if (data === "[DONE]") {
+                    console.log("Stream complete");
                 } else {
                     // Append to UI
-                    document.getElementById('output').textContent += data;
+                    document.getElementById("output").textContent += data;
                 }
             }
         }
     }
 }
 ```
+
 {% endcode %}
 
 ## Next Steps

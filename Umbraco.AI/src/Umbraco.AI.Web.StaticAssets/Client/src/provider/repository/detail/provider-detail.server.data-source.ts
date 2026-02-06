@@ -18,10 +18,7 @@ export class UaiProviderDetailServerDataSource {
      * Fetches a provider by ID with full details including setting definitions.
      */
     async get(id: string): Promise<{ data?: UaiProviderDetailModel; error?: unknown }> {
-        const { data, error } = await tryExecute(
-            this.#host,
-            ProvidersService.getProviderById({ path: { id } })
-        );
+        const { data, error } = await tryExecute(this.#host, ProvidersService.getProviderById({ path: { id } }));
 
         if (error || !data) {
             return { error };

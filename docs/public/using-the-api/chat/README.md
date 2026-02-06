@@ -1,6 +1,6 @@
 ---
 description: >-
-  Use the chat API for conversational AI, text generation, and completions.
+    Use the chat API for conversational AI, text generation, and completions.
 ---
 
 # Chat
@@ -12,6 +12,7 @@ The chat API provides access to conversational AI capabilities. Use it for text 
 The primary interface for chat operations:
 
 {% code title="IAIChatService.cs" %}
+
 ```csharp
 public interface IAIChatService
 {
@@ -45,11 +46,13 @@ public interface IAIChatService
         CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Basic Usage
 
 {% code title="Example.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
@@ -76,22 +79,24 @@ public class ContentAssistant
     }
 }
 ```
+
 {% endcode %}
 
 ## Message Roles
 
-| Role | Description |
-|------|-------------|
-| `ChatRole.System` | Instructions for the AI (set behavior, context) |
-| `ChatRole.User` | Messages from the user |
-| `ChatRole.Assistant` | Previous responses from the AI |
-| `ChatRole.Tool` | Results from tool/function calls |
+| Role                 | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `ChatRole.System`    | Instructions for the AI (set behavior, context) |
+| `ChatRole.User`      | Messages from the user                          |
+| `ChatRole.Assistant` | Previous responses from the AI                  |
+| `ChatRole.Tool`      | Results from tool/function calls                |
 
 ## Multi-Turn Conversations
 
 Include previous messages to maintain context:
 
 {% code title="ConversationExample.cs" %}
+
 ```csharp
 var conversation = new List<ChatMessage>
 {
@@ -104,6 +109,7 @@ var conversation = new List<ChatMessage>
 var response = await _chatService.GetChatResponseAsync(conversation);
 // Response considers the full conversation context
 ```
+
 {% endcode %}
 
 ## Choosing a Profile

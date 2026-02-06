@@ -91,7 +91,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const connectionId = event.target.value as string;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ connectionId, model: null }, "connectionId")
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ connectionId, model: null }, "connectionId"),
         );
         // Load models for the new connection
         if (connectionId && this._model?.capability) {
@@ -106,16 +106,14 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const value = event.target.value as string;
         if (!value) {
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model: null }, "model")
+                new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model: null }, "model"),
             );
             return;
         }
 
         const [providerId, modelId] = value.split("|");
         const model: UaiModelRef = { providerId, modelId };
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model }, "model")
-        );
+        this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiProfileDetailModel>({ model }, "model"));
     }
 
     #onTemperatureChange(event: Event) {
@@ -154,15 +152,15 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const chatSettings: UaiChatProfileSettings = isChatSettings(currentSettings)
             ? { ...currentSettings, ...updates }
             : {
-                $type: "chat",
-                temperature: updates.temperature ?? null,
-                maxTokens: updates.maxTokens ?? null,
-                systemPromptTemplate: updates.systemPromptTemplate ?? null,
-                contextIds: updates.contextIds ?? [],
-            };
+                  $type: "chat",
+                  temperature: updates.temperature ?? null,
+                  maxTokens: updates.maxTokens ?? null,
+                  systemPromptTemplate: updates.systemPromptTemplate ?? null,
+                  contextIds: updates.contextIds ?? [],
+              };
 
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings")
+            new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings"),
         );
     }
 
@@ -170,7 +168,7 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
      * Gets the current chat settings, or null if not a chat profile.
      */
     #getChatSettings(): UaiChatProfileSettings | null {
-        return isChatSettings(this._model?.settings ?? null) ? this._model!.settings as UaiChatProfileSettings : null;
+        return isChatSettings(this._model?.settings ?? null) ? (this._model!.settings as UaiChatProfileSettings) : null;
     }
 
     /**
@@ -197,7 +195,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="Settings">
-                <umb-property-layout label="Temperature" description="Controls randomness (0.0 = deterministic, 2.0 = very random)">
+                <umb-property-layout
+                    label="Temperature"
+                    description="Controls randomness (0.0 = deterministic, 2.0 = very random)"
+                >
                     <umb-input-slider
                         slot="editor"
                         label="Temperature"
@@ -301,27 +302,28 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                     ${this._loadingModels
                         ? html`<uui-loader-bar slot="editor"></uui-loader-bar>`
                         : html`
-                            <uui-select
-                                slot="editor"
-                                .value=${this.#getCurrentModelValue()}
-                                .options=${this.#getModelOptions()}
-                                @change=${this.#onModelChange}
-                                placeholder="Select a model"
-                                ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
-                            ></uui-select>
-                        `}
+                              <uui-select
+                                  slot="editor"
+                                  .value=${this.#getCurrentModelValue()}
+                                  .options=${this.#getModelOptions()}
+                                  @change=${this.#onModelChange}
+                                  placeholder="Select a model"
+                                  ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
+                              ></uui-select>
+                          `}
                 </umb-property-layout>
             </uui-box>
 
             ${this.#renderCapabilitySettings()}
-
-            ${this._model.tags.length > 0 ? html`
-                <uui-box headline="Tags">
-                    <div class="tags-container">
-                        ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
-                    </div>
-                </uui-box>
-            ` : nothing}
+            ${this._model.tags.length > 0
+                ? html`
+                      <uui-box headline="Tags">
+                          <div class="tags-container">
+                              ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
+                          </div>
+                      </uui-box>
+                  `
+                : nothing}
         `;
     }
 

@@ -10,18 +10,17 @@ import { UaiAuditLogTypeMapper } from "../../type-mapper.js";
  * AuditLog Logs are read-only - they're created by the system, not by users.
  */
 export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<UaiAuditLogDetailModel> {
-    
-    #host: UmbControllerHost; 
+    #host: UmbControllerHost;
 
     constructor(host: UmbControllerHost) {
-        this.#host = host; 
+        this.#host = host;
     }
 
     /**
      * Scaffold not needed for traces (read-only).
      */
     async createScaffold(_preset?: Partial<UaiAuditLogDetailModel>) {
-        return { error: { message: 'AuditLogs cannot be created manually' } as any };
+        return { error: { message: "AuditLogs cannot be created manually" } as any };
     }
 
     /**
@@ -30,7 +29,7 @@ export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<Ua
     async read(unique: string) {
         const { data, error } = await tryExecute(
             this.#host,
-            AuditLogsService.getAuditLogByIdentifier({ path: { auditLogId: unique } })
+            AuditLogsService.getAuditLogByIdentifier({ path: { auditLogId: unique } }),
         );
 
         if (error || !data) {
@@ -44,24 +43,23 @@ export class UaiAuditLogDetailServerDataSource implements UmbDetailDataSource<Ua
      * Create not supported for traces (read-only).
      */
     async create(_model: UaiAuditLogDetailModel, _parentUnique: string | null) {
-        return { error: { message: 'AuditLogs cannot be created manually' } as any };
+        return { error: { message: "AuditLogs cannot be created manually" } as any };
     }
 
     /**
      * Update not supported for traces (read-only).
      */
     async update(_model: UaiAuditLogDetailModel) {
-        return { error: { message: 'AuditLogs cannot be updated' } as any };
+        return { error: { message: "AuditLogs cannot be updated" } as any };
     }
 
     /**
      * Deletes a trace by its unique identifier.
      */
     async delete(unique: string) {
-
         const { error } = await tryExecute(
             this.#host,
-            AuditLogsService.deleteAuditLog({ path: { auditLogId: unique } })
+            AuditLogsService.deleteAuditLog({ path: { auditLogId: unique } }),
         );
 
         if (error) {

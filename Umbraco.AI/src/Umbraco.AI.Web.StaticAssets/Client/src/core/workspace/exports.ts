@@ -1,1 +1,1 @@
-export * from './entity-deleted-redirect.controller.js';
+export * from "./entity-deleted-redirect.controller.js";

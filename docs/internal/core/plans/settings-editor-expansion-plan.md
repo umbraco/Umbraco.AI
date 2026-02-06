@@ -7,6 +7,7 @@ Expand the settings editor to expose additional configuration options beyond the
 ### Current State
 
 The settings editor currently exposes only two settings via `AISettings`:
+
 - `DefaultChatProfileId` - Default profile for chat operations
 - `DefaultEmbeddingProfileId` - Default profile for embedding operations
 
@@ -26,16 +27,17 @@ These are persisted using the `[AISetting]` attribute pattern which stores setti
 
 ### Settings to Expose
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `AuditLogEnabled` | bool | true | Enable/disable audit logging |
-| `AuditLogRetentionDays` | int | 14 | Days to retain audit records |
-| `AuditLogPersistPrompts` | bool | true | Store prompt snapshots |
-| `AuditLogPersistResponses` | bool | true | Store response snapshots |
+| Setting                    | Type | Default | Description                  |
+| -------------------------- | ---- | ------- | ---------------------------- |
+| `AuditLogEnabled`          | bool | true    | Enable/disable audit logging |
+| `AuditLogRetentionDays`    | int  | 14      | Days to retain audit records |
+| `AuditLogPersistPrompts`   | bool | true    | Store prompt snapshots       |
+| `AuditLogPersistResponses` | bool | true    | Store response snapshots     |
 
 ### Implementation
 
 **1. Add properties to `AISettings.cs`:**
+
 ```csharp
 [AISetting]
 public bool? AuditLogEnabled { get; init; }
@@ -51,6 +53,7 @@ public bool? AuditLogPersistResponses { get; init; }
 ```
 
 **2. Update `AIAuditLogOptions` to check `AISettings` first:**
+
 ```csharp
 // In AIAuditLogService or a new options resolver
 public bool IsEnabled => _aiSettings.AuditLogEnabled ?? _options.Enabled;
@@ -59,10 +62,12 @@ public int RetentionDays => _aiSettings.AuditLogRetentionDays ?? _options.Retent
 ```
 
 **3. Update API models:**
+
 - `SettingsResponseModel` - Add audit log fields
 - `UpdateSettingsRequestModel` - Add audit log fields
 
 **4. Update frontend:**
+
 - Add audit log section to settings editor
 - Toggle for enabled/disabled
 - Number input for retention days
@@ -81,16 +86,17 @@ public int RetentionDays => _aiSettings.AuditLogRetentionDays ?? _options.Retent
 
 ### Settings to Expose
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `AnalyticsEnabled` | bool | true | Enable/disable usage analytics |
-| `AnalyticsHourlyRetentionDays` | int | 30 | Days to retain hourly stats |
-| `AnalyticsDailyRetentionDays` | int | 365 | Days to retain daily stats |
-| `AnalyticsIncludeUserDimension` | bool | true | Track per-user usage (privacy) |
+| Setting                         | Type | Default | Description                    |
+| ------------------------------- | ---- | ------- | ------------------------------ |
+| `AnalyticsEnabled`              | bool | true    | Enable/disable usage analytics |
+| `AnalyticsHourlyRetentionDays`  | int  | 30      | Days to retain hourly stats    |
+| `AnalyticsDailyRetentionDays`   | int  | 365     | Days to retain daily stats     |
+| `AnalyticsIncludeUserDimension` | bool | true    | Track per-user usage (privacy) |
 
 ### Implementation
 
 **1. Add properties to `AISettings.cs`:**
+
 ```csharp
 [AISetting]
 public bool? AnalyticsEnabled { get; init; }
@@ -120,16 +126,17 @@ public bool? AnalyticsIncludeUserDimension { get; init; }
 
 ### Settings to Expose
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `WebFetchEnabled` | bool | true | Enable/disable web fetch tool |
-| `WebFetchAllowedDomains` | List<string> | [] | Domain whitelist (empty = allow all) |
-| `WebFetchBlockedDomains` | List<string> | [] | Domain blacklist |
-| `WebFetchTimeoutSeconds` | int | 30 | Request timeout |
+| Setting                  | Type         | Default | Description                          |
+| ------------------------ | ------------ | ------- | ------------------------------------ |
+| `WebFetchEnabled`        | bool         | true    | Enable/disable web fetch tool        |
+| `WebFetchAllowedDomains` | List<string> | []      | Domain whitelist (empty = allow all) |
+| `WebFetchBlockedDomains` | List<string> | []      | Domain blacklist                     |
+| `WebFetchTimeoutSeconds` | int          | 30      | Request timeout                      |
 
 ### Implementation
 
 **1. Add properties to `AISettings.cs`:**
+
 ```csharp
 [AISetting]
 public bool? WebFetchEnabled { get; init; }
@@ -260,17 +267,21 @@ Register resolvers and update services to use them instead of `IOptions<T>` dire
 ## Files Summary
 
 ### Core Changes
+
 - `src/Umbraco.AI.Core/Settings/AISettings.cs` - Add new setting properties
 - `src/Umbraco.AI.Core/Settings/AISettingsService.cs` - May need caching updates
 
 ### Options Resolution
+
 - New `IOptionsResolver<T>` interface and implementations
 - Update services to use resolvers instead of `IOptions<T>`
 
 ### Web API
+
 - `src/Umbraco.AI.Web/Api/Management/Settings/Models/SettingsResponseModel.cs`
 - `src/Umbraco.AI.Web/Api/Management/Settings/Models/UpdateSettingsRequestModel.cs`
 
 ### Frontend
+
 - `src/Umbraco.AI.Web.StaticAssets/Client/src/settings/` - Editor components
 - Regenerate OpenAPI client after API changes

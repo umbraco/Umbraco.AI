@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configuring agent instructions for optimal behavior.
+    Configuring agent instructions for optimal behavior.
 ---
 
 # Agent Instructions
@@ -20,6 +20,7 @@ A good instruction set includes:
 ## Example Instructions
 
 {% code title="Content Editor Agent" %}
+
 ```
 You are a content editing assistant for a news website.
 
@@ -51,6 +52,7 @@ You help journalists and editors improve their articles by providing suggestions
 - Concise responses
 - Use bullet points for multiple suggestions
 ```
+
 {% endcode %}
 
 ## Best Practices
@@ -58,11 +60,13 @@ You help journalists and editors improve their articles by providing suggestions
 ### Be Specific
 
 Instead of:
+
 ```
 You are a helpful assistant.
 ```
 
 Use:
+
 ```
 You are a customer support specialist for an e-commerce platform.
 You help customers with order tracking, returns, and product questions.
@@ -111,6 +115,7 @@ You help customers with order tracking, returns, and product questions.
 Combine agent instructions with AI Contexts for brand voice:
 
 {% code title="Example" %}
+
 ```csharp
 var agent = new AIAgent
 {
@@ -128,9 +133,11 @@ Write engaging content that follows our brand guidelines.
     ContextIds = new[] { brandVoiceContextId, styleGuideContextId }
 };
 ```
+
 {% endcode %}
 
 The brand voice context might contain:
+
 ```
 Our brand voice is:
 - Friendly but professional
@@ -154,5 +161,5 @@ When refining instructions:
 
 ## Related
 
-* [Concepts](concepts.md) - Agent fundamentals
-* [AI Contexts](../../concepts/contexts.md) - Brand voice injection
+- [Concepts](concepts.md) - Agent fundamentals
+- [AI Contexts](../../concepts/contexts.md) - Brand voice injection

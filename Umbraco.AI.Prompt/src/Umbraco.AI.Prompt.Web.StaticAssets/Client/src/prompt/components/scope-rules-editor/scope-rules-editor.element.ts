@@ -35,27 +35,28 @@ export class UaiScopeRulesEditorElement extends UmbLitElement {
     }
 
     #dispatchChange(rules: UaiScopeRule[]) {
-        this.dispatchEvent(new CustomEvent<UaiScopeRule[]>("rules-change", {
-            detail: rules,
-            bubbles: true,
-            composed: true,
-        }));
+        this.dispatchEvent(
+            new CustomEvent<UaiScopeRule[]>("rules-change", {
+                detail: rules,
+                bubbles: true,
+                composed: true,
+            }),
+        );
     }
 
     render() {
         return html`
             <div class="rules-container">
-                ${this.rules.map((rule, index) => html`
-                    <uai-scope-rule-editor
-                        .rule=${rule}
-                        @rule-change=${(e: CustomEvent<UaiScopeRule>) => this.#onRuleChange(index, e.detail)}
-                        @remove=${() => this.#onRemoveRule(index)}
-                    ></uai-scope-rule-editor>
-                `)}
-                <uui-button
-                    look="placeholder"
-                    @click=${this.#onAddRule}
-                >
+                ${this.rules.map(
+                    (rule, index) => html`
+                        <uai-scope-rule-editor
+                            .rule=${rule}
+                            @rule-change=${(e: CustomEvent<UaiScopeRule>) => this.#onRuleChange(index, e.detail)}
+                            @remove=${() => this.#onRemoveRule(index)}
+                        ></uai-scope-rule-editor>
+                    `,
+                )}
+                <uui-button look="placeholder" @click=${this.#onAddRule}>
                     <uui-icon name="icon-add"></uui-icon>
                     ${this.addButtonLabel}
                 </uui-button>

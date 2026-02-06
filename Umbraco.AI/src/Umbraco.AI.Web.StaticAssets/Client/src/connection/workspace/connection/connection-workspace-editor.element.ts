@@ -16,139 +16,135 @@ import "../../../core/components/status-selector/status-selector.element.js";
 
 @customElement("uai-connection-workspace-editor")
 export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
-  #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
-  #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
+    #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
+    #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
-  @state()
-  private _model?: UaiConnectionDetailModel;
+    @state()
+    private _model?: UaiConnectionDetailModel;
 
-  @state()
-  private _isNew?: boolean;
+    @state()
+    private _isNew?: boolean;
 
-  @state()
-  private _aliasLocked = true;
+    @state()
+    private _aliasLocked = true;
 
-  @state()
-  private _testButtonState?: UUIButtonState;
+    @state()
+    private _testButtonState?: UUIButtonState;
 
-  @state()
-  private _testButtonColor?: "default" | "positive" | "warning" | "danger" = "default";
+    @state()
+    private _testButtonColor?: "default" | "positive" | "warning" | "danger" = "default";
 
-  constructor() {
-    super();
+    constructor() {
+        super();
 
-    this.consumeContext(UAI_CONNECTION_WORKSPACE_CONTEXT, (context) => {
-      if (!context) return;
-      this.#workspaceContext = context;
-      this.observe(context.model, (model) => {
-        this._model = model;
-      });
-      this.observe(context.isNew, (isNew) => {
-        this._isNew = isNew;
-        if (isNew) {
-          requestAnimationFrame(() => {
-            (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
-          });
+        this.consumeContext(UAI_CONNECTION_WORKSPACE_CONTEXT, (context) => {
+            if (!context) return;
+            this.#workspaceContext = context;
+            this.observe(context.model, (model) => {
+                this._model = model;
+            });
+            this.observe(context.isNew, (isNew) => {
+                this._isNew = isNew;
+                if (isNew) {
+                    requestAnimationFrame(() => {
+                        (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
+                    });
+                }
+            });
+        });
+
+        this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
+            this.#notificationContext = context;
+        });
+    }
+
+    #onNameChange(event: UUIInputEvent) {
+        event.stopPropagation();
+        const target = event.composedPath()[0] as UUIInputElement;
+        const name = target.value.toString();
+
+        // If alias is locked and creating new, generate alias from name
+        if (this._aliasLocked && this._isNew) {
+            const alias = this.#generateAlias(name);
+            this.#workspaceContext?.handleCommand(
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias"),
+            );
+        } else {
+            this.#workspaceContext?.handleCommand(
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name"),
+            );
         }
-      });
-    });
-
-    this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
-      this.#notificationContext = context;
-    });
-  }
-
-  #onNameChange(event: UUIInputEvent) {
-    event.stopPropagation();
-    const target = event.composedPath()[0] as UUIInputElement;
-    const name = target.value.toString();
-
-    // If alias is locked and creating new, generate alias from name
-    if (this._aliasLocked && this._isNew) {
-      const alias = this.#generateAlias(name);
-      this.#workspaceContext?.handleCommand(
-        new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias")
-      );
-    } else {
-      this.#workspaceContext?.handleCommand(
-        new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name")
-      );
-    }
-  }
-
-  #onAliasChange(event: UUIInputEvent) {
-    event.stopPropagation();
-    const target = event.composedPath()[0] as UUIInputElement;
-    this.#workspaceContext?.handleCommand(
-      new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias")
-    );
-  }
-
-  #onToggleAliasLock() {
-    this._aliasLocked = !this._aliasLocked;
-  }
-
-  #generateAlias(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
-
-  #onActiveChange(e: CustomEvent<{ value: boolean }>) {
-    this.#workspaceContext?.handleCommand(
-      new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: e.detail.value }, "isActive")
-    );
-  }
-
-  async #onTestConnection() {
-    const unique = this._model?.unique;
-    if (!unique || unique === UAI_EMPTY_GUID) return;
-
-    this._testButtonState = "waiting";
-    this._testButtonColor = "default";
-
-    const { data, error } = await tryExecute(
-      this,
-      ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } })
-    );
-
-    if (error || !data?.success) {
-      this._testButtonState = "failed";
-      this._testButtonColor = "danger";
-      this.#notificationContext?.peek("danger", {
-        data: { message: data?.errorMessage ?? this.localize.string("#uaiConnection_testConnectionFailed") },
-      });
-      this.#resetButtonState();
-      return;
     }
 
-    this._testButtonState = "success";
-    this._testButtonColor = "positive";
-    this.#notificationContext?.peek("positive", {
-      data: { message: this.localize.string("#uaiConnection_testConnectionSuccess") },
-    });
-    this.#resetButtonState();
-  }
+    #onAliasChange(event: UUIInputEvent) {
+        event.stopPropagation();
+        const target = event.composedPath()[0] as UUIInputElement;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias"),
+        );
+    }
 
-  #resetButtonState() {
-    setTimeout(() => {
-      this._testButtonState = undefined;
-      this._testButtonColor = "default";
-    }, 2000);
-  }
+    #onToggleAliasLock() {
+        this._aliasLocked = !this._aliasLocked;
+    }
 
-  render() {
-    if (!this._model) return html`<uui-loader></uui-loader>`;
+    #generateAlias(name: string): string {
+        return name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+    }
 
-    return html`
+    #onActiveChange(e: CustomEvent<{ value: boolean }>) {
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: e.detail.value }, "isActive"),
+        );
+    }
+
+    async #onTestConnection() {
+        const unique = this._model?.unique;
+        if (!unique || unique === UAI_EMPTY_GUID) return;
+
+        this._testButtonState = "waiting";
+        this._testButtonColor = "default";
+
+        const { data, error } = await tryExecute(
+            this,
+            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } }),
+        );
+
+        if (error || !data?.success) {
+            this._testButtonState = "failed";
+            this._testButtonColor = "danger";
+            this.#notificationContext?.peek("danger", {
+                data: { message: data?.errorMessage ?? this.localize.string("#uaiConnection_testConnectionFailed") },
+            });
+            this.#resetButtonState();
+            return;
+        }
+
+        this._testButtonState = "success";
+        this._testButtonColor = "positive";
+        this.#notificationContext?.peek("positive", {
+            data: { message: this.localize.string("#uaiConnection_testConnectionSuccess") },
+        });
+        this.#resetButtonState();
+    }
+
+    #resetButtonState() {
+        setTimeout(() => {
+            this._testButtonState = undefined;
+            this._testButtonColor = "default";
+        }, 2000);
+    }
+
+    render() {
+        if (!this._model) return html`<uui-loader></uui-loader>`;
+
+        return html`
             <umb-workspace-editor alias="${UAI_CONNECTION_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}
-                        label="Back to connections"
-                        compact
-                    >
+                    <uui-button href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} label="Back to connections" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -181,24 +177,25 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                 </div>
 
                 ${when(
-      !this._isNew && this._model,
-      () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
-    )}
-
+                    !this._isNew && this._model,
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
+                )}
                 ${when(
-      !this._isNew && this._model,
-      () => html`
+                    !this._isNew && this._model,
+                    () => html`
                         <uui-button
                             slot="actions"
                             label=${this.localize.string("#uaiConnection_testConnection")}
                             look="default"
                             .color=${this._testButtonColor}
                             .state=${this._testButtonState}
-                            @click=${this.#onTestConnection}>
+                            @click=${this.#onTestConnection}
+                        >
                             ${this.localize.string("#uaiConnection_testConnection")}
                         </uui-button>
-                    `
-    )}
+                    `,
+                )}
 
                 <div slot="footer-info" id="footer">
                     <a href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}>Connections</a>
@@ -206,11 +203,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                 </div>
             </umb-workspace-editor>
         `;
-  }
+    }
 
-  static styles = [
-    UmbTextStyles,
-    css`
+    static styles = [
+        UmbTextStyles,
+        css`
             :host {
                 display: block;
                 width: 100%;
@@ -242,13 +239,13 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                 transform: translate(-50%, -50%);
             }
         `,
-  ];
+    ];
 }
 
 export default UaiConnectionWorkspaceEditorElement;
 
 declare global {
-  interface HTMLElementTagNameMap {
-    "uai-connection-workspace-editor": UaiConnectionWorkspaceEditorElement;
-  }
+    interface HTMLElementTagNameMap {
+        "uai-connection-workspace-editor": UaiConnectionWorkspaceEditorElement;
+    }
 }

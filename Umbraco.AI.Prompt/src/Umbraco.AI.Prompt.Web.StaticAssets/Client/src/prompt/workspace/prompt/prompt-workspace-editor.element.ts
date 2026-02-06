@@ -10,91 +10,85 @@ import { UAI_PROMPT_ROOT_WORKSPACE_PATH } from "../prompt-root/paths.js";
 
 @customElement("uai-prompt-workspace-editor")
 export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
-  #workspaceContext?: typeof UAI_PROMPT_WORKSPACE_CONTEXT.TYPE;
+    #workspaceContext?: typeof UAI_PROMPT_WORKSPACE_CONTEXT.TYPE;
 
-  @state()
-  private _model?: UaiPromptDetailModel;
+    @state()
+    private _model?: UaiPromptDetailModel;
 
-  @state()
-  private _isNew?: boolean;
+    @state()
+    private _isNew?: boolean;
 
-  @state()
-  private _aliasLocked = true;
+    @state()
+    private _aliasLocked = true;
 
-  constructor() {
-    super();
+    constructor() {
+        super();
 
-    this.consumeContext(UAI_PROMPT_WORKSPACE_CONTEXT, (context) => {
-      if (!context) return;
-      this.#workspaceContext = context;
-      this.observe(context.model, (model) => {
-        this._model = model;
-      });
-      this.observe(context.isNew, (isNew) => {
-        this._isNew = isNew;
-        if (isNew) {
-          requestAnimationFrame(() => {
-            (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
-          });
-        }
-      });
-    });
-  }
-
-  #onNameChange(event: UUIInputEvent) {
-    event.stopPropagation();
-    const target = event.composedPath()[0] as UUIInputElement;
-    const name = target.value.toString();
-
-    // If alias is locked and creating new, generate alias from name
-    if (this._aliasLocked && this._isNew) {
-      const alias = this.#generateAlias(name);
-      this.#workspaceContext?.handleCommand(
-        new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name, alias }, "name-alias")
-      );
-    } else {
-      this.#workspaceContext?.handleCommand(
-        new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name }, "name")
-      );
+        this.consumeContext(UAI_PROMPT_WORKSPACE_CONTEXT, (context) => {
+            if (!context) return;
+            this.#workspaceContext = context;
+            this.observe(context.model, (model) => {
+                this._model = model;
+            });
+            this.observe(context.isNew, (isNew) => {
+                this._isNew = isNew;
+                if (isNew) {
+                    requestAnimationFrame(() => {
+                        (this.shadowRoot?.querySelector("#name") as HTMLElement)?.focus();
+                    });
+                }
+            });
+        });
     }
-  }
 
-  #onAliasChange(event: UUIInputEvent) {
-    event.stopPropagation();
-    const target = event.composedPath()[0] as UUIInputElement;
-    this.#workspaceContext?.handleCommand(
-      new UaiPartialUpdateCommand<UaiPromptDetailModel>({ alias: target.value.toString() }, "alias")
-    );
-  }
+    #onNameChange(event: UUIInputEvent) {
+        event.stopPropagation();
+        const target = event.composedPath()[0] as UUIInputElement;
+        const name = target.value.toString();
 
-  #onToggleAliasLock() {
-    this._aliasLocked = !this._aliasLocked;
-  }
+        // If alias is locked and creating new, generate alias from name
+        if (this._aliasLocked && this._isNew) {
+            const alias = this.#generateAlias(name);
+            this.#workspaceContext?.handleCommand(
+                new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name, alias }, "name-alias"),
+            );
+        } else {
+            this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name }, "name"));
+        }
+    }
 
-  #generateAlias(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
+    #onAliasChange(event: UUIInputEvent) {
+        event.stopPropagation();
+        const target = event.composedPath()[0] as UUIInputElement;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ alias: target.value.toString() }, "alias"),
+        );
+    }
 
-  #onActiveChange(e: CustomEvent<{ value: boolean }>) {
-    this.#workspaceContext?.handleCommand(
-      new UaiPartialUpdateCommand<UaiPromptDetailModel>({ isActive: e.detail.value }, "isActive")
-    );
-  }
+    #onToggleAliasLock() {
+        this._aliasLocked = !this._aliasLocked;
+    }
 
-  render() {
-    if (!this._model) return html`<uui-loader></uui-loader>`;
+    #generateAlias(name: string): string {
+        return name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+    }
 
-    return html`
+    #onActiveChange(e: CustomEvent<{ value: boolean }>) {
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ isActive: e.detail.value }, "isActive"),
+        );
+    }
+
+    render() {
+        if (!this._model) return html`<uui-loader></uui-loader>`;
+
+        return html`
             <umb-workspace-editor alias="${UAI_PROMPT_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_PROMPT_ROOT_WORKSPACE_PATH}
-                        label="Back to prompts"
-                        compact
-                    >
+                    <uui-button href=${UAI_PROMPT_ROOT_WORKSPACE_PATH} label="Back to prompts" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -126,9 +120,10 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
                 </div>
 
                 ${when(
-      !this._isNew && this._model,
-      () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
-    )}
+                    !this._isNew && this._model,
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
+                )}
 
                 <div slot="footer-info" id="footer">
                     <a href=${UAI_PROMPT_ROOT_WORKSPACE_PATH}>Prompts</a>
@@ -136,11 +131,11 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
                 </div>
             </umb-workspace-editor>
         `;
-  }
+    }
 
-  static styles = [
-    UmbTextStyles,
-    css`
+    static styles = [
+        UmbTextStyles,
+        css`
             :host {
                 display: block;
                 width: 100%;
@@ -172,13 +167,13 @@ export class UaiPromptWorkspaceEditorElement extends UmbLitElement {
                 transform: translate(-50%, -50%);
             }
         `,
-  ];
+    ];
 }
 
 export default UaiPromptWorkspaceEditorElement;
 
 declare global {
-  interface HTMLElementTagNameMap {
-    "uai-prompt-workspace-editor": UaiPromptWorkspaceEditorElement;
-  }
+    interface HTMLElementTagNameMap {
+        "uai-prompt-workspace-editor": UaiPromptWorkspaceEditorElement;
+    }
 }

@@ -1,6 +1,16 @@
-import type { ProfileResponseModel, ProfileItemResponseModel, ChatProfileSettingsModel, EmbeddingProfileSettingsModel } from "../api/types.gen.js";
+import type {
+    ProfileResponseModel,
+    ProfileItemResponseModel,
+    ChatProfileSettingsModel,
+    EmbeddingProfileSettingsModel,
+} from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
-import type { UaiProfileDetailModel, UaiProfileItemModel, UaiProfileSettings, UaiChatProfileSettings } from "./types.js";
+import type {
+    UaiProfileDetailModel,
+    UaiProfileItemModel,
+    UaiProfileSettings,
+    UaiChatProfileSettings,
+} from "./types.js";
 import { isChatSettings } from "./types.js";
 
 export const UaiProfileTypeMapper = {
@@ -91,7 +101,9 @@ export const UaiProfileTypeMapper = {
     /**
      * Maps internal model settings to API request format.
      */
-    mapRequestSettings(settings: UaiProfileSettings | null): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null {
+    mapRequestSettings(
+        settings: UaiProfileSettings | null,
+    ): ChatProfileSettingsModel | EmbeddingProfileSettingsModel | null {
         if (!settings) return null;
 
         if (isChatSettings(settings)) {

@@ -12,7 +12,7 @@ This document explores **AI Workflows**, a system for automating field populatio
 
 AI Workflows are document-scoped automations that populate fields using AI. They run automatically in response to content events (save, publish) or on a schedule, and can orchestrate one or more steps.
 
-**Key Distinction**: Workflows are *automatic* (triggered by events), while AI Prompts are *human-initiated* (clicked in the UI).
+**Key Distinction**: Workflows are _automatic_ (triggered by events), while AI Prompts are _human-initiated_ (clicked in the UI).
 
 **Core Concept**: Workflows can chain multiple steps, providing a unified execution model for both simple and complex automation.
 
@@ -35,6 +35,7 @@ AI Workflow (configured per document type)
 ### 1. Chain-First Model
 
 All workflows are chains of steps. This provides:
+
 - **Unified execution model** - no special cases
 - **Easy extension** - add steps to existing workflows
 - **Consistent UI** - same interface regardless of complexity
@@ -80,6 +81,7 @@ var processArticle = new AIWorkflow
 ### 2. Document Type Scoped
 
 AI Workflows are configured per document type, ensuring:
+
 - **Validation at configuration time** - UI shows only properties that exist
 - **Type safety** - validate compatible inputs/outputs
 - **No runtime surprises** - workflows won't fail due to missing properties
@@ -117,10 +119,10 @@ Content Editor View:
 
 Following Umbraco patterns (Property Editors + Data Types):
 
-| Layer | Defined By | Purpose |
-|-------|------------|---------|
-| **Step Types** | Developers (code) | What a step *can* do |
-| **Workflows** | Editors/Admins (UI) | How steps are configured and connected |
+| Layer          | Defined By          | Purpose                                |
+| -------------- | ------------------- | -------------------------------------- |
+| **Step Types** | Developers (code)   | What a step _can_ do                   |
+| **Workflows**  | Editors/Admins (UI) | How steps are configured and connected |
 
 ```csharp
 // Developer creates Step Type
@@ -148,16 +150,17 @@ public class LlmSummarizerStep : AIWorkflowStepTypeBase
 ### Step Context & Variable Passing
 
 Steps can reference:
+
 - Property values from the document
 - Outputs from previous steps
 - Workflow-level context
 
-| Reference | Meaning |
-|-----------|---------|
-| `bodyText` | Property alias on the document |
-| `$previous` | Output from immediately preceding step |
-| `$step1` or `$stepAlias` | Named output from specific step |
-| `$workflow.trigger` | How the workflow was invoked |
+| Reference                | Meaning                                |
+| ------------------------ | -------------------------------------- |
+| `bodyText`               | Property alias on the document         |
+| `$previous`              | Output from immediately preceding step |
+| `$step1` or `$stepAlias` | Named output from specific step        |
+| `$workflow.trigger`      | How the workflow was invoked           |
 
 ```csharp
 public class WorkflowStepContext
@@ -203,11 +206,11 @@ public class AIWorkflowExecutor
 
 ### Trigger Options
 
-| Trigger | Behavior |
-|---------|----------|
-| **Manual** | Editor clicks "Run" in workspace view |
-| **OnSave** | Executes when content is saved |
-| **OnPublish** | Executes when content is published |
+| Trigger       | Behavior                                        |
+| ------------- | ----------------------------------------------- |
+| **Manual**    | Editor clicks "Run" in workspace view           |
+| **OnSave**    | Executes when content is saved                  |
+| **OnPublish** | Executes when content is published              |
 | **Scheduled** | Runs on a schedule (e.g., re-translate nightly) |
 
 ---
@@ -275,12 +278,12 @@ A workspace view shows available workflows and execution history:
 
 Properties targeted by AI Workflows show visual indicators:
 
-| State | Indicator | Meaning |
-|-------|-----------|---------|
-| Target | 🤖 | Property is populated by a workflow |
-| Ready | 🤖 | Workflow can run, inputs available |
-| Stale | 🤖⚠️ | Source fields changed since last run |
-| Running | 🤖⏳ | Workflow currently executing |
+| State   | Indicator | Meaning                              |
+| ------- | --------- | ------------------------------------ |
+| Target  | 🤖        | Property is populated by a workflow  |
+| Ready   | 🤖        | Workflow can run, inputs available   |
+| Stale   | 🤖⚠️      | Source fields changed since last run |
+| Running | 🤖⏳      | Workflow currently executing         |
 
 ---
 
@@ -288,14 +291,14 @@ Properties targeted by AI Workflows show visual indicators:
 
 Initial set of step types to ship with Umbraco.AI:
 
-| Step Type | Description | Capability |
-|-----------|-------------|------------|
-| `llm-text-generator` | Generate text from prompt + context | Chat |
-| `llm-summarizer` | Summarize source field content | Chat |
-| `llm-translator` | Translate to target language | Chat |
-| `llm-tagger` | Suggest taxonomy terms | Chat |
-| `llm-alt-text` | Generate image alt text | Chat + Media |
-| `llm-seo-description` | Generate SEO meta descriptions | Chat |
+| Step Type             | Description                         | Capability   |
+| --------------------- | ----------------------------------- | ------------ |
+| `llm-text-generator`  | Generate text from prompt + context | Chat         |
+| `llm-summarizer`      | Summarize source field content      | Chat         |
+| `llm-translator`      | Translate to target language        | Chat         |
+| `llm-tagger`          | Suggest taxonomy terms              | Chat         |
+| `llm-alt-text`        | Generate image alt text             | Chat + Media |
+| `llm-seo-description` | Generate SEO meta descriptions      | Chat         |
 
 Developers can create custom step types for specialized needs.
 
@@ -344,6 +347,7 @@ AI Workflow executions flow through the existing middleware pipeline, getting lo
 What if the same workflow is needed on multiple document types?
 
 **Options**:
+
 - **A) Duplicate** - Configure separately on each (simple, v1 approach)
 - **B) Templates** - Create reusable workflow templates
 - **C) Composition** - Attach to compositions that doc types share
@@ -376,6 +380,7 @@ Preview Result:
 ### 3. Error Handling
 
 What happens when step 3 of 5 fails?
+
 - Stop and rollback all changes?
 - Keep completed steps, skip failed?
 - Configurable per-workflow?
@@ -383,6 +388,7 @@ What happens when step 3 of 5 fails?
 ### 4. Cost Control
 
 How to prevent runaway API costs from bulk operations?
+
 - Rate limiting?
 - Confirmation for batch operations?
 - Usage tracking/quotas?
@@ -406,14 +412,14 @@ This could align with the agents design doc's "human-in-the-loop" concept.
 
 AI Workflows, AI Prompts, and Agents serve different use cases:
 
-| Aspect | AI Workflows | AI Prompts | Agents |
-|--------|--------------|------------|--------|
-| **Initiation** | Automatic (event-driven) | Human-initiated (UI click) | Human-initiated (conversation) |
-| **Steps** | One or more (chainable) | Single step only | Dynamic (tool calls) |
-| **Trigger** | OnSave, OnPublish, Scheduled | Inline button click | User conversation |
-| **Output** | Property values | Single property value | Chat responses + tool calls |
-| **Use case** | Automation pipelines | Quick content assistance | Complex reasoning & exploration |
-| **Configuration** | Per document type | Per property editor/type | Per agent definition |
+| Aspect            | AI Workflows                 | AI Prompts                 | Agents                          |
+| ----------------- | ---------------------------- | -------------------------- | ------------------------------- |
+| **Initiation**    | Automatic (event-driven)     | Human-initiated (UI click) | Human-initiated (conversation)  |
+| **Steps**         | One or more (chainable)      | Single step only           | Dynamic (tool calls)            |
+| **Trigger**       | OnSave, OnPublish, Scheduled | Inline button click        | User conversation               |
+| **Output**        | Property values              | Single property value      | Chat responses + tool calls     |
+| **Use case**      | Automation pipelines         | Quick content assistance   | Complex reasoning & exploration |
+| **Configuration** | Per document type            | Per property editor/type   | Per agent definition            |
 
 They share infrastructure (Profiles, Capabilities, Middleware, AI Context) but serve distinct purposes.
 
@@ -424,12 +430,14 @@ They share infrastructure (Profiles, Capabilities, Middleware, AI Context) but s
 **Consider for Phase 2**, after core chat/embedding functionality is stable.
 
 ### Prerequisites
+
 1. Stable Profile and Connection management
 2. Chat capability working end-to-end
 3. Basic backoffice UI for AI configuration
 4. AI Context system (for brand voice injection)
 
 ### Implementation Order
+
 1. Step Type plugin system and registry
 2. Workflow model and execution engine
 3. Document type configuration UI
@@ -458,11 +466,11 @@ They share infrastructure (Profiles, Capabilities, Middleware, AI Context) but s
 
 ## Related Decisions
 
-| Decision | Current Choice |
-|----------|----------------|
-| Naming | "AI Workflows" (multi-step automation) |
+| Decision            | Current Choice                                           |
+| ------------------- | -------------------------------------------------------- |
+| Naming              | "AI Workflows" (multi-step automation)                   |
 | Configuration model | Hybrid: code-defined step types, UI-configured workflows |
-| Scope | Per document type |
-| Execution model | Chain-first (all workflows are step chains) |
-| UI integration | Workspace view + property indicators |
-| Chaining support | First-class, via steps with variable passing |
+| Scope               | Per document type                                        |
+| Execution model     | Chain-first (all workflows are step chains)              |
+| UI integration      | Workspace view + property indicators                     |
+| Chaining support    | First-class, via steps with variable passing             |

@@ -1,16 +1,16 @@
 {
-  "scopes": [
-    "core",
-    "profile",
-    "chat",
-    "embedding",
-    "connection",
-    "middleware",
-    "registry",
-    "settings",
-    "providers",
-    "ui",
-    "frontend",
-    "api"
-  ]
+    "scopes": [
+        "core",
+        "profile",
+        "chat",
+        "embedding",
+        "connection",
+        "middleware",
+        "registry",
+        "settings",
+        "providers",
+        "ui",
+        "frontend",
+        "api"
+    ]
 }

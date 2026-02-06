@@ -1,21 +1,21 @@
 {
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "profiles": {
-    "DemoSite": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:44355",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "DemoSite-Claude": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "applicationUrl": "https://127.0.0.1:0",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+    "$schema": "https://json.schemastore.org/launchsettings.json",
+    "profiles": {
+        "DemoSite": {
+            "commandName": "Project",
+            "dotnetRunMessages": true,
+            "applicationUrl": "https://localhost:44355",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        },
+        "DemoSite-Claude": {
+            "commandName": "Project",
+            "dotnetRunMessages": true,
+            "applicationUrl": "https://127.0.0.1:0",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        }
     }
-  }
 }

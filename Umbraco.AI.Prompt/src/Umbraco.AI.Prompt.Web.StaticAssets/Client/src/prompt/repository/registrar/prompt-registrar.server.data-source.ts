@@ -26,7 +26,7 @@ export class UaiPromptRegistrarServerDataSource {
                     skip: 0,
                     take: 1000, // Fetch all prompts - registration happens once
                 },
-            })
+            }),
         );
 
         if (error || !data) {
@@ -43,7 +43,7 @@ export class UaiPromptRegistrarServerDataSource {
                     this.#host,
                     PromptsService.getPromptByIdOrAlias({
                         path: { promptIdOrAlias: item.id },
-                    })
+                    }),
                 );
 
                 if (detailError || !detail) {
@@ -63,7 +63,7 @@ export class UaiPromptRegistrarServerDataSource {
                     isActive,
                 };
                 return model;
-            })
+            }),
         );
 
         return {
@@ -77,7 +77,7 @@ export class UaiPromptRegistrarServerDataSource {
     async getPromptById(unique: string): Promise<{ data?: UaiPromptRegistrationModel; error?: unknown }> {
         const { data: detail, error } = await tryExecute(
             this.#host,
-            PromptsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } })
+            PromptsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } }),
         );
 
         if (error || !detail) return { error };
@@ -94,7 +94,7 @@ export class UaiPromptRegistrarServerDataSource {
                 profileId,
                 scope,
                 isActive,
-            }
+            },
         };
     }
 }

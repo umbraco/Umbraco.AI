@@ -6,14 +6,13 @@ import { UMB_COLLECTION_CONTEXT, UmbCollectionDefaultElement } from "@umbraco-cm
  */
 @customElement("uai-audit-collection")
 export class UaiAuditLogCollectionElement extends UmbCollectionDefaultElement {
-    
     async #onPollInterval() {
         const ctx = await this.getContext(UMB_COLLECTION_CONTEXT);
         if (ctx) {
             ctx.loadCollection();
         }
     }
-    
+
     protected override renderToolbar() {
         return html`
             <umb-collection-toolbar slot="header">
@@ -27,7 +26,7 @@ export class UaiAuditLogCollectionElement extends UmbCollectionDefaultElement {
 
     static styles = [
         css`
-			.header-contents {
+            .header-contents {
                 display: flex;
                 gap: 1rem;
                 align-items: center;
@@ -36,7 +35,7 @@ export class UaiAuditLogCollectionElement extends UmbCollectionDefaultElement {
             umb-collection-filter-field {
                 flex-grow: 1;
             }
-		`,
+        `,
     ];
 }
 

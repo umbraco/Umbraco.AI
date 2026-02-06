@@ -1,6 +1,13 @@
 import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEvent, UmbTableDeselectedEvent, UmbTableElement } from "@umbraco-cms/backoffice/components";
+import type {
+    UmbTableColumn,
+    UmbTableItem,
+    UmbTableConfig,
+    UmbTableSelectedEvent,
+    UmbTableDeselectedEvent,
+    UmbTableElement,
+} from "@umbraco-cms/backoffice/components";
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -49,7 +56,7 @@ export class UaiContextTableCollectionViewElement extends UmbLitElement {
         this.observe(
             this.#collectionContext.items,
             (items) => this.#createTableItems(items as UaiContextItemModel[]),
-            "umbCollectionItemsObserver"
+            "umbCollectionItemsObserver",
         );
 
         this.observe(
@@ -57,7 +64,7 @@ export class UaiContextTableCollectionViewElement extends UmbLitElement {
             (selection) => {
                 this._selection = selection as string[];
             },
-            "umbCollectionSelectionObserver"
+            "umbCollectionSelectionObserver",
         );
     }
 
@@ -108,7 +115,8 @@ export class UaiContextTableCollectionViewElement extends UmbLitElement {
             .items=${this._items}
             .selection=${this._selection}
             @selected=${this.#handleSelect}
-            @deselected=${this.#handleDeselect}></umb-table>`;
+            @deselected=${this.#handleDeselect}
+        ></umb-table>`;
     }
 
     static styles = [UmbTextStyles];

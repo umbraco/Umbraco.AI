@@ -1,6 +1,6 @@
 ---
 description: >-
-  Model representing an AI operation audit log entry.
+    Model representing an AI operation audit log entry.
 ---
 
 # AIAuditLog
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.AuditLog;
 ## Definition
 
 {% code title="AIAuditLog" %}
+
 ```csharp
 public class AIAuditLog
 {
@@ -66,68 +67,69 @@ public class AIAuditLog
     public IReadOnlyDictionary<string, string>? Metadata { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
 ### Core Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Unique identifier |
-| `StartTime` | `DateTime` | When operation started |
-| `EndTime` | `DateTime?` | When operation completed |
-| `Duration` | `TimeSpan?` | Computed duration |
+| Property    | Type        | Description              |
+| ----------- | ----------- | ------------------------ |
+| `Id`        | `Guid`      | Unique identifier        |
+| `StartTime` | `DateTime`  | When operation started   |
+| `EndTime`   | `DateTime?` | When operation completed |
+| `Duration`  | `TimeSpan?` | Computed duration        |
 
 ### Status Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Status` | `AIAuditLogStatus` | Operation outcome |
+| Property        | Type                       | Description          |
+| --------------- | -------------------------- | -------------------- |
+| `Status`        | `AIAuditLogStatus`         | Operation outcome    |
 | `ErrorCategory` | `AIAuditLogErrorCategory?` | Error classification |
-| `ErrorMessage` | `string?` | Error details |
+| `ErrorMessage`  | `string?`                  | Error details        |
 
 ### Context Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `UserId` | `string?` | User who initiated |
-| `UserName` | `string?` | User display name |
-| `EntityId` | `string?` | Content item ID |
-| `EntityType` | `string?` | Content item type |
+| Property     | Type      | Description        |
+| ------------ | --------- | ------------------ |
+| `UserId`     | `string?` | User who initiated |
+| `UserName`   | `string?` | User display name  |
+| `EntityId`   | `string?` | Content item ID    |
+| `EntityType` | `string?` | Content item type  |
 
 ### AI Configuration
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Capability` | `AICapability` | Chat, Embedding, etc. |
-| `ProfileId` | `Guid` | Profile used |
-| `ProfileAlias` | `string` | Profile alias at time |
-| `ProfileVersion` | `int?` | Profile version at time |
-| `ProviderId` | `string` | Provider ID |
-| `ModelId` | `string` | Model ID |
+| Property         | Type           | Description             |
+| ---------------- | -------------- | ----------------------- |
+| `Capability`     | `AICapability` | Chat, Embedding, etc.   |
+| `ProfileId`      | `Guid`         | Profile used            |
+| `ProfileAlias`   | `string`       | Profile alias at time   |
+| `ProfileVersion` | `int?`         | Profile version at time |
+| `ProviderId`     | `string`       | Provider ID             |
+| `ModelId`        | `string`       | Model ID                |
 
 ### Feature Context
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `FeatureType` | `string?` | "prompt", "agent", or null |
-| `FeatureId` | `Guid?` | Feature ID |
-| `FeatureVersion` | `int?` | Feature version at time |
+| Property         | Type      | Description                |
+| ---------------- | --------- | -------------------------- |
+| `FeatureType`    | `string?` | "prompt", "agent", or null |
+| `FeatureId`      | `Guid?`   | Feature ID                 |
+| `FeatureVersion` | `int?`    | Feature version at time    |
 
 ### Token Usage
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `InputTokens` | `int?` | Tokens in request |
+| Property       | Type   | Description        |
+| -------------- | ------ | ------------------ |
+| `InputTokens`  | `int?` | Tokens in request  |
 | `OutputTokens` | `int?` | Tokens in response |
-| `TotalTokens` | `int?` | Combined tokens |
+| `TotalTokens`  | `int?` | Combined tokens    |
 
 ### Content Snapshots
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `PromptSnapshot` | `string?` | Request content (if configured to persist) |
+| Property           | Type      | Description                                 |
+| ------------------ | --------- | ------------------------------------------- |
+| `PromptSnapshot`   | `string?` | Request content (if configured to persist)  |
 | `ResponseSnapshot` | `string?` | Response content (if configured to persist) |
 
 ---
@@ -135,6 +137,7 @@ public class AIAuditLog
 # AIAuditLogStatus
 
 {% code title="AIAuditLogStatus" %}
+
 ```csharp
 public enum AIAuditLogStatus
 {
@@ -145,6 +148,7 @@ public enum AIAuditLogStatus
     PartialSuccess = 4
 }
 ```
+
 {% endcode %}
 
 ---
@@ -152,6 +156,7 @@ public enum AIAuditLogStatus
 # AIAuditLogErrorCategory
 
 {% code title="AIAuditLogErrorCategory" %}
+
 ```csharp
 public enum AIAuditLogErrorCategory
 {
@@ -164,6 +169,7 @@ public enum AIAuditLogErrorCategory
     NetworkError = 6
 }
 ```
+
 {% endcode %}
 
 ---
@@ -173,6 +179,7 @@ public enum AIAuditLogErrorCategory
 Used to filter audit log queries.
 
 {% code title="AIAuditLogFilter" %}
+
 ```csharp
 public class AIAuditLogFilter
 {
@@ -186,9 +193,10 @@ public class AIAuditLogFilter
     public string? FeatureType { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Related
 
-* [IAIAuditLogService](../services/ai-audit-log-service.md) - Audit log service
-* [Audit Logs Backoffice](../../backoffice/audit-logs.md) - Viewing logs
+- [IAIAuditLogService](../services/ai-audit-log-service.md) - Audit log service
+- [Audit Logs Backoffice](../../backoffice/audit-logs.md) - Viewing logs

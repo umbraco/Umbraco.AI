@@ -1,6 +1,6 @@
 ---
 description: >-
-  Integrate AI capabilities into custom backoffice elements.
+    Integrate AI capabilities into custom backoffice elements.
 ---
 
 # Frontend Integration
@@ -12,20 +12,23 @@ Umbraco.AI provides TypeScript APIs for integrating AI chat capabilities into cu
 The chat API is exported from the Umbraco.AI client package:
 
 {% code title="Import" %}
+
 ```typescript
-import { UaiChatController, UaiChatMessage, UaiChatResult } from '@umbraco-ai/backoffice';
+import { UaiChatController, UaiChatMessage, UaiChatResult } from "@umbraco-ai/backoffice";
 ```
+
 {% endcode %}
 
 ## Quick Start
 
 {% code title="Using Chat in a Custom Element" %}
-```typescript
-import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { UaiChatController, UaiChatMessage, UaiChatResult } from '@umbraco-ai/backoffice';
 
-@customElement('my-ai-element')
+```typescript
+import { LitElement, html } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { UaiChatController, UaiChatMessage, UaiChatResult } from "@umbraco-ai/backoffice";
+
+@customElement("my-ai-element")
 export class MyAIElement extends LitElement {
     #chatController = new UaiChatController(this);
 
@@ -38,16 +41,14 @@ export class MyAIElement extends LitElement {
     async #handleSubmit() {
         this._loading = true;
 
-        const messages: UaiChatMessage[] = [
-            { role: 'user', content: 'Hello, can you help me?' }
-        ];
+        const messages: UaiChatMessage[] = [{ role: "user", content: "Hello, can you help me?" }];
 
         const { data, error } = await this.#chatController.complete(messages);
 
         if (data) {
             this._response = data.message.content;
         } else {
-            console.error('Chat error:', error);
+            console.error("Chat error:", error);
         }
 
         this._loading = false;
@@ -56,13 +57,14 @@ export class MyAIElement extends LitElement {
     render() {
         return html`
             <button @click=${this.#handleSubmit} ?disabled=${this._loading}>
-                ${this._loading ? 'Loading...' : 'Ask AI'}
+                ${this._loading ? "Loading..." : "Ask AI"}
             </button>
-            ${this._response ? html`<p>${this._response}</p>` : ''}
+            ${this._response ? html`<p>${this._response}</p>` : ""}
         `;
     }
 }
 ```
+
 {% endcode %}
 
 ## Key Concepts
@@ -79,6 +81,7 @@ class MyElement extends LitElement {
 ```
 
 The controller handles:
+
 - API communication with the Management API
 - Request lifecycle management
 - Automatic cleanup on element disconnect
@@ -92,10 +95,10 @@ Specify which AI profile to use via `profileIdOrAlias`:
 await controller.complete(messages);
 
 // Use specific profile by alias
-await controller.complete(messages, { profileIdOrAlias: 'content-assistant' });
+await controller.complete(messages, { profileIdOrAlias: "content-assistant" });
 
 // Use specific profile by ID
-await controller.complete(messages, { profileIdOrAlias: '3fa85f64-5717-4562-b3fc-2c963f66afa6' });
+await controller.complete(messages, { profileIdOrAlias: "3fa85f64-5717-4562-b3fc-2c963f66afa6" });
 ```
 
 ### Cancellation

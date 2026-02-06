@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for managing AI profiles.
+    Service for managing AI profiles.
 ---
 
 # IAIProfileService
@@ -17,6 +17,7 @@ using Umbraco.AI.Core.Models;
 ## Interface
 
 {% code title="IAIProfileService" %}
+
 ```csharp
 public interface IAIProfileService
 {
@@ -42,6 +43,7 @@ public interface IAIProfileService
     Task<bool> DeleteProfileAsync(Guid id, CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Methods
@@ -50,14 +52,15 @@ public interface IAIProfileService
 
 Gets a profile by its unique identifier.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The profile ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The profile ID     |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The profile if found, otherwise `null`.
 
 {% code title="Example" %}
+
 ```csharp
 var profile = await _profileService.GetProfileAsync(profileId);
 if (profile != null)
@@ -66,23 +69,26 @@ if (profile != null)
     Console.WriteLine($"Model: {profile.Model}");
 }
 ```
+
 {% endcode %}
 
 ### GetProfileByAliasAsync
 
 Gets a profile by its alias.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `alias` | `string` | The profile alias |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `alias`             | `string`            | The profile alias  |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The profile if found, otherwise `null`.
 
 {% code title="Example" %}
+
 ```csharp
 var profile = await _profileService.GetProfileByAliasAsync("content-assistant");
 ```
+
 {% endcode %}
 
 ### GetAllProfilesAsync
@@ -95,35 +101,38 @@ Gets all profiles.
 
 Gets profiles for a specific capability.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `capability` | `AICapability` | The capability to filter by |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description                 |
+| ------------------- | ------------------- | --------------------------- |
+| `capability`        | `AICapability`      | The capability to filter by |
+| `cancellationToken` | `CancellationToken` | Cancellation token          |
 
 **Returns**: Profiles matching the capability.
 
 {% code title="Example" %}
+
 ```csharp
 var chatProfiles = await _profileService.GetProfilesAsync(AICapability.Chat);
 var embeddingProfiles = await _profileService.GetProfilesAsync(AICapability.Embedding);
 ```
+
 {% endcode %}
 
 ### GetProfilesPagedAsync
 
 Gets profiles with pagination and optional filtering.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `filter` | `string?` | Filter by name (case-insensitive contains) |
-| `capability` | `AICapability?` | Filter by capability |
-| `skip` | `int` | Items to skip |
-| `take` | `int` | Items to take |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description                                |
+| ------------------- | ------------------- | ------------------------------------------ |
+| `filter`            | `string?`           | Filter by name (case-insensitive contains) |
+| `capability`        | `AICapability?`     | Filter by capability                       |
+| `skip`              | `int`               | Items to skip                              |
+| `take`              | `int`               | Items to take                              |
+| `cancellationToken` | `CancellationToken` | Cancellation token                         |
 
 **Returns**: Tuple of (profiles, total count).
 
 {% code title="Example" %}
+
 ```csharp
 var (profiles, total) = await _profileService.GetProfilesPagedAsync(
     filter: "assistant",
@@ -133,15 +142,16 @@ var (profiles, total) = await _profileService.GetProfilesPagedAsync(
 
 Console.WriteLine($"Found {total} profiles, showing {profiles.Count()}");
 ```
+
 {% endcode %}
 
 ### GetDefaultProfileAsync
 
 Gets the default profile for a capability.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `capability` | `AICapability` | The capability |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `capability`        | `AICapability`      | The capability     |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The default profile.
@@ -149,6 +159,7 @@ Gets the default profile for a capability.
 **Throws**: `InvalidOperationException` if no default profile is configured.
 
 {% code title="Example" %}
+
 ```csharp
 try
 {
@@ -160,20 +171,22 @@ catch (InvalidOperationException ex)
     Console.WriteLine("No default chat profile configured");
 }
 ```
+
 {% endcode %}
 
 ### SaveProfileAsync
 
 Creates or updates a profile.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `profile` | `AIProfile` | The profile to save |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description         |
+| ------------------- | ------------------- | ------------------- |
+| `profile`           | `AIProfile`         | The profile to save |
+| `cancellationToken` | `CancellationToken` | Cancellation token  |
 
 **Returns**: The saved profile with ID assigned.
 
 {% code title="Example" %}
+
 ```csharp
 var profile = new AIProfile
 {
@@ -192,20 +205,22 @@ var profile = new AIProfile
 var saved = await _profileService.SaveProfileAsync(profile);
 Console.WriteLine($"Created profile with ID: {saved.Id}");
 ```
+
 {% endcode %}
 
 ### DeleteProfileAsync
 
 Deletes a profile by ID.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | `Guid` | The profile ID |
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
+| `id`                | `Guid`              | The profile ID     |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: `true` if deleted, `false` if not found.
 
 {% code title="Example" %}
+
 ```csharp
 var deleted = await _profileService.DeleteProfileAsync(profileId);
 if (deleted)
@@ -213,4 +228,5 @@ if (deleted)
     Console.WriteLine("Profile deleted");
 }
 ```
+
 {% endcode %}

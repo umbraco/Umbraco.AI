@@ -17,9 +17,9 @@ export const UAI_ENTITY_ADAPTER_EXTENSION_TYPE = "uaiEntityAdapter";
  * Manifest for entity adapter extensions.
  */
 export interface ManifestEntityAdapter extends ManifestBase {
-	type: typeof UAI_ENTITY_ADAPTER_EXTENSION_TYPE;
-	/** The entity type this adapter handles (e.g., "document", "media") */
-	forEntityType: string;
-	/** The adapter API class loader */
-	api: () => Promise<{ default: new () => UaiEntityAdapterApi }>;
+    type: typeof UAI_ENTITY_ADAPTER_EXTENSION_TYPE;
+    /** The entity type this adapter handles (e.g., "document", "media") */
+    forEntityType: string;
+    /** The adapter API class loader */
+    api: () => Promise<{ default: new () => UaiEntityAdapterApi }>;
 }

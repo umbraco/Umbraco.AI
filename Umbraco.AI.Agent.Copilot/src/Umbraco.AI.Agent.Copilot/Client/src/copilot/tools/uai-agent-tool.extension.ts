@@ -1,7 +1,4 @@
-import type {
-  ManifestElementAndApi,
-  UmbApi,
-} from "@umbraco-cms/backoffice/extension-api";
+import type { ManifestElementAndApi, UmbApi } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHostElement } from "@umbraco-cms/backoffice/controller-api";
 
 /**
@@ -9,24 +6,24 @@ import type { UmbControllerHostElement } from "@umbraco-cms/backoffice/controlle
  * Implement this to create a tool that can be called by AI agents.
  */
 export interface UaiAgentToolApi extends UmbApi {
-  /**
-   * Execute the tool with the given arguments.
-   * @param args The arguments passed by the AI agent
-   * @returns The result to send back to the agent
-   */
-  execute(args: Record<string, unknown>): Promise<unknown>;
+    /**
+     * Execute the tool with the given arguments.
+     * @param args The arguments passed by the AI agent
+     * @returns The result to send back to the agent
+     */
+    execute(args: Record<string, unknown>): Promise<unknown>;
 }
 
 /**
  * Tool status values matching AG-UI events.
  */
 export type UaiAgentToolStatus =
-  | "pending"           // TOOL_CALL_START received
-  | "streaming"         // TOOL_CALL_ARGS being received
-  | "awaiting_approval" // HITL: Waiting for user approval
-  | "executing"         // Frontend tool executing (after TOOL_CALL_END)
-  | "complete"          // TOOL_CALL_RESULT received or frontend execution done
-  | "error";            // Error occurred
+    | "pending" // TOOL_CALL_START received
+    | "streaming" // TOOL_CALL_ARGS being received
+    | "awaiting_approval" // HITL: Waiting for user approval
+    | "executing" // Frontend tool executing (after TOOL_CALL_END)
+    | "complete" // TOOL_CALL_RESULT received or frontend execution done
+    | "error"; // Error occurred
 
 /**
  * HITL approval configuration for tools.
@@ -55,32 +52,31 @@ export type UaiAgentToolStatus =
  * ```
  */
 export type UaiAgentToolApprovalConfig =
-  | true
-  | {
-      /** Alias of approval element (defaults to 'Uai.AgentApprovalElement.Default') */
-      elementAlias?: string;
-      /** Static config passed to the approval element */
-      config?: Record<string, unknown>;
-    };
+    | true
+    | {
+          /** Alias of approval element (defaults to 'Uai.AgentApprovalElement.Default') */
+          elementAlias?: string;
+          /** Static config passed to the approval element */
+          config?: Record<string, unknown>;
+      };
 
 /**
  * Props interface for tool render elements.
  * All tool elements receive these standardized props.
  */
 export interface UaiAgentToolElementProps {
-  /** Arguments passed to the tool by the AI agent */
-  args: Record<string, unknown>;
-  /** Current execution status of the tool */
-  status: UaiAgentToolStatus;
-  /** Result from tool execution (when completed) */
-  result?: unknown;
+    /** Arguments passed to the tool by the AI agent */
+    args: Record<string, unknown>;
+    /** Current execution status of the tool */
+    status: UaiAgentToolStatus;
+    /** Result from tool execution (when completed) */
+    result?: unknown;
 }
 
 /**
  * Base element type for tool render elements.
  */
-export type UaiAgentToolElement = UmbControllerHostElement &
-  UaiAgentToolElementProps;
+export type UaiAgentToolElement = UmbControllerHostElement & UaiAgentToolElementProps;
 
 /**
  * Manifest for AI Agent Tools.
@@ -133,33 +129,32 @@ export type UaiAgentToolElement = UmbControllerHostElement &
  * }
  * ```
  */
-export interface ManifestUaiAgentTool
-  extends ManifestElementAndApi<UaiAgentToolElement, UaiAgentToolApi> {
-  type: "uaiAgentTool";
-  kind?: "default";
-  meta: {
-    /** Tool name that matches the AG-UI tool call name */
-    toolName: string;
-    /** Display label for the tool */
-    label?: string;
-    /** Description for LLM (required for frontend tools) */
-    description?: string;
-    /** JSON Schema for tool parameters (required for frontend tools) */
-    parameters?: Record<string, unknown>;
-    /** Icon to display with the tool */
-    icon?: string;
-    /**
-     * HITL approval configuration.
-     * When specified, tool pauses for user approval before execution.
-     * - `true` - Use default approval element with localized defaults
-     * - `{ elementAlias?, config? }` - Custom approval element and/or config
-     */
-    approval?: UaiAgentToolApprovalConfig;
-  };
+export interface ManifestUaiAgentTool extends ManifestElementAndApi<UaiAgentToolElement, UaiAgentToolApi> {
+    type: "uaiAgentTool";
+    kind?: "default";
+    meta: {
+        /** Tool name that matches the AG-UI tool call name */
+        toolName: string;
+        /** Display label for the tool */
+        label?: string;
+        /** Description for LLM (required for frontend tools) */
+        description?: string;
+        /** JSON Schema for tool parameters (required for frontend tools) */
+        parameters?: Record<string, unknown>;
+        /** Icon to display with the tool */
+        icon?: string;
+        /**
+         * HITL approval configuration.
+         * When specified, tool pauses for user approval before execution.
+         * - `true` - Use default approval element with localized defaults
+         * - `{ elementAlias?, config? }` - Custom approval element and/or config
+         */
+        approval?: UaiAgentToolApprovalConfig;
+    };
 }
 
 declare global {
-  interface UmbExtensionManifestMap {
-    uaiAgentTool: ManifestUaiAgentTool;
-  }
+    interface UmbExtensionManifestMap {
+        uaiAgentTool: ManifestUaiAgentTool;
+    }
 }

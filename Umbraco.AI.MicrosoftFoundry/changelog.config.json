@@ -1,5 +1,3 @@
 {
-  "scopes": [
-    "microsoft-foundry"
-  ]
+    "scopes": ["microsoft-foundry"]
 }

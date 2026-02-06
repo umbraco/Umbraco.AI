@@ -1,6 +1,6 @@
 ---
 description: >-
-  Generate vector embeddings from text values.
+    Generate vector embeddings from text values.
 ---
 
 # Generate Embeddings
@@ -15,31 +15,30 @@ POST /umbraco/ai/management/api/v1/embedding/generate
 
 ### Headers
 
-| Header | Value |
-|--------|-------|
+| Header          | Value                  |
+| --------------- | ---------------------- |
 | `Authorization` | Bearer token or cookie |
-| `Content-Type` | `application/json` |
+| `Content-Type`  | `application/json`     |
 
 ### Request Body
 
 {% code title="Request" %}
+
 ```json
 {
-  "profileIdOrAlias": "document-embeddings",
-  "values": [
-    "Umbraco is an open-source CMS",
-    "Content management made easy"
-  ]
+    "profileIdOrAlias": "document-embeddings",
+    "values": ["Umbraco is an open-source CMS", "Content management made easy"]
 }
 ```
+
 {% endcode %}
 
 ### Request Properties
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `profileIdOrAlias` | string/guid | No | Profile ID or alias (uses default if omitted) |
-| `values` | string[] | Yes | Text values to embed (min 1) |
+| Property           | Type        | Required | Description                                   |
+| ------------------ | ----------- | -------- | --------------------------------------------- |
+| `profileIdOrAlias` | string/guid | No       | Profile ID or alias (uses default if omitted) |
+| `values`           | string[]    | Yes      | Text values to embed (min 1)                  |
 
 ## Response
 
@@ -48,6 +47,7 @@ POST /umbraco/ai/management/api/v1/embedding/generate
 Returns embeddings for each input value.
 
 {% code title="Response" %}
+
 ```json
 {
   "embeddings": [
@@ -62,29 +62,32 @@ Returns embeddings for each input value.
   ]
 }
 ```
+
 {% endcode %}
 
 ### Response Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `embeddings` | array | List of embedding results |
-| `embeddings[].index` | int | Index of corresponding input value |
-| `embeddings[].vector` | float[] | Embedding vector |
+| Property              | Type    | Description                        |
+| --------------------- | ------- | ---------------------------------- |
+| `embeddings`          | array   | List of embedding results          |
+| `embeddings[].index`  | int     | Index of corresponding input value |
+| `embeddings[].vector` | float[] | Embedding vector                   |
 
 ### Bad Request (400)
 
 Returned when the request is invalid or embedding generation fails.
 
 {% code title="Response" %}
+
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-  "title": "Embedding generation failed",
-  "detail": "No default embedding profile configured",
-  "status": 400
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+    "title": "Embedding generation failed",
+    "detail": "No default embedding profile configured",
+    "status": 400
 }
 ```
+
 {% endcode %}
 
 ### Not Found (404)
@@ -92,13 +95,15 @@ Returned when the request is invalid or embedding generation fails.
 Returned when the specified profile doesn't exist.
 
 {% code title="Response" %}
+
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-  "title": "Not Found",
-  "status": 404
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    "title": "Not Found",
+    "status": 404
 }
 ```
+
 {% endcode %}
 
 ## Example
@@ -118,6 +123,7 @@ curl -X POST "https://localhost:44331/umbraco/ai/management/api/v1/embedding/gen
 ### C# HttpClient
 
 {% code title="Example" %}
+
 ```csharp
 using var client = new HttpClient();
 client.DefaultRequestHeaders.Authorization =
@@ -140,29 +146,32 @@ foreach (var embedding in result.Embeddings)
     Console.WriteLine($"Input {embedding.Index}: {embedding.Vector.Length} dimensions");
 }
 ```
+
 {% endcode %}
 
 ### JavaScript
 
 {% code title="Example" %}
+
 ```javascript
-const response = await fetch('/umbraco/ai/management/api/v1/embedding/generate', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    profileIdOrAlias: 'document-embeddings',
-    values: ['Umbraco CMS', 'Content management']
-  })
+const response = await fetch("/umbraco/ai/management/api/v1/embedding/generate", {
+    method: "POST",
+    headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+        profileIdOrAlias: "document-embeddings",
+        values: ["Umbraco CMS", "Content management"],
+    }),
 });
 
 const result = await response.json();
-result.embeddings.forEach(e => {
-  console.log(`Input ${e.index}: ${e.vector.length} dimensions`);
+result.embeddings.forEach((e) => {
+    console.log(`Input ${e.index}: ${e.vector.length} dimensions`);
 });
 ```
+
 {% endcode %}
 
 ## Use Cases
@@ -172,6 +181,7 @@ result.embeddings.forEach(e => {
 Generate embeddings for content to enable semantic search:
 
 {% code title="Example" %}
+
 ```csharp
 public async Task IndexContentAsync(IContent content)
 {
@@ -193,6 +203,7 @@ public async Task IndexContentAsync(IContent content)
     });
 }
 ```
+
 {% endcode %}
 
 ### Content Similarity
@@ -200,6 +211,7 @@ public async Task IndexContentAsync(IContent content)
 Find similar content by comparing embeddings:
 
 {% code title="Example" %}
+
 ```csharp
 public async Task<IEnumerable<IContent>> FindSimilarContentAsync(
     string text,
@@ -222,6 +234,7 @@ public async Task<IEnumerable<IContent>> FindSimilarContentAsync(
         .Where(c => c != null);
 }
 ```
+
 {% endcode %}
 
 ### Batch Processing
@@ -229,6 +242,7 @@ public async Task<IEnumerable<IContent>> FindSimilarContentAsync(
 Process content in batches for efficiency:
 
 {% code title="Example" %}
+
 ```csharp
 public async Task IndexAllContentAsync(IEnumerable<IContent> contents)
 {
@@ -254,6 +268,7 @@ public async Task IndexAllContentAsync(IEnumerable<IContent> contents)
     }
 }
 ```
+
 {% endcode %}
 
 ## Notes

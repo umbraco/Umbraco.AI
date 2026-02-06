@@ -1,6 +1,6 @@
 ---
 description: >-
-  Generate embeddings for multiple texts in a single request for efficiency.
+    Generate embeddings for multiple texts in a single request for efficiency.
 ---
 
 # Batch Embeddings
@@ -10,6 +10,7 @@ When embedding multiple texts, use batch operations for better performance. A si
 ## Basic Batch Example
 
 {% code title="BatchEmbedding.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Embeddings;
@@ -31,18 +32,20 @@ public class BatchEmbeddingExample
     }
 }
 ```
+
 {% endcode %}
 
 ## Understanding the Response
 
 `GenerateEmbeddingsAsync` returns `GeneratedEmbeddings<Embedding<float>>`:
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Property     | Type                      | Description                       |
+| ------------ | ------------------------- | --------------------------------- |
 | (collection) | `IList<Embedding<float>>` | The generated embeddings in order |
-| `Usage` | `UsageDetails?` | Token usage for the batch |
+| `Usage`      | `UsageDetails?`           | Token usage for the batch         |
 
 {% code title="BatchDetails.cs" %}
+
 ```csharp
 var texts = new[] { "First document", "Second document", "Third document" };
 
@@ -64,6 +67,7 @@ if (embeddings.Usage is { } usage)
     Console.WriteLine($"Total tokens: {usage.TotalTokenCount}");
 }
 ```
+
 {% endcode %}
 
 ## Batch Indexing
@@ -71,6 +75,7 @@ if (embeddings.Usage is { } usage)
 Index multiple content items efficiently:
 
 {% code title="BatchIndexer.cs" %}
+
 ```csharp
 public class BatchContentIndexer
 {
@@ -113,6 +118,7 @@ public class BatchContentIndexer
     }
 }
 ```
+
 {% endcode %}
 
 ## Chunking Large Batches
@@ -120,6 +126,7 @@ public class BatchContentIndexer
 Most providers have limits on batch size. Process large sets in chunks:
 
 {% code title="ChunkedBatch.cs" %}
+
 ```csharp
 public class ChunkedEmbeddingService
 {
@@ -154,6 +161,7 @@ public class ChunkedEmbeddingService
     }
 }
 ```
+
 {% endcode %}
 
 ## With Progress Reporting
@@ -161,6 +169,7 @@ public class ChunkedEmbeddingService
 Report progress for large batch operations:
 
 {% code title="WithProgress.cs" %}
+
 ```csharp
 public async Task<IList<Embedding<float>>> GenerateWithProgress(
     IList<string> texts,
@@ -189,11 +198,13 @@ public async Task<IList<Embedding<float>>> GenerateWithProgress(
     return allEmbeddings;
 }
 ```
+
 {% endcode %}
 
 ## Using a Specific Profile
 
 {% code title="BatchWithProfile.cs" %}
+
 ```csharp
 public async Task<IList<float[]>> GenerateBatchWithProfile(
     IEnumerable<string> texts,
@@ -206,6 +217,7 @@ public async Task<IList<float[]>> GenerateBatchWithProfile(
     return embeddings.Select(e => e.Vector.ToArray()).ToList();
 }
 ```
+
 {% endcode %}
 
 ## Parallel Processing
@@ -213,6 +225,7 @@ public async Task<IList<float[]>> GenerateBatchWithProfile(
 For large datasets, consider parallel processing with rate limiting:
 
 {% code title="ParallelBatch.cs" %}
+
 ```csharp
 public async Task<IDictionary<string, float[]>> GenerateParallel(
     IDictionary<string, string> idToText,
@@ -249,6 +262,7 @@ public async Task<IDictionary<string, float[]>> GenerateParallel(
     return results;
 }
 ```
+
 {% endcode %}
 
 {% hint style="warning" %}
@@ -265,5 +279,5 @@ Be mindful of API rate limits when using parallel processing. Most providers lim
 
 ## Related
 
-* [Generating Embeddings](generating-embeddings.md) - Single embedding generation
-* [Embeddings Concept](../../concepts/capabilities.md) - Understanding capabilities
+- [Generating Embeddings](generating-embeddings.md) - Single embedding generation
+- [Embeddings Concept](../../concepts/capabilities.md) - Understanding capabilities

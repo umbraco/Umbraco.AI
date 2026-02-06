@@ -11,10 +11,7 @@ import "../../components/version-diff-view/version-diff-view.element.js";
  * @element uai-rollback-modal
  */
 @customElement("uai-rollback-modal")
-export class UaiRollbackModalElement extends UmbModalBaseElement<
-    UaiRollbackModalData,
-    UaiRollbackModalValue
-> {
+export class UaiRollbackModalElement extends UmbModalBaseElement<UaiRollbackModalData, UaiRollbackModalValue> {
     #onRollback() {
         this.updateValue({ rollback: true });
         this._submitModal();
@@ -22,18 +19,18 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
 
     override render() {
         if (!this.data) return html``;
-        
-        const headline = this.localize.term("uaiVersionHistory_compareVersions", 
+
+        const headline = this.localize.term(
+            "uaiVersionHistory_compareVersions",
             this.data.fromVersion,
-            this.data.toVersion);
+            this.data.toVersion,
+        );
 
         return html`
             <umb-body-layout headline=${headline}>
                 <div id="main">
                     <uui-box headline=${this.localize.term("uaiVersionHistory_changes")}>
-                        <uai-version-diff-view
-                            .changes=${this.data.changes}>
-                        </uai-version-diff-view>
+                        <uai-version-diff-view .changes=${this.data.changes}> </uai-version-diff-view>
                     </uui-box>
                 </div>
 
@@ -41,7 +38,8 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
                     slot="actions"
                     id="close"
                     label=${this.localize.term("general_close")}
-                    @click=${this._rejectModal}>
+                    @click=${this._rejectModal}
+                >
                     ${this.localize.term("general_close")}
                 </uui-button>
                 <uui-button
@@ -50,7 +48,8 @@ export class UaiRollbackModalElement extends UmbModalBaseElement<
                     color="positive"
                     look="primary"
                     label=${this.localize.term("uaiVersionHistory_rollback", [this.data.fromVersion])}
-                    @click=${this.#onRollback}>
+                    @click=${this.#onRollback}
+                >
                     ${this.localize.term("uaiVersionHistory_rollback", [this.data.fromVersion])}
                 </uui-button>
             </umb-body-layout>

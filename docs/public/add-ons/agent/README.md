@@ -1,6 +1,6 @@
 ---
 description: >-
-  Agent Runtime add-on for configuring and running AI agents with streaming responses.
+    Agent Runtime add-on for configuring and running AI agents with streaming responses.
 ---
 
 # Agent Runtime
@@ -10,17 +10,21 @@ The Agent Runtime add-on (`Umbraco.AI.Agent`) enables you to configure and run A
 ## Installation
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 Install-Package Umbraco.AI.Agent
 ```
+
 {% endcode %}
 
 Or via .NET CLI:
 
 {% code title="Terminal" %}
+
 ```bash
 dotnet add package Umbraco.AI.Agent
 ```
+
 {% endcode %}
 
 ## Features
@@ -44,16 +48,17 @@ For the **Copilot chat sidebar** with frontend tools and HITL approval, install 
 
 In the backoffice, navigate to **Settings** > **AI** > **Agents** and create a new agent:
 
-| Field | Value |
-|-------|-------|
-| Alias | `content-assistant` |
-| Name | Content Assistant |
+| Field        | Value                                                                        |
+| ------------ | ---------------------------------------------------------------------------- |
+| Alias        | `content-assistant`                                                          |
+| Name         | Content Assistant                                                            |
 | Instructions | `You are a helpful content assistant. Help users write and improve content.` |
-| Profile | (select your chat profile) |
+| Profile      | (select your chat profile)                                                   |
 
 ### 2. Run the Agent
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class AgentRunner
 {
@@ -88,23 +93,26 @@ public class AgentRunner
     }
 }
 ```
+
 {% endcode %}
 
 ### 3. Consume in Frontend
 
 {% code title="Frontend.ts" %}
-```typescript
-const eventSource = new EventSource('/api/agent/content-assistant/run');
 
-eventSource.addEventListener('text_message_content', (e) => {
-  const data = JSON.parse(e.data);
-  console.log('Content:', data.content);
+```typescript
+const eventSource = new EventSource("/api/agent/content-assistant/run");
+
+eventSource.addEventListener("text_message_content", (e) => {
+    const data = JSON.parse(e.data);
+    console.log("Content:", data.content);
 });
 
-eventSource.addEventListener('run_finished', () => {
-  eventSource.close();
+eventSource.addEventListener("run_finished", () => {
+    eventSource.close();
 });
 ```
+
 {% endcode %}
 
 ## AG-UI Protocol
@@ -118,27 +126,27 @@ The Agent Runtime uses the AG-UI (Agent UI) protocol for streaming responses. Th
 
 ## Documentation
 
-| Section | Description |
-|---------|-------------|
-| [Concepts](concepts.md) | Agent architecture and AG-UI protocol |
-| [Getting Started](getting-started.md) | Step-by-step setup guide |
-| [Instructions](instructions.md) | Agent instruction configuration |
-| [Scopes](scopes.md) | Categorizing agents with scopes |
-| [Streaming](streaming.md) | SSE streaming and event handling |
-| [Frontend Client](frontend-client.md) | UaiAgentClient for custom agent UIs |
-| [API Reference](api/README.md) | Management API endpoints |
-| [Service Reference](reference/ai-agent-service.md) | IAIAgentService |
+| Section                                            | Description                           |
+| -------------------------------------------------- | ------------------------------------- |
+| [Concepts](concepts.md)                            | Agent architecture and AG-UI protocol |
+| [Getting Started](getting-started.md)              | Step-by-step setup guide              |
+| [Instructions](instructions.md)                    | Agent instruction configuration       |
+| [Scopes](scopes.md)                                | Categorizing agents with scopes       |
+| [Streaming](streaming.md)                          | SSE streaming and event handling      |
+| [Frontend Client](frontend-client.md)              | UaiAgentClient for custom agent UIs   |
+| [API Reference](api/README.md)                     | Management API endpoints              |
+| [Service Reference](reference/ai-agent-service.md) | IAIAgentService                       |
 
 For Copilot-specific features:
 
-| Section | Description |
-|---------|-------------|
-| [Copilot Overview](../agent-copilot/README.md) | Chat sidebar and tool execution |
-| [Frontend Tools](../agent-copilot/frontend-tools.md) | Browser-executable tools |
-| [Copilot Usage](../agent-copilot/copilot.md) | Using the chat interface |
+| Section                                              | Description                     |
+| ---------------------------------------------------- | ------------------------------- |
+| [Copilot Overview](../agent-copilot/README.md)       | Chat sidebar and tool execution |
+| [Frontend Tools](../agent-copilot/frontend-tools.md) | Browser-executable tools        |
+| [Copilot Usage](../agent-copilot/copilot.md)         | Using the chat interface        |
 
 ## Related
 
-* [Add-ons Overview](../README.md) - All add-on packages
-* [AI Contexts](../../concepts/contexts.md) - Brand voice and guidelines
-* [Profiles](../../concepts/profiles.md) - AI configuration
+- [Add-ons Overview](../README.md) - All add-on packages
+- [AI Contexts](../../concepts/contexts.md) - Brand voice and guidelines
+- [Profiles](../../concepts/profiles.md) - AI configuration

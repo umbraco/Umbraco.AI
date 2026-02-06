@@ -18,10 +18,7 @@ export class UaiProviderItemServerDataSource {
      * Fetches all available providers.
      */
     async getItems(): Promise<{ data?: UaiProviderItemModel[]; error?: unknown }> {
-        const { data, error } = await tryExecute(
-            this.#host,
-            ProvidersService.getAllProviders()
-        );
+        const { data, error } = await tryExecute(this.#host, ProvidersService.getAllProviders());
 
         if (error || !data) {
             return { error };

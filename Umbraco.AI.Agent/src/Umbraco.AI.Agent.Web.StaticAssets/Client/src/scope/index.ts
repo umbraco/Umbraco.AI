@@ -1,1 +1,1 @@
-export * from './components/scope-picker/scope-picker.element.js';
+export * from "./components/scope-picker/scope-picker.element.js";

@@ -21,10 +21,13 @@ export class UaiContextDetailRepository extends UmbDetailRepositoryBase<UaiConte
         const result = await super.create(model, null);
         if (!result.error && result.data) {
             dispatchActionEvent(this, UaiEntityActionEvent.created(result.data.unique, UAI_CONTEXT_ENTITY_TYPE));
-            dispatchActionEvent(this, new UmbRequestReloadChildrenOfEntityEvent({
-                entityType: UAI_CONTEXT_ROOT_ENTITY_TYPE,
-                unique: null,
-            }));
+            dispatchActionEvent(
+                this,
+                new UmbRequestReloadChildrenOfEntityEvent({
+                    entityType: UAI_CONTEXT_ROOT_ENTITY_TYPE,
+                    unique: null,
+                }),
+            );
         }
         return result;
     }
@@ -41,10 +44,13 @@ export class UaiContextDetailRepository extends UmbDetailRepositoryBase<UaiConte
         const result = await super.delete(unique);
         if (!result.error) {
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_CONTEXT_ENTITY_TYPE));
-            dispatchActionEvent(this, new UmbRequestReloadChildrenOfEntityEvent({
-                entityType: UAI_CONTEXT_ROOT_ENTITY_TYPE,
-                unique: null,
-            }));
+            dispatchActionEvent(
+                this,
+                new UmbRequestReloadChildrenOfEntityEvent({
+                    entityType: UAI_CONTEXT_ROOT_ENTITY_TYPE,
+                    unique: null,
+                }),
+            );
         }
         return result;
     }

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Contexts define brand voice, guidelines, and additional content that get injected into AI operations.
+    Contexts define brand voice, guidelines, and additional content that get injected into AI operations.
 ---
 
 # Contexts
@@ -9,35 +9,35 @@ A context is a collection of resources that provide additional information to AI
 
 ## What Contexts Store
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Unique identifier (GUID) |
-| `Alias` | Unique string for programmatic lookup |
-| `Name` | Display name shown in the backoffice |
-| `Resources` | Collection of context resources |
-| `Version` | Current version number (for version history) |
+| Property    | Description                                  |
+| ----------- | -------------------------------------------- |
+| `Id`        | Unique identifier (GUID)                     |
+| `Alias`     | Unique string for programmatic lookup        |
+| `Name`      | Display name shown in the backoffice         |
+| `Resources` | Collection of context resources              |
+| `Version`   | Current version number (for version history) |
 
 ## Context Resources
 
 Each context contains one or more resources. A resource represents a piece of content that gets injected into AI requests.
 
-| Property | Description |
-|----------|-------------|
-| `Id` | Unique identifier (GUID) |
+| Property         | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `Id`             | Unique identifier (GUID)                        |
 | `ResourceTypeId` | The type of resource (e.g., "text", "document") |
-| `Name` | Display name for the resource |
-| `Description` | Optional description |
-| `SortOrder` | Controls injection order |
-| `Data` | Type-specific resource data |
-| `InjectionMode` | When the resource is injected |
+| `Name`           | Display name for the resource                   |
+| `Description`    | Optional description                            |
+| `SortOrder`      | Controls injection order                        |
+| `Data`           | Type-specific resource data                     |
+| `InjectionMode`  | When the resource is injected                   |
 
 ### Injection Modes
 
 Resources can be injected based on different conditions:
 
-| Mode | Description |
-|------|-------------|
-| `Always` | Resource is always included (default) |
+| Mode       | Description                                         |
+| ---------- | --------------------------------------------------- |
+| `Always`   | Resource is always included (default)               |
 | `OnDemand` | Resource is included only when explicitly requested |
 
 ## Why Use Contexts
@@ -52,18 +52,19 @@ Contexts provide these benefits:
 
 ## Example Context Configurations
 
-| Context | Use Case | Resources |
-|---------|----------|-----------|
-| `brand-voice` | Consistent tone | Writing guidelines, terminology |
-| `product-catalog` | E-commerce | Product descriptions, pricing rules |
-| `support-kb` | Customer service | FAQ, troubleshooting guides |
-| `legal-compliance` | Regulatory | Compliance rules, disclaimers |
+| Context            | Use Case         | Resources                           |
+| ------------------ | ---------------- | ----------------------------------- |
+| `brand-voice`      | Consistent tone  | Writing guidelines, terminology     |
+| `product-catalog`  | E-commerce       | Product descriptions, pricing rules |
+| `support-kb`       | Customer service | FAQ, troubleshooting guides         |
+| `legal-compliance` | Regulatory       | Compliance rules, disclaimers       |
 
 ## Using Contexts in Code
 
 ### Getting a Context
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class ContextExample
 {
@@ -80,11 +81,13 @@ public class ContextExample
     }
 }
 ```
+
 {% endcode %}
 
 ### Creating a Context
 
 {% code title="Example.cs" %}
+
 ```csharp
 public async Task<AIContext> CreateContext()
 {
@@ -108,6 +111,7 @@ public async Task<AIContext> CreateContext()
     return await _contextService.SaveContextAsync(context);
 }
 ```
+
 {% endcode %}
 
 ### Using Contexts with Profiles
@@ -115,6 +119,7 @@ public async Task<AIContext> CreateContext()
 Contexts are typically associated with prompts or agents rather than directly with profiles. When executing a prompt or running an agent, the associated contexts are automatically injected.
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Contexts are injected automatically when using prompts
 var result = await _promptService.ExecutePromptAsync(
@@ -124,6 +129,7 @@ var result = await _promptService.ExecutePromptAsync(
         EntityContext = "The product being described..."
     });
 ```
+
 {% endcode %}
 
 ## How Context Injection Works
@@ -155,6 +161,7 @@ When multiple contexts are used:
 ### Via Code
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class ContextManagement
 {
@@ -176,6 +183,7 @@ public class ContextManagement
     }
 }
 ```
+
 {% endcode %}
 
 ## Version History
@@ -190,6 +198,6 @@ See [Version History](versioning.md) for more information.
 
 ## Related
 
-* [Profiles](profiles.md) - Use contexts with AI profiles
-* [Version History](versioning.md) - Track context changes over time
-* [Managing Contexts](../backoffice/managing-contexts.md) - Backoffice guide
+- [Profiles](profiles.md) - Use contexts with AI profiles
+- [Version History](versioning.md) - Track context changes over time
+- [Managing Contexts](../backoffice/managing-contexts.md) - Backoffice guide

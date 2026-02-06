@@ -20,7 +20,7 @@ export class UaiContextResourceTypeDetailServerDataSource {
     async get(id: string): Promise<{ data?: UaiContextResourceTypeDetailModel; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
-            ContextResourceTypesService.getContextResourceTypeById({ path: { id } })
+            ContextResourceTypesService.getContextResourceTypeById({ path: { id } }),
         );
 
         if (error || !data) {

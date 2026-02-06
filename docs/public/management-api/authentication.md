@@ -1,6 +1,6 @@
 ---
 description: >-
-  Authentication requirements for the Umbraco.AI Management API.
+    Authentication requirements for the Umbraco.AI Management API.
 ---
 
 # Authentication
@@ -25,15 +25,17 @@ All Management API endpoints require the **Settings section access** policy. Use
 When calling from backoffice components (Lit elements, controllers), authentication is handled automatically through the browser's cookies:
 
 {% code title="backoffice-example.ts" %}
+
 ```typescript
-const response = await fetch('/umbraco/ai/management/api/v1/connections', {
-    method: 'GET',
-    credentials: 'include', // Include cookies
+const response = await fetch("/umbraco/ai/management/api/v1/connections", {
+    method: "GET",
+    credentials: "include", // Include cookies
     headers: {
-        'Content-Type': 'application/json'
-    }
+        "Content-Type": "application/json",
+    },
 });
 ```
+
 {% endcode %}
 
 ### From Server-Side Code
@@ -49,24 +51,26 @@ The Management API is designed for backoffice integration, not for public-facing
 ### 401 Unauthorized
 
 Returned when:
-* No authentication credentials provided
-* Session has expired
-* User is not logged in
+
+- No authentication credentials provided
+- Session has expired
+- User is not logged in
 
 ### 403 Forbidden
 
 Returned when:
-* User lacks Settings section access
-* User doesn't have required permissions
+
+- User lacks Settings section access
+- User doesn't have required permissions
 
 ## Example Error Response
 
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
-  "title": "Forbidden",
-  "status": 403,
-  "detail": "User does not have access to the Settings section"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
+    "title": "Forbidden",
+    "status": 403,
+    "detail": "User does not have access to the Settings section"
 }
 ```
 
@@ -82,6 +86,7 @@ Returned when:
 If you need to expose AI capabilities publicly, create your own API controllers:
 
 {% code title="PublicChatController.cs" %}
+
 ```csharp
 [ApiController]
 [Route("api/chat")]
@@ -111,10 +116,12 @@ public class PublicChatController : ControllerBase
     }
 }
 ```
+
 {% endcode %}
 
 This approach lets you:
-* Implement custom authentication
-* Add rate limiting
-* Control which profiles are accessible
-* Add logging and monitoring
+
+- Implement custom authentication
+- Add rate limiting
+- Control which profiles are accessible
+- Add logging and monitoring

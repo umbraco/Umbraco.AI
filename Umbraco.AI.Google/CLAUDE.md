@@ -22,8 +22,8 @@ Umbraco.AI.Google is a provider plugin for Umbraco.AI that enables integration w
 
 This provider uses a simplified structure (single project):
 
-| Project | Purpose |
-|---------|---------|
+| Project             | Purpose                                             |
+| ------------------- | --------------------------------------------------- |
 | `Umbraco.AI.Google` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
@@ -45,6 +45,7 @@ public class GoogleProvider : AIProviderBase<GoogleProviderSettings>
 ### Capabilities
 
 **Chat Capability** (`GoogleChatCapability`):
+
 - Extends `AIChatCapabilityBase<GoogleProviderSettings>`
 - Creates `IChatClient` instances using Google.GenAI SDK with `AsIChatClient()` extension
 - Supports Gemini 2.0, 1.5 Pro, 1.5 Flash models
@@ -68,6 +69,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 ### Supported Models
 
 **Chat Models:**
+
 - `gemini-2.0-flash` (Gemini 2.0 Flash)
 - `gemini-2.0-flash-lite` (Gemini 2.0 Flash Lite)
 - `gemini-1.5-pro` (Gemini 1.5 Pro)
@@ -75,6 +77,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 - `gemini-1.5-flash-8b` (Gemini 1.5 Flash 8B)
 
 **Key Features:**
+
 - Extended context windows (up to 1M tokens for Pro models)
 - Multimodal capabilities (for supported models)
 - System prompt support
@@ -87,9 +90,9 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 
 ```json
 {
-  "Google": {
-    "ApiKey": "AIza..."
-  }
+    "Google": {
+        "ApiKey": "AIza..."
+    }
 }
 ```
 
@@ -108,6 +111,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Google:Api
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
+
 1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
 3. Registration in the `AIProvidersCollectionBuilder`
@@ -115,6 +119,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
+
 - `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles

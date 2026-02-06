@@ -22,8 +22,8 @@ Umbraco.AI.OpenAI is a provider plugin for Umbraco.AI that enables integration w
 
 This provider uses a simplified structure (single project):
 
-| Project | Purpose |
-|---------|---------|
+| Project             | Purpose                                             |
+| ------------------- | --------------------------------------------------- |
 | `Umbraco.AI.OpenAI` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
@@ -46,12 +46,14 @@ public class OpenAIProvider : AIProviderBase<OpenAISettings>
 ### Capabilities
 
 **Chat Capability** (`OpenAIChatCapability`):
+
 - Extends `AIChatCapabilityBase<OpenAISettings>`
 - Creates `IChatClient` instances using Microsoft.Extensions.AI.OpenAI
 - Supports both OpenAI API and Azure OpenAI endpoints
 - Handles model configuration (GPT-4, GPT-3.5-turbo, etc.)
 
 **Embedding Capability** (`OpenAIEmbeddingCapability`):
+
 - Extends `AIEmbeddingCapabilityBase<OpenAISettings>`
 - Creates `IEmbeddingGenerator<string, Embedding<float>>` instances
 - Supports text-embedding-3-large, text-embedding-3-small, text-embedding-ada-002
@@ -81,12 +83,14 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 ### Supported Models
 
 **Chat Models:**
+
 - `gpt-4o`
 - `gpt-4-turbo`
 - `gpt-4`
 - `gpt-3.5-turbo`
 
 **Embedding Models:**
+
 - `text-embedding-3-large`
 - `text-embedding-3-small`
 - `text-embedding-ada-002`
@@ -103,10 +107,10 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 
 ```json
 {
-  "OpenAI": {
-    "ApiKey": "sk-proj-...",
-    "OrganizationId": "org-..."
-  }
+    "OpenAI": {
+        "ApiKey": "sk-proj-...",
+        "OrganizationId": "org-..."
+    }
 }
 ```
 
@@ -114,13 +118,13 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 
 ```json
 {
-  "OpenAI": {
-    "Azure": {
-      "Endpoint": "https://your-resource.openai.azure.com/",
-      "ApiKey": "...",
-      "DeploymentName": "gpt-4"
+    "OpenAI": {
+        "Azure": {
+            "Endpoint": "https://your-resource.openai.azure.com/",
+            "ApiKey": "...",
+            "DeploymentName": "gpt-4"
+        }
     }
-  }
 }
 ```
 
@@ -140,6 +144,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$OpenAI:Api
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
+
 1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
 3. Registration in the `AIProvidersCollectionBuilder`
@@ -147,6 +152,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
+
 - `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles

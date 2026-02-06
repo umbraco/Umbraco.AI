@@ -22,16 +22,16 @@
  * Umbraco URLs follow the pattern: /section/{pathname}/...
  */
 export function getSectionPathnameFromUrl(): string | null {
-  const path = window.location.pathname;
-  const match = path.match(/\/section\/([^/]+)/);
-  return match ? match[1] : null;
+    const path = window.location.pathname;
+    const match = path.match(/\/section\/([^/]+)/);
+    return match ? match[1] : null;
 }
 
 /**
  * Checks if a section pathname is in the allowed list.
  */
 export function isSectionAllowed(pathname: string | null, allowedPathnames: string[]): boolean {
-  return pathname ? allowedPathnames.includes(pathname) : false;
+    return pathname ? allowedPathnames.includes(pathname) : false;
 }
 
 /**
@@ -47,47 +47,44 @@ export type SectionChangeCallback = (pathname: string | null) => void;
  * @param pollInterval - How often to check for URL changes (ms). Default: 100
  * @returns Cleanup function to stop observing
  */
-export function observeSectionChanges(
-  callback: SectionChangeCallback,
-  pollInterval = 100
-): () => void {
-  let lastUrl = window.location.href;
-  let lastPathname = getSectionPathnameFromUrl();
+export function observeSectionChanges(callback: SectionChangeCallback, pollInterval = 100): () => void {
+    let lastUrl = window.location.href;
+    let lastPathname = getSectionPathnameFromUrl();
 
-  const checkAndNotify = () => {
-    const currentPathname = getSectionPathnameFromUrl();
-    if (currentPathname !== lastPathname) {
-      lastPathname = currentPathname;
-      callback(currentPathname);
-    }
-  };
+    const checkAndNotify = () => {
+        const currentPathname = getSectionPathnameFromUrl();
+        if (currentPathname !== lastPathname) {
+            lastPathname = currentPathname;
+            callback(currentPathname);
+        }
+    };
 
-  const handleNavigation = () => {
-    if (window.location.href !== lastUrl) {
-      lastUrl = window.location.href;
-      checkAndNotify();
-    }
-  };
+    const handleNavigation = () => {
+        if (window.location.href !== lastUrl) {
+            lastUrl = window.location.href;
+            checkAndNotify();
+        }
+    };
 
-  // Listen for navigation events
-  window.addEventListener("popstate", handleNavigation);
-  window.addEventListener("navigated", handleNavigation);
+    // Listen for navigation events
+    window.addEventListener("popstate", handleNavigation);
+    window.addEventListener("navigated", handleNavigation);
 
-  // Poll for URL changes as a fallback (some SPA routers don't fire events)
-  const intervalId = setInterval(() => {
-    if (window.location.href !== lastUrl) {
-      lastUrl = window.location.href;
-      checkAndNotify();
-    }
-  }, pollInterval);
+    // Poll for URL changes as a fallback (some SPA routers don't fire events)
+    const intervalId = setInterval(() => {
+        if (window.location.href !== lastUrl) {
+            lastUrl = window.location.href;
+            checkAndNotify();
+        }
+    }, pollInterval);
 
-  // Notify immediately with current section
-  callback(lastPathname);
+    // Notify immediately with current section
+    callback(lastPathname);
 
-  // Return cleanup function
-  return () => {
-    window.removeEventListener("popstate", handleNavigation);
-    window.removeEventListener("navigated", handleNavigation);
-    clearInterval(intervalId);
-  };
+    // Return cleanup function
+    return () => {
+        window.removeEventListener("popstate", handleNavigation);
+        window.removeEventListener("navigated", handleNavigation);
+        clearInterval(intervalId);
+    };
 }

@@ -1,6 +1,17 @@
-import type { ContextResponseModel, ContextItemResponseModel, ContextResourceModel, CreateContextRequestModel, UpdateContextRequestModel } from "../api";
+import type {
+    ContextResponseModel,
+    ContextItemResponseModel,
+    ContextResourceModel,
+    CreateContextRequestModel,
+    UpdateContextRequestModel,
+} from "../api";
 import { UAI_CONTEXT_ENTITY_TYPE } from "./constants.js";
-import type { UaiContextDetailModel, UaiContextItemModel, UaiContextResourceModel, UaiContextResourceInjectionMode } from "./types.js";
+import type {
+    UaiContextDetailModel,
+    UaiContextItemModel,
+    UaiContextResourceModel,
+    UaiContextResourceInjectionMode,
+} from "./types.js";
 
 export const UaiContextTypeMapper = {
     toDetailModel(response: ContextResponseModel): UaiContextDetailModel {

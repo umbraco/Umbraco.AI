@@ -26,7 +26,7 @@ export class UaiPromptRegistrarServerDataSource {
                     skip: 0,
                     take: 1000, // Fetch all prompts - registration happens once
                 },
-            })
+            }),
         );
 
         if (error || !data) {
@@ -43,38 +43,58 @@ export class UaiPromptRegistrarServerDataSource {
                     this.#host,
                     PromptsService.getPromptByIdOrAlias({
                         path: { promptIdOrAlias: item.id },
-                    })
+                    }),
                 );
 
                 if (detailError || !detail) {
                     return null;
                 }
 
-                return {
-                    unique: detail.id,
-                    alias: detail.alias,
-                    name: detail.name,
-                    description: detail.description ?? null,
-                    instructions: detail.instructions,
-                    profileId: detail.profileId ?? null,
-                    scope: detail.scope ? {
-                        allowRules: detail.scope.allowRules?.map(r => ({
-                            propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
-                            propertyAliases: r.propertyAliases ?? null,
-                            contentTypeAliases: r.contentTypeAliases ?? null,
-                        })) ?? [],
-                        denyRules: detail.scope.denyRules?.map(r => ({
-                            propertyEditorUiAliases: r.propertyEditorUiAliases ?? null,
-                            propertyAliases: r.propertyAliases ?? null,
-                            contentTypeAliases: r.contentTypeAliases ?? null,
-                        })) ?? [],
-                    } : null,
-                } satisfies UaiPromptRegistrationModel;
-            })
+                // Destructure only the properties needed for registration
+                const { id, alias, name, description, instructions, profileId, scope, isActive } = detail;
+                const model: UaiPromptRegistrationModel = {
+                    unique: id,
+                    alias,
+                    name,
+                    description,
+                    instructions,
+                    profileId,
+                    scope,
+                    isActive,
+                };
+                return model;
+            }),
         );
 
         return {
             data: promptDetails.filter((p): p is UaiPromptRegistrationModel => p !== null),
+        };
+    }
+
+    /**
+     * Gets a single prompt by ID for registration.
+     */
+    async getPromptById(unique: string): Promise<{ data?: UaiPromptRegistrationModel; error?: unknown }> {
+        const { data: detail, error } = await tryExecute(
+            this.#host,
+            PromptsService.getPromptByIdOrAlias({ path: { promptIdOrAlias: unique } }),
+        );
+
+        if (error || !detail) return { error };
+
+        // Destructure only the properties needed for registration
+        const { id, alias, name, description, instructions, profileId, scope, isActive } = detail;
+        return {
+            data: {
+                unique: id,
+                alias,
+                name,
+                description,
+                instructions,
+                profileId,
+                scope,
+                isActive,
+            },
         };
     }
 }

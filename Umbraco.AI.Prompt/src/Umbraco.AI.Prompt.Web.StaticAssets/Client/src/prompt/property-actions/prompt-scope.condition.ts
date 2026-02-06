@@ -1,10 +1,14 @@
-import { UMB_PROPERTY_CONTEXT } from '@umbraco-cms/backoffice/property';
-import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from '@umbraco-cms/backoffice/content-type';
-import type { UmbControllerHost } from '@umbraco-cms/backoffice/controller-api';
-import type { UmbConditionConfigBase, UmbConditionControllerArguments, UmbExtensionCondition } from '@umbraco-cms/backoffice/extension-api';
-import { UmbConditionBase } from '@umbraco-cms/backoffice/extension-registry';
-import { isPromptAllowed, type PropertyActionContext } from './prompt-scope-matcher.js';
-import type { UaiPromptScope } from './types.js';
+import { UMB_PROPERTY_CONTEXT } from "@umbraco-cms/backoffice/property";
+import { UMB_PROPERTY_STRUCTURE_WORKSPACE_CONTEXT } from "@umbraco-cms/backoffice/content-type";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import type {
+    UmbConditionConfigBase,
+    UmbConditionControllerArguments,
+    UmbExtensionCondition,
+} from "@umbraco-cms/backoffice/extension-api";
+import { UmbConditionBase } from "@umbraco-cms/backoffice/extension-registry";
+import { isPromptAllowed, type PropertyActionContext } from "./prompt-scope-matcher.js";
+import type { UaiPromptScope } from "./types.js";
 
 /**
  * Condition configuration for prompt scope filtering.
@@ -46,7 +50,7 @@ export class UaiPromptScopeCondition
                     this.#propertyEditorUiAlias = manifest?.alias ?? null;
                     this.#updatePermitted();
                 },
-                PropertyContextSymbol
+                PropertyContextSymbol,
             );
 
             // Get the property alias
@@ -68,7 +72,7 @@ export class UaiPromptScopeCondition
                     this.#contentTypeAliases = aliases ?? [];
                     this.#updatePermitted();
                 },
-                ContentTypeSymbol
+                ContentTypeSymbol,
             );
         });
     }

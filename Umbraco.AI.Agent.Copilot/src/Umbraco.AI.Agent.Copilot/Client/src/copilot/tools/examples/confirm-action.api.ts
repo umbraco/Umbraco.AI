@@ -5,7 +5,7 @@ import type { UaiAgentToolApi } from "../uai-agent-tool.extension.js";
  * HITL approval response shape from approval elements.
  */
 interface ApprovalResponse {
-  approved?: boolean;
+    approved?: boolean;
 }
 
 /**
@@ -20,25 +20,25 @@ interface ApprovalResponse {
  * { approved: boolean } from the approval element.
  */
 export default class ConfirmActionApi extends UmbControllerBase implements UaiAgentToolApi {
-  async execute(args: Record<string, unknown>): Promise<string> {
-    // The __approval field contains the user's response
-    const approval = args.__approval as ApprovalResponse | undefined;
+    async execute(args: Record<string, unknown>): Promise<string> {
+        // The __approval field contains the user's response
+        const approval = args.__approval as ApprovalResponse | undefined;
 
-    if (!approval?.approved) {
-      return JSON.stringify({
-        success: false,
-        reason: "User denied the action",
-        action: args.action,
-      });
+        if (!approval?.approved) {
+            return JSON.stringify({
+                success: false,
+                reason: "User denied the action",
+                action: args.action,
+            });
+        }
+
+        // User approved - simulate performing the action
+        // In a real tool, this would call an API, modify data, etc.
+        return JSON.stringify({
+            success: true,
+            message: `Action "${args.action}" was approved and executed`,
+            action: args.action,
+            timestamp: new Date().toISOString(),
+        });
     }
-
-    // User approved - simulate performing the action
-    // In a real tool, this would call an API, modify data, etc.
-    return JSON.stringify({
-      success: true,
-      message: `Action "${args.action}" was approved and executed`,
-      action: args.action,
-      timestamp: new Date().toISOString(),
-    });
-  }
 }

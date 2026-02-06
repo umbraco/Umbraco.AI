@@ -1,6 +1,6 @@
 ---
 description: >-
-  Profile configuration for AI model usage.
+    Profile configuration for AI model usage.
 ---
 
 # AIProfile
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Profiles;
 ## Class Definition
 
 {% code title="AIProfile" %}
+
 ```csharp
 public sealed class AIProfile
 {
@@ -29,20 +30,21 @@ public sealed class AIProfile
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Unique identifier (assigned on save) |
-| `Alias` | `string` | Unique alias for code references |
-| `Name` | `string` | Display name |
-| `Capability` | `AICapability` | Type of AI capability (Chat, Embedding) |
-| `Model` | `AIModelRef` | Reference to provider and model |
-| `ConnectionId` | `Guid` | ID of the connection to use |
-| `Settings` | `IAIProfileSettings?` | Capability-specific settings |
-| `Tags` | `IReadOnlyList<string>` | Optional categorization tags |
+| Property       | Type                    | Description                             |
+| -------------- | ----------------------- | --------------------------------------- |
+| `Id`           | `Guid`                  | Unique identifier (assigned on save)    |
+| `Alias`        | `string`                | Unique alias for code references        |
+| `Name`         | `string`                | Display name                            |
+| `Capability`   | `AICapability`          | Type of AI capability (Chat, Embedding) |
+| `Model`        | `AIModelRef`            | Reference to provider and model         |
+| `ConnectionId` | `Guid`                  | ID of the connection to use             |
+| `Settings`     | `IAIProfileSettings?`   | Capability-specific settings            |
+| `Tags`         | `IReadOnlyList<string>` | Optional categorization tags            |
 
 ## Settings Types
 
@@ -51,6 +53,7 @@ Settings are polymorphic based on capability.
 ### AIChatProfileSettings
 
 {% code title="Chat Settings" %}
+
 ```csharp
 public class AIChatProfileSettings : IAIProfileSettings
 {
@@ -59,28 +62,32 @@ public class AIChatProfileSettings : IAIProfileSettings
     public string? SystemPromptTemplate { get; set; }
 }
 ```
+
 {% endcode %}
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Temperature` | `float?` | Randomness (0.0-1.0, default varies by model) |
-| `MaxTokens` | `int?` | Maximum response tokens |
-| `SystemPromptTemplate` | `string?` | Default system prompt |
+| Property               | Type      | Description                                   |
+| ---------------------- | --------- | --------------------------------------------- |
+| `Temperature`          | `float?`  | Randomness (0.0-1.0, default varies by model) |
+| `MaxTokens`            | `int?`    | Maximum response tokens                       |
+| `SystemPromptTemplate` | `string?` | Default system prompt                         |
 
 ### AIEmbeddingProfileSettings
 
 {% code title="Embedding Settings" %}
+
 ```csharp
 public class AIEmbeddingProfileSettings : IAIProfileSettings
 {
     // Currently no additional settings
 }
 ```
+
 {% endcode %}
 
 ## Creating a Profile
 
 {% code title="Example" %}
+
 ```csharp
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Models;
@@ -103,6 +110,7 @@ var profile = new AIProfile
 
 var saved = await profileService.SaveProfileAsync(profile);
 ```
+
 {% endcode %}
 
 ## Notes

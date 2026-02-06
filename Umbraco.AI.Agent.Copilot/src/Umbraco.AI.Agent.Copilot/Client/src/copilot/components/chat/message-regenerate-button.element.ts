@@ -9,34 +9,34 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
  */
 @customElement("uai-message-regenerate-button")
 export class UaiMessageRegenerateButtonElement extends UmbLitElement {
-  #handleRegenerate() {
-    this.dispatchEvent(new CustomEvent("regenerate", { bubbles: true, composed: true }));
-  }
+    #handleRegenerate() {
+        this.dispatchEvent(new CustomEvent("regenerate", { bubbles: true, composed: true }));
+    }
 
-  override render() {
-    return html`
-      <uui-button compact look="secondary" @click=${this.#handleRegenerate} title="Regenerate">
-        <uui-icon name="icon-sync"></uui-icon>
-      </uui-button>
+    override render() {
+        return html`
+            <uui-button compact look="secondary" @click=${this.#handleRegenerate} title="Regenerate">
+                <uui-icon name="icon-sync"></uui-icon>
+            </uui-button>
+        `;
+    }
+
+    static override styles = css`
+        :host {
+            display: inline-block;
+        }
+
+        uui-button {
+            --uui-button-height: 24px;
+            --uui-button-font-size: 12px;
+        }
     `;
-  }
-
-  static override styles = css`
-    :host {
-      display: inline-block;
-    }
-
-    uui-button {
-      --uui-button-height: 24px;
-      --uui-button-font-size: 12px;
-    }
-  `;
 }
 
 export default UaiMessageRegenerateButtonElement;
 
 declare global {
-  interface HTMLElementTagNameMap {
-    "uai-message-regenerate-button": UaiMessageRegenerateButtonElement;
-  }
+    interface HTMLElementTagNameMap {
+        "uai-message-regenerate-button": UaiMessageRegenerateButtonElement;
+    }
 }

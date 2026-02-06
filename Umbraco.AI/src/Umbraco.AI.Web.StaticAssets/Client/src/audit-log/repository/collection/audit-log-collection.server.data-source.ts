@@ -8,8 +8,7 @@ import { AuditLogsService, UaiAuditLogTypeMapper } from "../../../app.js";
  * Server data source for AuditLog collection operations.
  */
 export class UaiAuditLogCollectionServerDataSource implements UmbCollectionDataSource<UaiAuditLogItemModel> {
-    
-     #host: UmbControllerHost; 
+    #host: UmbControllerHost;
 
     constructor(host: UmbControllerHost) {
         this.#host = host;
@@ -34,7 +33,7 @@ export class UaiAuditLogCollectionServerDataSource implements UmbCollectionDataS
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },
-            })
+            }),
         );
 
         if (error || !data) {

@@ -1,0 +1,22 @@
+# Build output
+wwwroot/
+dist/
+bin/
+obj/
+
+# Dependencies
+node_modules/
+
+# Generated API clients
+**/api/**/*.gen.ts
+
+# Demo site
+demo/
+
+# Package files
+*.nupkg
+*.snupkg
+*.tgz
+
+# Changelog (auto-generated)
+CHANGELOG.md

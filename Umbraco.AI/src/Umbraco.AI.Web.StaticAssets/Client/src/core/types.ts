@@ -1,4 +1,3 @@
-
 /**
  * Editable model schema for UI consumption.
  */

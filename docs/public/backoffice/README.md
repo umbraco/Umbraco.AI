@@ -1,6 +1,6 @@
 ---
 description: >-
-  Manage AI connections and profiles through the Umbraco backoffice.
+    Manage AI connections and profiles through the Umbraco backoffice.
 ---
 
 # Backoffice
@@ -38,8 +38,8 @@ Umbraco.AI adds an AI section to the Umbraco backoffice where you can manage con
 
 Understanding the relationship:
 
-* **Connection** = Your credentials for an AI provider (for example, your OpenAI API key)
-* **Profile** = A specific configuration using a connection (for example, "Content Writer" using GPT-4 with creative settings)
+- **Connection** = Your credentials for an AI provider (for example, your OpenAI API key)
+- **Profile** = A specific configuration using a connection (for example, "Content Writer" using GPT-4 with creative settings)
 
 You need at least one connection before you can create profiles. Multiple profiles can share the same connection.
 

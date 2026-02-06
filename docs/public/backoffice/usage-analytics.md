@@ -1,6 +1,6 @@
 ---
 description: >-
-  Understand AI usage patterns with analytics dashboards.
+    Understand AI usage patterns with analytics dashboards.
 ---
 
 # Usage Analytics
@@ -19,12 +19,12 @@ The analytics dashboard shows:
 
 ### Summary Metrics
 
-| Metric | Description |
-|--------|-------------|
+| Metric         | Description                           |
+| -------------- | ------------------------------------- |
 | Total Requests | Number of AI operations in the period |
-| Total Tokens | Combined input and output tokens |
-| Success Rate | Percentage of successful operations |
-| Avg Duration | Average operation time |
+| Total Tokens   | Combined input and output tokens      |
+| Success Rate   | Percentage of successful operations   |
+| Avg Duration   | Average operation time                |
 
 ### Time Series Chart
 
@@ -47,12 +47,12 @@ Pie or bar charts showing distribution:
 
 Select the time period to analyze:
 
-| Range | Best For |
-|-------|----------|
+| Range         | Best For             |
+| ------------- | -------------------- |
 | Last 24 hours | Real-time monitoring |
-| Last 7 days | Weekly trends |
-| Last 30 days | Monthly analysis |
-| Custom range | Specific period |
+| Last 7 days   | Weekly trends        |
+| Last 30 days  | Monthly analysis     |
+| Custom range  | Specific period      |
 
 ## Reading the Charts
 
@@ -137,17 +137,19 @@ To export analytics data:
 Analytics are derived from audit logs. Configure retention:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "AuditLog": {
-        "RetentionDays": 90
-      }
+    "Umbraco": {
+        "AI": {
+            "AuditLog": {
+                "RetentionDays": 90
+            }
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 {% hint style="warning" %}
@@ -160,5 +162,5 @@ For custom dashboards or integrations, use the [Analytics API](../management-api
 
 ## Related
 
-* [Audit Logs](audit-logs.md) - Raw operation data
-* [Analytics API](../management-api/analytics/README.md) - Programmatic access
+- [Audit Logs](audit-logs.md) - Raw operation data
+- [Analytics API](../management-api/analytics/README.md) - Programmatic access

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Model representing an AI agent.
+    Model representing an AI agent.
 ---
 
 # AIAgent
@@ -16,6 +16,7 @@ using Umbraco.AI.Agent.Core.Agents;
 ## Definition
 
 {% code title="AIAgent" %}
+
 ```csharp
 public class AIAgent : IAIVersionableEntity
 {
@@ -39,28 +40,30 @@ public class AIAgent : IAIVersionableEntity
     public int Version { get; internal set; } = 1;
 }
 ```
+
 {% endcode %}
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Id` | `Guid` | Unique identifier |
-| `Alias` | `string` | Unique alias for code references (required) |
-| `Name` | `string` | Display name (required) |
-| `Description` | `string?` | Optional description |
-| `ProfileId` | `Guid?` | Associated AI profile (null uses default) |
-| `ContextIds` | `IReadOnlyList<Guid>` | AI Contexts to inject |
-| `ScopeIds` | `IReadOnlyList<string>` | Scope IDs for categorization |
-| `Instructions` | `string?` | Agent system prompt |
-| `IsActive` | `bool` | Whether agent is available |
-| `DateCreated` | `DateTime` | When created |
-| `DateModified` | `DateTime` | When last modified |
-| `Version` | `int` | Current version number |
+| Property       | Type                    | Description                                 |
+| -------------- | ----------------------- | ------------------------------------------- |
+| `Id`           | `Guid`                  | Unique identifier                           |
+| `Alias`        | `string`                | Unique alias for code references (required) |
+| `Name`         | `string`                | Display name (required)                     |
+| `Description`  | `string?`               | Optional description                        |
+| `ProfileId`    | `Guid?`                 | Associated AI profile (null uses default)   |
+| `ContextIds`   | `IReadOnlyList<Guid>`   | AI Contexts to inject                       |
+| `ScopeIds`     | `IReadOnlyList<string>` | Scope IDs for categorization                |
+| `Instructions` | `string?`               | Agent system prompt                         |
+| `IsActive`     | `bool`                  | Whether agent is available                  |
+| `DateCreated`  | `DateTime`              | When created                                |
+| `DateModified` | `DateTime`              | When last modified                          |
+| `Version`      | `int`                   | Current version number                      |
 
 ## Example
 
 {% code title="Example" %}
+
 ```csharp
 var agent = new AIAgent
 {
@@ -83,10 +86,11 @@ Guidelines:
 
 var saved = await _agentService.SaveAgentAsync(agent);
 ```
+
 {% endcode %}
 
 ## Related
 
-* [IAIAgentService](ai-agent-service.md) - Agent service
-* [Agent Concepts](../concepts.md) - Concepts overview
-* [Scopes](../scopes.md) - Agent categorization
+- [IAIAgentService](ai-agent-service.md) - Agent service
+- [Agent Concepts](../concepts.md) - Concepts overview
+- [Scopes](../scopes.md) - Agent categorization

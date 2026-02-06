@@ -6,12 +6,11 @@ import type { UaiInterruptContext } from "./interrupts/types.js";
 import { BehaviorSubject, combineLatest, map } from "rxjs";
 
 export interface PendingApproval {
-  interrupt: UaiInterruptInfo;
-  targetMessageId?: string;
+    interrupt: UaiInterruptInfo;
+    targetMessageId?: string;
 }
 
 export class UaiHitlContext extends UmbControllerBase {
-
     #pendingContext?: UaiInterruptContext;
     #interrupt$ = new BehaviorSubject<UaiInterruptInfo | undefined>(undefined);
     #targetMessageId$ = new BehaviorSubject<string | undefined>(undefined);
@@ -20,13 +19,8 @@ export class UaiHitlContext extends UmbControllerBase {
     readonly targetMessageId$ = this.#targetMessageId$.asObservable();
 
     // Combined observable for rendering HITL inline
-    readonly pendingApproval$ = combineLatest([
-        this.#interrupt$,
-        this.#targetMessageId$
-    ]).pipe(
-        map(([interrupt, targetMessageId]) =>
-            interrupt ? { interrupt, targetMessageId } : undefined
-        )
+    readonly pendingApproval$ = combineLatest([this.#interrupt$, this.#targetMessageId$]).pipe(
+        map(([interrupt, targetMessageId]) => (interrupt ? { interrupt, targetMessageId } : undefined)),
     );
 
     constructor(host: UmbControllerHost) {
@@ -48,7 +42,6 @@ export class UaiHitlContext extends UmbControllerBase {
     }
 }
 
-export const UAI_HITL_CONTEXT =
-    new UmbContextToken<UaiHitlContext>("UaiHitlContext");
+export const UAI_HITL_CONTEXT = new UmbContextToken<UaiHitlContext>("UaiHitlContext");
 
 export default UaiHitlContext;

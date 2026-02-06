@@ -1,6 +1,6 @@
 ---
 description: >-
-  Step-by-step guide to creating a custom AI tool.
+    Step-by-step guide to creating a custom AI tool.
 ---
 
 # Creating a Tool
@@ -12,6 +12,7 @@ This guide walks through creating a complete AI tool from start to finish.
 If your tool needs input, create an arguments record with `[Description]` attributes:
 
 {% code title="ContentSearchArgs.cs" %}
+
 ```csharp
 using System.ComponentModel;
 
@@ -25,6 +26,7 @@ public record ContentSearchArgs(
     [property: Description("Content type to filter by (optional)")] string? ContentType = null,
     [property: Description("Maximum results (1-50, default 10)")] int MaxResults = 10);
 ```
+
 {% endcode %}
 
 {% hint style="info" %}
@@ -34,10 +36,12 @@ Use records for arguments - they're immutable and provide good serialization beh
 ## Step 2: Create the Tool Class
 
 Choose the appropriate base class:
+
 - `AIToolBase` - For tools without arguments
 - `AIToolBase<TArgs>` - For tools with typed arguments
 
 {% code title="ContentSearchTool.cs" %}
+
 ```csharp
 using Umbraco.AI.Core.Tools;
 using Umbraco.Cms.Core;
@@ -122,6 +126,7 @@ public class ContentItem
     public string? Url { get; set; }
 }
 ```
+
 {% endcode %}
 
 ## Step 3: Configure the AITool Attribute
@@ -129,6 +134,7 @@ public class ContentItem
 The `[AITool]` attribute provides metadata:
 
 {% code title="Attribute Options" %}
+
 ```csharp
 [AITool(
     "tool_id",              // Unique identifier (required)
@@ -138,6 +144,7 @@ The `[AITool]` attribute provides metadata:
     Tags = new[] { "tag1", "tag2" }  // Additional tags (default: empty)
 )]
 ```
+
 {% endcode %}
 
 ## Step 4: Test Your Tool
@@ -145,6 +152,7 @@ The `[AITool]` attribute provides metadata:
 Create a test to verify the tool works:
 
 {% code title="ContentSearchToolTests.cs" %}
+
 ```csharp
 using Moq;
 using Xunit;
@@ -174,6 +182,7 @@ public class ContentSearchToolTests
     }
 }
 ```
+
 {% endcode %}
 
 ## Tool Without Arguments
@@ -181,6 +190,7 @@ public class ContentSearchToolTests
 For tools that don't need input:
 
 {% code title="ServerInfoTool.cs" %}
+
 ```csharp
 using Umbraco.AI.Core.Tools;
 using Umbraco.Cms.Core.Configuration;
@@ -209,6 +219,7 @@ public class ServerInfoTool : AIToolBase
     }
 }
 ```
+
 {% endcode %}
 
 ## Handling Errors
@@ -216,6 +227,7 @@ public class ServerInfoTool : AIToolBase
 Return error information in the result rather than throwing exceptions:
 
 {% code title="Error Handling" %}
+
 ```csharp
 protected override async Task<object> ExecuteAsync(
     MyArgs args,
@@ -244,6 +256,7 @@ protected override async Task<object> ExecuteAsync(
     }
 }
 ```
+
 {% endcode %}
 
 ## Best Practices
@@ -307,6 +320,7 @@ public class DeleteContentTool : AIToolBase<DeleteArgs>
 ## Complete Example: Weather Tool
 
 {% code title="WeatherTool.cs" %}
+
 ```csharp
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
@@ -387,4 +401,5 @@ internal class WeatherApiResponse
     public int Humidity { get; set; }
 }
 ```
+
 {% endcode %}

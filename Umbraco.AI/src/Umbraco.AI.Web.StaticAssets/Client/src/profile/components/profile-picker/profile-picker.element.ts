@@ -1,25 +1,16 @@
-import {
-    css,
-    customElement,
-    html,
-    nothing,
-    property,
-    repeat,
-    state,
-    when,
-} from '@umbraco-cms/backoffice/external/lit';
-import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { UmbChangeEvent } from '@umbraco-cms/backoffice/event';
-import { UmbFormControlMixin } from '@umbraco-cms/backoffice/validation';
-import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
-import { tryExecute } from '@umbraco-cms/backoffice/resources';
-import { ProfilesService } from '../../../api/sdk.gen.js';
-import { UAI_ITEM_PICKER_MODAL } from '../../../core/modals/item-picker/item-picker-modal.token.js';
-import type { UaiPickableItemModel } from '../../../core/modals/item-picker/types.js';
-import { UaiProfileTypeMapper } from '../../type-mapper.js';
-import type { UaiProfileItemModel } from '../../types.js';
+import { css, customElement, html, nothing, property, repeat, state, when } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { ProfilesService } from "../../../api/sdk.gen.js";
+import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
+import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
+import { UaiProfileTypeMapper } from "../../type-mapper.js";
+import type { UaiProfileItemModel } from "../../types.js";
 
-const elementName = 'uai-profile-picker';
+const elementName = "uai-profile-picker";
 
 /**
  * Profile picker component that allows selecting one or more AI profiles.
@@ -124,16 +115,13 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
         this._loading = true;
 
         // Fetch all profiles and filter to selected ones
-        const { data, error } = await tryExecute(
-            this,
-            ProfilesService.getAllProfiles({ query: { take: 1000 } })
-        );
+        const { data, error } = await tryExecute(this, ProfilesService.getAllProfiles({ query: { take: 1000 } }));
 
         if (!error && data) {
             const allItems = data.items.map(UaiProfileTypeMapper.toItemModel);
             // Preserve selection order
             this._items = this._selection
-                .map(id => allItems.find(item => item.unique === id))
+                .map((id) => allItems.find((item) => item.unique === id))
                 .filter((item): item is UaiProfileItemModel => item !== undefined);
         }
 
@@ -147,9 +135,9 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
         const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
                 fetchItems: () => this.#fetchAvailableProfiles(),
-                selectionMode: this.multiple ? 'multiple' : 'single',
-                title: this.localize.term('uaiProfile_selectProfile'),
-                noResultsMessage: this.localize.term('uaiProfile_noProfilesAvailable'),
+                selectionMode: this.multiple ? "multiple" : "single",
+                title: this.localize.term("uaiProfile_selectProfile"),
+                noResultsMessage: this.localize.term("uaiProfile_noProfilesAvailable"),
             },
         });
 
@@ -164,25 +152,20 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
     }
 
     async #fetchAvailableProfiles(): Promise<UaiPickableItemModel[]> {
-        const { data } = await tryExecute(
-            this,
-            ProfilesService.getAllProfiles({ query: { take: 1000 } })
-        );
+        const { data } = await tryExecute(this, ProfilesService.getAllProfiles({ query: { take: 1000 } }));
 
         if (!data) return [];
 
         // Filter by capability if specified
         let profiles = data.items;
         if (this.capability) {
-            profiles = profiles.filter(
-                (p) => p.capability.toLowerCase() === this.capability!.toLowerCase()
-            );
+            profiles = profiles.filter((p) => p.capability.toLowerCase() === this.capability!.toLowerCase());
         }
 
         // Filter out already selected items
         return profiles
-            .filter(profile => !this._selection.includes(profile.id))
-            .map(profile => ({
+            .filter((profile) => !this._selection.includes(profile.id))
+            .map((profile) => ({
                 value: profile.id,
                 label: profile.name,
                 description: profile.alias,
@@ -192,16 +175,14 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
 
     #getCapabilityIcon(capability: string): string {
         const capabilityLower = capability.toLowerCase();
-        if (capabilityLower === 'chat') return 'icon-chat';
-        if (capabilityLower === 'embedding') return 'icon-list';
-        return 'icon-wand';
+        if (capabilityLower === "chat") return "icon-chat";
+        if (capabilityLower === "embedding") return "icon-list";
+        return "icon-wand";
     }
 
     #addSelections(items: UaiPickableItemModel[]) {
         // Filter out already selected items
-        const newValues = items
-            .map(item => item.value)
-            .filter(value => !this._selection.includes(value));
+        const newValues = items.map((item) => item.value).filter((value) => !this._selection.includes(value));
 
         if (newValues.length === 0) return;
 
@@ -217,18 +198,13 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
     }
 
     #onRemove(id: string) {
-        this._selection = this._selection.filter(x => x !== id);
-        this._items = this._items.filter(x => x.unique !== id);
+        this._selection = this._selection.filter((x) => x !== id);
+        this._items = this._items.filter((x) => x.unique !== id);
         this.dispatchEvent(new UmbChangeEvent());
     }
 
     override render() {
-        return html`
-            <div class="container">
-                ${this.#renderItems()}
-                ${this.#renderAddButton()}
-            </div>
-        `;
+        return html` <div class="container">${this.#renderItems()} ${this.#renderAddButton()}</div> `;
     }
 
     #renderItems() {
@@ -251,26 +227,25 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
 
     #renderItem(item: UaiProfileItemModel) {
         return html`
-            <uui-ref-node
-                name=${item.name}
-                detail=${item.alias}
-                readonly>
+            <uui-ref-node name=${item.name} detail=${item.alias} readonly>
                 <umb-icon slot="icon" name=${this.#getCapabilityIcon(item.capability)}></umb-icon>
-                ${when(item.model, () => html`
-                    <uui-tag slot="tag" look="secondary">${item.model!.modelId}</uui-tag>
-                `)}
-                ${when(!this.readonly, () => html`
-                    <uui-action-bar slot="actions">
-                        <uui-button
-                            label="Remove"
-                            @click=${(e: Event) => {
-                                e.stopPropagation();
-                                this.#onRemove(item.unique);
-                            }}>
-                            <uui-icon name="icon-trash"></uui-icon>
-                        </uui-button>
-                    </uui-action-bar>
-                `)}
+                ${when(item.model, () => html` <uui-tag slot="tag" look="secondary">${item.model!.modelId}</uui-tag> `)}
+                ${when(
+                    !this.readonly,
+                    () => html`
+                        <uui-action-bar slot="actions">
+                            <uui-button
+                                label="Remove"
+                                @click=${(e: Event) => {
+                                    e.stopPropagation();
+                                    this.#onRemove(item.unique);
+                                }}
+                            >
+                                <uui-icon name="icon-trash"></uui-icon>
+                            </uui-button>
+                        </uui-action-bar>
+                    `,
+                )}
             </uui-ref-node>
         `;
     }
@@ -286,9 +261,10 @@ export class UaiProfilePickerElement extends UmbFormControlMixin<
                 id="btn-add"
                 look="placeholder"
                 @click=${this.#openPicker}
-                label=${this.localize.term('uaiProfile_addProfile')}>
+                label=${this.localize.term("uaiProfile_addProfile")}
+            >
                 <uui-icon name="icon-add"></uui-icon>
-                ${this.localize.term('general_add')}
+                ${this.localize.term("general_add")}
             </uui-button>
         `;
     }

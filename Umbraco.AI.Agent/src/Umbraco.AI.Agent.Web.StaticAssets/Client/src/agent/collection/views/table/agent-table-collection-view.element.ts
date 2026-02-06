@@ -57,7 +57,7 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
         this.observe(
             this.#collectionContext.items,
             (items) => this.#createTableItems(items as UaiAgentItemModel[]),
-            "umbCollectionItemsObserver"
+            "umbCollectionItemsObserver",
         );
 
         this.observe(
@@ -65,7 +65,7 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
             (selection) => {
                 this._selection = selection as string[];
             },
-            "umbCollectionSelectionObserver"
+            "umbCollectionSelectionObserver",
         );
     }
 
@@ -122,7 +122,8 @@ export class UaiAgentTableCollectionViewElement extends UmbLitElement {
             .items=${this._items}
             .selection=${this._selection}
             @selected=${this.#handleSelect}
-            @deselected=${this.#handleDeselect}></umb-table>`;
+            @deselected=${this.#handleDeselect}
+        ></umb-table>`;
     }
 
     static styles = [UmbTextStyles];

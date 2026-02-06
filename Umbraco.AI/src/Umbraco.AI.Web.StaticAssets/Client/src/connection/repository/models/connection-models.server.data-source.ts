@@ -22,13 +22,15 @@ export class UaiConnectionModelsServerDataSource {
     /**
      * Fetches available models for a connection, optionally filtered by capability.
      */
-    async getModels(args: UaiConnectionModelsRequestArgs): Promise<{ data?: UaiModelDescriptorModel[]; error?: unknown }> {
+    async getModels(
+        args: UaiConnectionModelsRequestArgs,
+    ): Promise<{ data?: UaiModelDescriptorModel[]; error?: unknown }> {
         const { data, error } = await tryExecute(
             this.#host,
             ConnectionsService.getModels({
                 path: { connectionIdOrAlias: args.connectionId },
                 query: { capability: args.capability },
-            })
+            }),
         );
 
         if (error || !data) {

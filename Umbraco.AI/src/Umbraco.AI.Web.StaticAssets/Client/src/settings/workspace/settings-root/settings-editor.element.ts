@@ -1,9 +1,4 @@
-import {
-    html,
-    css,
-    customElement,
-    state,
-} from "@umbraco-cms/backoffice/external/lit";
+import { html, css, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
@@ -43,10 +38,8 @@ export class UaiSettingsEditorElement extends UmbLitElement {
         const target = e.target as HTMLElement & { name?: string; value?: string | string[] };
         const name = target.getAttribute("name") as keyof UaiSettingsModel | undefined;
         if (!name) return;
-        const value = typeof target.value === 'string' ? target.value : null;
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiSettingsModel>({ [name]: value }, name)
-        );
+        const value = typeof target.value === "string" ? target.value : null;
+        this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiSettingsModel>({ [name]: value }, name));
     }
 
     override render() {
@@ -58,25 +51,29 @@ export class UaiSettingsEditorElement extends UmbLitElement {
             <uui-box headline="Defaults">
                 <umb-property-layout
                     label="Default Chat Profile"
-                    description="The default profile to use for chat completions when no profile is specified in API calls.">
+                    description="The default profile to use for chat completions when no profile is specified in API calls."
+                >
                     <div slot="editor">
                         <uai-profile-picker
                             name="defaultChatProfileId"
                             capability="Chat"
                             .value=${this._model?.defaultChatProfileId ?? undefined}
-                            @change=${this.#onPropertyChange}>
+                            @change=${this.#onPropertyChange}
+                        >
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>
                 <umb-property-layout
                     label="Default Embedding Profile"
-                    description="The default profile to use for generating embeddings when no profile is specified in API calls.">
+                    description="The default profile to use for generating embeddings when no profile is specified in API calls."
+                >
                     <div slot="editor">
                         <uai-profile-picker
                             name="defaultEmbeddingProfileId"
                             capability="Embedding"
                             .value=${this._model?.defaultEmbeddingProfileId ?? undefined}
-                            @change=${this.#onPropertyChange}>
+                            @change=${this.#onPropertyChange}
+                        >
                         </uai-profile-picker>
                     </div>
                 </umb-property-layout>

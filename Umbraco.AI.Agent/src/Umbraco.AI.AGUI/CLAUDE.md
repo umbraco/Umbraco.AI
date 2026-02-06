@@ -46,14 +46,14 @@ When working with `Umbraco.AI.AGUI`, you MUST:
 
 All events in this project must belong to one of these AG-UI-defined categories:
 
-| Category | Purpose | Examples |
-|----------|---------|----------|
-| **Lifecycle** | Run and step lifecycle management | `RunStartedEvent`, `RunFinishedEvent`, `RunErrorEvent`, `StepStartedEvent`, `StepFinishedEvent` |
-| **Messages** | Text message streaming | `TextMessageStartEvent`, `TextMessageChunkEvent`, `TextMessageContentEvent`, `TextMessageEndEvent` |
-| **Tools** | Tool/function call lifecycle | `ToolCallStartEvent`, `ToolCallArgsEvent`, `ToolCallChunkEvent`, `ToolCallEndEvent`, `ToolCallResultEvent` |
-| **State** | State snapshots and deltas | `StateSnapshotEvent`, `StateDeltaEvent`, `MessagesSnapshotEvent` |
-| **Activity** | Activity tracking | `ActivitySnapshotEvent`, `ActivityDeltaEvent` |
-| **Special** | Custom and raw events | `CustomEvent`, `RawEvent` |
+| Category      | Purpose                           | Examples                                                                                                   |
+| ------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Lifecycle** | Run and step lifecycle management | `RunStartedEvent`, `RunFinishedEvent`, `RunErrorEvent`, `StepStartedEvent`, `StepFinishedEvent`            |
+| **Messages**  | Text message streaming            | `TextMessageStartEvent`, `TextMessageChunkEvent`, `TextMessageContentEvent`, `TextMessageEndEvent`         |
+| **Tools**     | Tool/function call lifecycle      | `ToolCallStartEvent`, `ToolCallArgsEvent`, `ToolCallChunkEvent`, `ToolCallEndEvent`, `ToolCallResultEvent` |
+| **State**     | State snapshots and deltas        | `StateSnapshotEvent`, `StateDeltaEvent`, `MessagesSnapshotEvent`                                           |
+| **Activity**  | Activity tracking                 | `ActivitySnapshotEvent`, `ActivityDeltaEvent`                                                              |
+| **Special**   | Custom and raw events             | `CustomEvent`, `RawEvent`                                                                                  |
 
 ### Validation Checklist
 
@@ -178,6 +178,7 @@ public void RunStartedEvent_SerializesToAGUIFormat()
 ```
 
 Tests should verify:
+
 - Event serialization to SSE format
 - Event schema compliance
 - Stream emission patterns
@@ -286,6 +287,7 @@ public class RunPausedEvent : BaseAGUIEvent
 ## Common Pitfalls
 
 ### ❌ Wrong: Custom event not in AG-UI spec
+
 ```csharp
 // DON'T create custom events outside AG-UI spec
 public class CustomProgressEvent : BaseAGUIEvent
@@ -295,6 +297,7 @@ public class CustomProgressEvent : BaseAGUIEvent
 ```
 
 ### ✅ Right: Use CustomEvent for extensions
+
 ```csharp
 // DO use CustomEvent for vendor-specific extensions
 var evt = new CustomEvent
@@ -305,6 +308,7 @@ var evt = new CustomEvent
 ```
 
 ### ❌ Wrong: Synchronous patterns
+
 ```csharp
 // DON'T use synchronous patterns
 public AGUIMessage GetNextMessage() // ❌ Synchronous
@@ -314,6 +318,7 @@ public AGUIMessage GetNextMessage() // ❌ Synchronous
 ```
 
 ### ✅ Right: Streaming patterns
+
 ```csharp
 // DO use async streaming
 public async IAsyncEnumerable<IAGUIEvent> StreamMessages()

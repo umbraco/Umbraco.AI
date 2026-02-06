@@ -4,10 +4,9 @@ import { UaiWithEntityBaseDirective } from "../../core/directives/with-entity-di
 import { UmbUserItemModel, UmbUserItemRepository } from "@umbraco-cms/backoffice/user";
 
 export class WithUserDirective extends UaiWithEntityBaseDirective<UmbUserItemModel> {
-    async getEntity(host: UmbControllerHost, unique: string)
-    {
+    async getEntity(host: UmbControllerHost, unique: string) {
         const repository = new UmbUserItemRepository(host);
-        return repository.requestItems([unique]).then(({ data:users }) => {
+        return repository.requestItems([unique]).then(({ data: users }) => {
             return users ? users[0] : undefined;
         });
     }

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Configure Google Gemini as an AI provider for chat capabilities.
+    Configure Google Gemini as an AI provider for chat capabilities.
 ---
 
 # Google Gemini
@@ -10,31 +10,35 @@ Google Gemini provides access to Google's latest AI models, offering strong perf
 ## Installation
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 Install-Package Umbraco.AI.Google
 ```
+
 {% endcode %}
 
 Or via .NET CLI:
 
 {% code title="Terminal" %}
+
 ```bash
 dotnet add package Umbraco.AI.Google
 ```
+
 {% endcode %}
 
 ## Capabilities
 
-| Capability | Supported | Description |
-|------------|-----------|-------------|
-| Chat | Yes | Gemini 2.0, Gemini 1.5 model families |
-| Embedding | No | Not currently supported |
+| Capability | Supported | Description                           |
+| ---------- | --------- | ------------------------------------- |
+| Chat       | Yes       | Gemini 2.0, Gemini 1.5 model families |
+| Embedding  | No        | Not currently supported               |
 
 ## Connection Settings
 
-| Setting | Required | Description |
-|---------|----------|-------------|
-| API Key | Yes | Your Google AI API key from [AI Studio](https://aistudio.google.com) |
+| Setting | Required | Description                                                          |
+| ------- | -------- | -------------------------------------------------------------------- |
+| API Key | Yes      | Your Google AI API key from [AI Studio](https://aistudio.google.com) |
 
 ### Getting an API Key
 
@@ -50,13 +54,13 @@ Keep your API key secure. Never commit it to source control or expose it in clie
 
 ## Available Models
 
-| Model | Context Window | Best For |
-|-------|---------------|----------|
-| `gemini-2.0-flash` | 1M | Latest, best performance |
-| `gemini-2.0-flash-lite` | 1M | Cost-optimized, fast |
-| `gemini-1.5-pro` | 2M | Complex reasoning, long context |
-| `gemini-1.5-flash` | 1M | Balanced speed and quality |
-| `gemini-1.5-flash-8b` | 1M | Most cost-effective |
+| Model                   | Context Window | Best For                        |
+| ----------------------- | -------------- | ------------------------------- |
+| `gemini-2.0-flash`      | 1M             | Latest, best performance        |
+| `gemini-2.0-flash-lite` | 1M             | Cost-optimized, fast            |
+| `gemini-1.5-pro`        | 2M             | Complex reasoning, long context |
+| `gemini-1.5-flash`      | 1M             | Balanced speed and quality      |
+| `gemini-1.5-flash-8b`   | 1M             | Most cost-effective             |
 
 {% hint style="info" %}
 Gemini 1.5 Pro has a 2 million token context window - the largest available, ideal for processing entire codebases or book-length documents.
@@ -75,6 +79,7 @@ Gemini 1.5 Pro has a 2 million token context window - the largest available, ide
 ### Via Code
 
 {% code title="Example.cs" %}
+
 ```csharp
 var connection = new AIConnection
 {
@@ -89,11 +94,13 @@ var connection = new AIConnection
 
 await _connectionService.SaveConnectionAsync(connection);
 ```
+
 {% endcode %}
 
 ## Creating a Profile
 
 {% code title="Example.cs" %}
+
 ```csharp
 var profile = new AIProfile
 {
@@ -112,6 +119,7 @@ var profile = new AIProfile
 
 await _profileService.SaveProfileAsync(profile);
 ```
+
 {% endcode %}
 
 ## Gemini-Specific Features
@@ -129,6 +137,7 @@ Gemini 1.5 Pro's 2M token context is exceptional for:
 Gemini Flash models offer strong performance at lower cost:
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Use Flash for high-volume, cost-sensitive operations
 var costEfficientProfile = new AIProfile
@@ -145,18 +154,19 @@ var costEfficientProfile = new AIProfile
     }
 };
 ```
+
 {% endcode %}
 
 ## Pricing Considerations
 
 Google Gemini uses pay-per-token pricing:
 
-| Model | Input (1M tokens) | Output (1M tokens) |
-|-------|-------------------|-------------------|
-| Gemini 2.0 Flash | ~$0.10 | ~$0.40 |
-| Gemini 1.5 Pro | ~$1.25 | ~$5.00 |
-| Gemini 1.5 Flash | ~$0.075 | ~$0.30 |
-| Gemini 1.5 Flash-8B | ~$0.0375 | ~$0.15 |
+| Model               | Input (1M tokens) | Output (1M tokens) |
+| ------------------- | ----------------- | ------------------ |
+| Gemini 2.0 Flash    | ~$0.10            | ~$0.40             |
+| Gemini 1.5 Pro      | ~$1.25            | ~$5.00             |
+| Gemini 1.5 Flash    | ~$0.075           | ~$0.30             |
+| Gemini 1.5 Flash-8B | ~$0.0375          | ~$0.15             |
 
 {% hint style="info" %}
 Prices are approximate and subject to change. Check [Google AI pricing](https://ai.google.dev/pricing) for current rates.
@@ -187,12 +197,13 @@ Error: Resource exhausted
 ```
 
 Google has rate limits based on your account. Consider:
+
 - Implementing retry logic with exponential backoff
 - Requesting quota increases through Google Cloud Console
 - Using Flash models for high-volume operations
 
 ## Related
 
-* [Providers Overview](README.md) - Compare all providers
-* [Connections](../concepts/connections.md) - Managing credentials
-* [Profiles](../concepts/profiles.md) - Configuring models
+- [Providers Overview](README.md) - Compare all providers
+- [Connections](../concepts/connections.md) - Managing credentials
+- [Profiles](../concepts/profiles.md) - Configuring models

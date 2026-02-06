@@ -35,16 +35,16 @@ Umbraco.AI.Agent is an agent management plugin for Umbraco.AI. It provides stora
 
 ### Project Structure
 
-| Project | Purpose |
-|---------|---------|
-| `Umbraco.AI.Agent.Core` | Core domain models, services, and repository interfaces |
-| `Umbraco.AI.Agent.Persistence` | EF Core DbContext, entities, and repository implementations |
-| `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations |
-| `Umbraco.AI.Agent.Persistence.Sqlite` | SQLite migrations |
-| `Umbraco.AI.Agent.Web` | Management API controllers, models, and mapping |
-| `Umbraco.AI.Agent.Web.StaticAssets` | TypeScript/Lit frontend components |
-| `Umbraco.AI.Agent.Startup` | Umbraco Composer for auto-discovery and DI registration |
-| `Umbraco.AI.Agent` | Meta-package that bundles all components |
+| Project                                  | Purpose                                                     |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `Umbraco.AI.Agent.Core`                  | Core domain models, services, and repository interfaces     |
+| `Umbraco.AI.Agent.Persistence`           | EF Core DbContext, entities, and repository implementations |
+| `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations                                       |
+| `Umbraco.AI.Agent.Persistence.Sqlite`    | SQLite migrations                                           |
+| `Umbraco.AI.Agent.Web`                   | Management API controllers, models, and mapping             |
+| `Umbraco.AI.Agent.Web.StaticAssets`      | TypeScript/Lit frontend components                          |
+| `Umbraco.AI.Agent.Startup`               | Umbraco Composer for auto-discovery and DI registration     |
+| `Umbraco.AI.Agent`                       | Meta-package that bundles all components                    |
 
 ### Key Services
 
@@ -54,6 +54,7 @@ Umbraco.AI.Agent is an agent management plugin for Umbraco.AI. It provides stora
 ### Domain Model
 
 The `AIAgent` entity represents a stored agent definition:
+
 - `Id` - Unique identifier
 - `Alias` - URL-safe unique identifier
 - `Name` - Display name
@@ -68,14 +69,14 @@ The `AIAgent` entity represents a stored agent definition:
 
 Endpoints are under `/umbraco/ai/management/api/v1/agents/`:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/agents` | Get all agents (paged) |
-| GET | `/agents/{agentIdOrAlias}` | Get agent by ID or alias |
-| GET | `/agents/profile/{profileId}` | Get agents by profile |
-| POST | `/agents` | Create agent |
-| PUT | `/agents/{agentIdOrAlias}` | Update agent by ID or alias |
-| DELETE | `/agents/{agentIdOrAlias}` | Delete agent by ID or alias |
+| Method | Endpoint                      | Description                 |
+| ------ | ----------------------------- | --------------------------- |
+| GET    | `/agents`                     | Get all agents (paged)      |
+| GET    | `/agents/{agentIdOrAlias}`    | Get agent by ID or alias    |
+| GET    | `/agents/profile/{profileId}` | Get agents by profile       |
+| POST   | `/agents`                     | Create agent                |
+| PUT    | `/agents/{agentIdOrAlias}`    | Update agent by ID or alias |
+| DELETE | `/agents/{agentIdOrAlias}`    | Delete agent by ID or alias |
 
 The `{agentIdOrAlias}` parameter accepts either a GUID (e.g., `550e8400-e29b-41d4-a716-446655440000`) or a string alias (e.g., `my-agent-alias`). This pattern matches Umbraco.AI's `IdOrAlias` convention.
 
@@ -110,6 +111,7 @@ dotnet ef migrations add UmbracoAIAgent_<MigrationName> \
 ### Web Layer (Layer-Based Organization)
 
 Web follows Umbraco CMS Management API conventions:
+
 - `Controllers/` - API endpoints
 - `Models/` - Request/response DTOs
 - `Mapping/` - UmbracoMapper definitions
@@ -125,13 +127,13 @@ Web follows Umbraco CMS Management API conventions:
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "Agent": {
-        // Future configuration options
-      }
+    "Umbraco": {
+        "AI": {
+            "Agent": {
+                // Future configuration options
+            }
+        }
     }
-  }
 }
 ```
 

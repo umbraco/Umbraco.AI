@@ -43,12 +43,12 @@ export class UaiPromptInfoWorkspaceViewElement extends UmbLitElement {
         if (!this._model) return null;
 
         return html`<uai-version-history
-                entity-type="prompt"
-                entity-id=${this._model.unique}
-                .currentVersion=${this._model.version}
-                @rollback=${() => this.#workspaceContext?.reload()}>
-            </uai-version-history>
-        `;
+            entity-type="prompt"
+            entity-id=${this._model.unique}
+            .currentVersion=${this._model.version}
+            @rollback=${() => this.#workspaceContext?.reload()}
+        >
+        </uai-version-history> `;
     }
 
     #renderRightColumn() {
@@ -57,20 +57,26 @@ export class UaiPromptInfoWorkspaceViewElement extends UmbLitElement {
         return html`
             <uui-box headline="Info">
                 <umb-property-layout label="Id" orientation="vertical">
-                    <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-                        ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-                        : this._model.unique}</div>
+                    <div slot="editor">
+                        ${this._model.unique === UAI_EMPTY_GUID
+                            ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
+                            : this._model.unique}
+                    </div>
                 </umb-property-layout>
-                ${this._model.dateCreated ? html`
-                    <umb-property-layout label="Date Created" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
-                    </umb-property-layout>
-                ` : ''}
-                ${this._model.dateModified ? html`
-                    <umb-property-layout label="Date Modified" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
-                    </umb-property-layout>
-                ` : ''}
+                ${this._model.dateCreated
+                    ? html`
+                          <umb-property-layout label="Date Created" orientation="vertical">
+                              <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
+                          </umb-property-layout>
+                      `
+                    : ""}
+                ${this._model.dateModified
+                    ? html`
+                          <umb-property-layout label="Date Modified" orientation="vertical">
+                              <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
+                          </umb-property-layout>
+                      `
+                    : ""}
             </uui-box>
         `;
     }

@@ -1,6 +1,4 @@
-import type {
-  ManifestElement,
-} from "@umbraco-cms/backoffice/extension-api";
+import type { ManifestElement } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHostElement } from "@umbraco-cms/backoffice/controller-api";
 
 /**
@@ -8,19 +6,18 @@ import type { UmbControllerHostElement } from "@umbraco-cms/backoffice/controlle
  * All approval elements receive these standardized props.
  */
 export interface UaiAgentApprovalElementProps {
-  /** Tool arguments from the LLM */
-  args: Record<string, unknown>;
-  /** Static config from tool manifest (optional overrides/defaults) */
-  config: Record<string, unknown>;
-  /** Callback to respond - MUST be called to complete the approval */
-  respond: (result: unknown) => void;
+    /** Tool arguments from the LLM */
+    args: Record<string, unknown>;
+    /** Static config from tool manifest (optional overrides/defaults) */
+    config: Record<string, unknown>;
+    /** Callback to respond - MUST be called to complete the approval */
+    respond: (result: unknown) => void;
 }
 
 /**
  * Base element type for approval render elements.
  */
-export type UaiAgentApprovalElement = UmbControllerHostElement &
-  UaiAgentApprovalElementProps;
+export type UaiAgentApprovalElement = UmbControllerHostElement & UaiAgentApprovalElementProps;
 
 /**
  * Manifest for Agent Approval UI elements.
@@ -63,21 +60,20 @@ export type UaiAgentApprovalElement = UmbControllerHostElement &
  * }
  * ```
  */
-export interface ManifestUaiAgentApprovalElement
-  extends ManifestElement<UaiAgentApprovalElement> {
-  type: "uaiAgentApprovalElement";
-  meta: {
-    /** Display label for the approval type */
-    label: string;
-    /** Description of when to use this approval type */
-    description?: string;
-    /** Icon for the approval type */
-    icon?: string;
-  };
+export interface ManifestUaiAgentApprovalElement extends ManifestElement<UaiAgentApprovalElement> {
+    type: "uaiAgentApprovalElement";
+    meta: {
+        /** Display label for the approval type */
+        label: string;
+        /** Description of when to use this approval type */
+        description?: string;
+        /** Icon for the approval type */
+        icon?: string;
+    };
 }
 
 declare global {
-  interface UmbExtensionManifestMap {
-    uaiAgentApprovalElement: ManifestUaiAgentApprovalElement;
-  }
+    interface UmbExtensionManifestMap {
+        uaiAgentApprovalElement: ManifestUaiAgentApprovalElement;
+    }
 }

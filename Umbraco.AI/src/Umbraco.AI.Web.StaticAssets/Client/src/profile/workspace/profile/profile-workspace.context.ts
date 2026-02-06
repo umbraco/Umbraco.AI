@@ -58,7 +58,7 @@ export class UaiProfileWorkspaceContext
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
-                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!
+                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!,
                     );
                 },
             },
@@ -120,13 +120,13 @@ export class UaiProfileWorkspaceContext
                         this.setIsNew(false);
                     }
                 },
-                "_observeModel"
+                "_observeModel",
             );
         }
 
         return data;
     }
-    
+
     /**
      * Reloads the current connection.
      */
@@ -203,7 +203,6 @@ export class UaiProfileWorkspaceContext
             this.#commandStore.unmute();
         }
     }
-
 }
 
 export { UaiProfileWorkspaceContext as api };

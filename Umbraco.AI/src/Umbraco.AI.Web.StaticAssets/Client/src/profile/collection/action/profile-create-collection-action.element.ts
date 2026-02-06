@@ -68,30 +68,21 @@ export class UaiProfileCreateCollectionActionElement extends UmbLitElement {
 
         return this._availableCapabilities.map(
             (cap) => html`
-                <uui-menu-item
-                    label=${this.#getCapabilityLabel(cap)}
-                    @click=${() => this.#onSelectCapability(cap)}
-                >
+                <uui-menu-item label=${this.#getCapabilityLabel(cap)} @click=${() => this.#onSelectCapability(cap)}>
                     <umb-icon slot="icon" name="icon-wand"></umb-icon>
                 </uui-menu-item>
-            `
+            `,
         );
     }
 
     override render() {
         return html`
-            <uui-button
-                look="outline"
-                popovertarget="uai-create-profile-popover"
-                @click=${this.#onToggle}
-            >
+            <uui-button look="outline" popovertarget="uai-create-profile-popover" @click=${this.#onToggle}>
                 Create
                 <uui-symbol-expand .open=${this._popoverOpen}></uui-symbol-expand>
             </uui-button>
             <uui-popover-container id="uai-create-profile-popover" placement="bottom-start">
-                <umb-popover-layout>
-                    ${this.#renderContent()}
-                </umb-popover-layout>
+                <umb-popover-layout> ${this.#renderContent()} </umb-popover-layout>
             </uui-popover-container>
         `;
     }

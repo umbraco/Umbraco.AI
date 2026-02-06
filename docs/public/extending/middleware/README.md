@@ -1,6 +1,6 @@
 ---
 description: >-
-  Add cross-cutting concerns to AI operations with middleware.
+    Add cross-cutting concerns to AI operations with middleware.
 ---
 
 # Custom Middleware
@@ -21,14 +21,15 @@ Each middleware receives a client and returns a wrapped client with additional b
 
 ## Middleware Types
 
-| Type | Interface | Wraps |
-|------|-----------|-------|
-| Chat | `IAIChatMiddleware` | `IChatClient` |
+| Type      | Interface                | Wraps                                           |
+| --------- | ------------------------ | ----------------------------------------------- |
+| Chat      | `IAIChatMiddleware`      | `IChatClient`                                   |
 | Embedding | `IAIEmbeddingMiddleware` | `IEmbeddingGenerator<string, Embedding<float>>` |
 
 ## Quick Example
 
 {% code title="LoggingMiddleware.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -51,9 +52,11 @@ public class LoggingChatMiddleware : IAIChatMiddleware
     }
 }
 ```
+
 {% endcode %}
 
 {% code title="MyComposer.cs" %}
+
 ```csharp
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
@@ -67,6 +70,7 @@ public class MyComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Key Concepts

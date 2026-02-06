@@ -1,1 +1,1 @@
-export * from './bulk-delete.action.js';
+export * from "./bulk-delete.action.js";

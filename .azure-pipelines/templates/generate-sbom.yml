@@ -1,0 +1,71 @@
+# Template: Generate SBOM for a product and upload to Dependency-Track
+# Parameters:
+#   product: Product name (e.g., "Umbraco.AI", "Umbraco.AI.OpenAI")
+parameters:
+    - name: product
+      type: string
+
+steps:
+    - task: Npm@1
+      displayName: Install cdxgen
+      inputs:
+          command: custom
+          customCommand: install --global @cyclonedx/cdxgen
+
+    - task: PowerShell@2
+      displayName: Generate SBOM for ${{ parameters.product }}
+      inputs:
+          targetType: inline
+          pwsh: true
+          script: |
+              # Extract major version from version.json
+              $versionFile = Join-Path "${{ parameters.product }}" "version.json"
+              if (-not (Test-Path $versionFile)) {
+                Write-Error "version.json not found at $versionFile"
+                exit 1
+              }
+
+              $rawVersion = (Get-Content $versionFile -Raw | ConvertFrom-Json).version
+              if ($rawVersion -match '^(\d+)\.') {
+                $version = "v$($matches[1])"
+              } else {
+                Write-Error "Could not extract major version from $rawVersion"
+                exit 1
+              }
+
+              Write-Host "Product: ${{ parameters.product }}"
+              Write-Host "Version: $version"
+              Write-Host "Server URL: $env:DT_BASE_URL"
+
+              # Create output directory
+              $outputDir = Join-Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY "sbom"
+              New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+              $outputFile = Join-Path $outputDir "${{ parameters.product }}-bom.json"
+
+              # Generate SBOM and upload to Dependency-Track
+              cdxgen --recurse `
+                --output $outputFile `
+                --json-pretty `
+                --project-group "Umbraco" `
+                --project-name "${{ parameters.product }}" `
+                --project-version $version `
+                --server-url $env:DT_BASE_URL `
+                --api-key $env:DT_API_KEY `
+                "${{ parameters.product }}/"
+
+              if ($LASTEXITCODE -ne 0) {
+                Write-Error "cdxgen failed with exit code $LASTEXITCODE"
+                exit $LASTEXITCODE
+              }
+
+              Write-Host "SBOM generated successfully: $outputFile"
+      env:
+          DT_BASE_URL: $(DT_BASE_URL)
+          DT_API_KEY: $(DT_API_KEY)
+
+    - task: PublishPipelineArtifact@1
+      displayName: Upload SBOM artifact
+      inputs:
+          targetPath: $(Build.ArtifactStagingDirectory)/sbom
+          artifact: ${{ parameters.product }}-sbom
+          publishLocation: pipeline

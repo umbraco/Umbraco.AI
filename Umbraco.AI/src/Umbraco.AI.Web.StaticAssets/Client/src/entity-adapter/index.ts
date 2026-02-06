@@ -34,11 +34,11 @@ export { UaiDocumentAdapter } from "./adapters/document.adapter.js";
 
 // Types
 export type {
-	UaiDetectedEntity,
-	UaiEntityAdapterApi,
-	UaiEntityContext,
-	UaiPropertyChange,
-	UaiPropertyChangeResult,
-	UaiSerializedEntity,
-	UaiSerializedProperty,
+    UaiDetectedEntity,
+    UaiEntityAdapterApi,
+    UaiEntityContext,
+    UaiPropertyChange,
+    UaiPropertyChangeResult,
+    UaiSerializedEntity,
+    UaiSerializedProperty,
 } from "./types.js";

@@ -1,8 +1,4 @@
-import {
-    UAI_CONTEXT_ROOT_WORKSPACE_ALIAS,
-    UAI_CONTEXT_ROOT_ENTITY_TYPE,
-    UAI_CONTEXT_ICON,
-} from "../../constants.js";
+import { UAI_CONTEXT_ROOT_WORKSPACE_ALIAS, UAI_CONTEXT_ROOT_ENTITY_TYPE, UAI_CONTEXT_ICON } from "../../constants.js";
 import { UAI_CONTEXT_COLLECTION_ALIAS } from "../../collection/constants.js";
 import { UMB_WORKSPACE_CONDITION_ALIAS } from "@umbraco-cms/backoffice/workspace";
 

@@ -1,10 +1,6 @@
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import {
-    UaiVersionHistoryResponse,
-    UaiVersionComparisonResponse,
-    UaiVersionHistoryTypeMapper,
-} from "../exports.js";
+import { UaiVersionHistoryResponse, UaiVersionComparisonResponse, UaiVersionHistoryTypeMapper } from "../exports.js";
 import { VersionsService } from "../../../api/index.js";
 
 /**
@@ -30,7 +26,7 @@ export class UaiUnifiedVersionHistoryRepository {
         entityType: string,
         entityId: string,
         skip: number,
-        take: number
+        take: number,
     ): Promise<UaiVersionHistoryResponse | undefined> {
         const { data, error } = await tryExecute(
             this.#host,
@@ -43,7 +39,7 @@ export class UaiUnifiedVersionHistoryRepository {
                     skip,
                     take,
                 },
-            })
+            }),
         );
 
         if (error || !data) {
@@ -66,7 +62,7 @@ export class UaiUnifiedVersionHistoryRepository {
         entityType: string,
         entityId: string,
         fromVersion: number,
-        toVersion: number
+        toVersion: number,
     ): Promise<UaiVersionComparisonResponse | undefined> {
         const { data, error } = await tryExecute(
             this.#host,
@@ -77,7 +73,7 @@ export class UaiUnifiedVersionHistoryRepository {
                     fromEntityVersion: fromVersion,
                     toEntityVersion: toVersion,
                 },
-            })
+            }),
         );
 
         if (error || !data) {
@@ -95,11 +91,7 @@ export class UaiUnifiedVersionHistoryRepository {
      * @param version - The version number to rollback to.
      * @returns True if rollback was successful.
      */
-    async rollback(
-        entityType: string,
-        entityId: string,
-        version: number
-    ): Promise<boolean> {
+    async rollback(entityType: string, entityId: string, version: number): Promise<boolean> {
         const { error } = await tryExecute(
             this.#host,
             VersionsService.rollbackToVersion({
@@ -108,7 +100,7 @@ export class UaiUnifiedVersionHistoryRepository {
                     entityId,
                     entityVersion: version,
                 },
-            })
+            }),
         );
 
         if (error) {

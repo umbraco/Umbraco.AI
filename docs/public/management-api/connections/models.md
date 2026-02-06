@@ -1,6 +1,6 @@
 ---
 description: >-
-  Get available AI models for a connection.
+    Get available AI models for a connection.
 ---
 
 # Get Models
@@ -15,8 +15,8 @@ GET /connections/{idOrAlias}/models
 
 ## Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter   | Type   | Description              |
+| ----------- | ------ | ------------------------ |
 | `idOrAlias` | string | Connection GUID or alias |
 
 ## Response
@@ -24,50 +24,52 @@ GET /connections/{idOrAlias}/models
 ### Success (200 OK)
 
 {% code title="Response" %}
+
 ```json
 {
-  "items": [
-    {
-      "id": "gpt-4o",
-      "name": "GPT-4o",
-      "capabilities": ["Chat"]
-    },
-    {
-      "id": "gpt-4o-mini",
-      "name": "GPT-4o Mini",
-      "capabilities": ["Chat"]
-    },
-    {
-      "id": "text-embedding-3-small",
-      "name": "Text Embedding 3 Small",
-      "capabilities": ["Embedding"]
-    },
-    {
-      "id": "text-embedding-3-large",
-      "name": "Text Embedding 3 Large",
-      "capabilities": ["Embedding"]
-    }
-  ]
+    "items": [
+        {
+            "id": "gpt-4o",
+            "name": "GPT-4o",
+            "capabilities": ["Chat"]
+        },
+        {
+            "id": "gpt-4o-mini",
+            "name": "GPT-4o Mini",
+            "capabilities": ["Chat"]
+        },
+        {
+            "id": "text-embedding-3-small",
+            "name": "Text Embedding 3 Small",
+            "capabilities": ["Embedding"]
+        },
+        {
+            "id": "text-embedding-3-large",
+            "name": "Text Embedding 3 Large",
+            "capabilities": ["Embedding"]
+        }
+    ]
 }
 ```
+
 {% endcode %}
 
 ### Model Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | string | Model identifier to use in API calls |
-| `name` | string | Display name |
-| `capabilities` | string[] | Capabilities this model supports |
+| Property       | Type     | Description                          |
+| -------------- | -------- | ------------------------------------ |
+| `id`           | string   | Model identifier to use in API calls |
+| `name`         | string   | Display name                         |
+| `capabilities` | string[] | Capabilities this model supports     |
 
 ### 404 Not Found
 
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "Connection not found"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    "title": "Not Found",
+    "status": 404,
+    "detail": "Connection not found"
 }
 ```
 
@@ -76,69 +78,76 @@ GET /connections/{idOrAlias}/models
 ### cURL
 
 {% code title="cURL" %}
+
 ```bash
 curl -X GET "https://localhost:44331/umbraco/ai/management/api/v1/connections/openai-prod/models"
 ```
+
 {% endcode %}
 
 ### JavaScript
 
 {% code title="JavaScript" %}
+
 ```javascript
 async function getModels(connectionIdOrAlias) {
-  const response = await fetch(
-    `/umbraco/ai/management/api/v1/connections/${connectionIdOrAlias}/models`,
-    { credentials: 'include' }
-  );
+    const response = await fetch(`/umbraco/ai/management/api/v1/connections/${connectionIdOrAlias}/models`, {
+        credentials: "include",
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch models');
-  }
+    if (!response.ok) {
+        throw new Error("Failed to fetch models");
+    }
 
-  const { items } = await response.json();
-  return items;
+    const { items } = await response.json();
+    return items;
 }
 
 // Usage
-const models = await getModels('openai-prod');
+const models = await getModels("openai-prod");
 console.log(models);
 ```
+
 {% endcode %}
 
 ### Filter by Capability
 
 {% code title="JavaScript" %}
+
 ```javascript
 async function getChatModels(connectionIdOrAlias) {
-  const models = await getModels(connectionIdOrAlias);
-  return models.filter(m => m.capabilities.includes('Chat'));
+    const models = await getModels(connectionIdOrAlias);
+    return models.filter((m) => m.capabilities.includes("Chat"));
 }
 
 async function getEmbeddingModels(connectionIdOrAlias) {
-  const models = await getModels(connectionIdOrAlias);
-  return models.filter(m => m.capabilities.includes('Embedding'));
+    const models = await getModels(connectionIdOrAlias);
+    return models.filter((m) => m.capabilities.includes("Embedding"));
 }
 ```
+
 {% endcode %}
 
 ### Populate Model Dropdown
 
 {% code title="JavaScript" %}
+
 ```javascript
 async function populateModelSelect(selectElement, connectionId, capability) {
-  const models = await getModels(connectionId);
-  const filtered = models.filter(m => m.capabilities.includes(capability));
+    const models = await getModels(connectionId);
+    const filtered = models.filter((m) => m.capabilities.includes(capability));
 
-  selectElement.innerHTML = '';
+    selectElement.innerHTML = "";
 
-  for (const model of filtered) {
-    const option = document.createElement('option');
-    option.value = model.id;
-    option.textContent = model.name;
-    selectElement.appendChild(option);
-  }
+    for (const model of filtered) {
+        const option = document.createElement("option");
+        option.value = model.id;
+        option.textContent = model.name;
+        selectElement.appendChild(option);
+    }
 }
 ```
+
 {% endcode %}
 
 ## Notes

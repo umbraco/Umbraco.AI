@@ -63,9 +63,9 @@ export class UaiConnectionInfoWorkspaceViewElement extends UmbLitElement {
             entity-type="connection"
             entity-id=${this._model.unique}
             .currentVersion=${this._model.version}
-            @rollback=${() => this.#workspaceContext?.reload()}>
-        </uai-version-history>
-        `;
+            @rollback=${() => this.#workspaceContext?.reload()}
+        >
+        </uai-version-history> `;
     }
 
     #renderRightColumn() {
@@ -74,20 +74,26 @@ export class UaiConnectionInfoWorkspaceViewElement extends UmbLitElement {
         return html`
             <uui-box headline="Info">
                 <umb-property-layout label="Id" orientation="vertical">
-                    <div slot="editor">${this._model.unique === UAI_EMPTY_GUID
-                        ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
-                        : this._model.unique}</div>
+                    <div slot="editor">
+                        ${this._model.unique === UAI_EMPTY_GUID
+                            ? html`<uui-tag color="default" look="placeholder">Unsaved</uui-tag>`
+                            : this._model.unique}
+                    </div>
                 </umb-property-layout>
-                ${this._model.dateCreated ? html`
-                    <umb-property-layout label="Date Created" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
-                    </umb-property-layout>
-                ` : ''}
-                ${this._model.dateModified ? html`
-                    <umb-property-layout label="Date Modified" orientation="vertical">
-                        <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
-                    </umb-property-layout>
-                ` : ''}
+                ${this._model.dateCreated
+                    ? html`
+                          <umb-property-layout label="Date Created" orientation="vertical">
+                              <div slot="editor">${formatDateTime(this._model.dateCreated)}</div>
+                          </umb-property-layout>
+                      `
+                    : ""}
+                ${this._model.dateModified
+                    ? html`
+                          <umb-property-layout label="Date Modified" orientation="vertical">
+                              <div slot="editor">${formatDateTime(this._model.dateModified)}</div>
+                          </umb-property-layout>
+                      `
+                    : ""}
 
                 <umb-property-layout label="Provider" orientation="vertical">
                     <div slot="editor">${this._provider?.name ?? this._model.providerId}</div>
@@ -95,7 +101,9 @@ export class UaiConnectionInfoWorkspaceViewElement extends UmbLitElement {
 
                 <umb-property-layout label="Capabilities" orientation="vertical">
                     <div slot="editor">
-                        ${this._provider?.capabilities.map(cap => html`<uui-tag color="default" look="outline">${cap}</uui-tag> `)}
+                        ${this._provider?.capabilities.map(
+                            (cap) => html`<uui-tag color="default" look="outline">${cap}</uui-tag> `,
+                        )}
                     </div>
                 </umb-property-layout>
             </uui-box>

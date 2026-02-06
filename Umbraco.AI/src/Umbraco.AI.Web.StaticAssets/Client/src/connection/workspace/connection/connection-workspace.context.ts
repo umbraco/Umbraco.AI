@@ -25,7 +25,8 @@ import { UAI_CONNECTION_ROOT_WORKSPACE_PATH } from "../connection-root/paths.js"
  */
 export class UaiConnectionWorkspaceContext
     extends UmbSubmittableWorkspaceContextBase<UaiConnectionDetailModel>
-    implements UmbRoutableWorkspaceContext {
+    implements UmbRoutableWorkspaceContext
+{
     readonly routes = new UmbWorkspaceRouteManager(this);
 
     #unique = new UmbBasicState<string | undefined>(undefined);
@@ -57,7 +58,7 @@ export class UaiConnectionWorkspaceContext
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
-                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!
+                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!,
                     );
                 },
             },
@@ -119,13 +120,13 @@ export class UaiConnectionWorkspaceContext
                         this.setIsNew(false);
                     }
                 },
-                "_observeModel"
+                "_observeModel",
             );
         }
 
         return data;
     }
-    
+
     /**
      * Reloads the current connection.
      */
@@ -202,7 +203,6 @@ export class UaiConnectionWorkspaceContext
             this.#commandStore.unmute();
         }
     }
-
 }
 
 export { UaiConnectionWorkspaceContext as api };

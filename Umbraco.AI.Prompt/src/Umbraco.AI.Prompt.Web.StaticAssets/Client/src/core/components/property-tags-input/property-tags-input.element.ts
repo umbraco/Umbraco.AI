@@ -54,10 +54,7 @@ export class UaiPropertyTagsInputElement extends UmbLitElement {
      * Lookup callback for fetching property aliases.
      */
     #lookup: TagLookupCallback = async (query: string): Promise<TagItem[]> => {
-        const { data } = await tryExecute(
-            this,
-            UtilsService.getPropertyAliases({ query: { query } })
-        );
+        const { data } = await tryExecute(this, UtilsService.getPropertyAliases({ query: { query } }));
 
         if (data) {
             return data.map((alias) => ({

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Create custom AI providers to support additional AI services.
+    Create custom AI providers to support additional AI services.
 ---
 
 # Custom Providers
@@ -28,6 +28,7 @@ MyProvider/
 ### 1. Create a Settings Class
 
 {% code title="MyProviderSettings.cs" %}
+
 ```csharp
 using Umbraco.AI.Core.Settings;
 
@@ -40,11 +41,13 @@ public class MyProviderSettings
     public string? Endpoint { get; set; }
 }
 ```
+
 {% endcode %}
 
 ### 2. Create a Chat Capability
 
 {% code title="MyChatCapability.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
@@ -74,11 +77,13 @@ public class MyChatCapability : AIChatCapabilityBase<MyProviderSettings>
     }
 }
 ```
+
 {% endcode %}
 
 ### 3. Create the Provider Class
 
 {% code title="MyProvider.cs" %}
+
 ```csharp
 using Umbraco.AI.Core.Providers;
 
@@ -92,6 +97,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
     }
 }
 ```
+
 {% endcode %}
 
 ## How It Works

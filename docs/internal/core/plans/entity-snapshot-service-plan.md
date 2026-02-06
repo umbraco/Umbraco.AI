@@ -29,6 +29,7 @@ We explicitly avoid dependencies on `Umbraco.Cms.Core.DeliveryApi` namespace. In
 - `PublishedItemType` - Reuse existing CMS enum for entity types
 
 The core property value conversion pipeline already returns fully-typed models:
+
 - `BlockListModel` / `BlockGridModel` for block editors
 - `MediaWithCrops` for media pickers
 - `IPublishedContent` for content pickers
@@ -865,38 +866,38 @@ public static class AISnapshotComposerExtensions
 
 ```json
 {
-  "heroSection": {
-    "items": [
-      {
-        "contentType": "heroBlock",
-        "properties": {
-          "heading": "Welcome",
-          "subheading": "To our site"
-        }
-      }
-    ]
-  },
-  "contentBlocks": {
-    "items": [
-      {
-        "contentType": "textBlock",
-        "properties": {
-          "text": "Some content here..."
-        }
-      },
-      {
-        "contentType": "imageBlock",
-        "properties": {
-          "image": {
-            "key": "media-key",
-            "name": "Featured Image",
-            "url": "/media/image.jpg",
-            "mediaType": "Image"
-          }
-        }
-      }
-    ]
-  }
+    "heroSection": {
+        "items": [
+            {
+                "contentType": "heroBlock",
+                "properties": {
+                    "heading": "Welcome",
+                    "subheading": "To our site"
+                }
+            }
+        ]
+    },
+    "contentBlocks": {
+        "items": [
+            {
+                "contentType": "textBlock",
+                "properties": {
+                    "text": "Some content here..."
+                }
+            },
+            {
+                "contentType": "imageBlock",
+                "properties": {
+                    "image": {
+                        "key": "media-key",
+                        "name": "Featured Image",
+                        "url": "/media/image.jpg",
+                        "mediaType": "Image"
+                    }
+                }
+            }
+        ]
+    }
 }
 ```
 
@@ -904,12 +905,12 @@ public static class AISnapshotComposerExtensions
 
 ```json
 {
-  "featuredImage": {
-    "key": "media-key",
-    "name": "Featured Image",
-    "url": "/media/image.jpg",
-    "mediaType": "Image"
-  }
+    "featuredImage": {
+        "key": "media-key",
+        "name": "Featured Image",
+        "url": "/media/image.jpg",
+        "mediaType": "Image"
+    }
 }
 ```
 
@@ -917,12 +918,12 @@ public static class AISnapshotComposerExtensions
 
 ```json
 {
-  "relatedArticle": {
-    "key": "content-key",
-    "name": "Related Article Title",
-    "url": "/blog/related-article",
-    "contentType": "blogPost"
-  }
+    "relatedArticle": {
+        "key": "content-key",
+        "name": "Related Article Title",
+        "url": "/blog/related-article",
+        "contentType": "blogPost"
+    }
 }
 ```
 
@@ -930,7 +931,7 @@ public static class AISnapshotComposerExtensions
 
 ```json
 {
-  "bodyText": "This is the content with all HTML tags removed. Links and formatting become plain text."
+    "bodyText": "This is the content with all HTML tags removed. Links and formatting become plain text."
 }
 ```
 
@@ -953,6 +954,7 @@ public static class AISnapshotComposerExtensions
 - `PublishedItemType` - Existing enum for entity types
 
 **NOT used** (Delivery API specific):
+
 - ~~`IApiPropertyRenderer`~~
 - ~~`IOutputExpansionStrategy`~~
 - ~~`IApiContentBuilder`~~
@@ -990,17 +992,17 @@ public static class AISnapshotComposerExtensions
 ## Open Questions
 
 1. **Draft Content**: Should we support snapshots of unpublished/draft content?
-   - Requires `IContentService` instead of published cache
-   - Different property value resolution path
+    - Requires `IContentService` instead of published cache
+    - Different property value resolution path
 
 2. **Member Snapshots**: How much member data should be included?
-   - Privacy considerations
-   - Sensitive field handling
+    - Privacy considerations
+    - Sensitive field handling
 
 3. **Performance**: Should we implement snapshot caching?
-   - Cache invalidation complexity
-   - Memory vs. computation trade-off
+    - Cache invalidation complexity
+    - Memory vs. computation trade-off
 
 4. **Placeholder Syntax**: Mustache vs. custom syntax?
-   - Mustache is well-known but limited
-   - Custom syntax could support filters (e.g., `{{content.date | formatDate}}`)
+    - Mustache is well-known but limited
+    - Custom syntax could support filters (e.g., `{{content.date | formatDate}}`)

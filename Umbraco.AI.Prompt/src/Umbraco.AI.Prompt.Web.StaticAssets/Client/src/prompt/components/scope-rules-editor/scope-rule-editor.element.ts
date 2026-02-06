@@ -27,7 +27,7 @@ function getRuleSummary(rule: UaiScopeRule): string {
         parts.push(`Property: ${rule.propertyAliases.join(" | ")}`);
     }
     if (rule.propertyEditorUiAliases && rule.propertyEditorUiAliases.length > 0) {
-        const simplified = rule.propertyEditorUiAliases.map(a => a.replace("Umb.PropertyEditorUi.", ""));
+        const simplified = rule.propertyEditorUiAliases.map((a) => a.replace("Umb.PropertyEditorUi.", ""));
         parts.push(`Editor: ${simplified.join(" | ")}`);
     }
 
@@ -90,11 +90,13 @@ export class UaiScopeRuleEditorElement extends UmbLitElement {
     }
 
     #dispatchChange(rule: UaiScopeRule) {
-        this.dispatchEvent(new CustomEvent<UaiScopeRule>("rule-change", {
-            detail: rule,
-            bubbles: true,
-            composed: true,
-        }));
+        this.dispatchEvent(
+            new CustomEvent<UaiScopeRule>("rule-change", {
+                detail: rule,
+                bubbles: true,
+                composed: true,
+            }),
+        );
     }
 
     render() {
@@ -107,11 +109,11 @@ export class UaiScopeRuleEditorElement extends UmbLitElement {
                     <span class="rule-summary">${summary}</span>
                     <uui-action-bar>
                         <uui-button
-                                look="secondary"
-                                color="default"
-                                compact
-                                @click=${this.#onRemove}
-                                label="Remove rule"
+                            look="secondary"
+                            color="default"
+                            compact
+                            @click=${this.#onRemove}
+                            label="Remove rule"
                         >
                             <uui-icon name="icon-trash"></uui-icon>
                         </uui-button>
@@ -195,7 +197,7 @@ export class UaiScopeRuleEditorElement extends UmbLitElement {
             }
 
             .rule-header:hover,
-            .rule-header:focus{
+            .rule-header:focus {
                 border-color: var(--uui-color-border-emphasis);
             }
 

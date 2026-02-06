@@ -27,7 +27,7 @@ export class UaiPromptCollectionServerDataSource implements UmbCollectionDataSou
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },
-            })
+            }),
         );
 
         if (error || !data) {

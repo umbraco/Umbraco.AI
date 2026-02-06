@@ -143,40 +143,43 @@ docs/public/
 
 **Purpose**: Quick onboarding for new users
 
-| Article | Content |
-|---------|---------|
-| `installation.md` | NuGet package installation, provider packages (OpenAI), prerequisites (.NET 10, Umbraco 17+) |
-| `configuration.md` | appsettings.json structure, `Umbraco:AI` section, default profile aliases |
+| Article               | Content                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------- |
+| `installation.md`     | NuGet package installation, provider packages (OpenAI), prerequisites (.NET 10, Umbraco 17+)             |
+| `configuration.md`    | appsettings.json structure, `Umbraco:AI` section, default profile aliases                                |
 | `first-connection.md` | Backoffice walkthrough: create connection, enter API key, configuration references, multiple connections |
-| `first-profile.md` | Create a chat profile, select model, configure settings, use in code |
+| `first-profile.md`    | Create a chat profile, select model, configure settings, use in code                                     |
 
 ### 2. Concepts
 
 **Purpose**: Explain the mental model before diving into code
 
-| Article | Content |
-|---------|---------|
-| `providers.md` | Provider = installable plugin (NuGet), discovery via `[AIProvider]`, examples (OpenAI) |
-| `connections.md` | Connection = credentials + provider, stored in DB, can have multiple per provider |
-| `profiles.md` | Profile = connection + model + settings, use-case specific (e.g., "content-assistant") |
+| Article           | Content                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| `providers.md`    | Provider = installable plugin (NuGet), discovery via `[AIProvider]`, examples (OpenAI)           |
+| `connections.md`  | Connection = credentials + provider, stored in DB, can have multiple per provider                |
+| `profiles.md`     | Profile = connection + model + settings, use-case specific (e.g., "content-assistant")           |
 | `capabilities.md` | Chat, Embedding, future (Media, Moderation), M.E.AI types (`IChatClient`, `IEmbeddingGenerator`) |
-| `middleware.md` | Pipeline concept, wrapping clients, logging/caching/rate-limiting examples |
+| `middleware.md`   | Pipeline concept, wrapping clients, logging/caching/rate-limiting examples                       |
 
 ### 3. Using the API
 
 **Purpose**: Developer guide for consuming AI services
 
 **Chat Section**:
+
 - Basic `IAIChatService.GetResponseAsync()` usage
 - Streaming with `GetStreamingResponseAsync()`
 - System prompts via profile settings
 - Options: temperature, max tokens, stop sequences
 
 **Embeddings Section**:
+
 - Basic `IAIEmbeddingService.GenerateEmbeddingAsync()` usage
 - Batch operations with `GenerateEmbeddingsAsync()`
 
 **Tools Section**:
+
 - What AI tools are
 - Using tools with chat completions
 - Tool result handling
@@ -185,10 +188,10 @@ docs/public/
 
 **Purpose**: End-user guide for UI management
 
-| Article | Content |
-|---------|---------|
-| `managing-connections.md` | Screenshots + steps: navigate to AI section, create/edit/delete connections, test button |
-| `managing-profiles.md` | Screenshots + steps: create profile, select capability, choose connection/model, configure settings |
+| Article                   | Content                                                                                             |
+| ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `managing-connections.md` | Screenshots + steps: navigate to AI section, create/edit/delete connections, test button            |
+| `managing-profiles.md`    | Screenshots + steps: create profile, select capability, choose connection/model, configure settings |
 
 ### 5. Extending
 
@@ -219,6 +222,7 @@ docs/public/
 **Purpose**: REST API reference for integrations
 
 Each endpoint article includes:
+
 - HTTP method and path
 - Request/response models (JSON)
 - Authentication requirements
@@ -226,6 +230,7 @@ Each endpoint article includes:
 - Error responses
 
 **Key patterns to document**:
+
 - `IdOrAlias` - endpoints accept GUID or string alias
 - Pagination - `skip`, `take`, `total` pattern
 - Filtering - `filter`, `providerId`, `capability` query params
@@ -234,17 +239,18 @@ Each endpoint article includes:
 
 **Purpose**: TypeScript/JavaScript integration guide
 
-| Article | Content |
-|---------|---------|
-| `chat-controller.md` | `UaiChatController` class, methods, usage in custom elements |
-| `chat-repository.md` | `UaiChatRepository` for direct API calls |
-| `types.md` | Exported types: `UaiChatMessage`, `UaiChatResult`, `UaiChatStreamChunk`, etc. |
+| Article              | Content                                                                       |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `chat-controller.md` | `UaiChatController` class, methods, usage in custom elements                  |
+| `chat-repository.md` | `UaiChatRepository` for direct API calls                                      |
+| `types.md`           | Exported types: `UaiChatMessage`, `UaiChatResult`, `UaiChatStreamChunk`, etc. |
 
 ### 8. Reference
 
 **Purpose**: API reference documentation (comprehensive but concise)
 
 Each service reference includes:
+
 - Interface signature
 - Method descriptions
 - Parameter/return type details
@@ -255,22 +261,26 @@ Each service reference includes:
 ## Content Priorities
 
 ### Phase 1 - Essential (MVP)
+
 1. `README.md` (landing page)
 2. `getting-started/` (all articles)
 3. `concepts/` (all articles)
 4. `using-the-api/chat/` (basic-chat.md, streaming.md)
 
 ### Phase 2 - Core Features
+
 1. `backoffice/` (all articles with screenshots)
 2. `using-the-api/embeddings/`
 3. `management-api/chat/` and `management-api/connections/`
 
 ### Phase 3 - Extension Points
+
 1. `extending/providers/` (all articles)
 2. `extending/middleware/` (all articles)
 3. `management-api/profiles/` and `management-api/providers/`
 
 ### Phase 4 - Complete Coverage
+
 1. `extending/tools/`
 2. `frontend/`
 3. `reference/` (all articles)
@@ -282,10 +292,10 @@ Each service reference includes:
 
 ### Concept Article Template
 
-```markdown
+````markdown
 ---
 description: >-
-  Brief description for search results and cards.
+    Brief description for search results and cards.
 ---
 
 # Title
@@ -307,15 +317,19 @@ Helpful tip or note.
 ## Example
 
 {% code title="Example.cs" %}
+
 ```csharp
 // Code example
 ```
+````
+
 {% endcode %}
 
 ## Related
 
-* [Related Topic](../path/to/related.md)
-```
+- [Related Topic](../path/to/related.md)
+
+````
 
 ### API Endpoint Template
 
@@ -345,7 +359,8 @@ description: >-
 {
   "property": "value"
 }
-```
+````
+
 {% endcode %}
 
 ## Response
@@ -353,32 +368,37 @@ description: >-
 ### Success (200)
 
 {% code title="Response" %}
+
 ```json
 {
-  "property": "value"
+    "property": "value"
 }
 ```
+
 {% endcode %}
 
 ### Errors
 
-| Status | Description |
-|--------|-------------|
-| 400 | Bad request |
-| 401 | Unauthorized |
-| 404 | Not found |
+| Status | Description  |
+| ------ | ------------ |
+| 400    | Bad request  |
+| 401    | Unauthorized |
+| 404    | Not found    |
 
 ## Example
 
 {% code title="cURL" %}
+
 ```bash
 curl -X POST https://example.com/umbraco/ai/management/api/v1/chat/complete \
   -H "Authorization: Bearer {token}" \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "Hello"}]}'
 ```
+
 {% endcode %}
-```
+
+````
 
 ---
 
@@ -508,7 +528,7 @@ All images:
   * [AIModelRef](reference/models/ai-model-ref.md)
 * [Configuration](reference/configuration/README.md)
   * [AIOptions](reference/configuration/ai-options.md)
-```
+````
 
 ---
 

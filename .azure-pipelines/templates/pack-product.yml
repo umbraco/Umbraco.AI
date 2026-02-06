@@ -17,129 +17,129 @@
 # Converted from GitHub Actions composite action: .github/actions/pack-product/action.yml
 
 parameters:
-  - name: product
-    type: string
-  - name: condition
-    type: string
-    default: 'true'
-  - name: useProjectReferences
-    type: boolean
-    default: false
+    - name: product
+      type: string
+    - name: condition
+      type: string
+      default: "true"
+    - name: useProjectReferences
+      type: boolean
+      default: false
 
 steps:
-  - script: dotnet tool install --global nbgv || true
-    displayName: Install NBGV
-    condition: ${{ parameters.condition }}
+    - script: dotnet tool install --global nbgv || true
+      displayName: Install NBGV
+      condition: ${{ parameters.condition }}
 
-  - script: nbgv cloud
-    displayName: Set version
-    condition: ${{ parameters.condition }}
-    workingDirectory: ${{ parameters.product }}
+    - script: nbgv cloud
+      displayName: Set version
+      condition: ${{ parameters.condition }}
+      workingDirectory: ${{ parameters.product }}
 
-  - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true
-    displayName: Restore packages
-    condition: ${{ parameters.condition }}
+    - script: dotnet restore ${{ parameters.product }}/${{ parameters.product }}.sln --configfile NuGet.CI.config -p:UseProjectReferences=${{ parameters.useProjectReferences }} -p:DisableCloudBuildNumber=true
+      displayName: Restore packages
+      condition: ${{ parameters.condition }}
 
-  - script: |
-      dotnet pack ${{ parameters.product }}/${{ parameters.product }}.sln \
-        --configuration Release \
-        --no-build \
-        --output ./artifacts/nupkg \
-        -p:UseProjectReferences=${{ parameters.useProjectReferences }} \
-        -p:DisableCloudBuildNumber=true
-    displayName: Pack ${{ parameters.product }} (NuGet)
-    condition: ${{ parameters.condition }}
+    - script: |
+          dotnet pack ${{ parameters.product }}/${{ parameters.product }}.sln \
+            --configuration Release \
+            --no-build \
+            --output ./artifacts/nupkg \
+            -p:UseProjectReferences=${{ parameters.useProjectReferences }} \
+            -p:DisableCloudBuildNumber=true
+      displayName: Pack ${{ parameters.product }} (NuGet)
+      condition: ${{ parameters.condition }}
 
-  # npm pack for frontend types (auto-detects if package.json exports types)
-  - script: |
-      set -e
+    # npm pack for frontend types (auto-detects if package.json exports types)
+    - script: |
+          set -e
 
-      PRODUCT="${{ parameters.product }}"
+          PRODUCT="${{ parameters.product }}"
 
-      # Try standard path first (Web.StaticAssets), then fall back to direct project path
-      # (Copilot uses direct path as it's frontend-only with no separate Web.StaticAssets project)
-      CLIENT_DIR="$PRODUCT/src/$PRODUCT.Web.StaticAssets/Client"
-      if [ ! -d "$CLIENT_DIR" ]; then
-        CLIENT_DIR="$PRODUCT/src/$PRODUCT/Client"
-      fi
+          # Try standard path first (Web.StaticAssets), then fall back to direct project path
+          # (Copilot uses direct path as it's frontend-only with no separate Web.StaticAssets project)
+          CLIENT_DIR="$PRODUCT/src/$PRODUCT.Web.StaticAssets/Client"
+          if [ ! -d "$CLIENT_DIR" ]; then
+            CLIENT_DIR="$PRODUCT/src/$PRODUCT/Client"
+          fi
 
-      PACKAGE_JSON="$CLIENT_DIR/package.json"
+          PACKAGE_JSON="$CLIENT_DIR/package.json"
 
-      # Check if frontend client folder exists
-      if [ ! -d "$CLIENT_DIR" ]; then
-        echo "No frontend client folder found - skipping npm pack"
-        exit 0
-      fi
+          # Check if frontend client folder exists
+          if [ ! -d "$CLIENT_DIR" ]; then
+            echo "No frontend client folder found - skipping npm pack"
+            exit 0
+          fi
 
-      echo "Found frontend client folder at $CLIENT_DIR"
+          echo "Found frontend client folder at $CLIENT_DIR"
 
-      # Check if package.json exists
-      if [ ! -f "$PACKAGE_JSON" ]; then
-        echo "No package.json found at $PACKAGE_JSON - skipping npm pack"
-        exit 0
-      fi
+          # Check if package.json exists
+          if [ ! -f "$PACKAGE_JSON" ]; then
+            echo "No package.json found at $PACKAGE_JSON - skipping npm pack"
+            exit 0
+          fi
 
-      # Check if package.json has "types" field (exports types)
-      HAS_TYPES=$(node -e "
-        const pkg = require('./$PACKAGE_JSON');
-        console.log(pkg.types ? 'true' : 'false');
-      ")
+          # Check if package.json has "types" field (exports types)
+          HAS_TYPES=$(node -e "
+            const pkg = require('./$PACKAGE_JSON');
+            console.log(pkg.types ? 'true' : 'false');
+          ")
 
-      if [ "$HAS_TYPES" != "true" ]; then
-        echo "package.json does not export types - skipping npm pack"
-        exit 0
-      fi
+          if [ "$HAS_TYPES" != "true" ]; then
+            echo "package.json does not export types - skipping npm pack"
+            exit 0
+          fi
 
-      echo "Package exports types - running npm pack"
+          echo "Package exports types - running npm pack"
 
-      # Get version from NBGV
-      VERSION=$(cd "$PRODUCT" && nbgv get-version -v NuGetPackageVersion)
-      echo "Using version: $VERSION"
+          # Get version from NBGV
+          VERSION=$(cd "$PRODUCT" && nbgv get-version -v NuGetPackageVersion)
+          echo "Using version: $VERSION"
 
-      # Navigate to frontend client folder
-      cd "$CLIENT_DIR"
+          # Navigate to frontend client folder
+          cd "$CLIENT_DIR"
 
-      # Update package.json version and cleanse for publishing
-      node -e "
-        const fs = require('fs');
-        const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          # Update package.json version and cleanse for publishing
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
-        // Update version to match NuGet version
-        pkg.version = '$VERSION';
-        console.log('Updated package.json version to: ' + pkg.version);
+            // Update version to match NuGet version
+            pkg.version = '$VERSION';
+            console.log('Updated package.json version to: ' + pkg.version);
 
-        // Cleanse package.json for publishing
-        console.log('Cleansing package.json for publishing...');
+            // Cleanse package.json for publishing
+            console.log('Cleansing package.json for publishing...');
 
-        // Remove devDependencies
-        delete pkg.devDependencies;
+            // Remove devDependencies
+            delete pkg.devDependencies;
 
-        // Convert dependencies to peerDependencies
-        // Existing peerDependencies take precedence over converted dependencies
-        if (pkg.dependencies) {
-          pkg.peerDependencies = {
-            ...pkg.dependencies,
-            ...(pkg.peerDependencies || {})
-          };
-          delete pkg.dependencies;
-        }
+            // Convert dependencies to peerDependencies
+            // Existing peerDependencies take precedence over converted dependencies
+            if (pkg.dependencies) {
+              pkg.peerDependencies = {
+                ...pkg.dependencies,
+                ...(pkg.peerDependencies || {})
+              };
+              delete pkg.dependencies;
+            }
 
-        // Remove scripts (not needed in published package)
-        delete pkg.scripts;
+            // Remove scripts (not needed in published package)
+            delete pkg.scripts;
 
-        // Write back to disk
-        fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-        console.log('Package cleansing complete');
-      "
+            // Write back to disk
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('Package cleansing complete');
+          "
 
-      # Create artifacts/npm directory
-      mkdir -p $(Build.SourcesDirectory)/artifacts/npm
+          # Create artifacts/npm directory
+          mkdir -p $(Build.SourcesDirectory)/artifacts/npm
 
-      # Run npm pack
-      npm pack --pack-destination $(Build.SourcesDirectory)/artifacts/npm
+          # Run npm pack
+          npm pack --pack-destination $(Build.SourcesDirectory)/artifacts/npm
 
-      echo ""
-      echo "npm packages created:"
-      ls -la $(Build.SourcesDirectory)/artifacts/npm/
-    displayName: Pack ${{ parameters.product }} (npm)
-    condition: ${{ parameters.condition }}
+          echo ""
+          echo "npm packages created:"
+          ls -la $(Build.SourcesDirectory)/artifacts/npm/
+      displayName: Pack ${{ parameters.product }} (npm)
+      condition: ${{ parameters.condition }}

@@ -6,17 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo containing Umbraco.AI and its add-on packages:
 
-| Product | Description | Location |
-|---------|-------------|----------|
-| **Umbraco.AI** | Core AI integration layer for Umbraco CMS | `Umbraco.AI/` |
-| **Umbraco.AI.Prompt** | Prompt template management add-on | `Umbraco.AI.Prompt/` |
-| **Umbraco.AI.Agent** | AI agent management add-on | `Umbraco.AI.Agent/` |
-| **Umbraco.AI.Agent.Copilot** | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/` |
-| **Umbraco.AI.OpenAI** | OpenAI provider plugin | `Umbraco.AI.OpenAI/` |
-| **Umbraco.AI.Anthropic** | Anthropic provider plugin | `Umbraco.AI.Anthropic/` |
-| **Umbraco.AI.Amazon** | Amazon Bedrock provider plugin | `Umbraco.AI.Amazon/` |
-| **Umbraco.AI.Google** | Google Gemini provider plugin | `Umbraco.AI.Google/` |
-| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin | `Umbraco.AI.MicrosoftFoundry/` |
+| Product                         | Description                                | Location                       |
+| ------------------------------- | ------------------------------------------ | ------------------------------ |
+| **Umbraco.AI**                  | Core AI integration layer for Umbraco CMS  | `Umbraco.AI/`                  |
+| **Umbraco.AI.Prompt**           | Prompt template management add-on          | `Umbraco.AI.Prompt/`           |
+| **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`            |
+| **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/`    |
+| **Umbraco.AI.OpenAI**           | OpenAI provider plugin                     | `Umbraco.AI.OpenAI/`           |
+| **Umbraco.AI.Anthropic**        | Anthropic provider plugin                  | `Umbraco.AI.Anthropic/`        |
+| **Umbraco.AI.Amazon**           | Amazon Bedrock provider plugin             | `Umbraco.AI.Amazon/`           |
+| **Umbraco.AI.Google**           | Google Gemini provider plugin              | `Umbraco.AI.Google/`           |
+| **Umbraco.AI.MicrosoftFoundry** | Microsoft AI Foundry provider plugin       | `Umbraco.AI.MicrosoftFoundry/` |
 
 Each product has its own solution file, CLAUDE.md, and can be built independently. For detailed guidance on a specific product, see its CLAUDE.md file.
 
@@ -25,6 +25,7 @@ Each product has its own solution file, CLAUDE.md, and can be built independentl
 ### Initial Setup
 
 Use the setup skill for first-time repository configuration:
+
 ```bash
 /repo-setup  # Interactive setup: git hooks, demo site, dependencies, build
 ```
@@ -35,6 +36,7 @@ Use the setup skill for first-time repository configuration:
 **Credentials:** admin@example.com / password1234
 
 **Infrastructure Operations:**
+
 ```bash
 /demo-site-management start              # Start with DemoSite-Claude profile (dynamic port)
 /demo-site-management stop               # Stop the running demo site
@@ -44,6 +46,7 @@ Use the setup skill for first-time repository configuration:
 ```
 
 **Browser Automation (Playwright):**
+
 ```bash
 /demo-site-automation login                         # Login to Umbraco backoffice
 /demo-site-automation navigate-to-connections       # Navigate to AI settings sections
@@ -51,6 +54,7 @@ Use the setup skill for first-time repository configuration:
 ```
 
 **Architecture Notes:**
+
 - `DemoSite-Claude` profile uses dynamic ports to avoid conflicts between worktrees
 - HTTP over named pipes: `umbraco.demosite.{branch-or-worktree}`
 - Site address endpoint: `/site-address` (query via named pipe to get HTTPS address)
@@ -64,14 +68,17 @@ Use the setup skill for first-time repository configuration:
 This repository uses two Azure DevOps projects:
 
 **Backlog & Work Items:**
+
 - **Project:** D-Team Tracker
 - **Backlog:** AI Team
 - **Default Tag:** Umbraco AI
 
 **CI/CD Pipelines:**
+
 - **Project:** Umbraco AI
 
 **Default behavior:**
+
 - Unless otherwise specified, all Azure DevOps related tasks (work items, issues, sprints, etc.) should be managed in the D-Team Tracker project under the AI Team backlog
 - All backlog items created for this repository should be tagged with `Umbraco AI` unless explicitly stated otherwise
 - CI/CD pipelines and build configurations are located in the Umbraco AI project
@@ -137,6 +144,7 @@ npm run watch:agent
 ```
 
 **Workspace Benefits:**
+
 - Single `npm install` installs all dependencies across all packages
 - Add-ons automatically use the local `@umbraco-ai/core` during development
 - Common dependencies are hoisted to the root `node_modules`
@@ -204,26 +212,27 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `scripts/install-demo-site.ps1` | Creates unified local dev environment (Windows) |
-| `scripts/install-demo-site.sh` | Creates unified local dev environment (Linux/Mac) |
-| `scripts/generate-changelog.ps1` | Generate changelogs for release (Windows) |
-| `scripts/generate-changelog.sh` | Generate changelogs for release (Linux/Mac) |
-| `scripts/generate-changelog.js` | Node.js changelog generator (main implementation) |
-| `scripts/generate-release-manifest.ps1` | Interactive release manifest generator (Windows) |
-| `scripts/generate-release-manifest.sh` | Interactive release manifest generator (Linux/Mac) |
-| `Umbraco.AI.local.sln` | Unified solution (generated) |
-| `package.json` | Root npm scripts for frontend builds and changelog generation |
-| `commitlint.config.js` | Commit message validation with dynamic scope loading |
-| `release-manifest.json` | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`) |
-| `pack-manifest` (artifact) | CI-generated metadata for deployed packages (used by release pipeline for git tagging) |
-| `<Product>/changelog.config.json` | Per-product scopes for changelog generation (auto-discovered) |
-| `<Product>/CHANGELOG.md` | Per-product changelog (auto-generated from git history) |
+| File                                    | Purpose                                                                                |
+| --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `scripts/install-demo-site.ps1`         | Creates unified local dev environment (Windows)                                        |
+| `scripts/install-demo-site.sh`          | Creates unified local dev environment (Linux/Mac)                                      |
+| `scripts/generate-changelog.ps1`        | Generate changelogs for release (Windows)                                              |
+| `scripts/generate-changelog.sh`         | Generate changelogs for release (Linux/Mac)                                            |
+| `scripts/generate-changelog.js`         | Node.js changelog generator (main implementation)                                      |
+| `scripts/generate-release-manifest.ps1` | Interactive release manifest generator (Windows)                                       |
+| `scripts/generate-release-manifest.sh`  | Interactive release manifest generator (Linux/Mac)                                     |
+| `Umbraco.AI.local.sln`                  | Unified solution (generated)                                                           |
+| `package.json`                          | Root npm scripts for frontend builds and changelog generation                          |
+| `commitlint.config.js`                  | Commit message validation with dynamic scope loading                                   |
+| `release-manifest.json`                 | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`)             |
+| `pack-manifest` (artifact)              | CI-generated metadata for deployed packages (used by release pipeline for git tagging) |
+| `<Product>/changelog.config.json`       | Per-product scopes for changelog generation (auto-discovered)                          |
+| `<Product>/CHANGELOG.md`                | Per-product changelog (auto-generated from git history)                                |
 
 ## Frontend Architecture
 
 All products use the same frontend stack:
+
 - **Lit** web components
 - **TypeScript**
 - **Vite** for building
@@ -235,9 +244,9 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 
 - SQL Server and SQLite supported via EF Core
 - Each product has its own migrations with prefixes:
-  - `UmbracoAI_` - Core
-  - `UmbracoAIPrompt_` - Prompt add-on
-  - `UmbracoAIAgent_` - Agent add-on
+    - `UmbracoAI_` - Core
+    - `UmbracoAIPrompt_` - Prompt add-on
+    - `UmbracoAIAgent_` - Agent add-on
 
 ## Target Framework
 
@@ -252,10 +261,7 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
 
 ```json
-[
-  "Umbraco.AI",
-  "Umbraco.AI.OpenAI"
-]
+["Umbraco.AI", "Umbraco.AI.OpenAI"]
 ```
 
 **Generating the manifest:**
@@ -271,6 +277,7 @@ Use the interactive script to select which products to include:
 ```
 
 The script will:
+
 1. Scan for all `Umbraco.AI*` product folders
 2. Present an interactive multiselect interface
 3. Generate `release-manifest.json` at the repository root
@@ -278,6 +285,7 @@ The script will:
 The manifest is treated as the authoritative list of packages to pack and release. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
 
 On `hotfix/*` branches, the manifest is **optional**:
+
 - If present: Enforced the same way as release branches (explicit pack list)
 - If absent: Change detection is used automatically
 
@@ -286,12 +294,14 @@ On `hotfix/*` branches, the manifest is **optional**:
 On `hotfix/*` branches, the CI change detection uses **per-product tag-based comparison** to accurately identify which products have been hotfixed:
 
 **How it works:**
+
 - For each product, finds the most recent release tag (e.g., `Umbraco.AI@1.0.0`)
 - Compares changes in that product's folder since its own tag
 - Only substantive changes trigger a rebuild (excludes `CHANGELOG.md`, `version.json`)
 - Falls back to merge-base with main if no tag exists (new products)
 
 **Example workflow:**
+
 ```bash
 # Hotfix an old version
 git checkout Umbraco.AI@1.0.0
@@ -305,6 +315,7 @@ git commit -m "fix(core): Fix critical bug"
 ```
 
 **Multi-product hotfixes:**
+
 - If products were released together, use one hotfix branch
 - If products are at different points in history, use separate hotfix branches
 - Each product always compares against its own latest release tag
@@ -315,13 +326,14 @@ This ensures hotfix builds only include changes since the last release of each p
 
 The CI build produces the following artifacts for deployment:
 
-| Artifact | Description |
-|----------|-------------|
-| `all-nuget-packages` | All .nupkg files for NuGet deployment |
-| `all-npm-packages` | All .tgz files for npm deployment |
-| `pack-manifest` | Package metadata (name, version, type) for each package |
+| Artifact             | Description                                             |
+| -------------------- | ------------------------------------------------------- |
+| `all-nuget-packages` | All .nupkg files for NuGet deployment                   |
+| `all-npm-packages`   | All .tgz files for npm deployment                       |
+| `pack-manifest`      | Package metadata (name, version, type) for each package |
 
 The Azure DevOps release pipeline:
+
 1. Downloads these artifacts
 2. Deploys packages to package feeds (MyGet for pre-release, NuGet.org/npm for production)
 3. Tags the git repository with `[Product_Name]@[Version]` for each deployed package
@@ -341,6 +353,7 @@ Add-on packages and providers depend on Umbraco.AI (Core). These dependencies ar
 When an add-on (e.g., Umbraco.AI.Prompt or Umbraco.AI.Agent) needs to depend on a specific version range of Core, create a `Directory.Packages.props` file within the product folder:
 
 **Example:** `Umbraco.AI.Prompt/Directory.Packages.props`
+
 ```xml
 <Project>
   <ItemGroup>
@@ -351,11 +364,13 @@ When an add-on (e.g., Umbraco.AI.Prompt or Umbraco.AI.Agent) needs to depend on 
 ```
 
 The range format `[minimum, maximum)` means:
+
 - `[` = inclusive lower bound (>= 1.1.0)
 - `)` = exclusive upper bound (< 1.999.999)
 - Result: accepts any 1.x version from 1.1.0 onwards
 
 **How it works:**
+
 - **Root level** (`Directory.Packages.props` at repo root): Defines default package versions and ranges for all products
 - **Product level** (`ProductFolder/Directory.Packages.props`): Overrides specific package version ranges for that product only
 - **During local development**: Project references (`UseProjectReferences=true`) bypass NuGet versions entirely
@@ -366,27 +381,29 @@ The range format `[minimum, maximum)` means:
 If you release Core 1.1.0 with breaking changes, but Agent 1.0.0 isn't ready for the upgrade:
 
 1. **Agent's Directory.Packages.props** specifies minimum Core 1.0.0:
-   ```xml
-   <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
-   ```
+
+    ```xml
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
+    ```
 
 2. **Root Directory.Packages.props** may have a broader or different range:
-   ```xml
-   <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
-   ```
+
+    ```xml
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.0.0, 1.999.999)" />
+    ```
 
 3. When Agent is ready for Core 1.1.0+, update its `Directory.Packages.props` minimum version:
-   ```xml
-   <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
-   ```
+    ```xml
+    <PackageVersion Include="Umbraco.AI.Core" Version="[1.1.0, 1.999.999)" />
+    ```
 
 ### Version Range Guidelines
 
-| Scenario | Range Format | Example | Use Case |
-|----------|--------------|---------|----------|
+| Scenario             | Range Format         | Example              | Use Case                                   |
+| -------------------- | -------------------- | -------------------- | ------------------------------------------ |
 | Minor version series | `[X.Y.0, X.999.999)` | `[1.1.0, 1.999.999)` | Add-on requires min 1.1.0, accepts all 1.x |
-| Specific minimum | `[X.Y.Z, X.999.999)` | `[1.1.5, 1.999.999)` | Add-on requires min 1.1.5, accepts all 1.x |
-| Exact version | `[X.Y.Z]` | `[1.1.0]` | **Avoid** - prevents any updates |
+| Specific minimum     | `[X.Y.Z, X.999.999)` | `[1.1.5, 1.999.999)` | Add-on requires min 1.1.5, accepts all 1.x |
+| Exact version        | `[X.Y.Z]`            | `[1.1.0]`            | **Avoid** - prevents any updates           |
 
 ### Best Practices
 
@@ -413,6 +430,7 @@ All commits should follow the [Conventional Commits](https://www.conventionalcom
 ```
 
 **Examples:**
+
 ```bash
 feat(chat): Add streaming support
 fix(openai): Handle rate limit errors
@@ -422,21 +440,21 @@ docs(core): Update API examples
 **Formatting Rules (enforced by commitlint):**
 
 1. **Subject must be sentence-case** - Capitalize the first word after the scope
-   - ✅ `fix(frontend): Prevent scripts from hanging`
-   - ❌ `fix(frontend): prevent scripts from hanging`
+    - ✅ `fix(frontend): Prevent scripts from hanging`
+    - ❌ `fix(frontend): prevent scripts from hanging`
 
 2. **Scope must be valid** - Use one of the allowed scopes defined in `commitlint.config.js`
-   - **Valid types**: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `revert`, `build`
-   - **Valid scopes**: Dynamically loaded from all `<Product>/changelog.config.json` files + meta scopes (`deps`, `ci`, `docs`, `release`)
-   - **Single scope only** - Multiple scopes are not supported (e.g., `fix(core,agent):` is invalid)
-   - **To list current options**: `npm run commit-options` or `node scripts/list-commit-options.js`
-   - **For Claude Code**: Read `commitlint.config.js` at runtime to discover valid types and scopes - never use hardcoded lists
+    - **Valid types**: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `revert`, `build`
+    - **Valid scopes**: Dynamically loaded from all `<Product>/changelog.config.json` files + meta scopes (`deps`, `ci`, `docs`, `release`)
+    - **Single scope only** - Multiple scopes are not supported (e.g., `fix(core,agent):` is invalid)
+    - **To list current options**: `npm run commit-options` or `node scripts/list-commit-options.js`
+    - **For Claude Code**: Read `commitlint.config.js` at runtime to discover valid types and scopes - never use hardcoded lists
 
 3. **Body lines must not exceed 100 characters** - Wrap long lines in the commit body
 
 4. **Split commits when changes affect multiple areas** - If your changes span multiple scopes, create separate commits
-   - ✅ Split into: `fix(core): Fix issue A` + `fix(agent): Fix issue B`
-   - ❌ Don't use: `fix(core,agent): Fix issues`
+    - ✅ Split into: `fix(core): Fix issue A` + `fix(agent): Fix issue B`
+    - ❌ Don't use: `fix(core,agent): Fix issues`
 
 Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
 
@@ -466,6 +484,7 @@ Each product has a `changelog.config.json` file defining its scopes. The generat
 ### Automated Validation
 
 On `release/*` and `hotfix/*` branches, Azure DevOps automatically validates changelogs:
+
 - ✅ CHANGELOG.md exists for each product in release-manifest.json
 - ✅ CHANGELOG.md was updated in recent commits
 - ✅ Version in CHANGELOG.md matches version.json
@@ -485,13 +504,14 @@ These standards apply to all packages in this repository. Sub-project CLAUDE.md 
 
 All async service methods MUST follow the pattern `[Action][Entity]Async`:
 
-| Component | Description | Examples |
-|-----------|-------------|----------|
-| **Action** | Verb describing the operation | `Get`, `Create`, `Update`, `Delete`, `Save`, `Find`, `List`, `Validate`, `Execute`, `Generate` |
-| **Entity** | Noun describing what's being operated on | `Profile`, `Connection`, `Prompt`, `Agent`, `Context`, `ChatResponse` |
-| **Async** | Required suffix for async methods | Always `Async` |
+| Component  | Description                              | Examples                                                                                       |
+| ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Action** | Verb describing the operation            | `Get`, `Create`, `Update`, `Delete`, `Save`, `Find`, `List`, `Validate`, `Execute`, `Generate` |
+| **Entity** | Noun describing what's being operated on | `Profile`, `Connection`, `Prompt`, `Agent`, `Context`, `ChatResponse`                          |
+| **Async**  | Required suffix for async methods        | Always `Async`                                                                                 |
 
 **Correct Examples:**
+
 ```csharp
 // GOOD - follows [Action][Entity]Async
 Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken ct);
@@ -503,6 +523,7 @@ Task<PagedResult<AIAgent>> GetAgentsPagedAsync(int skip, int take, CancellationT
 ```
 
 **Incorrect Examples:**
+
 ```csharp
 // BAD - missing entity name
 Task<AIProfile?> GetAsync(Guid id, CancellationToken ct);           // Should be: GetProfileAsync
@@ -558,6 +579,7 @@ Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId, CancellationToke
 ```
 
 **Correct:**
+
 ```csharp
 // Other services use the entity service, not the repository
 public class AIChatService
@@ -573,6 +595,7 @@ public class AIChatService
 ```
 
 **Incorrect:**
+
 ```csharp
 // BAD: Service directly accessing another entity's repository
 public class AIChatService
@@ -588,6 +611,7 @@ public class AIChatService
 ```
 
 **Why this matters:**
+
 - Services encapsulate business logic, validation, and caching
 - Bypassing services leads to inconsistent behavior
 - Makes refactoring and testing easier
@@ -597,15 +621,16 @@ public class AIChatService
 
 Repository methods follow the same `[Action][Entity]Async` pattern as services, but may use more database-centric verbs:
 
-| Service Method | Repository Method |
-|----------------|-------------------|
-| `GetProfileAsync` | `GetByIdAsync` (entity is implicit in repository context) |
-| `GetProfileByAliasAsync` | `GetByAliasAsync` |
-| `GetAllProfilesAsync` | `GetAllAsync` |
-| `SaveProfileAsync` | `AddAsync` / `UpdateAsync` or `UpsertAsync` |
-| `DeleteProfileAsync` | `DeleteAsync` |
+| Service Method           | Repository Method                                         |
+| ------------------------ | --------------------------------------------------------- |
+| `GetProfileAsync`        | `GetByIdAsync` (entity is implicit in repository context) |
+| `GetProfileByAliasAsync` | `GetByAliasAsync`                                         |
+| `GetAllProfilesAsync`    | `GetAllAsync`                                             |
+| `SaveProfileAsync`       | `AddAsync` / `UpdateAsync` or `UpsertAsync`               |
+| `DeleteProfileAsync`     | `DeleteAsync`                                             |
 
 Repository methods can use shorter names since they operate on a single entity type:
+
 ```csharp
 public interface IAIProfileRepository
 {

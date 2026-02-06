@@ -69,19 +69,19 @@ Documentation: https://docs.ag-ui.com
 
 ### Event Types by Layer
 
-| Event | Core | Agents |
-|-------|:----:|:------:|
-| `run_started` | ✓ | ✓ |
-| `run_finished` | ✓ | ✓ |
-| `run_error` | ✓ | ✓ |
-| `text_message_start` | ✓ | ✓ |
-| `text_message_content` | ✓ | ✓ |
-| `text_message_end` | ✓ | ✓ |
-| `tool_call_*` | - | ✓ |
-| `state_snapshot` | - | ✓ |
-| `state_delta` | - | ✓ |
-| `messages_snapshot` | - | ✓ |
-| `approval_*` (custom) | - | ✓ |
+| Event                  | Core | Agents |
+| ---------------------- | :--: | :----: |
+| `run_started`          |  ✓   |   ✓    |
+| `run_finished`         |  ✓   |   ✓    |
+| `run_error`            |  ✓   |   ✓    |
+| `text_message_start`   |  ✓   |   ✓    |
+| `text_message_content` |  ✓   |   ✓    |
+| `text_message_end`     |  ✓   |   ✓    |
+| `tool_call_*`          |  -   |   ✓    |
+| `state_snapshot`       |  -   |   ✓    |
+| `state_delta`          |  -   |   ✓    |
+| `messages_snapshot`    |  -   |   ✓    |
+| `approval_*` (custom)  |  -   |   ✓    |
 
 ### Package Dependencies
 
@@ -259,10 +259,12 @@ private async Task WriteEventAsync(AIStreamEvent evt, CancellationToken ct)
 **Source:** https://github.com/microsoft/agent-framework
 
 Microsoft is adding official AG-UI support via two packages:
+
 - **`Microsoft.Agents.AI`** - Core agent abstractions
 - **`Microsoft.Agents.AI.Hosting.AGUI.AspNetCore`** - Server-side ASP.NET Core integration
 
 **Key Components:**
+
 - **`ChatClientAgent`** - Wraps `IChatClient` directly (perfect fit for Umbraco.AI)
 - **`MapAGUI()`** - ASP.NET Core endpoint extension
 - Built-in OpenTelemetry, memory providers, workflow support
@@ -274,6 +276,7 @@ Microsoft is adding official AG-UI support via two packages:
 **Source:** https://github.com/ag-ui-protocol/ag-ui/pull/38
 
 Lighter-weight alternative with:
+
 - `ChatClientAgent` wrapping `IChatClient`
 - `MapAgentEndpoint()` route builder extension
 
@@ -282,6 +285,7 @@ Lighter-weight alternative with:
 #### Recommendation
 
 Use **Microsoft Agent Framework** because:
+
 1. **`ChatClientAgent` wraps `IChatClient` directly** - perfect fit for Umbraco.AI's architecture
 2. **Official Microsoft support** - long-term investment, consistent with .NET ecosystem
 3. **Built-in features** - OpenTelemetry, logging, memory providers included
@@ -503,13 +507,13 @@ public class AgentChatController : UmbracoAuthorizedApiController
 
 #### Comparison
 
-| Aspect | Option A: Minimal API | Option B: Controller |
-|--------|----------------------|---------------------|
-| AG-UI streaming | Handled by `Results.Extensions.AGUI()` | Manual implementation required |
-| OpenAPI | Via `.WithOpenApi()` fluent API | Via attributes + filters |
-| Umbraco conventions | Uses `UmbracoPipelineFilter` | Uses standard controller routing |
-| Customization | Limited to what Microsoft exposes | Full control over event stream |
-| Maintenance | Microsoft maintains streaming logic | We maintain streaming logic |
+| Aspect              | Option A: Minimal API                  | Option B: Controller             |
+| ------------------- | -------------------------------------- | -------------------------------- |
+| AG-UI streaming     | Handled by `Results.Extensions.AGUI()` | Manual implementation required   |
+| OpenAPI             | Via `.WithOpenApi()` fluent API        | Via attributes + filters         |
+| Umbraco conventions | Uses `UmbracoPipelineFilter`           | Uses standard controller routing |
+| Customization       | Limited to what Microsoft exposes      | Full control over event stream   |
+| Maintenance         | Microsoft maintains streaming logic    | We maintain streaming logic      |
 
 **Recommendation**: Use **Option A** (Minimal API) unless you need fine-grained control over the event stream. The OpenAPI documentation is achieved through the fluent `.WithOpenApi()` API rather than controller attributes.
 
@@ -553,124 +557,121 @@ public record ApprovalRequestedEvent : AIStreamEvent
  */
 
 interface BaseEvent {
-  type: string;
-  timestamp?: number;
+    type: string;
+    timestamp?: number;
 }
 
 // Lifecycle events
 export interface RunStartedEvent extends BaseEvent {
-  type: 'run_started';
-  run_id?: string;
+    type: "run_started";
+    run_id?: string;
 }
 
 export interface RunFinishedEvent extends BaseEvent {
-  type: 'run_finished';
-  run_id?: string;
+    type: "run_finished";
+    run_id?: string;
 }
 
 export interface RunErrorEvent extends BaseEvent {
-  type: 'run_error';
-  message?: string;
+    type: "run_error";
+    message?: string;
 }
 
 // Text message events
 export interface TextMessageStartEvent extends BaseEvent {
-  type: 'text_message_start';
-  message_id: string;
-  role?: string;
+    type: "text_message_start";
+    message_id: string;
+    role?: string;
 }
 
 export interface TextMessageContentEvent extends BaseEvent {
-  type: 'text_message_content';
-  message_id: string;
-  delta?: string;
+    type: "text_message_content";
+    message_id: string;
+    delta?: string;
 }
 
 export interface TextMessageEndEvent extends BaseEvent {
-  type: 'text_message_end';
-  message_id: string;
+    type: "text_message_end";
+    message_id: string;
 }
 
 // Tool events (Agents only)
 export interface ToolCallStartEvent extends BaseEvent {
-  type: 'tool_call_start';
-  tool_call_id: string;
-  tool_call_name: string;
-  parent_message_id?: string;
+    type: "tool_call_start";
+    tool_call_id: string;
+    tool_call_name: string;
+    parent_message_id?: string;
 }
 
 export interface ToolCallArgsEvent extends BaseEvent {
-  type: 'tool_call_args';
-  tool_call_id: string;
-  delta?: string;
+    type: "tool_call_args";
+    tool_call_id: string;
+    delta?: string;
 }
 
 export interface ToolCallEndEvent extends BaseEvent {
-  type: 'tool_call_end';
-  tool_call_id: string;
+    type: "tool_call_end";
+    tool_call_id: string;
 }
 
 // Approval events (Agents only, custom)
 export interface ApprovalRequestedEvent extends BaseEvent {
-  type: 'approval_requested';
-  approval_id: string;
-  tool_id: string;
-  tool_name: string;
-  parameters: unknown;
-  parameters_summary?: string;
+    type: "approval_requested";
+    approval_id: string;
+    tool_id: string;
+    tool_name: string;
+    parameters: unknown;
+    parameters_summary?: string;
 }
 
 // State events (Agents only)
 export interface StateSnapshotEvent extends BaseEvent {
-  type: 'state_snapshot';
-  snapshot: unknown;
+    type: "state_snapshot";
+    snapshot: unknown;
 }
 
 export interface StateDeltaEvent extends BaseEvent {
-  type: 'state_delta';
-  delta: Array<{ op: string; path: string; value?: unknown }>;
+    type: "state_delta";
+    delta: Array<{ op: string; path: string; value?: unknown }>;
 }
 
 // Messages snapshot (for syncing conversation history)
 export interface MessagesSnapshotEvent extends BaseEvent {
-  type: 'messages_snapshot';
-  messages: Array<{
-    role: string;
-    id?: string;
-    content?: string;
-    tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }>;
-  }>;
+    type: "messages_snapshot";
+    messages: Array<{
+        role: string;
+        id?: string;
+        content?: string;
+        tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }>;
+    }>;
 }
 
 // Union types - Core subset vs full Agents
 export type CoreStreamEvent =
-  | RunStartedEvent
-  | RunFinishedEvent
-  | RunErrorEvent
-  | TextMessageStartEvent
-  | TextMessageContentEvent
-  | TextMessageEndEvent;
+    | RunStartedEvent
+    | RunFinishedEvent
+    | RunErrorEvent
+    | TextMessageStartEvent
+    | TextMessageContentEvent
+    | TextMessageEndEvent;
 
 export type AgentStreamEvent =
-  | CoreStreamEvent
-  | ToolCallStartEvent
-  | ToolCallArgsEvent
-  | ToolCallEndEvent
-  | StateSnapshotEvent
-  | StateDeltaEvent
-  | MessagesSnapshotEvent
-  | ApprovalRequestedEvent;
+    | CoreStreamEvent
+    | ToolCallStartEvent
+    | ToolCallArgsEvent
+    | ToolCallEndEvent
+    | StateSnapshotEvent
+    | StateDeltaEvent
+    | MessagesSnapshotEvent
+    | ApprovalRequestedEvent;
 
 // Type guards
-export const isRunStarted = (e: BaseEvent): e is RunStartedEvent => e.type === 'run_started';
-export const isRunFinished = (e: BaseEvent): e is RunFinishedEvent => e.type === 'run_finished';
-export const isRunError = (e: BaseEvent): e is RunErrorEvent => e.type === 'run_error';
-export const isTextMessageContent = (e: BaseEvent): e is TextMessageContentEvent =>
-  e.type === 'text_message_content';
-export const isToolCallStart = (e: BaseEvent): e is ToolCallStartEvent =>
-  e.type === 'tool_call_start';
-export const isApprovalRequested = (e: BaseEvent): e is ApprovalRequestedEvent =>
-  e.type === 'approval_requested';
+export const isRunStarted = (e: BaseEvent): e is RunStartedEvent => e.type === "run_started";
+export const isRunFinished = (e: BaseEvent): e is RunFinishedEvent => e.type === "run_finished";
+export const isRunError = (e: BaseEvent): e is RunErrorEvent => e.type === "run_error";
+export const isTextMessageContent = (e: BaseEvent): e is TextMessageContentEvent => e.type === "text_message_content";
+export const isToolCallStart = (e: BaseEvent): e is ToolCallStartEvent => e.type === "tool_call_start";
+export const isApprovalRequested = (e: BaseEvent): e is ApprovalRequestedEvent => e.type === "approval_requested";
 ```
 
 ## Implementation Phases
@@ -714,7 +715,7 @@ export const isApprovalRequested = (e: BaseEvent): e is ApprovalRequestedEvent =
 ### Core (Modify)
 
 - `src/Umbraco.AI.Web/Api/Common/Events/` (new folder)
-  - `AIStreamEvent.cs` (includes all event types)
+    - `AIStreamEvent.cs` (includes all event types)
 - `src/Umbraco.AI.Web/Api/Management/Chat/Controllers/StreamChatController.cs`
 - `src/Umbraco.AI.Web.StaticAssets/Client/src/api/events.ts`
 
@@ -746,12 +747,13 @@ SSE endpoints require special handling in OpenAPI/Swashbuckle since OpenAPI does
 
 The implementation differs based on the endpoint approach chosen above:
 
-| Approach | OpenAPI Integration |
-|----------|---------------------|
+| Approach                  | OpenAPI Integration                                       |
+| ------------------------- | --------------------------------------------------------- |
 | **Option A: Minimal API** | `.WithOpenApi()` fluent API + Document Filter for schemas |
-| **Option B: Controller** | `[AgUiEndpoint]` attribute + Operation Filter |
+| **Option B: Controller**  | `[AgUiEndpoint]` attribute + Operation Filter             |
 
 Both approaches share:
+
 1. **Event schema models** - For OpenAPI schema generation
 2. **Document filter** - Registers schemas and adds `x-ag-ui-protocol` extension
 3. **Extension builder** - Creates `x-ag-ui-events` array
@@ -1352,76 +1354,76 @@ The above configuration produces OpenAPI documentation like:
 
 ```yaml
 paths:
-  /umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/chat/stream:
-    post:
-      summary: Stream an AI agent chat session.
-      description: |
-        Initiates a streaming chat session with an Umbraco AI agent...
+    /umbraco/ai/management/api/v1/agents/{agentIdOrAlias}/chat/stream:
+        post:
+            summary: Stream an AI agent chat session.
+            description: |
+                Initiates a streaming chat session with an Umbraco AI agent...
 
-        **AG-UI Protocol**: This endpoint streams Server-Sent Events (SSE)...
-      produces:
-        - text/event-stream
-      x-ag-ui-events:
-        - type: run_started
-          $ref: '#/components/schemas/RunStartedEvent'
-        - type: text_message_content
-          $ref: '#/components/schemas/TextMessageContentEvent'
-        # ... etc
+                **AG-UI Protocol**: This endpoint streams Server-Sent Events (SSE)...
+            produces:
+                - text/event-stream
+            x-ag-ui-events:
+                - type: run_started
+                  $ref: "#/components/schemas/RunStartedEvent"
+                - type: text_message_content
+                  $ref: "#/components/schemas/TextMessageContentEvent"
+                # ... etc
 
 components:
-  schemas:
-    RunStartedEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          example: run_started
-        run_id:
-          type: string
-          format: uuid
-        timestamp:
-          type: integer
-          format: int64
+    schemas:
+        RunStartedEvent:
+            type: object
+            properties:
+                type:
+                    type: string
+                    example: run_started
+                run_id:
+                    type: string
+                    format: uuid
+                timestamp:
+                    type: integer
+                    format: int64
 
-    TextMessageContentEvent:
-      type: object
-      properties:
-        type:
-          type: string
-          example: text_message_content
-        message_id:
-          type: string
-        delta:
-          type: string
-          example: "Hello, how can I"
-    # ... all other event schemas
+        TextMessageContentEvent:
+            type: object
+            properties:
+                type:
+                    type: string
+                    example: text_message_content
+                message_id:
+                    type: string
+                delta:
+                    type: string
+                    example: "Hello, how can I"
+        # ... all other event schemas
 
 x-ag-ui-protocol:
-  version: "1.0"
-  documentation: https://docs.ag-ui.com
-  events:
-    - run_started
-    - run_finished
-    - run_error
-    - text_message_start
-    - text_message_content
-    - text_message_end
-    - tool_call_start
-    - tool_call_args
-    - tool_call_end
-    - approval_requested
+    version: "1.0"
+    documentation: https://docs.ag-ui.com
+    events:
+        - run_started
+        - run_finished
+        - run_error
+        - text_message_start
+        - text_message_content
+        - text_message_end
+        - tool_call_start
+        - tool_call_args
+        - tool_call_end
+        - approval_requested
 ```
 
 ### Files Summary (OpenAPI)
 
-| File | Purpose |
-|------|---------|
-| `Api/OpenApi/AgUiOpenApiExtensions.cs` | Helper for building `x-ag-ui-events` and `x-ag-ui-protocol` |
-| `Api/OpenApi/AgUiEventSchemas.cs` | Schema models for OpenAPI generation |
-| `Api/OpenApi/AgUiDocumentFilter.cs` | Registers event schemas in OpenAPI doc |
-| `Api/OpenApi/AgUiOperationFilter.cs` | Adds AG-UI metadata to endpoints (Option B only) |
-| `Api/Models/AgentChatRequestModel.cs` | Request model with XML docs |
-| `Configuration/AgentsSwaggerConfiguration.cs` | SwaggerGen extension method |
+| File                                          | Purpose                                                     |
+| --------------------------------------------- | ----------------------------------------------------------- |
+| `Api/OpenApi/AgUiOpenApiExtensions.cs`        | Helper for building `x-ag-ui-events` and `x-ag-ui-protocol` |
+| `Api/OpenApi/AgUiEventSchemas.cs`             | Schema models for OpenAPI generation                        |
+| `Api/OpenApi/AgUiDocumentFilter.cs`           | Registers event schemas in OpenAPI doc                      |
+| `Api/OpenApi/AgUiOperationFilter.cs`          | Adds AG-UI metadata to endpoints (Option B only)            |
+| `Api/Models/AgentChatRequestModel.cs`         | Request model with XML docs                                 |
+| `Configuration/AgentsSwaggerConfiguration.cs` | SwaggerGen extension method                                 |
 
 ### Integration with MapAGUI()
 
@@ -1444,6 +1446,7 @@ The key insight is that `Results.Extensions.AGUI()` handles all the SSE streamin
 ```
 
 This separation means:
+
 1. **If Microsoft changes event format** - Runtime automatically updates, docs need manual update
 2. **If we need custom events** (like `approval_requested`) - Add to our schema models and extension helper
 3. **OpenAPI consumers** - Can see the event schemas even though SSE doesn't normally document them
@@ -1515,15 +1518,18 @@ endpoints.MapAGUI("/umbraco/ai/api/v1/agents/chat", tracedAgent);
 ## References
 
 **AG-UI Protocol:**
+
 - Documentation: https://docs.ag-ui.com
 - Events: https://docs.ag-ui.com/concepts/events
 - State: https://docs.ag-ui.com/concepts/state
 - Tools: https://docs.ag-ui.com/concepts/tools
 
 **.NET Implementations:**
+
 - Microsoft Agent Framework: https://github.com/microsoft/agent-framework
 - Microsoft AG-UI Support: https://github.com/microsoft/agent-framework/issues/1774
 - Community .NET SDK (alternative): https://github.com/ag-ui-protocol/ag-ui/pull/38
 
 **Internal:**
+
 - Umbraco.AI Agents Design: `docs/internal/umbraco-ai-agents-design.md`

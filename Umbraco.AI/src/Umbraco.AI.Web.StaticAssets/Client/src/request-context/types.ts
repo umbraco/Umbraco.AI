@@ -10,8 +10,8 @@
  * Intentionally flexible - processors on backend extract meaning.
  */
 export interface UaiRequestContextItem {
-	/** Human-readable description */
-	description: string;
-	/** The context data */
-	value?: string;
+    /** Human-readable description */
+    description: string;
+    /** The context data */
+    value?: string;
 }

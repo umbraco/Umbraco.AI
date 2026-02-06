@@ -13,7 +13,6 @@ import { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from "../../constan
  * Dispatches entity action events after successful CRUD operations.
  */
 export class UaiAgentDetailRepository extends UmbDetailRepositoryBase<UaiAgentDetailModel> {
-
     constructor(host: UmbControllerHost) {
         super(host, UaiAgentDetailServerDataSource, UAI_AGENT_DETAIL_STORE_CONTEXT);
     }
@@ -22,10 +21,13 @@ export class UaiAgentDetailRepository extends UmbDetailRepositoryBase<UaiAgentDe
         const result = await super.create(model, null);
         if (!result.error && result.data) {
             dispatchActionEvent(this, UaiEntityActionEvent.created(result.data.unique, UAI_AGENT_ENTITY_TYPE));
-            dispatchActionEvent(this, new UmbRequestReloadChildrenOfEntityEvent({
-                entityType: UAI_AGENT_ROOT_ENTITY_TYPE,
-                unique: null,
-            }));
+            dispatchActionEvent(
+                this,
+                new UmbRequestReloadChildrenOfEntityEvent({
+                    entityType: UAI_AGENT_ROOT_ENTITY_TYPE,
+                    unique: null,
+                }),
+            );
         }
         return result;
     }
@@ -42,10 +44,13 @@ export class UaiAgentDetailRepository extends UmbDetailRepositoryBase<UaiAgentDe
         const result = await super.delete(unique);
         if (!result.error) {
             dispatchActionEvent(this, UaiEntityActionEvent.deleted(unique, UAI_AGENT_ENTITY_TYPE));
-            dispatchActionEvent(this, new UmbRequestReloadChildrenOfEntityEvent({
-                entityType: UAI_AGENT_ROOT_ENTITY_TYPE,
-                unique: null,
-            }));
+            dispatchActionEvent(
+                this,
+                new UmbRequestReloadChildrenOfEntityEvent({
+                    entityType: UAI_AGENT_ROOT_ENTITY_TYPE,
+                    unique: null,
+                }),
+            );
         }
         return result;
     }

@@ -1,32 +1,32 @@
 ---
 labels: ["idea"]
 body:
-  - type: dropdown
-    id: component
-    attributes:
-      label: "Which component is this idea related to?"
-      options:
-      - Umbraco.AI (Core)
-      - Umbraco.AI.OpenAI
-      - Umbraco.AI.Anthropic
-      - Umbraco.AI.Prompt
-      - Umbraco.AI.Agent
-      - Umbraco.AI.Agent.Copilot
-        - Other / Not sure
-      description: "Select which product/add-on type that you'd like to see improvements on"
-    validations:
-      required: true
+    - type: dropdown
+      id: component
+      attributes:
+          label: "Which component is this idea related to?"
+          options:
+              - Umbraco.AI (Core)
+              - Umbraco.AI.OpenAI
+              - Umbraco.AI.Anthropic
+              - Umbraco.AI.Prompt
+              - Umbraco.AI.Agent
+              - Umbraco.AI.Agent.Copilot
+                - Other / Not sure
+          description: "Select which product/add-on type that you'd like to see improvements on"
+      validations:
+          required: true
 
-  - type: textarea
-    id: proposal
-    attributes:
-      label: "Describe your idea"
-      placeholder: "What should this feature do? Why is it useful? Who would benefit?"
-    validations:
-      required: true
+    - type: textarea
+      id: proposal
+      attributes:
+          label: "Describe your idea"
+          placeholder: "What should this feature do? Why is it useful? Who would benefit?"
+      validations:
+          required: true
 
-  - type: textarea
-    id: context
-    attributes:
-      label: "Context"
-      description: "Explain the problem you're trying to solve, or how this idea fits in."
+    - type: textarea
+      id: context
+      attributes:
+          label: "Context"
+          description: "Explain the problem you're trying to solve, or how this idea fits in."

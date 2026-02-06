@@ -1,6 +1,6 @@
 ---
 description: >-
-  High-level controller for chat completions in custom elements.
+    High-level controller for chat completions in custom elements.
 ---
 
 # Chat Controller
@@ -10,9 +10,11 @@ description: >-
 ## Import
 
 {% code title="Import" %}
+
 ```typescript
-import { UaiChatController } from '@umbraco-ai/backoffice';
+import { UaiChatController } from "@umbraco-ai/backoffice";
 ```
+
 {% endcode %}
 
 ## Constructor
@@ -21,9 +23,9 @@ import { UaiChatController } from '@umbraco-ai/backoffice';
 new UaiChatController(host: UmbControllerHost)
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `host` | `UmbControllerHost` | The controller host (usually `this` in a Lit element) |
+| Parameter | Type                | Description                                           |
+| --------- | ------------------- | ----------------------------------------------------- |
+| `host`    | `UmbControllerHost` | The controller host (usually `this` in a Lit element) |
 
 ## Methods
 
@@ -32,47 +34,51 @@ new UaiChatController(host: UmbControllerHost)
 Performs a chat completion and returns the full response.
 
 {% code title="Signature" %}
+
 ```typescript
 async complete(
     messages: UaiChatMessage[],
     options?: UaiChatOptions
 ): Promise<{ data?: UaiChatResult; error?: unknown }>
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter  | Type               | Description               |
+| ---------- | ------------------ | ------------------------- |
 | `messages` | `UaiChatMessage[]` | The conversation messages |
-| `options` | `UaiChatOptions` | Optional configuration |
+| `options`  | `UaiChatOptions`   | Optional configuration    |
 
 **Returns**: Promise resolving to `{ data?, error? }`
 
 {% code title="Example" %}
+
 ```typescript
-import { LitElement } from 'lit';
-import { UaiChatController, UaiChatMessage } from '@umbraco-ai/backoffice';
+import { LitElement } from "lit";
+import { UaiChatController, UaiChatMessage } from "@umbraco-ai/backoffice";
 
 class MyElement extends LitElement {
     #chat = new UaiChatController(this);
 
     async askQuestion(question: string) {
         const messages: UaiChatMessage[] = [
-            { role: 'system', content: 'You are a helpful assistant.' },
-            { role: 'user', content: question }
+            { role: "system", content: "You are a helpful assistant." },
+            { role: "user", content: question },
         ];
 
         const { data, error } = await this.#chat.complete(messages);
 
         if (error) {
-            console.error('Failed:', error);
+            console.error("Failed:", error);
             return;
         }
 
-        console.log('Response:', data.message.content);
-        console.log('Tokens used:', data.usage?.totalTokens);
+        console.log("Response:", data.message.content);
+        console.log("Tokens used:", data.usage?.totalTokens);
     }
 }
 ```
+
 {% endcode %}
 
 ### stream
@@ -80,18 +86,20 @@ class MyElement extends LitElement {
 Performs a streaming chat completion, yielding chunks as they arrive.
 
 {% code title="Signature" %}
+
 ```typescript
 stream(
     messages: UaiChatMessage[],
     options?: UaiChatOptions
 ): AsyncGenerator<UaiChatStreamChunk>
 ```
+
 {% endcode %}
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter  | Type               | Description               |
+| ---------- | ------------------ | ------------------------- |
 | `messages` | `UaiChatMessage[]` | The conversation messages |
-| `options` | `UaiChatOptions` | Optional configuration |
+| `options`  | `UaiChatOptions`   | Optional configuration    |
 
 **Returns**: AsyncGenerator yielding `UaiChatStreamChunk` objects
 
@@ -100,6 +108,7 @@ Streaming is currently under development. Check the release notes for availabili
 {% endhint %}
 
 {% code title="Example (Future)" %}
+
 ```typescript
 async streamResponse(question: string) {
     const messages: UaiChatMessage[] = [
@@ -118,11 +127,13 @@ async streamResponse(question: string) {
     }
 }
 ```
+
 {% endcode %}
 
 ## Options
 
 {% code title="UaiChatOptions" %}
+
 ```typescript
 interface UaiChatOptions {
     /** Profile ID (GUID) or alias. If omitted, uses the default chat profile. */
@@ -131,33 +142,38 @@ interface UaiChatOptions {
     signal?: AbortSignal;
 }
 ```
+
 {% endcode %}
 
 ## Complete Example
 
 {% code title="ai-assistant.element.ts" %}
-```typescript
-import { LitElement, html, css } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
-import {
-    UaiChatController,
-    UaiChatMessage,
-    UaiChatResult
-} from '@umbraco-ai/backoffice';
 
-@customElement('ai-assistant')
+```typescript
+import { LitElement, html, css } from "lit";
+import { customElement, state, property } from "lit/decorators.js";
+import { UaiChatController, UaiChatMessage, UaiChatResult } from "@umbraco-ai/backoffice";
+
+@customElement("ai-assistant")
 export class AIAssistantElement extends LitElement {
     static styles = css`
-        :host { display: block; padding: 1rem; }
-        .loading { opacity: 0.5; }
-        .error { color: red; }
+        :host {
+            display: block;
+            padding: 1rem;
+        }
+        .loading {
+            opacity: 0.5;
+        }
+        .error {
+            color: red;
+        }
     `;
 
     #chat = new UaiChatController(this);
     #abortController?: AbortController;
 
     @property()
-    profileAlias = 'content-assistant';
+    profileAlias = "content-assistant";
 
     @state()
     private _messages: UaiChatMessage[] = [];
@@ -170,10 +186,7 @@ export class AIAssistantElement extends LitElement {
 
     async #sendMessage(userMessage: string) {
         // Add user message
-        this._messages = [
-            ...this._messages,
-            { role: 'user', content: userMessage }
-        ];
+        this._messages = [...this._messages, { role: "user", content: userMessage }];
 
         this._loading = true;
         this._error = undefined;
@@ -183,21 +196,18 @@ export class AIAssistantElement extends LitElement {
 
         const { data, error } = await this.#chat.complete(this._messages, {
             profileIdOrAlias: this.profileAlias,
-            signal: this.#abortController.signal
+            signal: this.#abortController.signal,
         });
 
         this._loading = false;
 
         if (error) {
-            this._error = 'Failed to get response';
+            this._error = "Failed to get response";
             return;
         }
 
         // Add assistant response
-        this._messages = [
-            ...this._messages,
-            data!.message
-        ];
+        this._messages = [...this._messages, data!.message];
     }
 
     #cancel() {
@@ -207,31 +217,27 @@ export class AIAssistantElement extends LitElement {
     #handleSubmit(e: Event) {
         e.preventDefault();
         const form = e.target as HTMLFormElement;
-        const input = form.querySelector('input') as HTMLInputElement;
+        const input = form.querySelector("input") as HTMLInputElement;
         if (input.value.trim()) {
             this.#sendMessage(input.value);
-            input.value = '';
+            input.value = "";
         }
     }
 
     render() {
         return html`
             <div class="messages">
-                ${this._messages.map(m => html`
-                    <div class="message ${m.role}">
-                        <strong>${m.role}:</strong> ${m.content}
-                    </div>
-                `)}
+                ${this._messages.map(
+                    (m) => html` <div class="message ${m.role}"><strong>${m.role}:</strong> ${m.content}</div> `,
+                )}
             </div>
 
-            ${this._error ? html`<p class="error">${this._error}</p>` : ''}
+            ${this._error ? html`<p class="error">${this._error}</p>` : ""}
 
-            <form @submit=${this.#handleSubmit} class=${this._loading ? 'loading' : ''}>
-                <input type="text" placeholder="Ask something..." ?disabled=${this._loading}>
+            <form @submit=${this.#handleSubmit} class=${this._loading ? "loading" : ""}>
+                <input type="text" placeholder="Ask something..." ?disabled=${this._loading} />
                 <button type="submit" ?disabled=${this._loading}>Send</button>
-                ${this._loading ? html`
-                    <button type="button" @click=${this.#cancel}>Cancel</button>
-                ` : ''}
+                ${this._loading ? html` <button type="button" @click=${this.#cancel}>Cancel</button> ` : ""}
             </form>
         `;
     }
@@ -239,8 +245,9 @@ export class AIAssistantElement extends LitElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        'ai-assistant': AIAssistantElement;
+        "ai-assistant": AIAssistantElement;
     }
 }
 ```
+
 {% endcode %}

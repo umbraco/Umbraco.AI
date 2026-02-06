@@ -4,12 +4,15 @@ import {
 	html,
 	property,
 	repeat,
-	state,
 	when,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
-import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
+import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
+import { UaiToolRepository, type ToolItemResponseModel } from "../../repository/tool.repository.js";
+import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
+import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
+import { toCamelCase } from "../../utils.js";
 
 /**
  * Permission state for a tool override.
@@ -34,6 +37,8 @@ export interface UaiToolPermission {
  */
 @customElement("uai-tool-permissions-override")
 export class UaiToolPermissionsOverrideElement extends UmbLitElement {
+	#toolRepository = new UaiToolRepository(this);
+
 	/**
 	 * Inherited tool IDs from agent defaults.
 	 */
@@ -57,12 +62,6 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 	 */
 	@property({ type: Boolean })
 	readonly = false;
-
-	/**
-	 * Input value for adding new tool ID.
-	 */
-	@state()
-	private _newToolId = "";
 
 	/**
 	 * Computed list of all tools with their permission states.
@@ -96,41 +95,67 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 	}
 
 	/**
-	 * Handle new tool ID input change.
-	 */
-	private _onNewToolIdInput(event: UUIInputEvent): void {
-		const input = event.target as UUIInputElement;
-		this._newToolId = input.value as string;
-	}
-
-	/**
 	 * Add a new allowed tool.
 	 */
-	private _addAllowedTool(): void {
-		const toolId = this._newToolId.trim();
-		if (!toolId) {
-			return;
-		}
+	private async _addAllowedTool(): Promise<void> {
+		const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+		if (!modalManager) return;
 
-		// Check if already exists
-		if (this.allowedToolIds.includes(toolId) || this.inheritedToolIds.includes(toolId)) {
-			this._newToolId = "";
-			return;
-		}
+		const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
+			data: {
+				fetchItems: () => this._fetchAvailableTools(),
+				selectionMode: "multiple",
+				title: this.localize.term("uaiAgent_addTool") || "Add Tools",
+				noResultsMessage: this.localize.term("uaiAgent_noToolsAvailable") || "No tools available",
+			},
+		});
 
-		this.allowedToolIds = [...this.allowedToolIds, toolId];
-		this._newToolId = "";
-		this._dispatchChangeEvent();
+		try {
+			const result = await modal.onSubmit();
+			if (result?.selection?.length) {
+				// Add selected tools to allowed list (filter out duplicates)
+				const newTools = result.selection
+					.map((item: UaiPickableItemModel) => item.value)
+					.filter(
+						(toolId: string) => !this.allowedToolIds.includes(toolId) && !this.inheritedToolIds.includes(toolId)
+					);
+
+				if (newTools.length > 0) {
+					this.allowedToolIds = [...this.allowedToolIds, ...newTools];
+					this._dispatchChangeEvent();
+				}
+			}
+		} catch {
+			// Modal was cancelled
+		}
 	}
 
 	/**
-	 * Handle Enter key in input to add tool.
+	 * Fetch available tools for the picker modal.
 	 */
-	private _onNewToolIdKeydown(event: KeyboardEvent): void {
-		if (event.key === "Enter") {
-			event.preventDefault();
-			this._addAllowedTool();
-		}
+	private async _fetchAvailableTools(): Promise<UaiPickableItemModel[]> {
+		const { data } = await this.#toolRepository.getTools();
+
+		if (!data) return [];
+
+		// Filter out already selected items and map to picker format
+		return data
+			.filter((tool: ToolItemResponseModel) =>
+				!this.allowedToolIds.includes(tool.id) && !this.inheritedToolIds.includes(tool.id)
+			)
+			.map((tool: ToolItemResponseModel) => {
+				const camelCaseId = toCamelCase(tool.id);
+				const localizedName = this.localize.term(`uaiTool_${camelCaseId}Label`) || tool.name || tool.id;
+				const localizedDescription =
+					this.localize.term(`uaiTool_${camelCaseId}Description`) || tool.description || "";
+
+				return {
+					value: tool.id,
+					label: localizedName,
+					description: localizedDescription,
+					icon: "icon-wand",
+				};
+			});
 	}
 
 	/**
@@ -181,16 +206,16 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 				${when(
 					tool.state === "inherited",
 					() => html`
-						<uui-tag slot="tag" look="secondary">${this.localize.term("uai_inherited")}</uui-tag>
+						<uui-tag slot="tag" look="secondary">${this.localize.term("uaiGeneral_inherited")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`
 								<uui-action-bar slot="actions">
 									<uui-button
-										label=${this.localize.term("uai_deny")}
+										label=${this.localize.term("uaiGeneral_deny")}
 										color="danger"
 										@click=${() => this._denyTool(tool.toolId)}>
-										${this.localize.term("uai_deny")}
+										${this.localize.term("uaiGeneral_deny")}
 									</uui-button>
 								</uui-action-bar>
 							`
@@ -200,7 +225,7 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 				${when(
 					tool.state === "allowed",
 					() => html`
-						<uui-tag slot="tag" look="positive">${this.localize.term("uai_allowed")}</uui-tag>
+						<uui-tag slot="tag" look="positive">${this.localize.term("uaiGeneral_allowed")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`
@@ -218,16 +243,16 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 				${when(
 					tool.state === "denied",
 					() => html`
-						<uui-tag slot="tag" look="negative">${this.localize.term("uai_denied")}</uui-tag>
+						<uui-tag slot="tag" look="negative">${this.localize.term("uaiGeneral_denied")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`
 								<uui-action-bar slot="actions">
 									<uui-button
-										label=${this.localize.term("uai_allow")}
+										label=${this.localize.term("uaiGeneral_allow")}
 										color="positive"
 										@click=${() => this._allowTool(tool.toolId)}>
-										${this.localize.term("uai_allow")}
+										${this.localize.term("uaiGeneral_allow")}
 									</uui-button>
 								</uui-action-bar>
 							`
@@ -252,28 +277,18 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 							)}
 						</uui-ref-list>
 					`,
-					() => html`<p class="empty-message">${this.localize.term("uai_noToolsConfigured")}</p>`
+					() => html`<p class="empty-message">No tools configured</p>`
 				)}
 				${when(
 					!this.readonly,
 					() => html`
-						<div class="add-tool">
-							<uui-input
-								.value=${this._newToolId}
-								@input=${this._onNewToolIdInput}
-								@keydown=${this._onNewToolIdKeydown}
-								placeholder=${this.localize.term("uai_enterToolId")}
-								label=${this.localize.term("uai_toolId")}>
-							</uui-input>
-							<uui-button
-								look="primary"
-								@click=${this._addAllowedTool}
-								label=${this.localize.term("uai_addTool")}
-								?disabled=${!this._newToolId.trim()}>
-								<uui-icon name="icon-add"></uui-icon>
-								${this.localize.term("uai_addTool")}
-							</uui-button>
-						</div>
+						<uui-button
+							look="placeholder"
+							@click=${this._addAllowedTool}
+							label=${this.localize.term("uaiAgent_addTool") || "Add Tools"}>
+							<uui-icon name="icon-add"></uui-icon>
+							${this.localize.term("uaiAgent_addTool") || "Add Tools"}
+						</uui-button>
 					`
 				)}
 			</div>
@@ -297,14 +312,8 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 				color: var(--uui-color-text-alt);
 			}
 
-			.add-tool {
-				display: flex;
-				gap: var(--uui-size-space-3);
-				align-items: flex-end;
-			}
-
-			.add-tool uui-input {
-				flex: 1;
+			uui-button[look="placeholder"] {
+				width: 100%;
 			}
 		`,
 	];

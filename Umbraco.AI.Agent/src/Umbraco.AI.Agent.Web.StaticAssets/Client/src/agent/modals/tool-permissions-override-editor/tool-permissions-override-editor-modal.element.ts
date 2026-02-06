@@ -131,45 +131,9 @@ export class UaiToolPermissionsOverrideEditorModalElement extends UmbModalBaseEl
 		return html`
 			<umb-body-layout headline=${`Tool Permission Overrides: ${this.data.userGroupName}`}>
 				<div class="content">
-					<!-- Agent Defaults (Read-Only) -->
-					<uui-box headline=${this.localize.term("uaiAgent_agentDefaults")}>
-						<p class="description">${this.localize.term("uaiAgent_agentDefaultsDescription")}</p>
-						${when(
-							this.data.agentDefaults.allowedToolScopeIds.length > 0 ||
-								this.data.agentDefaults.allowedToolIds.length > 0,
-							() => html`
-								<div class="defaults-content">
-									${when(
-										this.data!.agentDefaults.allowedToolScopeIds.length > 0,
-										() => html`
-											<div class="defaults-section">
-												<strong>${this.localize.term("uaiAgent_allowedToolScopes")}:</strong>
-												<div class="chips">
-													${this.data!.agentDefaults.allowedToolScopeIds.map(
-														(scope) => html`<uui-tag look="secondary">${scope}</uui-tag>`
-													)}
-												</div>
-											</div>
-										`
-									)}
-									${when(
-										this.data!.agentDefaults.allowedToolIds.length > 0,
-										() => html`
-											<div class="defaults-section">
-												<strong>${this.localize.term("uaiAgent_allowedToolIds")}:</strong>
-												<p>${this.data!.agentDefaults.allowedToolIds.join(", ")}</p>
-											</div>
-										`
-									)}
-								</div>
-							`,
-							() => html`<p class="empty-message">${this.localize.term("uaiAgent_noDefaultPermissions")}</p>`
-						)}
-					</uui-box>
 
 					<!-- Tool Scope Overrides -->
 					<uui-box headline=${this.localize.term("uaiAgent_toolScopeOverrides")}>
-						<p class="description">${this.localize.term("uaiAgent_toolScopeOverridesDescription")}</p>
 						<uai-tool-scope-permissions-override
 							.inheritedScopeIds=${this.data.agentDefaults.allowedToolScopeIds}
 							.allowedScopeIds=${this._allowedToolScopeIds}
@@ -180,7 +144,6 @@ export class UaiToolPermissionsOverrideEditorModalElement extends UmbModalBaseEl
 
 					<!-- Tool ID Overrides -->
 					<uui-box headline=${this.localize.term("uaiAgent_toolIdOverrides")}>
-						<p class="description">${this.localize.term("uaiAgent_toolIdOverridesDescription")}</p>
 						<uai-tool-permissions-override
 							.inheritedToolIds=${this.data.agentDefaults.allowedToolIds}
 							.allowedToolIds=${this._allowedToolIds}
@@ -213,6 +176,7 @@ export class UaiToolPermissionsOverrideEditorModalElement extends UmbModalBaseEl
 		css`
 			:host {
 				display: block;
+                height: 100%;
 			}
 
 			.content {

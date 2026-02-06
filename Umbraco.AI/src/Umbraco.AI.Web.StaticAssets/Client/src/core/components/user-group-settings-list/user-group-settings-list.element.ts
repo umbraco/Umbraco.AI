@@ -1,12 +1,12 @@
 import {
-	css,
-	customElement,
-	html,
-	property,
-	repeat,
-	state,
-	when,
-	type TemplateResult,
+    css,
+    customElement,
+    html,
+    property,
+    repeat,
+    state,
+    when,
+    type TemplateResult, nothing,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
@@ -47,8 +47,6 @@ export interface UaiUserGroupSettingsConfig<TSettings> {
 		headline?: string;
 		/** Add button label (default: "Add User Group Override") */
 		addButton?: string;
-		/** Empty state message (default: "No user group overrides configured.") */
-		noGroupsMessage?: string;
 	};
 }
 
@@ -116,9 +114,8 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 	 */
 	private get _labels() {
 		return {
-			headline: this.config.labels?.headline ?? this.localize.term("uai_userGroupOverrides"),
-			addButton: this.config.labels?.addButton ?? this.localize.term("uai_addUserGroupOverride"),
-			noGroupsMessage: this.config.labels?.noGroupsMessage ?? this.localize.term("uai_noUserGroupOverridesConfigured"),
+			headline: this.config.labels?.headline ?? this.localize.term("uaiUserGroupPermissions_headline"),
+			addButton: this.config.labels?.addButton ?? this.localize.term("general_add")
 		};
 	}
 
@@ -271,7 +268,6 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 
 	override render() {
 		return html`
-			<uui-box headline=${this._labels.headline}>
 				${when(
 					this._hasUserGroups,
 					() => html`
@@ -307,7 +303,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 							)}
 						</uui-ref-list>
 					`,
-					() => html`<p>${this._labels.noGroupsMessage}</p>`
+                    () => nothing
 				)}
 				${when(
 					!this.readonly,
@@ -321,7 +317,6 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 						</uui-button>
 					`
 				)}
-			</uui-box>
 		`;
 	}
 

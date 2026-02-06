@@ -4,6 +4,11 @@ export default {
     uaiGeneral: {
         select: "Select",
         close: "Close",
+        inherited: "Inherited",
+        allowed: "Allowed",
+        denied: "Denied",
+        allow: "Allow",
+        deny: "Deny",
     },
     uaiComponents: {
         pollingButtonTogglePolling: "Toggle Polling",
@@ -111,20 +116,7 @@ export default {
         amazonEndpointLabel: "Custom Endpoint",
         amazonEndpointDescription: "Custom endpoint URL for Bedrock services (optional)",
     },
-    uai: {
-        userGroupOverrides: "User Group Overrides",
-        addUserGroupOverride: "Add User Group Override",
-        noUserGroupOverridesConfigured: "No user group overrides configured.",
-        inherited: "Inherited",
-        allowed: "Allowed",
-        denied: "Denied",
-        allow: "Allow",
-        deny: "Deny",
-        noToolScopesConfigured: "No tool scopes configured",
-        addToolScope: "Add Tool Scope",
-        noToolsConfigured: "No tools configured",
-        addTool: "Add Tool",
-        enterToolId: "Enter tool ID",
-        toolId: "Tool ID",
+    uaiUserGroupPermissions: {
+        headline: "User Group Permissions",
     },
 } as UmbLocalizationDictionary;

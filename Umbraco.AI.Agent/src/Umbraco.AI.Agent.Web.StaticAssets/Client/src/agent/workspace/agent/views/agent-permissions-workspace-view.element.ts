@@ -107,14 +107,21 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                         @change=${this.#onAllowedToolIdsChange}
                     ></uai-tool-picker>
                 </umb-property-layout>
-                <uai-user-group-tool-permissions
-                    .value=${this._model.userGroupPermissions}
-                    .agentDefaults=${{
-                        allowedToolIds: this._model.allowedToolIds,
-                        allowedToolScopeIds: this._model.allowedToolScopeIds
-                    }}
-                    @change=${this.#onUserGroupPermissionsChange}
-                ></uai-user-group-tool-permissions>
+                <umb-property-layout
+                    label="User Group Permissions"
+                    description="Configure tool permissions for specific user groups. Permissions set here will override the general tool and scope permissions for users in those groups."
+                >
+                    <uai-user-group-tool-permissions
+                        slot="editor"
+                        .value=${this._model.userGroupPermissions}
+                        .agentDefaults=${{
+                            allowedToolIds: this._model.allowedToolIds,
+                            allowedToolScopeIds: this._model.allowedToolScopeIds
+                        }}
+                        @change=${this.#onUserGroupPermissionsChange}
+                    ></uai-user-group-tool-permissions>
+                </umb-property-layout>
+
             </uui-box>
         `;
     }

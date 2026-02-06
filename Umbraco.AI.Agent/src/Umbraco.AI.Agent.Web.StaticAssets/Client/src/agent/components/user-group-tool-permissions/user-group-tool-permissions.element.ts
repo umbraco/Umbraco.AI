@@ -112,12 +112,7 @@ export class UaiUserGroupToolPermissionsElement extends UmbLitElement {
 			display: {
 				renderSummary: (settings) => this._renderSummary(settings),
 				renderTags: (settings) => this._renderTags(settings),
-			},
-			labels: {
-				headline: this.localize.term("uaiAgent_userGroupOverrides"),
-				addButton: this.localize.term("uaiAgent_addUserGroupOverride"),
-				noGroupsMessage: this.localize.term("uaiAgent_noUserGroupOverridesConfigured"),
-			},
+			}
 		};
 
 		return html`

@@ -11,7 +11,10 @@ import {
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UAI_TOOL_SCOPE_PICKER_MODAL } from "../../tool-scope/index.js";
+import { UaiToolRepository, type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
+import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
+import { toCamelCase } from "../../utils.js";
 
 /**
  * Permission state for a tool scope override.
@@ -36,6 +39,8 @@ export interface UaiToolScopePermission {
  */
 @customElement("uai-tool-scope-permissions-override")
 export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
+	#toolRepository = new UaiToolRepository(this);
+
 	/**
 	 * Inherited scope IDs from agent defaults.
 	 */
@@ -96,26 +101,63 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	 */
 	private async _addAllowedScope(): Promise<void> {
 		const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+		if (!modalManager) return;
 
-		const result = await modalManager.open(this, UAI_TOOL_SCOPE_PICKER_MODAL, {
+		const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
 			data: {
-				multiple: true,
+				fetchItems: () => this._fetchAvailableScopes(),
+				selectionMode: "multiple",
+				title: this.localize.term("uaiAgent_addScope") || "Add Tool Scopes",
+				noResultsMessage: this.localize.term("uaiAgent_noToolScopesAvailable") || "No tool scopes available",
 			},
 		});
 
-		if (!result || !result.selection || result.selection.length === 0) {
-			return;
-		}
+		try {
+			const result = await modal.onSubmit();
+			if (result?.selection?.length) {
+				// Add selected scopes to allowed list (filter out duplicates)
+				const newScopes = result.selection
+					.map((item: UaiPickableItemModel) => item.value)
+					.filter(
+						(scopeId: string) => !this.allowedScopeIds.includes(scopeId) && !this.inheritedScopeIds.includes(scopeId)
+					);
 
-		// Add selected scopes to allowed list (filter out duplicates)
-		const newScopes = result.selection.filter(
-			(scopeId) => !this.allowedScopeIds.includes(scopeId) && !this.inheritedScopeIds.includes(scopeId)
-		);
-
-		if (newScopes.length > 0) {
-			this.allowedScopeIds = [...this.allowedScopeIds, ...newScopes];
-			this._dispatchChangeEvent();
+				if (newScopes.length > 0) {
+					this.allowedScopeIds = [...this.allowedScopeIds, ...newScopes];
+					this._dispatchChangeEvent();
+				}
+			}
+		} catch {
+			// Modal was cancelled
 		}
+	}
+
+	/**
+	 * Fetch available tool scopes for the picker modal.
+	 */
+	private async _fetchAvailableScopes(): Promise<UaiPickableItemModel[]> {
+		const { data } = await this.#toolRepository.getToolScopes();
+
+		if (!data) return [];
+
+		// Filter out already selected items and map to picker format
+		return data
+			.filter((scope: ToolScopeItemResponseModel) =>
+				!this.allowedScopeIds.includes(scope.id) && !this.inheritedScopeIds.includes(scope.id)
+			)
+			.map((scope: ToolScopeItemResponseModel) => {
+				const camelCaseId = toCamelCase(scope.id);
+				const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
+				const localizedDescription =
+					this.localize.term(`uaiToolScope_${camelCaseId}Description`) || scope.description || "";
+
+				return {
+					value: scope.id,
+					label: localizedName,
+					description: localizedDescription,
+					icon: scope.icon || "icon-wand",
+				};
+			});
 	}
 
 	/**

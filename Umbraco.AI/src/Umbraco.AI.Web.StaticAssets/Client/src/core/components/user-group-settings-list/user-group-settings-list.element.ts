@@ -13,8 +13,7 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UMB_USER_GROUP_PICKER_MODAL } from "@umbraco-cms/backoffice/user-group";
-import { UserGroupService } from "@umbraco-cms/backoffice/external/backend-api";
-import { tryExecuteAndNotify } from "@umbraco-cms/backoffice/resources";
+import { createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-registry";
 
 /**
  * Configuration for the user group settings list component.
@@ -161,17 +160,20 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
 			return this._userGroupNames.get(userGroupId) ?? null;
 		}
 
-		// Fetch from API
+		// Fetch from user group repository
 		try {
-			const { data } = await tryExecuteAndNotify(
+			const repository = await createExtensionApiByAlias(
 				this,
-				UserGroupService.getUserGroupById({ id: userGroupId })
+				"Umb.Repository.UserGroupItem"
 			);
 
-			if (data) {
-				const name = data.name ?? userGroupId;
-				this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
-				return name;
+			if (repository && "requestItems" in repository) {
+				const { data } = await (repository as any).requestItems([userGroupId]);
+				if (data && data.length > 0) {
+					const name = data[0].name ?? userGroupId;
+					this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
+					return name;
+				}
 			}
 		} catch (error) {
 			console.error(`Failed to fetch user group name for ${userGroupId}:`, error);

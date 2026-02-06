@@ -5,7 +5,7 @@ export class UaiAgentDeleteAction extends UaiDeleteActionBase {
     protected getArgs(): UaiDeleteActionArgs {
         return {
             headline: "#actions_delete",
-            confirmMessage: "#uaiAgentCopilotdeleteConfirm",
+            confirmMessage: "#uaiAgent_deleteConfirm",
             getRepository: (host) => new UaiAgentDetailRepository(host),
         };
     }

@@ -4,6 +4,7 @@ import {
 	html,
 	property,
 	repeat,
+	state,
 	when,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
@@ -40,6 +41,12 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 	#toolRepository = new UaiToolRepository(this);
 
 	/**
+	 * Map of tool ID to full tool data.
+	 */
+	@state()
+	private _toolDataMap = new Map<string, ToolItemResponseModel>();
+
+	/**
 	 * Inherited tool IDs from agent defaults.
 	 */
 	@property({ type: Array })
@@ -62,6 +69,36 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 	 */
 	@property({ type: Boolean })
 	readonly = false;
+
+	override connectedCallback(): void {
+		super.connectedCallback();
+		this._loadToolData();
+	}
+
+	override updated(changedProperties: Map<string, unknown>): void {
+		super.updated(changedProperties);
+		if (
+			changedProperties.has("inheritedToolIds") ||
+			changedProperties.has("allowedToolIds") ||
+			changedProperties.has("deniedToolIds")
+		) {
+			this._loadToolData();
+		}
+	}
+
+	/**
+	 * Load full tool data for all tools.
+	 */
+	private async _loadToolData(): Promise<void> {
+		const { data } = await this.#toolRepository.getTools();
+		if (!data) return;
+
+		const toolMap = new Map<string, ToolItemResponseModel>();
+		for (const tool of data) {
+			toolMap.set(tool.id, tool);
+		}
+		this._toolDataMap = toolMap;
+	}
 
 	/**
 	 * Computed list of all tools with their permission states.
@@ -200,8 +237,13 @@ export class UaiToolPermissionsOverrideElement extends UmbLitElement {
 	 * Render a tool permission item.
 	 */
 	private _renderToolItem(tool: UaiToolPermission) {
+		const toolData = this._toolDataMap.get(tool.toolId);
+		const camelCaseId = toCamelCase(tool.toolId);
+		const name = this.localize.term(`uaiTool_${camelCaseId}Label`) || toolData?.name || tool.toolId;
+		const description = this.localize.term(`uaiTool_${camelCaseId}Description`) || toolData?.description || "";
+
 		return html`
-			<uui-ref-node name=${tool.toolId}>
+			<uui-ref-node name=${name} detail=${description}>
 				<umb-icon slot="icon" name="icon-wand"></umb-icon>
 				${when(
 					tool.state === "inherited",

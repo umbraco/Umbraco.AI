@@ -4,6 +4,7 @@ import {
 	html,
 	property,
 	repeat,
+	state,
 	when,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
@@ -40,6 +41,12 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	#toolRepository = new UaiToolRepository(this);
 
 	/**
+	 * Map of scope ID to full scope data.
+	 */
+	@state()
+	private _scopeDataMap = new Map<string, ToolScopeItemResponseModel>();
+
+	/**
 	 * Inherited scope IDs from agent defaults.
 	 */
 	@property({ type: Array })
@@ -62,6 +69,36 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	 */
 	@property({ type: Boolean })
 	readonly = false;
+
+	override connectedCallback(): void {
+		super.connectedCallback();
+		this._loadScopeData();
+	}
+
+	override updated(changedProperties: Map<string, unknown>): void {
+		super.updated(changedProperties);
+		if (
+			changedProperties.has("inheritedScopeIds") ||
+			changedProperties.has("allowedScopeIds") ||
+			changedProperties.has("deniedScopeIds")
+		) {
+			this._loadScopeData();
+		}
+	}
+
+	/**
+	 * Load full scope data for all scopes.
+	 */
+	private async _loadScopeData(): Promise<void> {
+		const { data } = await this.#toolRepository.getToolScopes();
+		if (!data) return;
+
+		const scopeMap = new Map<string, ToolScopeItemResponseModel>();
+		for (const scope of data) {
+			scopeMap.set(scope.id, scope);
+		}
+		this._scopeDataMap = scopeMap;
+	}
 
 	/**
 	 * Computed list of all scopes with their permission states.
@@ -200,9 +237,15 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	 * Render a scope permission item.
 	 */
 	private _renderScopeItem(scope: UaiToolScopePermission) {
+		const scopeData = this._scopeDataMap.get(scope.scopeId);
+		const camelCaseId = toCamelCase(scope.scopeId);
+		const name = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.scopeId;
+		const description = this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
+		const icon = scopeData?.icon || "icon-wand";
+
 		return html`
-			<uui-ref-node name=${scope.scopeId}>
-				<umb-icon slot="icon" name="icon-box"></umb-icon>
+			<uui-ref-node name=${name} detail=${description}>
+				<umb-icon slot="icon" name=${icon}></umb-icon>
 				${when(
 					scope.state === "inherited",
 					() => html`

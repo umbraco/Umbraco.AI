@@ -2,7 +2,7 @@ import {
 	css,
 	customElement,
 	html,
-	property,
+	nothing,
 	state,
 	when,
 } from "@umbraco-cms/backoffice/external/lit";

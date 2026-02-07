@@ -1,5 +1,5 @@
 ---
-name: umbraco-docs
+name: docs-writer
 description: Writes and reviews user-facing documentation for Umbraco.AI following the official Umbraco documentation style guide and Vale linting rules. Focuses on public APIs, extension points, and getting-started guides. Use when writing, reviewing, or improving documentation for any product in the repository.
 argument-hint: [write|review|lint] <topic or file path>
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
@@ -226,16 +226,16 @@ N errors, M warnings
 
 ```bash
 # Write new documentation
-/umbraco-docs write getting-started-with-profiles
+/docs-writer write getting-started-with-profiles
 
 # Review a file
-/umbraco-docs review Umbraco.AI/README.md
+/docs-writer review Umbraco.AI/README.md
 
 # Lint a directory
-/umbraco-docs lint Umbraco.AI.OpenAI/
+/docs-writer lint Umbraco.AI.OpenAI/
 
 # Write provider-specific docs
-/umbraco-docs write how-to-create-a-custom-provider
+/docs-writer write how-to-create-a-custom-provider
 ```
 
 ## Depth Calibration

@@ -55,6 +55,7 @@
     - [Getting Started](add-ons/agent/getting-started.md)
     - [Instructions](add-ons/agent/instructions.md)
     - [Scopes](add-ons/agent/scopes.md)
+    - [Permissions](add-ons/agent/permissions.md)
     - [Streaming](add-ons/agent/streaming.md)
     - [API](add-ons/agent/api/README.md)
         - [List](add-ons/agent/api/list.md)

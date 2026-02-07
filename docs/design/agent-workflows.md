@@ -57,22 +57,197 @@ The workflow system adds new domain entities (`AIWorkflow`, `AIWorkflowStep`, `A
 
 ## Core Concepts
 
-### Mapping to MAF
+### Key Insight: All Orchestrations Are Workflows
 
-The design maps Umbraco concepts onto the MAF workflow engine:
+In MAF, orchestration patterns (Sequential, Concurrent, Handoff, Magentic) are **not a separate API** — they are factory methods that produce `Workflow` objects via `WorkflowBuilder`. Every orchestration compiles down to the same graph of executors and edges.
+
+This means our design doesn't need separate runtime code paths for each pattern. Instead, each orchestration type is a different **compilation strategy** that produces a MAF `Workflow`:
+
+```
+AIWorkflow (Umbraco definition)
+    │
+    ├─ Mode: Graph      ──▶  WorkflowBuilder (manual edges)
+    ├─ Mode: Sequential  ──▶  AgentWorkflowBuilder.BuildSequential()
+    ├─ Mode: Concurrent  ──▶  AgentWorkflowBuilder.BuildConcurrent()
+    ├─ Mode: Handoff     ──▶  HandoffsWorkflowBuilder
+    └─ Mode: Magentic    ──▶  GroupChatWorkflowBuilder + MagenticManager
+                                    │
+                                    ▼
+                              MAF Workflow  ──▶  InProcessExecution.StreamAsync()
+```
+
+### Mapping to MAF
 
 | Umbraco Concept | MAF Concept | Description |
 |---|---|---|
-| **AIWorkflow** | `Workflow` (via `WorkflowBuilder`) | The full graph definition |
-| **AIWorkflowStep** | `Executor<TIn, TOut>` | A node in the graph — either an agent or a deterministic function |
-| **AIWorkflowEdge** | `Edge` (simple, conditional, fan-out/fan-in) | A directed connection between steps |
+| **AIWorkflow** | `Workflow` (via builders) | The full graph definition |
+| **AIWorkflowStep** | `Executor<TIn, TOut>` | A node in the graph — agent or deterministic function |
+| **AIWorkflowEdge** | `Edge` (simple, conditional, fan-out/fan-in) | A directed connection between steps (Graph mode) |
+| **AIWorkflowOrchestrationMode** | Builder selection | Which factory method compiles the workflow |
 | **AIWorkflowRun** | `StreamingRun` | A single execution of a workflow |
-| **Step Types** | `Executor` subclasses | Agent step, transform step, condition step, approval step |
 | **Shared State** | `IWorkflowContext` | Data passed between steps via scoped state |
+
+### Orchestration Modes
+
+Each workflow has an **orchestration mode** that determines its topology, editing UI, and compilation strategy:
+
+```
+┌──────────────┬──────────────────────────────────────────────────────────────────────┐
+│ Mode         │ Description                                                          │
+├──────────────┼──────────────────────────────────────────────────────────────────────┤
+│              │                                                                      │
+│ Graph        │ Full visual canvas editor. User defines steps and edges manually.    │
+│              │ Supports all step types (agent, transform, condition, approval,      │
+│              │ content, sub-workflow). Maximum flexibility.                          │
+│              │                                                                      │
+│              │ MAF: WorkflowBuilder with manual AddEdge / AddFanOutEdge /           │
+│              │       AddFanInEdge / AddSwitch calls.                                │
+│              │                                                                      │
+│              │ UI: Node canvas with drag-to-connect edges.                          │
+│              │                                                                      │
+├──────────────┼──────────────────────────────────────────────────────────────────────┤
+│              │                                                                      │
+│ Sequential   │ Pipeline: each agent processes in order, passing output as input     │
+│              │ to the next. Previous agent's output becomes the next agent's user   │
+│              │ message (via MAF's ReassignOtherAgentsAsUsers).                      │
+│              │                                                                      │
+│              │ MAF: AgentWorkflowBuilder.BuildSequential(agents)                    │
+│              │                                                                      │
+│              │ UI: Simple ordered list — drag to reorder agents.                    │
+│              │                                                                      │
+│              │ Example: Content Review → Translation → Quality Check → Publish      │
+│              │                                                                      │
+├──────────────┼──────────────────────────────────────────────────────────────────────┤
+│              │                                                                      │
+│ Concurrent   │ Parallel: all agents receive the same input simultaneously.          │
+│              │ Results are aggregated via a configurable strategy (last message,    │
+│              │ merge all, custom).                                                   │
+│              │                                                                      │
+│              │ MAF: AgentWorkflowBuilder.BuildConcurrent(agents, aggregator)        │
+│              │                                                                      │
+│              │ UI: Agent list (unordered) + aggregation strategy picker.             │
+│              │                                                                      │
+│              │ Example: Three reviewers analyze content independently → merge        │
+│              │          their feedback into a consolidated report.                   │
+│              │                                                                      │
+├──────────────┼──────────────────────────────────────────────────────────────────────┤
+│              │                                                                      │
+│ Handoff      │ Mesh: agents dynamically transfer control to each other based on     │
+│              │ conversation context. Each agent gets AI tool functions               │
+│              │ (handoff_to_N) for transferring to other agents. The LLM             │
+│              │ decides when to hand off.                                             │
+│              │                                                                      │
+│              │ MAF: HandoffsWorkflowBuilder with WithHandoff() relationships        │
+│              │                                                                      │
+│              │ UI: Agent list + handoff relationship matrix (who can hand off to     │
+│              │      whom, with optional handoff reasons).                            │
+│              │                                                                      │
+│              │ Example: Triage agent routes to Content Specialist, SEO Expert,       │
+│              │          or Translation Agent based on user request.                  │
+│              │                                                                      │
+├──────────────┼──────────────────────────────────────────────────────────────────────┤
+│              │                                                                      │
+│ Magentic     │ Manager + Specialists: a manager agent creates a task ledger and     │
+│              │ dynamically dispatches subtasks to specialist agents. Uses a          │
+│              │ two-loop architecture (task planning + progress tracking).            │
+│              │                                                                      │
+│              │ MAF: GroupChatWorkflowBuilder + StandardMagenticManager              │
+│              │                                                                      │
+│              │ UI: Pick manager agent/profile + specialist agent list + config       │
+│              │      (max iterations, stall threshold).                               │
+│              │                                                                      │
+│              │ Example: Manager analyzes a content brief, dispatches Researcher,     │
+│              │          Writer, and SEO Specialist as needed, re-plans on stalls.   │
+│              │                                                                      │
+└──────────────┴──────────────────────────────────────────────────────────────────────┘
+```
+
+### How Each Mode Compiles
+
+#### Sequential
+
+```csharp
+// User defines: [Agent A] → [Agent B] → [Agent C]
+// Compiles to:
+var agents = steps.Select(s => ResolveAgent(s)).ToArray();
+Workflow wf = AgentWorkflowBuilder.BuildSequential(agents);
+// MAF chains: A.AddEdge(B).AddEdge(C).WithOutputFrom(C)
+// Each agent sees previous output as user message (ReassignOtherAgentsAsUsers=true)
+```
+
+#### Concurrent
+
+```csharp
+// User defines: [Agent A, Agent B, Agent C] + aggregation strategy
+// Compiles to:
+var agents = steps.Select(s => ResolveAgent(s)).ToArray();
+Func<IList<List<ChatMessage>>, List<ChatMessage>> aggregator = config.AggregationStrategy switch
+{
+    "lastMessage" => lists => lists.Select(l => l.Last()).ToList(),     // default
+    "mergeAll"    => lists => lists.SelectMany(l => l).ToList(),        // combine everything
+    "summarize"   => lists => CreateSummaryAggregator(lists, config),   // use an LLM to summarize
+    _ => null  // use MAF default
+};
+Workflow wf = AgentWorkflowBuilder.BuildConcurrent(agents, aggregator);
+// MAF creates: Start → FanOut → [A, B, C in parallel] → FanIn(aggregator) → Output
+```
+
+#### Handoff
+
+```csharp
+// User defines: agents + handoff matrix [{from: A, to: B, reason: "..."}, ...]
+// Compiles to:
+var builder = AgentWorkflowBuilder.CreateHandoffBuilderWith(initialAgent);
+foreach (var handoff in config.Handoffs)
+{
+    builder.WithHandoff(
+        from: ResolveAgent(handoff.FromAgentId),
+        to: ResolveAgent(handoff.ToAgentId),
+        handoffReason: handoff.Reason  // becomes the tool description the LLM sees
+    );
+}
+Workflow wf = builder.Build();
+// MAF creates: Start → InitialAgent ─[AddSwitch]→ {handoff_to_1→AgentB, handoff_to_2→AgentC, default→End}
+// Each agent gets handoff_to_N tool functions injected; LLM decides when to transfer
+```
+
+#### Magentic
+
+```csharp
+// User defines: manager profile + specialist agents + config (maxIterations, stallThreshold)
+// Compiles to:
+var managerChatClient = await CreateChatClientForProfile(config.ManagerProfileId);
+var manager = new StandardMagenticManager(managerChatClient, new()
+{
+    MaximumInvocationCount = config.MaxIterations ?? 5,
+    // StallThreshold, etc.
+});
+
+var specialists = steps.Select(s => ResolveAgent(s)).ToArray();
+var builder = AgentWorkflowBuilder.CreateGroupChatBuilderWith(manager, specialists);
+Workflow wf = builder.Build();
+// MAF creates: GroupChatHost executor that loops:
+//   1. Manager evaluates progress (Task Ledger + Progress Ledger)
+//   2. Manager picks next specialist via SelectNextAgentAsync()
+//   3. Specialist executes with manager's instruction
+//   4. Repeat until is_request_satisfied or max iterations
+```
 
 ### Step Types
 
-Workflows support these step types:
+Steps available depend on the orchestration mode:
+
+| Step Type | Graph | Sequential | Concurrent | Handoff | Magentic |
+|---|---|---|---|---|---|
+| **AgentStep** | Yes | Yes | Yes | Yes | Yes |
+| **TransformStep** | Yes | - | - | - | - |
+| **ConditionStep** | Yes | - | - | - | - |
+| **ApprovalStep** | Yes | Yes* | - | - | - |
+| **ContentRead** | Yes | Yes* | - | - | - |
+| **ContentWrite** | Yes | Yes* | - | - | - |
+| **SubWorkflowStep** | Yes | - | - | - | - |
+
+\* In Sequential mode, approval/content steps are inserted between agent steps as non-agent executors.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -100,15 +275,38 @@ Workflows support these step types:
 └─────────────┴───────────────────────────────────────────────────┘
 ```
 
+### Composability: Workflows as Agents
+
+MAF's `Workflow.AsAgent()` extension converts any workflow into an `AIAgent`. This means:
+
+1. A **Sequential** workflow can be embedded as a single step inside a **Graph** workflow
+2. A **Handoff** workflow can be one of the specialists inside a **Magentic** workflow
+3. A **Concurrent** "brainstorm" workflow can be one step in a **Sequential** pipeline
+
+```
+Graph Workflow
+├─ [ContentRead]
+├─ [SubWorkflow: Sequential Translation Pipeline]  ← entire workflow as one step
+│      ├─ Agent: Translate
+│      ├─ Agent: Review
+│      └─ Agent: Polish
+├─ [Approval]
+└─ [ContentWrite]
+```
+
+In the domain model, `SubWorkflowStep` references another `AIWorkflow` by ID. At compilation time, the referenced workflow is compiled to a MAF `Workflow`, converted to an `AIAgent` via `.AsAgent()`, and bound as an executor in the parent graph.
+
 ### Execution Model
 
-Workflows execute using MAF's **Pregel / Bulk Synchronous Parallel** model:
+All modes execute using MAF's **Pregel / Bulk Synchronous Parallel** model:
 
-1. Input enters the starting step
-2. Steps in the same "superstep" execute concurrently
-3. Output is routed along edges to downstream steps
+1. Input enters the starting executor
+2. Executors in the same "superstep" run concurrently
+3. Output is routed along edges to downstream executors
 4. Approval steps **pause** execution until human resumes
-5. The run completes when all terminal steps finish
+5. The run completes when all terminal executors finish
+
+**Graph mode example:**
 
 ```
 Content Input ──▶ [Agent: Review] ──▶ [Condition: Quality Check]
@@ -123,6 +321,51 @@ Content Input ──▶ [Agent: Review] ──▶ [Condition: Quality Check]
                                            │
                                            ▼
                                    [Content: Publish]
+```
+
+**Handoff mode example:**
+
+```
+User Request ──▶ [Triage Agent]
+                      │
+                ┌─────┼──────────────┐
+                │     │              │
+        handoff_to_1  handoff_to_2   handoff_to_3
+                │     │              │
+                ▼     ▼              ▼
+         [Content    [SEO         [Translation
+          Specialist] Expert]      Agent]
+                │     │              │
+                └──┬──┘──────────────┘
+                   │ (can hand back to Triage)
+                   ▼
+               [Complete]
+```
+
+**Magentic mode example:**
+
+```
+Task Input ──▶ [Manager Agent]
+                    │
+              ┌─────┼──────────────────┐
+              │  Progress Ledger Loop   │
+              │                         │
+              │  1. Evaluate progress   │
+              │  2. Pick next speaker   │
+              │  3. Dispatch with       │
+              │     instructions        │
+              │                         │
+              ├──▶ [Researcher] ────────┤
+              ├──▶ [Writer] ────────────┤
+              ├──▶ [SEO Specialist] ────┤
+              │                         │
+              │  4. Assess results      │
+              │  5. Re-plan if stalled  │
+              │  6. Repeat or finish    │
+              └─────────────────────────┘
+                    │
+                    ▼
+              [Summary Agent] ──▶ Output
 ```
 
 ---
@@ -140,19 +383,33 @@ public sealed class AIWorkflow : IAIVersionableEntity
     public string? Description { get; set; }
 
     /// <summary>
-    /// The step that receives initial input when the workflow starts.
+    /// The orchestration mode determines the workflow's topology and compilation strategy.
     /// </summary>
-    public Guid StartingStepId { get; set; }
+    public required AIWorkflowOrchestrationMode Mode { get; set; }
+
+    /// <summary>
+    /// The step that receives initial input when the workflow starts.
+    /// Only used in Graph mode — other modes derive the starting point automatically.
+    /// </summary>
+    public Guid? StartingStepId { get; set; }
 
     /// <summary>
     /// All steps in this workflow.
+    /// In Sequential mode, order matters. In Concurrent/Handoff/Magentic, order is display-only.
     /// </summary>
     public IReadOnlyList<AIWorkflowStep> Steps { get; set; } = [];
 
     /// <summary>
-    /// All edges connecting steps.
+    /// All edges connecting steps. Only used in Graph mode.
+    /// Other modes generate edges automatically during compilation.
     /// </summary>
     public IReadOnlyList<AIWorkflowEdge> Edges { get; set; } = [];
+
+    /// <summary>
+    /// Mode-specific configuration. Null for Graph mode.
+    /// See: SequentialConfig, ConcurrentConfig, HandoffConfig, MagenticConfig.
+    /// </summary>
+    public string? OrchestrationConfig { get; set; }
 
     /// <summary>
     /// Input schema defining what data the workflow expects.
@@ -176,6 +433,24 @@ public sealed class AIWorkflow : IAIVersionableEntity
     public DateTime DateModified { get; set; } = DateTime.UtcNow;
     public Guid? CreatedByUserId { get; set; }
     public Guid? ModifiedByUserId { get; set; }
+}
+
+public enum AIWorkflowOrchestrationMode
+{
+    /// <summary>Full visual canvas — user defines steps and edges manually.</summary>
+    Graph,
+
+    /// <summary>Pipeline — agents process in order, output becomes next input.</summary>
+    Sequential,
+
+    /// <summary>Parallel — all agents process same input, results aggregated.</summary>
+    Concurrent,
+
+    /// <summary>Mesh — agents dynamically transfer control via handoff tool functions.</summary>
+    Handoff,
+
+    /// <summary>Manager + Specialists — manager dispatches subtasks dynamically.</summary>
+    Magentic
 }
 ```
 
@@ -335,6 +610,117 @@ public sealed class ContentWriteStepConfiguration
     /// Whether to create a new version or update in-place.
     /// </summary>
     public bool CreateNewVersion { get; set; } = true;
+}
+```
+
+### Orchestration Mode Configurations
+
+Each orchestration mode (except Graph) stores its configuration in `AIWorkflow.OrchestrationConfig` as JSON:
+
+```csharp
+// Sequential — no extra config needed beyond step order.
+// Steps are executed in list order. The step list IS the config.
+public sealed class SequentialOrchestrationConfig
+{
+    // Reserved for future options (e.g., error handling strategy)
+}
+
+// Concurrent — configures how parallel results are combined.
+public sealed class ConcurrentOrchestrationConfig
+{
+    /// <summary>
+    /// How to combine results from all agents.
+    /// "lastMessage" — take last message from each (default, MAF default)
+    /// "mergeAll"    — concatenate all messages
+    /// "summarize"   — use an LLM to synthesize a summary (requires SummaryProfileId)
+    /// </summary>
+    public string AggregationStrategy { get; set; } = "lastMessage";
+
+    /// <summary>
+    /// Profile for the summarization LLM when AggregationStrategy is "summarize".
+    /// </summary>
+    public Guid? SummaryProfileId { get; set; }
+
+    /// <summary>
+    /// Optional prompt template for the summary agent.
+    /// Default: "Synthesize the following responses into a single coherent answer: {{responses}}"
+    /// </summary>
+    public string? SummaryPromptTemplate { get; set; }
+}
+
+// Handoff — defines the agent transfer relationships.
+public sealed class HandoffOrchestrationConfig
+{
+    /// <summary>
+    /// The step ID of the initial agent that receives the first message.
+    /// </summary>
+    public required Guid InitialAgentStepId { get; set; }
+
+    /// <summary>
+    /// Directed handoff relationships between agents.
+    /// Each entry allows "from" to transfer to "to" with a reason.
+    /// </summary>
+    public IReadOnlyList<AIWorkflowHandoff> Handoffs { get; set; } = [];
+
+    /// <summary>
+    /// Whether the workflow supports interactive mode (user can send
+    /// follow-up messages, like a multi-agent chat).
+    /// </summary>
+    public bool Interactive { get; set; } = false;
+}
+
+public sealed class AIWorkflowHandoff
+{
+    /// <summary>
+    /// The step ID of the agent that can initiate this handoff.
+    /// </summary>
+    public required Guid FromStepId { get; set; }
+
+    /// <summary>
+    /// The step ID of the agent that receives the handoff.
+    /// </summary>
+    public required Guid ToStepId { get; set; }
+
+    /// <summary>
+    /// Why this handoff exists — becomes the tool function description
+    /// that the LLM sees when deciding whether to transfer.
+    /// Falls back to the target agent's description if not set.
+    /// </summary>
+    public string? Reason { get; set; }
+}
+
+// Magentic — configures the manager + specialist dynamic dispatch pattern.
+public sealed class MagenticOrchestrationConfig
+{
+    /// <summary>
+    /// Profile for the manager agent that creates task/progress ledgers
+    /// and dispatches work. Should be a capable reasoning model.
+    /// </summary>
+    public required Guid ManagerProfileId { get; set; }
+
+    /// <summary>
+    /// Optional custom instructions for the manager agent.
+    /// Merged with the default Magentic planning prompts.
+    /// </summary>
+    public string? ManagerInstructions { get; set; }
+
+    /// <summary>
+    /// Maximum number of agent invocations before the manager
+    /// is forced to produce a final answer. Default: 10.
+    /// </summary>
+    public int MaxIterations { get; set; } = 10;
+
+    /// <summary>
+    /// Number of consecutive stalls (no progress) before
+    /// the outer loop re-plans. Default: 2.
+    /// </summary>
+    public int StallThreshold { get; set; } = 2;
+
+    /// <summary>
+    /// Maximum number of outer-loop re-plans before terminating
+    /// with failure. Default: 2.
+    /// </summary>
+    public int MaxReplans { get; set; } = 2;
 }
 ```
 
@@ -498,12 +884,13 @@ public sealed class AIWorkflowRunTrigger
 
 ### Workflow Engine — Compilation
 
-The engine compiles an `AIWorkflow` definition into a MAF workflow at runtime:
+The engine dispatches to the correct MAF builder based on orchestration mode:
 
 ```csharp
 public class AIWorkflowEngine : IAIWorkflowEngine
 {
     private readonly IAIAgentFactory _agentFactory;
+    private readonly IAIChatClientFactory _chatClientFactory;
     private readonly IContentService _contentService;
 
     public async Task<StreamingRun> CompileAndStartAsync(
@@ -512,59 +899,218 @@ public class AIWorkflowEngine : IAIWorkflowEngine
         AGUIEventEmitter emitter,
         CancellationToken ct)
     {
-        // 1. Create executors for each step
-        var executors = new Dictionary<Guid, IExecutor>();
-        foreach (var step in workflow.Steps)
+        Workflow mafWorkflow = workflow.Mode switch
         {
-            executors[step.Id] = step.Type switch
-            {
-                AIWorkflowStepType.Agent => await CreateAgentExecutorAsync(step, emitter, ct),
-                AIWorkflowStepType.Transform => CreateTransformExecutor(step),
-                AIWorkflowStepType.Condition => CreateConditionExecutor(step),
-                AIWorkflowStepType.Approval => CreateApprovalExecutor(step, emitter),
-                AIWorkflowStepType.ContentRead => CreateContentReadExecutor(step),
-                AIWorkflowStepType.ContentWrite => CreateContentWriteExecutor(step),
-                AIWorkflowStepType.SubWorkflow => await CreateSubWorkflowExecutorAsync(step, emitter, ct),
-                _ => throw new NotSupportedException($"Step type {step.Type} is not supported")
-            };
-        }
+            AIWorkflowOrchestrationMode.Graph      => await CompileGraphAsync(workflow, emitter, ct),
+            AIWorkflowOrchestrationMode.Sequential  => await CompileSequentialAsync(workflow, emitter, ct),
+            AIWorkflowOrchestrationMode.Concurrent  => await CompileConcurrentAsync(workflow, emitter, ct),
+            AIWorkflowOrchestrationMode.Handoff     => await CompileHandoffAsync(workflow, emitter, ct),
+            AIWorkflowOrchestrationMode.Magentic    => await CompileMagenticAsync(workflow, emitter, ct),
+            _ => throw new NotSupportedException($"Mode {workflow.Mode} is not supported")
+        };
 
-        // 2. Build the workflow graph
-        var startingExecutor = executors[workflow.StartingStepId];
-        var builder = new WorkflowBuilder(startingExecutor);
-
-        foreach (var edge in workflow.Edges)
-        {
-            var source = executors[edge.SourceStepId];
-            var target = executors[edge.TargetStepId];
-
-            switch (edge.Type)
-            {
-                case AIWorkflowEdgeType.Simple:
-                    builder.AddEdge(source, target);
-                    break;
-                case AIWorkflowEdgeType.Conditional:
-                    builder.AddEdge(source, target,
-                        condition: msg => EvaluateBranch(msg, edge.Branch));
-                    break;
-                case AIWorkflowEdgeType.FanOut:
-                    // Collected into groups and added via AddFanOutEdge
-                    break;
-                case AIWorkflowEdgeType.FanIn:
-                    // Collected into groups and added via AddFanInEdge
-                    break;
-            }
-        }
-
-        // 3. Mark terminal steps as outputs
-        var terminalStepIds = FindTerminalStepIds(workflow);
-        foreach (var id in terminalStepIds)
-            builder.WithOutputFrom(executors[id]);
-
-        // 4. Build and stream
-        var wf = builder.Build();
-        return await InProcessExecution.StreamAsync(wf, input);
+        return await InProcessExecution.StreamAsync(mafWorkflow, input);
     }
+}
+```
+
+#### Graph Mode Compilation
+
+Full manual control — user-defined steps and edges:
+
+```csharp
+private async Task<Workflow> CompileGraphAsync(
+    AIWorkflow workflow, AGUIEventEmitter emitter, CancellationToken ct)
+{
+    // 1. Create executors for each step
+    var executors = new Dictionary<Guid, IExecutor>();
+    foreach (var step in workflow.Steps)
+    {
+        executors[step.Id] = step.Type switch
+        {
+            AIWorkflowStepType.Agent       => await CreateAgentExecutorAsync(step, emitter, ct),
+            AIWorkflowStepType.Transform   => CreateTransformExecutor(step),
+            AIWorkflowStepType.Condition   => CreateConditionExecutor(step),
+            AIWorkflowStepType.Approval    => CreateApprovalExecutor(step, emitter),
+            AIWorkflowStepType.ContentRead => CreateContentReadExecutor(step),
+            AIWorkflowStepType.ContentWrite=> CreateContentWriteExecutor(step),
+            AIWorkflowStepType.SubWorkflow => await CreateSubWorkflowExecutorAsync(step, emitter, ct),
+            _ => throw new NotSupportedException($"Step type {step.Type}")
+        };
+    }
+
+    // 2. Build the graph manually from user-defined edges
+    var builder = new WorkflowBuilder(executors[workflow.StartingStepId!.Value]);
+
+    foreach (var edge in workflow.Edges)
+    {
+        var source = executors[edge.SourceStepId];
+        var target = executors[edge.TargetStepId];
+
+        switch (edge.Type)
+        {
+            case AIWorkflowEdgeType.Simple:
+                builder.AddEdge(source, target);
+                break;
+            case AIWorkflowEdgeType.Conditional:
+                builder.AddEdge(source, target,
+                    condition: msg => EvaluateBranch(msg, edge.Branch));
+                break;
+            // Fan-out/fan-in edges collected into groups and added in batch
+        }
+    }
+
+    // 3. Mark terminal steps as outputs
+    foreach (var id in FindTerminalStepIds(workflow))
+        builder.WithOutputFrom(executors[id]);
+
+    return builder.Build();
+}
+```
+
+#### Sequential Mode Compilation
+
+Steps executed in list order — each agent's output becomes the next agent's input:
+
+```csharp
+private async Task<Workflow> CompileSequentialAsync(
+    AIWorkflow workflow, AGUIEventEmitter emitter, CancellationToken ct)
+{
+    // Resolve each step to a MAF AIAgent
+    var agents = new List<AIAgent>();
+    foreach (var step in workflow.Steps)
+    {
+        var agent = await ResolveStepToMAFAgentAsync(step, emitter, ct);
+        agents.Add(agent);
+    }
+
+    // MAF handles the chaining automatically:
+    // - AddEdge between each pair
+    // - ReassignOtherAgentsAsUsers = true (prev output → next input)
+    // - ForwardIncomingMessages = true
+    return AgentWorkflowBuilder.BuildSequential(agents.ToArray());
+}
+```
+
+#### Concurrent Mode Compilation
+
+All agents process the same input in parallel, results aggregated:
+
+```csharp
+private async Task<Workflow> CompileConcurrentAsync(
+    AIWorkflow workflow, AGUIEventEmitter emitter, CancellationToken ct)
+{
+    var config = Deserialize<ConcurrentOrchestrationConfig>(workflow.OrchestrationConfig);
+
+    var agents = new List<AIAgent>();
+    foreach (var step in workflow.Steps)
+        agents.Add(await ResolveStepToMAFAgentAsync(step, emitter, ct));
+
+    // Build the aggregation function
+    Func<IList<List<ChatMessage>>, List<ChatMessage>>? aggregator = config.AggregationStrategy switch
+    {
+        "lastMessage" => null,  // MAF default: last message from each
+        "mergeAll" => lists => lists.SelectMany(l => l).ToList(),
+        "summarize" => await CreateSummaryAggregatorAsync(config, ct),
+        _ => null
+    };
+
+    // MAF creates: Start → FanOut → [agents in parallel] → FanIn(aggregator) → Output
+    return AgentWorkflowBuilder.BuildConcurrent(agents.ToArray(), aggregator);
+}
+
+// The "summarize" aggregator uses an LLM to merge parallel results
+private async Task<Func<IList<List<ChatMessage>>, List<ChatMessage>>>
+    CreateSummaryAggregatorAsync(ConcurrentOrchestrationConfig config, CancellationToken ct)
+{
+    var chatClient = await _chatClientFactory.CreateChatClientAsync(config.SummaryProfileId!.Value, ct);
+    var template = config.SummaryPromptTemplate
+        ?? "Synthesize these responses into a single coherent answer:\n\n{{responses}}";
+
+    return lists =>
+    {
+        var responses = string.Join("\n\n---\n\n",
+            lists.SelectMany(l => l).Select(m => m.Text));
+        var prompt = template.Replace("{{responses}}", responses);
+
+        // Run synchronously within the aggregator (MAF constraint)
+        var result = chatClient.GetResponseAsync([new(ChatRole.User, prompt)]).GetAwaiter().GetResult();
+        return [new ChatMessage(ChatRole.Assistant, result.Text)];
+    };
+}
+```
+
+#### Handoff Mode Compilation
+
+Agents hand off control to each other dynamically via tool functions:
+
+```csharp
+private async Task<Workflow> CompileHandoffAsync(
+    AIWorkflow workflow, AGUIEventEmitter emitter, CancellationToken ct)
+{
+    var config = Deserialize<HandoffOrchestrationConfig>(workflow.OrchestrationConfig);
+
+    // Resolve all agents
+    var agentMap = new Dictionary<Guid, AIAgent>();
+    foreach (var step in workflow.Steps)
+        agentMap[step.Id] = await ResolveStepToMAFAgentAsync(step, emitter, ct);
+
+    // Build the handoff relationships
+    var initialAgent = agentMap[config.InitialAgentStepId];
+    var builder = AgentWorkflowBuilder.CreateHandoffBuilderWith(initialAgent);
+
+    foreach (var handoff in config.Handoffs)
+    {
+        builder.WithHandoff(
+            from: agentMap[handoff.FromStepId],
+            to: agentMap[handoff.ToStepId],
+            handoffReason: handoff.Reason  // LLM sees this as the handoff tool description
+        );
+    }
+
+    // MAF creates for each agent:
+    //   - handoff_to_N tool functions (one per valid target)
+    //   - AddSwitch routing based on which tool the LLM calls
+    //   - Full conversation history carried in HandoffState
+    return builder.Build();
+}
+```
+
+#### Magentic Mode Compilation
+
+Manager + specialist agents with dynamic task dispatch:
+
+```csharp
+private async Task<Workflow> CompileMagenticAsync(
+    AIWorkflow workflow, AGUIEventEmitter emitter, CancellationToken ct)
+{
+    var config = Deserialize<MagenticOrchestrationConfig>(workflow.OrchestrationConfig);
+
+    // Create the manager (needs a capable reasoning model)
+    var managerClient = await _chatClientFactory.CreateChatClientAsync(config.ManagerProfileId, ct);
+    var manager = new StandardMagenticManager(managerClient, new()
+    {
+        MaximumInvocationCount = config.MaxIterations,
+        // StallThreshold and MaxReplans configured via manager prompts
+    });
+
+    if (config.ManagerInstructions is not null)
+        manager.Instructions = config.ManagerInstructions;
+
+    // Resolve specialist agents
+    var specialists = new List<AIAgent>();
+    foreach (var step in workflow.Steps)
+        specialists.Add(await ResolveStepToMAFAgentAsync(step, emitter, ct));
+
+    // MAF creates a GroupChatHost that loops:
+    //   1. Manager evaluates Task Ledger (facts, plan)
+    //   2. Manager produces Progress Ledger (JSON):
+    //      { is_request_satisfied, is_in_loop, is_progress_being_made,
+    //        next_speaker, instruction_or_question }
+    //   3. Selected specialist executes with instruction
+    //   4. Results fed back to manager
+    //   5. Re-plans on stall detection
+    return AgentWorkflowBuilder.CreateGroupChatBuilderWith(manager, specialists.ToArray()).Build();
 }
 ```
 
@@ -861,9 +1407,48 @@ A complete workflow that translates a content node to another language:
 
 ## Frontend UI
 
-### Workflow Editor — Visual Canvas
+### Mode Selection — Create Workflow
 
-The workflow editor is a node-based visual canvas built with Lit web components. Users drag-and-drop steps onto a canvas and connect them with edges.
+When creating a new workflow, the user first picks the orchestration mode. This determines which editor they see:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Create Workflow                                             │
+│                                                              │
+│  Choose an orchestration mode:                               │
+│                                                              │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  ⊞ Graph                                              │  │
+│  │  Full visual canvas. Define steps and connections      │  │
+│  │  manually. Maximum flexibility for complex workflows.  │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  → Sequential                                         │  │
+│  │  Pipeline: agents process in order. Output from one   │  │
+│  │  becomes input to the next.                           │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  ⇉ Concurrent                                         │  │
+│  │  Parallel: all agents receive the same input. Results │  │
+│  │  are combined using a strategy you choose.            │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  ⇄ Handoff                                            │  │
+│  │  Mesh: agents transfer control to each other based on │  │
+│  │  context. LLM decides when to hand off.               │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  ✦ Magentic                                           │  │
+│  │  Manager + Specialists: a manager agent plans tasks   │  │
+│  │  and dispatches work to specialist agents dynamically. │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Editor — Graph Mode (Visual Canvas)
+
+The Graph mode editor is a node-based visual canvas built with Lit web components. Users drag-and-drop steps onto a canvas and connect them with edges.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -1069,9 +1654,175 @@ export class UaiWorkflowAgentStepConfig extends LitElement {
 }
 ```
 
+### Editor — Sequential Mode
+
+A simple ordered list of agents. Drag to reorder. Each agent's output automatically becomes the next agent's user message.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Workflow: Content Review Pipeline (Sequential)            [Save] [Run] │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Pipeline Steps (drag to reorder)                                       │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  1.  ≡  Agent: "Content Reviewer"                        [Edit] │   │
+│  │        Reviews content for quality, grammar, and tone           │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │         ↓  output becomes input                                  │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  2.  ≡  Agent: "SEO Optimizer"                           [Edit] │   │
+│  │        Optimizes headings, meta description, keyword density    │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │         ↓  output becomes input                                  │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  3.  ≡  Agent: "Final Editor"                            [Edit] │   │
+│  │        Polishes and produces the final version                  │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  [+ Add Agent Step]                                                     │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Editor — Concurrent Mode
+
+Unordered list of agents that process in parallel, plus aggregation strategy configuration:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Workflow: Multi-Perspective Review (Concurrent)           [Save] [Run] │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Parallel Agents (all receive the same input)                           │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  Agent: "Technical Reviewer"                             [Edit] │   │
+│  │  Reviews for technical accuracy                                 │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Agent: "Brand Voice Reviewer"                           [Edit] │   │
+│  │  Checks tone and brand consistency                              │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Agent: "Accessibility Reviewer"                         [Edit] │   │
+│  │  Checks readability and accessibility compliance                │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  [+ Add Agent]                                                          │
+│                                                                          │
+│  ── Aggregation Strategy ──────────────────────────────────────────     │
+│                                                                          │
+│  ○ Last message from each agent (default)                               │
+│  ○ Merge all messages                                                   │
+│  ● Summarize with LLM                                                   │
+│    Profile: [AI Profile Picker: "GPT-4o Summary" ▾]                    │
+│    Prompt:  [Synthesize these reviews into actionable feedback: ...]    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Editor — Handoff Mode
+
+Configure which agents can transfer to which, with a visual relationship matrix:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Workflow: Customer Support Triage (Handoff)               [Save] [Run] │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Agents                                           Initial Agent: ▾      │
+│                                                   [Triage Agent]        │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  Agent: "Triage Agent"                                   [Edit] │   │
+│  │  Routes requests to the right specialist                        │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Agent: "Content Specialist"                             [Edit] │   │
+│  │  Handles content editing and publishing questions                │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Agent: "SEO Expert"                                     [Edit] │   │
+│  │  Handles SEO-related questions and optimization                 │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Agent: "Translation Agent"                              [Edit] │   │
+│  │  Handles localization and translation requests                  │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  [+ Add Agent]                                                          │
+│                                                                          │
+│  ── Handoff Relationships ─────────────────────────────────────────     │
+│  (Who can transfer to whom? LLM decides when based on the reason.)     │
+│                                                                          │
+│     From              → To                   Reason                     │
+│  ┌──────────────────┬───────────────────┬─────────────────────────┐    │
+│  │  Triage Agent     │ Content Spec.     │ "Content editing help"  │    │
+│  │  Triage Agent     │ SEO Expert        │ "SEO questions"         │    │
+│  │  Triage Agent     │ Translation Agent │ "Translation requests"  │    │
+│  │  Content Spec.    │ Triage Agent      │ "Not content-related"   │    │
+│  │  SEO Expert       │ Triage Agent      │ "Not SEO-related"       │    │
+│  │  Translation Agent│ Triage Agent      │ "Not translation-rel."  │    │
+│  └──────────────────┴───────────────────┴─────────────────────────┘    │
+│  [+ Add Handoff Rule]                                                   │
+│                                                                          │
+│  ☐ Interactive mode (user can send follow-up messages)                  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Editor — Magentic Mode
+
+Pick a manager profile and specialist agents. The manager dynamically plans and dispatches:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Workflow: Deep Content Research (Magentic)                [Save] [Run] │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ── Manager Agent ─────────────────────────────────────────────────     │
+│                                                                          │
+│  Profile: [AI Profile Picker: "Claude Opus (Reasoning)" ▾]             │
+│  Instructions (optional):                                               │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ You are managing a content research workflow for Umbraco CMS.   │   │
+│  │ Prioritize accuracy and source citations. Re-plan if the       │   │
+│  │ writer produces content without supporting research.            │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  ── Specialist Agents ─────────────────────────────────────────────     │
+│  (Manager dispatches work to these agents based on its task plan)       │
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │  Agent: "Researcher"                                     [Edit] │   │
+│  │  Finds and summarizes relevant information                      │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Agent: "Writer"                                         [Edit] │   │
+│  │  Drafts content sections based on research                      │   │
+│  ├──────────────────────────────────────────────────────────────────┤   │
+│  │  Agent: "SEO Specialist"                                 [Edit] │   │
+│  │  Optimizes content for search engines                           │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+│  [+ Add Specialist]                                                     │
+│                                                                          │
+│  ── Execution Limits ──────────────────────────────────────────────     │
+│                                                                          │
+│  Max iterations:    [10  ▾]  (max agent invocations before forced end)  │
+│  Stall threshold:   [2   ▾]  (stalls before re-planning)               │
+│  Max re-plans:      [2   ▾]  (re-plans before terminating with error)  │
+│                                                                          │
+│  ── How It Works ──────────────────────────────────────────────────     │
+│  The manager agent will:                                                │
+│  1. Analyze the input and create a task plan (Task Ledger)             │
+│  2. Assess progress after each specialist completes (Progress Ledger)  │
+│  3. Pick the next specialist and provide specific instructions         │
+│  4. Re-plan if progress stalls                                         │
+│  5. Produce a final answer when the request is satisfied               │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
 ### Workflow Run Monitor
 
-When a workflow is executing, the canvas shows real-time progress:
+When a workflow is executing, the UI shows real-time progress. The monitor adapts to the orchestration mode:
+
+**Graph & Sequential** — step-by-step progress with streaming output:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -1099,7 +1850,81 @@ When a workflow is executing, the canvas shows real-time progress:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-Step node status indicators:
+**Concurrent** — parallel progress columns showing each agent's output side-by-side:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Run: Multi-Perspective Review (Concurrent)           [Cancel]  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌───────────────────┬───────────────────┬──────────────────┐   │
+│  │ ⏳ Technical       │ ✅ Brand Voice     │ ⏳ Accessibility  │   │
+│  │                    │                    │                   │   │
+│  │ The code examples  │ The tone is        │ Heading levels   │   │
+│  │ in section 3 have  │ consistent with    │ skip from H2 to  │   │
+│  │ a syntax error...  │ brand guidelines.  │ H4 in section... │   │
+│  │ ████████░░░░       │ Done (2.1s)        │ ██████░░░░░      │   │
+│  └───────────────────┴───────────────────┴──────────────────┘   │
+│                                                                  │
+│  Aggregation: Summarize with LLM   Status: Waiting for agents   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Handoff** — chat-style view showing which agent is currently active:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Run: Customer Support Triage (Handoff)               [Cancel]  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Active Agent: SEO Expert  (handoff from Triage Agent)          │
+│                                                                  │
+│  ┌─ Triage Agent ──────────────────────────────────────────┐    │
+│  │ I'll route this to our SEO expert who can help with     │    │
+│  │ your meta description optimization.                      │    │
+│  │ → Handed off to SEO Expert                               │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│  ┌─ SEO Expert ────────────────────────────────────────────┐    │
+│  │ Looking at your page's meta description, here are my    │    │
+│  │ recommendations: ...                                     │    │
+│  │ ████████████████████░░░░░░ streaming...                  │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  Transfer History: User → Triage → SEO Expert                   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Magentic** — shows manager's task plan and specialist dispatch log:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Run: Deep Content Research (Magentic)                [Cancel]  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Manager: Planning... (iteration 3/10)                          │
+│                                                                  │
+│  ── Task Ledger ───────────────────────────────────────────     │
+│  Facts: Found 3 authoritative sources on AI in CMS              │
+│  Plan:  1. ✅ Research background  2. ⏳ Draft intro            │
+│         3. ○ Draft body  4. ○ SEO optimize  5. ○ Final review   │
+│                                                                  │
+│  ── Progress Log ──────────────────────────────────────────     │
+│  ┌───────┬──────────────┬──────────────────────────────────┐    │
+│  │ Turn  │ Agent         │ Task                             │    │
+│  │ 1     │ Researcher    │ ✅ Find sources on AI+CMS        │    │
+│  │ 2     │ Researcher    │ ✅ Summarize top 3 articles       │    │
+│  │ 3     │ Writer        │ ⏳ Draft introduction section     │    │
+│  │       │               │ ████████░░░░ streaming...         │    │
+│  └───────┴──────────────┴──────────────────────────────────┘    │
+│                                                                  │
+│  Progress: Making progress | No stalls | 3/10 iterations used   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Step node status indicators (all modes):
 
 | Icon | Status | Visual |
 |---|---|---|
@@ -1328,7 +2153,9 @@ CREATE TABLE UmbracoAIAgent_Workflow (
     Alias           NVARCHAR(255)    NOT NULL UNIQUE,
     Name            NVARCHAR(255)    NOT NULL,
     Description     NVARCHAR(MAX)    NULL,
-    StartingStepId  UNIQUEIDENTIFIER NOT NULL,
+    Mode            INT              NOT NULL DEFAULT 0,  -- enum AIWorkflowOrchestrationMode
+    StartingStepId  UNIQUEIDENTIFIER NULL,   -- Required for Graph, optional for others
+    OrchestrationConfig NVARCHAR(MAX) NULL,  -- Mode-specific JSON (null for Graph)
     InputSchema     NVARCHAR(MAX)    NULL,
     ScopeIds        NVARCHAR(MAX)    NULL,   -- JSON array
     ContextIds      NVARCHAR(MAX)    NULL,   -- JSON array
@@ -1406,63 +2233,74 @@ Migration prefix: `UmbracoAIAgent_` (shared with existing agent migrations).
 
 ## Implementation Phases
 
-### Phase 1 — Foundation (MVP)
+### Phase 1 — Foundation: Sequential & Concurrent
 
-**Goal:** Basic sequential workflows with agent steps and manual triggers.
+**Goal:** The two simplest orchestration modes with manual triggers. These have the simplest UIs (ordered list / unordered list) and require no edge editing.
 
-- [ ] Domain models: `AIWorkflow`, `AIWorkflowStep`, `AIWorkflowEdge`
-- [ ] `IAIWorkflowService` with CRUD operations
-- [ ] `IAIWorkflowEngine` — compiles workflow to MAF `WorkflowBuilder`
-- [ ] `AgentStepExecutor` — runs existing agents within a workflow
-- [ ] `TransformStepExecutor` — basic data mapping between steps
+- [ ] Domain models: `AIWorkflow`, `AIWorkflowStep`, `AIWorkflowEdge`, orchestration configs
+- [ ] `IAIWorkflowService` with CRUD operations + version tracking
+- [ ] `IAIWorkflowEngine` — mode-based compilation dispatcher
+- [ ] **Sequential compilation** via `AgentWorkflowBuilder.BuildSequential()`
+- [ ] **Concurrent compilation** via `AgentWorkflowBuilder.BuildConcurrent()` with aggregation strategies
 - [ ] `IAIWorkflowRunService` — start/monitor/cancel runs
 - [ ] `AIWorkflowRun` persistence with step execution log
 - [ ] SSE streaming endpoint bridging MAF events → AG-UI
 - [ ] Management API: workflow CRUD + run start/stream
 - [ ] EF Core migrations for all tables
-- [ ] Frontend: basic workflow list view
-- [ ] Frontend: simple sequential workflow editor (no canvas — just ordered step list)
-- [ ] Frontend: run monitor with step progress and streaming output
+- [ ] Frontend: workflow list view with mode badges
+- [ ] Frontend: mode selection on create
+- [ ] Frontend: Sequential editor (ordered agent list, drag to reorder)
+- [ ] Frontend: Concurrent editor (agent list + aggregation strategy picker)
+- [ ] Frontend: run monitor — sequential step-by-step and concurrent parallel columns
 
 **NuGet dependency:** `Microsoft.Agents.AI.Workflows`
 
-### Phase 2 — Visual Editor & Branching
+### Phase 2 — Handoff & Magentic
 
-**Goal:** Full visual canvas editor with conditional branching and parallel execution.
+**Goal:** The two dynamic orchestration modes where the LLM decides routing.
 
-- [ ] `ConditionStepExecutor` — evaluates predicates for branching
-- [ ] Conditional and fan-out/fan-in edges
-- [ ] Frontend: full canvas-based workflow editor (SVG edges, draggable nodes)
-- [ ] Frontend: edge drawing via drag-from-port interaction
-- [ ] Frontend: step configuration side panel
-- [ ] Frontend: template editor with `{{variable}}` autocomplete from upstream state keys
-- [ ] Workflow validation (cycle detection, unreachable steps, missing configs)
+- [ ] **Handoff compilation** via `HandoffsWorkflowBuilder`
+- [ ] Frontend: Handoff editor (agent list + handoff relationship matrix)
+- [ ] Frontend: Handoff run monitor (chat-style view with transfer history)
+- [ ] **Magentic compilation** via `GroupChatWorkflowBuilder` + `StandardMagenticManager`
+- [ ] Frontend: Magentic editor (manager profile + specialist list + limits config)
+- [ ] Frontend: Magentic run monitor (task ledger + progress log + dispatch history)
+- [ ] Interactive mode for Handoff (user can send follow-up messages during run)
 
-### Phase 3 — Content Integration & Approvals
+### Phase 3 — Graph Mode & Content Integration
 
-**Goal:** Deep Umbraco content integration and human-in-the-loop approval.
+**Goal:** Full visual canvas editor for custom topologies, plus deep Umbraco content integration.
 
-- [ ] `ContentReadExecutor` — loads content node properties into state
-- [ ] `ContentWriteExecutor` — writes state back to content properties
+- [ ] **Graph compilation** via manual `WorkflowBuilder` with user-defined edges
+- [ ] `TransformStepExecutor` — deterministic data mapping between steps
+- [ ] `ConditionStepExecutor` — evaluates predicates for conditional branching
+- [ ] `ContentReadExecutor` — loads content node properties into workflow state
+- [ ] `ContentWriteExecutor` — writes workflow state back to content properties
 - [ ] `ApprovalStepExecutor` — pauses for human review via AG-UI interrupts
 - [ ] Resume endpoint for approval responses
-- [ ] Content app showing available workflows and run history
-- [ ] Event-driven triggers via Umbraco notifications
+- [ ] Frontend: full canvas-based workflow editor (SVG edges, draggable nodes)
+- [ ] Frontend: edge drawing via drag-from-port interaction
+- [ ] Frontend: step configuration side panel with `{{variable}}` autocomplete
+- [ ] Frontend: approval UI in run monitor (approve/reject/feedback)
+- [ ] Content app showing available workflows and run history per content node
+- [ ] Event-driven triggers via Umbraco notifications (publish, save, create)
 - [ ] `WorkflowTrigger` configuration (content type + event → workflow)
-- [ ] Approval notification system (backoffice alerts, optional email)
+- [ ] Workflow validation (cycle detection, unreachable steps, missing configs)
 
-### Phase 4 — Advanced Features
+### Phase 4 — Composability & Production Features
 
-**Goal:** Production-grade features for complex workflows.
+**Goal:** Nested workflows, fault tolerance, and operational tooling.
 
-- [ ] `SubWorkflowStepExecutor` — embed workflows within workflows
+- [ ] `SubWorkflowStepExecutor` — embed workflows within workflows (any mode as a step)
 - [ ] Workflow version history and rollback (existing versioning pattern)
 - [ ] Checkpointing via MAF `CheckpointManager` for fault tolerance
 - [ ] Run retry/resume from last checkpoint
 - [ ] Scheduled workflow triggers (cron-style)
 - [ ] Workflow templates / presets (pre-built workflows users can import)
-- [ ] Run analytics (duration, success rate, cost tracking per step)
+- [ ] Run analytics (duration, success rate, cost tracking per step/agent)
 - [ ] Bulk operations (run workflow on multiple content nodes)
+- [ ] Approval notification system (backoffice alerts, optional email)
+- [ ] Declarative workflow import/export (MAF YAML/JSON format)
 
 ---
 
@@ -1479,3 +2317,7 @@ Migration prefix: `UmbracoAIAgent_` (shared with existing agent migrations).
 5. **Agent tool calls within workflows** — When an agent step calls tools (MCP, frontend), should those tool calls be visible in the workflow monitor? Or should each agent step be treated as a black box?
 
 6. **Content locking** — When a workflow is writing to a content node, should we lock the node to prevent concurrent edits? Umbraco doesn't have native content locking, so this would need a custom implementation.
+
+7. **Handoff interactive mode and AG-UI** — The Handoff pattern supports multi-turn conversations where the user sends follow-up messages. How should this integrate with the AG-UI run protocol? Should it be a long-lived SSE connection with bidirectional message flow, or separate run-per-turn?
+
+8. **Magentic manager cost** — The Magentic pattern calls the manager LLM at every iteration for progress evaluation. For a 10-iteration workflow, that's 10+ manager calls plus specialist calls. Should we show estimated cost before starting? Allow budget limits?

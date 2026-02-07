@@ -1,4 +1,4 @@
-# Agent Workflows Design
+# Umbraco.AI.Agent.Automate — Design
 
 > **Status:** Draft
 > **Date:** 2026-02-07
@@ -8,21 +8,22 @@
 
 1. [Overview](#overview)
 2. [Product Positioning](#product-positioning)
-3. [Core Concepts](#core-concepts)
-4. [Domain Model](#domain-model)
-5. [Backend Architecture](#backend-architecture)
-6. [Umbraco Integration — Inputs & Outputs](#umbraco-integration--inputs--outputs)
-7. [Frontend UI](#frontend-ui)
-8. [AG-UI Streaming & Real-Time Feedback](#ag-ui-streaming--real-time-feedback)
-9. [Management API](#management-api)
-10. [Database Schema](#database-schema)
-11. [Implementation Phases](#implementation-phases)
+3. [Project Structure](#project-structure)
+4. [Core Concepts](#core-concepts)
+5. [Domain Model](#domain-model)
+6. [Backend Architecture](#backend-architecture)
+7. [Umbraco Integration — Inputs & Outputs](#umbraco-integration--inputs--outputs)
+8. [Frontend UI](#frontend-ui)
+9. [AG-UI Streaming & Real-Time Feedback](#ag-ui-streaming--real-time-feedback)
+10. [Management API](#management-api)
+11. [Database Schema](#database-schema)
+12. [Implementation Phases](#implementation-phases)
 
 ---
 
 ## Overview
 
-Agent Workflows extends `Umbraco.AI.Agent` with orchestrated multi-step AI processes built on the [Microsoft Agent Framework (MAF) workflow system](https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/overview). Where a single agent handles one conversational task, a workflow chains multiple agents (and deterministic functions) into a graph that processes Umbraco content through defined stages — review, translate, enrich, publish — with human approval gates along the way.
+**Umbraco.AI.Agent.Automate** is a separate add-on package that extends `Umbraco.AI.Agent` with orchestrated multi-step AI workflows built on the [Microsoft Agent Framework (MAF) workflow system](https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/overview). Where a single agent handles one conversational task, a workflow chains multiple agents (and deterministic functions) into a graph that processes Umbraco content through defined stages — review, translate, enrich, publish — with human approval gates along the way.
 
 ### Goals
 
@@ -42,16 +43,155 @@ Agent Workflows extends `Umbraco.AI.Agent` with orchestrated multi-step AI proce
 
 ## Product Positioning
 
-Workflows are a **feature within `Umbraco.AI.Agent`**, not a new standalone product. The rationale:
+`Umbraco.AI.Agent.Automate` is a **separate add-on package** that depends on `Umbraco.AI.Agent`, following the same pattern as `Umbraco.AI.Agent.Copilot`. It is not part of Agent core.
+
+### Why Separate
 
 | Consideration | Decision |
 |---|---|
-| Dependency | Workflows compose *agents* — they can't exist without them |
-| Domain overlap | Workflows reuse agent scopes, contexts, profiles, and the AG-UI streaming infrastructure |
-| Frontend | The workflow editor lives alongside the agent editor in the same backoffice section |
-| Packaging | Ships as part of `Umbraco.AI.Agent` — no extra NuGet install needed |
+| **Complexity** | Workflow orchestration, visual editors, and execution engines are substantial — keeping them out of Agent core keeps the core package focused on agent definitions and single-agent chat |
+| **Optional install** | Users who only need single-agent chat (via Copilot) shouldn't carry the weight of workflow infrastructure |
+| **Independent release cadence** | Workflows can iterate independently; workflow features don't gate Agent releases |
+| **Database footprint** | Own migration prefix (`UmbracoAIAgentAutomate_`) — users who don't install Automate get no extra tables |
+| **MAF dependency** | The `Microsoft.Agents.AI.Workflows` NuGet dependency is only pulled in by Automate, not Agent core |
 
-The workflow system adds new domain entities (`AIWorkflow`, `AIWorkflowStep`, `AIWorkflowEdge`, `AIWorkflowRun`) and a new scope (`workflow`) to the existing agent add-on.
+### Dependency Chain
+
+```
+Umbraco.AI (Core)
+    ├── Umbraco.AI.OpenAI (Provider)
+    ├── Umbraco.AI.Anthropic (Provider)
+    ├── Umbraco.AI.Amazon (Provider)
+    ├── Umbraco.AI.Google (Provider)
+    ├── Umbraco.AI.MicrosoftFoundry (Provider)
+    ├── Umbraco.AI.Prompt (Add-on)
+    └── Umbraco.AI.Agent (Add-on)
+        ├── Umbraco.AI.Agent.Copilot (Chat UI — frontend-only)
+        └── Umbraco.AI.Agent.Automate (Workflows — full-stack)  ◀── NEW
+```
+
+Automate depends on Agent.Core for:
+- `AIAgent` entity — workflows compose agents by reference
+- `IAIAgentService` — resolving agent definitions at runtime
+- `IAIAgentFactory` / `ScopedAIAgent` — creating MAF agents for workflow steps
+- `AGUIEventEmitter` / AG-UI event types — streaming workflow progress
+- Agent scopes — registering `workflow` as a new scope
+
+---
+
+## Project Structure
+
+Follows the standard full-stack add-on pattern (same as Agent and Prompt):
+
+```
+Umbraco.AI.Agent.Automate/
+├── CLAUDE.md                                           # Product-specific guidance
+├── CHANGELOG.md                                        # Auto-generated
+├── Umbraco.AI.Agent.Automate.sln                       # Individual solution
+├── Directory.Build.props                                # .NET 10.0, packaging metadata
+├── Directory.Packages.props                             # Version range for Agent.Core dependency
+├── changelog.config.json                                # Commit scopes for changelog
+├── version.json                                         # Independent versioning
+├── src/
+│   ├── Umbraco.AI.Agent.Automate.Core/                 # Domain models, services, interfaces
+│   │   ├── Workflows/                                   # AIWorkflow, AIWorkflowStep, etc.
+│   │   ├── Runs/                                        # AIWorkflowRun, step executions
+│   │   ├── Engine/                                      # IAIWorkflowEngine, compilation
+│   │   └── Executors/                                   # AgentStepExecutor, ApprovalStepExecutor, etc.
+│   ├── Umbraco.AI.Agent.Automate.Web/                  # Management API controllers, models
+│   │   └── Api/Management/Workflow/                     # Workflow + run endpoints
+│   ├── Umbraco.AI.Agent.Automate.Web.StaticAssets/     # TypeScript/Lit frontend
+│   │   └── Client/                                      # npm project (@umbraco-ai/agent-automate)
+│   ├── Umbraco.AI.Agent.Automate.Persistence/          # EF Core DbContext, repositories
+│   ├── Umbraco.AI.Agent.Automate.Persistence.SqlServer/ # SQL Server migrations
+│   ├── Umbraco.AI.Agent.Automate.Persistence.Sqlite/   # SQLite migrations
+│   ├── Umbraco.AI.Agent.Automate.Startup/              # Umbraco Composer for DI
+│   └── Umbraco.AI.Agent.Automate/                      # Meta-package bundling all
+├── tests/
+│   ├── Umbraco.AI.Agent.Automate.Tests.Unit/
+│   ├── Umbraco.AI.Agent.Automate.Tests.Integration/
+│   └── Umbraco.AI.Agent.Automate.Tests.Common/
+└── assets/
+    └── logo-128.png
+```
+
+### Key Dependencies
+
+| Dependency | Source | Purpose |
+|---|---|---|
+| `Umbraco.AI.Core` | NuGet / project ref | Profiles, contexts, chat clients |
+| `Umbraco.AI.Agent.Core` | NuGet / project ref | Agent definitions, factory, AG-UI events |
+| `Microsoft.Agents.AI.Workflows` | NuGet | MAF WorkflowBuilder, executors, edges |
+| `Umbraco.Cms.Core` | NuGet | Content service, notifications |
+
+### Conditional References (.csproj pattern)
+
+```xml
+<PropertyGroup>
+    <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
+</PropertyGroup>
+
+<!-- Local development -->
+<ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
+    <ProjectReference Include="..\..\..\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
+    <ProjectReference Include="..\..\..\Umbraco.AI\src\Umbraco.AI.Core\Umbraco.AI.Core.csproj" />
+</ItemGroup>
+
+<!-- CI/Release -->
+<ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
+    <PackageReference Include="Umbraco.AI.Agent.Core" />
+    <PackageReference Include="Umbraco.AI.Core" />
+</ItemGroup>
+```
+
+### Frontend Package
+
+```json
+{
+    "name": "@umbraco-ai/agent-automate",
+    "peerDependencies": {
+        "@umbraco-ai/core": "^1.0.0",
+        "@umbraco-ai/agent": "^1.0.0",
+        "@umbraco-cms/backoffice": "^17.1.0"
+    },
+    "dependencies": {
+        "@ag-ui/client": "^0.0.42",
+        "rxjs": "^7.8.2"
+    }
+}
+```
+
+### Key Namespaces
+
+| Namespace | Purpose |
+|---|---|
+| `Umbraco.AI.Agent.Automate.Core.Workflows` | Workflow domain model and services |
+| `Umbraco.AI.Agent.Automate.Core.Runs` | Workflow run state and services |
+| `Umbraco.AI.Agent.Automate.Core.Engine` | Workflow compilation engine |
+| `Umbraco.AI.Agent.Automate.Core.Executors` | MAF executor implementations |
+| `Umbraco.AI.Agent.Automate.Persistence` | EF Core DbContext, entities, repositories |
+| `Umbraco.AI.Agent.Automate.Web.Api.Management` | API controllers and models |
+| `Umbraco.AI.Agent.Automate.Extensions` | DI extension methods |
+
+### Database Migration Prefix
+
+`UmbracoAIAgentAutomate_` — separate from Agent's `UmbracoAIAgent_` prefix.
+
+### Configuration Namespace
+
+```json
+{
+    "Umbraco": {
+        "AI": {
+            "Agent": {
+                "Automate": {
+                    // Workflow-specific configuration
+                }
+            }
+        }
+    }
+}
+```
 
 ---
 
@@ -1936,18 +2076,19 @@ Step node status indicators (all modes):
 
 ### Workflow Listing in Backoffice
 
-Workflows appear as a new section within the AI settings area:
+When `Umbraco.AI.Agent.Automate` is installed, a "Workflows" section appears alongside existing AI settings. The section is registered via the product's Umbraco package manifest (`umbraco-package.json`), following the same extension point pattern used by Agents and Prompts:
 
 ```
 Umbraco Backoffice → Settings → AI
-├── Connections
-├── Profiles
-├── Prompts
-├── Agents
-└── Workflows    ◀── New section
-    ├── Content Translation Pipeline
-    ├── SEO Review Workflow
-    └── Multi-Channel Content Distribution
+├── Connections                          (Umbraco.AI)
+├── Profiles                             (Umbraco.AI)
+├── Prompts                              (Umbraco.AI.Prompt)
+├── Agents                               (Umbraco.AI.Agent)
+└── Workflows                            (Umbraco.AI.Agent.Automate)  ◀── NEW
+    ├── Content Translation Pipeline     (Sequential)
+    ├── Multi-Perspective Review         (Concurrent)
+    ├── Customer Support Triage          (Handoff)
+    └── Deep Content Research            (Magentic)
 ```
 
 ### Content App Integration
@@ -2138,7 +2279,7 @@ data: {"type":"RUN_FINISHED","outcome":"success","timestamp":1738934510000}
 | GET | `/content/{contentId}/workflows` | Workflows available for this content type |
 | GET | `/content/{contentId}/workflow-runs` | Run history for this content node |
 
-All endpoints follow the existing `IdOrAlias` convention and share the `ai-management` Swagger group.
+All endpoints are under `/umbraco/ai/management/api/v1/` and follow the existing `IdOrAlias` convention. They share the `ai-management` Swagger group with Umbraco.AI and Umbraco.AI.Agent.
 
 ---
 
@@ -2148,7 +2289,7 @@ All endpoints follow the existing `IdOrAlias` convention and share the `ai-manag
 
 ```sql
 -- Workflow definitions
-CREATE TABLE UmbracoAIAgent_Workflow (
+CREATE TABLE UmbracoAIAgentAutomate_Workflow (
     Id              UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
     Alias           NVARCHAR(255)    NOT NULL UNIQUE,
     Name            NVARCHAR(255)    NOT NULL,
@@ -2168,9 +2309,9 @@ CREATE TABLE UmbracoAIAgent_Workflow (
 );
 
 -- Steps within a workflow (stored as JSON in the parent, or normalized)
-CREATE TABLE UmbracoAIAgent_WorkflowStep (
+CREATE TABLE UmbracoAIAgentAutomate_WorkflowStep (
     Id              UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgent_Workflow(Id) ON DELETE CASCADE,
+    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgentAutomate_Workflow(Id) ON DELETE CASCADE,
     Name            NVARCHAR(255)    NOT NULL,
     Type            INT              NOT NULL,  -- enum AIWorkflowStepType
     Configuration   NVARCHAR(MAX)    NOT NULL,  -- JSON
@@ -2179,20 +2320,20 @@ CREATE TABLE UmbracoAIAgent_WorkflowStep (
 );
 
 -- Edges connecting steps
-CREATE TABLE UmbracoAIAgent_WorkflowEdge (
+CREATE TABLE UmbracoAIAgentAutomate_WorkflowEdge (
     Id              UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgent_Workflow(Id) ON DELETE CASCADE,
-    SourceStepId    UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgent_WorkflowStep(Id),
-    TargetStepId    UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgent_WorkflowStep(Id),
+    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgentAutomate_Workflow(Id) ON DELETE CASCADE,
+    SourceStepId    UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgentAutomate_WorkflowStep(Id),
+    TargetStepId    UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgentAutomate_WorkflowStep(Id),
     Type            INT              NOT NULL,  -- enum AIWorkflowEdgeType
     Branch          NVARCHAR(255)    NULL,
     Label           NVARCHAR(255)    NULL
 );
 
 -- Workflow run execution records
-CREATE TABLE UmbracoAIAgent_WorkflowRun (
+CREATE TABLE UmbracoAIAgentAutomate_WorkflowRun (
     Id              UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgent_Workflow(Id),
+    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgentAutomate_Workflow(Id),
     TriggerType     NVARCHAR(50)     NOT NULL,
     TriggerData     NVARCHAR(MAX)    NULL,      -- JSON
     Status          INT              NOT NULL,   -- enum AIWorkflowRunStatus
@@ -2205,9 +2346,9 @@ CREATE TABLE UmbracoAIAgent_WorkflowRun (
 );
 
 -- Per-step execution log within a run
-CREATE TABLE UmbracoAIAgent_WorkflowStepExecution (
+CREATE TABLE UmbracoAIAgentAutomate_WorkflowStepExecution (
     Id              UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-    RunId           UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgent_WorkflowRun(Id) ON DELETE CASCADE,
+    RunId           UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgentAutomate_WorkflowRun(Id) ON DELETE CASCADE,
     StepId          UNIQUEIDENTIFIER NOT NULL,
     StepName        NVARCHAR(255)    NOT NULL,
     Status          INT              NOT NULL,   -- enum AIWorkflowStepExecutionStatus
@@ -2218,16 +2359,16 @@ CREATE TABLE UmbracoAIAgent_WorkflowStepExecution (
 );
 
 -- Workflow triggers (which content types/events trigger which workflows)
-CREATE TABLE UmbracoAIAgent_WorkflowTrigger (
+CREATE TABLE UmbracoAIAgentAutomate_WorkflowTrigger (
     Id              UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgent_Workflow(Id) ON DELETE CASCADE,
+    WorkflowId      UNIQUEIDENTIFIER NOT NULL REFERENCES UmbracoAIAgentAutomate_Workflow(Id) ON DELETE CASCADE,
     TriggerType     NVARCHAR(50)     NOT NULL,  -- "contentPublish", "contentSave", etc.
     ContentTypeAlias NVARCHAR(255)   NULL,       -- NULL = any content type
     IsEnabled       BIT              NOT NULL DEFAULT 1
 );
 ```
 
-Migration prefix: `UmbracoAIAgent_` (shared with existing agent migrations).
+Migration prefix: `UmbracoAIAgentAutomate_` (separate from Agent's `UmbracoAIAgent_` prefix).
 
 ---
 

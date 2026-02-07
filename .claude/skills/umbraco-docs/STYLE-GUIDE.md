@@ -2,6 +2,30 @@
 
 This is a condensed reference of the official Umbraco documentation writing conventions, adapted for the Umbraco.AI repository. Based on the [Umbraco Style Guide](https://docs.umbraco.com/contributing/documentation/style-guide).
 
+## Audience and Depth
+
+**Who reads this documentation**: Umbraco developers adding AI capabilities to their CMS sites. They are comfortable with Umbraco, .NET, and web development, but may be new to AI services and this package.
+
+**What to document**: Public APIs, NuGet/npm packages, configuration, backoffice UI, extension points, and Management API endpoints.
+
+**What NOT to document**: Internal services, repositories, database schemas, EF Core migrations, or private implementation details. These are not part of the user contract and change without notice.
+
+**How deep to go**: Show the reader how to achieve a task with a minimal working example. Mention that advanced options exist and link to reference material, but do not front-load complexity. A reader scanning the page should find a working code sample within the first scroll.
+
+```markdown
+<!-- TOO DEEP: explains internals the user does not need -->
+The `AIProfileService` uses the `IAIProfileRepository` internally to persist
+profiles to the database via EF Core. The repository calls `DbSet<AIProfile>`
+on the `AIDbContext`, which supports both SQL Server and SQLite...
+
+<!-- RIGHT DEPTH: shows what the user does -->
+To retrieve a profile by ID, inject `IAIProfileService`:
+
+```csharp
+var profile = await profileService.GetProfileAsync(profileId, cancellationToken);
+```
+```
+
 ## Voice and Tone
 
 ### Second Person
@@ -264,69 +288,29 @@ getting-started/
 
 ## Umbraco.AI-Specific Conventions
 
-### Documenting APIs
+### Depth Guidelines by Content Type
 
-When documenting Management API endpoints:
-
-```markdown
-### Get all connections
-
-`GET /umbraco/management/api/v1/ai/connection`
-
-Returns a list of all configured AI connections.
-
-**Response** (200):
-
-```json
-{
-  "items": [
-    {
-      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      "name": "My OpenAI Connection",
-      "providerAlias": "openai"
-    }
-  ]
-}
-```
-```
-
-### Documenting .NET Services
-
-Follow the repository's naming conventions when showing service method signatures:
+**Installation / Getting Started**: Show the NuGet install command and the one-line DI registration. Link to configuration for next steps.
 
 ```markdown
-The `IAIProfileService` provides methods for managing AI profiles:
+Install the package:
+
+```bash
+dotnet add package Umbraco.AI.OpenAI
+```
+
+Register the provider in `Program.cs`:
 
 ```csharp
-Task<AIProfile?> GetProfileAsync(Guid id, CancellationToken cancellationToken);
-Task<AIProfile> CreateProfileAsync(AIProfile profile, CancellationToken cancellationToken);
-Task DeleteProfileAsync(Guid id, CancellationToken cancellationToken);
+builder.Services.AddUmbracoAI()
+    .AddOpenAI();
 ```
 ```
 
-### Documenting Lit Components
-
-When documenting frontend components, show the custom element usage:
+**Configuration**: Lead with `appsettings.json` (most common path). Mention code-based configuration exists and link to it, but do not show both inline unless the article is specifically about configuration.
 
 ```markdown
-The `umb-ai-connection-picker` element provides a dropdown for selecting AI connections:
-
-```html
-<umb-ai-connection-picker
-  .value=${this._selectedConnectionId}
-  @change=${this._onConnectionChange}>
-</umb-ai-connection-picker>
-```
-```
-
-### Documenting Configuration
-
-Show both `appsettings.json` and C# configuration approaches:
-
-```markdown
-## Configuration
-
-Add the AI settings to `appsettings.json`:
+Add the connection settings to `appsettings.json`:
 
 ```json
 {
@@ -338,12 +322,33 @@ Add the AI settings to `appsettings.json`:
 }
 ```
 
-Or configure in code:
+You can also [configure options in code](./advanced-configuration.md).
+```
 
-```csharp
-builder.Services.AddUmbracoAI(options =>
-{
-    options.DefaultCapability = AICapability.Chat;
-});
+**Management API endpoints**: Show the HTTP verb, path, and one example. Do not document every query parameter — link to the OpenAPI spec for full details.
+
+```markdown
+### Get all connections
+
+`GET /umbraco/management/api/v1/ai/connection`
+
+Returns all configured AI connections.
 ```
+
+**Backoffice UI**: Describe the navigation path and what the user sees. Use screenshots sparingly — one per major workflow step is enough.
+
+```markdown
+1. Open the **Settings** section in the Umbraco backoffice.
+2. Select **AI Connections** from the sidebar.
+3. Click **Create** to add a new connection.
 ```
+
+### What to Omit
+
+Do not document:
+
+- Internal service implementations or repository patterns
+- Database schema, migrations, or EF Core details
+- Private or internal classes
+- DI registration internals beyond the public extension methods
+- Build tooling or CI pipeline configuration (this is contributor documentation, not user documentation)

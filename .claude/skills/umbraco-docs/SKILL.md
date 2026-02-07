@@ -1,13 +1,25 @@
 ---
 name: umbraco-docs
-description: Writes and reviews documentation for Umbraco.AI following the official Umbraco documentation style guide and Vale linting rules. Covers .NET, TypeScript, Lit, Umbraco CMS, EF Core, and OpenAPI topics. Use when writing, reviewing, or improving documentation for any product in the repository.
+description: Writes and reviews user-facing documentation for Umbraco.AI following the official Umbraco documentation style guide and Vale linting rules. Focuses on public APIs, extension points, and getting-started guides. Use when writing, reviewing, or improving documentation for any product in the repository.
 argument-hint: [write|review|lint] <topic or file path>
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Umbraco.AI Documentation Subagent
 
-Write and review documentation for Umbraco.AI products following the official Umbraco documentation style guide and Vale linting rules.
+Write and review user-facing documentation for Umbraco.AI products following the official Umbraco documentation style guide and Vale linting rules.
+
+## Documentation Philosophy
+
+**Audience**: Umbraco developers integrating AI into their sites. They know Umbraco CMS but may be new to AI concepts and this package ecosystem.
+
+**Core principles**:
+
+1. **Public APIs only** — Document what users consume: NuGet/npm packages, public interfaces, extension methods, configuration options, backoffice UI, and Management API endpoints. Never document internal services, repositories, or implementation details.
+2. **Concise over comprehensive** — Show how to use something with a minimal working example. Do not enumerate every overload, every property, or every edge case. A reader should be able to scan a page and start working within minutes.
+3. **Progressive disclosure** — Start with the common case. Mention advanced options exist and link to them, but do not front-load complexity. A getting-started guide should not read like a reference manual.
+4. **One task per page** — Each article answers one question: "How do I configure a connection?", "How do I create a custom provider?". If an article tries to answer multiple questions, split it.
+5. **Code speaks louder than prose** — A 5-line code sample with a one-sentence explanation beats three paragraphs of description. When in doubt, show the code.
 
 ## Command: $ARGUMENTS
 
@@ -42,25 +54,36 @@ Determine what the user needs:
 
 ### Step 2: Gather Codebase Context
 
-Before writing documentation, always read the relevant source code:
+Before writing documentation, read the **public surface area** of the relevant code. Focus on what users install, configure, and call — not internal implementation.
+
+**What to read (public API)**:
 
 ```
-# For .NET backend topics
-Glob: src/**/I*.cs (interfaces)
-Glob: src/**/*Service.cs (services)
-Glob: src/**/*Controller.cs (API controllers)
+# Public extension methods (the main entry point for users)
+Glob: src/**/*Extensions.cs
+Glob: src/**/*BuilderExtensions.cs
 
-# For TypeScript/Lit frontend topics
-Glob: Client/src/**/*.ts
-Glob: Client/src/**/*.element.ts (Lit components)
+# Public interfaces users interact with
+Glob: src/**/I*Service.cs (only public ones in .Core projects)
+Glob: src/**/I*Provider.cs
 
-# For EF Core / database topics
-Glob: src/**/*DbContext.cs
-Glob: src/**/Migrations/*.cs
+# Configuration / options classes
+Glob: src/**/*Options.cs
+Glob: src/**/*Settings.cs
 
-# For OpenAPI topics
-Glob: Client/src/api/**/*.ts (generated clients)
+# Management API controllers (REST endpoints users call)
+Glob: src/**/*Controller.cs
+
+# Frontend elements users can place in the backoffice
+Glob: Client/src/**/*.element.ts
 ```
+
+**What NOT to read or document**:
+
+- Internal repositories (`I*Repository.cs`) — implementation detail
+- DbContext / migrations — users do not interact with these
+- Internal services that are not in the DI container publicly
+- Private/internal helper classes
 
 Read the product-specific `CLAUDE.md` for architectural context:
 
@@ -123,39 +146,32 @@ Systematically check each of the 12 rules documented in [VALE-RULES.md](VALE-RUL
 
 ### Step 5: Multi-Discipline Awareness
 
-This repository spans multiple technology domains. Adapt documentation style to the audience:
+This repository spans multiple technology domains. Always write from the **user's perspective** — what they install, configure, and call.
 
 #### .NET / C# Documentation
 
 - Use `csharp` as the fenced code block language
-- Reference namespaces, interfaces, and dependency injection patterns
-- Follow the repository's `[Action][Entity]Async` naming convention in examples
-- Mention `CancellationToken` parameters in async method signatures
+- Focus on: NuGet package installation, `AddUmbraco*()` extension methods, configuration in `appsettings.json`, and public service interfaces
+- Show the minimal code to achieve a task — do not show every overload
+- Do not document internal DI registrations, repositories, or persistence details
 
 #### TypeScript / Lit Frontend Documentation
 
-- Use `typescript` or `ts` as the fenced code block language
-- Reference Lit component lifecycle (`connectedCallback`, `render`, `updated`)
-- Document custom element tag names and their properties
-- Reference the Umbraco UI Library (UUI) components where relevant
+- Use `typescript` as the fenced code block language
+- Focus on: npm package installation, custom element tag names, and key properties/events
+- Do not document internal component architecture or Lit lifecycle internals
 
-#### EF Core / Database Documentation
+#### Management API Documentation
 
-- Document migration commands and naming prefixes (`UmbracoAI_`, `UmbracoAIPrompt_`, `UmbracoAIAgent_`)
-- Mention both SQL Server and SQLite support
-- Use `sql` for raw SQL examples, `csharp` for EF Core code
-
-#### OpenAPI / API Documentation
-
-- Document Management API endpoints with HTTP verbs and paths
-- Reference the generated TypeScript clients from `@hey-api/openapi-ts`
-- Include request/response examples in JSON
+- Document endpoints with HTTP verb, path, and a single request/response example
+- Reference the generated TypeScript client methods when relevant
+- Do not document every query parameter variation — show the common case
 
 #### Umbraco CMS Integration Documentation
 
 - Use correct Umbraco terminology (see UmbracoTerms rule)
-- Reference Composers, Components, and the Umbraco DI pipeline
-- Document backoffice UI integration points
+- Focus on: Composer setup, backoffice navigation, and configuration sections
+- Do not explain Umbraco internals the reader already knows (they are Umbraco developers)
 
 ## Reference Documentation
 
@@ -222,12 +238,27 @@ N errors, M warnings
 /umbraco-docs write how-to-create-a-custom-provider
 ```
 
+## Depth Calibration
+
+Use this guide to decide how much detail to include:
+
+| Content Type | Right Depth | Too Deep |
+|---|---|---|
+| Getting started | Install, configure, first working example | Every configuration option explained |
+| How-to guide | Steps to complete one task, with code | Multiple approaches compared in detail |
+| API reference | Method signature, one-line description, example | Full parameter docs for every overload |
+| Configuration | Common options with defaults, example JSON | Every option with edge cases |
+| Concepts | What it is, why it matters, how it connects | Internal architecture and design decisions |
+
+**Rule of thumb**: If a section makes the reader scroll more than twice without learning something actionable, it is too long. Move details to a linked reference page or remove them.
+
 ## Tips
 
 - Always read the source code before writing about it; do not guess at API shapes
-- When documenting interfaces, read the implementation too for behavioral details
+- Focus on public interfaces — if a class is `internal`, it does not belong in user documentation
 - Cross-reference existing documentation in the repo to maintain consistency
-- For code samples, prefer examples that compile and work against the actual codebase
-- Keep paragraphs short (3-4 sentences maximum)
-- Use tables for reference material (configuration options, parameters, etc.)
+- For code samples, prefer the shortest example that compiles and demonstrates the feature
+- Keep paragraphs to 2-3 sentences maximum
+- Use tables for reference material (configuration options, parameters)
 - Use ordered lists only for sequential steps; unordered lists for everything else
+- When a topic has a simple path and an advanced path, document the simple path inline and link to the advanced path

@@ -795,6 +795,33 @@ export type CreateConnectionResponses = {
     201: unknown;
 };
 
+export type AliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/connections/{alias}/exists';
+};
+
+export type AliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type AliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type AliasExistsResponse = AliasExistsResponses[keyof AliasExistsResponses];
+
 export type DeleteConnectionData = {
     body?: never;
     path: {
@@ -1302,6 +1329,33 @@ export type CreateProfileResponses = {
      */
     201: unknown;
 };
+
+export type AliasExists2Data = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/profiles/{alias}/exists';
+};
+
+export type AliasExists2Errors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type AliasExists2Responses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type AliasExists2Response = AliasExists2Responses[keyof AliasExists2Responses];
 
 export type DeleteProfileData = {
     body?: never;

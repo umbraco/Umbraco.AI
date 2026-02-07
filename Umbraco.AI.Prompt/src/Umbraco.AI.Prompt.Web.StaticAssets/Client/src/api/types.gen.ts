@@ -198,6 +198,33 @@ export type CreatePromptResponses = {
 
 export type CreatePromptResponse = CreatePromptResponses[keyof CreatePromptResponses];
 
+export type AliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/prompts/{alias}/exists';
+};
+
+export type AliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type AliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type AliasExistsResponse = AliasExistsResponses[keyof AliasExistsResponses];
+
 export type DeletePromptData = {
     body?: never;
     path: {

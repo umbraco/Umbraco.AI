@@ -1,10 +1,11 @@
-import { css, html, customElement, state, when } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, when, nothing } from "@umbraco-cms/backoffice/external/lit";
 import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { umbBindToValidation, UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "./connection-workspace.context-token.js";
 import { UAI_CONNECTION_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UaiConnectionDetailModel } from "../../types.js";
@@ -15,7 +16,7 @@ import { ConnectionsService } from "../../../api/sdk.gen.js";
 import "../../../core/components/status-selector/status-selector.element.js";
 
 @customElement("uai-connection-workspace-editor")
-export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
+export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(UmbLitElement) {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
     #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
@@ -34,8 +35,23 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
     @state()
     private _testButtonColor?: "default" | "positive" | "warning" | "danger" = "default";
 
+    @state()
+    private _aliasCheckInProgress = false;
+
+    @state()
+    private _aliasExists = false;
+
+    private _aliasCheckTimeout?: number;
+
     constructor() {
         super();
+
+        // Add custom validator for alias uniqueness
+        this.addValidator(
+            "customError",
+            () => this.localize.term("uaiValidation_aliasExists"),
+            () => this._aliasExists,
+        );
 
         this.consumeContext(UAI_CONNECTION_WORKSPACE_CONTEXT, (context) => {
             if (!context) return;
@@ -56,6 +72,41 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         this.consumeContext(UMB_NOTIFICATION_CONTEXT, (context) => {
             this.#notificationContext = context;
         });
+    }
+
+    protected override firstUpdated() {
+        super.firstUpdated();
+        // Register form control elements to enable HTML5 validation
+        const nameInput = this.shadowRoot?.querySelector("#name");
+        if (nameInput) this.addFormControlElement(nameInput);
+    }
+
+    async #checkAliasUniqueness(alias: string): Promise<void> {
+        if (!alias) {
+            this._aliasExists = false;
+            return;
+        }
+
+        this._aliasCheckInProgress = true;
+        try {
+            const { data } = await tryExecute(
+                this,
+                ConnectionsService.aliasExists({
+                    path: { alias },
+                    query: {
+                        excludeId:
+                            this._model?.unique !== UAI_EMPTY_GUID ? this._model?.unique : undefined,
+                    },
+                }),
+            );
+
+            this._aliasExists = data === true;
+
+            // Trigger validation re-check
+            this.checkValidity();
+        } finally {
+            this._aliasCheckInProgress = false;
+        }
     }
 
     #onNameChange(event: UUIInputEvent) {
@@ -79,9 +130,22 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
     #onAliasChange(event: UUIInputEvent) {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
+        const alias = target.value.toString();
+
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias"),
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias }, "alias"),
         );
+
+        // Reset uniqueness flag when user changes value
+        this._aliasExists = false;
+
+        // Debounced uniqueness check
+        if (this._aliasCheckTimeout) {
+            clearTimeout(this._aliasCheckTimeout);
+        }
+        this._aliasCheckTimeout = window.setTimeout(() => {
+            this.#checkAliasUniqueness(alias);
+        }, 500);
     }
 
     #onToggleAliasLock() {
@@ -154,6 +218,10 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                         label="Name"
                         placeholder="Enter connection name"
                         required
+                        maxlength="255"
+                        .requiredMessage=${this.localize.term("uaiValidation_required")}
+                        .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 255)}
+                        ${umbBindToValidation(this, "$.name", this._model.name)}
                     >
                         <uui-input-lock
                             slot="append"
@@ -167,7 +235,18 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                             ?readonly=${this._aliasLocked || !this._isNew}
                             @input=${this.#onAliasChange}
                             @lock-change=${this.#onToggleAliasLock}
-                        ></uui-input-lock>
+                            required
+                            maxlength="100"
+                            pattern="^[a-z0-9-]+$"
+                            .requiredMessage=${this.localize.term("uaiValidation_required")}
+                            .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
+                            .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
+                            ${umbBindToValidation(this, "$.alias", this._model.alias)}
+                        >
+                            ${this._aliasCheckInProgress
+                                ? html`<uui-loader slot="append"></uui-loader>`
+                                : nothing}
+                        </uui-input-lock>
                     </uui-input>
 
                     <uai-status-selector

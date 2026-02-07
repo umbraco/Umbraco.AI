@@ -170,6 +170,18 @@ export class UaiConnectionWorkspaceContext
         const model = this.#model.getValue();
         if (!model) return;
 
+        // Validate before submit
+        const validationContext = this.validation?.getContext();
+        if (validationContext) {
+            try {
+                await validationContext.validate();
+            } catch {
+                // Validation failed - focus first invalid element
+                validationContext.focusFirstInvalidElement();
+                return;
+            }
+        }
+
         // Mute command store during submit
         this.#commandStore.mute();
 

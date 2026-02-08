@@ -20,6 +20,7 @@ These were established through architectural discussion and should be treated as
 - **Manifest split**: The current `ManifestUaiAgentTool` (which uses `api` presence as a discriminator) splits into `ManifestUaiAgentToolRenderer` (shared rendering) and `ManifestUaiAgentFrontendTool` (copilot execution).
 - **The agent package stays clean**. Shared chat UI goes into a new `@umbraco-ai/agent-ui`, not into `@umbraco-ai/agent`. The agent package is about agent infrastructure, not chat rendering.
 - **Embed (visitor-facing) is a future concern**. It doesn't use the backoffice UI stack at all. This split doesn't need to account for it -- it's purely additive later.
+- **All packages are pre-stable (alpha)**. There is no backward compatibility contract. No deprecation periods, no bridge code, no legacy observers. Clean breaks only.
 
 ---
 
@@ -57,13 +58,15 @@ Umbraco.AI.Agent.Chat       (NEW - chat scope + static assets)
 
 ---
 
-## Phase 1: Manifest Type Split
+## Phase 1: Extract, Split, Restructure
 
-**Goal**: Define the two new extension types without changing runtime behavior yet. The old `ManifestUaiAgentTool` type remains temporarily as a bridge.
+Since all packages are alpha, phases 1-3 from the original plan collapse into a single pass. No deprecation bridge, no temporary coexistence of old and new types.
 
-### New types
+**Goal**: Create `@umbraco-ai/agent-ui`, define the new manifest types there, move shared code from copilot, update copilot to be surface-only, delete the old `ManifestUaiAgentTool`.
 
-Create in `@umbraco-ai/agent-ui` (initially can be authored in copilot, moved in phase 2):
+### 1a: New manifest types
+
+Defined in `@umbraco-ai/agent-ui`:
 
 ```typescript
 // ManifestUaiAgentToolRenderer -- shared, for rendering tool status/results in any chat surface
@@ -77,7 +80,11 @@ interface ManifestUaiAgentToolRenderer extends ManifestElement<UaiAgentToolEleme
         approval?: UaiAgentToolApprovalConfig;
     };
 }
+```
 
+Defined in `@umbraco-ai/copilot`:
+
+```typescript
 // ManifestUaiAgentFrontendTool -- copilot-only, for browser-executable tools
 interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolApi> {
     type: "uaiAgentFrontendTool";
@@ -89,7 +96,7 @@ interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolApi> {
 }
 ```
 
-### Shared types (stay as-is, move to agent-ui)
+Shared types (in `@umbraco-ai/agent-ui`):
 
 ```typescript
 UaiAgentToolStatus        // "pending" | "streaming" | "awaiting_approval" | ...
@@ -99,7 +106,9 @@ UaiAgentToolApprovalConfig // true | { elementAlias?, config? }
 UaiAgentToolApi            // { execute(args): Promise<unknown> } -- type stays shared, usage is copilot-only
 ```
 
-### Migration of existing tool registrations
+The old `ManifestUaiAgentTool` type and its `"uaiAgentTool"` extension type registration are deleted entirely. No bridge, no fallback.
+
+### 1b: Tool registration migration
 
 Each existing `ManifestUaiAgentTool` registration becomes one or two new registrations:
 
@@ -108,45 +117,13 @@ Each existing `ManifestUaiAgentTool` registration becomes one or two new registr
 | `getCurrentTime` | Yes | No | 1x `uaiAgentFrontendTool` |
 | `getPageInfo` | Yes | No | 1x `uaiAgentFrontendTool` |
 | `showWeather` | Yes | Yes | 1x `uaiAgentFrontendTool` + 1x `uaiAgentToolRenderer` |
-| `confirmAction` | Yes | No | 1x `uaiAgentFrontendTool` (approval config moves to renderer) |
-| `set_property_value` | Yes | No | 1x `uaiAgentFrontendTool` + 1x `uaiAgentToolRenderer` (for approval) |
+| `confirmAction` | Yes | No | 1x `uaiAgentFrontendTool` + 1x `uaiAgentToolRenderer` (for approval config) |
+| `set_property_value` | Yes | No | 1x `uaiAgentFrontendTool` + 1x `uaiAgentToolRenderer` (for approval config) |
 | `search_umbraco` | No | Yes | 1x `uaiAgentToolRenderer` |
 
-**Rule**: If a tool has approval config, it needs a `uaiAgentToolRenderer` registration (approval lives on the renderer, not the frontend tool). If a tool is execute-only with no custom UI and no approval, it only needs a `uaiAgentFrontendTool`.
+**Rule**: If a tool has approval config or custom UI, it needs a `uaiAgentToolRenderer`. If a tool executes in the browser, it needs a `uaiAgentFrontendTool`. A tool may need both, one, or (for backend tools with no custom UI) neither.
 
-### Deprecation of `ManifestUaiAgentTool`
-
-Keep the old type temporarily with a `@deprecated` JSDoc tag. The `ToolManager` (before split) can handle both old and new types during the transition:
-
-```typescript
-// In ToolRendererManager (shared):
-// Observe both "uaiAgentToolRenderer" AND legacy "uaiAgentTool" for element resolution
-
-// In FrontendToolManager (copilot):
-// Observe both "uaiAgentFrontendTool" AND legacy "uaiAgentTool" (with api) for tool extraction
-```
-
-Remove the old type after all registrations are migrated.
-
-### Files to create/modify
-
-| Action | File | Notes |
-|---|---|---|
-| Create | `copilot/tools/uai-agent-tool-renderer.extension.ts` | `ManifestUaiAgentToolRenderer` type + global declaration |
-| Create | `copilot/tools/uai-agent-frontend-tool.extension.ts` | `ManifestUaiAgentFrontendTool` type + global declaration |
-| Modify | `copilot/tools/uai-agent-tool.extension.ts` | Add `@deprecated` to `ManifestUaiAgentTool` |
-| Modify | `copilot/tools/examples/manifests.ts` | Split each tool into renderer + frontend-tool registrations |
-| Modify | `copilot/tools/entity/manifests.ts` | Split `set_property_value` |
-| Modify | `copilot/tools/umbraco/manifests.ts` | Change to `uaiAgentToolRenderer` type |
-| Modify | `copilot/tools/exports.ts` | Export new types |
-
----
-
-## Phase 2: Create `@umbraco-ai/agent-ui` Package
-
-**Goal**: Establish the shared chat UI package and move components + services from copilot.
-
-### 2a: Scaffold the package
+### 1c: Scaffold `@umbraco-ai/agent-ui`
 
 Create the new npm workspace and NuGet project following existing patterns.
 
@@ -203,19 +180,17 @@ Umbraco.AI.Agent.UI/
 
 **Build order**: core -> prompt -> agent -> **agent-ui** -> copilot
 
-### 2b: Move shared components
-
-Move from `@umbraco-ai/agent-copilot` `copilot/` to `@umbraco-ai/agent-ui` `chat/`:
+### 1d: Move shared components from copilot to agent-ui
 
 #### Components
 
 | Source (copilot) | Destination (agent-ui) | New tag name | Notes |
 |---|---|---|---|
-| `components/chat/chat.element.ts` | `chat/components/chat.element.ts` | `<uai-chat>` | Drop copilot prefix. Remove `UAI_COPILOT_CONTEXT` dependency -- accept props/context interface instead |
+| `components/chat/chat.element.ts` | `chat/components/chat.element.ts` | `<uai-chat>` | Remove `UAI_COPILOT_CONTEXT` dependency -- consume `UAI_CHAT_CONTEXT` interface instead |
 | `components/chat/message.element.ts` | `chat/components/message.element.ts` | `<uai-chat-message>` | Pure rendering, no context dependency |
 | `components/chat/input.element.ts` | `chat/components/input.element.ts` | `<uai-chat-input>` | Remove agent selector coupling -- accept agents as prop |
 | `components/chat/agent-status.element.ts` | `chat/components/agent-status.element.ts` | `<uai-agent-status>` | Already context-free |
-| `components/chat/tool-renderer.element.ts` | `chat/components/tool-renderer.element.ts` | `<uai-tool-renderer>` | Change to use `ToolRendererManager` instead of `UaiToolManager` |
+| `components/chat/tool-renderer.element.ts` | `chat/components/tool-renderer.element.ts` | `<uai-tool-renderer>` | Use `UaiToolRendererManager` instead of `UaiToolManager` |
 | `components/chat/approval-base.element.ts` | `chat/components/approval-base.element.ts` | `<uai-approval-base>` | Already generic |
 | `components/chat/hitl-approval.element.ts` | `chat/components/hitl-approval.element.ts` | `<uai-hitl-approval>` | Drop copilot prefix |
 | `components/chat/message-copy-button.element.ts` | `chat/components/message-copy-button.element.ts` | `<uai-message-copy-button>` | Already generic |
@@ -226,22 +201,21 @@ Move from `@umbraco-ai/agent-copilot` `copilot/` to `@umbraco-ai/agent-ui` `chat
 
 | Source (copilot) | Destination (agent-ui) | New name | Notes |
 |---|---|---|---|
-| `services/tool.manager.ts` | `chat/services/tool-renderer.manager.ts` | `UaiToolRendererManager` | **Only the rendering half**: manifest lookup, element resolution, element caching. Remove `frontendTools$`, `getApi()`, `isFrontendTool()`. Observe `"uaiAgentToolRenderer"` (+ legacy `"uaiAgentTool"` during transition) |
-| `services/copilot-run.controller.ts` | `chat/services/run.controller.ts` | `UaiRunController` | Extract base class or refactor to accept tool manager and tool executor as constructor params. The copilot version passes `FrontendToolManager` + `FrontendToolExecutor`. The chat version passes only `ToolRendererManager` (no frontend tools). See details below. |
-| `hitl.context.ts` | `chat/services/hitl.context.ts` | `UaiHitlContext` | Move as-is. Used by both surfaces for HITL approval rendering. |
+| `services/tool.manager.ts` | `chat/services/tool-renderer.manager.ts` | `UaiToolRendererManager` | **Only the rendering half**: manifest lookup, element resolution, element caching. Remove `frontendTools$`, `getApi()`, `isFrontendTool()`. Observe `"uaiAgentToolRenderer"` only. |
+| `services/copilot-run.controller.ts` | `chat/services/run.controller.ts` | `UaiRunController` | Refactored to accept tool execution as optional injection (see 1e). |
+| `hitl.context.ts` | `chat/services/hitl.context.ts` | `UaiHitlContext` | Move as-is. Used by both surfaces. |
 | `interrupts/interrupt-handler.registry.ts` | `chat/services/interrupt-handler.registry.ts` | `UaiInterruptHandlerRegistry` | Already generic |
 | `interrupts/types.ts` | `chat/services/interrupt.types.ts` | (types) | Already generic |
 | `interrupts/handlers/hitl-interrupt.handler.ts` | `chat/services/handlers/hitl-interrupt.handler.ts` | `UaiHitlInterruptHandler` | Used by both surfaces |
 | `interrupts/handlers/default-interrupt.handler.ts` | `chat/services/handlers/default-interrupt.handler.ts` | `UaiDefaultInterruptHandler` | Used by both surfaces |
 
-**Note**: `UaiToolExecutionHandler` stays in copilot. It's the handler that invokes `UaiFrontendToolExecutor` for browser-side tool execution, which is copilot-only.
+**Note**: `UaiToolExecutionHandler` stays in copilot. It's the handler that invokes `UaiFrontendToolExecutor` for browser-side tool execution -- copilot-only.
 
 #### Types
 
 | Source (copilot) | Destination (agent-ui) | Notes |
 |---|---|---|
-| `tools/uai-agent-tool-renderer.extension.ts` | `chat/extensions/uai-agent-tool-renderer.extension.ts` | Created in phase 1 |
-| `tools/uai-agent-tool.extension.ts` (shared types only) | `chat/types/tool.types.ts` | `UaiAgentToolStatus`, `UaiAgentToolElementProps`, `UaiAgentToolElement`, `UaiAgentToolApprovalConfig` |
+| `tools/uai-agent-tool.extension.ts` (shared types only) | `chat/types/tool.types.ts` | `UaiAgentToolStatus`, `UaiAgentToolElementProps`, `UaiAgentToolElement`, `UaiAgentToolApprovalConfig`, `UaiAgentToolApi` |
 | `approval/uai-agent-approval-element.extension.ts` | `chat/extensions/uai-agent-approval-element.extension.ts` | Approval manifest type |
 | `types.ts` (re-exports from agent) | `chat/types/index.ts` | `UaiChatMessage`, `UaiToolCallInfo`, `UaiToolCallStatus`, `UaiInterruptInfo`, etc. |
 | `utils/json.ts` | `chat/utils/json.ts` | `safeParseJson` |
@@ -259,11 +233,9 @@ Move from `@umbraco-ai/agent-copilot` `copilot/` to `@umbraco-ai/agent-ui` `chat
 |---|---|---|
 | `tools/default/default.tool.kind.ts` | `chat/manifests/tool-renderer-kind.manifests.ts` | Default kind for `uaiAgentToolRenderer` (maps to `<uai-agent-tool-status>`) |
 
-### 2c: Run controller refactoring
+### 1e: Run controller refactoring
 
-The `UaiCopilotRunController` currently couples frontend tool execution into the run lifecycle. For the shared layer, we need a run controller that both surfaces can use.
-
-**Approach**: Make the run controller configurable via constructor injection.
+The `UaiCopilotRunController` currently couples frontend tool execution into the run lifecycle. For the shared layer, the run controller accepts tool execution as optional injection.
 
 ```typescript
 // In @umbraco-ai/agent-ui
@@ -289,16 +261,14 @@ export class UaiRunController extends UmbControllerBase {
 }
 ```
 
-- **Copilot** creates the run controller with `frontendToolProvider` set to `FrontendToolManager` and registers `UaiToolExecutionHandler` in the interrupt handlers array.
+- **Copilot** creates the run controller with `frontendToolProvider` set to `UaiFrontendToolManager` and registers `UaiToolExecutionHandler` in the interrupt handlers array.
 - **Chat** creates the run controller with `frontendToolProvider` unset (no frontend tools sent in AG-UI request) and only registers the HITL + default handlers.
 
 The run controller's `sendMessage()` reads `frontendToolProvider.frontendTools` (or empty array if not set) and passes them to the AG-UI client. No if/else branching needed -- just absence of data.
 
-### 2d: Decouple chat component from copilot context
+### 1f: Shared chat context interface
 
-Currently `<uai-copilot-chat>` consumes `UAI_COPILOT_CONTEXT`. The shared `<uai-chat>` should consume a more generic context interface.
-
-**Approach**: Define a chat context interface in agent-ui.
+Currently `<uai-copilot-chat>` consumes `UAI_COPILOT_CONTEXT`. The shared `<uai-chat>` should consume a generic context interface.
 
 ```typescript
 // In @umbraco-ai/agent-ui
@@ -323,9 +293,132 @@ export interface UaiChatContextApi {
 export const UAI_CHAT_CONTEXT = new UmbContextToken<UaiChatContextApi>("UaiChatContext");
 ```
 
-Both `UaiCopilotContext` and the new `UaiChatContext` implement this interface. The shared chat components consume `UAI_CHAT_CONTEXT`. Each surface provides its own implementation.
+Both `UaiCopilotContext` and the future `UaiChatContext` implement this interface. Shared chat components consume `UAI_CHAT_CONTEXT`. Each surface provides its own implementation.
 
-### 2e: Public exports from agent-ui
+### 1g: Slim down copilot
+
+Delete everything that moved. The copilot becomes a thin surface shell.
+
+**What stays in copilot**:
+
+```
+@umbraco-ai/copilot
+├── copilot/
+│   ├── copilot.context.ts              Copilot facade (implements UaiChatContextApi)
+│   │                                    - Panel state (open/close/toggle)
+│   │                                    - Entity context serialization for sendUserMessage
+│   │                                    - Creates UaiRunController with FrontendToolManager
+│   │                                    - Provides UAI_CHAT_CONTEXT + UAI_COPILOT_CONTEXT
+│   │
+│   ├── components/
+│   │   ├── sidebar/
+│   │   │   ├── copilot-sidebar.element.ts    Layout shell (450px fixed panel)
+│   │   │   ├── entry-point.ts                Creates context, appends sidebar
+│   │   │   └── manifests.ts
+│   │   ├── header-app/
+│   │   │   ├── copilot-header-app.element.ts  Toggle button in header
+│   │   │   ├── copilot-section.condition.ts   Section visibility condition
+│   │   │   └── manifests.ts
+│   │   └── entity-selector/
+│   │       └── entity-selector.element.ts     Entity context display/selection
+│   │
+│   ├── services/
+│   │   ├── frontend-tool.manager.ts     NEW - extracted from UaiToolManager
+│   │   │                                 - Observes "uaiAgentFrontendTool" extensions
+│   │   │                                 - Provides frontendTools$ and frontendTools for AG-UI
+│   │   │                                 - Provides getApi() for tool execution
+│   │   │                                 - Provides isFrontendTool()
+│   │   └── frontend-tool.executor.ts    Browser-side tool execution
+│   │
+│   ├── interrupts/
+│   │   └── handlers/
+│   │       └── tool-execution.handler.ts  Frontend tool execution handler (copilot-only)
+│   │
+│   ├── repository/
+│   │   └── copilot-agent.repository.ts   Filters agents by scope="copilot"
+│   │
+│   ├── tools/
+│   │   ├── uai-agent-frontend-tool.extension.ts   ManifestUaiAgentFrontendTool type
+│   │   ├── examples/                     Example frontend tools + renderers
+│   │   ├── entity/                       Entity tools (set_property_value)
+│   │   └── umbraco/                      Backend tool renderers (search_umbraco)
+│   │
+│   ├── section-detector.ts              URL-based section detection
+│   └── types.ts                         UaiCopilotAgentItem (copilot-specific)
+```
+
+**What gets deleted from copilot** (now in `@umbraco-ai/agent-ui`):
+
+```
+DELETED from copilot:
+├── components/chat/chat.element.ts
+├── components/chat/message.element.ts
+├── components/chat/input.element.ts
+├── components/chat/agent-status.element.ts
+├── components/chat/tool-renderer.element.ts
+├── components/chat/approval-base.element.ts
+├── components/chat/hitl-approval.element.ts
+├── components/chat/message-copy-button.element.ts
+├── components/chat/message-regenerate-button.element.ts
+├── services/copilot-run.controller.ts         (replaced by UaiRunController from agent-ui)
+├── services/tool.manager.ts                   (split into ToolRendererManager + FrontendToolManager)
+├── hitl.context.ts
+├── interrupts/interrupt-handler.registry.ts
+├── interrupts/types.ts
+├── interrupts/handlers/hitl-interrupt.handler.ts
+├── interrupts/handlers/default-interrupt.handler.ts
+├── tools/uai-agent-tool.extension.ts          (deleted -- replaced by new types)
+├── tools/tool-status.element.ts
+├── tools/default/default.tool.kind.ts
+├── approval/uai-agent-approval-element.extension.ts
+├── approval/elements/default.element.ts
+├── approval/manifests.ts
+├── utils/json.ts
+```
+
+### 1h: FrontendToolManager (new, copilot-only)
+
+```typescript
+// Extracted from UaiToolManager -- only the execution/LLM concerns
+export class UaiFrontendToolManager extends UmbControllerBase {
+    #apiCache: Map<string, UaiAgentToolApi> = new Map();
+    #frontendTools = new BehaviorSubject<AGUITool[]>([]);
+
+    readonly frontendTools$ = this.#frontendTools.asObservable();
+    get frontendTools(): AGUITool[] { return [...this.#frontendTools.value]; }
+
+    constructor(host: UmbControllerHost) {
+        super(host);
+        // Observe "uaiAgentFrontendTool" extensions only
+        this.observe(umbExtensionsRegistry.byType("uaiAgentFrontendTool"), (manifests) => {
+            this.#frontendTools.next(manifests.map(m => ({
+                name: m.meta.toolName,
+                description: m.meta.description,
+                parameters: m.meta.parameters,
+            })));
+        });
+    }
+
+    isFrontendTool(toolName: string): boolean { ... }
+    async getApi(toolName: string): Promise<UaiAgentToolApi> { ... }
+}
+```
+
+### 1i: Copilot's updated dependencies
+
+```json
+{
+  "name": "@umbraco-ai/copilot",
+  "peerDependencies": {
+    "@umbraco-ai/core": "workspace:*",
+    "@umbraco-ai/agent": "workspace:*",
+    "@umbraco-ai/agent-ui": "workspace:*",
+    "@umbraco-cms/backoffice": "^17.1.0"
+  }
+}
+```
+
+### 1j: Public exports from agent-ui
 
 ```typescript
 // @umbraco-ai/agent-ui exports
@@ -362,136 +455,11 @@ export { safeParseJson } from "./chat/utils/json.js";
 
 ---
 
-## Phase 3: Slim Down Copilot
-
-**Goal**: Remove everything that moved to `@umbraco-ai/agent-ui`. The copilot becomes a thin surface shell.
-
-### What stays in copilot
-
-```
-@umbraco-ai/copilot
-├── copilot/
-│   ├── copilot.context.ts              Copilot facade (implements UaiChatContextApi)
-│   │                                    - Panel state (open/close/toggle)
-│   │                                    - Entity context serialization for sendUserMessage
-│   │                                    - Creates UaiRunController with FrontendToolManager
-│   │                                    - Provides UAI_CHAT_CONTEXT + UAI_COPILOT_CONTEXT
-│   │
-│   ├── components/
-│   │   ├── sidebar/
-│   │   │   ├── copilot-sidebar.element.ts    Layout shell (450px fixed panel)
-│   │   │   ├── entry-point.ts                Creates context, appends sidebar
-│   │   │   └── manifests.ts
-│   │   ├── header-app/
-│   │   │   ├── copilot-header-app.element.ts  Toggle button in header
-│   │   │   ├── copilot-section.condition.ts   Section visibility condition
-│   │   │   └── manifests.ts
-│   │   └── entity-selector/
-│   │       └── entity-selector.element.ts     Entity context display/selection
-│   │
-│   ├── services/
-│   │   ├── frontend-tool.manager.ts     NEW - extracts frontend tool concerns from UaiToolManager
-│   │   │                                 - Observes "uaiAgentFrontendTool" extensions
-│   │   │                                 - Provides frontendTools$ and frontendTools for AG-UI
-│   │   │                                 - Provides getApi() for tool execution
-│   │   │                                 - Provides isFrontendTool()
-│   │   └── frontend-tool.executor.ts    Browser-side tool execution (moved reference stays)
-│   │
-│   ├── interrupts/
-│   │   └── handlers/
-│   │       └── tool-execution.handler.ts  Frontend tool execution handler (copilot-only)
-│   │
-│   ├── repository/
-│   │   └── copilot-agent.repository.ts   Filters agents by scope="copilot"
-│   │
-│   ├── tools/
-│   │   ├── uai-agent-frontend-tool.extension.ts   ManifestUaiAgentFrontendTool type
-│   │   ├── examples/                     Example frontend tools + renderers
-│   │   ├── entity/                       Entity tools (set_property_value)
-│   │   └── umbraco/                      Backend tool renderers (search_umbraco)
-│   │
-│   ├── section-detector.ts              URL-based section detection
-│   └── types.ts                         UaiCopilotAgentItem (copilot-specific)
-```
-
-### What gets deleted from copilot (moved to agent-ui)
-
-```
-DELETED from copilot (now in @umbraco-ai/agent-ui):
-├── components/chat/chat.element.ts
-├── components/chat/message.element.ts
-├── components/chat/input.element.ts
-├── components/chat/agent-status.element.ts
-├── components/chat/tool-renderer.element.ts
-├── components/chat/approval-base.element.ts
-├── components/chat/hitl-approval.element.ts
-├── components/chat/message-copy-button.element.ts
-├── components/chat/message-regenerate-button.element.ts
-├── services/copilot-run.controller.ts         (replaced by UaiRunController from agent-ui)
-├── services/tool.manager.ts                   (split into ToolRendererManager + FrontendToolManager)
-├── hitl.context.ts
-├── interrupts/interrupt-handler.registry.ts
-├── interrupts/types.ts
-├── interrupts/handlers/hitl-interrupt.handler.ts
-├── interrupts/handlers/default-interrupt.handler.ts
-├── tools/uai-agent-tool.extension.ts          (deprecated, removed)
-├── tools/tool-status.element.ts
-├── tools/default/default.tool.kind.ts
-├── approval/uai-agent-approval-element.extension.ts
-├── approval/elements/default.element.ts
-├── approval/manifests.ts
-├── utils/json.ts
-```
-
-### Copilot's updated dependencies
-
-```json
-{
-  "name": "@umbraco-ai/copilot",
-  "peerDependencies": {
-    "@umbraco-ai/core": "workspace:*",
-    "@umbraco-ai/agent": "workspace:*",
-    "@umbraco-ai/agent-ui": "workspace:*",
-    "@umbraco-cms/backoffice": "^17.1.0"
-  }
-}
-```
-
-### FrontendToolManager (new, copilot-only)
-
-```typescript
-// Extracted from UaiToolManager -- only the execution/LLM concerns
-export class UaiFrontendToolManager extends UmbControllerBase {
-    #apiCache: Map<string, UaiAgentToolApi> = new Map();
-    #frontendTools = new BehaviorSubject<AGUITool[]>([]);
-
-    readonly frontendTools$ = this.#frontendTools.asObservable();
-    get frontendTools(): AGUITool[] { return [...this.#frontendTools.value]; }
-
-    constructor(host: UmbControllerHost) {
-        super(host);
-        // Observe "uaiAgentFrontendTool" extensions
-        this.observe(umbExtensionsRegistry.byType("uaiAgentFrontendTool"), (manifests) => {
-            this.#frontendTools.next(manifests.map(m => ({
-                name: m.meta.toolName,
-                description: m.meta.description,
-                parameters: m.meta.parameters,
-            })));
-        });
-    }
-
-    isFrontendTool(toolName: string): boolean { ... }
-    async getApi(toolName: string): Promise<UaiAgentToolApi> { ... }
-}
-```
-
----
-
-## Phase 4: Create Central Chat Package
+## Phase 2: Create Central Chat Package
 
 **Goal**: Add the `chat` scope and central chat workspace surface.
 
-### 4a: Backend -- Chat scope
+### 2a: Backend -- Chat scope
 
 Create `Umbraco.AI.Agent.Chat/` following the Copilot pattern:
 
@@ -506,7 +474,7 @@ public class ChatAgentScope : AIAgentScopeBase
 
 Minimal NuGet package: scope definition + static assets host. No controllers, no services -- it's just a scope and a frontend.
 
-### 4b: Frontend -- Chat workspace
+### 2b: Frontend -- Chat workspace
 
 ```
 @umbraco-ai/chat
@@ -549,7 +517,7 @@ Minimal NuGet package: scope definition + static assets host. No controllers, no
 }
 ```
 
-### 4c: Chat context implementation
+### 2c: Chat context implementation
 
 ```typescript
 export class UaiChatContext extends UmbControllerBase implements UaiChatContextApi {
@@ -581,54 +549,33 @@ export class UaiChatContext extends UmbControllerBase implements UaiChatContextA
 }
 ```
 
-### 4d: Workspace registration
+### 2d: Workspace registration
 
 Register as a section or workspace in the Umbraco backoffice. The chat workspace appears as a dedicated section or within the existing AI settings area.
 
 ---
 
-## Phase Execution Order
+## Phase Execution
 
-Each phase leaves the system in a working state:
+| Phase | Description | Ship as |
+|---|---|---|
+| **1** | Create agent-ui, manifest split, move shared code, slim copilot, delete old types | Single PR |
+| **2** | Add central chat surface + chat scope | Separate PR |
 
-| Phase | Description | Breaking? | Ship independently? |
-|---|---|---|---|
-| **1** | Define new manifest types, deprecate old | No -- old type still works | Yes |
-| **2** | Create agent-ui, move shared code, update copilot imports | Yes (internal) -- copilot's import paths change | Yes (ship with phase 3) |
-| **3** | Slim copilot, migrate tool registrations to new types | Yes (public API) -- tool authors update manifests | Ship with phase 2 |
-| **4** | Add central chat surface | No -- purely additive | Yes |
-
-**Recommended approach**: Phases 1-3 as one PR (the manifest split and extraction are tightly coupled). Phase 4 as a separate PR.
+Phase 1 is the structural refactoring. Phase 2 is purely additive new functionality. Both are breaking relative to the current alpha, but since there's no stability contract, that's fine.
 
 ---
 
-## Migration Guide for Tool Authors
+## Tool Registration Examples
 
-### Before (single manifest)
-
-```typescript
-const myTool: ManifestUaiAgentTool = {
-    type: "uaiAgentTool",
-    alias: "My.AgentTool.Example",
-    meta: {
-        toolName: "my_tool",
-        description: "Does something",
-        parameters: { type: "object", properties: { query: { type: "string" } } },
-        icon: "icon-search",
-        approval: true,
-    },
-    api: () => import("./my-tool.api.js"),
-    element: () => import("./my-tool.element.js"),
-};
-```
-
-### After (two manifests)
+### Frontend tool with custom UI and approval (copilot-only execution, shared rendering)
 
 ```typescript
 import type { ManifestUaiAgentToolRenderer } from "@umbraco-ai/agent-ui";
 import type { ManifestUaiAgentFrontendTool } from "@umbraco-ai/copilot";
 
-const myToolRenderer: ManifestUaiAgentToolRenderer = {
+// Renderer -- registered globally, works in both copilot and chat
+const renderer: ManifestUaiAgentToolRenderer = {
     type: "uaiAgentToolRenderer",
     alias: "My.AgentToolRenderer.Example",
     meta: {
@@ -639,7 +586,8 @@ const myToolRenderer: ManifestUaiAgentToolRenderer = {
     element: () => import("./my-tool.element.js"),
 };
 
-const myFrontendTool: ManifestUaiAgentFrontendTool = {
+// Frontend tool -- registered only in copilot context
+const frontendTool: ManifestUaiAgentFrontendTool = {
     type: "uaiAgentFrontendTool",
     alias: "My.AgentFrontendTool.Example",
     meta: {
@@ -651,17 +599,48 @@ const myFrontendTool: ManifestUaiAgentFrontendTool = {
 };
 ```
 
-### Backend-only tools (no change in pattern)
+### Backend tool with custom UI (shared rendering, server execution)
 
 ```typescript
-const searchRenderer: ManifestUaiAgentToolRenderer = {
+import type { ManifestUaiAgentToolRenderer } from "@umbraco-ai/agent-ui";
+
+const renderer: ManifestUaiAgentToolRenderer = {
     type: "uaiAgentToolRenderer",
     alias: "My.AgentToolRenderer.Search",
     meta: { toolName: "search_content", icon: "icon-search" },
     element: () => import("./search-results.element.js"),
 };
-// No ManifestUaiAgentFrontendTool needed -- execution is server-side
+// No ManifestUaiAgentFrontendTool -- execution is server-side
 ```
+
+### Frontend tool with no custom UI (copilot-only, default status indicator)
+
+```typescript
+import type { ManifestUaiAgentFrontendTool } from "@umbraco-ai/copilot";
+
+const frontendTool: ManifestUaiAgentFrontendTool = {
+    type: "uaiAgentFrontendTool",
+    alias: "My.AgentFrontendTool.GetTime",
+    meta: {
+        toolName: "get_current_time",
+        description: "Returns the current date and time",
+        parameters: { type: "object", properties: {} },
+    },
+    api: () => import("./get-time.api.js"),
+};
+// No renderer needed -- default tool status indicator is used automatically
+```
+
+---
+
+## Localization
+
+Chat components currently use keys prefixed with `uaiCopilot_`. Since we're alpha:
+
+- Rename to `uaiChat_` in agent-ui
+- No backward-compatible aliases needed
+- Copilot-specific keys (sidebar title, section labels) stay as `uaiCopilot_`
+- Chat-specific keys use `uaiChat_` prefix
 
 ---
 
@@ -669,19 +648,15 @@ const searchRenderer: ManifestUaiAgentToolRenderer = {
 
 ### Package naming
 
-The copilot npm package is currently `@umbraco-ai/agent-copilot`. This plan uses `@umbraco-ai/copilot` for brevity. Decide whether to rename (breaking for npm consumers) or keep the longer name. The NuGet package name `Umbraco.AI.Agent.Copilot` stays regardless.
+The copilot npm package is currently `@umbraco-ai/agent-copilot`. This plan uses `@umbraco-ai/copilot`. Since we're alpha, rename now. The NuGet package name `Umbraco.AI.Agent.Copilot` stays regardless.
 
 ### Component tag name changes
 
-Renaming `<uai-copilot-chat>` to `<uai-chat>` etc. is a breaking change for anyone targeting these elements in CSS or JS. Since these are internal (not documented as public API), the risk is low.
-
-### Localization keys
-
-Chat components use localization keys prefixed with `uaiCopilot_`. When moving to agent-ui, these should be renamed to `uaiChat_` or kept with backward-compatible aliases.
+Renaming `<uai-copilot-chat>` to `<uai-chat>` etc. is a breaking change for anyone targeting these elements in CSS or JS. Alpha -- acceptable.
 
 ### Build order in CI
 
-Adding `@umbraco-ai/agent-ui` between `@umbraco-ai/agent` and `@umbraco-ai/copilot` in the build chain. Update `npm run build` script ordering.
+Adding `@umbraco-ai/agent-ui` between `@umbraco-ai/agent` and `@umbraco-ai/copilot` in the build chain. Update `npm run build` script ordering and CI pipeline.
 
 ### Test coverage
 

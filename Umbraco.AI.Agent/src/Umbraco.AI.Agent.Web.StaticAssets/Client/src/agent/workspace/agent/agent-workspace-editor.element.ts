@@ -197,6 +197,8 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
                             .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
+                            ?error=${this._aliasExists}
+                            .errorMessage=${this._aliasExists ? this.localize.term("uaiValidation_aliasExists") : ""}
                             ${umbBindToValidation(this, "$.alias", this._model.alias)}
                         >
                             ${this._aliasCheckInProgress ? html`<uui-loader slot="append"></uui-loader>` : nothing}

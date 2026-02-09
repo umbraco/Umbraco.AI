@@ -252,6 +252,8 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
                             .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
+                            ?error=${this._aliasExists}
+                            .errorMessage=${this._aliasExists ? this.localize.term("uaiValidation_aliasExists") : ""}
                             ${umbBindToValidation(this, "$.alias", this._model.alias)}
                         >
                             ${this._aliasCheckInProgress

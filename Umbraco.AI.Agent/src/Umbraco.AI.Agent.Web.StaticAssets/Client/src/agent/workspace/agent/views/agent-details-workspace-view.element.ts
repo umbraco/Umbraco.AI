@@ -122,12 +122,12 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     label="Scopes"
                     description="Select how this agent can be used (e.g., Copilot chat)"
                 >
-                    <uai-scope-picker
+                    <uai-agent-scope-picker
                         slot="editor"
                         multiple
                         .value=${this._model.scopeIds}
                         @change=${this.#onScopeIdsChange}
-                    ></uai-scope-picker>
+                    ></uai-agent-scope-picker>
                 </umb-property-layout>
             </uui-box>
         `;

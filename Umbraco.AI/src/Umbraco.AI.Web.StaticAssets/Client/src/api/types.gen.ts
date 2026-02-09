@@ -332,6 +332,22 @@ export type SettingsResponseModel = {
     defaultEmbeddingProfileId?: string | null;
 };
 
+export type ToolItemResponseModel = {
+    id: string;
+    name: string;
+    description: string;
+    scopeId: string;
+    isDestructive: boolean;
+    tags: Array<string>;
+};
+
+export type ToolScopeItemResponseModel = {
+    id: string;
+    icon: string;
+    isDestructive: boolean;
+    domain: string;
+};
+
 export type UpdateConnectionRequestModel = {
     alias: string;
     name: string;
@@ -1495,6 +1511,52 @@ export type UpdateSettingsResponses = {
 };
 
 export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
+
+export type GetAllToolsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tools';
+};
+
+export type GetAllToolsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllToolsResponses = {
+    /**
+     * OK
+     */
+    200: Array<ToolItemResponseModel>;
+};
+
+export type GetAllToolsResponse = GetAllToolsResponses[keyof GetAllToolsResponses];
+
+export type GetAllToolScopesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tools/scopes';
+};
+
+export type GetAllToolScopesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllToolScopesResponses = {
+    /**
+     * OK
+     */
+    200: Array<ToolScopeItemResponseModel>;
+};
+
+export type GetAllToolScopesResponse = GetAllToolScopesResponses[keyof GetAllToolScopesResponses];
 
 export type GetVersionHistoryData = {
     body?: never;

@@ -14,6 +14,7 @@ export type {
     UaiInterruptInfo,
     UaiInterruptOption,
     UaiAgentState,
+    UaiFrontendTool,
 } from "./types.js";
 
 // Transport types

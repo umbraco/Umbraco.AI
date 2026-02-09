@@ -76,7 +76,7 @@ public class AIToolBaseGenericTests
 
     public record TestResult(string Echo, int Count);
 
-    [AITool("typed-test-tool", "Typed Test Tool", Category = "Testing")]
+    [AITool("typed-test-tool", "Typed Test Tool", ScopeId = "Testing")]
     private class TypedTestTool : AIToolBase<TestArgs>
     {
         public override string Description => "A typed test tool";

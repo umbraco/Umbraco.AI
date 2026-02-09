@@ -12,14 +12,14 @@ public class FakeTool : IAITool
         string id = "fake-tool",
         string name = "Fake Tool",
         string description = "A fake tool for testing",
-        string category = "Test",
+        string? scopeId = null,
         bool isDestructive = false,
         IReadOnlyList<string>? tags = null)
     {
         Id = id;
         Name = name;
         Description = description;
-        Category = category;
+        ScopeId = scopeId;
         IsDestructive = isDestructive;
         Tags = tags ?? [];
     }
@@ -27,7 +27,7 @@ public class FakeTool : IAITool
     public string Id { get; }
     public string Name { get; }
     public string Description { get; }
-    public string Category { get; }
+    public string? ScopeId { get; }
     public bool IsDestructive { get; }
     public IReadOnlyList<string> Tags { get; }
     public Type? ArgsType => null;
@@ -61,14 +61,14 @@ public class FakeTypedTool<TArgs> : IAITool where TArgs : class
         string id = "fake-typed-tool",
         string name = "Fake Typed Tool",
         string description = "A fake typed tool for testing",
-        string category = "Test",
+        string? scopeId = null,
         bool isDestructive = false,
         IReadOnlyList<string>? tags = null)
     {
         Id = id;
         Name = name;
         Description = description;
-        Category = category;
+        ScopeId = scopeId;
         IsDestructive = isDestructive;
         Tags = tags ?? [];
     }
@@ -76,7 +76,7 @@ public class FakeTypedTool<TArgs> : IAITool where TArgs : class
     public string Id { get; }
     public string Name { get; }
     public string Description { get; }
-    public string Category { get; }
+    public string? ScopeId { get; }
     public bool IsDestructive { get; }
     public IReadOnlyList<string> Tags { get; }
     public Type ArgsType => typeof(TArgs);
@@ -118,14 +118,14 @@ public class FakeSystemTool : IAITool, IAISystemTool
         string id = "fake-system-tool",
         string name = "Fake System Tool",
         string description = "A fake system tool for testing",
-        string category = "System",
+        string? scopeId = null,
         bool isDestructive = false,
         IReadOnlyList<string>? tags = null)
     {
         Id = id;
         Name = name;
         Description = description;
-        Category = category;
+        ScopeId = scopeId;
         IsDestructive = isDestructive;
         Tags = tags ?? [];
     }
@@ -133,7 +133,7 @@ public class FakeSystemTool : IAITool, IAISystemTool
     public string Id { get; }
     public string Name { get; }
     public string Description { get; }
-    public string Category { get; }
+    public string? ScopeId { get; }
     public bool IsDestructive { get; }
     public IReadOnlyList<string> Tags { get; }
     public Type? ArgsType => null;

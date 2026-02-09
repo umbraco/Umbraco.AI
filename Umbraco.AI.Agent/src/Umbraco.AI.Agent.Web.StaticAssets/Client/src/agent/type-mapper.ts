@@ -18,6 +18,9 @@ export const UaiAgentTypeMapper = {
             profileId: response.profileId ?? null,
             contextIds: response.contextIds ?? [],
             scopeIds: response.scopeIds ?? [],
+            allowedToolIds: response.allowedToolIds ?? [],
+            allowedToolScopeIds: response.allowedToolScopeIds ?? [],
+            userGroupPermissions: (response as any).userGroupPermissions ?? {},
             instructions: response.instructions ?? null,
             isActive: response.isActive,
             dateCreated: response.dateCreated,
@@ -36,6 +39,8 @@ export const UaiAgentTypeMapper = {
             profileId: response.profileId ?? null,
             contextIds: response.contextIds ?? [],
             scopeIds: response.scopeIds ?? [],
+            allowedToolIds: response.allowedToolIds ?? [],
+            allowedToolScopeIds: response.allowedToolScopeIds ?? [],
             isActive: response.isActive,
             dateCreated: response.dateCreated,
             dateModified: response.dateModified,
@@ -50,8 +55,11 @@ export const UaiAgentTypeMapper = {
             profileId: model.profileId,
             contextIds: model.contextIds,
             scopeIds: model.scopeIds,
+            allowedToolIds: model.allowedToolIds,
+            allowedToolScopeIds: model.allowedToolScopeIds,
+            userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
-        };
+        } as CreateAgentRequestModel;
     },
 
     toUpdateRequest(model: UaiAgentDetailModel): UpdateAgentRequestModel {
@@ -62,8 +70,11 @@ export const UaiAgentTypeMapper = {
             profileId: model.profileId,
             contextIds: model.contextIds,
             scopeIds: model.scopeIds,
+            allowedToolIds: model.allowedToolIds,
+            allowedToolScopeIds: model.allowedToolScopeIds,
+            userGroupPermissions: model.userGroupPermissions,
             instructions: model.instructions,
             isActive: model.isActive,
-        };
+        } as UpdateAgentRequestModel;
     },
 };

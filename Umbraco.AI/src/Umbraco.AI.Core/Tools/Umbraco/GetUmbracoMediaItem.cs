@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Prompt.Core.Media;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -22,7 +23,7 @@ public sealed record GetUmbracoMediaItemArgs(
 /// </summary>
 /// <param name="runtimeContextAccessor"></param>
 /// <param name="mediaResolver"></param>
-[AITool("get_umbraco_media", "Retrieves a media item from Umbraco")]
+[AITool("get_umbraco_media", "Retrieves a media item from Umbraco", ScopeId = MediaReadScope.ScopeId)]
 public class GetUmbracoMediaItem(IAIRuntimeContextAccessor runtimeContextAccessor, IAIUmbracoMediaResolver mediaResolver) : AIToolBase<GetUmbracoMediaItemArgs>
 {
     /// <inheritdoc />
@@ -30,7 +31,7 @@ public class GetUmbracoMediaItem(IAIRuntimeContextAccessor runtimeContextAccesso
         "Retrieves a media item from Umbraco by its unique key. " +
         "The media item is prepared for analysis by adding its binary data and media type to the runtime context. " +
         "Use this tool to fetch images or other media for further processing or analysis.";
-    
+
     /// <inheritdoc />
     protected override async Task<object> ExecuteAsync(GetUmbracoMediaItemArgs args, CancellationToken ct)
     {

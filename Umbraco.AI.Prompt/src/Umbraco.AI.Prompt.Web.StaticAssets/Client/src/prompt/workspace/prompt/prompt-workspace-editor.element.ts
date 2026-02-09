@@ -104,6 +104,15 @@ export class UaiPromptWorkspaceEditorElement extends UmbFormControlMixin(UmbLitE
             this.#workspaceContext?.handleCommand(
                 new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name, alias }, "name-alias"),
             );
+
+            // Trigger alias uniqueness check for auto-generated alias
+            this._aliasExists = false;
+            if (this._aliasCheckTimeout) {
+                clearTimeout(this._aliasCheckTimeout);
+            }
+            this._aliasCheckTimeout = window.setTimeout(() => {
+                this.#checkAliasUniqueness(alias);
+            }, 500);
         } else {
             this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiPromptDetailModel>({ name }, "name"));
         }

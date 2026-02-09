@@ -10,6 +10,9 @@ export default {
         allow: "Allow",
         deny: "Deny",
     },
+    uaiPlaceholders: {
+      enterName: "Enter a name for this item",
+    },
     uaiComponents: {
         pollingButtonTogglePolling: "Toggle Polling",
         pollingButtonPolling: "Polling",

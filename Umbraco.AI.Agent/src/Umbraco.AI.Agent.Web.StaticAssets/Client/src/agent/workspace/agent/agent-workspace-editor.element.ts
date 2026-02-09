@@ -104,6 +104,15 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
             this.#workspaceContext?.handleCommand(
                 new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name, alias }, "name-alias"),
             );
+
+            // Trigger alias uniqueness check for auto-generated alias
+            this._aliasExists = false;
+            if (this._aliasCheckTimeout) {
+                clearTimeout(this._aliasCheckTimeout);
+            }
+            this._aliasCheckTimeout = window.setTimeout(() => {
+                this.#checkAliasUniqueness(alias);
+            }, 500);
         } else {
             this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiAgentDetailModel>({ name }, "name"));
         }

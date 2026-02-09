@@ -85,20 +85,11 @@ export class UaiPromptWorkspaceEditorElement extends UmbFormControlMixin(UmbLitE
 
             // Add/remove validation message on the workspace validation context
             if (this._aliasExists) {
-                this.#workspaceContext?.validation.messages.addMessage(
-                    'error',
-                    '$.alias',
-                    this.localize.term('uaiValidation_aliasExists'),
-                    'alias-uniqueness' // unique key for this validation message
-                );
-
                 // Set custom validity to trigger :invalid state for visual styling
                 aliasInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
                 // Force validation check to update visual state
                 aliasInput?.checkValidity();
             } else {
-                this.#workspaceContext?.validation.messages.removeMessageByKey('alias-uniqueness');
-
                 // Clear custom validity
                 aliasInput?.setCustomValidity('');
                 // Force validation check to clear visual state

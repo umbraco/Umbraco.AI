@@ -95,29 +95,22 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
 
             this._aliasExists = data === true;
 
-            // Get the alias input element
-            const aliasInput = this.shadowRoot?.querySelector<UUIInputElement>('#alias');
+            // The alias input doesn't seem to support validation styling
+            // so we'll record the error against the name input since it's the most relevant field
+            // and has the same error (required) when empty
+            const nameInput = this.shadowRoot?.querySelector<UUIInputElement>('#name');
 
             // Add/remove validation message on the workspace validation context
             if (this._aliasExists) {
-                this.#workspaceContext?.validation.messages.addMessage(
-                    'error',
-                    '$.alias',
-                    this.localize.term('uaiValidation_aliasExists'),
-                    'alias-uniqueness' // unique key for this validation message
-                );
-
-                // Set custom validity to trigger :invalid state for visual styling
-                aliasInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
+                  // Set custom validity to trigger :invalid state for visual styling
+                nameInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
                 // Force validation check to update visual state
-                aliasInput?.checkValidity();
+                //nameInput?.checkValidity();
             } else {
-                this.#workspaceContext?.validation.messages.removeMessageByKey('alias-uniqueness');
-
                 // Clear custom validity
-                aliasInput?.setCustomValidity('');
+                nameInput?.setCustomValidity('');
                 // Force validation check to clear visual state
-                aliasInput?.checkValidity();
+                //nameInput?.checkValidity();
             }
         } finally {
             this._aliasCheckInProgress = false;

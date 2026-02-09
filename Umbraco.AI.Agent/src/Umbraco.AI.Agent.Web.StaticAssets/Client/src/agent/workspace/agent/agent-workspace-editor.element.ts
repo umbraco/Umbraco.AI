@@ -35,16 +35,10 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
     constructor() {
         super();
 
-        // ONLY custom validator: Alias uniqueness (async business logic)
-        this.addValidator(
-            "customError",
-            () => this.localize.term("uaiValidation_aliasExists"),
-            () => this._aliasExists,
-        );
-
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
             if (!context) return;
             this.#workspaceContext = context;
+
             this.observe(context.model, (model) => {
                 this._model = model;
             });
@@ -86,8 +80,17 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
 
             this._aliasExists = data === true;
 
-            // Trigger validation re-check
-            this.checkValidity();
+            // Add/remove validation message on the workspace validation context
+            if (this._aliasExists) {
+                this.#workspaceContext?.validation.messages.addMessage(
+                    'error',
+                    '$.alias',
+                    this.localize.term('uaiValidation_aliasExists'),
+                    'alias-uniqueness' // unique key for this validation message
+                );
+            } else {
+                this.#workspaceContext?.validation.messages.removeMessageByKey('alias-uniqueness');
+            }
         } finally {
             this._aliasCheckInProgress = false;
         }

@@ -39,6 +39,11 @@ export class UaiAgentWorkspaceContext
     #entityContext = new UmbEntityContext(this);
     #validationContext = new UmbValidationContext(this);
 
+    // Expose validation context publicly so editor elements can register validators
+    get validation() {
+        return this.#validationContext;
+    }
+
     constructor(host: UmbControllerHost) {
         super(host, UAI_AGENT_WORKSPACE_ALIAS);
 

@@ -10,8 +10,13 @@ export default {
         allow: "Allow",
         deny: "Deny",
     },
+    uaiLabels: {
+        name: "Name",
+        alias: "Alias",
+    },
     uaiPlaceholders: {
-      enterName: "Enter a name for this item",
+        enterName: "Enter a name for this item",
+        enterAlias: "Enter an alias for this item",
     },
     uaiComponents: {
         pollingButtonTogglePolling: "Toggle Polling",

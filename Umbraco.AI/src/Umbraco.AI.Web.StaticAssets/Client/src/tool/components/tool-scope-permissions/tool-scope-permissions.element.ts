@@ -2,7 +2,8 @@ import { css, customElement, html, property, repeat, state } from "@umbraco-cms/
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
-import { UaiToolRepository, type ToolScopeItemResponseModel, toCamelCase } from "@umbraco-ai/core";
+import { UaiToolRepository, type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import { toCamelCase } from "../../utils.js";
 
 const elementName = "uai-tool-scope-permissions";
 

@@ -16,8 +16,9 @@ This plan extracts the shared layer into a new `@umbraco-ai/agent-ui` package, s
 These were established through architectural discussion and should be treated as settled:
 
 - **Scopes**: `copilot` (contextual drawer) and `chat` (central workspace). Agents opt into one or both via `ScopeIds[]`.
-- **Frontend tools are copilot-only**. The central chat uses server-side tools exclusively. No browser-executed tools in the chat surface.
-- **Manifest split**: The current `ManifestUaiAgentTool` (which uses `api` presence as a discriminator) splits into `ManifestUaiAgentToolRenderer` (shared rendering) and `ManifestUaiAgentFrontendTool` (copilot execution).
+- **Frontend tools are shared infrastructure**. Both copilot and chat can execute browser-side tools. The tool infrastructure (manifests, executor, manager) lives in agent-ui. Individual tool implementations live wherever makes sense (copilot registers entity-mutation tools, chat could register navigation tools). Tool availability per surface is designed to use Umbraco's **conditions framework** on the manifest -- a tool declares the conditions under which it resolves (e.g., entity context must exist). Conditions don't need to be implemented in the first pass, but the design must not preclude them.
+- **Entity context is a shared contract**. `UaiEntityContextApi` is defined in agent-ui. The copilot provides it by wrapping the host workspace's entity state. The chat could provide it via a side-drawer editor. Tools that operate on entities consume this context -- they don't know which surface they're in.
+- **Manifest split**: The current `ManifestUaiAgentTool` (which uses `api` presence as a discriminator) splits into `ManifestUaiAgentToolRenderer` (shared rendering) and `ManifestUaiAgentFrontendTool` (shared execution infrastructure). Both live in agent-ui.
 - **The agent package stays clean**. Shared chat UI goes into a new `@umbraco-ai/agent-ui`, not into `@umbraco-ai/agent`. The agent package is about agent infrastructure, not chat rendering.
 - **Embed (visitor-facing) is a future concern**. It doesn't use the backoffice UI stack at all. This split doesn't need to account for it -- it's purely additive later.
 - **All packages are pre-stable (alpha)**. There is no backward compatibility contract. No deprecation periods, no bridge code, no legacy observers. Clean breaks only.
@@ -82,10 +83,13 @@ interface ManifestUaiAgentToolRenderer extends ManifestElement<UaiAgentToolEleme
 }
 ```
 
-Defined in `@umbraco-ai/copilot`:
+Also defined in `@umbraco-ai/agent-ui`:
 
 ```typescript
-// ManifestUaiAgentFrontendTool -- copilot-only, for browser-executable tools
+// ManifestUaiAgentFrontendTool -- browser-executable tools, available to any surface
+// Tool availability per surface is controlled via Umbraco's conditions framework on the manifest.
+// Example: a tool that needs entity context adds a condition for UAI_ENTITY_CONTEXT.
+// Conditions are not implemented in the first pass -- all registered tools resolve everywhere.
 interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolApi> {
     type: "uaiAgentFrontendTool";
     meta: {
@@ -97,6 +101,8 @@ interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolApi> {
         /** Whether the tool performs destructive operations */
         isDestructive?: boolean;
     };
+    // Future: conditions control when the tool resolves
+    // conditions: [{ alias: "Umb.Condition.Context", context: "UAI_ENTITY_CONTEXT" }]
 }
 ```
 
@@ -112,7 +118,39 @@ UaiAgentToolApi            // { execute(args): Promise<unknown> } -- type stays 
 
 The old `ManifestUaiAgentTool` type and its `"uaiAgentTool"` extension type registration are deleted entirely. No bridge, no fallback.
 
-### 1b: Tool registration migration
+### 1b: Entity context contract
+
+Defined in `@umbraco-ai/agent-ui`. This is the shared abstraction that allows tools to operate on an entity without knowing which surface they're in.
+
+```typescript
+// In @umbraco-ai/agent-ui
+export interface UaiEntityContextApi {
+    readonly entityType$: Observable<string | undefined>;
+    readonly entityKey$: Observable<string | undefined>;
+
+    getPropertyValue(alias: string): unknown;
+    setPropertyValue(alias: string, value: unknown): void;
+
+    readonly isDirty$: Observable<boolean>;
+}
+
+export const UAI_ENTITY_CONTEXT = new UmbContextToken<UaiEntityContextApi>("UaiEntityContext");
+```
+
+**Who provides it:**
+
+| Surface | Implementation | How |
+|---|---|---|
+| **Copilot** | `UaiCopilotEntityContext` | Wraps the host workspace's entity state (passive -- reflects what the user navigated to) |
+| **Chat** | (future) | Could wrap an embedded editor in a side drawer (active -- the chat opened it) |
+
+**Who consumes it:**
+
+Frontend tools that operate on entities (e.g., `set_property_value`) consume `UAI_ENTITY_CONTEXT`. If the context doesn't exist in the current surface, the tool doesn't have access to entity state. Today this is handled by the tool simply not being registered outside copilot. In the future, Umbraco's conditions framework on the manifest would gate tool resolution automatically (e.g., `conditions: [{ alias: "Umb.Condition.Context", context: "UAI_ENTITY_CONTEXT" }]`).
+
+The entity context implementation in copilot stays in the copilot package -- it's the bridge between Umbraco's workspace system and the shared contract. Only the interface and token live in agent-ui.
+
+### 1c: Tool registration migration
 
 Each existing `ManifestUaiAgentTool` registration becomes one or two new registrations:
 
@@ -127,7 +165,7 @@ Each existing `ManifestUaiAgentTool` registration becomes one or two new registr
 
 **Rule**: If a tool has approval config or custom UI, it needs a `uaiAgentToolRenderer`. If a tool executes in the browser, it needs a `uaiAgentFrontendTool`. A tool may need both, one, or (for backend tools with no custom UI) neither.
 
-### 1c: Scaffold `@umbraco-ai/agent-ui`
+### 1d: Scaffold `@umbraco-ai/agent-ui`
 
 Create the new npm workspace and NuGet project following existing patterns.
 
@@ -184,7 +222,7 @@ Umbraco.AI.Agent.UI/
 
 **Build order**: core -> prompt -> agent -> **agent-ui** -> copilot
 
-### 1d: Move shared components from copilot to agent-ui
+### 1e: Move shared components from copilot to agent-ui
 
 #### Components
 
@@ -205,15 +243,16 @@ Umbraco.AI.Agent.UI/
 
 | Source (copilot) | Destination (agent-ui) | New name | Notes |
 |---|---|---|---|
-| `services/tool.manager.ts` | `chat/services/tool-renderer.manager.ts` | `UaiToolRendererManager` | **Only the rendering half**: manifest lookup, element resolution, element caching. Remove `frontendTools$`, `getApi()`, `isFrontendTool()`. Observe `"uaiAgentToolRenderer"` only. |
-| `services/copilot-run.controller.ts` | `chat/services/run.controller.ts` | `UaiRunController` | Refactored to accept tool execution as optional injection (see 1e). |
+| `services/tool.manager.ts` (rendering half) | `chat/services/tool-renderer.manager.ts` | `UaiToolRendererManager` | Manifest lookup, element resolution, element caching. Observes `"uaiAgentToolRenderer"` only. |
+| `services/tool.manager.ts` (execution half) | `chat/services/frontend-tool.manager.ts` | `UaiFrontendToolManager` | Observes `"uaiAgentFrontendTool"` extensions, produces `UaiFrontendTool[]` for AG-UI, provides `getApi()` and `isFrontendTool()`. See 1i. |
+| `services/frontend-tool.executor.ts` | `chat/services/frontend-tool.executor.ts` | `UaiFrontendToolExecutor` | Sequential browser-side tool execution with HITL approval. Surface-agnostic -- works wherever frontend tools are provided. |
+| `services/copilot-run.controller.ts` | `chat/services/run.controller.ts` | `UaiRunController` | Refactored to accept tool execution as optional injection (see 1f). |
 | `hitl.context.ts` | `chat/services/hitl.context.ts` | `UaiHitlContext` | Move as-is. Used by both surfaces. |
 | `interrupts/interrupt-handler.registry.ts` | `chat/services/interrupt-handler.registry.ts` | `UaiInterruptHandlerRegistry` | Already generic |
 | `interrupts/types.ts` | `chat/services/interrupt.types.ts` | (types) | Already generic |
 | `interrupts/handlers/hitl-interrupt.handler.ts` | `chat/services/handlers/hitl-interrupt.handler.ts` | `UaiHitlInterruptHandler` | Used by both surfaces |
 | `interrupts/handlers/default-interrupt.handler.ts` | `chat/services/handlers/default-interrupt.handler.ts` | `UaiDefaultInterruptHandler` | Used by both surfaces |
-
-**Note**: `UaiToolExecutionHandler` stays in copilot. It's the handler that invokes `UaiFrontendToolExecutor` for browser-side tool execution -- copilot-only.
+| `interrupts/handlers/tool-execution.handler.ts` | `chat/services/handlers/tool-execution.handler.ts` | `UaiToolExecutionHandler` | Invokes `UaiFrontendToolExecutor`. Moves to agent-ui since any surface with frontend tools needs it. |
 
 #### Types
 
@@ -237,21 +276,17 @@ Umbraco.AI.Agent.UI/
 |---|---|---|
 | `tools/default/default.tool.kind.ts` | `chat/manifests/tool-renderer-kind.manifests.ts` | Default kind for `uaiAgentToolRenderer` (maps to `<uai-agent-tool-status>`) |
 
-### 1e: Run controller refactoring
+### 1f: Run controller refactoring
 
-The `UaiCopilotRunController` currently couples frontend tool execution into the run lifecycle. For the shared layer, the run controller accepts tool execution as optional injection.
+The `UaiCopilotRunController` currently couples frontend tool execution into the run lifecycle. For the shared layer, the run controller accepts tool configuration as optional injection.
 
 ```typescript
 // In @umbraco-ai/agent-ui
 export interface UaiRunControllerConfig {
     /** Tool renderer manager for manifest/element lookup */
     toolRendererManager: UaiToolRendererManager;
-    /** Optional frontend tool provider -- copilot injects this, chat does not */
-    frontendToolProvider?: {
-        /** Tools to send in the AG-UI request (includes scope/isDestructive metadata) */
-        frontendTools: UaiFrontendTool[];
-        frontendTools$: Observable<UaiFrontendTool[]>;
-    };
+    /** Optional frontend tool manager -- surfaces that support frontend tools inject this */
+    frontendToolManager?: UaiFrontendToolManager;
     /** Interrupt handlers to register */
     interruptHandlers: UaiInterruptHandler[];
 }
@@ -265,12 +300,12 @@ export class UaiRunController extends UmbControllerBase {
 }
 ```
 
-- **Copilot** creates the run controller with `frontendToolProvider` set to `UaiFrontendToolManager` and registers `UaiToolExecutionHandler` in the interrupt handlers array.
-- **Chat** creates the run controller with `frontendToolProvider` unset (no frontend tools sent in AG-UI request) and only registers the HITL + default handlers.
+- **Copilot** creates the run controller with `frontendToolManager` set (entity-scoped tools are registered) and includes `UaiToolExecutionHandler` in the interrupt handlers array.
+- **Chat** initially creates the run controller without `frontendToolManager`. When/if chat gains frontend tools (e.g., navigation tools, or entity tools via a side-drawer), it provides a `UaiFrontendToolManager` the same way copilot does. No structural change required.
 
-The run controller's `sendMessage()` reads `frontendToolProvider.frontendTools` (or empty array if not set) and passes them to the AG-UI client. No if/else branching needed -- just absence of data.
+The run controller's `sendMessage()` reads `frontendToolManager.frontendTools` (or empty array if not set) and passes them to the AG-UI client. No if/else branching needed -- just absence of data.
 
-### 1f: Shared chat context interface
+### 1g: Shared chat context interface
 
 Currently `<uai-copilot-chat>` consumes `UAI_COPILOT_CONTEXT`. The shared `<uai-chat>` should consume a generic context interface.
 
@@ -299,7 +334,7 @@ export const UAI_CHAT_CONTEXT = new UmbContextToken<UaiChatContextApi>("UaiChatC
 
 Both `UaiCopilotContext` and the future `UaiChatContext` implement this interface. Shared chat components consume `UAI_CHAT_CONTEXT`. Each surface provides its own implementation.
 
-### 1g: Slim down copilot
+### 1h: Slim down copilot
 
 Delete everything that moved. The copilot becomes a thin surface shell.
 
@@ -313,6 +348,7 @@ Delete everything that moved. The copilot becomes a thin surface shell.
 │   │                                    - Entity context serialization for sendUserMessage
 │   │                                    - Creates UaiRunController with FrontendToolManager
 │   │                                    - Provides UAI_CHAT_CONTEXT + UAI_COPILOT_CONTEXT
+│   │                                    - Provides UAI_ENTITY_CONTEXT (wraps workspace state)
 │   │
 │   ├── components/
 │   │   ├── sidebar/
@@ -327,35 +363,29 @@ Delete everything that moved. The copilot becomes a thin surface shell.
 │   │       └── entity-selector.element.ts     Entity context display/selection
 │   │
 │   ├── services/
-│   │   ├── frontend-tool.manager.ts     NEW - extracted from UaiToolManager
-│   │   │                                 - Observes "uaiAgentFrontendTool" extensions
-│   │   │                                 - Provides frontendTools$ and frontendTools for AG-UI
-│   │   │                                 - Provides getApi() for tool execution
-│   │   │                                 - Provides isFrontendTool()
-│   │   └── frontend-tool.executor.ts    Browser-side tool execution
-│   │
-│   ├── interrupts/
-│   │   └── handlers/
-│   │       └── tool-execution.handler.ts  Frontend tool execution handler (copilot-only)
+│   │   └── copilot-entity.context.ts    UaiCopilotEntityContext -- implements UaiEntityContextApi
+│   │                                     by wrapping the host workspace's entity state
 │   │
 │   ├── repository/
 │   │   └── copilot-agent.repository.ts   Filters agents by scope="copilot"
 │   │
 │   ├── tools/
-│   │   ├── uai-agent-frontend-tool.extension.ts   ManifestUaiAgentFrontendTool type
 │   │   ├── frontend-tool.repository.ts   Implements UaiFrontendToolRepositoryApi for tool picker
 │   │   ├── examples/                     Example frontend tools + renderers
-│   │   ├── entity/                       Entity tools (set_property_value)
+│   │   ├── entity/                       Entity tools (set_property_value) -- registered here
+│   │   │                                  with conditions for UAI_ENTITY_CONTEXT (future)
 │   │   └── umbraco/                      Backend tool renderers (search_umbraco)
 │   │
 │   ├── section-detector.ts              URL-based section detection
 │   └── types.ts                         UaiCopilotAgentItem (copilot-specific)
 ```
 
+Note: Entity tool *implementations* (e.g., `set_property_value`) stay in copilot for now because they are registered alongside the copilot's entity context provider. In the future, if chat provides `UAI_ENTITY_CONTEXT` via a side-drawer editor, these tools could move to agent-ui to be shared -- but that's not needed until chat actually provides entity context.
+
 **What gets deleted from copilot** (now in `@umbraco-ai/agent-ui`):
 
 ```
-DELETED from copilot:
+DELETED from copilot (moved to agent-ui):
 ├── components/chat/chat.element.ts
 ├── components/chat/message.element.ts
 ├── components/chat/input.element.ts
@@ -365,14 +395,17 @@ DELETED from copilot:
 ├── components/chat/hitl-approval.element.ts
 ├── components/chat/message-copy-button.element.ts
 ├── components/chat/message-regenerate-button.element.ts
-├── services/copilot-run.controller.ts         (replaced by UaiRunController from agent-ui)
-├── services/tool.manager.ts                   (split into ToolRendererManager + FrontendToolManager)
-├── hitl.context.ts
-├── interrupts/interrupt-handler.registry.ts
+├── services/copilot-run.controller.ts         (→ UaiRunController)
+├── services/tool.manager.ts                   (→ UaiToolRendererManager + UaiFrontendToolManager)
+├── services/frontend-tool.executor.ts         (→ UaiFrontendToolExecutor)
+├── hitl.context.ts                            (→ UaiHitlContext)
+├── interrupts/interrupt-handler.registry.ts   (→ UaiInterruptHandlerRegistry)
 ├── interrupts/types.ts
 ├── interrupts/handlers/hitl-interrupt.handler.ts
 ├── interrupts/handlers/default-interrupt.handler.ts
-├── tools/uai-agent-tool.extension.ts          (deleted -- replaced by new types)
+├── interrupts/handlers/tool-execution.handler.ts  (→ UaiToolExecutionHandler)
+├── tools/uai-agent-tool.extension.ts          (deleted -- replaced by new types in agent-ui)
+├── tools/uai-agent-frontend-tool.extension.ts (→ moved to agent-ui)
 ├── tools/tool-status.element.ts
 ├── tools/default/default.tool.kind.ts
 ├── approval/uai-agent-approval-element.extension.ts
@@ -381,13 +414,15 @@ DELETED from copilot:
 ├── utils/json.ts
 ```
 
-### 1h: FrontendToolManager (new, copilot-only)
+### 1i: FrontendToolManager (in agent-ui)
 
 ```typescript
+// In @umbraco-ai/agent-ui
 import { type UaiFrontendTool } from "@umbraco-ai/agent";
 
-// Extracted from UaiToolManager -- only the execution/LLM concerns
+// Extracted from UaiToolManager -- the execution/LLM concerns
 // Produces UaiFrontendTool[] (extends AGUITool with scope + isDestructive metadata)
+// Lives in agent-ui so any surface can use it.
 export class UaiFrontendToolManager extends UmbControllerBase {
     #apiCache: Map<string, UaiAgentToolApi> = new Map();
     #frontendTools = new BehaviorSubject<UaiFrontendTool[]>([]);
@@ -397,7 +432,8 @@ export class UaiFrontendToolManager extends UmbControllerBase {
 
     constructor(host: UmbControllerHost) {
         super(host);
-        // Observe "uaiAgentFrontendTool" extensions only
+        // Observe "uaiAgentFrontendTool" extensions -- only resolved manifests appear
+        // (i.e., the conditions framework has already filtered by the current surface's context)
         this.observe(umbExtensionsRegistry.byType("uaiAgentFrontendTool"), (manifests) => {
             this.#frontendTools.next(manifests.map(m => ({
                 name: m.meta.toolName,
@@ -415,7 +451,9 @@ export class UaiFrontendToolManager extends UmbControllerBase {
 }
 ```
 
-### 1i: Copilot's updated dependencies
+Because the manager observes only *resolved* manifests from the extension registry, any future conditions on the manifest are automatically respected. A tool with `conditions: [{ alias: "Umb.Condition.Context", context: "UAI_ENTITY_CONTEXT" }]` would only appear in `frontendTools$` when entity context is provided by the current surface. No filtering logic needed in the manager itself.
+
+### 1j: Copilot's updated dependencies
 
 ```json
 {
@@ -429,7 +467,7 @@ export class UaiFrontendToolManager extends UmbControllerBase {
 }
 ```
 
-### 1j: Public exports from agent-ui
+### 1k: Public exports from agent-ui
 
 ```typescript
 // @umbraco-ai/agent-ui exports
@@ -444,15 +482,19 @@ export { UaiAgentToolStatusElement } from "./chat/components/tool-status.element
 
 // Services
 export { UaiToolRendererManager } from "./chat/services/tool-renderer.manager.js";
+export { UaiFrontendToolManager } from "./chat/services/frontend-tool.manager.js";
+export { UaiFrontendToolExecutor } from "./chat/services/frontend-tool.executor.js";
 export { UaiRunController, type UaiRunControllerConfig } from "./chat/services/run.controller.js";
 export { UaiHitlContext, UAI_HITL_CONTEXT } from "./chat/services/hitl.context.js";
 export { UaiInterruptHandlerRegistry } from "./chat/services/interrupt-handler.registry.js";
 
 // Context
 export { UAI_CHAT_CONTEXT, type UaiChatContextApi } from "./chat/context.js";
+export { UAI_ENTITY_CONTEXT, type UaiEntityContextApi } from "./chat/entity-context.js";
 
 // Extension types (for tool/approval authors)
 export type { ManifestUaiAgentToolRenderer } from "./chat/extensions/uai-agent-tool-renderer.extension.js";
+export type { ManifestUaiAgentFrontendTool } from "./chat/extensions/uai-agent-frontend-tool.extension.js";
 export type { ManifestUaiAgentApprovalElement } from "./chat/extensions/uai-agent-approval-element.extension.js";
 export type { UaiAgentToolStatus, UaiAgentToolElementProps, UaiAgentToolElement } from "./chat/types/tool.types.js";
 export type { UaiAgentToolApprovalConfig } from "./chat/types/tool.types.js";
@@ -497,9 +539,12 @@ Minimal NuGet package: scope definition + static assets host. No controllers, no
 │   └── chat/
 │       ├── chat.context.ts              Chat facade (implements UaiChatContextApi)
 │       │                                 - No panel state (always visible)
-│       │                                 - No entity context injection
-│       │                                 - Creates UaiRunController WITHOUT FrontendToolManager
+│       │                                 - No entity context initially
+│       │                                 - Creates UaiRunController (no frontend tools initially)
 │       │                                 - Provides UAI_CHAT_CONTEXT
+│       │                                 - Future: could provide UAI_ENTITY_CONTEXT via side-drawer
+│       │                                   editor and add UaiFrontendToolManager for navigation/
+│       │                                   entity tools -- agent-ui infrastructure supports this
 │       │
 │       ├── components/
 │       │   ├── chat-workspace.element.ts  Full-page workspace layout
@@ -543,7 +588,10 @@ export class UaiChatContext extends UmbControllerBase implements UaiChatContextA
         this.#hitlContext = new UaiHitlContext(host);
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager,
-            // NO frontendToolProvider -- chat uses server-side tools only
+            // No frontendToolManager initially -- chat starts with server-side tools only.
+            // When/if chat gains frontend tools (e.g., navigation or entity tools via
+            // a side-drawer editor), add a UaiFrontendToolManager here. The infrastructure
+            // in agent-ui already supports it -- no structural changes needed.
             interruptHandlers: [
                 new UaiHitlInterruptHandler(this),
                 new UaiDefaultInterruptHandler(),
@@ -579,13 +627,12 @@ Phase 1 is the structural refactoring. Phase 2 is purely additive new functional
 
 ## Tool Registration Examples
 
-### Frontend tool with custom UI and approval (copilot-only execution, shared rendering)
+### Frontend tool with custom UI and approval
 
 ```typescript
-import type { ManifestUaiAgentToolRenderer } from "@umbraco-ai/agent-ui";
-import type { ManifestUaiAgentFrontendTool } from "@umbraco-ai/copilot";
+import type { ManifestUaiAgentToolRenderer, ManifestUaiAgentFrontendTool } from "@umbraco-ai/agent-ui";
 
-// Renderer -- registered globally, works in both copilot and chat
+// Renderer -- works in any chat surface
 const renderer: ManifestUaiAgentToolRenderer = {
     type: "uaiAgentToolRenderer",
     alias: "My.AgentToolRenderer.Example",
@@ -597,7 +644,7 @@ const renderer: ManifestUaiAgentToolRenderer = {
     element: () => import("./my-tool.element.js"),
 };
 
-// Frontend tool -- registered only in copilot context
+// Frontend tool -- available in any surface (conditions can restrict this later)
 const frontendTool: ManifestUaiAgentFrontendTool = {
     type: "uaiAgentFrontendTool",
     alias: "My.AgentFrontendTool.Example",
@@ -609,6 +656,30 @@ const frontendTool: ManifestUaiAgentFrontendTool = {
         isDestructive: false,         // safe operation
     },
     api: () => import("./my-tool.api.js"),
+};
+```
+
+### Frontend tool scoped to entity context (conditions-ready)
+
+```typescript
+import type { ManifestUaiAgentFrontendTool } from "@umbraco-ai/agent-ui";
+
+// This tool needs entity context to function. Today it's registered in copilot
+// alongside the entity context provider. When conditions are implemented, the
+// manifest can declare that dependency explicitly:
+const entityTool: ManifestUaiAgentFrontendTool = {
+    type: "uaiAgentFrontendTool",
+    alias: "My.AgentFrontendTool.SetProperty",
+    meta: {
+        toolName: "set_property_value",
+        description: "Sets a property value on the current entity",
+        parameters: { type: "object", properties: { alias: { type: "string" }, value: {} } },
+        scope: "entity-write",
+        isDestructive: false,
+    },
+    api: () => import("./set-property.api.js"),
+    // Future: conditions gate when the tool resolves
+    // conditions: [{ alias: "Umb.Condition.Context", context: "UAI_ENTITY_CONTEXT" }]
 };
 ```
 
@@ -626,10 +697,10 @@ const renderer: ManifestUaiAgentToolRenderer = {
 // No ManifestUaiAgentFrontendTool -- execution is server-side
 ```
 
-### Frontend tool with no custom UI (copilot-only, default status indicator)
+### Frontend tool with no custom UI (default status indicator)
 
 ```typescript
-import type { ManifestUaiAgentFrontendTool } from "@umbraco-ai/copilot";
+import type { ManifestUaiAgentFrontendTool } from "@umbraco-ai/agent-ui";
 
 const frontendTool: ManifestUaiAgentFrontendTool = {
     type: "uaiAgentFrontendTool",
@@ -697,7 +768,7 @@ A full tool permissions system was added. This affects both manifest types and t
     }
     ```
 
-2. **`FrontendToolManager` must produce `UaiFrontendTool[]`** (not plain `AGUITool[]`). It reads `scope` and `isDestructive` from the manifest and includes them in the tool objects passed to the AG-UI client.
+2. **`UaiFrontendToolManager` must produce `UaiFrontendTool[]`** (not plain `AGUITool[]`). It reads `scope` and `isDestructive` from the manifest and includes them in the tool objects passed to the AG-UI client. Lives in agent-ui alongside the `ManifestUaiAgentFrontendTool` type.
 
 3. **`UaiFrontendToolRepository` stays in copilot**. It queries the extension registry for frontend tool manifests to feed the backoffice tool picker. After the split, it queries `"uaiAgentFrontendTool"` extensions instead of `"uaiAgentTool"`.
 

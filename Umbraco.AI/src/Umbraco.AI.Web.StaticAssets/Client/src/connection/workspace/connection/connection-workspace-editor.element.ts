@@ -95,6 +95,9 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
 
             this._aliasExists = data === true;
 
+            // Get the alias input element
+            const aliasInput = this.shadowRoot?.querySelector<UUIInputElement>('#alias');
+
             // Add/remove validation message on the workspace validation context
             if (this._aliasExists) {
                 this.#workspaceContext?.validation.messages.addMessage(
@@ -103,8 +106,14 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
                     this.localize.term('uaiValidation_aliasExists'),
                     'alias-uniqueness' // unique key for this validation message
                 );
+
+                // Set custom validity to trigger :invalid state for visual styling
+                aliasInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
             } else {
                 this.#workspaceContext?.validation.messages.removeMessageByKey('alias-uniqueness');
+
+                // Clear custom validity
+                aliasInput?.setCustomValidity('');
             }
         } finally {
             this._aliasCheckInProgress = false;
@@ -252,8 +261,6 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
                             .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
-                            ?error=${this._aliasExists}
-                            .errorMessage=${this._aliasExists ? this.localize.term("uaiValidation_aliasExists") : ""}
                             ${umbBindToValidation(this, "$.alias", this._model.alias)}
                         >
                             ${this._aliasCheckInProgress

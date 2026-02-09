@@ -302,4 +302,11 @@ internal sealed class AIConnectionService : IAIConnectionService
 
         return await _repository.SaveAsync(rolledBackConnection, userId, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<bool> ConnectionAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        var existing = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return existing is not null && (!excludeId.HasValue || existing.Id != excludeId.Value);
+    }
 }

@@ -27,6 +27,7 @@ using Umbraco.AI.Core.TaskQueue;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Core.Tests.Graders;
 using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Tools.Web;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Prompt.Core.Media;
@@ -89,6 +90,10 @@ public static partial class UmbracoBuilderExtensions
         // Tool infrastructure - auto-discover tools via [AITool] attribute
         builder.AITools()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAITool, AIToolAttribute>(cache: true));
+
+        // Tool scope infrastructure - auto-discover scopes via [AIToolScope] attribute
+        builder.AIToolScopes()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIToolScope, AIToolScopeAttribute>(cache: true));
 
         // Web fetch tool services
         services.AddSingleton<IUrlValidator, UrlValidator>();

@@ -27,16 +27,30 @@ public sealed class AIFrontendToolFunction : AIFunction
     private readonly JsonElement _jsonSchema;
 
     /// <summary>
+    /// Gets the scope identifier for permission checks.
+    /// </summary>
+    public string? Scope { get; }
+
+    /// <summary>
+    /// Gets whether this tool performs destructive operations.
+    /// </summary>
+    public bool IsDestructive { get; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AIFrontendToolFunction"/> class.
     /// </summary>
     /// <param name="tool">The AG-UI tool definition.</param>
-    public AIFrontendToolFunction(AGUITool tool)
+    /// <param name="scope">Optional scope identifier for permission checks.</param>
+    /// <param name="isDestructive">Whether the tool is destructive.</param>
+    public AIFrontendToolFunction(AGUITool tool, string? scope = null, bool isDestructive = false)
     {
         ArgumentNullException.ThrowIfNull(tool);
 
         _name = tool.Name;
         _description = tool.Description;
         _jsonSchema = BuildJsonSchema(tool.Parameters);
+        Scope = scope;
+        IsDestructive = isDestructive;
     }
 
     /// <summary>
@@ -45,13 +59,22 @@ public sealed class AIFrontendToolFunction : AIFunction
     /// <param name="name">The tool name.</param>
     /// <param name="description">The tool description.</param>
     /// <param name="jsonSchema">The JSON schema for the tool parameters.</param>
-    public AIFrontendToolFunction(string name, string description, JsonElement jsonSchema)
+    /// <param name="scope">Optional scope identifier for permission checks.</param>
+    /// <param name="isDestructive">Whether the tool is destructive.</param>
+    public AIFrontendToolFunction(
+        string name,
+        string description,
+        JsonElement jsonSchema,
+        string? scope = null,
+        bool isDestructive = false)
     {
         ArgumentNullException.ThrowIfNull(name);
 
         _name = name;
         _description = description ?? string.Empty;
         _jsonSchema = jsonSchema;
+        Scope = scope;
+        IsDestructive = isDestructive;
     }
 
     /// <inheritdoc />

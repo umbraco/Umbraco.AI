@@ -23,9 +23,9 @@ public abstract class AIToolBasic
     public abstract string Description { get; }
 
     /// <summary>
-    /// Gets the category of the tool for grouping purposes.
+    /// Gets the scope identifier for permission and grouping purposes.
     /// </summary>
-    public string Category { get; }
+    public string ScopeId { get; }
 
     /// <summary>
     /// Gets whether the tool performs destructive operations.
@@ -41,7 +41,7 @@ public abstract class AIToolBasic
     /// Gets the arguments model type, if the tool uses strongly-typed args.
     /// </summary>
     public virtual Type? ArgsType => null;
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AIToolBase"/> class.
     /// </summary>
@@ -54,7 +54,7 @@ public abstract class AIToolBasic
 
         Id = attribute.Id;
         Name = attribute.Name;
-        Category = attribute.Category;
+        ScopeId = attribute.ScopeId;
         IsDestructive = attribute.IsDestructive;
         Tags = attribute.Tags;
     }

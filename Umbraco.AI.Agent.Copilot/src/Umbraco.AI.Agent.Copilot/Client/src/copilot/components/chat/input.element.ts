@@ -1,4 +1,4 @@
-import { customElement, property, state, css, html, ref, createRef } from "@umbraco-cms/backoffice/external/lit";
+import { customElement, property, state, css, html, ref, createRef, nothing } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
@@ -32,6 +32,10 @@ export class UaiCopilotInputElement extends UmbLitElement {
 
     #copilotContext?: UaiCopilotContext;
     #textareaRef = createRef<HTMLElement>();
+
+    get #isDisabled(): boolean {
+        return this.disabled || this._agents.length === 0;
+    }
 
     constructor() {
         super();
@@ -103,14 +107,16 @@ export class UaiCopilotInputElement extends UmbLitElement {
     }
 
     override render() {
+        const hasNoAgents = this._agents.length === 0 && !this._agentsLoading;
+
         return html`
             <div class="input-wrapper">
                 <div class="input-box">
                     <uui-textarea
                         ${ref(this.#textareaRef)}
                         .value=${this._value}
-                        placeholder=${this.placeholder}
-                        ?disabled=${this.disabled}
+                        placeholder=${hasNoAgents ? "Create a copilot agent to start chatting" : this.placeholder}
+                        ?disabled=${this.#isDisabled}
                         auto-height
                         @input=${this.#handleInput}
                         @keydown=${this.#handleKeydown}
@@ -120,19 +126,21 @@ export class UaiCopilotInputElement extends UmbLitElement {
                         <div class="left-actions">
                             ${this._agentsLoading
                                 ? html`<span class="agent-loading">Loading...</span>`
-                                : html`
-                                      <uui-select
-                                          class="agent-select"
-                                          .value=${this._selectedAgentId}
-                                          .options=${this.#getAgentOptions()}
-                                          @change=${this.#handleAgentChange}
-                                      ></uui-select>
-                                  `}
+                                : hasNoAgents
+                                  ? nothing
+                                  : html`
+                                        <uui-select
+                                            class="agent-select"
+                                            .value=${this._selectedAgentId}
+                                            .options=${this.#getAgentOptions()}
+                                            @change=${this.#handleAgentChange}
+                                        ></uui-select>
+                                    `}
                         </div>
                         <uui-button
                             look="primary"
                             compact
-                            ?disabled=${this.disabled || !this._value.trim()}
+                            ?disabled=${this.#isDisabled || !this._value.trim()}
                             @click=${this.#send}
                         >
                             <uui-icon name="icon-navigation-right"></uui-icon>

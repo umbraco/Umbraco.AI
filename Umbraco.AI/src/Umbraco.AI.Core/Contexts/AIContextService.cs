@@ -96,6 +96,13 @@ internal sealed class AIContextService : IAIContextService
     }
 
     /// <inheritdoc />
+    public async Task<bool> ContextAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        var existing = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return existing is not null && (!excludeId.HasValue || existing.Id != excludeId.Value);
+    }
+
+    /// <inheritdoc />
     public Task<(IEnumerable<AIEntityVersion> Items, int Total)> GetContextVersionHistoryAsync(
         Guid contextId,
         int skip,

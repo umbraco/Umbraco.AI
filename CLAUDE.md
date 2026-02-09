@@ -446,15 +446,16 @@ docs(core): Update API examples
 2. **Scope must be valid** - Use one of the allowed scopes defined in `commitlint.config.js`
     - **Valid types**: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`, `ci`, `revert`, `build`
     - **Valid scopes**: Dynamically loaded from all `<Product>/changelog.config.json` files + meta scopes (`deps`, `ci`, `docs`, `release`)
-    - **Single scope only** - Multiple scopes are not supported (e.g., `fix(core,agent):` is invalid)
+    - **Multiple scopes supported** - Use comma-separated scopes when a single change affects multiple areas (e.g., `feat(core,copilot): Add streaming support`)
     - **To list current options**: `npm run commit-options` or `node scripts/list-commit-options.js`
     - **For Claude Code**: Read `commitlint.config.js` at runtime to discover valid types and scopes - never use hardcoded lists
 
 3. **Body lines must not exceed 100 characters** - Wrap long lines in the commit body
 
-4. **Split commits when changes affect multiple areas** - If your changes span multiple scopes, create separate commits
-    - ✅ Split into: `fix(core): Fix issue A` + `fix(agent): Fix issue B`
-    - ❌ Don't use: `fix(core,agent): Fix issues`
+4. **Prefer single scope when possible** - Use multiple scopes only when a single logical change affects multiple areas
+    - ✅ Use multiple scopes for unified changes: `feat(core,copilot): Add streaming support to chat and UI`
+    - ✅ Split logically separate changes: `fix(core): Fix rate limiting` + `fix(agent): Fix validation`
+    - ❌ Don't group unrelated changes: `fix(core,agent,prompt): Various fixes`
 
 Commits are validated by commitlint on commit (soft warnings - allows non-conventional commits but warns).
 

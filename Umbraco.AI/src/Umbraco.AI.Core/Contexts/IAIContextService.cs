@@ -62,6 +62,15 @@ public interface IAIContextService
     Task<bool> DeleteContextAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks if a context with the given alias exists.
+    /// </summary>
+    /// <param name="alias">The alias to check.</param>
+    /// <param name="excludeId">Optional context ID to exclude from the check (for editing existing contexts).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if a context with the alias exists, false otherwise.</returns>
+    Task<bool> ContextAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets the version history for a context with pagination.
     /// </summary>
     /// <param name="contextId">The context ID.</param>

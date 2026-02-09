@@ -92,7 +92,7 @@ stages:
                       versionSpec: $(NODE_VERSION)
 
                 - script: |
-                      npm ci
+                      npm ci --include=optional
                       npm run build
                   displayName: Build frontend
 

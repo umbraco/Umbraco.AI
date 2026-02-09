@@ -144,6 +144,16 @@ export interface ManifestUaiAgentTool extends ManifestElementAndApi<UaiAgentTool
         /** Icon to display with the tool */
         icon?: string;
         /**
+         * Tool scope for permission grouping (e.g., 'entity-write', 'navigation').
+         * Used to control which agents can access this tool.
+         */
+        scope?: string;
+        /**
+         * Whether the tool performs destructive operations (e.g., delete, publish, modify data).
+         * Used for permission filtering - agents can be configured to block destructive tools.
+         */
+        isDestructive?: boolean;
+        /**
          * HITL approval configuration.
          * When specified, tool pauses for user approval before execution.
          * - `true` - Use default approval element with localized defaults

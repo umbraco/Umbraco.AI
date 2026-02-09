@@ -87,6 +87,35 @@ public interface IAIAgentService
     Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the tools that are allowed for the specified agent.
+    /// Includes system tools (always) + user tools matching agent configuration.
+    /// If user group IDs are provided, applies user group permission overrides.
+    /// </summary>
+    /// <param name="agent">The agent.</param>
+    /// <param name="userGroupIds">Optional user group IDs to resolve permission overrides. If null, uses current user's groups.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Collection of allowed tool IDs.</returns>
+    Task<IReadOnlyList<string>> GetAllowedToolIdsAsync(
+        AIAgent agent,
+        IEnumerable<Guid>? userGroupIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validates that a specific tool call is permitted for the agent.
+    /// If user group IDs are provided, applies user group permission overrides.
+    /// </summary>
+    /// <param name="agent">The agent.</param>
+    /// <param name="toolId">The tool ID being called.</param>
+    /// <param name="userGroupIds">Optional user group IDs to resolve permission overrides. If null, uses current user's groups.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if tool is allowed, false otherwise.</returns>
+    Task<bool> IsToolAllowedAsync(
+        AIAgent agent,
+        string toolId,
+        IEnumerable<Guid>? userGroupIds = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Streams an agent execution with AG-UI events.
     /// </summary>
     /// <remarks>
@@ -103,12 +132,12 @@ public interface IAIAgentService
     /// </remarks>
     /// <param name="agentId">The agent ID.</param>
     /// <param name="request">The AG-UI run request containing messages, tools, and context.</param>
-    /// <param name="frontendToolDefinitions">Frontend tool definitions from the request.</param>
+    /// <param name="frontendTools">Frontend tools with metadata for permission filtering.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
     IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
         AGUIRunRequest request,
-        IEnumerable<AGUITool>? frontendToolDefinitions,
+        IEnumerable<AIFrontendTool>? frontendTools,
         CancellationToken cancellationToken = default);
 }

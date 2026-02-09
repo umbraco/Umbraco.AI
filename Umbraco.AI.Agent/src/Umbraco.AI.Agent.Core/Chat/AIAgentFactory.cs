@@ -54,15 +54,17 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        // Build tool list
-        var tools = new List<AITool>();
-        tools.AddRange(_toolCollection.ToSystemToolFunctions(_functionFactory));
-        tools.AddRange(_toolCollection.ToUserToolFunctions(_functionFactory));
+        // Get allowed tool IDs for this agent
+        var allowedToolIds = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
 
-        var frontendTools = additionalTools?.ToList() ?? [];
-        if (frontendTools.Count > 0)
+        // Build tool list using only allowed tools
+        var tools = new List<AITool>();
+        tools.AddRange(_toolCollection.ToAIFunctions(allowedToolIds, _functionFactory));
+
+        // Frontend tools - already filtered by service layer, just add them
+        if (additionalTools is not null)
         {
-            tools.AddRange(frontendTools);
+            tools.AddRange(additionalTools);
         }
 
         // Get profile - use default Chat profile if not specified
@@ -92,7 +94,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
             innerAgent,
             agent,
             contextItems ?? [],
-            frontendTools,
+            additionalTools,
             additionalProperties,
             _runtimeContextScopeProvider,
             _contextContributors);

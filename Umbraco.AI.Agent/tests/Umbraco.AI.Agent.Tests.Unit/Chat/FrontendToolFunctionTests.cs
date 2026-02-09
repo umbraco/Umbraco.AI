@@ -196,4 +196,73 @@ public class FrontendToolFunctionTests
         // Assert
         function.JsonSchema.TryGetProperty("required", out _).ShouldBeFalse();
     }
+
+    [Fact]
+    public void Constructor_WithScopeAndIsDestructive_SetsMetadataProperties()
+    {
+        // Arrange
+        var tool = new AGUITool
+        {
+            Name = "test-tool",
+            Description = "A test tool",
+            Parameters = new AGUIToolParameters
+            {
+                Type = "object",
+                Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
+            }
+        };
+
+        // Act
+        var function = new AIFrontendToolFunction(tool, scope: "content-write", isDestructive: true);
+
+        // Assert
+        function.Scope.ShouldBe("content-write");
+        function.IsDestructive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Constructor_WithoutScopeAndIsDestructive_UsesDefaults()
+    {
+        // Arrange
+        var tool = new AGUITool
+        {
+            Name = "test-tool",
+            Description = "A test tool",
+            Parameters = new AGUIToolParameters
+            {
+                Type = "object",
+                Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
+            }
+        };
+
+        // Act
+        var function = new AIFrontendToolFunction(tool);
+
+        // Assert
+        function.Scope.ShouldBeNull();
+        function.IsDestructive.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Constructor_WithNullScope_SetsNullScope()
+    {
+        // Arrange
+        var tool = new AGUITool
+        {
+            Name = "test-tool",
+            Description = "A test tool",
+            Parameters = new AGUIToolParameters
+            {
+                Type = "object",
+                Properties = JsonSerializer.SerializeToElement(new { param1 = new { type = "string" } })
+            }
+        };
+
+        // Act
+        var function = new AIFrontendToolFunction(tool, scope: null, isDestructive: false);
+
+        // Assert
+        function.Scope.ShouldBeNull();
+        function.IsDestructive.ShouldBeFalse();
+    }
 }

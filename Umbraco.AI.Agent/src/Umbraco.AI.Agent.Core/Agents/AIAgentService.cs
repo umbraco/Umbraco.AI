@@ -6,6 +6,7 @@ using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
@@ -23,25 +24,25 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAIEntityVersionService _versionService;
     private readonly IAIAgentFactory _agentFactory;
     private readonly IAGUIStreamingService _streamingService;
-    private readonly IAGUIToolConverter _toolConverter;
     private readonly IAGUIContextConverter _contextConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly AIToolCollection _toolCollection;
 
     public AIAgentService(
         IAIAgentRepository repository,
         IAIEntityVersionService versionService,
         IAIAgentFactory agentFactory,
         IAGUIStreamingService streamingService,
-        IAGUIToolConverter toolConverter,
         IAGUIContextConverter contextConverter,
+        AIToolCollection toolCollection,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _versionService = versionService;
         _agentFactory = agentFactory;
         _streamingService = streamingService;
-        _toolConverter = toolConverter;
         _contextConverter = contextConverter;
+        _toolCollection = toolCollection;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -113,10 +114,54 @@ internal sealed class AIAgentService : IAIAgentService
         => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> GetAllowedToolIdsAsync(
+        AIAgent agent,
+        IEnumerable<Guid>? userGroupIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Resolve user groups if not provided
+        var resolvedUserGroupIds = userGroupIds ?? await GetCurrentUserGroupIdsAsync(cancellationToken);
+
+        var result = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection, resolvedUserGroupIds);
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsToolAllowedAsync(
+        AIAgent agent,
+        string toolId,
+        IEnumerable<Guid>? userGroupIds = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Resolve user groups if not provided
+        var resolvedUserGroupIds = userGroupIds ?? await GetCurrentUserGroupIdsAsync(cancellationToken);
+
+        var result = AIAgentToolHelper.IsToolAllowed(agent, toolId, _toolCollection, resolvedUserGroupIds);
+        return result;
+    }
+
+    /// <summary>
+    /// Gets the current user's user group IDs.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of user group IDs for the current user. Empty list if no user or no groups.</returns>
+    private Task<IReadOnlyList<Guid>> GetCurrentUserGroupIdsAsync(CancellationToken cancellationToken)
+    {
+        var user = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser;
+        if (user is null)
+        {
+            return Task.FromResult<IReadOnlyList<Guid>>([]);
+        }
+
+        var groupIds = user.Groups.Select(g => g.Key).ToList();
+        return Task.FromResult<IReadOnlyList<Guid>>(groupIds);
+    }
+
+    /// <inheritdoc />
     public async IAsyncEnumerable<IAGUIEvent> StreamAgentAsync(
         Guid agentId,
         AGUIRunRequest request,
-        IEnumerable<AGUITool>? frontendToolDefinitions,
+        IEnumerable<AIFrontendTool>? frontendTools,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // 1. Resolve agent
@@ -141,9 +186,48 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
-        // 2. Convert AG-UI context and frontend tools
+        // 2. Convert AG-UI context and create frontend tools with permission filtering
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
-        var frontendTools = _toolConverter.ConvertToFrontendTools(frontendToolDefinitions);
+
+        // Get allowed tool IDs for permission checking (uses current user's groups)
+        var allowedToolIds = await GetAllowedToolIdsAsync(agent, userGroupIds: null, cancellationToken);
+
+        // Convert AIFrontendTools to AIFrontendToolFunction and filter by permissions
+        IList<AITool>? convertedFrontendTools = null;
+        if (frontendTools is not null)
+        {
+            var tools = new List<AITool>();
+
+            foreach (var frontendTool in frontendTools)
+            {
+                // Create AIFrontendToolFunction with metadata already attached
+                var toolFunction = new Chat.AIFrontendToolFunction(
+                    frontendTool.Tool,
+                    frontendTool.Scope,
+                    frontendTool.IsDestructive);
+
+                // Check if tool is permitted
+                bool isPermitted = false;
+
+                // Check if tool ID is explicitly allowed
+                if (allowedToolIds.Contains(frontendTool.Tool.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    isPermitted = true;
+                }
+                // Check if tool has scope and scope is allowed
+                else if (frontendTool.Scope is not null && agent.AllowedToolScopeIds.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase))
+                {
+                    isPermitted = true;
+                }
+
+                if (isPermitted)
+                {
+                    tools.Add(toolFunction);
+                }
+            }
+
+            convertedFrontendTools = tools.Count > 0 ? tools : null;
+        }
 
         // 3. Build additional properties for telemetry/logging
         var additionalProperties = new Dictionary<string, object?>
@@ -162,13 +246,13 @@ internal sealed class AIAgentService : IAIAgentService
         var agentInst = await _agentFactory.CreateAgentAsync(
             agent,
             contextItems,
-            frontendTools,
+            convertedFrontendTools,
             additionalProperties,
             cancellationToken);
 
         // 5. Stream via AG-UI streaming service
         //    No additionalSystemPrompt needed - ScopedAIAgent handles it
-        await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, frontendTools, cancellationToken))
+        await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
         {
             yield return evt;
         }

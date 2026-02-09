@@ -74,11 +74,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
         });
     }
 
-    protected override firstUpdated() {
-        super.firstUpdated();
+    protected override firstUpdated(_changedProperties: any) {
+        super.firstUpdated(_changedProperties);
         // Register form control elements to enable HTML5 validation
-        const nameInput = this.shadowRoot?.querySelector("#name");
-        if (nameInput) this.addFormControlElement(nameInput);
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+        if (nameInput) this.addFormControlElement(nameInput as any);
     }
 
     async #checkAliasUniqueness(alias: string): Promise<void> {
@@ -91,7 +91,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
         try {
             const { data } = await tryExecute(
                 this,
-                ConnectionsService.aliasExists({
+                ConnectionsService.connectionAliasExists({
                     path: { alias },
                     query: {
                         excludeId:
@@ -103,7 +103,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
             this._aliasExists = data === true;
 
             // Trigger validation re-check
-            this.checkValidity();
+            this.checkValidity;
         } finally {
             this._aliasCheckInProgress = false;
         }

@@ -31,7 +31,7 @@ public class AliasExistsAgentController : AgentControllerBase
     [HttpGet("{alias}/exists")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-    public async Task<IActionResult> AliasExists(
+    public async Task<IActionResult> AgentAliasExists(
         string alias,
         [FromQuery] Guid? excludeId = null,
         CancellationToken cancellationToken = default)

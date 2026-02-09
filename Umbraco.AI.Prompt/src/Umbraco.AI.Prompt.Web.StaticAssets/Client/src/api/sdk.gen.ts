@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AliasExistsData, AliasExistsErrors, AliasExistsResponses, CreatePromptData, CreatePromptErrors, CreatePromptResponses, DeletePromptData, DeletePromptErrors, DeletePromptResponses, ExecutePromptData, ExecutePromptErrors, ExecutePromptResponses, GetAllPromptsData, GetAllPromptsErrors, GetAllPromptsResponses, GetDocumentTypeAliasesData, GetDocumentTypeAliasesErrors, GetDocumentTypeAliasesResponses, GetPromptByIdOrAliasData, GetPromptByIdOrAliasErrors, GetPromptByIdOrAliasResponses, GetPropertyAliasesData, GetPropertyAliasesErrors, GetPropertyAliasesResponses, UpdatePromptData, UpdatePromptErrors, UpdatePromptResponses } from './types.gen';
+import type { CreatePromptData, CreatePromptErrors, CreatePromptResponses, DeletePromptData, DeletePromptErrors, DeletePromptResponses, ExecutePromptData, ExecutePromptErrors, ExecutePromptResponses, GetAllPromptsData, GetAllPromptsErrors, GetAllPromptsResponses, GetDocumentTypeAliasesData, GetDocumentTypeAliasesErrors, GetDocumentTypeAliasesResponses, GetPromptByIdOrAliasData, GetPromptByIdOrAliasErrors, GetPromptByIdOrAliasResponses, GetPropertyAliasesData, GetPropertyAliasesErrors, GetPropertyAliasesResponses, PromptAliasExistsData, PromptAliasExistsErrors, PromptAliasExistsResponses, UpdatePromptData, UpdatePromptErrors, UpdatePromptResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -49,8 +49,8 @@ export class PromptsService {
         });
     }
     
-    public static aliasExists<ThrowOnError extends boolean = false>(options: Options<AliasExistsData, ThrowOnError>) {
-        return (options.client ?? client).get<AliasExistsResponses, AliasExistsErrors, ThrowOnError>({
+    public static promptAliasExists<ThrowOnError extends boolean = false>(options: Options<PromptAliasExistsData, ThrowOnError>) {
+        return (options.client ?? client).get<PromptAliasExistsResponses, PromptAliasExistsErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',

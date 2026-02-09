@@ -37,12 +37,13 @@ export class UaiAgentWorkspaceContext
     #repository: UaiAgentDetailRepository;
     #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
+    #validationContext = new UmbValidationContext(this);
 
     constructor(host: UmbControllerHost) {
         super(host, UAI_AGENT_WORKSPACE_ALIAS);
 
         this.#repository = new UaiAgentDetailRepository(this);
-        this.addValidationContext(new UmbValidationContext(this));
+        this.addValidationContext(this.#validationContext);
 
         this.#entityContext.setEntityType(UAI_AGENT_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
@@ -169,15 +170,12 @@ export class UaiAgentWorkspaceContext
         if (!model) return;
 
         // Validate before submit
-        const validationContext = this.validation?.getContext();
-        if (validationContext) {
-            try {
-                await validationContext.validate();
-            } catch {
-                // Validation failed - focus first invalid element
-                validationContext.focusFirstInvalidElement();
-                return;
-            }
+        try {
+            await this.#validationContext.validate();
+        } catch {
+            // Validation failed - focus first invalid element
+            this.#validationContext.focusFirstInvalidElement();
+            return;
         }
 
         // Mute command store during submit

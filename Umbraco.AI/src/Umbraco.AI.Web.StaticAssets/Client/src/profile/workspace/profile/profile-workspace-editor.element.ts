@@ -9,7 +9,7 @@ import type { UaiProfileDetailModel } from "../../types.js";
 import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
 import { UAI_PROFILE_ROOT_WORKSPACE_PATH } from "../profile-root/paths.js";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { ProfilesService } from "../../../core/api/index.js";
+import { ProfilesService } from "../../../api/index.js";
 import { UAI_EMPTY_GUID } from "../../../core/index.js";
 
 @customElement("uai-profile-workspace-editor")
@@ -60,11 +60,11 @@ export class UaiProfileWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
         });
     }
 
-    protected override firstUpdated() {
-        super.firstUpdated();
+    protected override firstUpdated(_changedProperties: any) {
+        super.firstUpdated(_changedProperties);
         // Register form control elements to enable HTML5 validation
-        const nameInput = this.shadowRoot?.querySelector("#name");
-        if (nameInput) this.addFormControlElement(nameInput);
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+        if (nameInput) this.addFormControlElement(nameInput as any);
     }
 
     async #checkAliasUniqueness(alias: string): Promise<void> {
@@ -77,7 +77,7 @@ export class UaiProfileWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
         try {
             const { data } = await tryExecute(
                 this,
-                ProfilesService.aliasExists({
+                ProfilesService.profileAliasExists({
                     path: { alias },
                     query: {
                         excludeId: this._model?.unique !== UAI_EMPTY_GUID ? this._model?.unique : undefined,
@@ -88,7 +88,7 @@ export class UaiProfileWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
             this._aliasExists = data === true;
 
             // Trigger validation re-check
-            this.checkValidity();
+            this.checkValidity;
         } finally {
             this._aliasCheckInProgress = false;
         }

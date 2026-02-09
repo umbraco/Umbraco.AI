@@ -795,7 +795,7 @@ export type CreateConnectionResponses = {
     201: unknown;
 };
 
-export type AliasExistsData = {
+export type ConnectionAliasExistsData = {
     body?: never;
     path: {
         alias: string;
@@ -806,21 +806,21 @@ export type AliasExistsData = {
     url: '/umbraco/ai/management/api/v1/connections/{alias}/exists';
 };
 
-export type AliasExistsErrors = {
+export type ConnectionAliasExistsErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type AliasExistsResponses = {
+export type ConnectionAliasExistsResponses = {
     /**
      * OK
      */
     200: boolean;
 };
 
-export type AliasExistsResponse = AliasExistsResponses[keyof AliasExistsResponses];
+export type ConnectionAliasExistsResponse = ConnectionAliasExistsResponses[keyof ConnectionAliasExistsResponses];
 
 export type DeleteConnectionData = {
     body?: never;
@@ -1330,7 +1330,7 @@ export type CreateProfileResponses = {
     201: unknown;
 };
 
-export type AliasExists2Data = {
+export type ProfileAliasExistsData = {
     body?: never;
     path: {
         alias: string;
@@ -1341,21 +1341,21 @@ export type AliasExists2Data = {
     url: '/umbraco/ai/management/api/v1/profiles/{alias}/exists';
 };
 
-export type AliasExists2Errors = {
+export type ProfileAliasExistsErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type AliasExists2Responses = {
+export type ProfileAliasExistsResponses = {
     /**
      * OK
      */
     200: boolean;
 };
 
-export type AliasExists2Response = AliasExists2Responses[keyof AliasExists2Responses];
+export type ProfileAliasExistsResponse = ProfileAliasExistsResponses[keyof ProfileAliasExistsResponses];
 
 export type DeleteProfileData = {
     body?: never;

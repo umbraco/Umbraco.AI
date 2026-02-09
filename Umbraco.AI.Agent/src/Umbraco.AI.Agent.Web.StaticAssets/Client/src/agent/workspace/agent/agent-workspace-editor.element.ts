@@ -3,13 +3,13 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { umbBindToValidation, UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
-import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
+import { UaiPartialUpdateCommand, UAI_EMPTY_GUID } from "@umbraco-ai/core";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "./agent-workspace.context-token.js";
-import { UAI_AGENT_WORKSPACE_ALIAS, UAI_EMPTY_GUID } from "../../constants.js";
+import { UAI_AGENT_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UaiAgentDetailModel } from "../../types.js";
 import { UAI_AGENT_ROOT_WORKSPACE_PATH } from "../agent-root/paths.js";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
-import { AgentsService } from "../../api/index.js";
+import { AgentsService } from "../../../api/index.js";
 
 @customElement("uai-agent-workspace-editor")
 export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitElement) {
@@ -59,11 +59,11 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
         });
     }
 
-    protected override firstUpdated() {
-        super.firstUpdated();
+    protected override firstUpdated(_changedProperties: any) {
+        super.firstUpdated(_changedProperties);
         // Register form control elements to enable HTML5 validation
-        const nameInput = this.shadowRoot?.querySelector("#name");
-        if (nameInput) this.addFormControlElement(nameInput);
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+        if (nameInput) this.addFormControlElement(nameInput as any);
     }
 
     async #checkAliasUniqueness(alias: string): Promise<void> {
@@ -76,7 +76,7 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
         try {
             const { data } = await tryExecute(
                 this,
-                AgentsService.aliasExists({
+                AgentsService.agentAliasExists({
                     path: { alias },
                     query: {
                         excludeId: this._model?.unique !== UAI_EMPTY_GUID ? this._model?.unique : undefined,
@@ -87,7 +87,7 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
             this._aliasExists = data === true;
 
             // Trigger validation re-check
-            this.checkValidity();
+            this.checkValidity;
         } finally {
             this._aliasCheckInProgress = false;
         }

@@ -197,7 +197,7 @@ export class UaiProfileWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
                             @lock-change=${this.#onToggleAliasLock}
                             required
                             maxlength="100"
-                            pattern="^[a-z0-9-]+$"
+                            pattern="^[a-z0-9\-]+$"
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
                             .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}

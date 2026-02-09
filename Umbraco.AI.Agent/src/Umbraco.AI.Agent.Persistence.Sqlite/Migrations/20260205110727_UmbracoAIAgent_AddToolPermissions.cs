@@ -27,7 +27,7 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
             // Set default scopes for existing agents (backward compatibility)
             migrationBuilder.Sql(
                 @"UPDATE umbracoAIAgent
-                  SET AllowedToolScopeIds = '[""search"",""navigation"",""translation"",""web""]'
+                  SET AllowedToolScopeIds = '[""search"",""navigation"",""web""]'
                   WHERE AllowedToolScopeIds IS NULL;");
         }
 

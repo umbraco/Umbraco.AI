@@ -59,6 +59,13 @@ export type AGUIToolParametersModel = {
     required?: Array<string> | null;
 };
 
+export type AiAgentUserGroupPermissionsModel = {
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
+    deniedToolIds: Array<string>;
+    deniedToolScopeIds: Array<string>;
+};
+
 export type AgentItemResponseModel = {
     id: string;
     alias: string;
@@ -84,6 +91,9 @@ export type AgentResponseModel = {
     scopeIds: Array<string>;
     allowedToolIds: Array<string>;
     allowedToolScopeIds: Array<string>;
+    userGroupPermissions: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    };
     instructions?: string | null;
     isActive: boolean;
     dateCreated: string;
@@ -105,6 +115,9 @@ export type CreateAgentRequestModel = {
     scopeIds?: Array<string> | null;
     allowedToolIds?: Array<string> | null;
     allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
     instructions?: string | null;
 };
 
@@ -139,6 +152,9 @@ export type UpdateAgentRequestModel = {
     scopeIds?: Array<string> | null;
     allowedToolIds?: Array<string> | null;
     allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
     instructions?: string | null;
     isActive: boolean;
 };

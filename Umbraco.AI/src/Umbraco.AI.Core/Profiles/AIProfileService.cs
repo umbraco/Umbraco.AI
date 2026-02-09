@@ -192,4 +192,11 @@ internal sealed class AIProfileService : IAIProfileService
 
         return await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<bool> ProfileAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        var existing = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return existing is not null && (!excludeId.HasValue || existing.Id != excludeId.Value);
+    }
 }

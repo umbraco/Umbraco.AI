@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentScopesData, GetAgentScopesErrors, GetAgentScopesResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
+import type { AgentAliasExistsData, AgentAliasExistsErrors, AgentAliasExistsResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, GetAgentByIdOrAliasData, GetAgentByIdOrAliasErrors, GetAgentByIdOrAliasResponses, GetAgentScopesData, GetAgentScopesErrors, GetAgentScopesResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, RunAgentData, RunAgentErrors, RunAgentResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -106,6 +106,19 @@ export class AgentsService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+    
+    public static agentAliasExists<ThrowOnError extends boolean = false>(options: Options<AgentAliasExistsData, ThrowOnError>) {
+        return (options.client ?? client).get<AgentAliasExistsResponses, AgentAliasExistsErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/ai/management/api/v1/agents/{alias}/exists',
+            ...options
         });
     }
     

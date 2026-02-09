@@ -1,11 +1,13 @@
 using Microsoft.Extensions.Options;
 
+using Umbraco.AI.Core.Tools.Scopes;
+
 namespace Umbraco.AI.Core.Tools.Web;
 
 /// <summary>
 /// Tool that safely fetches and extracts text content from web pages.
 /// </summary>
-[AITool("fetch_webpage", "Fetch Web Page", Category = "Web")]
+[AITool("fetch_webpage", "Fetch Web Page", ScopeId = WebScope.ScopeId)]
 public class FetchWebPageTool : AIToolBase<FetchWebPageArgs>
 {
     private readonly IWebContentFetcher _fetcher;

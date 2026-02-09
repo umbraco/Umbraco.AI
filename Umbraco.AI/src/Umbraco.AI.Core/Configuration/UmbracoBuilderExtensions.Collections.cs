@@ -2,6 +2,7 @@ using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.DependencyInjection;
 
@@ -61,6 +62,22 @@ public static partial class UmbracoBuilderExtensions
     /// </remarks>
     public static AIToolCollectionBuilder AITools(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIToolCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI tool scopes collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI tool scopes collection builder.</returns>
+    /// <remarks>
+    /// Use this to add or exclude AI tool scopes. Scopes are auto-discovered via the [AIToolScope] attribute.
+    /// <code>
+    /// builder.AIToolScopes()
+    ///     .Add&lt;CustomScope&gt;()
+    ///     .Exclude&lt;SomeUnwantedScope&gt;();
+    /// </code>
+    /// </remarks>
+    public static AIToolScopeCollectionBuilder AIToolScopes(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIToolScopeCollectionBuilder>();
 
     /// <summary>
     /// Gets the AI runtime context contributor collection builder.

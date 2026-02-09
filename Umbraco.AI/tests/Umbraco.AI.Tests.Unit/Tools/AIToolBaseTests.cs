@@ -15,7 +15,7 @@ public class AIToolBaseTests
         // Assert
         tool.Id.ShouldBe("test-tool");
         tool.Name.ShouldBe("Test Tool");
-        tool.Category.ShouldBe("Testing");
+        tool.ScopeId.ShouldBe("Testing");
         tool.IsDestructive.ShouldBeTrue();
         tool.Tags.ShouldBe(new[] { "test", "fake" });
     }
@@ -29,7 +29,7 @@ public class AIToolBaseTests
         // Assert
         tool.Id.ShouldBe("minimal-tool");
         tool.Name.ShouldBe("Minimal Tool");
-        tool.Category.ShouldBe("General"); // Default
+        tool.ScopeId.ShouldBe("general"); // Default
         tool.IsDestructive.ShouldBeFalse(); // Default
         tool.Tags.ShouldBeEmpty(); // Default
     }
@@ -95,7 +95,7 @@ public class AIToolBaseTests
 
     #region Test tools
 
-    [AITool("test-tool", "Test Tool", Category = "Testing", IsDestructive = true, Tags = ["test", "fake"])]
+    [AITool("test-tool", "Test Tool", ScopeId = "Testing", IsDestructive = true, Tags = ["test", "fake"])]
     private class TestTool : AIToolBase
     {
         public override string Description => "A test tool";

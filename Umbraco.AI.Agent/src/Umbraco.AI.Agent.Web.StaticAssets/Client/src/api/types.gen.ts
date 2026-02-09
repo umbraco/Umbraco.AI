@@ -59,6 +59,13 @@ export type AGUIToolParametersModel = {
     required?: Array<string> | null;
 };
 
+export type AiAgentUserGroupPermissionsModel = {
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
+    deniedToolIds: Array<string>;
+    deniedToolScopeIds: Array<string>;
+};
+
 export type AgentItemResponseModel = {
     id: string;
     alias: string;
@@ -67,6 +74,8 @@ export type AgentItemResponseModel = {
     profileId?: string | null;
     contextIds: Array<string>;
     scopeIds: Array<string>;
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
     isActive: boolean;
     dateCreated: string;
     dateModified: string;
@@ -80,6 +89,11 @@ export type AgentResponseModel = {
     profileId?: string | null;
     contextIds: Array<string>;
     scopeIds: Array<string>;
+    allowedToolIds: Array<string>;
+    allowedToolScopeIds: Array<string>;
+    userGroupPermissions: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    };
     instructions?: string | null;
     isActive: boolean;
     dateCreated: string;
@@ -99,6 +113,11 @@ export type CreateAgentRequestModel = {
     profileId?: string | null;
     contextIds?: Array<string> | null;
     scopeIds?: Array<string> | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
     instructions?: string | null;
 };
 
@@ -131,6 +150,11 @@ export type UpdateAgentRequestModel = {
     profileId?: string | null;
     contextIds?: Array<string> | null;
     scopeIds?: Array<string> | null;
+    allowedToolIds?: Array<string> | null;
+    allowedToolScopeIds?: Array<string> | null;
+    userGroupPermissions?: {
+        [key: string]: AiAgentUserGroupPermissionsModel;
+    } | null;
     instructions?: string | null;
     isActive: boolean;
 };
@@ -341,6 +365,33 @@ export type RunAgentResponses = {
 };
 
 export type RunAgentResponse = RunAgentResponses[keyof RunAgentResponses];
+
+export type AgentAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/agents/{alias}/exists';
+};
+
+export type AgentAliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type AgentAliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type AgentAliasExistsResponse = AgentAliasExistsResponses[keyof AgentAliasExistsResponses];
 
 export type GetAgentScopesData = {
     body?: never;

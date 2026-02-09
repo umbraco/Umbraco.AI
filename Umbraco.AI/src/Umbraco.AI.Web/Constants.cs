@@ -9,7 +9,7 @@ public class Constants
     /// Defines the root namespace for the application.
     /// </summary>
     public const string AppNamespaceRoot = "Umbraco.AI";
-    
+
     /// <summary>
     /// Defines constants for the AI Management API.
     /// </summary>
@@ -35,7 +35,7 @@ public class Constants
         /// The namespace prefix for AI Management API.
         /// </summary>
         public const string ApiNamespacePrefix = $"{AppNamespaceRoot}.Web.Api.Management";
-        
+
         /// <summary>
         /// Defines constants for different feature areas within the Management API.
         /// </summary>
@@ -215,6 +215,22 @@ public class Constants
                 /// The Swagger group name for Version History features.
                 /// </summary>
                 public const string GroupName = "Versions";
+            }
+
+            /// <summary>
+            /// Defines constants for Tools features.
+            /// </summary>
+            public static class Tools
+            {
+                /// <summary>
+                /// The route segment for Tools features.
+                /// </summary>
+                public const string RouteSegment = "tools";
+
+                /// <summary>
+                /// The Swagger group name for Tools features.
+                /// </summary>
+                public const string GroupName = "Tools";
             }
         }
     }

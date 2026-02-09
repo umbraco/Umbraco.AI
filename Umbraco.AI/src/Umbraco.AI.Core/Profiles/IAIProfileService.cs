@@ -118,4 +118,13 @@ public interface IAIProfileService
         Guid profileId,
         int targetVersion,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a profile with the given alias exists.
+    /// </summary>
+    /// <param name="alias">The alias to check.</param>
+    /// <param name="excludeId">Optional profile ID to exclude from the check (for edit scenarios).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if a profile with the alias exists (excluding the specified ID if provided), false otherwise.</returns>
+    Task<bool> ProfileAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default);
 }

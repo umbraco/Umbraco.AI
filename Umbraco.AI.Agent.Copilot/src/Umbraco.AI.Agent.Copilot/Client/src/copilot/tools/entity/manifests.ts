@@ -1,27 +1,30 @@
-import type { ManifestUaiAgentTool } from "../uai-agent-tool.extension.js";
+import type { ManifestUaiAgentToolRenderer, ManifestUaiAgentFrontendTool } from "@umbraco-ai/agent-ui";
 
-/**
- * Tool: setPropertyValue
- *
- * Updates a property value on the currently selected entity.
- * Changes are staged in the workspace - user must click Save to persist.
- */
-const setPropertyValueManifest: ManifestUaiAgentTool = {
-    type: "uaiAgentTool",
+const setPropertyValueRendererManifest: ManifestUaiAgentToolRenderer = {
+    type: "uaiAgentToolRenderer",
     kind: "default",
-    alias: "Uai.AgentTool.SetPropertyValue",
-    name: "Set Property Value Tool",
-    api: () => import("./set-property-value.api.js"),
+    alias: "Uai.AgentToolRenderer.SetPropertyValue",
+    name: "Set Property Value Tool Renderer",
     meta: {
         toolName: "set_property_value",
         label: "Set Property Value",
+        icon: "icon-edit",
+        approval: true,
+    },
+};
+
+const setPropertyValueFrontendManifest: ManifestUaiAgentFrontendTool = {
+    type: "uaiAgentFrontendTool",
+    alias: "Uai.AgentFrontendTool.SetPropertyValue",
+    name: "Set Property Value Frontend Tool",
+    api: () => import("./set-property-value.api.js"),
+    meta: {
+        toolName: "set_property_value",
         description:
             "Update a property value on the currently selected entity (document, media, etc.). " +
             "Changes are staged in the workspace - the user must click Save to persist. " +
             "Only supports TextBox and TextArea properties. " +
             "Use the entity context to see available properties and their current values.",
-        icon: "icon-edit",
-        scope: "entity-write",
         parameters: {
             type: "object",
             properties: {
@@ -45,8 +48,8 @@ const setPropertyValueManifest: ManifestUaiAgentTool = {
             },
             required: ["alias", "value"],
         },
-        approval: true,
+        scope: "entity-write",
     },
 };
 
-export const manifests = [setPropertyValueManifest];
+export const manifests = [setPropertyValueRendererManifest, setPropertyValueFrontendManifest];

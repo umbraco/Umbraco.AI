@@ -1,7 +1,6 @@
 import type { ManifestGlobalContext } from "@umbraco-cms/backoffice/extension-registry";
 import { componentManifests } from "./components/manifests.js";
 import { manifests as toolManifests } from "./tools/manifests.js";
-import { manifests as approvalManifests } from "./approval/manifests.js";
 
 const globalContextManifest: ManifestGlobalContext = {
     type: "globalContext",
@@ -10,4 +9,4 @@ const globalContextManifest: ManifestGlobalContext = {
     api: () => import("./copilot.context.js"),
 };
 
-export const copilotManifests = [...componentManifests, ...toolManifests, ...approvalManifests, globalContextManifest];
+export const copilotManifests = [...componentManifests, ...toolManifests, globalContextManifest];

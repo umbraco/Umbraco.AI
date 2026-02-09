@@ -1,6 +1,6 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import { UAI_COPILOT_CONTEXT } from "../../../copilot/copilot.context.js";
-import type { UaiAgentToolApi } from "../uai-agent-tool.extension.js";
+import type { UaiAgentToolApi } from "@umbraco-ai/agent-ui";
 
 /**
  * Frontend tool: Set Property Value

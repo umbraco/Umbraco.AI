@@ -1,5 +1,5 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
-import type { UaiAgentToolApi } from "../uai-agent-tool.extension.js";
+import type { UaiAgentToolApi } from "@umbraco-ai/agent-ui";
 
 /**
  * Example frontend tool: Get Page Info

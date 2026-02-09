@@ -16,18 +16,14 @@
     "peerDependencies": {
         "@umbraco-ai/core": "^1.0.0",
         "@umbraco-ai/agent": "^1.0.0",
+        "@umbraco-ai/agent-ui": "workspace:*",
         "@umbraco-cms/backoffice": "^17.1.0"
     },
-    "dependencies": {
-        "@ag-ui/client": "^0.0.42",
-        "rxjs": "^7.8.2"
-    },
-    "overrides": {
-        "rxjs": "^7.8.2"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@microsoft/api-extractor": "^7.55.1",
         "@umbraco-ai/agent": "*",
+        "@umbraco-ai/agent-ui": "*",
         "@umbraco-ai/core": "*",
         "@umbraco-cms/backoffice": "^17.1.0",
         "typescript": "^5.9.2",

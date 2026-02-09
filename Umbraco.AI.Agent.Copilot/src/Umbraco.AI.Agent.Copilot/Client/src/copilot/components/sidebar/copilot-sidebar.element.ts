@@ -68,7 +68,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                 </header>
                 <uai-entity-selector></uai-entity-selector>
                 <div class="sidebar-content">
-                    <uai-copilot-chat></uai-copilot-chat>
+                    <uai-chat></uai-chat>
                 </div>
             </aside>
         `;
@@ -128,7 +128,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
             font-size: 16px;
         }
 
-        uai-copilot-chat {
+        uai-chat {
             flex: 1;
             display: block;
         }

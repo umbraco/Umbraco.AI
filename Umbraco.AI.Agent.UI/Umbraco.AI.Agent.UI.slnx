@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.csproj" />
+  </Folder>
+  <Project Path="../Umbraco.AI.Agent/src/Umbraco.AI.Agent.Core/Umbraco.AI.Agent.Core.csproj" />
+  <Project Path="../Umbraco.AI.Agent/src/Umbraco.AI.AGUI/Umbraco.AI.AGUI.csproj" />
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Core/Umbraco.AI.Core.csproj" />
+</Solution>

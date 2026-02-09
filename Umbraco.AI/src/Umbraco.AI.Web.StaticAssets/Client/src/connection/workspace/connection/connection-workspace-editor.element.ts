@@ -104,13 +104,9 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
             if (this._aliasExists) {
                   // Set custom validity to trigger :invalid state for visual styling
                 nameInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
-                // Force validation check to update visual state
-                //nameInput?.checkValidity();
             } else {
                 // Clear custom validity
                 nameInput?.setCustomValidity('');
-                // Force validation check to clear visual state
-                //nameInput?.checkValidity();
             }
         } finally {
             this._aliasCheckInProgress = false;
@@ -254,7 +250,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
                             @lock-change=${this.#onToggleAliasLock}
                             required
                             maxlength="100"
-                            pattern="^[a-z0-9\-]+$"
+                            pattern="^[a-z0-9\\-]+$"
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
                             .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}

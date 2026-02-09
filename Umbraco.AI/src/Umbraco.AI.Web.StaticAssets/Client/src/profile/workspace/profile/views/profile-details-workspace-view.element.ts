@@ -2,6 +2,7 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import type { UUISelectEvent } from "@umbraco-cms/backoffice/external/uui";
 import type { UaiProfileDetailModel, UaiModelRef, UaiChatProfileSettings } from "../../../types.js";
 import { isChatSettings } from "../../../types.js";
@@ -288,27 +289,33 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="Connection" description="Select the AI connection to use">
+                <umb-property-layout label="Connection" description="Select the AI connection to use" mandatory>
                     <uui-select
                         slot="editor"
+                        name="connectionId"
                         .value=${this._model.connectionId}
                         .options=${this.#getConnectionOptions()}
                         @change=${this.#onConnectionChange}
                         placeholder="Select a connection"
+                        required
+                        ${umbBindToValidation(this, "$.connectionId", this._model.connectionId)}
                     ></uui-select>
                 </umb-property-layout>
 
-                <umb-property-layout label="Model" description="Select the AI model to use">
+                <umb-property-layout label="Model" description="Select the AI model to use" mandatory>
                     ${this._loadingModels
                         ? html`<uui-loader-bar slot="editor"></uui-loader-bar>`
                         : html`
                               <uui-select
                                   slot="editor"
+                                  name="model"
                                   .value=${this.#getCurrentModelValue()}
                                   .options=${this.#getModelOptions()}
                                   @change=${this.#onModelChange}
                                   placeholder="Select a model"
                                   ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
+                                  required
+                                  ${umbBindToValidation(this, "$.model", this._model.model)}
                               ></uui-select>
                           `}
                 </umb-property-layout>

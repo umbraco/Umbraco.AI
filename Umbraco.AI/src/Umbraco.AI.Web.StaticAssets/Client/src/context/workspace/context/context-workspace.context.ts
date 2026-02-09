@@ -38,12 +38,21 @@ export class UaiContextWorkspaceContext
     #repository: UaiContextDetailRepository;
     #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
+    #validationContext: UmbValidationContext;
+
+    /**
+     * Expose validation context for form controls
+     */
+    get validation() {
+        return this.#validationContext;
+    }
 
     constructor(host: UmbControllerHost) {
         super(host, UAI_CONTEXT_WORKSPACE_ALIAS);
 
         this.#repository = new UaiContextDetailRepository(this);
-        this.addValidationContext(new UmbValidationContext(this));
+        this.#validationContext = new UmbValidationContext(this);
+        this.addValidationContext(this.#validationContext);
 
         this.#entityContext.setEntityType(UAI_CONTEXT_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
@@ -168,6 +177,15 @@ export class UaiContextWorkspaceContext
     async submit() {
         const model = this.#model.getValue();
         if (!model) return;
+
+        // Validate before submit
+        try {
+            await this.#validationContext.validate();
+        } catch {
+            // Validation failed - focus first invalid element
+            this.#validationContext.focusFirstInvalidElement();
+            return;
+        }
 
         // Mute command store during submit
         this.#commandStore.mute();

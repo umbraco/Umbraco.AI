@@ -1161,6 +1161,33 @@ export type CreateContextResponses = {
     201: unknown;
 };
 
+export type ContextAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/contexts/{alias}/exists';
+};
+
+export type ContextAliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type ContextAliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type ContextAliasExistsResponse = ContextAliasExistsResponses[keyof ContextAliasExistsResponses];
+
 export type DeleteContextData = {
     body?: never;
     path: {

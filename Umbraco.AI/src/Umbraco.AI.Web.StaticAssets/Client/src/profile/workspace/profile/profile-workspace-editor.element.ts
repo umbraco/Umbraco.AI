@@ -81,20 +81,18 @@ export class UaiProfileWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
 
             this._aliasExists = data === true;
 
-            // Get the alias input element
-            const aliasInput = this.shadowRoot?.querySelector<UUIInputElement>('#alias');
+            // The alias input doesn't seem to support validation styling
+            // so we'll record the error against the name input since it's the most relevant field
+            // and has the same error (required) when empty
+            const nameInput = this.shadowRoot?.querySelector<UUIInputElement>('#name');
 
             // Add/remove validation message on the workspace validation context
             if (this._aliasExists) {
                 // Set custom validity to trigger :invalid state for visual styling
-                aliasInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
-                // Force validation check to update visual state
-                aliasInput?.checkValidity();
+                nameInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
             } else {
                 // Clear custom validity
-                aliasInput?.setCustomValidity('');
-                // Force validation check to clear visual state
-                aliasInput?.checkValidity();
+                nameInput?.setCustomValidity('');
             }
         } finally {
             this._aliasCheckInProgress = false;
@@ -192,7 +190,7 @@ export class UaiProfileWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
                             @lock-change=${this.#onToggleAliasLock}
                             required
                             maxlength="100"
-                            pattern="^[a-z0-9\-]+$"
+                            pattern="^[a-z0-9\\-]+$"
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
                             .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}

@@ -1,15 +1,19 @@
-import { css, html, customElement, state, when } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, when, nothing } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
+import { umbBindToValidation, UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { UAI_CONTEXT_WORKSPACE_CONTEXT } from "./context-workspace.context-token.js";
 import { UAI_CONTEXT_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UaiContextDetailModel } from "../../types.js";
 import { UaiPartialUpdateCommand } from "../../../core/command/implement/partial-update.command.js";
 import { UAI_CONTEXT_ROOT_WORKSPACE_PATH } from "../context-root/paths.js";
+import { UAI_EMPTY_GUID } from "../../../core/index.js";
+import { ContextsService } from "../../../api/sdk.gen.js";
 
 @customElement("uai-context-workspace-editor")
-export class UaiContextWorkspaceEditorElement extends UmbLitElement {
+export class UaiContextWorkspaceEditorElement extends UmbFormControlMixin(UmbLitElement) {
     #workspaceContext?: typeof UAI_CONTEXT_WORKSPACE_CONTEXT.TYPE;
 
     @state()
@@ -20,6 +24,14 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
 
     @state()
     private _aliasLocked = true;
+
+    @state()
+    private _aliasCheckInProgress = false;
+
+    @state()
+    private _aliasExists = false;
+
+    private _aliasCheckTimeout?: number;
 
     constructor() {
         super();
@@ -39,6 +51,58 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
                 }
             });
         });
+
+        // ONLY custom validator: Async uniqueness check
+        this.addValidator(
+            "customError",
+            () => this.localize.term("uaiValidation_aliasExists"),
+            () => this._aliasExists,
+        );
+    }
+
+    protected override firstUpdated(_changedProperties: any) {
+        super.firstUpdated(_changedProperties);
+        // Register form control elements to enable HTML5 validation
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+        if (nameInput) this.addFormControlElement(nameInput as any);
+    }
+
+    async #checkAliasUniqueness(alias: string): Promise<void> {
+        if (!alias) {
+            this._aliasExists = false;
+            return;
+        }
+
+        this._aliasCheckInProgress = true;
+        try {
+            const { data } = await tryExecute(
+                this,
+                ContextsService.contextAliasExists({
+                    path: { alias },
+                    query: {
+                        excludeId: this._model?.unique !== UAI_EMPTY_GUID ? this._model?.unique : undefined,
+                    },
+                }),
+            );
+
+            this._aliasExists = data === true;
+
+            // The alias input doesn't seem to support validation styling
+            // so we'll record the error against the name input since it's the most relevant field
+            // and has the same error (required) when empty
+            const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+
+            // Add/remove validation message on the workspace validation context
+            if (this._aliasExists) {
+                // Set custom validity to trigger :invalid state for visual styling
+                nameInput?.setCustomValidity(this.localize.term("uaiValidation_aliasExists"));
+            } else {
+                // Clear custom validity
+                nameInput?.setCustomValidity("");
+            }
+        } finally {
+            this._aliasCheckInProgress = false;
+        }
     }
 
     #onNameChange(event: UUIInputEvent) {
@@ -52,6 +116,15 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
             this.#workspaceContext?.handleCommand(
                 new UaiPartialUpdateCommand<UaiContextDetailModel>({ name, alias }, "name-alias"),
             );
+
+            // Trigger alias uniqueness check for auto-generated alias
+            this._aliasExists = false;
+            if (this._aliasCheckTimeout) {
+                clearTimeout(this._aliasCheckTimeout);
+            }
+            this._aliasCheckTimeout = window.setTimeout(() => {
+                this.#checkAliasUniqueness(alias);
+            }, 500);
         } else {
             this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiContextDetailModel>({ name }, "name"));
         }
@@ -60,9 +133,22 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
     #onAliasChange(event: UUIInputEvent) {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
+        const alias = target.value.toString();
+
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiContextDetailModel>({ alias: target.value.toString() }, "alias"),
+            new UaiPartialUpdateCommand<UaiContextDetailModel>({ alias }, "alias"),
         );
+
+        // Reset uniqueness flag when user changes value
+        this._aliasExists = false;
+
+        // Debounced uniqueness check
+        if (this._aliasCheckTimeout) {
+            clearTimeout(this._aliasCheckTimeout);
+        }
+        this._aliasCheckTimeout = window.setTimeout(() => {
+            this.#checkAliasUniqueness(alias);
+        }, 500);
     }
 
     #onToggleAliasLock() {
@@ -89,22 +175,38 @@ export class UaiContextWorkspaceEditorElement extends UmbLitElement {
                         id="name"
                         .value=${this._model.name}
                         @input="${this.#onNameChange}"
-                        label="Name"
-                        placeholder="Enter context name"
+                        label=${this.localize.term("uaiLabels_name")}
+                        placeholder=${this.localize.term("uaiPlaceholders_enterName")}
                         required
+                        maxlength="255"
+                        .requiredMessage=${this.localize.term("uaiValidation_required")}
+                        .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 255)}
+                        ${umbBindToValidation(this, "$.name", this._model.name)}
                     >
                         <uui-input-lock
                             slot="append"
                             id="alias"
                             name="alias"
-                            label="Alias"
-                            placeholder="Enter alias"
+                            label=${this.localize.term("uaiLabels_alias")}
+                            placeholder=${this.localize.term("uaiPlaceholders_enterAlias")}
                             .value=${this._model.alias}
                             ?auto-width=${!!this._model.name}
                             ?locked=${this._aliasLocked}
+                            ?readonly=${this._aliasLocked || !this._isNew}
                             @input=${this.#onAliasChange}
                             @lock-change=${this.#onToggleAliasLock}
-                        ></uui-input-lock>
+                            required
+                            maxlength="100"
+                            pattern="^[a-z0-9\\-]+$"
+                            .requiredMessage=${this.localize.term("uaiValidation_required")}
+                            .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
+                            .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
+                            ${umbBindToValidation(this, "$.alias", this._model.alias)}
+                        >
+                            ${this._aliasCheckInProgress
+                                ? html`<uui-loader slot="append"></uui-loader>`
+                                : nothing}
+                        </uui-input-lock>
                     </uui-input>
                 </div>
 

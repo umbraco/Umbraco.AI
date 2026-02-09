@@ -13,10 +13,10 @@ public class AIToolCollectionTests
 
     public AIToolCollectionTests()
     {
-        _tool1 = new FakeTool("tool-1", "Tool One", category: "CategoryA", tags: ["tag1", "common"]);
-        _tool2 = new FakeTool("tool-2", "Tool Two", category: "CategoryA", tags: ["tag2", "common"]);
-        _tool3 = new FakeTool("tool-3", "Tool Three", category: "CategoryB", tags: ["tag3"]);
-        _destructiveTool = new FakeTool("destructive-tool", "Destructive Tool", category: "CategoryB", isDestructive: true);
+        _tool1 = new FakeTool("tool-1", "Tool One", scopeId: "ScopeA", tags: ["tag1", "common"]);
+        _tool2 = new FakeTool("tool-2", "Tool Two", scopeId: "ScopeA", tags: ["tag2", "common"]);
+        _tool3 = new FakeTool("tool-3", "Tool Three", scopeId: "ScopeB", tags: ["tag3"]);
+        _destructiveTool = new FakeTool("destructive-tool", "Destructive Tool", scopeId: "ScopeB", isDestructive: true);
 
         _collection = new AIToolCollection(() => new IAITool[] { _tool1, _tool2, _tool3, _destructiveTool });
     }
@@ -55,13 +55,13 @@ public class AIToolCollectionTests
 
     #endregion
 
-    #region GetByCategory
+    #region GetByScope
 
     [Fact]
-    public void GetByCategory_WithExistingCategory_ReturnsMatchingTools()
+    public void GetByScope_WithExistingScope_ReturnsMatchingTools()
     {
         // Act
-        var results = _collection.GetByCategory("CategoryA").ToList();
+        var results = _collection.GetByScope("ScopeA").ToList();
 
         // Assert
         results.Count.ShouldBe(2);
@@ -70,20 +70,20 @@ public class AIToolCollectionTests
     }
 
     [Fact]
-    public void GetByCategory_WithNonExistingCategory_ReturnsEmpty()
+    public void GetByScope_WithNonExistingScope_ReturnsEmpty()
     {
         // Act
-        var results = _collection.GetByCategory("NonExistent").ToList();
+        var results = _collection.GetByScope("NonExistent").ToList();
 
         // Assert
         results.ShouldBeEmpty();
     }
 
     [Fact]
-    public void GetByCategory_IsCaseInsensitive()
+    public void GetByScope_IsCaseInsensitive()
     {
         // Act
-        var results = _collection.GetByCategory("categorya").ToList();
+        var results = _collection.GetByScope("scopea").ToList();
 
         // Assert
         results.Count.ShouldBe(2);

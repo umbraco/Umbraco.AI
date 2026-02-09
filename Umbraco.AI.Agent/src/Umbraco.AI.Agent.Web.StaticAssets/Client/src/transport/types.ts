@@ -7,6 +7,19 @@ export { EventType, type Tool as AGUITool, type ToolMessage } from "@ag-ui/core"
 
 import type { RunAgentInput, BaseEvent, Message } from "@ag-ui/client";
 import type { Observable } from "rxjs";
+import type { Tool } from "@ag-ui/core";
+
+/**
+ * Extended AG-UI tool with Umbraco-specific metadata for frontend tools.
+ * Used internally by the copilot to attach permission and scope metadata to tools.
+ * @public
+ */
+export interface UaiFrontendTool extends Tool {
+    /** Tool scope for permission grouping (e.g., 'entity-write', 'navigation') */
+    scope?: string;
+    /** Whether the tool performs destructive operations (e.g., delete, publish) */
+    isDestructive?: boolean;
+}
 
 // =============================================================================
 // Domain Types for Agent Communication

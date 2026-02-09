@@ -42,6 +42,22 @@ internal class AIAgentEntity
     public string? ScopeIds { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of allowed tool IDs.
+    /// </summary>
+    public string? AllowedToolIds { get; set; }
+
+    /// <summary>
+    /// JSON-serialized array of allowed tool scope IDs.
+    /// </summary>
+    public string? AllowedToolScopeIds { get; set; }
+
+    /// <summary>
+    /// JSON-serialized dictionary of user group permission overrides.
+    /// Key: UserGroupId (Guid), Value: AIAgentUserGroupPermissions
+    /// </summary>
+    public string? UserGroupPermissions { get; set; }
+
+    /// <summary>
     /// Instructions that define how the agent behaves.
     /// </summary>
     public string? Instructions { get; set; }

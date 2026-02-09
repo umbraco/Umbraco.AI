@@ -1,11 +1,11 @@
-import { type Message, type BaseEvent, EventType as AGUIEventType, transformChunks } from "@ag-ui/client";
+import { type Message, type BaseEvent, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import type {
     UaiChatMessage,
     UaiToolCallInfo,
     UaiInterruptInfo,
     AgentClientCallbacks,
-    AGUITool,
+    UaiFrontendTool,
     AgentTransport,
     TextMessageStartEvent,
     TextMessageContentEvent,
@@ -112,12 +112,12 @@ export class UaiAgentClient {
     /**
      * Send messages and start a new run.
      * @param messages The messages to send
-     * @param tools Optional tools to include
+     * @param tools Optional frontend tools to include (with metadata)
      * @param context Optional context items to include for LLM awareness
      */
     sendMessage(
         messages: UaiChatMessage[],
-        tools?: AGUITool[],
+        tools?: UaiFrontendTool[],
         context?: Array<{ description: string; value: string }>,
     ): void {
         const threadId = crypto.randomUUID();
@@ -130,6 +130,9 @@ export class UaiAgentClient {
         const convertedMessages = messages.map((m) => UaiAgentClient.#toAGUIMessage(m));
         this.#transport.setMessages(convertedMessages);
 
+        // Split UaiFrontendTool into AGUITool[] and tool metadata
+        const { aguiTools, toolMetadata } = this.#splitFrontendTools(tools ?? []);
+
         // Subscribe to the transport's event stream
         // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
         this.#transport
@@ -137,8 +140,9 @@ export class UaiAgentClient {
                 threadId,
                 runId,
                 messages: convertedMessages,
-                tools: tools ?? [],
+                tools: aguiTools,
                 context: context ?? [],
+                forwardedProps: toolMetadata.length > 0 ? { toolMetadata } : undefined,
             })
             .pipe(transformChunks(false))
             .subscribe({
@@ -148,6 +152,37 @@ export class UaiAgentClient {
                     this.#callbacks.onError?.(err);
                 },
             });
+    }
+
+    /**
+     * Split UaiFrontendTool[] into AGUITool[] and tool metadata for forwardedProps.
+     * @param tools Array of UaiFrontendTool objects with metadata
+     * @returns Object with aguiTools (for LLM) and toolMetadata (for backend permission filtering)
+     */
+    #splitFrontendTools(tools: UaiFrontendTool[]): {
+        aguiTools: Tool[];
+        toolMetadata: Array<{ toolName: string; scope?: string; isDestructive: boolean }>;
+    } {
+        const aguiTools: Tool[] = [];
+        const toolMetadata: Array<{ toolName: string; scope?: string; isDestructive: boolean }> = [];
+
+        for (const tool of tools) {
+            // AG-UI tool (for LLM)
+            aguiTools.push({
+                name: tool.name,
+                description: tool.description,
+                parameters: tool.parameters,
+            });
+
+            // Tool metadata (for backend permission filtering)
+            toolMetadata.push({
+                toolName: tool.name,
+                scope: tool.scope,
+                isDestructive: tool.isDestructive ?? false,
+            });
+        }
+
+        return { aguiTools, toolMetadata };
     }
 
     /**

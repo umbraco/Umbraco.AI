@@ -143,7 +143,7 @@ internal sealed class AIPromptService : IAIPromptService
         // Create a runtime context scope for this execution
         using var runtimeContextScope = _runtimeContextScopeProvider.CreateScope(request.Context ?? []);
         var runtimeContext = runtimeContextScope.Context;
-        
+
         // 3. Process context items through registered contributors
         _contextContributors.Populate(runtimeContext);
 
@@ -177,7 +177,7 @@ internal sealed class AIPromptService : IAIPromptService
         // 6. Build chat messages with multimodal content
         List<ChatMessage> messages = [new(ChatRole.User, contents.ToList())];
 
-        // 7. Inject system message from context processors (only if IncludeEntityContext is enabled)
+        // 7. Inject system message from context processors (only if IncludeEntityContext is allowed)
         if (prompt.IncludeEntityContext && runtimeContext?.SystemMessageParts.Count > 0)
         {
             var contextContent = string.Join("\n\n", runtimeContext.SystemMessageParts);

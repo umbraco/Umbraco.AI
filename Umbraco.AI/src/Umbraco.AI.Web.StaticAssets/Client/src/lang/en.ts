@@ -4,6 +4,11 @@ export default {
     uaiGeneral: {
         select: "Select",
         close: "Close",
+        inherited: "Inherited",
+        allowed: "Allowed",
+        denied: "Denied",
+        allow: "Allow",
+        deny: "Deny",
     },
     uaiComponents: {
         pollingButtonTogglePolling: "Toggle Polling",
@@ -39,6 +44,30 @@ export default {
         noContextsAvailable: "No AI contexts available. Create one in the AI section.",
         deleteConfirm: "Are you sure you want to delete this context?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} context(s)?`,
+    },
+    uaiTool: {
+        selectTool: "Select Tools",
+        addTool: "Add tool",
+        noToolsAvailable: "No tools available",
+
+        // Tool names and descriptions
+        // Context tools (system tools - navigation scope)
+        getContextResourceLabel: "Get Context Resource",
+        getContextResourceDescription: "Retrieve a specific context resource by ID",
+        listContextResourcesLabel: "List Context Resources",
+        listContextResourcesDescription: "List available context resources that can be retrieved on demand",
+
+        // Umbraco media tools (media-read scope)
+        getUmbracoMediaLabel: "Get Umbraco Media",
+        getUmbracoMediaDescription: "Retrieve a media item from Umbraco by ID",
+
+        // Search tools (search scope)
+        searchUmbracoLabel: "Search Umbraco",
+        searchUmbracoDescription: "Search Umbraco content and media using Examine",
+
+        // Web tools (web scope)
+        fetchWebpageLabel: "Fetch Web Page",
+        fetchWebpageDescription: "Fetch and extract text content from a web page",
     },
     uaiAuditLog: {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,
@@ -100,5 +129,8 @@ export default {
         modelRequired: "Please select a model",
         temperatureRange: "Temperature must be between 0 and 2",
         maxTokensMin: "Max tokens must be at least 1",
+    },
+    uaiUserGroupPermissions: {
+        headline: "User Group Permissions",
     },
 } as UmbLocalizationDictionary;

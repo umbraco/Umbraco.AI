@@ -5,4 +5,5 @@ export * from "./embeddings/exports.js";
 export * from "./entity-adapter/exports.js";
 export * from "./profile/exports.js";
 export * from "./request-context/exports.js";
+export * from "./tool/exports.js";
 export * from "./workspace-registry/exports.js";

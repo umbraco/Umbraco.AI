@@ -46,7 +46,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
     constructor() {
         super();
 
-        // Add custom validator for alias uniqueness
+        // ONLY custom validator: Alias uniqueness (async business logic)
         this.addValidator(
             "customError",
             () => this.localize.term("uaiValidation_aliasExists"),
@@ -103,7 +103,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(Umb
             this._aliasExists = data === true;
 
             // Trigger validation re-check
-            this.checkValidity;
+            this.checkValidity();
         } finally {
             this._aliasCheckInProgress = false;
         }

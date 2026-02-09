@@ -88,7 +88,7 @@ export class UaiProfileWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
             this._aliasExists = data === true;
 
             // Trigger validation re-check
-            this.checkValidity;
+            this.checkValidity();
         } finally {
             this._aliasCheckInProgress = false;
         }

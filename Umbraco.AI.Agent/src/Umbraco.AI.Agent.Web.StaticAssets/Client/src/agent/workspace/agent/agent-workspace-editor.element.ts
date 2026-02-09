@@ -87,7 +87,7 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
             this._aliasExists = data === true;
 
             // Trigger validation re-check
-            this.checkValidity;
+            this.checkValidity();
         } finally {
             this._aliasCheckInProgress = false;
         }

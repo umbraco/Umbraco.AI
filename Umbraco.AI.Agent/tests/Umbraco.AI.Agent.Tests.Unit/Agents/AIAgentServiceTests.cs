@@ -23,7 +23,7 @@ public class AIAgentServiceTests
             CreateTool("tool1", scopeId: "content-read"),
             CreateTool("tool2", scopeId: "content-write"),
             CreateTool("tool3", scopeId: "search"),
-            CreateTool("specific-tool", scopeId: null),
+            CreateTool("specific-tool", scopeId: "custom"),
         };
         _toolCollection = new AIToolCollection(() => tools);
 

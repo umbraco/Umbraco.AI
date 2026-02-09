@@ -29,7 +29,7 @@ public class AIToolBaseTests
         // Assert
         tool.Id.ShouldBe("minimal-tool");
         tool.Name.ShouldBe("Minimal Tool");
-        tool.ScopeId.ShouldBeNull(); // Default
+        tool.ScopeId.ShouldBe("general"); // Default
         tool.IsDestructive.ShouldBeFalse(); // Default
         tool.Tags.ShouldBeEmpty(); // Default
     }

@@ -29,7 +29,7 @@ public sealed class AIToolCollection : BuilderCollectionBase<IAITool>
     /// <param name="scopeId">The scope identifier to filter by.</param>
     /// <returns>Tools in the specified scope.</returns>
     public IEnumerable<IAITool> GetByScope(string scopeId)
-        => this.Where(t => t.ScopeId.Equals(scopeId, StringComparison.OrdinalIgnoreCase));
+        => this.Where(t => string.Equals(t.ScopeId, scopeId, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
     /// Gets all tools matching any of the specified scope identifiers.

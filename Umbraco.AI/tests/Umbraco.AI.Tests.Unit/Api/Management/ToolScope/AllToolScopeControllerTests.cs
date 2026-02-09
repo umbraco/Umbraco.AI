@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Umbraco.AI.Core.Tools.Scopes;
-using Umbraco.AI.Web.Api.Management.ToolScope.Controllers;
-using Umbraco.AI.Web.Api.Management.ToolScope.Models;
+using Umbraco.AI.Web.Api.Management.Tool.Controllers;
+using Umbraco.AI.Web.Api.Management.Tool.Models;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Tests.Unit.Api.Management.ToolScope;
@@ -42,7 +42,7 @@ public class AllToolScopeControllerTests
         // Assert
         result.ShouldBeOfType<ActionResult<IEnumerable<ToolScopeItemResponseModel>>>();
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
-        var scopes = okResult.Value.ShouldBeOfType<ToolScopeItemResponseModel[]>();
+        var scopes = okResult.Value.ShouldBeAssignableTo<IEnumerable<ToolScopeItemResponseModel>>()!.ToArray();
         scopes.Length.ShouldBe(2);
         scopes[0].Id.ShouldBe("content-read");
         scopes[1].Id.ShouldBe("media-write");
@@ -65,7 +65,7 @@ public class AllToolScopeControllerTests
         // Assert
         result.ShouldBeOfType<ActionResult<IEnumerable<ToolScopeItemResponseModel>>>();
         var okResult = result.Result.ShouldBeOfType<OkObjectResult>();
-        var scopes = okResult.Value.ShouldBeOfType<ToolScopeItemResponseModel[]>();
+        var scopes = okResult.Value.ShouldBeAssignableTo<IEnumerable<ToolScopeItemResponseModel>>()!;
         scopes.ShouldBeEmpty();
     }
 

@@ -94,11 +94,15 @@ export class UaiPromptWorkspaceEditorElement extends UmbFormControlMixin(UmbLitE
 
                 // Set custom validity to trigger :invalid state for visual styling
                 aliasInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
+                // Force validation check to update visual state
+                aliasInput?.checkValidity();
             } else {
                 this.#workspaceContext?.validation.messages.removeMessageByKey('alias-uniqueness');
 
                 // Clear custom validity
                 aliasInput?.setCustomValidity('');
+                // Force validation check to clear visual state
+                aliasInput?.checkValidity();
             }
         } finally {
             this._aliasCheckInProgress = false;

@@ -92,6 +92,10 @@ interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolApi> {
         toolName: string;
         description: string;     // required -- LLM needs this
         parameters: Record<string, unknown>;  // required -- LLM needs this
+        /** Tool scope for permission grouping (e.g., 'entity-write', 'navigation') */
+        scope?: string;
+        /** Whether the tool performs destructive operations */
+        isDestructive?: boolean;
     };
 }
 ```
@@ -244,9 +248,9 @@ export interface UaiRunControllerConfig {
     toolRendererManager: UaiToolRendererManager;
     /** Optional frontend tool provider -- copilot injects this, chat does not */
     frontendToolProvider?: {
-        /** Tools to send in the AG-UI request */
-        frontendTools: AGUITool[];
-        frontendTools$: Observable<AGUITool[]>;
+        /** Tools to send in the AG-UI request (includes scope/isDestructive metadata) */
+        frontendTools: UaiFrontendTool[];
+        frontendTools$: Observable<UaiFrontendTool[]>;
     };
     /** Interrupt handlers to register */
     interruptHandlers: UaiInterruptHandler[];
@@ -339,6 +343,7 @@ Delete everything that moved. The copilot becomes a thin surface shell.
 │   │
 │   ├── tools/
 │   │   ├── uai-agent-frontend-tool.extension.ts   ManifestUaiAgentFrontendTool type
+│   │   ├── frontend-tool.repository.ts   Implements UaiFrontendToolRepositoryApi for tool picker
 │   │   ├── examples/                     Example frontend tools + renderers
 │   │   ├── entity/                       Entity tools (set_property_value)
 │   │   └── umbraco/                      Backend tool renderers (search_umbraco)
@@ -379,13 +384,16 @@ DELETED from copilot:
 ### 1h: FrontendToolManager (new, copilot-only)
 
 ```typescript
+import { type UaiFrontendTool } from "@umbraco-ai/agent";
+
 // Extracted from UaiToolManager -- only the execution/LLM concerns
+// Produces UaiFrontendTool[] (extends AGUITool with scope + isDestructive metadata)
 export class UaiFrontendToolManager extends UmbControllerBase {
     #apiCache: Map<string, UaiAgentToolApi> = new Map();
-    #frontendTools = new BehaviorSubject<AGUITool[]>([]);
+    #frontendTools = new BehaviorSubject<UaiFrontendTool[]>([]);
 
     readonly frontendTools$ = this.#frontendTools.asObservable();
-    get frontendTools(): AGUITool[] { return [...this.#frontendTools.value]; }
+    get frontendTools(): UaiFrontendTool[] { return [...this.#frontendTools.value]; }
 
     constructor(host: UmbControllerHost) {
         super(host);
@@ -395,6 +403,9 @@ export class UaiFrontendToolManager extends UmbControllerBase {
                 name: m.meta.toolName,
                 description: m.meta.description,
                 parameters: m.meta.parameters,
+                // Permission metadata -- forwarded to backend via UaiAgentClient
+                scope: m.meta.scope,
+                isDestructive: m.meta.isDestructive ?? false,
             })));
         });
     }
@@ -594,6 +605,8 @@ const frontendTool: ManifestUaiAgentFrontendTool = {
         toolName: "my_tool",
         description: "Does something",
         parameters: { type: "object", properties: { query: { type: "string" } } },
+        scope: "search",             // permission grouping
+        isDestructive: false,         // safe operation
     },
     api: () => import("./my-tool.api.js"),
 };
@@ -641,6 +654,66 @@ Chat components currently use keys prefixed with `uaiCopilot_`. Since we're alph
 - No backward-compatible aliases needed
 - Copilot-specific keys (sidebar title, section labels) stay as `uaiCopilot_`
 - Chat-specific keys use `uaiChat_` prefix
+
+---
+
+## API Changes from dev (merged 2026-02-09)
+
+Several features landed on dev that affect the plan. This section documents what changed and how the plan adapts.
+
+### Tool Permissions System
+
+A full tool permissions system was added. This affects both manifest types and the transport layer.
+
+**New backend concepts:**
+- `AIAgent` now has `AllowedToolIds`, `AllowedToolScopeIds`, and `UserGroupPermissions` -- agents control which tools they can use
+- `AIAgentToolHelper` resolves effective tool permissions (agent defaults + user group overrides - denials)
+- `AIToolScopeCollection` / `IAIToolScope` -- backend tool scopes for permission grouping (e.g., "content-read", "content-write")
+- `AIFrontendTool` record (C#) -- wraps `AGUITool` with `Scope` and `IsDestructive` metadata
+
+**New frontend concepts:**
+- `ManifestUaiAgentTool.meta` gained `scope?: string` and `isDestructive?: boolean` fields
+- `UaiFrontendTool` type (in `@umbraco-ai/agent` transport) extends AG-UI `Tool` with `scope` and `isDestructive`
+- `UaiToolManager` now produces `UaiFrontendTool[]` instead of `AGUITool[]`
+- `UaiAgentClient.sendMessage()` splits `UaiFrontendTool[]` into AG-UI tools + `toolMetadata` in `forwardedProps`
+- `RunAgentController` recombines tools with metadata on the server, then filters by agent permissions
+- `UaiFrontendToolRepository` in copilot -- exposes frontend tool metadata for the backoffice tool picker
+- `UaiFrontendToolRepositoryApi` / `UaiFrontendToolData` in `@umbraco-ai/core` -- interface for frontend tool discovery
+
+**Impact on the plan:**
+
+1. **`ManifestUaiAgentFrontendTool` meta needs `scope` and `isDestructive`**. These fields were added to the old `ManifestUaiAgentTool.meta` and must carry over to the new frontend tool manifest:
+
+    ```typescript
+    interface ManifestUaiAgentFrontendTool extends ManifestApi<UaiAgentToolApi> {
+        type: "uaiAgentFrontendTool";
+        meta: {
+            toolName: string;
+            description: string;
+            parameters: Record<string, unknown>;
+            scope?: string;           // NEW
+            isDestructive?: boolean;   // NEW
+        };
+    }
+    ```
+
+2. **`FrontendToolManager` must produce `UaiFrontendTool[]`** (not plain `AGUITool[]`). It reads `scope` and `isDestructive` from the manifest and includes them in the tool objects passed to the AG-UI client.
+
+3. **`UaiFrontendToolRepository` stays in copilot**. It queries the extension registry for frontend tool manifests to feed the backoffice tool picker. After the split, it queries `"uaiAgentFrontendTool"` extensions instead of `"uaiAgentTool"`.
+
+4. **`UaiFrontendToolRepositoryApi` stays in `@umbraco-ai/core`**. It's the interface contract -- any package providing frontend tools implements it. This is correct and doesn't change.
+
+5. **`ManifestUaiAgentToolRenderer` does NOT need `scope` or `isDestructive`**. These are execution/permission concerns, not rendering concerns. The renderer only needs `toolName`, `label`, `icon`, and `approval`.
+
+6. **The transport layer (`UaiAgentClient`) already handles the split correctly**. It accepts `UaiFrontendTool[]`, splits into AG-UI tools + metadata, and sends metadata via `forwardedProps`. No changes needed -- the `FrontendToolManager` just needs to produce the right type.
+
+### Workspace Validation
+
+All workspaces (Connection, Profile, Agent, Prompt) gained client-side validation with alias uniqueness checking. This is purely additive and doesn't affect the plan. The agent workspace editor's validation will stay in `@umbraco-ai/agent`, not in the copilot or chat packages.
+
+### Alias Existence Endpoints
+
+New `AliasExists` controllers added across Core, Agent, and Prompt. Backend-only -- no impact on the split.
 
 ---
 

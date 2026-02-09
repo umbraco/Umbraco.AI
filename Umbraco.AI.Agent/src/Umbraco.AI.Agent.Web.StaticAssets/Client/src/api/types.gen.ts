@@ -366,6 +366,33 @@ export type RunAgentResponses = {
 
 export type RunAgentResponse = RunAgentResponses[keyof RunAgentResponses];
 
+export type AgentAliasExistsData = {
+    body?: never;
+    path: {
+        alias: string;
+    };
+    query?: {
+        excludeId?: string;
+    };
+    url: '/umbraco/ai/management/api/v1/agents/{alias}/exists';
+};
+
+export type AgentAliasExistsErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type AgentAliasExistsResponses = {
+    /**
+     * OK
+     */
+    200: boolean;
+};
+
+export type AgentAliasExistsResponse = AgentAliasExistsResponses[keyof AgentAliasExistsResponses];
+
 export type GetAgentScopesData = {
     body?: never;
     path?: never;

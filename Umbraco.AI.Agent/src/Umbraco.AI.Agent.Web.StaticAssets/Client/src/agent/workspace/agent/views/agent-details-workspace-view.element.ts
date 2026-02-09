@@ -2,6 +2,7 @@ import { css, html, customElement, state } from "@umbraco-cms/backoffice/externa
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import type { UaiAgentDetailModel } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
@@ -109,11 +110,13 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-context-picker>
                 </umb-property-layout>
 
-                <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves">
+                <umb-property-layout label="Instructions" description="Instructions that define how this agent behaves" mandatory>
                     <umb-input-markdown
                         slot="editor"
                         .value=${this._model.instructions ?? ""}
                         @change=${this.#onInstructionsChange}
+                        required
+                        ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>

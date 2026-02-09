@@ -10,6 +10,14 @@ export default {
         allow: "Allow",
         deny: "Deny",
     },
+    uaiLabels: {
+        name: "Name",
+        alias: "Alias",
+    },
+    uaiPlaceholders: {
+        enterName: "Enter a name for this item",
+        enterAlias: "Enter an alias for this item",
+    },
     uaiComponents: {
         pollingButtonTogglePolling: "Toggle Polling",
         pollingButtonPolling: "Polling",
@@ -115,6 +123,20 @@ export default {
         amazonSecretAccessKeyDescription: "The AWS Secret Access Key for authenticating with Bedrock services",
         amazonEndpointLabel: "Custom Endpoint",
         amazonEndpointDescription: "Custom endpoint URL for Bedrock services (optional)",
+    },
+    uaiValidation: {
+        required: "This field is required",
+        aliasFormat: "Alias can only contain lowercase letters, numbers, and hyphens",
+        aliasExists: "An item with this alias already exists",
+        minLength: (min: number) => `Must be at least ${min} characters`,
+        maxLength: (max: number) => `Must not exceed ${max} characters`,
+        rangeUnderflow: (min: number) => `Value must be at least ${min}`,
+        rangeOverflow: (max: number) => `Value must not exceed ${max}`,
+        providerRequired: "Please select a provider",
+        connectionRequired: "Please select a connection",
+        modelRequired: "Please select a model",
+        temperatureRange: "Temperature must be between 0 and 2",
+        maxTokensMin: "Max tokens must be at least 1",
     },
     uaiUserGroupPermissions: {
         headline: "User Group Permissions",

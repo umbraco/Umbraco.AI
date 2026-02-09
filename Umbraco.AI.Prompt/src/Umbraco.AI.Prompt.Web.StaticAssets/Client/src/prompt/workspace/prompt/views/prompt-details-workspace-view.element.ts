@@ -2,6 +2,7 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
 import "@umbraco-cms/backoffice/markdown-editor";
@@ -169,11 +170,13 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-toggle>
                 </umb-property-layout>
 
-                <umb-property-layout label="Instructions" description="The prompt instructions template">
+                <umb-property-layout label="Instructions" description="The prompt instructions template" mandatory>
                     <umb-input-markdown
                         slot="editor"
                         .value=${this._model.instructions ?? ""}
                         @change=${this.#onInstructionsChange}
+                        required
+                        ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>

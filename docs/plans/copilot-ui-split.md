@@ -717,6 +717,364 @@ New `AliasExists` controllers added across Core, Agent, and Prompt. Backend-only
 
 ---
 
+## Azure Pipeline Configuration
+
+The split introduces two new products (`Umbraco.AI.Agent.UI`, `Umbraco.AI.Agent.Chat`) and changes the build level of the existing Copilot. This section documents all CI/CD changes needed.
+
+### Build level impact
+
+The NuGet dependency chain after the split:
+
+```
+Level 0: Umbraco.AI
+Level 1: Providers, Prompt, Agent
+Level 2: Agent.UI (depends on Agent)
+Level 3: Agent.Copilot, Agent.Chat (depend on Agent.UI)  ← NEW LEVEL
+```
+
+Currently Copilot is Level 2 (depends on Agent). After the split, Copilot and Chat both depend on Agent.UI, which pushes them to Level 3. The pipeline currently only supports Levels 0-2, so a new `level3Products` parameter and `PackLevel3` job are required.
+
+**Why Copilot/Chat must NuGet-depend on Agent.UI**: Both packages need the shared UI static assets (App_Plugins) to be automatically installed. Without the NuGet dependency, users would have to manually install `Umbraco.AI.Agent.UI` alongside Copilot or Chat.
+
+### `azure-pipelines.yml` parameter changes
+
+```yaml
+parameters:
+    - name: level1Products
+      type: object
+      default:
+          # Providers (no frontend)
+          - name: Umbraco.AI.OpenAI
+            changeVar: OpenaiChanged
+            hasNpm: false
+          - name: Umbraco.AI.Anthropic
+            changeVar: AnthropicChanged
+            hasNpm: false
+          - name: Umbraco.AI.Amazon
+            changeVar: AmazonChanged
+            hasNpm: false
+          - name: Umbraco.AI.Google
+            changeVar: GoogleChanged
+            hasNpm: false
+          - name: Umbraco.AI.MicrosoftFoundry
+            changeVar: MicrosoftfoundryChanged
+            hasNpm: false
+          # Add-ons
+          - name: Umbraco.AI.Prompt
+            changeVar: PromptChanged
+            hasNpm: false
+          - name: Umbraco.AI.Agent
+            changeVar: AgentChanged
+            hasNpm: true
+    - name: level2Products                   # CHANGED -- Copilot removed, Agent.UI added
+      type: object
+      default:
+          - name: Umbraco.AI.Agent.UI
+            changeVar: AgentuiChanged
+            hasNpm: true
+    - name: level3Products                   # NEW
+      type: object
+      default:
+          - name: Umbraco.AI.Agent.Copilot
+            changeVar: AgentCopilotChanged
+            hasNpm: true
+          - name: Umbraco.AI.Agent.Chat
+            changeVar: AgentChatChanged
+            hasNpm: true
+```
+
+### New `PackLevel3` job
+
+A new pack job following the same pattern as `PackLevel2`, but downloading Core, Level 1, and Level 2 packages as local NuGet feeds:
+
+```yaml
+- job: PackLevel3
+  displayName: Pack Level 3
+  dependsOn:
+      - DetectChanges
+      - PackCore
+      - PackLevel1
+      - PackLevel2
+  condition: |
+      and(
+        not(failed()),
+        not(canceled()),
+        eq(dependencies.DetectChanges.outputs['detect.Level3Changed'], 'true')
+      )
+  strategy:
+      matrix:
+          ${{ each product in parameters.level3Products }}:
+              ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
+                  product: ${{ product.name }}
+                  changeVar: ${{ product.changeVar }}
+      maxParallel: 10
+  variables:
+      CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
+      ${{ each product in parameters.level1Products }}:
+          ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+      ${{ each product in parameters.level2Products }}:
+          ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+      ${{ each product in parameters.level3Products }}:
+          ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+  steps:
+      - checkout: self
+        fetchDepth: 0
+      - template: .azure-pipelines/templates/check-should-pack.yml
+      - template: .azure-pipelines/templates/setup-pack-job.yml
+        parameters:
+            downloadCore: true
+            downloadLevel1: true
+            downloadLevel2: true          # NEW parameter
+            level1Products: ${{ parameters.level1Products }}
+            level2Products: ${{ parameters.level2Products }}
+      - template: .azure-pipelines/templates/pack-product.yml
+        parameters:
+            product: $(product)
+            useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
+            condition: eq(variables['check.shouldPack'], 'true')
+      - template: .azure-pipelines/templates/upload-packages.yml
+        parameters:
+            product: $(product)
+            condition: eq(variables['check.shouldPack'], 'true')
+```
+
+### Template changes
+
+**`setup-pack-job.yml`** -- Add `downloadLevel2` parameter:
+
+```yaml
+parameters:
+    - name: downloadLevel2
+      type: boolean
+      default: false
+    - name: level2Products
+      type: object
+      default: []
+
+# Add after existing Level 1 download:
+- ${{ if eq(parameters.downloadLevel2, true) }}:
+      - ${{ each product in parameters.level2Products }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download ${{ product.name }} packages (local feed)
+              condition: |
+                  and(
+                    ${{ parameters.condition }},
+                    eq(variables['${{ product.changeVar }}'], 'true')
+                  )
+              inputs:
+                  artifact: ${{ product.name }}-packages
+                  path: $(Build.SourcesDirectory)/artifacts/nupkg
+```
+
+### `CollectPackages` job updates
+
+Add `PackLevel3` to `dependsOn`, add Level 3 change variables, and add Level 3 download steps:
+
+```yaml
+- job: CollectPackages
+  dependsOn:
+      - DetectChanges
+      - PackCore
+      - PackLevel1
+      - PackLevel2
+      - PackLevel3          # NEW
+
+  variables:
+      # ... existing Core + Level 1 + Level 2 variables ...
+      ${{ each product in parameters.level3Products }}:
+          ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+
+  steps:
+      # ... existing Core + Level 1 + Level 2 downloads ...
+
+      # Download Level 3 NuGet packages
+      - ${{ each product in parameters.level3Products }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download ${{ product.name }} NuGet packages
+              condition: eq(variables.${{ product.changeVar }}, 'true')
+              inputs:
+                  artifact: "${{ product.name }}-packages"
+                  targetPath: "$(Pipeline.Workspace)/nuget"
+
+      # Download Level 3 npm packages
+      - ${{ each product in parameters.level3Products }}:
+            - ${{ if eq(product.hasNpm, true) }}:
+                  - task: DownloadPipelineArtifact@2
+                    displayName: Download ${{ product.name }} npm packages
+                    condition: eq(variables.${{ product.changeVar }}, 'true')
+                    inputs:
+                        artifact: "${{ product.name }}-npm-packages"
+                        targetPath: "$(Pipeline.Workspace)/npm"
+```
+
+The `buildManifest` step in CollectPackages also needs `LEVEL3_JSON`:
+
+```yaml
+env:
+    LEVEL1_JSON: ${{ convertToJson(parameters.level1Products) }}
+    LEVEL2_JSON: ${{ convertToJson(parameters.level2Products) }}
+    LEVEL3_JSON: ${{ convertToJson(parameters.level3Products) }}
+```
+
+And the PowerShell script extended to iterate `$level3`:
+
+```powershell
+$level3 = $env:LEVEL3_JSON | ConvertFrom-Json
+foreach ($p in $level3) {
+    $changeVar = [string]$p.changeVar
+    $changed = [Environment]::GetEnvironmentVariable($changeVar)
+    if (-not $changed) {
+        $changed = [Environment]::GetEnvironmentVariable($changeVar.ToUpper())
+    }
+    if ($changed -eq "true") {
+        Add-VersionByProduct $p.name
+    }
+}
+```
+
+### SBOM generation updates
+
+Add Level 3 to the GenerateSBOM stage:
+
+```yaml
+# Level 3 products (matrix)
+- job: GenerateSBOM_Level3
+  displayName: Generate SBOM - Level 3
+  pool:
+      vmImage: "ubuntu-latest"
+  strategy:
+      matrix:
+          ${{ each product in parameters.level3Products }}:
+              ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
+                  product: ${{ product.name }}
+      maxParallel: 10
+  steps:
+      - checkout: self
+        fetchDepth: 1
+      - task: NodeTool@0
+        displayName: Setup Node.js
+        inputs:
+            versionSpec: $(NODE_VERSION)
+      - template: .azure-pipelines/templates/generate-sbom.yml
+        parameters:
+            product: $(product)
+```
+
+`CollectSBOMs` adds `GenerateSBOM_Level3` to `dependsOn` and downloads Level 3 SBOMs:
+
+```yaml
+- job: CollectSBOMs
+  dependsOn:
+      - GenerateSBOM_Core
+      - GenerateSBOM_Level1
+      - GenerateSBOM_Level2
+      - GenerateSBOM_Level3      # NEW
+  steps:
+      # ... existing downloads ...
+      - ${{ each product in parameters.level3Products }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download ${{ product.name }} SBOM
+              inputs:
+                  artifact: "${{ product.name }}-sbom"
+                  targetPath: "$(Pipeline.Workspace)/sboms"
+```
+
+### `detect-changes.ps1` updates
+
+The script auto-discovers products and computes build levels from `.csproj` dependencies. No changes needed to the detection logic itself -- it already handles arbitrary dependency depths. It outputs:
+
+- Per-product variables: `CoreChanged`, `AgentChanged`, `AgentuiChanged`, `AgentCopilotChanged`, `AgentChatChanged`
+- Per-level variables: `Level0Changed`, `Level1Changed`, `Level2Changed`, `Level3Changed`
+
+The script's `Get-VariableName` function converts product keys to variable names:
+- `"agent.ui"` → `"AgentuiChanged"` (dots are collapsed in the PascalCase conversion)
+- `"agent.chat"` → `"AgentchatChanged"`
+- `"agent.copilot"` → `"AgentcopilotChanged"` (unchanged from current)
+
+Verify the `changeVar` values in the pipeline parameters match what the script produces. The current `AgentCopilotChanged` works because `Get-ProductKey("Umbraco.AI.Agent.Copilot")` returns `"agent.copilot"` and `Get-VariableName` converts that to `"AgentcopilotChanged"` -- but the parameter says `AgentCopilotChanged` (capital C). This existing inconsistency should be checked; if the detect script is case-insensitive, this works, but if not, align the casing.
+
+### npm workspace and build order
+
+**Root `package.json`** -- add new workspaces and build scripts:
+
+```json
+{
+    "workspaces": [
+        "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client",
+        "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client",
+        "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client",
+        "Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Client",
+        "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Client",
+        "Umbraco.AI.Agent.Chat/src/Umbraco.AI.Agent.Chat/Client"
+    ],
+    "scripts": {
+        "build": "npm run build:core && npm run build:prompt && npm run build:agent && npm run build:agent-ui && npm run build:copilot && npm run build:chat",
+        "build:core": "npm run build -w @umbraco-ai/core",
+        "build:prompt": "npm run build -w @umbraco-ai/prompt",
+        "build:agent": "npm run build -w @umbraco-ai/agent",
+        "build:agent-ui": "npm run build -w @umbraco-ai/agent-ui",
+        "build:copilot": "npm run build -w @umbraco-ai/copilot",
+        "build:chat": "npm run build -w @umbraco-ai/chat",
+        "watch": "concurrently --names \"core,prompt,agent,agent-ui,copilot,chat\" -c \"blue,green,yellow,cyan,magenta,red\" \"npm run watch:core\" \"npm run watch:prompt\" \"npm run watch:agent\" \"npm run watch:agent-ui\" \"npm run watch:copilot\" \"npm run watch:chat\"",
+        "watch:core": "npm run watch -w @umbraco-ai/core",
+        "watch:prompt": "npm run watch -w @umbraco-ai/prompt",
+        "watch:agent": "npm run watch -w @umbraco-ai/agent",
+        "watch:agent-ui": "npm run watch -w @umbraco-ai/agent-ui",
+        "watch:copilot": "npm run build -w @umbraco-ai/copilot",
+        "watch:chat": "npm run watch -w @umbraco-ai/chat"
+    }
+}
+```
+
+The sequential build order (`&&`) ensures npm dependencies are available: `core → prompt → agent → agent-ui → copilot → chat`.
+
+### New product scaffolding files
+
+Each new product needs:
+
+| File | Product | Purpose |
+|---|---|---|
+| `Umbraco.AI.Agent.UI/changelog.config.json` | Agent.UI | Commit scopes: `["agent-ui"]` |
+| `Umbraco.AI.Agent.Chat/changelog.config.json` | Agent.Chat | Commit scopes: `["chat"]` |
+| `Umbraco.AI.Agent.UI/version.json` | Agent.UI | NBGV versioning configuration |
+| `Umbraco.AI.Agent.Chat/version.json` | Agent.Chat | NBGV versioning configuration |
+| `Umbraco.AI.Agent.UI/Directory.Packages.props` | Agent.UI | NuGet version range for Agent dependency |
+| `Umbraco.AI.Agent.Chat/Directory.Packages.props` | Agent.Chat | NuGet version range for Agent dependency |
+
+**changelog.config.json examples**:
+
+```json
+// Umbraco.AI.Agent.UI/changelog.config.json
+{ "scopes": ["agent-ui"] }
+
+// Umbraco.AI.Agent.Chat/changelog.config.json
+{ "scopes": ["chat"] }
+```
+
+The commitlint config auto-discovers these -- no changes needed to `commitlint.config.js`.
+
+### `Umbraco.AI.local.sln` update
+
+The local unified solution must include the two new projects. Regenerate with:
+
+```bash
+dotnet sln Umbraco.AI.local.sln add Umbraco.AI.Agent.UI/Umbraco.AI.Agent.UI.sln
+dotnet sln Umbraco.AI.local.sln add Umbraco.AI.Agent.Chat/Umbraco.AI.Agent.Chat.sln
+```
+
+### Summary of pipeline file changes
+
+| File | Change |
+|---|---|
+| `azure-pipelines.yml` | Add `level3Products` parameter; move Copilot to Level 3; add Agent.UI to Level 2; add Agent.Chat to Level 3; add `PackLevel3` job; add `GenerateSBOM_Level3` job; update `CollectPackages` and `CollectSBOMs` dependencies and downloads |
+| `.azure-pipelines/templates/setup-pack-job.yml` | Add `downloadLevel2` + `level2Products` parameters and download steps |
+| `package.json` (root) | Add workspaces for Agent.UI and Agent.Chat; add build/watch scripts; update build order |
+| `NuGet.CI.config` | No changes needed (existing `Umbraco.AI.*` pattern covers new packages) |
+| `.azure-pipelines/scripts/detect-changes.ps1` | No changes needed (auto-discovers products and computes levels) |
+| `commitlint.config.js` | No changes needed (auto-discovers scopes from `changelog.config.json` files) |
+
+---
+
 ## Risks and Considerations
 
 ### Package naming

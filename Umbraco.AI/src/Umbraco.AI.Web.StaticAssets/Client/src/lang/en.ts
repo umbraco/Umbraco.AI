@@ -127,7 +127,6 @@ export default {
     uaiValidation: {
         required: "This field is required",
         aliasFormat: "Alias can only contain lowercase letters, numbers, and hyphens",
-        aliasFormatExtended: "Alias can only contain letters, numbers, underscores, and hyphens",
         aliasExists: "An item with this alias already exists",
         minLength: (min: number) => `Must be at least ${min} characters`,
         maxLength: (max: number) => `Must not exceed ${max} characters`,

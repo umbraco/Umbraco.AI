@@ -204,10 +204,10 @@ export class UaiAgentWorkspaceEditorElement extends UmbFormControlMixin(UmbLitEl
                             @lock-change=${this.#onToggleAliasLock}
                             required
                             maxlength="100"
-                            pattern="^[a-zA-Z0-9_\\-]+$"
+                            pattern="^[a-z0-9\\-]+$"
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
-                            .patternMessage=${this.localize.term("uaiValidation_aliasFormatExtended")}
+                            .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
                             ${umbBindToValidation(this, "$.alias", this._model.alias)}
                         >
                             ${this._aliasCheckInProgress ? html`<uui-loader slot="append"></uui-loader>` : nothing}

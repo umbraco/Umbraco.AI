@@ -74,6 +74,12 @@ export class UaiContextWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
         }
 
         this._aliasCheckInProgress = true;
+
+        // Set temporary validity state while checking to prevent submission during debounce
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+        nameInput?.setCustomValidity("Checking alias availability...");
+        this.checkValidity();
+
         try {
             const { data } = await tryExecute(
                 this,
@@ -100,6 +106,9 @@ export class UaiContextWorkspaceEditorElement extends UmbFormControlMixin(UmbLit
                 // Clear custom validity
                 nameInput?.setCustomValidity("");
             }
+
+            // Trigger validation re-check to update UI
+            this.checkValidity();
         } finally {
             this._aliasCheckInProgress = false;
         }

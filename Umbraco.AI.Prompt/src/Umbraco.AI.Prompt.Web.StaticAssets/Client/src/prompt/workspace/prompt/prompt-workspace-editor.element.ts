@@ -67,6 +67,12 @@ export class UaiPromptWorkspaceEditorElement extends UmbFormControlMixin(UmbLitE
         }
 
         this._aliasCheckInProgress = true;
+
+        // Set temporary validity state while checking to prevent submission during debounce
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+        nameInput?.setCustomValidity("Checking alias availability...");
+        this.checkValidity();
+
         try {
             const { data } = await tryExecute(
                 this,
@@ -93,6 +99,9 @@ export class UaiPromptWorkspaceEditorElement extends UmbFormControlMixin(UmbLitE
                 // Clear custom validity
                 nameInput?.setCustomValidity('');
             }
+
+            // Trigger validation re-check to update UI
+            this.checkValidity();
         } finally {
             this._aliasCheckInProgress = false;
         }
@@ -198,7 +207,7 @@ export class UaiPromptWorkspaceEditorElement extends UmbFormControlMixin(UmbLitE
                             pattern="^[a-zA-Z0-9_\\-]+$"
                             .requiredMessage=${this.localize.term("uaiValidation_required")}
                             .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
-                            .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
+                            .patternMessage=${this.localize.term("uaiValidation_aliasFormatExtended")}
                             ${umbBindToValidation(this, "$.alias", this._model.alias)}
                         >
                             ${this._aliasCheckInProgress ? html`<uui-loader slot="append"></uui-loader>` : nothing}

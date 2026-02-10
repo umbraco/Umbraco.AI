@@ -115,24 +115,32 @@ Use **AskUserQuestion** to confirm or adjust versions:
 
 **Branch Naming Convention:**
 
-Per CONTRIBUTING.md, the **recommended** convention is calendar-based:
-- `release/YYYY.MM` - Year and month of the release
-- Example: `release/2026.02` for a February 2026 release
+Per CONTRIBUTING.md, the **recommended** convention is calendar-based with incrementing numbers:
+- `release/YYYY.MM.N` - Year, month, and incrementing release number
+- Example: `release/2026.02.1` for the first February 2026 release
+- Example: `release/2026.02.2` for the second February 2026 release
 
-This is independent from product version numbers (which follow semantic versioning). A single release branch like `release/2026.02` can contain multiple products at different versions (e.g., Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5).
+This is independent from product version numbers (which follow semantic versioning). A single release branch like `release/2026.02.1` can contain multiple products at different versions (e.g., Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5).
 
 **Workflow:**
 
 1. **Determine current date** - Get current year and month for default branch name
 
-2. **Ask user for branch name**:
+2. **Find next release number** - Check existing release branches for current month:
+   ```bash
+   # Find existing release branches for current month
+   git branch -a | grep "release/2026.02" | wc -l
+   # Next number is count + 1
+   ```
+
+3. **Ask user for branch name**:
    ```
    Create release branch using recommended calendar naming?
 
-   Suggested: release/2026.02 (current: February 2026)
+   Suggested: release/2026.02.1 (first release in February 2026)
 
    Options:
-   - Use suggested name (release/2026.02)
+   - Use suggested name (release/2026.02.1)
    - Enter custom name (e.g., release/v1.1.0 for version-based)
    - Cancel
    ```
@@ -144,7 +152,7 @@ This is independent from product version numbers (which follow semantic versioni
 
 4. **Confirm branch creation**:
     ```
-    ✓ Created and switched to branch: release/2026.02
+    ✓ Created and switched to branch: release/2026.02.1
 
     All subsequent changes will be made on this branch.
 
@@ -233,7 +241,7 @@ Verify all files are consistent:
 
 2. **Create commit**:
     ```bash
-    git commit -m "chore(release): Prepare release 2026.02
+    git commit -m "chore(release): Prepare release 2026.02.1
 
     Updated products:
     - Umbraco.AI: 1.0.0 → 1.1.0
@@ -243,11 +251,11 @@ Verify all files are consistent:
     Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
     ```
 
-    **Note:** Use the release branch name (e.g., 2026.02) in the commit message, not product versions.
+    **Note:** Use the release branch name (e.g., 2026.02.1) in the commit message, not product versions.
 
 3. **Show summary**:
     ```
-    ✓ Release branch created: release/2026.02
+    ✓ Release branch created: release/2026.02.1
     ✓ Updated 3 products:
       - Umbraco.AI: 1.0.0 → 1.1.0
       - Umbraco.AI.OpenAI: 1.0.0 → 1.0.1
@@ -257,7 +265,7 @@ Verify all files are consistent:
 
     Next steps:
     - Review the changes: git show HEAD
-    - Push to remote: git push -u origin release/2026.02
+    - Push to remote: git push -u origin release/2026.02.1
     - Create PR to merge into main
     - CI will validate and build packages
     ```
@@ -265,9 +273,10 @@ Verify all files are consistent:
 ## Important Notes
 
 - Always run from repository root
-- **Branch naming**: Use calendar-based naming `release/YYYY.MM` (recommended per CONTRIBUTING.md)
+- **Branch naming**: Use calendar-based naming `release/YYYY.MM.N` (recommended per CONTRIBUTING.md)
   - Independent from product versions (multiple products = different versions in one release)
-  - Example: `release/2026.02` can contain Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5
+  - N is an incrementing number for each release in that month (1, 2, 3, etc.)
+  - Example: `release/2026.02.1` can contain Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5
   - Version-based naming like `release/v1.1.0` is valid but not recommended
 - Use conventional commit analysis for version recommendations
 - Validate cross-product dependencies
@@ -323,7 +332,8 @@ Options:
 User confirms with chosen option
 
 Phase 4: Create release branch
-You suggest: release/2026.02 (calendar-based, recommended)
+You detect: No existing release/2026.02.* branches
+You suggest: release/2026.02.1 (first release in February 2026)
 You create the branch and switch to it
 All subsequent work happens on this branch
 

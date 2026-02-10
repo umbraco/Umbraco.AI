@@ -11,6 +11,7 @@ This is a monorepo containing Umbraco.AI and its add-on packages:
 | **Umbraco.AI**                  | Core AI integration layer for Umbraco CMS  | `Umbraco.AI/`                  |
 | **Umbraco.AI.Prompt**           | Prompt template management add-on          | `Umbraco.AI.Prompt/`           |
 | **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`            |
+| **Umbraco.AI.Agent.UI**         | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`         |
 | **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/`    |
 | **Umbraco.AI.OpenAI**           | OpenAI provider plugin                     | `Umbraco.AI.OpenAI/`           |
 | **Umbraco.AI.Anthropic**        | Anthropic provider plugin                  | `Umbraco.AI.Anthropic/`        |
@@ -125,7 +126,7 @@ This monorepo uses **npm workspaces** for efficient dependency management. Add-o
 # Install all workspace dependencies (run from root)
 npm install
 
-# Build all frontends (sequential: core -> prompt -> agent)
+# Build all frontends (sequential: core -> prompt -> agent -> agent-ui -> copilot)
 npm run build
 
 # Watch all frontends in parallel
@@ -138,9 +139,13 @@ npm run generate-client  # Automatically discovers port via named pipe
 npm run build:core
 npm run build:prompt
 npm run build:agent
+npm run build:agent-ui
+npm run build:copilot
 npm run watch:core
 npm run watch:prompt
 npm run watch:agent
+npm run watch:agent-ui
+npm run watch:copilot
 ```
 
 **Workspace Benefits:**
@@ -163,6 +168,8 @@ Umbraco.AI (Core)
     ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.AI.Prompt (Add-on - depends on Core)
     └── Umbraco.AI.Agent (Add-on - depends on Core)
+            ├── Umbraco.AI.Agent.UI (Frontend library - depends on Agent)
+            └── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent + Agent.UI)
 ```
 
 ### Standard Project Structure

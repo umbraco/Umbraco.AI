@@ -1,0 +1,1 @@
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../../src/chat/types/index.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,YAAY,EACR,cAAc,EACd,iBAAiB,EACjB,eAAe,EACf,gBAAgB,EAChB,kBAAkB,EAClB,aAAa,GAChB,MAAM,mBAAmB,CAAC;AAE3B;;GAEG;AACH,MAAM,WAAW,YAAY;IACzB,EAAE,EAAE,MAAM,CAAC;IACX,IAAI,EAAE,MAAM,CAAC;IACb,KAAK,EAAE,MAAM,CAAC;CACjB"}

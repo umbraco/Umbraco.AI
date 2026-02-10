@@ -89,6 +89,10 @@ if [ "$FORCE" = true ] && [ -d "$SITE_PATH" ]; then
     rm -rf "$SITE_PATH"
 fi
 
+# Clear NuGet cache to ensure fresh packages from nightly feed
+echo "Clearing NuGet cache to fetch fresh packages..."
+dotnet nuget locals all --clear
+
 # Step 1: Install Umbraco templates
 if [ "$SKIP_TEMPLATE_INSTALL" = false ]; then
     echo "Installing Umbraco templates..."

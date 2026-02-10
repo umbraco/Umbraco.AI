@@ -2,6 +2,7 @@
     <PropertyGroup>
         <Title>Umbraco AI Agent Copilot</Title>
         <Description>Copilot chat UI for Umbraco AI Agent</Description>
+        <PackageTags>umbraco ai agent copilot umbraco-marketplace</PackageTags>
         <StaticWebAssetBasePath>App_Plugins/UmbracoAIAgentCopilot</StaticWebAssetBasePath>
         <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     </PropertyGroup>
@@ -11,11 +12,11 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' == 'true'">
-        <ProjectReference Include="..\..\..\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\..\..\Umbraco.AI.Agent.UI\src\Umbraco.AI.Agent.UI\Umbraco.AI.Agent.UI.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseProjectReferences)' != 'true'">
-        <PackageReference Include="Umbraco.AI.Agent.Core" />
+        <PackageReference Include="Umbraco.AI.Agent.UI" />
     </ItemGroup>
 
     <ItemGroup>

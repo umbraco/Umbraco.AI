@@ -1,6 +1,6 @@
 ---
 description: >-
-  Defining and handling frontend tools for agents.
+    Defining and handling frontend tools for agents.
 ---
 
 # Frontend Tools
@@ -34,6 +34,7 @@ Frontend tools allow agents to perform actions in the browser. When an agent cal
 Tools are defined when running the agent:
 
 {% code title="Example.cs" %}
+
 ```csharp
 var frontendTools = new[]
 {
@@ -83,6 +84,7 @@ await foreach (var evt in _agentService.StreamAgentAsync(
     // Handle events
 }
 ```
+
 {% endcode %}
 
 ## Tool Schema
@@ -90,32 +92,34 @@ await foreach (var evt in _agentService.StreamAgentAsync(
 Tools use JSON Schema for parameter definitions:
 
 {% code title="Tool Definition" %}
+
 ```json
 {
-  "name": "search_content",
-  "description": "Search for content in the CMS",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "query": {
-        "type": "string",
-        "description": "Search query"
-      },
-      "contentType": {
-        "type": "string",
-        "enum": ["article", "page", "product"],
-        "description": "Type of content to search"
-      },
-      "limit": {
-        "type": "integer",
-        "default": 10,
-        "description": "Maximum results to return"
-      }
-    },
-    "required": ["query"]
-  }
+    "name": "search_content",
+    "description": "Search for content in the CMS",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "Search query"
+            },
+            "contentType": {
+                "type": "string",
+                "enum": ["article", "page", "product"],
+                "description": "Type of content to search"
+            },
+            "limit": {
+                "type": "integer",
+                "default": 10,
+                "description": "Maximum results to return"
+            }
+        },
+        "required": ["query"]
+    }
 }
 ```
+
 {% endcode %}
 
 ## Handling Tool Calls
@@ -123,55 +127,57 @@ Tools use JSON Schema for parameter definitions:
 ### Frontend Handler
 
 {% code title="tool-handler.ts" %}
+
 ```typescript
 interface ToolHandler {
-  name: string;
-  execute: (args: unknown) => Promise<unknown>;
+    name: string;
+    execute: (args: unknown) => Promise<unknown>;
 }
 
 const toolHandlers: ToolHandler[] = [
-  {
-    name: 'insert_content',
-    execute: async (args: { content: string }) => {
-      const editor = getActiveEditor();
-      editor.insertAtCursor(args.content);
-      return { success: true, insertedLength: args.content.length };
-    }
-  },
-  {
-    name: 'replace_selection',
-    execute: async (args: { newContent: string }) => {
-      const editor = getActiveEditor();
-      const oldContent = editor.getSelection();
-      editor.replaceSelection(args.newContent);
-      return {
-        success: true,
-        replacedContent: oldContent,
-        newContent: args.newContent
-      };
-    }
-  },
-  {
-    name: 'search_content',
-    execute: async (args: { query: string; contentType?: string; limit?: number }) => {
-      const results = await searchApi.search({
-        query: args.query,
-        type: args.contentType,
-        limit: args.limit || 10
-      });
-      return { results };
-    }
-  }
+    {
+        name: "insert_content",
+        execute: async (args: { content: string }) => {
+            const editor = getActiveEditor();
+            editor.insertAtCursor(args.content);
+            return { success: true, insertedLength: args.content.length };
+        },
+    },
+    {
+        name: "replace_selection",
+        execute: async (args: { newContent: string }) => {
+            const editor = getActiveEditor();
+            const oldContent = editor.getSelection();
+            editor.replaceSelection(args.newContent);
+            return {
+                success: true,
+                replacedContent: oldContent,
+                newContent: args.newContent,
+            };
+        },
+    },
+    {
+        name: "search_content",
+        execute: async (args: { query: string; contentType?: string; limit?: number }) => {
+            const results = await searchApi.search({
+                query: args.query,
+                type: args.contentType,
+                limit: args.limit || 10,
+            });
+            return { results };
+        },
+    },
 ];
 
 function handleToolCall(toolName: string, args: unknown): Promise<unknown> {
-  const handler = toolHandlers.find(h => h.name === toolName);
-  if (!handler) {
-    return Promise.resolve({ error: `Unknown tool: ${toolName}` });
-  }
-  return handler.execute(args);
+    const handler = toolHandlers.find((h) => h.name === toolName);
+    if (!handler) {
+        return Promise.resolve({ error: `Unknown tool: ${toolName}` });
+    }
+    return handler.execute(args);
 }
 ```
+
 {% endcode %}
 
 ### Sending Results Back
@@ -179,18 +185,20 @@ function handleToolCall(toolName: string, args: unknown): Promise<unknown> {
 Tool results may need to be sent back to continue the conversation:
 
 {% code title="Example.ts" %}
+
 ```typescript
 async function handleAgentEvents(events: AsyncIterable<AgentEvent>) {
-  for await (const event of events) {
-    if (event.type === 'tool_call_end') {
-      const result = await handleToolCall(event.toolName, event.args);
+    for await (const event of events) {
+        if (event.type === "tool_call_end") {
+            const result = await handleToolCall(event.toolName, event.args);
 
-      // If the protocol requires sending results back
-      await sendToolResult(event.toolCallId, result);
+            // If the protocol requires sending results back
+            await sendToolResult(event.toolCallId, result);
+        }
     }
-  }
 }
 ```
+
 {% endcode %}
 
 ## Common Tool Patterns
@@ -199,16 +207,16 @@ async function handleAgentEvents(events: AsyncIterable<AgentEvent>) {
 
 ```json
 {
-  "name": "insert_heading",
-  "description": "Insert a heading at the cursor",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "level": { "type": "integer", "minimum": 1, "maximum": 6 },
-      "text": { "type": "string" }
-    },
-    "required": ["level", "text"]
-  }
+    "name": "insert_heading",
+    "description": "Insert a heading at the cursor",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "level": { "type": "integer", "minimum": 1, "maximum": 6 },
+            "text": { "type": "string" }
+        },
+        "required": ["level", "text"]
+    }
 }
 ```
 
@@ -216,17 +224,17 @@ async function handleAgentEvents(events: AsyncIterable<AgentEvent>) {
 
 ```json
 {
-  "name": "open_media_picker",
-  "description": "Open the media picker dialog",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "allowedTypes": {
-        "type": "array",
-        "items": { "type": "string" }
-      }
+    "name": "open_media_picker",
+    "description": "Open the media picker dialog",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "allowedTypes": {
+                "type": "array",
+                "items": { "type": "string" }
+            }
+        }
     }
-  }
 }
 ```
 
@@ -234,17 +242,17 @@ async function handleAgentEvents(events: AsyncIterable<AgentEvent>) {
 
 ```json
 {
-  "name": "get_linked_content",
-  "description": "Get content linked from the current page",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "relationshipType": {
-        "type": "string",
-        "enum": ["parent", "children", "related"]
-      }
+    "name": "get_linked_content",
+    "description": "Get content linked from the current page",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "relationshipType": {
+                "type": "string",
+                "enum": ["parent", "children", "related"]
+            }
+        }
     }
-  }
 }
 ```
 
@@ -258,6 +266,6 @@ async function handleAgentEvents(events: AsyncIterable<AgentEvent>) {
 
 ## Related
 
-* [Agent Copilot](../agent-copilot/README.md) - Full Copilot package documentation
-* [Concepts](concepts.md) - Agent and tool concepts
-* [Streaming](streaming.md) - Event handling
+- [Agent Copilot](../agent-copilot/README.md) - Full Copilot package documentation
+- [Concepts](concepts.md) - Agent and tool concepts
+- [Streaming](streaming.md) - Event handling

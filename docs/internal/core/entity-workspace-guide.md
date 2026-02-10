@@ -5,6 +5,7 @@ A comprehensive guide for implementing entity management UI in the Umbraco backo
 ## Overview
 
 This guide covers the key elements needed to create a fully functional entity workspace in Umbraco's backoffice, including:
+
 - Repository layer for API integration
 - Workspace context for state management with CommandStore pattern
 - Collection views for listing entities
@@ -94,8 +95,8 @@ src/
 **File:** `{entity}/entity.ts`
 
 ```typescript
-export const UAI_CONNECTION_ENTITY_TYPE = 'uai:connection';
-export const UAI_CONNECTION_ROOT_ENTITY_TYPE = 'uai:connection-root';
+export const UAI_CONNECTION_ENTITY_TYPE = "uai:connection";
+export const UAI_CONNECTION_ROOT_ENTITY_TYPE = "uai:connection-root";
 
 export type UaiConnectionEntityType = typeof UAI_CONNECTION_ENTITY_TYPE;
 export type UaiConnectionRootEntityType = typeof UAI_CONNECTION_ROOT_ENTITY_TYPE;
@@ -108,14 +109,14 @@ export type UaiConnectionRootEntityType = typeof UAI_CONNECTION_ROOT_ENTITY_TYPE
 Re-exports all constants from child modules for convenient imports:
 
 ```typescript
-export { UAI_CONNECTION_ENTITY_TYPE, UAI_CONNECTION_ROOT_ENTITY_TYPE } from './entity.js';
-export type { UaiConnectionEntityType, UaiConnectionRootEntityType } from './entity.js';
+export { UAI_CONNECTION_ENTITY_TYPE, UAI_CONNECTION_ROOT_ENTITY_TYPE } from "./entity.js";
+export type { UaiConnectionEntityType, UaiConnectionRootEntityType } from "./entity.js";
 
-export * from './workspace/constants.js';
-export * from './repository/constants.js';
-export * from './collection/constants.js';
+export * from "./workspace/constants.js";
+export * from "./repository/constants.js";
+export * from "./collection/constants.js";
 
-export const UAI_CONNECTION_ICON = 'icon-wall-plug';
+export const UAI_CONNECTION_ICON = "icon-wall-plug";
 ```
 
 ### Workspace Constants
@@ -123,8 +124,8 @@ export const UAI_CONNECTION_ICON = 'icon-wall-plug';
 **File:** `{entity}/workspace/constants.ts`
 
 ```typescript
-export const UAI_CONNECTION_WORKSPACE_ALIAS = 'UmbracoAI.Workspace.Connection';
-export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = 'UmbracoAI.Workspace.ConnectionRoot';
+export const UAI_CONNECTION_WORKSPACE_ALIAS = "UmbracoAI.Workspace.Connection";
+export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = "UmbracoAI.Workspace.ConnectionRoot";
 ```
 
 ### Repository Constants
@@ -132,9 +133,9 @@ export const UAI_CONNECTION_ROOT_WORKSPACE_ALIAS = 'UmbracoAI.Workspace.Connecti
 **File:** `{entity}/repository/constants.ts`
 
 ```typescript
-export const UAI_CONNECTION_DETAIL_REPOSITORY_ALIAS = 'UmbracoAI.Repository.Connection.Detail';
-export const UAI_CONNECTION_DETAIL_STORE_ALIAS = 'UmbracoAI.Store.Connection.Detail';
-export const UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS = 'UmbracoAI.Repository.Connection.Collection';
+export const UAI_CONNECTION_DETAIL_REPOSITORY_ALIAS = "UmbracoAI.Repository.Connection.Detail";
+export const UAI_CONNECTION_DETAIL_STORE_ALIAS = "UmbracoAI.Store.Connection.Detail";
+export const UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS = "UmbracoAI.Repository.Connection.Collection";
 ```
 
 ### Collection Constants
@@ -142,10 +143,11 @@ export const UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS = 'UmbracoAI.Repository.
 **File:** `{entity}/collection/constants.ts`
 
 ```typescript
-export const UAI_CONNECTION_COLLECTION_ALIAS = 'UmbracoAI.Collection.Connection';
+export const UAI_CONNECTION_COLLECTION_ALIAS = "UmbracoAI.Collection.Connection";
 ```
 
 **Naming Conventions:**
+
 - Entity types: Use prefixed format like `uai:connection` or CMS standard `webhook`
 - Aliases: Use dot notation like `UmbracoAI.Workspace.Connection`
 - Icon: Define once at feature root, reference everywhere
@@ -163,11 +165,11 @@ import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
 
 // Detail model for workspace editing
 export interface UaiConnectionDetailModel extends UmbEntityModel {
-    unique: string;           // GUID identifier
-    entityType: string;       // Must match entity type constant
-    alias: string;            // URL-safe identifier
-    name: string;             // Display name
-    providerId: string;       // Provider reference
+    unique: string; // GUID identifier
+    entityType: string; // Must match entity type constant
+    alias: string; // URL-safe identifier
+    name: string; // Display name
+    providerId: string; // Provider reference
     settings: Record<string, unknown> | null;
     isActive: boolean;
 }
@@ -273,7 +275,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
      */
     async createScaffold(preset?: Partial<UaiConnectionDetailModel>) {
         const scaffold: UaiConnectionDetailModel = {
-            unique: "",                              // Empty for new entities
+            unique: "", // Empty for new entities
             entityType: UAI_CONNECTION_ENTITY_TYPE,
             alias: "",
             name: "",
@@ -292,7 +294,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
     async read(unique: string) {
         const { data, error } = await tryExecuteAndNotify(
             this.#host,
-            ConnectionsService.getConnectionById({ path: { id: unique } })
+            ConnectionsService.getConnectionById({ path: { id: unique } }),
         );
 
         if (error || !data) {
@@ -310,7 +312,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
 
         const { response, error } = await tryExecuteAndNotify(
             this.#host,
-            ConnectionsService.postConnection({ body: requestBody })
+            ConnectionsService.postConnection({ body: requestBody }),
         );
 
         if (error) {
@@ -340,7 +342,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
             ConnectionsService.putConnectionById({
                 path: { id: model.unique },
                 body: requestBody,
-            })
+            }),
         );
 
         if (error) {
@@ -356,7 +358,7 @@ export class UaiConnectionDetailServerDataSource implements UmbDetailDataSource<
     async delete(unique: string) {
         const { error } = await tryExecuteAndNotify(
             this.#host,
-            ConnectionsService.deleteConnectionById({ path: { id: unique } })
+            ConnectionsService.deleteConnectionById({ path: { id: unique } }),
         );
 
         if (error) {
@@ -379,7 +381,7 @@ import { UmbContextToken } from "@umbraco-cms/backoffice/context-api";
 import type { UaiConnectionDetailModel } from "../../types.js";
 
 export const UAI_CONNECTION_DETAIL_STORE_CONTEXT = new UmbContextToken<UaiConnectionDetailStore>(
-    "UaiConnectionDetailStore"
+    "UaiConnectionDetailStore",
 );
 
 /**
@@ -416,7 +418,7 @@ export class UaiConnectionDetailRepository extends UmbDetailRepositoryBase<UaiCo
     }
 
     override async create(model: UaiConnectionDetailModel) {
-        return super.create(model, null);  // null parent for root-level entities
+        return super.create(model, null); // null parent for root-level entities
     }
 }
 
@@ -466,7 +468,7 @@ export class UaiConnectionCollectionServerDataSource implements UmbCollectionDat
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },
-            })
+            }),
         );
 
         if (error || !data) {
@@ -609,7 +611,7 @@ export class UaiCommandStore {
         if (this.#muted) return;
         // Replace command with same correlationId or append
         this.#commands = [
-            ...this.#commands.filter(x => !command.correlationId || x.correlationId !== command.correlationId),
+            ...this.#commands.filter((x) => !command.correlationId || x.correlationId !== command.correlationId),
             command,
         ];
     }
@@ -618,10 +620,19 @@ export class UaiCommandStore {
         return this.#muted ? [] : [...this.#commands];
     }
 
-    mute() { this.#muted = true; }
-    unmute() { this.#muted = false; }
-    clear() { this.#commands = []; }
-    reset() { this.clear(); this.unmute(); }
+    mute() {
+        this.#muted = true;
+    }
+    unmute() {
+        this.#muted = false;
+    }
+    clear() {
+        this.#commands = [];
+    }
+    reset() {
+        this.clear();
+        this.unmute();
+    }
 }
 ```
 
@@ -642,8 +653,8 @@ export class UaiPartialUpdateCommand<TReceiver> extends UaiCommandBase<TReceiver
 
     execute(receiver: TReceiver) {
         Object.keys(this.#partial)
-            .filter(key => this.#partial[key as keyof TReceiver] !== undefined)
-            .forEach(key => {
+            .filter((key) => this.#partial[key as keyof TReceiver] !== undefined)
+            .forEach((key) => {
                 receiver[key as keyof TReceiver] = this.#partial[key as keyof TReceiver]!;
             });
     }
@@ -651,6 +662,7 @@ export class UaiPartialUpdateCommand<TReceiver> extends UaiCommandBase<TReceiver
 ```
 
 **Key features:**
+
 - `correlationId` allows replacing commands for the same field (e.g., typing in name field replaces previous name command)
 - `mute()/unmute()` prevents command accumulation during save operations
 - `reset()` clears commands after successful save
@@ -676,8 +688,7 @@ export const UAI_CONNECTION_WORKSPACE_CONTEXT = new UmbContextToken<
 >(
     "UmbWorkspaceContext",
     undefined,
-    (context): context is UaiConnectionWorkspaceContext =>
-        context.getEntityType?.() === UAI_CONNECTION_ENTITY_TYPE
+    (context): context is UaiConnectionWorkspaceContext => context.getEntityType?.() === UAI_CONNECTION_ENTITY_TYPE,
 );
 ```
 
@@ -743,7 +754,7 @@ export class UaiConnectionWorkspaceContext
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
-                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!
+                        this.getHostElement().shadowRoot!.querySelector("umb-router-slot")!,
                     );
                 },
             },
@@ -797,7 +808,7 @@ export class UaiConnectionWorkspaceContext
                         this.setIsNew(false);
                     }
                 },
-                "_observeModel"
+                "_observeModel",
             );
         }
 
@@ -893,7 +904,7 @@ export const UAI_CONNECTION_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generate
 export const UAI_CREATE_CONNECTION_WORKSPACE_PATH = `${UAI_CONNECTION_WORKSPACE_PATH}/create`;
 
 export const UAI_EDIT_CONNECTION_WORKSPACE_PATH_PATTERN = new UmbPathPattern<{ unique: string }>(
-    'edit/:unique',
+    "edit/:unique",
     UAI_CONNECTION_WORKSPACE_PATH,
 );
 ```
@@ -993,11 +1004,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias")
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias"),
             );
         } else {
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name")
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name"),
             );
         }
     }
@@ -1006,7 +1017,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias"),
         );
     }
 
@@ -1027,11 +1038,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         return html`
             <umb-workspace-editor alias="${UAI_CONNECTION_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}
-                        label="Back to connections"
-                        compact
-                    >
+                    <uui-button href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} label="Back to connections" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -1059,7 +1066,8 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
                 ${when(
                     !this._isNew && this._model,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
                 )}
 
                 <div slot="footer-info" id="footer">
@@ -1149,7 +1157,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.target as HTMLInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ providerId: target.value }, "providerId")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ providerId: target.value }, "providerId"),
         );
     }
 
@@ -1157,7 +1165,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const target = event.target as HTMLInputElement;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: target.checked }, "isActive")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: target.checked }, "isActive"),
         );
     }
 
@@ -1177,7 +1185,11 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
 
                 <umb-property-layout label="Active" description="Enable or disable this connection">
-                    <uui-toggle slot="editor" .checked=${this._model.isActive} @change=${this.#onActiveChange}></uui-toggle>
+                    <uui-toggle
+                        slot="editor"
+                        .checked=${this._model.isActive}
+                        @change=${this.#onActiveChange}
+                    ></uui-toggle>
                 </umb-property-layout>
             </uui-box>
         `;
@@ -1290,6 +1302,7 @@ declare global {
 ### 9.2 Collection with Search
 
 To add search functionality to a collection, you need:
+
 1. A custom collection element that renders a toolbar with filter field
 2. Backend API support for the `filter` parameter
 3. Data source that passes the filter to the API
@@ -1326,6 +1339,7 @@ declare global {
 ```
 
 **Key points:**
+
 - Extend `UmbCollectionDefaultElement`
 - Override `renderToolbar()` to customize the header
 - Use `<umb-collection-toolbar>` as the wrapper with `slot="header"`
@@ -1356,11 +1370,11 @@ export class UaiConnectionCollectionServerDataSource implements UmbCollectionDat
             this.#host,
             ConnectionsService.getConnections({
                 query: {
-                    filter: filter.filter,  // Pass the search term to API
+                    filter: filter.filter, // Pass the search term to API
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },
-            })
+            }),
         );
 
         if (error || !data) {
@@ -1386,18 +1400,24 @@ export class UaiConnectionCollectionServerDataSource implements UmbCollectionDat
 **File:** `{entity}/collection/manifests.ts`
 
 ```typescript
-import type { ManifestCollection, ManifestCollectionView, ManifestCollectionAction } from "@umbraco-cms/backoffice/collection";
+import type {
+    ManifestCollection,
+    ManifestCollectionView,
+    ManifestCollectionAction,
+} from "@umbraco-cms/backoffice/collection";
 import { UAI_CONNECTION_COLLECTION_ALIAS } from "./constants.js";
 import { UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS } from "../repository/constants.js";
 import { connectionCollectionActionManifests } from "./action/manifests.js";
 
-export const connectionCollectionManifests: Array<ManifestCollection | ManifestCollectionView | ManifestCollectionAction> = [
+export const connectionCollectionManifests: Array<
+    ManifestCollection | ManifestCollectionView | ManifestCollectionAction
+> = [
     {
         type: "collection",
         kind: "default",
         alias: UAI_CONNECTION_COLLECTION_ALIAS,
         name: "Connection Collection",
-        element: () => import("./connection-collection.element.js"),  // Custom element with search
+        element: () => import("./connection-collection.element.js"), // Custom element with search
         meta: {
             repositoryAlias: UAI_CONNECTION_COLLECTION_REPOSITORY_ALIAS,
         },
@@ -1529,6 +1549,7 @@ export const connectionEntityActionManifests: Array<UmbExtensionManifest> = [
 ```
 
 **Key properties:**
+
 - `type: "entityAction"` - Registers as an entity action
 - `kind: "default"` - Uses the default entity action behavior (custom API)
 - `forEntityTypes` - Must include the root entity type (e.g., `uai:connection-root`) to appear next to the menu item
@@ -1542,35 +1563,37 @@ export const connectionEntityActionManifests: Array<UmbExtensionManifest> = [
 For the "+" button to appear next to a menu item:
 
 1. **Sidebar must use `menuWithEntityActions` kind:**
-   ```typescript
-   {
-       type: "sectionSidebarApp",
-       kind: "menuWithEntityActions",  // Required!
-       meta: {
-           menu: "UmbracoAI.Menu.Settings",
-       },
-   }
-   ```
+
+    ```typescript
+    {
+        type: "sectionSidebarApp",
+        kind: "menuWithEntityActions",  // Required!
+        meta: {
+            menu: "UmbracoAI.Menu.Settings",
+        },
+    }
+    ```
 
 2. **Menu item must have an `entityType`:**
-   ```typescript
-   {
-       type: "menuItem",
-       meta: {
-           entityType: UAI_CONNECTION_ROOT_ENTITY_TYPE,  // Required!
-           // ...
-       },
-   }
-   ```
+
+    ```typescript
+    {
+        type: "menuItem",
+        meta: {
+            entityType: UAI_CONNECTION_ROOT_ENTITY_TYPE,  // Required!
+            // ...
+        },
+    }
+    ```
 
 3. **Entity action must target the same entity type:**
-   ```typescript
-   {
-       type: "entityAction",
-       forEntityTypes: [UAI_CONNECTION_ROOT_ENTITY_TYPE],  // Must match!
-       // ...
-   }
-   ```
+    ```typescript
+    {
+        type: "entityAction",
+        forEntityTypes: [UAI_CONNECTION_ROOT_ENTITY_TYPE],  // Must match!
+        // ...
+    }
+    ```
 
 ### 11.4 Alternative: `kind: 'create'` with Options
 
@@ -1693,12 +1716,12 @@ export const manifests: Array<UmbExtensionManifest> = [
 **File:** `{entity}/workspace/manifests.ts`
 
 ```typescript
-import { manifests as connectionManifests } from './connection/manifests.js';
-import { manifests as connectionRootManifests } from './connection-root/manifests.js';
+import { manifests as connectionManifests } from "./connection/manifests.js";
+import { manifests as connectionRootManifests } from "./connection-root/manifests.js";
 
 export const connectionWorkspaceManifests: Array<UmbExtensionManifest> = [
     ...connectionManifests,
-    ...connectionRootManifests
+    ...connectionRootManifests,
 ];
 ```
 
@@ -1747,12 +1770,14 @@ export { connectionManifests } from "./manifests.js";
 ## 15. Implementation Checklist
 
 ### Core Infrastructure
+
 - [ ] Define entity types (`entity.ts`)
 - [ ] Create TypeScript interfaces (`types.ts`)
 - [ ] Create type mapper (`type-mapper.ts`)
 - [ ] Set up constants hierarchy (entity, workspace, repository, collection)
 
 ### Repository Layer
+
 - [ ] Detail server data source (CRUD operations)
 - [ ] Detail store with context token
 - [ ] Detail repository extending `UmbDetailRepositoryBase`
@@ -1762,11 +1787,13 @@ export { connectionManifests } from "./manifests.js";
 - [ ] Index files for exports
 
 ### CommandStore (if not already present)
+
 - [ ] Command interface and base class
 - [ ] Command store with mute/unmute
 - [ ] Partial update command implementation
 
 ### Workspace
+
 - [ ] Workspace context token (separate file)
 - [ ] Workspace context with CommandStore
 - [ ] Workspace editor element
@@ -1775,20 +1802,24 @@ export { connectionManifests } from "./manifests.js";
 - [ ] Workspace manifests
 
 ### Collection
+
 - [ ] Table collection view
 - [ ] Collection action (Create button)
 - [ ] Collection manifests
 - [ ] Custom collection element with search (optional)
 
 ### Entity Actions
+
 - [ ] Create entity action class (extends `UmbEntityActionBase`)
 - [ ] Entity action manifests (targets root entity type)
 
 ### Section Integration
+
 - [ ] Menu item manifest (with `entityType` in meta)
 - [ ] Root workspace manifests
 
 ### Final Assembly
+
 - [ ] Feature manifests aggregation
 - [ ] Feature index exports
 - [ ] Bundle manifests update
@@ -1798,15 +1829,15 @@ export { connectionManifests } from "./manifests.js";
 
 ## Key Patterns Summary
 
-| Pattern | Purpose | Key Base Class |
-|---------|---------|----------------|
-| Data Source | API communication | `UmbDetailDataSource<T>` / `UmbCollectionDataSource<T>` |
-| Store | Client-side cache | `UmbDetailStoreBase<T>` |
-| Repository | Coordinates data source + store | `UmbDetailRepositoryBase<T>` |
-| Workspace Context | Entity state management | `UmbSubmittableWorkspaceContextBase<T>` |
-| CommandStore | Optimistic UI with replay | `UaiCommandStore` (custom) |
-| Entity Action | Menu item actions ("+" button) | `UmbEntityActionBase<T>` |
-| Path Pattern | Type-safe URL generation | `UmbPathPattern<T>` |
+| Pattern           | Purpose                         | Key Base Class                                          |
+| ----------------- | ------------------------------- | ------------------------------------------------------- |
+| Data Source       | API communication               | `UmbDetailDataSource<T>` / `UmbCollectionDataSource<T>` |
+| Store             | Client-side cache               | `UmbDetailStoreBase<T>`                                 |
+| Repository        | Coordinates data source + store | `UmbDetailRepositoryBase<T>`                            |
+| Workspace Context | Entity state management         | `UmbSubmittableWorkspaceContextBase<T>`                 |
+| CommandStore      | Optimistic UI with replay       | `UaiCommandStore` (custom)                              |
+| Entity Action     | Menu item actions ("+" button)  | `UmbEntityActionBase<T>`                                |
+| Path Pattern      | Type-safe URL generation        | `UmbPathPattern<T>`                                     |
 
 ---
 
@@ -1859,7 +1890,11 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 
 // Collection
-import type { UmbCollectionRepository, UmbCollectionDataSource, UmbCollectionFilterModel } from "@umbraco-cms/backoffice/collection";
+import type {
+    UmbCollectionRepository,
+    UmbCollectionDataSource,
+    UmbCollectionFilterModel,
+} from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 
 // Components

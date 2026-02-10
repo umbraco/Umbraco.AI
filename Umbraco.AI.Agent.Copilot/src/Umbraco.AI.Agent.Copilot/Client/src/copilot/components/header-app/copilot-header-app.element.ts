@@ -5,51 +5,52 @@ import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.conte
 
 @customElement("uai-copilot-header-app")
 export class UaiCopilotHeaderAppElement extends UmbLitElement {
-  #copilotContext?: UaiCopilotContext;
-  @state() private _isOpen = false;
+    #copilotContext?: UaiCopilotContext;
+    @state() private _isOpen = false;
 
-  constructor() {
-    super();
-    this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
-      this.#copilotContext = context;
-      if (context) {
-        this.observe(context.isOpen, (isOpen) => (this._isOpen = isOpen));
-      }
-    });
-  }
+    constructor() {
+        super();
+        this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
+            this.#copilotContext = context;
+            if (context) {
+                this.observe(context.isOpen, (isOpen) => (this._isOpen = isOpen));
+            }
+        });
+    }
 
-  #handleClick() {
-    this.#copilotContext?.toggle();
-  }
+    #handleClick() {
+        this.#copilotContext?.toggle();
+    }
 
-  override render() {
-    return html`
-      <uui-button
-        look="primary"
-        label="AI Assistant"
-        compact
-        @click=${this.#handleClick}
-        class=${this._isOpen ? "active" : ""}>
-        <uui-icon name="icon-chat"></uui-icon>
-      </uui-button>
+    override render() {
+        return html`
+            <uui-button
+                look="primary"
+                label="AI Assistant"
+                compact
+                @click=${this.#handleClick}
+                class=${this._isOpen ? "active" : ""}
+            >
+                <uui-icon name="icon-chat"></uui-icon>
+            </uui-button>
+        `;
+    }
+
+    static override styles = css`
+        :host {
+            display: flex;
+            align-items: center;
+        }
+        uui-button.active {
+            background-color: var(--uui-color-selected);
+        }
     `;
-  }
-
-  static override styles = css`
-    :host {
-      display: flex;
-      align-items: center;
-    }
-    uui-button.active {
-      background-color: var(--uui-color-selected);
-    }
-  `;
 }
 
 export default UaiCopilotHeaderAppElement;
 
 declare global {
-  interface HTMLElementTagNameMap {
-    "uai-copilot-header-app": UaiCopilotHeaderAppElement;
-  }
+    interface HTMLElementTagNameMap {
+        "uai-copilot-header-app": UaiCopilotHeaderAppElement;
+    }
 }

@@ -3,7 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import {
     UaiPromptExecutionServerDataSource,
     type UaiPromptExecutionRequest,
-    type UaiPromptExecutionResponse
+    type UaiPromptExecutionResponse,
 } from "./prompt-execution.server.data-source.js";
 
 /**
@@ -27,7 +27,7 @@ export class UaiPromptExecutionRepository extends UmbControllerBase {
     async execute(
         promptIdOrAlias: string,
         request: UaiPromptExecutionRequest,
-        signal?: AbortSignal
+        signal?: AbortSignal,
     ): Promise<{ data?: UaiPromptExecutionResponse; error?: unknown }> {
         return this.#dataSource.execute(promptIdOrAlias, request, signal);
     }

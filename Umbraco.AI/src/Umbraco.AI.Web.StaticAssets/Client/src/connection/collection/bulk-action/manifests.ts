@@ -1,19 +1,19 @@
-import { UAI_CONNECTION_COLLECTION_ALIAS } from '../constants.js';
-import { UAI_CONNECTION_ENTITY_TYPE } from '../../constants.js';
-import { UMB_COLLECTION_ALIAS_CONDITION } from '@umbraco-cms/backoffice/collection';
+import { UAI_CONNECTION_COLLECTION_ALIAS } from "../constants.js";
+import { UAI_CONNECTION_ENTITY_TYPE } from "../../constants.js";
+import { UMB_COLLECTION_ALIAS_CONDITION } from "@umbraco-cms/backoffice/collection";
 
 export const connectionBulkActionManifests: Array<UmbExtensionManifest> = [
     {
-        type: 'entityBulkAction',
-        kind: 'default',
-        alias: 'UmbracoAI.EntityBulkAction.Connection.Delete',
-        name: 'Delete Connections Bulk Action',
+        type: "entityBulkAction",
+        kind: "default",
+        alias: "UmbracoAI.EntityBulkAction.Connection.Delete",
+        name: "Delete Connections Bulk Action",
         weight: 100,
-        api: () => import('./connection-bulk-delete.action.js'),
+        api: () => import("./connection-bulk-delete.action.js"),
         forEntityTypes: [UAI_CONNECTION_ENTITY_TYPE],
         meta: {
-            icon: 'icon-trash',
-            label: '#actions_delete',
+            icon: "icon-trash",
+            label: "#actions_delete",
         },
         conditions: [
             {

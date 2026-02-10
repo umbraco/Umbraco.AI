@@ -1,7 +1,14 @@
 import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbLocalizationController } from "@umbraco-cms/backoffice/localization-api";
-import type { UmbTableColumn, UmbTableItem, UmbTableConfig, UmbTableSelectedEvent, UmbTableDeselectedEvent, UmbTableElement } from "@umbraco-cms/backoffice/components";
+import type {
+    UmbTableColumn,
+    UmbTableItem,
+    UmbTableConfig,
+    UmbTableSelectedEvent,
+    UmbTableDeselectedEvent,
+    UmbTableElement,
+} from "@umbraco-cms/backoffice/components";
 import type { UmbDefaultCollectionContext } from "@umbraco-cms/backoffice/collection";
 import { UMB_COLLECTION_CONTEXT } from "@umbraco-cms/backoffice/collection";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -52,7 +59,7 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
         this.observe(
             this.#collectionContext.items,
             (items) => this.#createTableItems(items as UaiProfileItemModel[]),
-            "umbCollectionItemsObserver"
+            "umbCollectionItemsObserver",
         );
 
         this.observe(
@@ -60,7 +67,7 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
             (selection) => {
                 this._selection = selection as string[];
             },
-            "umbCollectionSelectionObserver"
+            "umbCollectionSelectionObserver",
         );
     }
 
@@ -80,13 +87,15 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
                         >${item.name}</a
                     >`,
                 },
-                { 
+                {
                     columnAlias: "alias",
                     value: html`<uui-tag color="primary" look="secondary">${item.alias}</uui-tag>`,
                 },
                 {
                     columnAlias: "capability",
-                    value: html`<uui-tag color="primary" look="outline">${this.#getCapabilityLabel(item.capability)}</uui-tag>`,
+                    value: html`<uui-tag color="primary" look="outline"
+                        >${this.#getCapabilityLabel(item.capability)}</uui-tag
+                    >`,
                 },
                 {
                     columnAlias: "model",
@@ -119,7 +128,8 @@ export class UaiProfileTableCollectionViewElement extends UmbLitElement {
             .items=${this._items}
             .selection=${this._selection}
             @selected=${this.#handleSelect}
-            @deselected=${this.#handleDeselect}></umb-table>`;
+            @deselected=${this.#handleDeselect}
+        ></umb-table>`;
     }
 
     static styles = [UmbTextStyles];

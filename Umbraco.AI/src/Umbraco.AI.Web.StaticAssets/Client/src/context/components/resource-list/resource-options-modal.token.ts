@@ -1,6 +1,6 @@
-import { UmbModalToken } from '@umbraco-cms/backoffice/modal';
-import type { UaiContextResourceInjectionMode } from '../../types.js';
-import type { UaiContextResourceTypeItemModel } from '../../../context-resource-type/types.js';
+import { UmbModalToken } from "@umbraco-cms/backoffice/modal";
+import type { UaiContextResourceInjectionMode } from "../../types.js";
+import type { UaiContextResourceTypeItemModel } from "../../../context-resource-type/types.js";
 
 export interface UaiResourceOptionsData {
     name: string;
@@ -18,12 +18,12 @@ export interface UaiResourceOptionsModalValue {
     resource: UaiResourceOptionsData;
 }
 
-export const UAI_RESOURCE_OPTIONS_MODAL = new UmbModalToken<
-    UaiResourceOptionsModalData,
-    UaiResourceOptionsModalValue
->('Uai.Modal.ResourceOptions', {
-    modal: {
-        type: 'sidebar',
-        size: 'medium',
+export const UAI_RESOURCE_OPTIONS_MODAL = new UmbModalToken<UaiResourceOptionsModalData, UaiResourceOptionsModalValue>(
+    "Uai.Modal.ResourceOptions",
+    {
+        modal: {
+            type: "sidebar",
+            size: "medium",
+        },
     },
-});
+);

@@ -9,6 +9,7 @@ This document captures thinking around a potential "ToolSets" feature for organi
 ## The Idea
 
 ToolSets would be named collections of tools that can be referenced by Agents, providing:
+
 - **Organization**: Group related tools together (e.g., "Content Management", "Translation", "Read Only")
 - **Governance**: Optionally attach user group permissions to the set
 
@@ -49,6 +50,7 @@ public sealed class AIAgent
 ## Potential Benefits
 
 ### 1. Convenience
+
 Instead of listing 6 individual tool IDs on every agent that needs content editing, reference one ToolSet:
 
 ```
@@ -63,9 +65,11 @@ Agent: "Content Assistant"
 ```
 
 ### 2. Consistency
+
 Changes to a ToolSet automatically apply to all Agents using it. Add a new content tool? All content-editing agents get it.
 
 ### 3. Reusable Permission Bundles
+
 If ToolSets have `AllowedUserGroups`, they become reusable permission templates:
 
 ```
@@ -79,6 +83,7 @@ ToolSet: "Destructive Content Operations"
 ## Concerns & Questions
 
 ### 1. Added Complexity
+
 We already have: Connections → Profiles → Agents → Tools
 
 Adding ToolSets creates another layer: Connections → Profiles → ToolSets → Agents → Tools
@@ -90,6 +95,7 @@ Adding ToolSets creates another layer: Connections → Profiles → ToolSets →
 Current design: **Agents own governance**. Tools in Core have no permissions.
 
 With ToolSets having permissions, we'd have **two governance layers**:
+
 - ToolSet level: "Only Admins can use destructive tools"
 - Agent level: "Only Editors can use this agent"
 
@@ -116,6 +122,7 @@ Tools already have a `Category` property for organization:
 ```
 
 And `IAIToolRegistry` provides:
+
 ```csharp
 _toolRegistry.GetToolsByCategory("content")
 ```
@@ -163,11 +170,13 @@ This gives grouping without a new entity. Governance stays purely at the Agent l
 **Defer ToolSets** until we have real-world usage patterns that justify the added complexity.
 
 Start with:
+
 1. **Categories on tools** (built-in organization)
 2. **Individual tool IDs on Agents** (explicit, simple)
 3. **Agent-level user group permissions** (single governance layer)
 
 Revisit ToolSets if:
+
 - Users complain about repetitive tool configuration across agents
 - A clear need emerges for permission bundles separate from agents
 - The simpler model proves insufficient
@@ -176,9 +185,9 @@ Revisit ToolSets if:
 
 ## Related Decisions
 
-| Decision | Current Choice |
-|----------|----------------|
-| Governance in Core | No - Core has no enforcement |
+| Decision               | Current Choice                                          |
+| ---------------------- | ------------------------------------------------------- |
+| Governance in Core     | No - Core has no enforcement                            |
 | Tool access from Agent | No `GetToolsForAgent()` - prevents bypassing governance |
-| Tool organization | Categories (metadata on tools) |
-| Permission layer | Agent-level only |
+| Tool organization      | Categories (metadata on tools)                          |
+| Permission layer       | Agent-level only                                        |

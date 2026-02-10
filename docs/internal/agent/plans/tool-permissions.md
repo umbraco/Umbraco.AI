@@ -7,18 +7,20 @@ Implement a tool permission system for Umbraco.AI agents that allows administrat
 ## Context
 
 ### Current Architecture
+
 - **Agents**: Defined in `AIAgent` entity, reference optional `ProfileId` for AI configuration
 - **Tools**: Discovered via `[AITool]` attribute, managed by `AIToolCollection`
 - **System Tools** (`IAISystemTool`): Always included, cannot be disabled
 - **User Tools**: Regular tools that should be configurable per agent
 - **Execution Flow**:
-  1. HTTP Request → `RunAgentController`
-  2. `AIAgentService.StreamAgentAsync()` orchestrates execution
-  3. `AIAgentFactory.CreateAgentAsync()` creates MAF agent with tool list
-  4. `ScopedAIAgent` manages per-execution scope
-  5. Tools are called via Microsoft.Extensions.AI function calling
+    1. HTTP Request → `RunAgentController`
+    2. `AIAgentService.StreamAgentAsync()` orchestrates execution
+    3. `AIAgentFactory.CreateAgentAsync()` creates MAF agent with tool list
+    4. `ScopedAIAgent` manages per-execution scope
+    5. Tools are called via Microsoft.Extensions.AI function calling
 
 ### Design Decisions (from user input)
+
 - **Default tool behavior**: Allow common tool scopes (Search, Navigation, etc.) for existing agents
 - **Phasing**: Implement tool restrictions first (Phase 1), user group restrictions later (Phase 2)
 - **Validation**: Backend-only validation (no frontend pre-checks in V1)
@@ -29,6 +31,7 @@ Implement a tool permission system for Umbraco.AI agents that allows administrat
 ### 1. Data Model Changes
 
 #### 1.1 Update AIAgent Entity
+
 **File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Agents\AIAgent.cs`
 
 Add two properties:
@@ -49,10 +52,11 @@ public IReadOnlyList<string> EnabledToolScopeIds { get; set; } = [];
 ```
 
 **Tool Resolution Logic**:
+
 1. System tools (`IAISystemTool`) are **always included** (cannot be disabled)
 2. User tools are included if:
-   - Tool ID is in `EnabledToolIds`, OR
-   - Tool Scope is in `EnabledToolScopeIds`
+    - Tool ID is in `EnabledToolIds`, OR
+    - Tool Scope is in `EnabledToolScopeIds`
 3. Deduplication: If a tool matches both criteria, include it once
 
 **Tool Scope Granularity Design**:
@@ -60,6 +64,7 @@ public IReadOnlyList<string> EnabledToolScopeIds { get; set; } = [];
 Tool scopes use **operation-level granularity** to separate read from write operations and accurately reflect destructiveness.
 
 **Problem with Broad Scopes**:
+
 - A "Content" scopecontaining both `content.get` (safe) and `content.delete` (destructive) must be marked as destructive
 - Users can't enable read operations without also enabling write operations
 - Ambiguity about what's actually being allowed
@@ -69,20 +74,21 @@ Tool scopes use **operation-level granularity** to separate read from write oper
 
 Split domain scopesby operation type:
 
-| Scope | Description | Destructive | Example Tools |
-|----------|-------------|-------------|---------------|
-| `content.read` | Read content operations | No | `content.get`, `content.search`, `content.list` |
-| `content.write` | Modify content operations | Yes | `content.create`, `content.update`, `content.publish`, `content.delete` |
-| `media.read` | Read media operations | No | `media.get`, `media.search`, `media.list` |
-| `media.write` | Modify media operations | Yes | `media.upload`, `media.update`, `media.delete`, `media.move` |
-| `navigation` | Site structure navigation | No | `navigation.tree`, `navigation.breadcrumb`, `navigation.children` |
-| `search` | Search operations | No | `search.fulltext`, `search.semantic`, `search.similar` |
-| `translation` | Translation operations | No | `translation.translate`, `translation.detect` |
-| `web` | External web operations | No | `web.fetch`, `web.scrape` |
-| `entity.read` | Read entity operations | No | `entity.get`, `entity.serialize` |
-| `entity.write` | Modify entity operations | Yes | `entity.setProperty`, `entity.save` |
+| Scope           | Description               | Destructive | Example Tools                                                           |
+| --------------- | ------------------------- | ----------- | ----------------------------------------------------------------------- |
+| `content.read`  | Read content operations   | No          | `content.get`, `content.search`, `content.list`                         |
+| `content.write` | Modify content operations | Yes         | `content.create`, `content.update`, `content.publish`, `content.delete` |
+| `media.read`    | Read media operations     | No          | `media.get`, `media.search`, `media.list`                               |
+| `media.write`   | Modify media operations   | Yes         | `media.upload`, `media.update`, `media.delete`, `media.move`            |
+| `navigation`    | Site structure navigation | No          | `navigation.tree`, `navigation.breadcrumb`, `navigation.children`       |
+| `search`        | Search operations         | No          | `search.fulltext`, `search.semantic`, `search.similar`                  |
+| `translation`   | Translation operations    | No          | `translation.translate`, `translation.detect`                           |
+| `web`           | External web operations   | No          | `web.fetch`, `web.scrape`                                               |
+| `entity.read`   | Read entity operations    | No          | `entity.get`, `entity.serialize`                                        |
+| `entity.write`  | Modify entity operations  | Yes         | `entity.setProperty`, `entity.save`                                     |
 
 **Benefits**:
+
 - **Clear destructiveness**: Scopes accurately marked as destructive or not
 - **Read-only agents**: Enable only `.read` scopes
 - **Bulk selection**: Enable all content read operations at once
@@ -92,40 +98,29 @@ Split domain scopesby operation type:
 **Agent Configuration Examples**:
 
 **Read-Only Assistant**:
+
 ```json
 {
-  "enabledToolScopeIds": [
-    "content.read",
-    "media.read",
-    "navigation",
-    "search"
-  ]
+    "enabledToolScopeIds": ["content.read", "media.read", "navigation", "search"]
 }
 ```
 
 **Content Editor Agent**:
+
 ```json
 {
-  "enabledToolScopeIds": [
-    "content.read",
-    "content.write",
-    "media.read",
-    "navigation",
-    "search"
-  ]
+    "enabledToolScopeIds": ["content.read", "content.write", "media.read", "navigation", "search"]
 }
 ```
 
 **Translation Agent**:
+
 ```json
 {
-  "enabledToolScopeIds": [
-    "content.read",
-    "translation"
-  ],
-  "enabledToolIds": [
-    "content.update"  // Can update content with translations
-  ]
+    "enabledToolScopeIds": ["content.read", "translation"],
+    "enabledToolIds": [
+        "content.update" // Can update content with translations
+    ]
 }
 ```
 
@@ -135,15 +130,16 @@ For even more precise control, combine scopeswith specific tool IDs:
 
 ```json
 {
-  "enabledToolScopeIds": ["navigation", "search"],
-  "enabledToolIds": [
-    "content.get",      // Individual tool from content.read
-    "content.update"    // Individual tool from content.write (without delete/publish)
-  ]
+    "enabledToolScopeIds": ["navigation", "search"],
+    "enabledToolIds": [
+        "content.get", // Individual tool from content.read
+        "content.update" // Individual tool from content.write (without delete/publish)
+    ]
 }
 ```
 
 **UI Impact**:
+
 - Scopes grouped by domain in UI: "Content", "Media", "Navigation", etc.
 - Each domain shows read/write subscopes with destructive badges
 - Clear visual distinction between safe and destructive operation groups
@@ -155,33 +151,38 @@ For even more precise control, combine scopeswith specific tool IDs:
 **Question**: Should tools support multiple scopes?
 
 **Option A: Single Scope (Recommended for V1)**
+
 - **Current state**: Each tool has one scope
 - **Implementation**: Keep existing `string ScopeId` property
 - **Rationale**:
-  - Simpler data model and permission logic
-  - If a tool truly serves multiple purposes, it should probably be split
-  - Can always add multi-scope support later without breaking changes
+    - Simpler data model and permission logic
+    - If a tool truly serves multiple purposes, it should probably be split
+    - Can always add multi-scope support later without breaking changes
 - **Example**:
-  ```csharp
-  [AITool("content.get", "Get Content", Scope = "content.read")]
-  [AITool("content.update", "Update Content", Scope = "content.write")]
-  ```
+    ```csharp
+    [AITool("content.get", "Get Content", Scope = "content.read")]
+    [AITool("content.update", "Update Content", Scope = "content.write")]
+    ```
 
 **Option B: Multiple Scopes (Future Enhancement)**
+
 - **Change**: Modify `ScopeId` to `ScopeIds` (string array)
 - **Implementation**:
-  ```csharp
-  // IAITool interface
-  IReadOnlyList<string> ScopeIds { get; }
 
-  // Tool attribute
-  [AITool("hybrid.tool", "Hybrid Tool", ScopeIds = new[] {"content.read", "search"})]
-  ```
+    ```csharp
+    // IAITool interface
+    IReadOnlyList<string> ScopeIds { get; }
+
+    // Tool attribute
+    [AITool("hybrid.tool", "Hybrid Tool", ScopeIds = new[] {"content.read", "search"})]
+    ```
+
 - **Permission logic**: Tool is enabled if ANY of its scopesare enabled
 - **UI consideration**: Tool appears under multiple scopegroups
 - **Trade-off**: More complexity, potential confusion about tool's primary purpose
 
 **Recommendation**: Use **Option A (single scope)** for V1. The operation-level scopescheme (`content.read`, `content.write`) already provides good granularity. If multi-scope support is needed later, it can be added as a non-breaking change by:
+
 1. Adding a `ScopeIds` property alongside existing `ScopeId`
 2. Treating `ScopeId` as a fallback if `ScopeIds` is empty
 3. Updating permission logic to check both
@@ -393,6 +394,7 @@ public interface IAITool
 6. **UI**: Can query `AIToolScopeCollection` to build UI with icons, groups, metadata
 
 #### 1.2 Update Persistence Entity
+
 **File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\Agents\AIAgentEntity.cs`
 
 Add corresponding entity properties with JSON serialization:
@@ -410,6 +412,7 @@ public string? EnabledToolScopeIds { get; set; }
 ```
 
 #### 1.3 EF Core Configuration
+
 **File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Persistence\UmbracoAIAgentDbContext.cs`
 
 Update `OnModelCreating()` to handle JSON conversion (consistent with existing `ContextIds`, `ScopeIds` pattern):
@@ -429,9 +432,11 @@ builder.Property(e => e.EnabledToolScopeIds)
 ```
 
 #### 1.4 Database Migration
+
 **Migration Name**: `UmbracoAIAgent_AddToolPermissions`
 
 **Changes**:
+
 - Add nullable `EnabledToolIds` column (nvarchar(4000))
 - Add nullable `EnabledToolScopeIds` column (nvarchar(2000))
 - Create SQL Server and SQLite variants
@@ -609,11 +614,13 @@ public async Task<bool> IsToolEnabledAsync(
 ### 4. Integration Points
 
 #### 4.1 Tool Resolution in Agent Factory
+
 **File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Core\Chat\AIAgentFactory.cs`
 
 **Method**: `CreateAgentAsync` (around line 46-97)
 
 **Changes**:
+
 1. Inject `IAIAgentService` into constructor (if not already present)
 2. Get enabled tools for agent before creating tool list
 3. Filter tools to only include enabled ones
@@ -690,10 +697,10 @@ public async Task<AIAgent> CreateAgentAsync(
 Frontend tools (e.g., `setPropertyValue`, entity mutation tools) will respect agent permissions for consistency and defense-in-depth:
 
 - **Rationale**:
-  - Consistency - all tools governed by same permission rules
-  - Defense in depth - permissions checked before tools are even available to the LLM
-  - Prevents the LLM from attempting to call tools the agent shouldn't have access to
-  - Better error messages - permission denied vs. tool not found
+    - Consistency - all tools governed by same permission rules
+    - Defense in depth - permissions checked before tools are even available to the LLM
+    - Prevents the LLM from attempting to call tools the agent shouldn't have access to
+    - Better error messages - permission denied vs. tool not found
 - **Implementation**: Extract tool metadata from `forwardedProps` and validate against agent permissions
 - **Frontend Consideration**: Frontend sends tool metadata via AGUI `forwardedProps` field
 
@@ -705,15 +712,17 @@ Frontend tool manifests (`uaiAgentTool`) include scope information in their `met
 
 ```typescript
 const setPropertyValueManifest: ManifestUaiAgentTool = {
-  type: "uaiAgentTool",
-  alias: "Uai.AgentTool.SetPropertyValue",
-  meta: {
-    toolName: "setPropertyValue",
-    description: "Update a property value...",
-    scope: "entity.write",  // ← NEW: Add scope (operation-level)
-    isDestructive: true,
-    parameters: { /* ... */ }
-  }
+    type: "uaiAgentTool",
+    alias: "Uai.AgentTool.SetPropertyValue",
+    meta: {
+        toolName: "setPropertyValue",
+        description: "Update a property value...",
+        scope: "entity.write", // ← NEW: Add scope (operation-level)
+        isDestructive: true,
+        parameters: {
+            /* ... */
+        },
+    },
 };
 ```
 
@@ -723,20 +732,20 @@ In `copilot-run.controller.ts`, when calling the agent API:
 
 ```typescript
 // Extract tool metadata from manifests
-const toolMetadata = this.#toolManager.frontendTools.map(manifest => ({
-  name: manifest.meta.toolName,
-  scope: manifest.meta.scope,
-  isDestructive: manifest.meta.isDestructive ?? false
+const toolMetadata = this.#toolManager.frontendTools.map((manifest) => ({
+    name: manifest.meta.toolName,
+    scope: manifest.meta.scope,
+    isDestructive: manifest.meta.isDestructive ?? false,
 }));
 
 // Send via forwardedProps
 await this.#client.sendMessage(
-  nextMessages,
-  this.#toolManager.frontendTools,  // Standard AGUI tools
-  this.#pendingContext,
-  {
-    toolMetadata: toolMetadata  // ← Metadata in forwardedProps
-  }
+    nextMessages,
+    this.#toolManager.frontendTools, // Standard AGUI tools
+    this.#pendingContext,
+    {
+        toolMetadata: toolMetadata, // ← Metadata in forwardedProps
+    },
 );
 ```
 
@@ -801,12 +810,14 @@ private record ToolMetadata(string Name, string? Scope, bool IsDestructive);
 ```
 
 **Benefits of Using forwardedProps**:
+
 - **AGUI Protocol Compliant**: Uses official extensibility mechanism
 - **No Custom Events**: Simpler than creating custom event handlers
 - **Defense in Depth**: Backend validates all tools regardless of frontend filtering
 - **Standard Tool Format**: AGUI tools remain unchanged, metadata travels separately
 
 #### 4.2 Constructor Injection
+
 **File**: Same as above
 
 Add constructor parameter (if not already present):
@@ -826,11 +837,13 @@ public AIAgentFactory(
 **Note**: `AIAgentFactory` may already have `IAIAgentService` injected. If so, just use the existing field.
 
 #### 4.3 Tool Metadata Extraction in RunAgentController
+
 **File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Controllers\RunAgentController.cs`
 
 **Method**: Agent run endpoint handler
 
 **Changes**:
+
 1. Extract tool metadata from `request.ForwardedProps`
 2. Pass metadata to `AIAgentFactory` via `additionalProperties`
 3. Log validation failures for audit
@@ -901,6 +914,7 @@ private record ToolMetadata(string Name, string? Scope, bool IsDestructive);
 ```
 
 **Why here**: RunAgentController is the entry point for agent execution. It's responsible for:
+
 - Receiving AGUI protocol requests
 - Extracting metadata from `forwardedProps` (AGUI extensibility field)
 - Passing validated data to the service layer
@@ -908,7 +922,9 @@ private record ToolMetadata(string Name, string? Scope, bool IsDestructive);
 ### 5. API Changes
 
 #### 5.1 Request/Response Models
+
 **Files**:
+
 - `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Models\AgentCreateRequestModel.cs`
 - `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Models\AgentUpdateRequestModel.cs`
 - `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Models\AgentResponseModel.cs`
@@ -921,11 +937,13 @@ public IReadOnlyList<string>? EnabledToolScopeIds { get; set; }
 ```
 
 #### 5.2 Mapping Configuration
+
 **File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Mapping\AgentMapDefinition.cs`
 
 Update mapper to include new properties in both directions (domain ↔ API models).
 
 #### 5.3 Optional: Tool Query Endpoint
+
 **New File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web\Api\Management\Agent\Controllers\GetAgentToolsController.cs`
 
 ```csharp
@@ -973,6 +991,7 @@ public class GetAgentToolsController : AgentControllerBase
 **Location**: Agent edit workspace (similar to Profile, Context sections)
 
 **Component Structure**:
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Agent: Content Assistant                                    │
@@ -1035,38 +1054,38 @@ public class GetAgentToolsController : AgentControllerBase
 **Key Features**:
 
 1. **Dual Selection Model**:
-   - **Specific Tools**: Tag-style input with dropdown for available tools
-   - **Scopes**: Checkbox list with tool count indicators
-   - Both can be used simultaneously
+    - **Specific Tools**: Tag-style input with dropdown for available tools
+    - **Scopes**: Checkbox list with tool count indicators
+    - Both can be used simultaneously
 
 2. **Tool Indicators**:
-   - Icon per tool scope
-   - ⚠️  badge for destructive tools
-   - 🔒 badge for system tools (shown but disabled)
-   - Tool count per scope: "(includes X tools)"
+    - Icon per tool scope
+    - ⚠️ badge for destructive tools
+    - 🔒 badge for system tools (shown but disabled)
+    - Tool count per scope: "(includes X tools)"
 
 3. **Search/Filter**:
-   - Search box to filter tool list by name/description
-   - Filter by scope
-   - Filter by destructive/non-destructive
+    - Search box to filter tool list by name/description
+    - Filter by scope
+    - Filter by destructive/non-destructive
 
 4. **Preview Pane** (optional):
-   ```
-   ┌───────────────────────────────────────┐
-   │ EFFECTIVE TOOLS (12)                  │
-   ├───────────────────────────────────────┤
-   │ System Tools (2):                     │
-   │  • list_context_resources             │
-   │  • get_context_resource               │
-   │                                       │
-   │ Enabled Tools (10):                   │
-   │  • fetch_webpage                      │
-   │  • search.semantic                    │
-   │  • search.fulltext (via "Search")     │
-   │  • navigation.tree (via "Navigation") │
-   │  • ...                                │
-   └───────────────────────────────────────┘
-   ```
+    ```
+    ┌───────────────────────────────────────┐
+    │ EFFECTIVE TOOLS (12)                  │
+    ├───────────────────────────────────────┤
+    │ System Tools (2):                     │
+    │  • list_context_resources             │
+    │  • get_context_resource               │
+    │                                       │
+    │ Enabled Tools (10):                   │
+    │  • fetch_webpage                      │
+    │  • search.semantic                    │
+    │  • search.fulltext (via "Search")     │
+    │  • navigation.tree (via "Navigation") │
+    │  • ...                                │
+    └───────────────────────────────────────┘
+    ```
 
 #### 6.2 Tool Selector Component
 
@@ -1075,6 +1094,7 @@ public class GetAgentToolsController : AgentControllerBase
 **Location**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\src\Umbraco.AI.Agent.Web.StaticAssets\Client\src\agent\components\tool-selector\`
 
 **Props**:
+
 ```typescript
 @property({ type: Array })
 enabledToolIds: string[] = [];
@@ -1087,6 +1107,7 @@ readonly: boolean = false;
 ```
 
 **Events**:
+
 ```typescript
 // Dispatched when tool selection changes
 "tool-selection-change": CustomEvent<{
@@ -1096,6 +1117,7 @@ readonly: boolean = false;
 ```
 
 **API Integration**:
+
 - Fetch all available tools: `GET /umbraco/ai/management/api/v1/tools` (if exists)
 - Or: Extract from `AIToolCollection` via new API endpoint
 - Group tools by scope
@@ -1106,6 +1128,7 @@ readonly: boolean = false;
 **Component**: `<uai-scope-checkbox-list>`
 
 Shows all tool scopes with:
+
 - Checkbox per scope
 - Tool count per scope
 - Destructive warning if scope contains destructive tools
@@ -1116,6 +1139,7 @@ Shows all tool scopes with:
 **Component**: `<uai-tool-tag-input>`
 
 Tag-style input with autocomplete:
+
 - Shows selected tools as removable tags
 - Dropdown with available tools
 - Search/filter capability
@@ -1124,49 +1148,52 @@ Tag-style input with autocomplete:
 #### 6.5 Backend API for Tool Metadata
 
 **New Endpoint** (required for UI):
+
 ```
 GET /umbraco/ai/management/api/v1/tools
 ```
 
 **Response**:
+
 ```json
 {
-  "tools": [
-    {
-      "id": "fetch_webpage",
-      "name": "Fetch Web Page",
-      "description": "Fetches content from a web page",
-      "scope": "Web",
-      "isDestructive": false,
-      "isSystem": false,
-      "tags": ["web", "http"]
-    },
-    {
-      "id": "content.update",
-      "name": "Update Content",
-      "description": "Updates content properties",
-      "scope": "Content",
-      "isDestructive": true,
-      "isSystem": false,
-      "tags": ["content", "write"]
-    }
-  ],
-  "scopes": [
-    {
-      "name": "Search",
-      "toolCount": 4,
-      "hasDestructiveTools": false
-    },
-    {
-      "name": "Content",
-      "toolCount": 7,
-      "hasDestructiveTools": true
-    }
-  ]
+    "tools": [
+        {
+            "id": "fetch_webpage",
+            "name": "Fetch Web Page",
+            "description": "Fetches content from a web page",
+            "scope": "Web",
+            "isDestructive": false,
+            "isSystem": false,
+            "tags": ["web", "http"]
+        },
+        {
+            "id": "content.update",
+            "name": "Update Content",
+            "description": "Updates content properties",
+            "scope": "Content",
+            "isDestructive": true,
+            "isSystem": false,
+            "tags": ["content", "write"]
+        }
+    ],
+    "scopes": [
+        {
+            "name": "Search",
+            "toolCount": 4,
+            "hasDestructiveTools": false
+        },
+        {
+            "name": "Content",
+            "toolCount": 7,
+            "hasDestructiveTools": true
+        }
+    ]
 }
 ```
 
 **Controller**: `GetToolsController.cs`
+
 ```csharp
 [ApiVersion("1.0")]
 [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
@@ -1206,39 +1233,46 @@ public class GetToolsController : ControllerBase
 #### 6.6 Validation & Feedback
 
 **Client-Side Validation**:
+
 - Warn if no tools are enabled (only system tools will be available)
 - Show preview of effective tools when selection changes
 - Highlight conflicts (tool ID selected + scope containing same tool)
 
 **Server-Side Validation**:
+
 - Accept empty lists (valid - only system tools)
 - Validate tool IDs exist in registry (return error for unknown tools)
 - Validate scope names exist
 
 **User Feedback**:
+
 - Success toast: "Agent tool permissions updated"
 - Preview before save: "This agent will have access to X tools"
-- Warning for restrictive configs: "⚠️  Only system tools enabled. Agent capabilities will be limited."
+- Warning for restrictive configs: "⚠️ Only system tools enabled. Agent capabilities will be limited."
 
 ### 7. Backward Compatibility
 
 **Breaking Changes**: None - new properties are additive and optional
 
 **Migration Strategy**:
+
 - Existing agents will have NULL for new columns
 - Migration script sets default scopes: `["Search","Navigation","Translation","Web"]`
 - This preserves reasonable defaults while being more restrictive than "all tools"
 
 **Empty Lists Behavior**:
+
 - Empty `EnabledToolIds` + Empty `EnabledToolScopeIds` = Only system tools (most restrictive)
 - NULL values after migration will be replaced with default scopes (balanced)
 
 ### 8. Testing Strategy
 
 #### Unit Tests
+
 **File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\tests\Umbraco.AI.Agent.Tests.Unit\Agents\AIAgentServiceTests.cs`
 
 Add test methods for new functionality:
+
 - System tools always included
 - Tool ID filtering works
 - Scope filtering works
@@ -1248,12 +1282,15 @@ Add test methods for new functionality:
 - `IsToolEnabledAsync` returns correct results
 
 **Existing File Updates**:
+
 - `AIAgentFactoryTests.cs` - Verify tool filtering in CreateAgentAsync
 
 #### Integration Tests
+
 **New File**: `D:\Work\Umbraco\Umbraco.AI\Umbraco.AI.Agent\tests\Umbraco.AI.Agent.Tests.Integration\Permissions\ToolPermissionIntegrationTests.cs`
 
 Test scenarios:
+
 - End-to-end agent execution with different tool configurations
 - Verify LLM cannot call non-enabled tools
 - API endpoints return correct tool lists
@@ -1262,6 +1299,7 @@ Test scenarios:
 ### 9. Documentation Updates
 
 **Files to Update**:
+
 1. `D:\Work\Umbraco\Umbraco.AI\docs\internal\core\umbraco-ai-agents-design.md` - Update Security and Permissions section
 2. `D:\Work\Umbraco\Umbraco.AI\CLAUDE.md` - Add notes about agent tool permissions
 3. **New File**: `D:\Work\Umbraco\Umbraco.AI\docs\internal\agent\tool-permissions.md` - Detailed permission system documentation
@@ -1271,27 +1309,30 @@ Test scenarios:
 **Deferred to Phase 2** based on user feedback. Considerations:
 
 ### Key Questions to Resolve
+
 1. **Automation scenarios**: How do agents run in scheduled tasks, webhooks, or event handlers?
-   - Option A: Require API user credentials
-   - Option B: Service-level bypass for trusted internal calls
-   - Option C: Special "system" user context for automation
+    - Option A: Require API user credentials
+    - Option B: Service-level bypass for trusted internal calls
+    - Option C: Special "system" user context for automation
 
 2. **Default behavior**: What should empty `AllowedUserGroupAliases` mean?
-   - Option A: All authenticated backoffice users (more permissive)
-   - Option B: No access / deny by default (more secure)
+    - Option A: All authenticated backoffice users (more permissive)
+    - Option B: No access / deny by default (more secure)
 
 3. **Integration with tool permissions**:
-   - Both layers check independently (user must pass both)
-   - OR user groups check happens first (fail-fast)
+    - Both layers check independently (user must pass both)
+    - OR user groups check happens first (fail-fast)
 
 ### Proposed Phase 2 Design (Tentative)
 
 **Add to AIAgent**:
+
 ```csharp
 public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 ```
 
 **Service changes**:
+
 - Inject `IBackOfficeSecurityAccessor`
 - Add user validation in `StreamAgentAsync` before tool resolution
 - Return structured error if user not in allowed groups
@@ -1301,6 +1342,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 ## Implementation Checklist
 
 ### Domain Model (Core) - Tool Scopes Infrastructure
+
 - [ ] Create `IAIToolScope` interface (Umbraco.AI.Core/Tools/Scopes/)
 - [ ] Create `AIToolScopeAttribute` class for discovery
 - [ ] Create `AIToolScopeBase` base class
@@ -1314,6 +1356,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Add scope validation in `AIToolCollectionBuilder` (validate scope IDs exist)
 
 ### Domain Model (Core) - Agent Permissions
+
 - [ ] Add `EnabledToolIds` property to `AIAgent.cs`
 - [ ] Add `EnabledToolScopeIds` property to `AIAgent.cs`
 - [ ] Add `GetEnabledToolIdsAsync` method to `IAIAgentService.cs`
@@ -1322,6 +1365,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Inject `AIToolCollection` and `AIToolScopeCollection` into `AIAgentService`
 
 ### Persistence Layer
+
 - [ ] Add properties to `AIAgentEntity.cs`
 - [ ] Update `UmbracoAIAgentDbContext.cs` with JSON converters
 - [ ] Update `AIAgentRepository.cs` mapping (if needed)
@@ -1330,11 +1374,13 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Add migration script for default values
 
 ### Service Integration
+
 - [ ] Update `AIAgentFactory.cs` constructor (inject `IAIAgentService` if not present)
 - [ ] Update `CreateAgentAsync` to call `_agentService.GetEnabledToolIdsAsync()`
 - [ ] Filter tools based on enabled tool IDs
 
 ### Web API Layer
+
 - [ ] Update `AgentCreateRequestModel.cs`
 - [ ] Update `AgentUpdateRequestModel.cs`
 - [ ] Update `AgentResponseModel.cs`
@@ -1343,6 +1389,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Create `GetToolsController.cs` - get all available tools metadata (required for UI)
 
 ### Frontend - Tool Metadata via forwardedProps
+
 - [ ] Update `ManifestUaiAgentTool` type to include optional `scope` field in `meta`
 - [ ] Add `scope` to existing frontend tool manifests (e.g., `setPropertyValue`)
 - [ ] Update `copilot-run.controller.ts` to extract tool metadata from manifests
@@ -1353,6 +1400,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Update tool filtering logic to validate against metadata
 
 ### Frontend UI Components
+
 - [ ] Create `<uai-tool-selector>` element (agent/components/tool-selector/)
 - [ ] Create `<uai-scope-checkbox-list>` element
 - [ ] Create `<uai-tool-tag-input>` element
@@ -1363,12 +1411,14 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - [ ] Style components consistently with Umbraco design system
 
 ### Testing
+
 - [ ] Add unit tests to `AIAgentServiceTests.cs` for tool permission methods
 - [ ] Update `AIAgentFactoryTests.cs` (verify tool filtering)
 - [ ] Create `ToolPermissionIntegrationTests.cs` (end-to-end tests)
 - [ ] Test migration script with sample data
 
 ### Documentation
+
 - [ ] Update `umbraco-ai-agents-design.md` (Security section)
 - [ ] Create `tool-permissions.md` (detailed design doc)
 - [ ] Update `CLAUDE.md` (repository overview)
@@ -1376,80 +1426,88 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 
 ## Critical Files Reference
 
-| File | Purpose | Changes |
-|------|---------|---------|
-| `Umbraco.AI.Agent.Core/Agents/AIAgent.cs` | Domain model | Add `EnabledToolIds`, `EnabledToolScopeIds` |
-| `Umbraco.AI.Agent.Core/Agents/IAIAgentService.cs` | Service interface | Add `GetEnabledToolIdsAsync`, `IsToolEnabledAsync` methods |
-| `Umbraco.AI.Agent.Core/Agents/AIAgentService.cs` | Service implementation | Implement tool permission methods, inject `AIToolCollection` |
-| `Umbraco.AI.Agent.Core/Chat/AIAgentFactory.cs` | Agent creation | Call `_agentService.GetEnabledToolIdsAsync()`, filter tools using metadata from `additionalProperties` |
-| `Umbraco.AI.Agent.Persistence/Agents/AIAgentEntity.cs` | EF entity | Add JSON columns |
-| `Umbraco.AI.Agent.Persistence/UmbracoAIAgentDbContext.cs` | EF configuration | Add JSON converters |
-| `Umbraco.AI.Agent.Web/.../RunAgentController.cs` | Agent execution | Extract tool metadata from `forwardedProps`, pass to factory |
-| `Umbraco.AI.Agent.Web/...Models/AgentCreateRequestModel.cs` | API model | Add properties |
-| `Umbraco.AI.Agent.Web/...Models/AgentUpdateRequestModel.cs` | API model | Add properties |
-| `Umbraco.AI.Agent.Web/...Models/AgentResponseModel.cs` | API model | Add properties |
-| `Umbraco.AI.Agent.Web/Mapping/AgentMapDefinition.cs` | Mapping config | Map new properties |
-| `Umbraco.AI.Agent.Copilot/.../copilot-run.controller.ts` | Frontend controller | Extract tool metadata, send via `forwardedProps` |
+| File                                                        | Purpose                | Changes                                                                                                |
+| ----------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `Umbraco.AI.Agent.Core/Agents/AIAgent.cs`                   | Domain model           | Add `EnabledToolIds`, `EnabledToolScopeIds`                                                            |
+| `Umbraco.AI.Agent.Core/Agents/IAIAgentService.cs`           | Service interface      | Add `GetEnabledToolIdsAsync`, `IsToolEnabledAsync` methods                                             |
+| `Umbraco.AI.Agent.Core/Agents/AIAgentService.cs`            | Service implementation | Implement tool permission methods, inject `AIToolCollection`                                           |
+| `Umbraco.AI.Agent.Core/Chat/AIAgentFactory.cs`              | Agent creation         | Call `_agentService.GetEnabledToolIdsAsync()`, filter tools using metadata from `additionalProperties` |
+| `Umbraco.AI.Agent.Persistence/Agents/AIAgentEntity.cs`      | EF entity              | Add JSON columns                                                                                       |
+| `Umbraco.AI.Agent.Persistence/UmbracoAIAgentDbContext.cs`   | EF configuration       | Add JSON converters                                                                                    |
+| `Umbraco.AI.Agent.Web/.../RunAgentController.cs`            | Agent execution        | Extract tool metadata from `forwardedProps`, pass to factory                                           |
+| `Umbraco.AI.Agent.Web/...Models/AgentCreateRequestModel.cs` | API model              | Add properties                                                                                         |
+| `Umbraco.AI.Agent.Web/...Models/AgentUpdateRequestModel.cs` | API model              | Add properties                                                                                         |
+| `Umbraco.AI.Agent.Web/...Models/AgentResponseModel.cs`      | API model              | Add properties                                                                                         |
+| `Umbraco.AI.Agent.Web/Mapping/AgentMapDefinition.cs`        | Mapping config         | Map new properties                                                                                     |
+| `Umbraco.AI.Agent.Copilot/.../copilot-run.controller.ts`    | Frontend controller    | Extract tool metadata, send via `forwardedProps`                                                       |
 
 ## Verification
 
 ### How to Test End-to-End
 
 1. **Create Test Agent**:
-   ```http
-   POST /umbraco/ai/management/api/v1/agents
-   {
-     "alias": "test-agent",
-     "name": "Test Agent",
-     "enabledToolIds": ["fetch_webpage"],
-     "enabledToolScopeIds": ["Search"]
-   }
-   ```
+
+    ```http
+    POST /umbraco/ai/management/api/v1/agents
+    {
+      "alias": "test-agent",
+      "name": "Test Agent",
+      "enabledToolIds": ["fetch_webpage"],
+      "enabledToolScopeIds": ["Search"]
+    }
+    ```
 
 2. **Run Agent**:
-   ```http
-   POST /umbraco/ai/management/api/v1/agents/test-agent/run
-   {
-     "messages": [{"role": "user", "content": "Search for X"}]
-   }
-   ```
+
+    ```http
+    POST /umbraco/ai/management/api/v1/agents/test-agent/run
+    {
+      "messages": [{"role": "user", "content": "Search for X"}]
+    }
+    ```
 
 3. **Verify Tool Resolution**:
-   ```http
-   GET /umbraco/ai/management/api/v1/agents/test-agent/enabled-tools
-   ```
-   Should return: system tools + "fetch_webpage" + tools in "Search" scope
+
+    ```http
+    GET /umbraco/ai/management/api/v1/agents/test-agent/enabled-tools
+    ```
+
+    Should return: system tools + "fetch_webpage" + tools in "Search" scope
 
 4. **Test LLM Cannot Call Disabled Tools**:
-   - Ask agent to perform action requiring disabled tool
-   - Should fail with "tool not found" or similar error
+    - Ask agent to perform action requiring disabled tool
+    - Should fail with "tool not found" or similar error
 
 5. **Run Unit Tests**:
-   ```bash
-   dotnet test Umbraco.AI.Agent.Tests.Unit
-   dotnet test Umbraco.AI.Agent.Tests.Integration
-   ```
+    ```bash
+    dotnet test Umbraco.AI.Agent.Tests.Unit
+    dotnet test Umbraco.AI.Agent.Tests.Integration
+    ```
 
 ## Design Rationale
 
 ### Why Tool Permissions First?
+
 - Simpler to implement (no user context complexity)
 - Immediate value for limiting agent capabilities
 - No automation/API user concerns to resolve
 - Can be tested independently
 
 ### Why Scopes + IDs?
+
 - **Scopes**: Convenience for bulk enablement (e.g., "enable all Search tools")
 - **IDs**: Fine-grained control for specific tools
 - **Both**: Maximum flexibility without introducing ToolSets entity
 
 ### Why Backend-Only Validation?
+
 - Simpler for V1
 - Frontend would need to duplicate permission logic
 - Backend is authoritative anyway
 - Frontend HITL approval already provides UI for destructive tools
 
 ### Why forwardedProps for Tool Metadata?
+
 - **AGUI Protocol Compliant**: `forwardedProps` is an official AGUI field designed for extensibility
 - **No Custom Events**: Simpler than creating custom event handlers
 - **Standard Tool Format**: AGUI tools remain unchanged (`{ name, description, parameters }`)
@@ -1457,6 +1515,7 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 - **Single Request**: Metadata travels with run request, no additional round trips
 
 ### Why NOT Tool-Level Permissions in V1?
+
 - Agent-level control is sufficient for most cases
 - Tool-level permissions add complexity (two governance layers)
 - Unclear if needed based on current requirements
@@ -1465,17 +1524,20 @@ public IReadOnlyList<string> AllowedUserGroupAliases { get; set; } = [];
 ## Extension Points for Future
 
 ### Phase 2: User Group Permissions
+
 - Add `AllowedUserGroupAliases` property
 - Inject `IBackOfficeSecurityAccessor`
 - Add validation before tool resolution
 
 ### Phase 3: ToolSets (If Needed)
+
 - Add `AIToolSet` entity
 - Add `EnabledToolSetAliases` to agent
 - Tool resolution includes tools from sets
 - Optional: ToolSets can have their own user group restrictions
 
 ### Other Future Enhancements
+
 - Rate limiting per tool
 - Audit logging for tool calls
 - Permission contributors (extension point)

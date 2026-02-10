@@ -1,6 +1,6 @@
 ---
 description: >-
-  Create and manage AI provider connections in the Umbraco backoffice.
+    Create and manage AI provider connections in the Umbraco backoffice.
 ---
 
 # Managing Connections
@@ -18,11 +18,11 @@ Connections store the credentials needed to communicate with AI providers. Manag
 1. Click **Create Connection** in the Connections section
 2. Fill in the required fields:
 
-| Field | Description |
-|-------|-------------|
-| **Name** | Display name for the connection |
-| **Alias** | Unique identifier (used in code) |
-| **Provider** | Select from installed providers |
+| Field        | Description                      |
+| ------------ | -------------------------------- |
+| **Name**     | Display name for the connection  |
+| **Alias**    | Unique identifier (used in code) |
+| **Provider** | Select from installed providers  |
 
 3. Configure provider-specific settings (varies by provider)
 4. Click **Save**
@@ -31,10 +31,10 @@ Connections store the credentials needed to communicate with AI providers. Manag
 
 When using the OpenAI provider:
 
-| Setting | Description | Required |
-|---------|-------------|----------|
-| **API Key** | Your OpenAI API key | Yes |
-| **Organization** | Organization ID (if applicable) | No |
+| Setting          | Description                     | Required |
+| ---------------- | ------------------------------- | -------- |
+| **API Key**      | Your OpenAI API key             | Yes      |
+| **Organization** | Organization ID (if applicable) | No       |
 
 ## Using Configuration References
 
@@ -43,13 +43,15 @@ Instead of storing API keys directly in the database, use configuration referenc
 1. Add your API key to `appsettings.json`:
 
 {% code title="appsettings.json" %}
+
 ```json
 {
-  "OpenAI": {
-    "ApiKey": "sk-your-api-key-here"
-  }
+    "OpenAI": {
+        "ApiKey": "sk-your-api-key-here"
+    }
 }
 ```
+
 {% endcode %}
 
 2. In the connection settings, enter `$OpenAI:ApiKey` as the API Key value
@@ -84,13 +86,14 @@ Deleting a connection will break any profiles that depend on it. Consider deacti
 
 Use the **Active** toggle to enable or disable a connection:
 
-* **Active** - Connection is available for use
-* **Inactive** - Connection is disabled; profiles using it will fail
+- **Active** - Connection is available for use
+- **Inactive** - Connection is disabled; profiles using it will fail
 
 This is useful for:
-* Temporarily disabling a connection without deleting it
-* Rotating API keys (create new connection, disable old one)
-* Testing failover scenarios
+
+- Temporarily disabling a connection without deleting it
+- Rotating API keys (create new connection, disable old one)
+- Testing failover scenarios
 
 ## Best Practices
 
@@ -101,5 +104,5 @@ This is useful for:
 
 ## Related
 
-* [Managing Profiles](managing-profiles.md) - Create profiles using connections
-* [Connections Concept](../concepts/connections.md) - Deeper explanation of connections
+- [Managing Profiles](managing-profiles.md) - Create profiles using connections
+- [Connections Concept](../concepts/connections.md) - Deeper explanation of connections

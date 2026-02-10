@@ -42,6 +42,17 @@ public class AgentItemResponseModel
     public IEnumerable<string> ScopeIds { get; set; } = [];
 
     /// <summary>
+    /// List of explicitly allowed tool IDs for this agent.
+    /// </summary>
+    public IEnumerable<string> AllowedToolIds { get; set; } = [];
+
+    /// <summary>
+    /// List of allowed tool scope IDs for this agent.
+    /// Grants access to all tools within the specified scopes.
+    /// </summary>
+    public IEnumerable<string> AllowedToolScopeIds { get; set; } = [];
+
+    /// <summary>
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }

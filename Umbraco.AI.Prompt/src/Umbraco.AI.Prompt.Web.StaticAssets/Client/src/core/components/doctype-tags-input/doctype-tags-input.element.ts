@@ -54,10 +54,7 @@ export class UaiDoctypeTagsInputElement extends UmbLitElement {
      * Lookup callback for fetching document type aliases.
      */
     #lookup: TagLookupCallback = async (query: string): Promise<TagItem[]> => {
-        const { data } = await tryExecute(
-            this,
-            UtilsService.getDocumentTypeAliases({ query: { query } })
-        );
+        const { data } = await tryExecute(this, UtilsService.getDocumentTypeAliases({ query: { query } }));
 
         if (data) {
             return data.map((alias) => ({

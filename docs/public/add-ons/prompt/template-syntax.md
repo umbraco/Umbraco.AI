@@ -1,6 +1,6 @@
 ---
 description: >-
-  Variable interpolation syntax for prompt templates.
+    Variable interpolation syntax for prompt templates.
 ---
 
 # Template Syntax
@@ -18,6 +18,7 @@ Translate the following text to {{language}}:
 ```
 
 Variables can reference:
+
 - Entity properties (name, content type, etc.)
 - Content property values by alias
 - Custom context items passed in the request
@@ -43,6 +44,7 @@ Combined: {{users[0].name}}
 ```
 
 Supported path patterns:
+
 - Simple property: `{{name}}`
 - Nested property: `{{user.name}}`
 - Array index: `{{items[0]}}`
@@ -66,6 +68,7 @@ Write alt text for:
 ```
 
 The image processor:
+
 1. Fetches the entity from Umbraco
 2. Gets the media property value
 3. Resolves the image content
@@ -102,6 +105,7 @@ Suggest improvements for SEO.
 Execute prompts programmatically using `IAIPromptService`:
 
 {% code title="Example.cs" %}
+
 ```csharp
 var result = await _promptService.ExecutePromptAsync(
     promptId,
@@ -118,22 +122,23 @@ var result = await _promptService.ExecutePromptAsync(
         }
     });
 ```
+
 {% endcode %}
 
 The `AIPromptExecutionRequest` requires:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `EntityId` | `Guid` | The content or media item ID |
-| `EntityType` | `string` | "document" or "media" |
-| `PropertyAlias` | `string` | The property being edited |
+| Property        | Type     | Description                  |
+| --------------- | -------- | ---------------------------- |
+| `EntityId`      | `Guid`   | The content or media item ID |
+| `EntityType`    | `string` | "document" or "media"        |
+| `PropertyAlias` | `string` | The property being edited    |
 
 Optional properties:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Culture` | `string?` | Culture variant code |
-| `Segment` | `string?` | Segment variant |
+| Property  | Type                                   | Description              |
+| --------- | -------------------------------------- | ------------------------ |
+| `Culture` | `string?`                              | Culture variant code     |
+| `Segment` | `string?`                              | Segment variant          |
 | `Context` | `IReadOnlyList<AIRequestContextItem>?` | Additional context items |
 
 ## Context Items
@@ -141,6 +146,7 @@ Optional properties:
 Context items provide additional information to the prompt:
 
 {% code title="AIRequestContextItem.cs" %}
+
 ```csharp
 public class AIRequestContextItem
 {
@@ -148,6 +154,7 @@ public class AIRequestContextItem
     public string? Value { get; init; }
 }
 ```
+
 {% endcode %}
 
 The `Description` provides a human-readable label, while `Value` contains the actual data that can be referenced in templates.
@@ -173,11 +180,13 @@ Target language: {{targetLanguage}}
 ### Be Explicit
 
 Instead of:
+
 ```
 Write about {{topic}}
 ```
 
 Use:
+
 ```
 Write a 500-word blog post about {{topic}}.
 Include an introduction, 3 main points, and a conclusion.
@@ -221,6 +230,6 @@ Keep the response under {{maxWords}} words.
 
 ## Related
 
-* [Concepts](concepts.md) - Prompt template concepts
-* [Scoping](scoping.md) - Content type rules
-* [Property Actions](property-actions.md) - Using prompts in the backoffice
+- [Concepts](concepts.md) - Prompt template concepts
+- [Scoping](scoping.md) - Content type rules
+- [Property Actions](property-actions.md) - Using prompts in the backoffice

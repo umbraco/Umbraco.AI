@@ -23,9 +23,12 @@ public interface IAITool : IDiscoverable
     string Description { get; }
 
     /// <summary>
-    /// Gets the category of the tool for grouping purposes.
+    /// Gets the scope identifier for permission and grouping purposes.
     /// </summary>
-    string Category { get; }
+    /// <remarks>
+    /// Examples: "content-read", "content-write", "media-read", "search"
+    /// </remarks>
+    string ScopeId { get; }
 
     /// <summary>
     /// Gets whether the tool performs destructive operations.

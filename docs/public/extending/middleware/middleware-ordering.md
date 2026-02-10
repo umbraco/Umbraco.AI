@@ -1,6 +1,6 @@
 ---
 description: >-
-  Control the execution order of middleware in the pipeline.
+    Control the execution order of middleware in the pipeline.
 ---
 
 # Middleware Ordering
@@ -27,16 +27,17 @@ The **first** registered middleware is the **outermost** wrapper and sees reques
 
 The collection builder provides methods to control ordering:
 
-| Method | Description |
-|--------|-------------|
-| `Append<T>()` | Add middleware at the end |
+| Method                       | Description                         |
+| ---------------------------- | ----------------------------------- |
+| `Append<T>()`                | Add middleware at the end           |
 | `InsertBefore<TBefore, T>()` | Insert before a specific middleware |
-| `InsertAfter<TAfter, T>()` | Insert after a specific middleware |
-| `Remove<T>()` | Remove a middleware |
+| `InsertAfter<TAfter, T>()`   | Insert after a specific middleware  |
+| `Remove<T>()`                | Remove a middleware                 |
 
 ## Basic Ordering
 
 {% code title="MyComposer.cs" %}
+
 ```csharp
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
@@ -52,6 +53,7 @@ public class MyComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Inserting Relative to Others
@@ -59,6 +61,7 @@ public class MyComposer : IComposer
 When extending existing middleware pipelines:
 
 {% code title="Inserting Middleware" %}
+
 ```csharp
 public class ExtendingComposer : IComposer
 {
@@ -74,6 +77,7 @@ public class ExtendingComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Removing Middleware
@@ -81,6 +85,7 @@ public class ExtendingComposer : IComposer
 Remove middleware added by other composers:
 
 {% code title="Removing Middleware" %}
+
 ```csharp
 public class CustomComposer : IComposer
 {
@@ -92,6 +97,7 @@ public class CustomComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Embedding Middleware Ordering
@@ -99,6 +105,7 @@ public class CustomComposer : IComposer
 The same methods work for embedding middleware:
 
 {% code title="Embedding Ordering" %}
+
 ```csharp
 public class MyComposer : IComposer
 {
@@ -111,6 +118,7 @@ public class MyComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Common Patterns
@@ -153,6 +161,7 @@ builder.AIChatMiddleware()
 When multiple composers add middleware, they combine in composer execution order:
 
 {% code title="ComposerA.cs" %}
+
 ```csharp
 [ComposeAfter(typeof(UmbracoAIComposer))]
 public class ComposerA : IComposer
@@ -164,9 +173,11 @@ public class ComposerA : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 {% code title="ComposerB.cs" %}
+
 ```csharp
 [ComposeAfter(typeof(ComposerA))]
 public class ComposerB : IComposer
@@ -179,6 +190,7 @@ public class ComposerB : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 Use `[ComposeBefore]` and `[ComposeAfter]` attributes to control composer order.
@@ -188,6 +200,7 @@ Use `[ComposeBefore]` and `[ComposeAfter]` attributes to control composer order.
 To inspect the current middleware order:
 
 {% code title="Debugging" %}
+
 ```csharp
 public class DebugComposer : IComposer
 {
@@ -198,6 +211,7 @@ public class DebugComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 {% hint style="info" %}

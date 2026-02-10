@@ -2,6 +2,7 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
 import "@umbraco-cms/backoffice/markdown-editor";
@@ -15,11 +16,13 @@ import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.
  */
 function createDefaultScope(): UaiPromptScope {
     return {
-        allowRules: [{
-            propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
-            propertyAliases: null,
-            contentTypeAliases: null,
-        }],
+        allowRules: [
+            {
+                propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
+                propertyAliases: null,
+                contentTypeAliases: null,
+            },
+        ],
         denyRules: [],
     };
 }
@@ -55,7 +58,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const value = (event.target as HTMLInputElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ description: value || null }, "description")
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ description: value || null }, "description"),
         );
     }
 
@@ -63,7 +66,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const value = (event.target as HTMLTextAreaElement).value;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ instructions: value }, "instructions")
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ instructions: value }, "instructions"),
         );
     }
 
@@ -72,7 +75,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         const picker = event.target as HTMLElement & { value: string | undefined };
         const profileId = picker.value ?? null;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ profileId }, "profileId")
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ profileId }, "profileId"),
         );
     }
 
@@ -80,10 +83,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string[] | undefined };
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>(
-                { contextIds: picker.value ?? [] },
-                "contextIds"
-            )
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ contextIds: picker.value ?? [] }, "contextIds"),
         );
     }
 
@@ -91,14 +91,15 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         event.stopPropagation();
         const checked = (event.target as HTMLInputElement).checked;
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ includeEntityContext: checked }, "includeEntityContext")
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>(
+                { includeEntityContext: checked },
+                "includeEntityContext",
+            ),
         );
     }
 
     #updateScope(scope: UaiPromptScope) {
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ scope }, "scope")
-        );
+        this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiPromptDetailModel>({ scope }, "scope"));
     }
 
     #onAllowRulesChange(event: CustomEvent<UaiScopeRule[]>) {
@@ -126,7 +127,10 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="AI Profile" description="Select a profile or leave empty to use the default Chat profile from Settings">
+                <umb-property-layout
+                    label="AI Profile"
+                    description="Select a profile or leave empty to use the default Chat profile from Settings"
+                >
                     <uai-profile-picker
                         slot="editor"
                         .value=${this._model.profileId ?? undefined}
@@ -143,7 +147,10 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-input>
                 </umb-property-layout>
 
-                <umb-property-layout label="Contexts" description="Predefined contexts to include when executing this prompt">
+                <umb-property-layout
+                    label="Contexts"
+                    description="Predefined contexts to include when executing this prompt"
+                >
                     <uai-context-picker
                         slot="editor"
                         multiple
@@ -152,7 +159,10 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-context-picker>
                 </umb-property-layout>
 
-                <umb-property-layout label="Include Entity Context" description="When enabled, all entity properties are formatted as markdown and injected as a system message. Variable replacement ({{property}}) works regardless of this setting.">
+                <umb-property-layout
+                    label="Include Entity Context"
+                    description="When enabled, all entity properties are formatted as markdown and injected as a system message. Variable replacement ({{property}}) works regardless of this setting."
+                >
                     <uui-toggle
                         slot="editor"
                         ?checked=${this._model.includeEntityContext}
@@ -160,11 +170,13 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-toggle>
                 </umb-property-layout>
 
-                <umb-property-layout label="Instructions" description="The prompt instructions template">
+                <umb-property-layout label="Instructions" description="The prompt instructions template" mandatory>
                     <umb-input-markdown
                         slot="editor"
                         .value=${this._model.instructions ?? ""}
                         @change=${this.#onInstructionsChange}
+                        required
+                        ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
@@ -195,13 +207,15 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
             </uui-box>
 
-            ${this._model.tags.length > 0 ? html`
-                <uui-box headline="Tags">
-                    <div class="tags-container">
-                        ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
-                    </div>
-                </uui-box>
-            ` : nothing}
+            ${this._model.tags.length > 0
+                ? html`
+                      <uui-box headline="Tags">
+                          <div class="tags-container">
+                              ${this._model.tags.map((tag) => html`<uui-tag>${tag}</uui-tag>`)}
+                          </div>
+                      </uui-box>
+                  `
+                : nothing}
         `;
     }
 

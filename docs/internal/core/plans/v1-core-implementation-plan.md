@@ -3,6 +3,7 @@
 ## Overview
 
 Complete the v1 core implementation of Umbraco.AI with:
+
 1. Database persistence (EF Core) replacing in-memory repositories
 2. Management API endpoints following Umbraco patterns
 3. Full CRUD UI for Connections and Profiles with dynamic settings forms
@@ -18,6 +19,7 @@ Convert provider registration to use Umbraco's collection builder pattern for co
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
+
 - ✅ `IAIProvider.cs` - Added `IDiscoverable` marker interface
 - ✅ `AIProviderCollection.cs` - Created with `GetById()` and `GetWithCapability<T>()` helpers
 - ✅ `AIProviderCollectionBuilder.cs` - Created extending `LazyCollectionBuilderBase`
@@ -30,6 +32,7 @@ Convert provider registration to use Umbraco's collection builder pattern for co
 ### Changes to IAIProvider
 
 **`src/Umbraco.AI.Core/Providers/IAIProvider.cs`** - Add `IDiscoverable` marker:
+
 ```csharp
 using Umbraco.Cms.Core.Composing;
 
@@ -42,6 +45,7 @@ public interface IAIProvider : IDiscoverable
 ### New Files
 
 **`src/Umbraco.AI.Core/Providers/AIProviderCollection.cs`**
+
 ```csharp
 public class AIProviderCollection : BuilderCollectionBase<IAIProvider>
 {
@@ -50,6 +54,7 @@ public class AIProviderCollection : BuilderCollectionBase<IAIProvider>
 ```
 
 **`src/Umbraco.AI.Core/Providers/AIProviderCollectionBuilder.cs`**
+
 ```csharp
 public class AIProviderCollectionBuilder
     : LazyCollectionBuilderBase<AIProviderCollectionBuilder, AIProviderCollection, IAIProvider>
@@ -59,6 +64,7 @@ public class AIProviderCollectionBuilder
 ```
 
 **`src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.Providers.cs`**
+
 ```csharp
 public static partial class UmbracoBuilderExtensions
 {
@@ -84,11 +90,13 @@ public static IUmbracoBuilder AddUmbracoAI(this IUmbracoBuilder builder)
 ```
 
 ### Benefits
+
 - **Consistency**: Same pattern as middleware collection builders
 - **TypeLoader caching**: Uses Umbraco's cached, efficient type discovery
 - **Extensibility**: Providers can be added/excluded via Composers
 
 ### Usage Example
+
 ```csharp
 // In a Composer - add or exclude providers
 builder.AIProviders()
@@ -97,6 +105,7 @@ builder.AIProviders()
 ```
 
 ### Modified Files
+
 - `src/Umbraco.AI.Core/Providers/IAIProvider.cs` - Add `: IDiscoverable`
 - `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Initialize provider collection, remove old `RegisterProviders()` method
 - `src/Umbraco.AI.Core/Registry/AIRegistry.cs` - Inject `AIProviderCollection` instead of `IEnumerable<IAIProvider>`
@@ -110,6 +119,7 @@ Convert middleware registration to use Umbraco's **OrderedCollectionBuilder** pa
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
+
 - ✅ `AIChatMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAIChatMiddleware>`
 - ✅ `AIChatMiddlewareCollectionBuilder.cs` - Created extending `OrderedCollectionBuilderBase`
 - ✅ `AIEmbeddingMiddlewareCollection.cs` - Created extending `BuilderCollectionBase<IAIEmbeddingMiddleware>`
@@ -128,6 +138,7 @@ Convert middleware registration to use Umbraco's **OrderedCollectionBuilder** pa
 ### New Files
 
 **`src/Umbraco.AI.Core/Middleware/AIChatMiddlewareCollection.cs`**
+
 ```csharp
 public class AIChatMiddlewareCollection : BuilderCollectionBase<IAIChatMiddleware>
 {
@@ -136,6 +147,7 @@ public class AIChatMiddlewareCollection : BuilderCollectionBase<IAIChatMiddlewar
 ```
 
 **`src/Umbraco.AI.Core/Middleware/AIChatMiddlewareCollectionBuilder.cs`**
+
 ```csharp
 public class AIChatMiddlewareCollectionBuilder
     : OrderedCollectionBuilderBase<AIChatMiddlewareCollectionBuilder, AIChatMiddlewareCollection, IAIChatMiddleware>
@@ -149,6 +161,7 @@ public class AIChatMiddlewareCollectionBuilder
 **`src/Umbraco.AI.Core/Middleware/AIEmbeddingMiddlewareCollectionBuilder.cs`** - Same pattern
 
 **`src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.Collections.cs`**
+
 ```csharp
 public static partial class UmbracoBuilderExtensions
 {
@@ -169,6 +182,7 @@ public static partial class UmbracoBuilderExtensions
 - **Remove `Order` property from `IAIChatMiddleware` and `IAIEmbeddingMiddleware`** - ordering managed by collection builder
 
 ### Usage Example
+
 ```csharp
 // In a Composer - OrderedCollectionBuilder API
 builder.AIChatMiddleware()
@@ -185,6 +199,7 @@ builder.AIChatMiddleware()
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
+
 - ✅ `IAIEmbeddingService.cs` - Created interface with 5 methods for single/batch embedding generation and direct generator access
 - ✅ `AIEmbeddingService.cs` - Created internal implementation following `AIChatService` pattern
 - ✅ `UmbracoBuilderExtensions.cs` - Registered `IAIEmbeddingService` in DI container
@@ -196,6 +211,7 @@ builder.AIChatMiddleware()
 ### New Files
 
 **`src/Umbraco.AI.Core/Services/IAIEmbeddingService.cs`**
+
 ```csharp
 public interface IAIEmbeddingService
 {
@@ -233,6 +249,7 @@ public interface IAIEmbeddingService
 ```
 
 **`src/Umbraco.AI.Core/Services/AIEmbeddingService.cs`**
+
 - Inject `IAIEmbeddingGeneratorFactory`, `IAIProfileService`, `IOptionsMonitor<AIOptions>`
 - Resolve default profile via `IAIProfileService.GetDefaultProfileAsync(AICapability.Embedding, ...)`
 - Delegate to factory for generator creation
@@ -248,6 +265,7 @@ public interface IAIEmbeddingService
 **Unit Tests (`tests/Umbraco.AI.Tests.Unit/Services/AIEmbeddingServiceTests.cs`):**
 
 16 tests covering:
+
 - ✅ Default embedding profile resolution
 - ✅ Named profile resolution by ID
 - ✅ Error handling: profile not found (`InvalidOperationException`)
@@ -263,6 +281,7 @@ public interface IAIEmbeddingService
 ### Implementation Status: COMPLETE (2025-11-26)
 
 **Completed Changes:**
+
 - ✅ `UmbracoAIApiRouteAttribute.cs` - Custom route attribute for `/umbraco/ai/management/api/v1`
 - ✅ `AIManagementControllerBase.cs` - Base controller with OpenAPI tags
 - ✅ Connection controllers (All, ById, Create, Update, Delete, Test)
@@ -344,26 +363,26 @@ src/Umbraco.AI.Web/Api/Management/
 
 ### Endpoint Summary
 
-| Resource | Method | Route | Description |
-|----------|--------|-------|-------------|
-| Connection | GET | `/connection` | List all connections |
-| Connection | GET | `/connection/{id}` | Get by ID |
-| Connection | POST | `/connection` | Create |
-| Connection | PUT | `/connection/{id}` | Update |
-| Connection | DELETE | `/connection/{id}` | Delete |
-| Connection | POST | `/connection/{id}/test` | Test connection |
-| Profile | GET | `/profile` | List all (filter by capability) |
-| Profile | GET | `/profile/{id}` | Get by ID |
-| Profile | GET | `/profile/alias/{alias}` | Get by alias |
-| Profile | POST | `/profile` | Create |
-| Profile | PUT | `/profile/{id}` | Update |
-| Profile | DELETE | `/profile/{id}` | Delete |
-| Provider | GET | `/provider` | List all providers |
-| Provider | GET | `/provider/{id}` | Get with settings schema |
-| Provider | GET | `/provider/{id}/models` | Get available models |
-| Embedding | POST | `/embedding/generate` | Generate embeddings |
-| Chat | POST | `/chat/complete` | Chat completion (non-streaming) |
-| Chat | POST | `/chat/stream` | Chat completion with SSE streaming |
+| Resource   | Method | Route                    | Description                        |
+| ---------- | ------ | ------------------------ | ---------------------------------- |
+| Connection | GET    | `/connection`            | List all connections               |
+| Connection | GET    | `/connection/{id}`       | Get by ID                          |
+| Connection | POST   | `/connection`            | Create                             |
+| Connection | PUT    | `/connection/{id}`       | Update                             |
+| Connection | DELETE | `/connection/{id}`       | Delete                             |
+| Connection | POST   | `/connection/{id}/test`  | Test connection                    |
+| Profile    | GET    | `/profile`               | List all (filter by capability)    |
+| Profile    | GET    | `/profile/{id}`          | Get by ID                          |
+| Profile    | GET    | `/profile/alias/{alias}` | Get by alias                       |
+| Profile    | POST   | `/profile`               | Create                             |
+| Profile    | PUT    | `/profile/{id}`          | Update                             |
+| Profile    | DELETE | `/profile/{id}`          | Delete                             |
+| Provider   | GET    | `/provider`              | List all providers                 |
+| Provider   | GET    | `/provider/{id}`         | Get with settings schema           |
+| Provider   | GET    | `/provider/{id}/models`  | Get available models               |
+| Embedding  | POST   | `/embedding/generate`    | Generate embeddings                |
+| Chat       | POST   | `/chat/complete`         | Chat completion (non-streaming)    |
+| Chat       | POST   | `/chat/stream`           | Chat completion with SSE streaming |
 
 ### Testing Requirements
 
@@ -372,6 +391,7 @@ src/Umbraco.AI.Web/Api/Management/
 For each controller, test the critical request/response mapping and validation:
 
 **Connection Controllers:**
+
 - `AllConnectionController` - Returns paginated list
 - `ByIdConnectionController` - Returns 404 when not found
 - `CreateConnectionController` - Validates required fields, returns created entity with ID
@@ -380,6 +400,7 @@ For each controller, test the critical request/response mapping and validation:
 - `TestConnectionController` - Returns test result with success/failure status
 
 **Profile Controllers:**
+
 - `AllProfileController` - Filters by capability query param
 - `ByIdProfileController` - Returns 404 when not found
 - `ByAliasProfileController` - Returns 404 when alias not found
@@ -388,20 +409,24 @@ For each controller, test the critical request/response mapping and validation:
 - `DeleteProfileController` - Returns 404 when not found
 
 **Provider Controllers:**
+
 - `AllProviderController` - Returns all registered providers
 - `ByIdProviderController` - Returns settings schema, 404 when not found
 - `ModelsByProviderController` - Returns available models for provider
 
 **Embedding Controller:**
+
 - `GenerateEmbeddingController` - Validates input, returns embeddings array
 
 **Chat Controllers:**
+
 - `CompleteChatController` - Validates messages array, returns response
 - `StreamChatController` - Returns SSE stream (integration test preferred)
 
 **Integration Tests (`tests/Umbraco.AI.Tests.Integration/Api/`):**
 
 Create integration tests for full HTTP request/response cycles:
+
 - Connection CRUD workflow (create → read → update → delete)
 - Profile CRUD workflow with connection dependency
 - Test connection with fake provider
@@ -451,6 +476,7 @@ Uses Umbraco's database connection via `UseUmbracoDatabaseProvider()`. AI tables
 ### Registration
 
 **`src/Umbraco.AI.Persistence/Extensions/UmbracoBuilderExtensions.cs`:**
+
 ```csharp
 public static IUmbracoBuilder AddUmbracoAIPersistence(this IUmbracoBuilder builder)
 {
@@ -486,6 +512,7 @@ Umbraco.AI.Persistence.Sqlite
 ### DbContext Setup (Following Umbraco Patterns)
 
 **UmbracoAIDbContext.cs:**
+
 ```csharp
 public class UmbracoAIDbContext : DbContext
 {
@@ -521,6 +548,7 @@ public class UmbracoAIDbContext : DbContext
 ### Auto-Migration on Startup
 
 **RunAIMigrationNotificationHandler.cs:**
+
 ```csharp
 public class RunAIMigrationNotificationHandler
     : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
@@ -546,6 +574,7 @@ public class RunAIMigrationNotificationHandler
 ### Repository Pattern with IEfCoreScopeProvider
 
 **EfCoreAIConnectionRepository.cs:**
+
 ```csharp
 public class EfCoreAIConnectionRepository : IAIConnectionRepository
 {
@@ -590,6 +619,7 @@ public class EfCoreAIConnectionRepository : IAIConnectionRepository
 ### Entity Definitions
 
 **AIConnectionEntity:**
+
 - `Id` (Guid, PK)
 - `Name` (string, required, max 255)
 - `ProviderId` (string, required, max 100, indexed)
@@ -599,6 +629,7 @@ public class EfCoreAIConnectionRepository : IAIConnectionRepository
 - `DateModified` (DateTime)
 
 **AIProfileEntity:**
+
 - `Id` (Guid, PK)
 - `Alias` (string, required, max 100, unique index)
 - `Name` (string, required, max 255)
@@ -614,6 +645,7 @@ public class EfCoreAIConnectionRepository : IAIConnectionRepository
 ### Migrations
 
 Generate migrations per database provider (context lives in shared project, migrations in provider project):
+
 ```bash
 # SQL Server
 dotnet ef migrations add InitialCreate \
@@ -639,6 +671,7 @@ Migrations auto-apply on startup via `RunAIMigrationNotificationHandler`.
 Test repository methods with in-memory SQLite:
 
 **EfCoreAIConnectionRepository:**
+
 - `GetAsync` - Returns null when not found
 - `GetAllAsync` - Returns empty list when no data
 - `SaveAsync` - Creates new entity (insert)
@@ -648,6 +681,7 @@ Test repository methods with in-memory SQLite:
 - Settings JSON serialization/deserialization
 
 **EfCoreAIProfileRepository:**
+
 - `GetByIdAsync` - Returns null when not found
 - `GetByAliasAsync` - Case-insensitive alias lookup
 - `GetAllAsync` - Filters by capability
@@ -656,6 +690,7 @@ Test repository methods with in-memory SQLite:
 - Tags JSON serialization/deserialization
 
 **Migration Tests:**
+
 - Verify migrations apply cleanly to empty database
 - Verify schema matches entity configuration
 
@@ -688,6 +723,7 @@ public class EfCoreTestFixture : IDisposable
 ```
 
 Usage in tests:
+
 ```csharp
 public class EfCoreAIConnectionRepositoryTests : IClassFixture<EfCoreTestFixture>
 {
@@ -717,6 +753,7 @@ public class EfCoreAIConnectionRepositoryTests : IClassFixture<EfCoreTestFixture
 ### Location in Backoffice
 
 UI lives in the **Settings section** with a new **AI group**:
+
 - Settings → AI → Connections (collection view → workspace)
 - Settings → AI → Profiles (collection view → workspace)
 
@@ -792,6 +829,7 @@ Client/src/
 ### Key Patterns (from Umbraco Commerce)
 
 **Constants Pattern (`constants.ts`):**
+
 ```typescript
 export const AIConnectionConstants = {
     EntityType: {
@@ -803,21 +841,23 @@ export const AIConnectionConstants = {
         Entity: "icon-plug",
     },
     Workspace: {
-        Collection: 'UmbracoAI.Workspace.Connections',
-        Entity: 'UmbracoAI.Workspace.Connection',
+        Collection: "UmbracoAI.Workspace.Connections",
+        Entity: "UmbracoAI.Workspace.Connection",
     },
-    Store: 'UmbracoAI.Store.Connection',
-    Repository: 'UmbracoAI.Repository.Connection',
-    Collection: 'UmbracoAI.Collection.Connection',
-}
+    Store: "UmbracoAI.Store.Connection",
+    Repository: "UmbracoAI.Repository.Connection",
+    Collection: "UmbracoAI.Collection.Connection",
+};
 ```
 
 **Three-Layer Repository Pattern:**
+
 1. **ServerDataSource** - HTTP client wrapper using generated API client
 2. **Store** - In-memory state with `UmbArrayState`
 3. **Repository** - Orchestrates store + data source with debouncing, caching, observables
 
 **Type Mapper Pattern (`type-mapper.ts`):**
+
 ```typescript
 export class AIConnectionTypeMapper {
     static responseToViewModel(dto: ConnectionResponseModel): AIConnectionModel { ... }
@@ -829,6 +869,7 @@ export class AIConnectionTypeMapper {
 ```
 
 **Manifest Aggregation Pattern:**
+
 ```typescript
 // connections/manifests.ts
 import { manifests as collectionManifests } from "./collection/manifests.js";
@@ -849,11 +890,12 @@ export const manifests: UmbExtensionManifest[] = [
 ### Workspace Context Pattern
 
 **Entity Workspace Context** (for create/edit):
+
 ```typescript
 export class AIConnectionWorkspaceContext
     extends UmbSubmittableWorkspaceContextBase<AIConnectionEditModel>
-    implements UmbSubmittableWorkspaceContext, UmbRoutableWorkspaceContext {
-
+    implements UmbSubmittableWorkspaceContext, UmbRoutableWorkspaceContext
+{
     readonly routes = new UmbWorkspaceRouteManager(this);
 
     constructor(host: UmbControllerHost) {
@@ -861,12 +903,14 @@ export class AIConnectionWorkspaceContext
 
         this.routes.setRoutes([
             {
-                path: 'create',
+                path: "create",
                 component: AIConnectionWorkspaceEditorElement,
-                setup: async () => { await this.scaffold(); },
+                setup: async () => {
+                    await this.scaffold();
+                },
             },
             {
-                path: ':unique',
+                path: ":unique",
                 component: AIConnectionWorkspaceEditorElement,
                 setup: async (_component, info) => {
                     await this.load(info.match.params.unique);
@@ -875,21 +919,29 @@ export class AIConnectionWorkspaceContext
         ]);
     }
 
-    async scaffold() { /* Create empty model */ }
-    async load(id: string) { /* Fetch from repository */ }
-    async submit() { /* Create or update via repository */ }
+    async scaffold() {
+        /* Create empty model */
+    }
+    async load(id: string) {
+        /* Fetch from repository */
+    }
+    async submit() {
+        /* Create or update via repository */
+    }
 }
 ```
 
 ### Key Components
 
 **connection-details-workspace-view.element.ts:**
+
 - Provider picker (dropdown) - loads settings schema on change
 - Dynamic settings form using `<umb-property>` components
 - Active toggle
 - Validation feedback
 
 **profile-details-workspace-view.element.ts:**
+
 - Name/Alias fields (alias auto-generated from name)
 - Capability dropdown (Chat/Embedding)
 - Connection picker
@@ -898,6 +950,7 @@ export class AIConnectionWorkspaceContext
 - Tags input
 
 **ai-dynamic-settings-form.element.ts:**
+
 - Receives `settingDefinitions` array from provider settings schema
 - Dynamically renders `<umb-property>` for each setting based on `EditorUiAlias`
 - Emits change events with updated values
@@ -909,6 +962,7 @@ export class AIConnectionWorkspaceContext
 Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity and maintenance overhead. For v1, rely on manual QA testing of the UI. Consider adding E2E tests in v2 once the UI patterns stabilize.
 
 **Manual Test Checklist:**
+
 - Connections collection view loads and displays data
 - Connection create/edit workspace saves correctly
 - Connection delete shows confirmation and removes entity
@@ -925,50 +979,50 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
 ### Week 1: Core Backend
 
 1. **Middleware Collection Builder** (Phase 1)
-   - Create collection and builder classes
-   - Update factories
-   - Update DI registration
+    - Create collection and builder classes
+    - Update factories
+    - Update DI registration
 
 2. **IAIEmbeddingService** (Phase 2)
-   - Interface and implementation
-   - Register in DI
+    - Interface and implementation
+    - Register in DI
 
 3. **Management API - Providers** (Phase 3 partial)
-   - Provider controllers (read-only)
-   - Settings schema endpoint
+    - Provider controllers (read-only)
+    - Settings schema endpoint
 
 ### Week 2: Full API
 
 4. **Management API - Connections** (Phase 3)
-   - All connection endpoints
-   - Test connection functionality
+    - All connection endpoints
+    - Test connection functionality
 
 5. **Management API - Profiles** (Phase 3)
-   - All profile endpoints
-   - Alias lookup
+    - All profile endpoints
+    - Alias lookup
 
 6. **Management API - Embeddings** (Phase 3)
-   - Generate embeddings endpoint
+    - Generate embeddings endpoint
 
 ### Week 3: Persistence
 
 7. **EF Core Persistence** (Phase 4)
-   - Create new project
-   - Entities and DbContext
-   - Repository implementations
-   - Migrations for SqlServer/Sqlite
+    - Create new project
+    - Entities and DbContext
+    - Repository implementations
+    - Migrations for SqlServer/Sqlite
 
 ### Week 4: Frontend
 
 8. **Frontend Foundation** (Phase 5)
-   - Regenerate API client
-   - Shared components (dynamic settings form, pickers)
-   - Repository/store pattern
+    - Regenerate API client
+    - Shared components (dynamic settings form, pickers)
+    - Repository/store pattern
 
 9. **Connections UI** (Phase 5)
-   - Collection view
-   - Workspace (create/edit)
-   - Delete modal
+    - Collection view
+    - Workspace (create/edit)
+    - Delete modal
 
 10. **Profiles UI** (Phase 5)
     - Collection view
@@ -984,6 +1038,7 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
 ## Critical Files to Read Before Implementation
 
 ### Umbraco.AI (Current)
+
 - `src/Umbraco.AI.Core/Configuration/UmbracoBuilderExtensions.cs` - Central DI registration
 - `src/Umbraco.AI.Core/Middleware/IAIChatMiddleware.cs` - Current middleware interface
 - `src/Umbraco.AI.Core/Connections/IAIConnectionRepository.cs` - Repository interface
@@ -992,6 +1047,7 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
 - `src/Umbraco.AI.Core/Factories/AIChatClientFactory.cs` - Middleware application pattern
 
 ### Umbraco CMS (Reference)
+
 - `src/Umbraco.Core/Composing/WeightedCollectionBuilderBase.cs` - Collection builder pattern
 - `src/Umbraco.Core/Composing/OrderedCollectionBuilderBase.cs` - Ordered collection builder
 - `src/Umbraco.Core/Composing/BuilderCollectionBase.cs` - Collection base class
@@ -1002,6 +1058,7 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
 - `src/Umbraco.Web.UI.Client/src/packages/core/property/` - Dynamic property rendering
 
 ### Umbraco CMS EF Core (Persistence Reference)
+
 - `src/Umbraco.Cms.Persistence.EFCore/UmbracoDbContext.cs` - Single DbContext for all providers
 - `src/Umbraco.Cms.Persistence.EFCore/Migrations/IMigrationProviderSetup.cs` - Provider setup interface
 - `src/Umbraco.Cms.Persistence.EFCore/Scoping/EFCoreScopeProvider.cs` - Scope provider pattern
@@ -1011,27 +1068,28 @@ Rationale: Frontend tests (Playwright/WebdriverIO) add significant complexity an
 - `src/Umbraco.Cms.Persistence.EFCore.Sqlite/Migrations/` - SQLite-specific migrations
 
 ### Umbraco Commerce (Frontend Reference)
+
 - `src/Umbraco.Commerce.Cms.Web.StaticAssets/Client/src/location/` - Complete example of:
-  - Collection views with table display
-  - Entity workspace with create/edit routes
-  - Three-layer repository pattern (ServerDataSource → Store → Repository)
-  - Constants, types, type-mapper organization
-  - Manifest aggregation pattern
-  - Menu item registration in Settings section
+    - Collection views with table display
+    - Entity workspace with create/edit routes
+    - Three-layer repository pattern (ServerDataSource → Store → Repository)
+    - Constants, types, type-mapper organization
+    - Manifest aggregation pattern
+    - Menu item registration in Settings section
 
 ---
 
 ## Open Questions Resolved
 
-| Question | Decision |
-|----------|----------|
-| Database access | EF Core |
-| API style | Umbraco Management API patterns |
-| Search service | Deferred to v2 |
-| UI scope | Full CRUD UI |
+| Question              | Decision                                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Database access       | EF Core                                                                                                                              |
+| API style             | Umbraco Management API patterns                                                                                                      |
+| Search service        | Deferred to v2                                                                                                                       |
+| UI scope              | Full CRUD UI                                                                                                                         |
 | Persistence packaging | 2-tier: shared `Umbraco.AI.Persistence` (entities, DbContext, repos) + `Umbraco.AI.Persistence.SqlServer`/`Sqlite` (migrations only) |
-| Connection string | Use `UseUmbracoDatabaseProvider()` to reuse Umbraco's database |
-| UI location | Settings section with AI group (Connections, Profiles menu items) |
-| Middleware ordering | OrderedCollectionBuilder with `InsertBefore`/`InsertAfter` (remove `Order` property from interface) |
-| Provider discovery | `LazyCollectionBuilderBase` with auto-discovery via `FindClassesOfType<IAIProvider>()` |
-| Chat streaming | SSE (Server-Sent Events) for streaming responses |
+| Connection string     | Use `UseUmbracoDatabaseProvider()` to reuse Umbraco's database                                                                       |
+| UI location           | Settings section with AI group (Connections, Profiles menu items)                                                                    |
+| Middleware ordering   | OrderedCollectionBuilder with `InsertBefore`/`InsertAfter` (remove `Order` property from interface)                                  |
+| Provider discovery    | `LazyCollectionBuilderBase` with auto-discovery via `FindClassesOfType<IAIProvider>()`                                               |
+| Chat streaming        | SSE (Server-Sent Events) for streaming responses                                                                                     |

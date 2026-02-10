@@ -1,1 +1,1 @@
-export const UAI_AGENT_COLLECTION_ALIAS = 'UmbracoAIAgent.Collection.Agent';
+export const UAI_AGENT_COLLECTION_ALIAS = "UmbracoAIAgent.Collection.Agent";

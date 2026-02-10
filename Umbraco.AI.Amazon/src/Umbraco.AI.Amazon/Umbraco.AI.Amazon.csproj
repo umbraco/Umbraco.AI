@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Title>Umbraco AI Amazon Bedrock Provider</Title>
     <Description>Amazon Bedrock provider for Umbraco AI</Description>
+    <PackageTags>umbraco ai amazon bedrock umbraco-marketplace</PackageTags>
     <StaticWebAssetBasePath>App_Plugins/UmbracoAIAmazon</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>

@@ -22,10 +22,10 @@ export class UaiEmbeddingsServerDataSource {
             EmbeddingsService.generateEmbeddings({
                 body: {
                     profileIdOrAlias: request.profileId ?? null,
-                    values: request.values
+                    values: request.values,
                 },
-                signal: request.signal
-            })
+                signal: request.signal,
+            }),
         );
 
         if (error || !data) {
@@ -34,11 +34,11 @@ export class UaiEmbeddingsServerDataSource {
 
         return {
             data: {
-                embeddings: data.embeddings.map(e => ({
+                embeddings: data.embeddings.map((e) => ({
                     index: e.index,
-                    vector: e.vector
-                }))
-            }
+                    vector: e.vector,
+                })),
+            },
         };
     }
 }

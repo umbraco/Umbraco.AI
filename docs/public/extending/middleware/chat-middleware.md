@@ -1,6 +1,6 @@
 ---
 description: >-
-  Create middleware to intercept and modify chat operations.
+    Create middleware to intercept and modify chat operations.
 ---
 
 # Chat Middleware
@@ -10,12 +10,14 @@ Chat middleware wraps `IChatClient` instances to add behavior to chat completion
 ## Interface
 
 {% code title="IAIChatMiddleware" %}
+
 ```csharp
 public interface IAIChatMiddleware
 {
     IChatClient Apply(IChatClient client);
 }
 ```
+
 {% endcode %}
 
 The `Apply` method receives the current client and returns a wrapped client.
@@ -23,6 +25,7 @@ The `Apply` method receives the current client and returns a wrapped client.
 ## Basic Implementation
 
 {% code title="SimpleChatMiddleware.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Chat;
@@ -35,6 +38,7 @@ public class SimpleChatMiddleware : IAIChatMiddleware
     }
 }
 ```
+
 {% endcode %}
 
 ## Creating a Custom Wrapper
@@ -42,6 +46,7 @@ public class SimpleChatMiddleware : IAIChatMiddleware
 To implement custom behavior, create a class that delegates to the inner client:
 
 {% code title="MetricsChatMiddleware.cs" %}
+
 ```csharp
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -131,6 +136,7 @@ internal class MetricsChatClient : IChatClient
     public void Dispose() => _inner.Dispose();
 }
 ```
+
 {% endcode %}
 
 ## Using M.E.AI Built-in Middleware
@@ -138,6 +144,7 @@ internal class MetricsChatClient : IChatClient
 Microsoft.Extensions.AI provides built-in middleware options. Use the builder pattern:
 
 {% code title="Using Built-in Middleware" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -159,22 +166,24 @@ public class LoggingChatMiddleware : IAIChatMiddleware
     }
 }
 ```
+
 {% endcode %}
 
 ### Available M.E.AI Middleware
 
-| Method | Purpose |
-|--------|---------|
-| `UseLogging()` | Log requests and responses |
-| `UseOpenTelemetry()` | Add OpenTelemetry tracing |
+| Method                    | Purpose                      |
+| ------------------------- | ---------------------------- |
+| `UseLogging()`            | Log requests and responses   |
+| `UseOpenTelemetry()`      | Add OpenTelemetry tracing    |
 | `UseFunctionInvocation()` | Enable tool/function calling |
-| `UseDistributedCache()` | Cache responses |
+| `UseDistributedCache()`   | Cache responses              |
 
 ## Registering Chat Middleware
 
 Register middleware in a Composer:
 
 {% code title="MyComposer.cs" %}
+
 ```csharp
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Composing;
@@ -188,6 +197,7 @@ public class MyComposer : IComposer
     }
 }
 ```
+
 {% endcode %}
 
 ## Example: Content Filter Middleware
@@ -195,6 +205,7 @@ public class MyComposer : IComposer
 Block responses containing specific content:
 
 {% code title="ContentFilterMiddleware.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 
@@ -262,6 +273,7 @@ internal class ContentFilterClient : IChatClient
     public void Dispose() => _inner.Dispose();
 }
 ```
+
 {% endcode %}
 
 ## Example: Retry Middleware
@@ -269,6 +281,7 @@ internal class ContentFilterClient : IChatClient
 Add automatic retry logic for transient failures:
 
 {% code title="RetryChatMiddleware.cs" %}
+
 ```csharp
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -344,4 +357,5 @@ internal class RetryChatClient : IChatClient
     public void Dispose() => _inner.Dispose();
 }
 ```
+
 {% endcode %}

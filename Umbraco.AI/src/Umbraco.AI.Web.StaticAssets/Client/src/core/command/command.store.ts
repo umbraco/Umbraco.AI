@@ -12,7 +12,7 @@ export class UaiCommandStore {
         if (this.#muted) return;
         // Replace command with same correlationId or append
         this.#commands = [
-            ...this.#commands.filter(x => !command.correlationId || x.correlationId !== command.correlationId),
+            ...this.#commands.filter((x) => !command.correlationId || x.correlationId !== command.correlationId),
             command,
         ];
     }
@@ -21,8 +21,17 @@ export class UaiCommandStore {
         return this.#muted ? [] : [...this.#commands];
     }
 
-    mute() { this.#muted = true; }
-    unmute() { this.#muted = false; }
-    clear() { this.#commands = []; }
-    reset() { this.clear(); this.unmute(); }
+    mute() {
+        this.#muted = true;
+    }
+    unmute() {
+        this.#muted = false;
+    }
+    clear() {
+        this.#commands = [];
+    }
+    reset() {
+        this.clear();
+        this.unmute();
+    }
 }

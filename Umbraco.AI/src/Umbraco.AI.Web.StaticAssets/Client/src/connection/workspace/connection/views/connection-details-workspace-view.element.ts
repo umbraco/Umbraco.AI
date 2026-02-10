@@ -48,16 +48,14 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
 
     #onSettingsChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ settings: e.detail.model }, "settings")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ settings: e.detail.model }, "settings"),
         );
     }
 
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
-        return html`<uui-box headline="General">
-            ${this.#renderProviderSettings()}
-        </uui-box>`;
+        return html`<uui-box headline="General"> ${this.#renderProviderSettings()} </uui-box>`;
     }
 
     #renderProviderSettings() {
@@ -66,7 +64,8 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
                 .schema=${this._provider?.settingsSchema}
                 .model=${this._model?.settings}
                 empty-message="This provider has no configurable settings."
-                @change=${this.#onSettingsChange}>
+                @change=${this.#onSettingsChange}
+            >
             </uai-model-editor>
         `;
     }

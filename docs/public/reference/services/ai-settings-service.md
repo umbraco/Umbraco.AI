@@ -1,6 +1,6 @@
 ---
 description: >-
-  Service for managing global AI settings.
+    Service for managing global AI settings.
 ---
 
 # IAISettingsService
@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Settings;
 ## Interface
 
 {% code title="IAISettingsService" %}
+
 ```csharp
 public interface IAISettingsService
 {
@@ -24,6 +25,7 @@ public interface IAISettingsService
     Task<AISettings> SaveSettingsAsync(AISettings settings, CancellationToken cancellationToken = default);
 }
 ```
+
 {% endcode %}
 
 ## Methods
@@ -32,13 +34,14 @@ public interface IAISettingsService
 
 Gets the current global AI settings.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter           | Type                | Description        |
+| ------------------- | ------------------- | ------------------ |
 | `cancellationToken` | `CancellationToken` | Cancellation token |
 
 **Returns**: The current settings. Creates default settings if none exist.
 
 {% code title="Example" %}
+
 ```csharp
 var settings = await _settingsService.GetSettingsAsync();
 
@@ -51,20 +54,22 @@ else
     Console.WriteLine("No default chat profile configured");
 }
 ```
+
 {% endcode %}
 
 ### SaveSettingsAsync
 
 Updates the global AI settings.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `settings` | `AISettings` | The settings to save |
-| `cancellationToken` | `CancellationToken` | Cancellation token |
+| Parameter           | Type                | Description          |
+| ------------------- | ------------------- | -------------------- |
+| `settings`          | `AISettings`        | The settings to save |
+| `cancellationToken` | `CancellationToken` | Cancellation token   |
 
 **Returns**: The saved settings with audit properties updated.
 
 {% code title="Example" %}
+
 ```csharp
 var settings = await _settingsService.GetSettingsAsync();
 settings.DefaultChatProfileId = chatProfileId;
@@ -73,11 +78,13 @@ settings.DefaultEmbeddingProfileId = embeddingProfileId;
 var saved = await _settingsService.SaveSettingsAsync(settings);
 Console.WriteLine($"Settings updated at {saved.DateModified}");
 ```
+
 {% endcode %}
 
 ## Usage Example
 
 {% code title="SettingsManager.cs" %}
+
 ```csharp
 public class SettingsManager
 {
@@ -119,6 +126,7 @@ public class SettingsManager
     }
 }
 ```
+
 {% endcode %}
 
 ## Notes
@@ -129,5 +137,5 @@ public class SettingsManager
 
 ## Related
 
-* [AISettings](../models/ai-settings.md) - The settings model
-* [Settings Concept](../../concepts/settings.md) - Settings concepts
+- [AISettings](../models/ai-settings.md) - The settings model
+- [Settings Concept](../../concepts/settings.md) - Settings concepts

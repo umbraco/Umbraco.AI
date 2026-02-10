@@ -57,15 +57,11 @@ export class UaiConnectionCreateOptionsModalElement extends UmbModalBaseElement<
                                         >
                                             <umb-icon slot="icon" name="icon-cloud"></umb-icon>
                                         </uui-ref-node>
-                                    `
+                                    `,
                                 )}
                             </uui-ref-list>
                         `}
-                <uui-button
-                    slot="actions"
-                    label="Cancel"
-                    @click=${() => this.modalContext?.reject()}
-                >
+                <uui-button slot="actions" label="Cancel" @click=${() => this.modalContext?.reject()}>
                     Cancel
                 </uui-button>
             </uui-dialog-layout>

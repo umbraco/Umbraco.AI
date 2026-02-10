@@ -1,46 +1,48 @@
 {
-  "name": "umbraco-ai-monorepo",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Root package for Umbraco.AI frontend development",
-  "workspaces": [
-    "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client",
-    "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client",
-    "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client",
-    "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Client"
-  ],
-  "scripts": {
-    "build": "npm run build:core && npm run build:prompt && npm run build:agent && npm run build:copilot",
-    "build:core": "npm run build -w @umbraco-ai/core",
-    "build:prompt": "npm run build -w @umbraco-ai/prompt",
-    "build:agent": "npm run build -w @umbraco-ai/agent",
-    "build:copilot": "npm run build -w @umbraco-ai/agent-copilot",
-
-    "watch": "concurrently --names \"core,prompt,agent,copilot\" -c \"blue,green,yellow,magenta\" \"npm run watch:core\" \"npm run watch:prompt\" \"npm run watch:agent\" \"npm run watch:copilot\"",
-    "watch:core": "npm run watch -w @umbraco-ai/core",
-    "watch:prompt": "npm run watch -w @umbraco-ai/prompt",
-    "watch:agent": "npm run watch -w @umbraco-ai/agent",
-    "watch:copilot": "npm run watch -w @umbraco-ai/agent-copilot",
-
-    "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
-    "generate-client:core": "npm run generate-client -w @umbraco-ai/core",
-    "generate-client:prompt": "npm run generate-client -w @umbraco-ai/prompt",
-    "generate-client:agent": "npm run generate-client -w @umbraco-ai/agent",
-
-    "changelog": "node scripts/generate-changelog.js",
-    "changelog:list": "node scripts/generate-changelog.js --list",
-    "changelog:all": "node scripts/generate-all-changelogs.js",
-
-    "commit-options": "node scripts/list-commit-options.js"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^20.3.1",
-    "@commitlint/config-conventional": "^20.3.1",
-    "concurrently": "^9.1.2",
-    "conventional-changelog-cli": "^5.0.0",
-    "conventional-changelog-conventionalcommits": "^9.1.0"
-  },
-  "overrides": {
-    "rxjs": "^7.8.2"
-  }
+    "name": "umbraco-ai-monorepo",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Root package for Umbraco.AI frontend development",
+    "workspaces": [
+        "Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client",
+        "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Client",
+        "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client",
+        "Umbraco.AI.Agent.UI/src/Umbraco.AI.Agent.UI/Client",
+        "Umbraco.AI.Agent.Copilot/src/Umbraco.AI.Agent.Copilot/Client"
+    ],
+    "scripts": {
+        "build": "npm run build:core && npm run build:prompt && npm run build:agent && npm run build:agent-ui && npm run build:copilot",
+        "build:core": "npm run build -w @umbraco-ai/core",
+        "build:prompt": "npm run build -w @umbraco-ai/prompt",
+        "build:agent": "npm run build -w @umbraco-ai/agent",
+        "build:agent-ui": "npm run build -w @umbraco-ai/agent-ui",
+        "build:copilot": "npm run build -w @umbraco-ai/agent-copilot",
+        "watch": "concurrently --names \"core,prompt,agent,agent-ui,copilot\" -c \"blue,green,yellow,cyan,magenta\" \"npm run watch:core\" \"npm run watch:prompt\" \"npm run watch:agent\" \"npm run watch:agent-ui\" \"npm run watch:copilot\"",
+        "watch:core": "npm run watch -w @umbraco-ai/core",
+        "watch:prompt": "npm run watch -w @umbraco-ai/prompt",
+        "watch:agent": "npm run watch -w @umbraco-ai/agent",
+        "watch:agent-ui": "npm run watch -w @umbraco-ai/agent-ui",
+        "watch:copilot": "npm run watch -w @umbraco-ai/agent-copilot",
+        "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
+        "generate-client:core": "npm run generate-client -w @umbraco-ai/core",
+        "generate-client:prompt": "npm run generate-client -w @umbraco-ai/prompt",
+        "generate-client:agent": "npm run generate-client -w @umbraco-ai/agent",
+        "changelog": "node scripts/generate-changelog.js",
+        "changelog:list": "node scripts/generate-changelog.js --list",
+        "changelog:all": "node scripts/generate-all-changelogs.js",
+        "commit-options": "node scripts/list-commit-options.js",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^20.3.1",
+        "@commitlint/config-conventional": "^20.3.1",
+        "concurrently": "^9.1.2",
+        "conventional-changelog-cli": "^5.0.0",
+        "conventional-changelog-conventionalcommits": "^9.1.0",
+        "prettier": "^3.8.1"
+    },
+    "overrides": {
+        "rxjs": "^7.8.2"
+    }
 }

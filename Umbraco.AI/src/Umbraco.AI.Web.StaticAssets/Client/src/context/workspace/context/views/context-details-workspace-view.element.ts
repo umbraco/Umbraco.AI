@@ -36,7 +36,7 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
         const resources = resourceList.items;
 
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiContextDetailModel>({ resources }, "update-resources")
+            new UaiPartialUpdateCommand<UaiContextDetailModel>({ resources }, "update-resources"),
         );
     }
 
@@ -45,11 +45,12 @@ export class UaiContextDetailsWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="General">
-                <umb-property-layout label="Resources" description="Define resources to provide additional context to AI operations.">
+                <umb-property-layout
+                    label="Resources"
+                    description="Define resources to provide additional context to AI operations."
+                >
                     <div slot="editor">
-                        <uai-resource-list
-                            .items=${this._model.resources}
-                            @change=${this.#onResourcesChange}>
+                        <uai-resource-list .items=${this._model.resources} @change=${this.#onResourcesChange}>
                         </uai-resource-list>
                     </div>
                 </umb-property-layout>

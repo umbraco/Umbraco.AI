@@ -1,6 +1,6 @@
 ---
 description: >-
-  Prompt Management add-on for creating and executing reusable prompt templates.
+    Prompt Management add-on for creating and executing reusable prompt templates.
 ---
 
 # Prompt Management
@@ -10,17 +10,21 @@ The Prompt Management add-on (`Umbraco.AI.Prompt`) enables you to create, manage
 ## Installation
 
 {% code title="Package Manager Console" %}
+
 ```powershell
 Install-Package Umbraco.AI.Prompt
 ```
+
 {% endcode %}
 
 Or via .NET CLI:
 
 {% code title="Terminal" %}
+
 ```bash
 dotnet add package Umbraco.AI.Prompt
 ```
+
 {% endcode %}
 
 ## Features
@@ -39,16 +43,17 @@ dotnet add package Umbraco.AI.Prompt
 
 In the backoffice, navigate to **Settings** > **AI** > **Prompts** and create a new prompt:
 
-| Field | Value |
-|-------|-------|
-| Alias | `summarize-article` |
-| Name | Summarize Article |
+| Field        | Value                                                                |
+| ------------ | -------------------------------------------------------------------- |
+| Alias        | `summarize-article`                                                  |
+| Name         | Summarize Article                                                    |
 | Instructions | `Summarize the following article in 3 bullet points:\n\n{{content}}` |
-| Profile | (select your chat profile) |
+| Profile      | (select your chat profile)                                           |
 
 ### 2. Execute the Prompt
 
 {% code title="Example.cs" %}
+
 ```csharp
 public class ArticleSummarizer
 {
@@ -77,6 +82,7 @@ public class ArticleSummarizer
     }
 }
 ```
+
 {% endcode %}
 
 ## Template Syntax
@@ -95,11 +101,11 @@ Translate the following text to {{language}}:
 
 Use prefixes for special variable sources:
 
-| Prefix | Source | Example |
-|--------|--------|---------|
-| `entity:` | Current content item | `{{entity:name}}` |
-| `property:` | Content property | `{{property:bodyText}}` |
-| `context:` | Request context | `{{context:culture}}` |
+| Prefix      | Source               | Example                 |
+| ----------- | -------------------- | ----------------------- |
+| `entity:`   | Current content item | `{{entity:name}}`       |
+| `property:` | Content property     | `{{property:bodyText}}` |
+| `context:`  | Request context      | `{{context:culture}}`   |
 
 ### Example Template
 
@@ -119,17 +125,17 @@ Requirements:
 
 ## Documentation
 
-| Section | Description |
-|---------|-------------|
-| [Concepts](concepts.md) | Prompt templates, variables, scoping |
-| [Getting Started](getting-started.md) | Step-by-step setup guide |
-| [Template Syntax](template-syntax.md) | Variable interpolation details |
-| [Scoping](scoping.md) | Content type allow/deny rules |
-| [API Reference](api/README.md) | Management API endpoints |
-| [Service Reference](reference/ai-prompt-service.md) | IAIPromptService |
+| Section                                             | Description                          |
+| --------------------------------------------------- | ------------------------------------ |
+| [Concepts](concepts.md)                             | Prompt templates, variables, scoping |
+| [Getting Started](getting-started.md)               | Step-by-step setup guide             |
+| [Template Syntax](template-syntax.md)               | Variable interpolation details       |
+| [Scoping](scoping.md)                               | Content type allow/deny rules        |
+| [API Reference](api/README.md)                      | Management API endpoints             |
+| [Service Reference](reference/ai-prompt-service.md) | IAIPromptService                     |
 
 ## Related
 
-* [Add-ons Overview](../README.md) - All add-on packages
-* [AI Contexts](../../concepts/contexts.md) - Brand voice and guidelines
-* [Profiles](../../concepts/profiles.md) - AI configuration
+- [Add-ons Overview](../README.md) - All add-on packages
+- [AI Contexts](../../concepts/contexts.md) - Brand voice and guidelines
+- [Profiles](../../concepts/profiles.md) - AI configuration

@@ -1,6 +1,6 @@
 ---
 description: >-
-  Delete an AI provider connection.
+    Delete an AI provider connection.
 ---
 
 # Delete Connection
@@ -15,9 +15,9 @@ DELETE /connections/{id}
 
 ## Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | guid | Connection ID (GUID only, not alias) |
+| Parameter | Type | Description                          |
+| --------- | ---- | ------------------------------------ |
+| `id`      | guid | Connection ID (GUID only, not alias) |
 
 ## Response
 
@@ -29,10 +29,10 @@ Returns empty response on successful deletion.
 
 ```json
 {
-  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "Connection with ID '3fa85f64-5717-4562-b3fc-2c963f66afa6' not found"
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+    "title": "Not Found",
+    "status": 404,
+    "detail": "Connection with ID '3fa85f64-5717-4562-b3fc-2c963f66afa6' not found"
 }
 ```
 
@@ -53,51 +53,54 @@ Before deleting a connection:
 ### cURL
 
 {% code title="cURL" %}
+
 ```bash
 curl -X DELETE "https://localhost:44331/umbraco/ai/management/api/v1/connections/3fa85f64-5717-4562-b3fc-2c963f66afa6"
 ```
+
 {% endcode %}
 
 ### JavaScript
 
 {% code title="JavaScript" %}
+
 ```javascript
 async function deleteConnection(id) {
-  const response = await fetch(
-    `/umbraco/ai/management/api/v1/connections/${id}`,
-    {
-      method: 'DELETE',
-      credentials: 'include'
-    }
-  );
+    const response = await fetch(`/umbraco/ai/management/api/v1/connections/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error('Connection not found');
+    if (!response.ok) {
+        if (response.status === 404) {
+            throw new Error("Connection not found");
+        }
+        const error = await response.json();
+        throw new Error(error.detail);
     }
-    const error = await response.json();
-    throw new Error(error.detail);
-  }
 
-  return true;
+    return true;
 }
 
 // Usage
-await deleteConnection('3fa85f64-5717-4562-b3fc-2c963f66afa6');
+await deleteConnection("3fa85f64-5717-4562-b3fc-2c963f66afa6");
 ```
+
 {% endcode %}
 
 ### Safe Delete Pattern
 
 {% code title="JavaScript" %}
+
 ```javascript
 async function safeDeleteConnection(id) {
-  // First, deactivate
-  await updateConnection(id, { isActive: false });
+    // First, deactivate
+    await updateConnection(id, { isActive: false });
 
-  // Wait/verify no issues
-  // Then delete if confirmed
-  await deleteConnection(id);
+    // Wait/verify no issues
+    // Then delete if confirmed
+    await deleteConnection(id);
 }
 ```
+
 {% endcode %}

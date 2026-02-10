@@ -81,7 +81,7 @@ export class UaiPromptExecutionServerDataSource {
     async execute(
         promptIdOrAlias: string,
         request: UaiPromptExecutionRequest,
-        _signal?: AbortSignal
+        _signal?: AbortSignal,
     ): Promise<{ data?: UaiPromptExecutionResponse; error?: unknown }> {
         // Build the body with context items array (typed as any to bypass generated type mismatch)
         const body = {
@@ -98,7 +98,7 @@ export class UaiPromptExecutionServerDataSource {
             PromptsService.executePrompt({
                 path: { promptIdOrAlias },
                 body,
-            })
+            }),
         );
 
         if (error || !data) {
@@ -108,11 +108,13 @@ export class UaiPromptExecutionServerDataSource {
         return {
             data: {
                 content: data.content,
-                usage: data.usage ? {
-                    inputTokens: data.usage.inputTokens ?? undefined,
-                    outputTokens: data.usage.outputTokens ?? undefined,
-                    totalTokens: data.usage.totalTokens ?? undefined,
-                } : undefined,
+                usage: data.usage
+                    ? {
+                          inputTokens: data.usage.inputTokens ?? undefined,
+                          outputTokens: data.usage.outputTokens ?? undefined,
+                          totalTokens: data.usage.totalTokens ?? undefined,
+                      }
+                    : undefined,
                 propertyChanges: data.propertyChanges?.map((change) => ({
                     alias: change.alias,
                     value: change.value,

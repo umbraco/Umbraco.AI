@@ -22,8 +22,8 @@ Umbraco.AI.Anthropic is a provider plugin for Umbraco.AI that enables integratio
 
 This provider uses a simplified structure (single project):
 
-| Project | Purpose |
-|---------|---------|
+| Project                | Purpose                                             |
+| ---------------------- | --------------------------------------------------- |
 | `Umbraco.AI.Anthropic` | Provider implementation, capabilities, and settings |
 
 ### Provider Implementation
@@ -45,6 +45,7 @@ public class AnthropicProvider : AIProviderBase<AnthropicSettings>
 ### Capabilities
 
 **Chat Capability** (`AnthropicChatCapability`):
+
 - Extends `AIChatCapabilityBase<AnthropicSettings>`
 - Creates `IChatClient` instances using Anthropic SDK
 - Supports Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku
@@ -72,12 +73,14 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Anthropic:
 ### Supported Models
 
 **Chat Models:**
+
 - `claude-3-5-sonnet-20241022` (Claude 3.5 Sonnet)
 - `claude-3-opus-20240229` (Claude 3 Opus)
 - `claude-3-sonnet-20240229` (Claude 3 Sonnet)
 - `claude-3-haiku-20240307` (Claude 3 Haiku)
 
 **Key Features:**
+
 - Extended context windows (up to 200K tokens)
 - Advanced reasoning capabilities
 - Vision support (for models that support it)
@@ -92,9 +95,9 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Anthropic:
 
 ```json
 {
-  "Anthropic": {
-    "ApiKey": "sk-ant-..."
-  }
+    "Anthropic": {
+        "ApiKey": "sk-ant-..."
+    }
 }
 ```
 
@@ -113,6 +116,7 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Anthropic:
 ## Provider Discovery
 
 The provider is automatically discovered by Umbraco.AI through:
+
 1. `[AIProvider]` attribute on the provider class
 2. Assembly scanning during Umbraco startup
 3. Registration in the `AIProvidersCollectionBuilder`
@@ -120,6 +124,7 @@ The provider is automatically discovered by Umbraco.AI through:
 ## Testing
 
 For testing provider implementations, use the test utilities from `Umbraco.AI.Tests.Common`:
+
 - `FakeAIProvider` - Test double for provider testing
 - `AIConnectionBuilder` - Fluent builder for test connections
 - `AIProfileBuilder` - Fluent builder for test profiles

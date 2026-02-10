@@ -21,7 +21,7 @@ This package is part of the [Umbraco.AI monorepo](../README.md). For local devel
 2. A Microsoft AI Foundry resource (Azure AI hub) with deployed models
 3. The endpoint URL and API key from your Microsoft AI Foundry resource
 
-> **Important:** Models must be deployed in Microsoft AI Foundry before they can be used. The model dropdown in Umbraco shows models that are *available* to deploy, not models that are currently deployed. You must deploy models in the AI Foundry portal first.
+> **Important:** Models must be deployed in Microsoft AI Foundry before they can be used. The model dropdown in Umbraco shows models that are _available_ to deploy, not models that are currently deployed. You must deploy models in the AI Foundry portal first.
 
 ## Azure Account Setup
 
@@ -39,8 +39,8 @@ If you don't already have an Azure account and AI Foundry resource set up, follo
 2. Sign in with your Azure account
 3. Click **+ New project**
 4. Enter a project name and select or create a **hub**:
-   - If creating a new hub, select your subscription and resource group
-   - Choose a region (note: model availability varies by region)
+    - If creating a new hub, select your subscription and resource group
+    - Choose a region (note: model availability varies by region)
 5. Click **Create** and wait for provisioning to complete
 
 ### Step 3: Deploy Models
@@ -49,8 +49,8 @@ Before you can use models, you must deploy them to your project:
 
 1. In your AI Foundry project, go to **Model catalog** (left sidebar)
 2. Browse or search for models you want to use:
-   - For chat: `gpt-4o`, `gpt-4o-mini`, `mistral-large`, `llama-3-70b`
-   - For embeddings: `text-embedding-3-small`, `text-embedding-3-large`
+    - For chat: `gpt-4o`, `gpt-4o-mini`, `mistral-large`, `llama-3-70b`
+    - For embeddings: `text-embedding-3-small`, `text-embedding-3-large`
 3. Click on a model, then click **Deploy**
 4. Choose a deployment name (or use the default)
 5. Select **Serverless API** deployment type for pay-as-you-go pricing
@@ -68,6 +68,7 @@ Before you can use models, you must deploy them to your project:
 5. Copy one of the **API keys**
 
 Alternatively, from the Azure Portal:
+
 1. Go to [portal.azure.com](https://portal.azure.com)
 2. Navigate to your Azure AI Services resource
 3. Go to **Keys and Endpoint** in the left menu
@@ -102,6 +103,7 @@ dotnet add package Umbraco.AI.MicrosoftFoundry
 ### 2. Deploy Models
 
 In your Microsoft AI Foundry resource:
+
 1. Go to the Model catalog
 2. Deploy the models you need (e.g., `gpt-4o`, `text-embedding-3-small`, `mistral-large`)
 3. Note the model names for use in Umbraco profiles
@@ -109,11 +111,12 @@ In your Microsoft AI Foundry resource:
 ### 3. Configure in Umbraco
 
 In the Umbraco backoffice:
+
 1. Navigate to **Settings** > **AI** > **Connections**
 2. Create a new connection and select **Microsoft AI Foundry**
 3. Enter your:
-   - **Endpoint**: Your Microsoft AI Foundry endpoint URL
-   - **API Key**: Your Microsoft AI Foundry API key
+    - **Endpoint**: Your Microsoft AI Foundry endpoint URL
+    - **API Key**: Your Microsoft AI Foundry API key
 
 ### 4. Create AI Profiles
 
@@ -123,16 +126,17 @@ In the Umbraco backoffice:
 
 ## Settings
 
-| Setting | Description | Required |
-|---------|-------------|----------|
-| Endpoint | Microsoft AI Foundry endpoint URL | Yes |
-| ApiKey | Microsoft AI Foundry API key | Yes |
+| Setting  | Description                       | Required |
+| -------- | --------------------------------- | -------- |
+| Endpoint | Microsoft AI Foundry endpoint URL | Yes      |
+| ApiKey   | Microsoft AI Foundry API key      | Yes      |
 
 ## Supported Models
 
 Microsoft AI Foundry provides access to multiple model providers through a single endpoint (subject to your Azure resource's model deployments):
 
 ### Chat Models
+
 - **OpenAI**: GPT-4o, GPT-4, GPT-3.5-turbo
 - **Mistral**: mistral-large, mistral-small
 - **Meta Llama**: llama-3-70b, llama-3-8b
@@ -140,6 +144,7 @@ Microsoft AI Foundry provides access to multiple model providers through a singl
 - **Microsoft Phi**: phi-3-medium, phi-3-small
 
 ### Embedding Models
+
 - **OpenAI**: text-embedding-3-large, text-embedding-3-small, text-embedding-ada-002
 - **Cohere**: embed-v3
 
@@ -149,14 +154,15 @@ You can store credentials in `appsettings.json` and reference them using the `$`
 
 ```json
 {
-  "MicrosoftFoundry": {
-    "Endpoint": "https://your-resource.services.ai.azure.com/",
-    "ApiKey": "your-api-key-here"
-  }
+    "MicrosoftFoundry": {
+        "Endpoint": "https://your-resource.services.ai.azure.com/",
+        "ApiKey": "your-api-key-here"
+    }
 }
 ```
 
 Then in your connection settings, use:
+
 - Endpoint: `$MicrosoftFoundry:Endpoint`
 - API Key: `$MicrosoftFoundry:ApiKey`
 
@@ -165,17 +171,20 @@ Then in your connection settings, use:
 ### Common Issues
 
 **"Resource not found" error**
+
 - Ensure your endpoint URL is correct
 - Verify the model name matches exactly (case-sensitive)
 - Check that the model is deployed in your Microsoft AI Foundry resource
 
 **"Access denied" error**
+
 - Check your API key is correct
 - Verify your Microsoft AI Foundry resource allows access from your IP/network
 
 **"Unavailable model" or "Model not available" error**
+
 - **This is the most common issue** - the model is not deployed in your Microsoft AI Foundry resource
-- The dropdown shows models *available to deploy*, not deployed models
+- The dropdown shows models _available to deploy_, not deployed models
 - Go to [ai.azure.com](https://ai.azure.com), open your project, and deploy the model you want to use
 - Once deployed, the model will work through your connection
 

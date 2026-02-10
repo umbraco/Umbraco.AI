@@ -35,25 +35,28 @@ Umbraco.AI.Agent is an agent management plugin for Umbraco.AI. It provides stora
 
 ### Project Structure
 
-| Project | Purpose |
-|---------|---------|
-| `Umbraco.AI.Agent.Core` | Core domain models, services, and repository interfaces |
-| `Umbraco.AI.Agent.Persistence` | EF Core DbContext, entities, and repository implementations |
-| `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations |
-| `Umbraco.AI.Agent.Persistence.Sqlite` | SQLite migrations |
-| `Umbraco.AI.Agent.Web` | Management API controllers, models, and mapping |
-| `Umbraco.AI.Agent.Web.StaticAssets` | TypeScript/Lit frontend components |
-| `Umbraco.AI.Agent.Startup` | Umbraco Composer for auto-discovery and DI registration |
-| `Umbraco.AI.Agent` | Meta-package that bundles all components |
+| Project                                  | Purpose                                                     |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| `Umbraco.AI.Agent.Core`                  | Core domain models, services, and repository interfaces     |
+| `Umbraco.AI.Agent.Persistence`           | EF Core DbContext, entities, and repository implementations |
+| `Umbraco.AI.Agent.Persistence.SqlServer` | SQL Server migrations                                       |
+| `Umbraco.AI.Agent.Persistence.Sqlite`    | SQLite migrations                                           |
+| `Umbraco.AI.Agent.Web`                   | Management API controllers, models, and mapping             |
+| `Umbraco.AI.Agent.Web.StaticAssets`      | TypeScript/Lit frontend components                          |
+| `Umbraco.AI.Agent.Startup`               | Umbraco Composer for auto-discovery and DI registration     |
+| `Umbraco.AI.Agent`                       | Meta-package that bundles all components                    |
 
 ### Key Services
 
-- `IAIAgentService` - Primary interface for agent CRUD operations
+- `IAIAgentService` - Primary interface for agent CRUD operations and tool permission validation
+  - `GetAllowedToolIdsAsync(agent)` - Returns all tool IDs allowed for an agent (both direct and scope-based)
+  - `IsToolEnabledAsync(agent, toolId)` - Checks if a specific tool is allowed for an agent
 - `IAIAgentRepository` - Repository interface for agent persistence
 
 ### Domain Model
 
 The `AIAgent` entity represents a stored agent definition:
+
 - `Id` - Unique identifier
 - `Alias` - URL-safe unique identifier
 - `Name` - Display name
@@ -62,20 +65,49 @@ The `AIAgent` entity represents a stored agent definition:
 - `ProfileId` - Optional link to Umbraco.AI profile (soft FK)
 - `Tags` - Categorization tags
 - `IsActive` - Active status
+- `AllowedToolIds` - List of specific tool IDs allowed for this agent
+- `AllowedToolScopeIds` - List of tool scope IDs allowed for this agent (grants access to all tools in those scopes)
 - `DateCreated` / `DateModified` - Timestamps
+
+### Agent Tool Permissions
+
+Agents can have fine-grained control over which tools they can access through two mechanisms:
+
+**1. Direct Tool Access** (`AllowedToolIds`)
+- Explicitly grant access to specific tools by their ID
+- Example: `["umbraco-content-get", "umbraco-media-upload"]`
+
+**2. Scope-Based Access** (`AllowedToolScopeIds`)
+- Grant access to all tools within a scope
+- Scopes represent categories of operations (e.g., "content-read", "media-write")
+- Example: `["content-read", "search"]` grants access to all tools in those scopes
+
+**Permission Resolution:**
+- A tool is enabled if it appears in `AllowedToolIds` OR if its scope appears in `AllowedToolScopeIds`
+- Case-insensitive comparison for both tool IDs and scope IDs
+- Permission checks are performed via `IAIAgentService.IsToolEnabledAsync(agent, toolId)`
+
+**Usage Example:**
+```csharp
+// Check if a specific tool is allowed for an agent
+bool canUseContentGet = await agentService.IsToolEnabledAsync(agent, "umbraco-content-get");
+
+// Get all enabled tool IDs for an agent
+IReadOnlyList<string> allowedTools = await agentService.GetAllowedToolIdsAsync(agent);
+```
 
 ### Management API
 
 Endpoints are under `/umbraco/ai/management/api/v1/agents/`:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/agents` | Get all agents (paged) |
-| GET | `/agents/{agentIdOrAlias}` | Get agent by ID or alias |
-| GET | `/agents/profile/{profileId}` | Get agents by profile |
-| POST | `/agents` | Create agent |
-| PUT | `/agents/{agentIdOrAlias}` | Update agent by ID or alias |
-| DELETE | `/agents/{agentIdOrAlias}` | Delete agent by ID or alias |
+| Method | Endpoint                      | Description                 |
+| ------ | ----------------------------- | --------------------------- |
+| GET    | `/agents`                     | Get all agents (paged)      |
+| GET    | `/agents/{agentIdOrAlias}`    | Get agent by ID or alias    |
+| GET    | `/agents/profile/{profileId}` | Get agents by profile       |
+| POST   | `/agents`                     | Create agent                |
+| PUT    | `/agents/{agentIdOrAlias}`    | Update agent by ID or alias |
+| DELETE | `/agents/{agentIdOrAlias}`    | Delete agent by ID or alias |
 
 The `{agentIdOrAlias}` parameter accepts either a GUID (e.g., `550e8400-e29b-41d4-a716-446655440000`) or a string alias (e.g., `my-agent-alias`). This pattern matches Umbraco.AI's `IdOrAlias` convention.
 
@@ -110,6 +142,7 @@ dotnet ef migrations add UmbracoAIAgent_<MigrationName> \
 ### Web Layer (Layer-Based Organization)
 
 Web follows Umbraco CMS Management API conventions:
+
 - `Controllers/` - API endpoints
 - `Models/` - Request/response DTOs
 - `Mapping/` - UmbracoMapper definitions
@@ -125,13 +158,13 @@ Web follows Umbraco CMS Management API conventions:
 
 ```json
 {
-  "Umbraco": {
-    "AI": {
-      "Agent": {
-        // Future configuration options
-      }
+    "Umbraco": {
+        "AI": {
+            "Agent": {
+                // Future configuration options
+            }
+        }
     }
-  }
 }
 ```
 

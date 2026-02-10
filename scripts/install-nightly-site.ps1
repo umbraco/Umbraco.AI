@@ -45,6 +45,10 @@ if ($Force -and (Test-Path $sitePath)) {
     Remove-Item -Recurse -Force $sitePath
 }
 
+# Clear NuGet cache to ensure fresh packages from nightly feed
+Write-Host "Clearing NuGet cache to fetch fresh packages..." -ForegroundColor Green
+dotnet nuget locals all --clear
+
 # Step 1: Install Umbraco templates
 if (-not $SkipTemplateInstall) {
     Write-Host "Installing Umbraco templates..." -ForegroundColor Green

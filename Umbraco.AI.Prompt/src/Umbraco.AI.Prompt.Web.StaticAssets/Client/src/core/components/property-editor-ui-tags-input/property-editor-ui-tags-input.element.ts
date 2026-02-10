@@ -32,7 +32,7 @@ export class UaiPropertyEditorUiTagsInputElement extends UmbLitElement {
     public set items(value: string[]) {
         // Filter to only allow valid text-based property editor UIs
         this.#items = (value ?? []).filter((item) =>
-            TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as typeof TEXT_BASED_PROPERTY_EDITOR_UIS[number])
+            TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as (typeof TEXT_BASED_PROPERTY_EDITOR_UIS)[number]),
         );
     }
     public get items(): string[] {
@@ -59,15 +59,11 @@ export class UaiPropertyEditorUiTagsInputElement extends UmbLitElement {
     #lookup: TagLookupCallback = async (query: string): Promise<TagItem[]> => {
         const lowerQuery = query.toLowerCase();
 
-        return TEXT_BASED_PROPERTY_EDITOR_UIS
-            .filter((alias) => {
-                // Match against full alias or simplified name
-                const simpleName = alias.replace("Umb.PropertyEditorUi.", "");
-                return (
-                    alias.toLowerCase().includes(lowerQuery) ||
-                    simpleName.toLowerCase().includes(lowerQuery)
-                );
-            })
+        return TEXT_BASED_PROPERTY_EDITOR_UIS.filter((alias) => {
+            // Match against full alias or simplified name
+            const simpleName = alias.replace("Umb.PropertyEditorUi.", "");
+            return alias.toLowerCase().includes(lowerQuery) || simpleName.toLowerCase().includes(lowerQuery);
+        })
             .filter((alias) => !this.#items.includes(alias)) // Exclude already selected
             .map((alias) => ({
                 id: alias,
@@ -80,19 +76,21 @@ export class UaiPropertyEditorUiTagsInputElement extends UmbLitElement {
         const target = event.target as HTMLElement & { items: string[] };
 
         // Map simplified names back to full aliases and validate
-        const newItems = target.items.map((item) => {
-            // If it's already a full alias, use it
-            if (TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as typeof TEXT_BASED_PROPERTY_EDITOR_UIS[number])) {
-                return item;
-            }
-            // Try to find matching full alias from simplified name
-            const fullAlias = TEXT_BASED_PROPERTY_EDITOR_UIS.find(
-                (alias) => alias.replace("Umb.PropertyEditorUi.", "") === item
+        const newItems = target.items
+            .map((item) => {
+                // If it's already a full alias, use it
+                if (TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as (typeof TEXT_BASED_PROPERTY_EDITOR_UIS)[number])) {
+                    return item;
+                }
+                // Try to find matching full alias from simplified name
+                const fullAlias = TEXT_BASED_PROPERTY_EDITOR_UIS.find(
+                    (alias) => alias.replace("Umb.PropertyEditorUi.", "") === item,
+                );
+                return fullAlias ?? item;
+            })
+            .filter((item) =>
+                TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as (typeof TEXT_BASED_PROPERTY_EDITOR_UIS)[number]),
             );
-            return fullAlias ?? item;
-        }).filter((item) =>
-            TEXT_BASED_PROPERTY_EDITOR_UIS.includes(item as typeof TEXT_BASED_PROPERTY_EDITOR_UIS[number])
-        );
 
         this.#items = newItems;
         this.dispatchEvent(new UmbChangeEvent());
@@ -100,9 +98,7 @@ export class UaiPropertyEditorUiTagsInputElement extends UmbLitElement {
 
     render() {
         // Display simplified names in the tags
-        const displayItems = this.#items.map((item) =>
-            item.replace("Umb.PropertyEditorUi.", "")
-        );
+        const displayItems = this.#items.map((item) => item.replace("Umb.PropertyEditorUi.", ""));
 
         return html`
             <uai-tags-input

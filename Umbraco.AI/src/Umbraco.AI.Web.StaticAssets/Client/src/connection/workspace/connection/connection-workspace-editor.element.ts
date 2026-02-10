@@ -1,10 +1,11 @@
-import { css, html, customElement, state, when } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state, when, nothing } from "@umbraco-cms/backoffice/external/lit";
 import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { umbBindToValidation, UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_CONNECTION_WORKSPACE_CONTEXT } from "./connection-workspace.context-token.js";
 import { UAI_CONNECTION_WORKSPACE_ALIAS } from "../../constants.js";
 import type { UaiConnectionDetailModel } from "../../types.js";
@@ -15,7 +16,7 @@ import { ConnectionsService } from "../../../api/sdk.gen.js";
 import "../../../core/components/status-selector/status-selector.element.js";
 
 @customElement("uai-connection-workspace-editor")
-export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
+export class UaiConnectionWorkspaceEditorElement extends UmbFormControlMixin(UmbLitElement) {
     #workspaceContext?: typeof UAI_CONNECTION_WORKSPACE_CONTEXT.TYPE;
     #notificationContext?: typeof UMB_NOTIFICATION_CONTEXT.TYPE;
 
@@ -33,6 +34,14 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
     @state()
     private _testButtonColor?: "default" | "positive" | "warning" | "danger" = "default";
+
+    @state()
+    private _aliasCheckInProgress = false;
+
+    @state()
+    private _aliasExists = false;
+
+    private _aliasCheckTimeout?: number;
 
     constructor() {
         super();
@@ -58,6 +67,61 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         });
     }
 
+    protected override firstUpdated(_changedProperties: any) {
+        super.firstUpdated(_changedProperties);
+        // Register form control elements to enable HTML5 validation
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>("#name");
+        if (nameInput) this.addFormControlElement(nameInput as any);
+    }
+
+    async #checkAliasUniqueness(alias: string): Promise<void> {
+        if (!alias) {
+            this._aliasExists = false;
+            return;
+        }
+
+        this._aliasCheckInProgress = true;
+
+        // Set temporary validity state while checking to prevent submission during debounce
+        const nameInput = this.shadowRoot?.querySelector<UUIInputElement>('#name');
+        nameInput?.setCustomValidity("Checking alias availability...");
+        this.checkValidity();
+
+        try {
+            const { data } = await tryExecute(
+                this,
+                ConnectionsService.connectionAliasExists({
+                    path: { alias },
+                    query: {
+                        excludeId:
+                            this._model?.unique !== UAI_EMPTY_GUID ? this._model?.unique : undefined,
+                    },
+                }),
+            );
+
+            this._aliasExists = data === true;
+
+            // The alias input doesn't seem to support validation styling
+            // so we'll record the error against the name input since it's the most relevant field
+            // and has the same error (required) when empty
+            const nameInput = this.shadowRoot?.querySelector<UUIInputElement>('#name');
+
+            // Add/remove validation message on the workspace validation context
+            if (this._aliasExists) {
+                  // Set custom validity to trigger :invalid state for visual styling
+                nameInput?.setCustomValidity(this.localize.term('uaiValidation_aliasExists'));
+            } else {
+                // Clear custom validity
+                nameInput?.setCustomValidity('');
+            }
+
+            // Trigger validation re-check to update UI
+            this.checkValidity();
+        } finally {
+            this._aliasCheckInProgress = false;
+        }
+    }
+
     #onNameChange(event: UUIInputEvent) {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
@@ -67,11 +131,20 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         if (this._aliasLocked && this._isNew) {
             const alias = this.#generateAlias(name);
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias")
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name, alias }, "name-alias"),
             );
+
+            // Trigger alias uniqueness check for auto-generated alias
+            this._aliasExists = false;
+            if (this._aliasCheckTimeout) {
+                clearTimeout(this._aliasCheckTimeout);
+            }
+            this._aliasCheckTimeout = window.setTimeout(() => {
+                this.#checkAliasUniqueness(alias);
+            }, 500);
         } else {
             this.#workspaceContext?.handleCommand(
-                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name")
+                new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ name }, "name"),
             );
         }
     }
@@ -79,9 +152,22 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
     #onAliasChange(event: UUIInputEvent) {
         event.stopPropagation();
         const target = event.composedPath()[0] as UUIInputElement;
+        const alias = target.value.toString();
+
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias: target.value.toString() }, "alias")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ alias }, "alias"),
         );
+
+        // Reset uniqueness flag when user changes value
+        this._aliasExists = false;
+
+        // Debounced uniqueness check
+        if (this._aliasCheckTimeout) {
+            clearTimeout(this._aliasCheckTimeout);
+        }
+        this._aliasCheckTimeout = window.setTimeout(() => {
+            this.#checkAliasUniqueness(alias);
+        }, 500);
     }
 
     #onToggleAliasLock() {
@@ -97,7 +183,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
     #onActiveChange(e: CustomEvent<{ value: boolean }>) {
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: e.detail.value }, "isActive")
+            new UaiPartialUpdateCommand<UaiConnectionDetailModel>({ isActive: e.detail.value }, "isActive"),
         );
     }
 
@@ -110,7 +196,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
         const { data, error } = await tryExecute(
             this,
-            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } })
+            ConnectionsService.testConnection({ path: { connectionIdOrAlias: unique } }),
         );
 
         if (error || !data?.success) {
@@ -144,11 +230,7 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
         return html`
             <umb-workspace-editor alias="${UAI_CONNECTION_WORKSPACE_ALIAS}">
                 <div id="header" slot="header">
-                    <uui-button
-                        href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH}
-                        label="Back to connections"
-                        compact
-                    >
+                    <uui-button href=${UAI_CONNECTION_ROOT_WORKSPACE_PATH} label="Back to connections" compact>
                         <uui-icon name="icon-arrow-left"></uui-icon>
                     </uui-button>
                     <uui-input
@@ -157,6 +239,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                         @input="${this.#onNameChange}"
                         label="Name"
                         placeholder="Enter connection name"
+                        required
+                        maxlength="255"
+                        .requiredMessage=${this.localize.term("uaiValidation_required")}
+                        .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 255)}
+                        ${umbBindToValidation(this, "$.name", this._model.name)}
                     >
                         <uui-input-lock
                             slot="append"
@@ -170,7 +257,18 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                             ?readonly=${this._aliasLocked || !this._isNew}
                             @input=${this.#onAliasChange}
                             @lock-change=${this.#onToggleAliasLock}
-                        ></uui-input-lock>
+                            required
+                            maxlength="100"
+                            pattern="^[a-z0-9\\-]+$"
+                            .requiredMessage=${this.localize.term("uaiValidation_required")}
+                            .maxlengthMessage=${this.localize.term("uaiValidation_maxLength", 100)}
+                            .patternMessage=${this.localize.term("uaiValidation_aliasFormat")}
+                            ${umbBindToValidation(this, "$.alias", this._model.alias)}
+                        >
+                            ${this._aliasCheckInProgress
+                                ? html`<uui-loader slot="append"></uui-loader>`
+                                : nothing}
+                        </uui-input-lock>
                     </uui-input>
 
                     <uai-status-selector
@@ -181,9 +279,9 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
 
                 ${when(
                     !this._isNew && this._model,
-                    () => html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`
+                    () =>
+                        html`<umb-workspace-entity-action-menu slot="action-menu"></umb-workspace-entity-action-menu>`,
                 )}
-
                 ${when(
                     !this._isNew && this._model,
                     () => html`
@@ -193,10 +291,11 @@ export class UaiConnectionWorkspaceEditorElement extends UmbLitElement {
                             look="default"
                             .color=${this._testButtonColor}
                             .state=${this._testButtonState}
-                            @click=${this.#onTestConnection}>
+                            @click=${this.#onTestConnection}
+                        >
                             ${this.localize.string("#uaiConnection_testConnection")}
                         </uui-button>
-                    `
+                    `,
                 )}
 
                 <div slot="footer-info" id="footer">

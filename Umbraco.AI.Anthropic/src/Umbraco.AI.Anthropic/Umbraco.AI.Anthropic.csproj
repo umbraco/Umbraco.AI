@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Title>Umbraco AI Anthropic Provider</Title>
     <Description>Anthropic provider for Umbraco AI</Description>
+    <PackageTags>umbraco ai anthropic claude umbraco-marketplace</PackageTags>
     <StaticWebAssetBasePath>App_Plugins/UmbracoAIAnthropic</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>

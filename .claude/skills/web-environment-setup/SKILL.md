@@ -25,19 +25,20 @@ dotnet build Umbraco.AI.sln
 ## Workflow
 
 1. **Run the setup script**:
-   ```bash
-   source .claude/scripts/setup-web-environment.sh
-   ```
+
+    ```bash
+    source .claude/scripts/setup-web-environment.sh
+    ```
 
 2. **Verify the setup** by checking:
-   - `dotnet --version` returns 10.x
-   - Proxy environment variables are set
-   - Git is not a shallow clone
+    - `dotnet --version` returns 10.x
+    - Proxy environment variables are set
+    - Git is not a shallow clone
 
 3. **Test the build**:
-   ```bash
-   dotnet build Umbraco.AI.sln
-   ```
+    ```bash
+    dotnet build Umbraco.AI.sln
+    ```
 
 ## Problem
 
@@ -50,11 +51,11 @@ Claude Code web runs in a sandboxed environment with restrictions:
 
 ## Scripts
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `setup-web-environment.sh` | Full environment setup | `source .claude/scripts/setup-web-environment.sh` |
-| `setup-dotnet-proxy.sh` | Proxy + NuGet config only | `source .claude/scripts/setup-dotnet-proxy.sh` |
-| `dotnet-with-proxy.sh` | Run dotnet with proxy | `.claude/scripts/dotnet-with-proxy.sh restore` |
+| Script                     | Purpose                   | Usage                                             |
+| -------------------------- | ------------------------- | ------------------------------------------------- |
+| `setup-web-environment.sh` | Full environment setup    | `source .claude/scripts/setup-web-environment.sh` |
+| `setup-dotnet-proxy.sh`    | Proxy + NuGet config only | `source .claude/scripts/setup-dotnet-proxy.sh`    |
+| `dotnet-with-proxy.sh`     | Run dotnet with proxy     | `.claude/scripts/dotnet-with-proxy.sh restore`    |
 
 ## What `setup-web-environment.sh` Does
 
@@ -75,22 +76,22 @@ else
 fi
 ```
 
-| Environment | `HTTP_PROXY` value | Detection |
-|-------------|-------------------|-----------|
-| Claude Code web | `http://...jwt_eyJ...@host:port` | ✅ Detected |
-| Local (no proxy) | *(unset)* | ❌ Not detected |
-| Local (corporate proxy) | `http://proxy.corp:8080` | ❌ Not detected |
+| Environment             | `HTTP_PROXY` value               | Detection       |
+| ----------------------- | -------------------------------- | --------------- |
+| Claude Code web         | `http://...jwt_eyJ...@host:port` | ✅ Detected     |
+| Local (no proxy)        | _(unset)_                        | ❌ Not detected |
+| Local (corporate proxy) | `http://proxy.corp:8080`         | ❌ Not detected |
 
 **On local machines, the scripts do nothing** - they're safe to run anywhere.
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Proxy errors | Check `/tmp/px-proxy.log` |
-| NuGet restore fails | Verify proxy: `pgrep -f px` |
-| GitVersioning errors | Run `git fetch --unshallow origin` |
-| MyGet warnings | Safe to ignore - nuget.org is used instead |
+| Issue                | Solution                                   |
+| -------------------- | ------------------------------------------ |
+| Proxy errors         | Check `/tmp/px-proxy.log`                  |
+| NuGet restore fails  | Verify proxy: `pgrep -f px`                |
+| GitVersioning errors | Run `git fetch --unshallow origin`         |
+| MyGet warnings       | Safe to ignore - nuget.org is used instead |
 
 ## How It Works
 

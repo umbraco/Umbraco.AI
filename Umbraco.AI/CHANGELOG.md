@@ -55,7 +55,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 * **core,agent,prompt:** Fix validation blocking by calling checkValidity() method ([1766901](https://github.com/umbraco/Umbraco.AI/commit/1766901e5e308235aed721bdbfc90d84e3c07fd5))
 * **core,agent,prompt:** Fix validation issues from code review ([5984276](https://github.com/umbraco/Umbraco.AI/commit/5984276e463b7dccd625edf1181c4c950b6555a7))
 * **core,agent,prompt:** Properly block save on duplicate alias via validation messages ([908d1c8](https://github.com/umbraco/Umbraco.AI/commit/908d1c8592755e08a88e92ef0e246b0783479da5))
-* **core,agent,prompt:** Use setCustomValidity for visual error display ([346f0e8](https://github.com/umbraco/Umbraco.AI/commit/346f0e8ad04776c0b39c67d39695ce00962c7520)), closes [#checkAliasUniqueness](https://github.com/umbraco/Umbraco.AI/issues/checkAliasUniqueness)
+* **core,agent,prompt:** Use setCustomValidity for visual error display ([346f0e8](https://github.com/umbraco/Umbraco.AI/commit/346f0e8ad04776c0b39c67d39695ce00962c7520))
 * **core,agent:** Fix breaking unit tests ([14f9c47](https://github.com/umbraco/Umbraco.AI/commit/14f9c4705fa50065501df3c4b88357db185d2858))
 * **core,tools:** Fix TypeScript compilation errors ([feae61a](https://github.com/umbraco/Umbraco.AI/commit/feae61a279c8181e189c4206a29375309078cb7c))
 * **core:** Actually write the entity key to the system prompt as context ([fb5cefd](https://github.com/umbraco/Umbraco.AI/commit/fb5cefd48c38ef9c0310d3cd62aaf0b7ac10d721))
@@ -70,7 +70,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 * **core:** Reload tool picker items when frontendTools property changes ([7babd11](https://github.com/umbraco/Umbraco.AI/commit/7babd114e5790991599278f7e83f1e543854fffc))
 * **core:** Use relative imports in tool-scope-permissions component ([47bf187](https://github.com/umbraco/Umbraco.AI/commit/47bf187618469296ba79a2bffc8be5cd37f9ba65))
 * **core:** Use user group repository instead of direct API access ([e8a2998](https://github.com/umbraco/Umbraco.AI/commit/e8a2998080e39fff85c8ff877800a8f693d4a95c))
-* **frontend:** Fix TypeScript compilation errors for workspace validation ([277abc6](https://github.com/umbraco/Umbraco.AI/commit/277abc61b519655bd3c989d35e5850011d5e265f)), closes [#validationContext](https://github.com/umbraco/Umbraco.AI/issues/validationContext)
+* **frontend:** Fix TypeScript compilation errors for workspace validation ([277abc6](https://github.com/umbraco/Umbraco.AI/commit/277abc61b519655bd3c989d35e5850011d5e265f))
 * **frontend:** Validate auto-generated aliases on name change ([35dbe84](https://github.com/umbraco/Umbraco.AI/commit/35dbe848759643e2176e241ff6bf05e8455d8573))
 
 ### refactor

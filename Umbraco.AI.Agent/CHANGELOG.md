@@ -51,12 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **core,agent,prompt:** Fix validation blocking by calling checkValidity() method ([1766901](https://github.com/umbraco/Umbraco.AI/commit/1766901e5e308235aed721bdbfc90d84e3c07fd5))
 * **core,agent,prompt:** Fix validation issues from code review ([5984276](https://github.com/umbraco/Umbraco.AI/commit/5984276e463b7dccd625edf1181c4c950b6555a7))
 * **core,agent,prompt:** Properly block save on duplicate alias via validation messages ([908d1c8](https://github.com/umbraco/Umbraco.AI/commit/908d1c8592755e08a88e92ef0e246b0783479da5))
-* **core,agent,prompt:** Use setCustomValidity for visual error display ([346f0e8](https://github.com/umbraco/Umbraco.AI/commit/346f0e8ad04776c0b39c67d39695ce00962c7520)), closes [#checkAliasUniqueness](https://github.com/umbraco/Umbraco.AI/issues/checkAliasUniqueness)
+* **core,agent,prompt:** Use setCustomValidity for visual error display ([346f0e8](https://github.com/umbraco/Umbraco.AI/commit/346f0e8ad04776c0b39c67d39695ce00962c7520))
 * **core,agent:** Fix breaking unit tests ([14f9c47](https://github.com/umbraco/Umbraco.AI/commit/14f9c4705fa50065501df3c4b88357db185d2858))
 
 ### perf
 
-* **agent:** Fetch single agent instead of all agents on update ([8fe5817](https://github.com/umbraco/Umbraco.AI/commit/8fe5817e86f48e00047eaa59e77dafed5e92fb14)), closes [#handleAgentUpdate](https://github.com/umbraco/Umbraco.AI/issues/handleAgentUpdate)
+* **agent:** Fetch single agent instead of all agents on update ([8fe5817](https://github.com/umbraco/Umbraco.AI/commit/8fe5817e86f48e00047eaa59e77dafed5e92fb14))
 
 ### refactor
 

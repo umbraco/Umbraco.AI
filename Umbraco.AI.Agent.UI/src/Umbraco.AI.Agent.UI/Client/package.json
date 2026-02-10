@@ -4,12 +4,6 @@
     "type": "module",
     "main": "./src/index.ts",
     "types": "./types/umbraco-ai-agent-ui-public-types.d.ts",
-    "exports": {
-        ".": {
-            "types": "./types/umbraco-ai-agent-ui-public-types.d.ts",
-            "import": "./src/index.ts"
-        }
-    },
     "files": [
         "types/umbraco-ai-agent-ui-public-types.d.ts",
         "README.md"
@@ -21,7 +15,7 @@
         "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)"
     },
     "peerDependencies": {
-        "@umbraco-ai/agent": "workspace:*",
+        "@umbraco-ai/agent": "^1.0.0",
         "@umbraco-cms/backoffice": "^17.1.0"
     },
     "dependencies": {

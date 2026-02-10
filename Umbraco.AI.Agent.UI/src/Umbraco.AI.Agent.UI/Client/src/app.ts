@@ -1,5 +1,18 @@
-import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import { manifests } from "./manifests.js";
+// Import all custom elements to register them
+import "./chat/components/chat.element.js";
+import "./chat/components/message.element.js";
+import "./chat/components/input.element.js";
+import "./chat/components/agent-status.element.js";
+import "./chat/components/tool-renderer.element.js";
+import "./chat/components/tool-status.element.js";
+import "./chat/components/hitl-approval.element.js";
+import "./chat/components/approval-base.element.js";
+import "./chat/components/message-copy-button.element.js";
+import "./chat/components/message-regenerate-button.element.js";
+
+// Re-export all public APIs from the package.
+export * from "./index.js";
+export * from "./exports.js";
 
 /**
  * Backoffice entry point for @umbraco-ai/agent-ui.
@@ -7,5 +20,5 @@ import { manifests } from "./manifests.js";
  * Registers all shared chat manifests (kinds, approval elements, localization).
  */
 export const onInit = (_host: unknown) => {
-    umbExtensionsRegistry.registerMany(manifests);
+    console.debug("Initializing Umbraco AI Agent UI package...");
 };

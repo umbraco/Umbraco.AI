@@ -153,12 +153,12 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const chatSettings: UaiChatProfileSettings = isChatSettings(currentSettings)
             ? { ...currentSettings, ...updates }
             : {
-                  $type: "chat",
-                  temperature: updates.temperature ?? null,
-                  maxTokens: updates.maxTokens ?? null,
-                  systemPromptTemplate: updates.systemPromptTemplate ?? null,
-                  contextIds: updates.contextIds ?? [],
-              };
+                $type: "chat",
+                temperature: updates.temperature ?? null,
+                maxTokens: updates.maxTokens ?? null,
+                systemPromptTemplate: updates.systemPromptTemplate ?? null,
+                contextIds: updates.contextIds ?? [],
+            };
 
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings"),
@@ -311,9 +311,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                             .options=${this.#getModelOptions()}
                             @change=${this.#onModelChange}
                             placeholder="Select a model"
-                            ?disabled=${this._loadingModels || !this._model.connectionId || this._availableModels.length === 0}
+                            ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
                             required
                             ${umbBindToValidation(this, "$.model", this._model.model)}
+                            class="${this._loadingModels ? "hidden" : ""}" 
                         ></uui-select>
                     </div>
                 </umb-property-layout>
@@ -374,6 +375,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
+            }
+
+            .hidden {
+                display: none;
             }
         `,
     ];

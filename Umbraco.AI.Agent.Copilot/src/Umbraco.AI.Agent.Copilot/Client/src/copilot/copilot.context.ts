@@ -9,6 +9,7 @@ import {
     UaiHitlContext,
     UAI_HITL_CONTEXT,
     UAI_CHAT_CONTEXT,
+    UAI_ENTITY_CONTEXT,
     UaiHitlInterruptHandler,
     UaiDefaultInterruptHandler,
     type UaiChatContextApi,
@@ -16,6 +17,7 @@ import {
 } from "@umbraco-ai/agent-ui";
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChangeResult } from "@umbraco-ai/core";
+import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -32,6 +34,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     #runController: UaiRunController;
     #hitlContext: UaiHitlContext;
     #entityAdapterContext: UaiEntityAdapterContext;
+    #entityContext: UaiCopilotEntityContext;
     #_toolRendererManager: UaiToolRendererManager;
     #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
@@ -107,6 +110,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#_toolRendererManager = new UaiToolRendererManager(host);
         const frontendToolManager = new UaiFrontendToolManager(host);
         this.#entityAdapterContext = new UaiEntityAdapterContext(host);
+        this.#entityContext = new UaiCopilotEntityContext(host, this.#entityAdapterContext);
 
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager: this.#_toolRendererManager,
@@ -139,6 +143,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.provideContext(UAI_COPILOT_CONTEXT, this);
         this.provideContext(UAI_CHAT_CONTEXT, this);
         this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
+        this.provideContext(UAI_ENTITY_CONTEXT, this.#entityContext);
     }
 
     // ─── Agent Catalog Actions ─────────────────────────────────────────────────

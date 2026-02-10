@@ -37,7 +37,14 @@ parameters:
     - name: level2Products
       type: object
       default:
-          # Copilot (depends on Agent - exports npm types)
+          # Agent UI (depends on Agent - exports npm types)
+          - name: Umbraco.AI.Agent.UI
+            changeVar: AgentUiChanged
+            hasNpm: true
+    - name: level3Products
+      type: object
+      default:
+          # Copilot (depends on Agent UI - exports npm types)
           - name: Umbraco.AI.Agent.Copilot
             changeVar: AgentCopilotChanged
             hasNpm: true
@@ -199,6 +206,30 @@ stages:
                   parameters:
                       product: $(product)
 
+          # Level 3 products (matrix)
+          - job: GenerateSBOM_Level3
+            displayName: Generate SBOM - Level 3
+            pool:
+                vmImage: "ubuntu-latest"
+            strategy:
+                matrix:
+                    ${{ each product in parameters.level3Products }}:
+                        ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
+                            product: ${{ product.name }}
+                maxParallel: 10
+            steps:
+                - checkout: self
+                  fetchDepth: 1
+
+                - task: NodeTool@0
+                  displayName: Setup Node.js
+                  inputs:
+                      versionSpec: $(NODE_VERSION)
+
+                - template: .azure-pipelines/templates/generate-sbom.yml
+                  parameters:
+                      product: $(product)
+
           # ============================================================
           # Collect all SBOMs into single artifact
           # Downloads artifacts from all SBOM jobs and combines them
@@ -209,6 +240,7 @@ stages:
                 - GenerateSBOM_Core
                 - GenerateSBOM_Level1
                 - GenerateSBOM_Level2
+                - GenerateSBOM_Level3
             condition: |
                 and(
                   not(failed()),
@@ -236,6 +268,14 @@ stages:
 
                 # Download Level 2 SBOMs
                 - ${{ each product in parameters.level2Products }}:
+                      - task: DownloadPipelineArtifact@2
+                        displayName: Download ${{ product.name }} SBOM
+                        inputs:
+                            artifact: "${{ product.name }}-sbom"
+                            targetPath: "$(Pipeline.Workspace)/sboms"
+
+                # Download Level 3 SBOMs
+                - ${{ each product in parameters.level3Products }}:
                       - task: DownloadPipelineArtifact@2
                         displayName: Download ${{ product.name }} SBOM
                         inputs:
@@ -493,7 +533,7 @@ stages:
                       condition: eq(variables['check.shouldPack'], 'true')
 
           # ============================================================
-          # Pack Level 2 (Copilot - depends on Agent)
+          # Pack Level 2 (Agent UI - depends on Agent)
           # Matrix generated from parameters.level2Products
           # ============================================================
           - job: PackLevel2
@@ -550,6 +590,68 @@ stages:
                       condition: eq(variables['check.shouldPack'], 'true')
 
           # ============================================================
+          # Pack Level 3 (Copilot - depends on Agent UI)
+          # Matrix generated from parameters.level3Products
+          # ============================================================
+          - job: PackLevel3
+            displayName: Pack Level 3
+            dependsOn:
+                - DetectChanges
+                - PackCore
+                - PackLevel1
+                - PackLevel2
+            condition: |
+                and(
+                  not(failed()),
+                  not(canceled()),
+                  eq(dependencies.DetectChanges.outputs['detect.Level3Changed'], 'true')
+                )
+            pool:
+                vmImage: "ubuntu-latest"
+            strategy:
+                matrix:
+                    # Generated from parameters.level3Products
+                    ${{ each product in parameters.level3Products }}:
+                        ${{ replace(replace(product.name, 'Umbraco.AI.', ''), '.', '_') }}:
+                            product: ${{ product.name }}
+                            changeVar: ${{ product.changeVar }}
+                maxParallel: 10
+            variables:
+                # Pass all per-product change flags as job variables
+                CoreChanged: $[ dependencies.DetectChanges.outputs['detect.CoreChanged'] ]
+                ${{ each product in parameters.level1Products }}:
+                    ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+                ${{ each product in parameters.level2Products }}:
+                    ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+                ${{ each product in parameters.level3Products }}:
+                    ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+            steps:
+                - checkout: self
+                  fetchDepth: 0
+
+                - template: .azure-pipelines/templates/check-should-pack.yml
+
+                - template: .azure-pipelines/templates/setup-pack-job.yml
+                  parameters:
+                      downloadCore: true
+                      downloadLevel1: true
+                      downloadLevel2: true
+                      level1Products: ${{ parameters.level1Products }}
+                      level2Products: ${{ parameters.level2Products }}
+
+                - template: .azure-pipelines/templates/pack-product.yml
+                  parameters:
+                      product: $(product)
+                      # Use project references on dev (preview releases), NuGet packages on release/hotfix/main (validate ranges)
+                      useProjectReferences: ${{ eq(variables['Build.SourceBranchName'], 'dev') }}
+                      condition: eq(variables['check.shouldPack'], 'true')
+
+                - template: .azure-pipelines/templates/upload-packages.yml
+                  parameters:
+                      product: $(product)
+                      condition: eq(variables['check.shouldPack'], 'true')
+
+          # ============================================================
           # Collect all packages into single artifact
           # Downloads artifacts from all pack jobs using ${{ each }}
           # ============================================================
@@ -560,6 +662,7 @@ stages:
                 - PackCore
                 - PackLevel1
                 - PackLevel2
+                - PackLevel3
             condition: |
                 and(
                   not(failed()),
@@ -574,6 +677,8 @@ stages:
                 ${{ each product in parameters.level1Products }}:
                     ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
                 ${{ each product in parameters.level2Products }}:
+                    ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
+                ${{ each product in parameters.level3Products }}:
                     ${{ product.changeVar }}: $[ dependencies.DetectChanges.outputs['detect.${{ product.changeVar }}'] ]
             steps:
                 - checkout: self
@@ -625,6 +730,25 @@ stages:
 
                 # Download Level 2 npm packages (only for products that have npm packages)
                 - ${{ each product in parameters.level2Products }}:
+                      - ${{ if eq(product.hasNpm, true) }}:
+                            - task: DownloadPipelineArtifact@2
+                              displayName: Download ${{ product.name }} npm packages
+                              condition: eq(variables.${{ product.changeVar }}, 'true')
+                              inputs:
+                                  artifact: "${{ product.name }}-npm-packages"
+                                  targetPath: "$(Pipeline.Workspace)/npm"
+
+                # Download Level 3 NuGet packages (only if product changed)
+                - ${{ each product in parameters.level3Products }}:
+                      - task: DownloadPipelineArtifact@2
+                        displayName: Download ${{ product.name }} NuGet packages
+                        condition: eq(variables.${{ product.changeVar }}, 'true')
+                        inputs:
+                            artifact: "${{ product.name }}-packages"
+                            targetPath: "$(Pipeline.Workspace)/nuget"
+
+                # Download Level 3 npm packages (only for products that have npm packages)
+                - ${{ each product in parameters.level3Products }}:
                       - ${{ if eq(product.hasNpm, true) }}:
                             - task: DownloadPipelineArtifact@2
                               displayName: Download ${{ product.name }} npm packages
@@ -713,6 +837,18 @@ stages:
                             }
                           }
 
+                          $level3 = $env:LEVEL3_JSON | ConvertFrom-Json
+                          foreach ($p in $level3) {
+                            $changeVar = [string]$p.changeVar
+                            $changed = [Environment]::GetEnvironmentVariable($changeVar)
+                            if (-not $changed) {
+                              $changed = [Environment]::GetEnvironmentVariable($changeVar.ToUpper())
+                            }
+                            if ($changed -eq "true") {
+                              Add-VersionByProduct $p.name
+                            }
+                          }
+
                           $json = $entries | ConvertTo-Json -Depth 3
                           $json | Out-File -FilePath $manifestFile -Encoding utf8
                           Write-Host "Pack manifest written to $manifestFile"
@@ -720,6 +856,7 @@ stages:
                   env:
                       LEVEL1_JSON: ${{ convertToJson(parameters.level1Products) }}
                       LEVEL2_JSON: ${{ convertToJson(parameters.level2Products) }}
+                      LEVEL3_JSON: ${{ convertToJson(parameters.level3Products) }}
 
                 - task: PublishPipelineArtifact@1
                   displayName: Upload pack manifest

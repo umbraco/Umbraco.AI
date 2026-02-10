@@ -303,10 +303,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
 
                 <umb-property-layout label="Model" description="Select the AI model to use" mandatory>
-                    <div slot="editor" class="model-editor-wrapper">
+                    <div slot="editor">
                         ${this._loadingModels ? html`<uui-loader-bar></uui-loader-bar>` : nothing}
                         <uui-select
-                            name="model"
+                            name="model" 
                             .value=${this.#getCurrentModelValue()}
                             .options=${this.#getModelOptions()}
                             @change=${this.#onModelChange}

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@1.0.0...Umbraco.AI.OpenAI@1.1.0) (2026-02-10)
+
+### fix
+
+* **agent, prompt, openai:** fix validation states for required backoffice fields (#33) ([4c31e25](https://github.com/umbraco/Umbraco.AI/commit/4c31e255a68aa281787feb760d172586599cff3c)), closes [#33](https://github.com/umbraco/Umbraco.AI/issues/33)
+
 ## [1.0.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@1.0.0...Umbraco.AI.OpenAI@1.0.1) (2026-02-04)
 
 ### chore

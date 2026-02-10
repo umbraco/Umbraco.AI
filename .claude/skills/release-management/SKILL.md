@@ -204,9 +204,11 @@ For each product with confirmed version:
 
 ### Phase 7: Generate Release Manifest
 
-Invoke `/release-manifest-management` skill:
-- Pass list of products to include
-- Or let user select interactively via the skill
+Invoke `/release-manifest-management` skill with product list:
+- Build comma-separated list of all products being released
+- Pass via `--products="Product1,Product2,..."` parameter
+- Example: `--products="Umbraco.AI,Umbraco.AI.Agent,Umbraco.AI.OpenAI"`
+- Skill will generate manifest automatically without prompting
 
 ### Phase 8: Generate Changelogs
 
@@ -345,8 +347,8 @@ Phase 6: Update version.json
 You edit all three version.json files on the release branch
 
 Phase 7: Generate manifest
-You invoke /release-manifest-management
-Manifest created with 3 products
+You invoke /release-manifest-management --products="Umbraco.AI,Umbraco.AI.OpenAI,Umbraco.AI.Prompt"
+Manifest created with 3 products (no user prompt needed)
 
 Phase 8: Generate changelogs
 You invoke /changelog-management for each product

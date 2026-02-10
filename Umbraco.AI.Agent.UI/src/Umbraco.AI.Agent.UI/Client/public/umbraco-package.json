@@ -1,0 +1,25 @@
+{
+    "$schema": "https://raw.githubusercontent.com/umbraco/Umbraco.CMS.Backoffice/main/umbraco-package-schema.json",
+    "id": "Umbraco.AI.Agent.UI",
+    "name": "Umbraco AI Agent UI",
+    "version": "1.0.0",
+    "extensions": [
+        {
+            "type": "bundle",
+            "alias": "Umbraco.AI.Agent.UI.Bundle",
+            "name": "Umbraco AI Agent UI Bundle",
+            "js": "/App_Plugins/UmbracoAIAgentUI/umbraco-ai-agent-ui-manifests.js"
+        },
+        {
+            "type": "backofficeEntryPoint",
+            "alias": "Umbraco.AI.Agent.UI.BackofficeEntryPoint",
+            "name": "Umbraco AI Agent UI Backoffice Entry Point",
+            "js": "/App_Plugins/UmbracoAIAgentUI/umbraco-ai-agent-ui-app.js"
+        }
+    ],
+    "importmap": {
+        "imports": {
+            "@umbraco-ai/agent-ui": "/App_Plugins/UmbracoAIAgentUI/umbraco-ai-agent-ui-app.js"
+        }
+    }
+}

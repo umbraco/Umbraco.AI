@@ -15,12 +15,14 @@ Guide users through the complete release preparation process:
 1. **Detect changed products** since their last release tags
 2. **Analyze commits** to recommend version bumps (major/minor/patch)
 3. **Confirm versions** with the user
-4. **Create release branch** (e.g., `release/1.1.0`) and switch to it
-5. **Update version.json** files for each product
-6. **Generate release-manifest.json** via `/release-manifest-management`
-7. **Generate CHANGELOG.md** files via `/changelog-management`
-8. **Validate** all files are consistent
-9. **Commit all changes** to the release branch
+4. **Update Directory.Packages.props** inter-product dependency ranges (with user approval)
+5. **Create release branch** (e.g., `release/2026.02.1`) and switch to it
+6. **Dependency validation** - Check for cross-product conflicts
+7. **Update version.json** files for each product
+8. **Generate release-manifest.json** via `/release-manifest-management`
+9. **Generate CHANGELOG.md** files via `/changelog-management`
+10. **Validate** all files are consistent
+11. **Commit all changes** to the release branch
 
 ## Workflow
 
@@ -109,7 +111,79 @@ Use **AskUserQuestion** to confirm or adjust versions:
 - Validate version format (X.Y.Z)
 - Warn if version doesn't follow semver conventions
 
-### Phase 4: Create Release Branch
+### Phase 4: Update Inter-Product Dependency Ranges
+
+After confirming versions, update the `Directory.Packages.props` file to reflect new minimum version requirements **only for products with breaking changes**.
+
+**Important:** Only update dependency ranges when there's a breaking change that requires dependent packages to update. If dependent packages can continue working with the previous version, keep the existing range.
+
+**Workflow:**
+
+1. **Read current Directory.Packages.props**:
+   ```bash
+   # Read the root Directory.Packages.props file
+   cat Directory.Packages.props
+   ```
+
+2. **Identify products with breaking changes**:
+   - Look for products with BREAKING CHANGE in commit bodies
+   - Look for commits with `!` after scope (e.g., `feat!:`, `refactor!:`)
+   - Track whether breaking changes were downplayed to minor (still breaking!)
+   - **Only these products need dependency range updates**
+
+3. **Determine which ranges need updating**:
+   - Look for `<PackageVersion Include="Umbraco.AI.*" Version="[X.Y.Z, X.999.999)" />` entries
+   - **Only update ranges for products with breaking changes**:
+     - **Major bump** (X.Y.Z → X+1.0.0): Update both bounds: `[X+1.0.0, X+1.999.999)`
+     - **Minor bump from downplayed breaking change** (X.Y.Z → X.Y+1.0): Update lower bound only: `[X.Y+1.0, X.999.999)`
+   - **Do NOT update ranges for products without breaking changes** (feat/fix only bumps)
+
+4. **Present proposed changes** to user (if any breaking changes detected):
+   ```
+   Directory.Packages.props updates:
+
+   Breaking changes detected in:
+   - Umbraco.AI.Core (BREAKING CHANGE: DetailLevel removal)
+
+   The following dependency ranges will be updated:
+   - Umbraco.AI.Core: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
+   - Umbraco.AI.Web: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
+   - Umbraco.AI.AGUI: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
+   - Umbraco.AI.Startup: [1.0.0, 1.999.999) → [1.1.0, 1.999.999)
+
+   Products without breaking changes (Agent, Prompt) will keep existing ranges.
+   ```
+
+5. **Ask for approval** using AskUserQuestion (only if breaking changes detected):
+   - **Default option**: "Update dependency ranges for breaking changes (recommended)"
+   - **Alternative options**:
+     - "Skip dependency updates" - Continue without updating ranges
+     - "Adjust manually later" - Skip now, remind user to update manually
+
+6. **If no breaking changes detected**:
+   ```
+   ✓ No breaking changes detected - dependency ranges remain unchanged
+   ```
+
+7. **If approved, update the file**:
+   ```bash
+   # Use Edit tool to update Directory.Packages.props
+   ```
+
+8. **Confirm updates**:
+   ```
+   ✓ Updated 4 inter-product dependency ranges in Directory.Packages.props
+   ```
+
+**Important Notes:**
+- **Conservative approach**: Only update ranges when there are breaking changes
+- Products without breaking changes keep their existing ranges (allowing flexibility)
+- Only the lower bound changes for minor bumps from downplayed breaking changes
+- Both bounds change for true major bumps (X.0.0 → X+1.0.0)
+- These changes will be staged and committed with other release files
+- If unsure, err on the side of NOT updating (keeps more flexibility for consumers)
+
+### Phase 5: Create Release Branch
 
 **IMPORTANT:** Create the release branch BEFORE making any file changes.
 
@@ -162,7 +236,7 @@ This is independent from product version numbers (which follow semantic versioni
     - Umbraco.AI.Prompt 2.0.0
     ```
 
-### Phase 5: Dependency Validation
+### Phase 6: Dependency Validation
 
 Check for cross-product dependency issues:
 
@@ -183,7 +257,7 @@ Check for cross-product dependency issues:
     - Or: Keep Umbraco.AI at 1.x for this release
     ```
 
-### Phase 6: Update version.json Files
+### Phase 7: Update version.json Files
 
 For each product with confirmed version:
 
@@ -202,7 +276,7 @@ For each product with confirmed version:
 
 3. **Verify update** by reading the file back
 
-### Phase 7: Generate Release Manifest
+### Phase 8: Generate Release Manifest
 
 Invoke `/release-manifest-management` skill with product list:
 - Build comma-separated list of all products being released
@@ -210,7 +284,7 @@ Invoke `/release-manifest-management` skill with product list:
 - Example: `--products="Umbraco.AI,Umbraco.AI.Agent,Umbraco.AI.OpenAI"`
 - Skill will generate manifest automatically without prompting
 
-### Phase 8: Generate Changelogs
+### Phase 9: Generate Changelogs
 
 For each product in the manifest:
 
@@ -221,7 +295,7 @@ For each product in the manifest:
 
 2. **Verify changelog** was generated correctly
 
-### Phase 9: Validation
+### Phase 10: Validation
 
 Verify all files are consistent:
 
@@ -230,13 +304,14 @@ Verify all files are consistent:
 3. **Check release-manifest.json** includes all intended products
 4. **Report any issues** to user
 
-### Phase 10: Commit Changes
+### Phase 11: Commit Changes
 
 **All work has been done on the release branch.** Now commit everything:
 
 1. **Stage all changes**:
     ```bash
     git add release-manifest.json
+    git add Directory.Packages.props
     git add */version.json
     git add */CHANGELOG.md
     ```
@@ -333,31 +408,38 @@ Options:
 - Cancel
 User confirms with chosen option
 
-Phase 4: Create release branch
+Phase 4: Update Directory.Packages.props
+You read Directory.Packages.props
+You identify products with BREAKING CHANGES (Core only)
+You present proposed dependency range updates for Core packages only
+User approves updates
+You update only the Core-related ranges (Agent, Prompt ranges remain unchanged)
+
+Phase 5: Create release branch
 You detect: No existing release/2026.02.* branches
 You suggest: release/2026.02.1 (first release in February 2026)
 You create the branch and switch to it
 All subsequent work happens on this branch
 
-Phase 5: Check dependencies
+Phase 6: Check dependencies
 You check Directory.Packages.props
 You warn: Prompt requires Core 1.x, but Core is going to 1.1.0 - compatible!
 
-Phase 6: Update version.json
+Phase 7: Update version.json
 You edit all three version.json files on the release branch
 
-Phase 7: Generate manifest
+Phase 8: Generate manifest
 You invoke /release-manifest-management --products="Umbraco.AI,Umbraco.AI.OpenAI,Umbraco.AI.Prompt"
 Manifest created with 3 products (no user prompt needed)
 
-Phase 8: Generate changelogs
+Phase 9: Generate changelogs
 You invoke /changelog-management for each product
 All changelogs generated
 
-Phase 9: Validate
+Phase 10: Validate
 You verify all files are correct
 
-Phase 10: Commit changes
+Phase 11: Commit changes
 You commit all changes to the release branch
 You show summary and next steps
 ```

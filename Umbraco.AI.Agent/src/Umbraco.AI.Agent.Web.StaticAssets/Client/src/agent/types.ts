@@ -31,7 +31,7 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     description: string | null;
     profileId: string | null;
     contextIds: string[];
-    scopeIds: string[];
+    surfaceIds: string[];
     contextScope: UaiAgentContextScope | null;
     allowedToolIds: string[];
     allowedToolScopeIds: string[];
@@ -54,7 +54,7 @@ export interface UaiAgentItemModel extends UmbEntityModel {
     description: string | null;
     profileId: string | null;
     contextIds: string[];
-    scopeIds: string[];
+    surfaceIds: string[];
     contextScope: UaiAgentContextScope | null;
     allowedToolIds: string[];
     allowedToolScopeIds: string[];

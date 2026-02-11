@@ -65,11 +65,11 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onScopeIdsChange(event: UmbChangeEvent) {
+    #onSurfaceIdsChange(event: UmbChangeEvent) {
         event.stopPropagation();
         const picker = event.target as HTMLElement & { value: string[] | undefined };
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ scopeIds: picker.value ?? [] }, "scopeIds"),
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ surfaceIds: picker.value ?? [] }, "surfaceIds"),
         );
     }
 
@@ -198,17 +198,17 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></umb-input-markdown>
                 </umb-property-layout>
             </uui-box>
-            <uui-box headline="Scope">
+            <uui-box headline="Surface">
                 <umb-property-layout
-                    label="Scopes"
+                    label="Surfaces"
                     description="Select how this agent can be used (e.g., Copilot chat)"
                 >
-                    <uai-agent-scope-picker
+                    <uai-agent-surface-picker
                         slot="editor"
                         multiple
-                        .value=${this._model.scopeIds}
-                        @change=${this.#onScopeIdsChange}
-                    ></uai-agent-scope-picker>
+                        .value=${this._model.surfaceIds}
+                        @change=${this.#onSurfaceIdsChange}
+                    ></uai-agent-surface-picker>
                 </umb-property-layout>
             </uui-box>
 

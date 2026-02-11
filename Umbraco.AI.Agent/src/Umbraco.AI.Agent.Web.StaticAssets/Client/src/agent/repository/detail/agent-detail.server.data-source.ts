@@ -29,7 +29,7 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
             description: null,
             profileId: null,
             contextIds: [],
-            scopeIds: [],
+            surfaceIds: [],
             contextScope: null,
             allowedToolIds: [],
             allowedToolScopeIds: [],

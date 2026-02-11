@@ -7,9 +7,9 @@ import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { AgentsService } from "../../../api/sdk.gen.js";
 import { UAI_ITEM_PICKER_MODAL, type UaiPickableItemModel } from "@umbraco-ai/core";
 
-const elementName = "uai-agent-scope-picker";
+const elementName = "uai-agent-surface-picker";
 
-interface UaiAgentScopeItemModel {
+interface UaiAgentSurfaceItemModel {
     id: string;
     icon: string;
     name: string;
@@ -17,13 +17,13 @@ interface UaiAgentScopeItemModel {
 }
 
 @customElement(elementName)
-export class UaiAgentScopePickerElement extends UmbFormControlMixin<
+export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
     string | string[] | undefined,
     typeof UmbLitElement,
     undefined
 >(UmbLitElement, undefined) {
     /**
-     * Allow selecting multiple scopes.
+     * Allow selecting multiple surfaces.
      */
     @property({ type: Boolean })
     public multiple = false;
@@ -35,7 +35,7 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
     public readonly = false;
 
     /**
-     * The selected agent scope ID(s).
+     * The selected agent surface ID(s).
      * - Single mode: string | undefined
      * - Multiple mode: string[] | undefined
      */
@@ -51,7 +51,7 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
     private _selection: string[] = [];
 
     @state()
-    private _items: UaiAgentScopeItemModel[] = [];
+    private _items: UaiAgentSurfaceItemModel[] = [];
 
     @state()
     private _loading = false;
@@ -88,23 +88,23 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
 
         this._loading = true;
 
-        // Fetch all scopes and filter to selected ones
-        const { data, error } = await tryExecute(this, AgentsService.getAgentScopes());
+        // Fetch all surfaces and filter to selected ones
+        const { data, error } = await tryExecute(this, AgentsService.getAgentSurfaces());
 
         if (!error && data) {
             // Map to internal model with localized name/description
             this._items = this._selection
                 .map((id) => {
-                    const scope = data.find((s) => s.id === id);
-                    if (!scope) return undefined;
+                    const surface = data.find((s) => s.id === id);
+                    if (!surface) return undefined;
                     return {
-                        id: scope.id,
-                        icon: scope.icon,
-                        name: this.localize.term(`uaiAgentScope_${scope.id}Label`) || scope.id,
-                        description: this.localize.term(`uaiAgentScope_${scope.id}Description`) || "",
+                        id: surface.id,
+                        icon: surface.icon,
+                        name: this.localize.term(`uaiAgentSurface_${surface.id}Label`) || surface.id,
+                        description: this.localize.term(`uaiAgentSurface_${surface.id}Description`) || "",
                     };
                 })
-                .filter((item): item is UaiAgentScopeItemModel => item !== undefined);
+                .filter((item): item is UaiAgentSurfaceItemModel => item !== undefined);
         }
 
         this._loading = false;
@@ -116,10 +116,10 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
 
         const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
             data: {
-                fetchItems: () => this.#fetchAvailableScopes(),
+                fetchItems: () => this.#fetchAvailableSurfaces(),
                 selectionMode: this.multiple ? "multiple" : "single",
-                title: this.localize.term("uaiAgent_selectScope"),
-                noResultsMessage: this.localize.term("uaiAgent_noScopesAvailable"),
+                title: this.localize.term("uaiAgent_selectSurface"),
+                noResultsMessage: this.localize.term("uaiAgent_noSurfacesAvailable"),
             },
         });
 
@@ -133,19 +133,19 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
         }
     }
 
-    async #fetchAvailableScopes(): Promise<UaiPickableItemModel[]> {
-        const { data } = await tryExecute(this, AgentsService.getAgentScopes());
+    async #fetchAvailableSurfaces(): Promise<UaiPickableItemModel[]> {
+        const { data } = await tryExecute(this, AgentsService.getAgentSurfaces());
 
         if (!data) return [];
 
         // Filter out already selected items
         return data
-            .filter((scope) => !this._selection.includes(scope.id))
-            .map((scope) => ({
-                value: scope.id,
-                label: this.localize.term(`uaiAgentScope_${scope.id}Label`) || scope.id,
-                description: this.localize.term(`uaiAgentScope_${scope.id}Description`) || "",
-                icon: scope.icon,
+            .filter((surface) => !this._selection.includes(surface.id))
+            .map((surface) => ({
+                value: surface.id,
+                label: this.localize.term(`uaiAgentSurface_${surface.id}Label`) || surface.id,
+                description: this.localize.term(`uaiAgentSurface_${surface.id}Description`) || "",
+                icon: surface.icon,
             }));
     }
 
@@ -194,7 +194,7 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
         `;
     }
 
-    #renderItem(item: UaiAgentScopeItemModel) {
+    #renderItem(item: UaiAgentSurfaceItemModel) {
         return html`
             <uui-ref-node name=${item.name} detail=${item.description} readonly>
                 <umb-icon slot="icon" name=${item.icon}></umb-icon>
@@ -227,7 +227,7 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
                 id="btn-add"
                 look="placeholder"
                 @click=${this.#openPicker}
-                label=${this.localize.term("uaiAgent_addScope")}
+                label=${this.localize.term("uaiAgent_addSurface")}
             >
                 <uui-icon name="icon-add"></uui-icon>
                 ${this.localize.term("general_add")}
@@ -269,10 +269,10 @@ export class UaiAgentScopePickerElement extends UmbFormControlMixin<
     ];
 }
 
-export default UaiAgentScopePickerElement;
+export default UaiAgentSurfacePickerElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        [elementName]: UaiAgentScopePickerElement;
+        [elementName]: UaiAgentSurfacePickerElement;
     }
 }

@@ -18,6 +18,7 @@ import {
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChangeResult } from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
+import { getSectionPathnameFromUrl } from "./section-detector.js";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -210,6 +211,17 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
 
         const context: Array<{ description: string; value: string }> = [];
+
+        // Add section context (NEW)
+        const currentSection = getSectionPathnameFromUrl();
+        if (currentSection) {
+            context.push({
+                description: `Current section: ${currentSection}`,
+                value: JSON.stringify({ sectionAlias: currentSection }),
+            });
+        }
+
+        // Add entity context
         if (entityContext) {
             context.push({
                 description: `Currently editing ${entityContext.entityType}: ${entityContext.name}`,

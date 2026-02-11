@@ -6,6 +6,7 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Extensions;
 using CoreConstants = Umbraco.AI.Core.Constants;
 using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
@@ -23,6 +24,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     private readonly IAIProfileService _profileService;
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIToolCollection _toolCollection;
+    private readonly AIToolScopeCollection _toolScopeCollection;
     private readonly IAIFunctionFactory _functionFactory;
 
     /// <summary>
@@ -34,6 +36,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         IAIProfileService profileService,
         IAIChatClientFactory chatClientFactory,
         AIToolCollection toolCollection,
+        AIToolScopeCollection toolScopeCollection,
         IAIFunctionFactory functionFactory)
     {
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
@@ -41,6 +44,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _chatClientFactory = chatClientFactory ?? throw new ArgumentNullException(nameof(chatClientFactory));
         _toolCollection = toolCollection ?? throw new ArgumentNullException(nameof(toolCollection));
+        _toolScopeCollection = toolScopeCollection ?? throw new ArgumentNullException(nameof(toolScopeCollection));
         _functionFactory = functionFactory ?? throw new ArgumentNullException(nameof(functionFactory));
     }
 
@@ -54,12 +58,30 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     {
         ArgumentNullException.ThrowIfNull(agent);
 
-        // Get allowed tool IDs for this agent
+        // STEP 1: Get allowed tool IDs (permission check - existing logic)
         var allowedToolIds = AIAgentToolHelper.GetAllowedToolIds(agent, _toolCollection);
 
-        // Build tool list using only allowed tools
+        // STEP 2: Create runtime context and run contributors (NEW)
+        AIRuntimeContext? runtimeContext = null;
+        if (contextItems?.Any() == true)
+        {
+            runtimeContext = new AIRuntimeContext(contextItems);
+            foreach (var contributor in _contextContributors)
+            {
+                contributor.Contribute(runtimeContext);
+            }
+        }
+
+        // STEP 3: Filter tools by runtime context (NEW)
+        var contextFilteredToolIds = AIToolContextFilter.FilterByContext(
+            allowedToolIds,
+            runtimeContext,
+            _toolCollection,
+            _toolScopeCollection);
+
+        // STEP 4: Build tool list using context-filtered tools
         var tools = new List<AITool>();
-        tools.AddRange(_toolCollection.ToAIFunctions(allowedToolIds, _functionFactory));
+        tools.AddRange(_toolCollection.ToAIFunctions(contextFilteredToolIds, _functionFactory));
 
         // Frontend tools - already filtered by service layer, just add them
         if (additionalTools is not null)

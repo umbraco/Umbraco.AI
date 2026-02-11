@@ -193,6 +193,7 @@ public static partial class UmbracoBuilderExtensions
         builder.AIRuntimeContextContributors()
             .Append<UserContextContributor>()           // Ambient: adds current user info
             .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities
+            .Append<SectionContextContributor>()        // Item-based: extracts section pathname for context filtering
             .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items
 
         // Register media image resolver

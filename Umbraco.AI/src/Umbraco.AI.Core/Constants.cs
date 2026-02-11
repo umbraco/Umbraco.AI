@@ -100,7 +100,13 @@ public static class Constants
         /// Key for entity type in metadata collections.
         /// </summary>
         public const string EntityType = "Umbraco.AI.EntityType";
-    
+
+        /// <summary>
+        /// Key for section pathname in metadata collections.
+        /// </summary>
+        /// <example>"content", "media", "settings"</example>
+        public const string SectionAlias = "Umbraco.AI.SectionAlias";
+
         /// <summary>
         /// Key for log keys in metadata collections.
         /// </summary>

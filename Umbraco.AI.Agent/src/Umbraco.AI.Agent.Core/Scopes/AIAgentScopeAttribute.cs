@@ -40,6 +40,26 @@ public sealed class AIAgentScopeAttribute : Attribute
     public string Icon { get; set; } = "icon-tag";
 
     /// <summary>
+    /// Gets or sets the context dimensions this scope uses for filtering agents.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Specify which aspects of the current context this scope considers when
+    /// determining agent availability. Common dimensions:
+    /// <list type="bullet">
+    ///   <item><c>"section"</c> - Current section (e.g., "content", "media")</item>
+    ///   <item><c>"entityType"</c> - Current entity type (e.g., "document", "media")</item>
+    ///   <item><c>"workspace"</c> - Current workspace (e.g., "Umb.Workspace.Document")</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// Empty or null means no context-based filtering (all agents available everywhere).
+    /// </para>
+    /// </remarks>
+    /// <example>new[] { "section", "entityType" }</example>
+    public string[]? SupportedContextDimensions { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentScopeAttribute"/> class.
     /// </summary>
     /// <param name="id">The unique identifier for the scope.</param>

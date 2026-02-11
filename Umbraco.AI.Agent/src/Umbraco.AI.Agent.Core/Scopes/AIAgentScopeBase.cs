@@ -25,6 +25,9 @@ public abstract class AIAgentScopeBase : IAIAgentScope
     /// <inheritdoc />
     public string Icon { get; }
 
+    /// <inheritdoc />
+    public IReadOnlyList<string> SupportedContextDimensions { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentScopeBase"/> class.
     /// </summary>
@@ -39,5 +42,6 @@ public abstract class AIAgentScopeBase : IAIAgentScope
 
         Id = attribute.Id;
         Icon = attribute.Icon;
+        SupportedContextDimensions = attribute.SupportedContextDimensions ?? Array.Empty<string>();
     }
 }

@@ -10,7 +10,8 @@
  */
 export function formatTimestamp(timestamp: string): string {
     // Ensure the timestamp is treated as UTC if it doesn't have a timezone indicator
-    const normalizedTimestamp = timestamp.endsWith("Z") || timestamp.includes("+") || timestamp.includes("-")
+    const timePart = timestamp.includes("T") ? timestamp.split("T")[1] : timestamp;
+    const normalizedTimestamp = timestamp.endsWith("Z") || timePart.includes("+") || timePart.includes("-")
         ? timestamp
         : `${timestamp}Z`;
 

@@ -4,7 +4,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
-import type { UaiAgentDetailModel, UaiAgentContextScopeRule, UaiAgentContextScope } from "../../../types.js";
+import type { UaiAgentDetailModel, UaiAgentScopeRule, UaiAgentScope } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
@@ -76,31 +76,31 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
     #addRule(ruleType: "allow" | "deny") {
         if (!this._model) return;
 
-        const newRule: UaiAgentContextScopeRule = {
+        const newRule: UaiAgentScopeRule = {
             sectionAliases: [],
             entityTypeAliases: [],
             workspaceAliases: [],
         };
 
-        const currentScope = this._model.contextScope ?? { allowRules: [], denyRules: [] };
-        const updatedScope: UaiAgentContextScope = {
+        const currentScope = this._model.scope ?? { allowRules: [], denyRules: [] };
+        const updatedScope: UaiAgentScope = {
             ...currentScope,
             allowRules: ruleType === "allow" ? [...currentScope.allowRules, newRule] : currentScope.allowRules,
             denyRules: ruleType === "deny" ? [...currentScope.denyRules, newRule] : currentScope.denyRules,
         };
 
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextScope: updatedScope }, "contextScope"),
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ scope: updatedScope }, "scope"),
         );
     }
 
     #onRemoveRule(e: CustomEvent) {
-        if (!this._model?.contextScope) return;
+        if (!this._model?.scope) return;
 
         const { index, ruleType } = e.detail;
-        const currentScope = this._model.contextScope;
+        const currentScope = this._model.scope;
 
-        const updatedScope: UaiAgentContextScope = {
+        const updatedScope: UaiAgentScope = {
             ...currentScope,
             allowRules: ruleType === "allow"
                 ? currentScope.allowRules.filter((_, i) => i !== index)
@@ -111,28 +111,28 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         };
 
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextScope: updatedScope }, "contextScope"),
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ scope: updatedScope }, "scope"),
         );
     }
 
-    #updateRuleProperty(index: number, ruleType: "allow" | "deny", property: keyof UaiAgentContextScopeRule, value: any) {
-        if (!this._model?.contextScope) return;
+    #updateRuleProperty(index: number, ruleType: "allow" | "deny", property: keyof UaiAgentScopeRule, value: any) {
+        if (!this._model?.scope) return;
 
-        const currentScope = this._model.contextScope;
+        const currentScope = this._model.scope;
         const rules = ruleType === "allow" ? [...currentScope.allowRules] : [...currentScope.denyRules];
 
         if (rules[index]) {
             rules[index] = { ...rules[index], [property]: value };
         }
 
-        const updatedScope: UaiAgentContextScope = {
+        const updatedScope: UaiAgentScope = {
             ...currentScope,
             allowRules: ruleType === "allow" ? rules : currentScope.allowRules,
             denyRules: ruleType === "deny" ? rules : currentScope.denyRules,
         };
 
         this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextScope: updatedScope }, "contextScope"),
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ scope: updatedScope }, "scope"),
         );
     }
 
@@ -228,7 +228,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         </p>
                     </div>
 
-                    ${this._model.contextScope?.allowRules.map(
+                    ${this._model.scope?.allowRules.map(
                         (rule, index) => html`
                             <uai-agent-context-scope-rule-editor
                                 .rule=${rule}
@@ -261,7 +261,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         </p>
                     </div>
 
-                    ${this._model.contextScope?.denyRules.map(
+                    ${this._model.scope?.denyRules.map(
                         (rule, index) => html`
                             <uai-agent-context-scope-rule-editor
                                 .rule=${rule}

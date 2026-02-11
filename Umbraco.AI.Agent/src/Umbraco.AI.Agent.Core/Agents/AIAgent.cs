@@ -49,7 +49,7 @@ public sealed class AIAgent : IAIVersionableEntity
     public IReadOnlyList<string> SurfaceIds { get; set; } = [];
 
     /// <summary>
-    /// Optional context scope defining where this agent is available.
+    /// Optional scope defining where this agent is available.
     /// If null, agent is available in all contexts (backwards compatible).
     /// </summary>
     /// <remarks>
@@ -60,14 +60,14 @@ public sealed class AIAgent : IAIVersionableEntity
     /// <para>
     /// Example: A content-only agent would have:
     /// <code>
-    /// ContextScope = new AIAgentContextScope
+    /// Scope = new AIAgentScope
     /// {
-    ///     AllowRules = [new AIAgentContextScopeRule { SectionAliases = ["content"] }]
+    ///     AllowRules = [new AIAgentScopeRule { SectionAliases = ["content"] }]
     /// }
     /// </code>
     /// </para>
     /// </remarks>
-    public AIAgentContextScope? ContextScope { get; set; }
+    public AIAgentScope? Scope { get; set; }
 
     /// <summary>
     /// Tool IDs explicitly allowed for this agent.

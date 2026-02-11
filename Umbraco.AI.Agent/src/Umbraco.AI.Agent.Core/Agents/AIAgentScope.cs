@@ -18,19 +18,19 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </list>
 /// </para>
 /// </remarks>
-public sealed class AIAgentContextScope
+public sealed class AIAgentScope
 {
     /// <summary>
     /// Rules that define where the agent is available.
     /// If any rule matches, the agent can be used (OR logic between rules).
     /// Empty means the agent is available everywhere (unless denied).
     /// </summary>
-    public IReadOnlyList<AIAgentContextScopeRule> AllowRules { get; set; } = [];
+    public IReadOnlyList<AIAgentScopeRule> AllowRules { get; set; } = [];
 
     /// <summary>
     /// Rules that define where the agent is explicitly denied.
     /// If any rule matches, the agent cannot be used (OR logic between rules).
     /// Deny rules take precedence over allow rules.
     /// </summary>
-    public IReadOnlyList<AIAgentContextScopeRule> DenyRules { get; set; } = [];
+    public IReadOnlyList<AIAgentScopeRule> DenyRules { get; set; } = [];
 }

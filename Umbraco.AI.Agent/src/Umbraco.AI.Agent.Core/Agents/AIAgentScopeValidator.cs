@@ -1,54 +1,54 @@
-using Umbraco.AI.Agent.Core.Scopes;
+using Umbraco.AI.Agent.Core.Surfaces;
 
 namespace Umbraco.AI.Agent.Core.Agents;
 
 /// <summary>
-/// Validates agent context scope rules, following the same pattern as Prompt scope validation.
+/// Validates agent scope rules, following the same pattern as Prompt scope validation.
 /// </summary>
 /// <remarks>
 /// <para>
-/// This validator is scope-aware: it only checks context dimensions that the requesting
-/// scope declares it cares about via <see cref="IAIAgentScope.SupportedContextDimensions"/>.
+/// This validator is surface-aware: it only checks context dimensions that the requesting
+/// surface declares it cares about via <see cref="IAIAgentSurface.SupportedContextDimensions"/>.
 /// </para>
 /// <para>
-/// For example, if a Copilot scope only checks ["section", "entityType"], then workspace
-/// rules in the agent's context scope will be ignored when filtering for that scope.
+/// For example, if a Copilot surface only checks ["section", "entityType"], then workspace
+/// rules in the agent's scope will be ignored when filtering for that surface.
 /// </para>
 /// </remarks>
-public class AIAgentContextScopeValidator
+public class AIAgentScopeValidator
 {
     /// <summary>
-    /// Checks if an agent is available in the given context for a specific scope.
+    /// Checks if an agent is available in the given context for a specific surface.
     /// </summary>
     /// <param name="agent">The agent to check.</param>
     /// <param name="context">The current context.</param>
-    /// <param name="scope">The scope requesting the agent (determines which dimensions to check).</param>
+    /// <param name="surface">The surface requesting the agent (determines which dimensions to check).</param>
     /// <returns>True if agent is available, false otherwise.</returns>
-    public bool IsAgentAvailable(AIAgent agent, AgentAvailabilityContext context, IAIAgentScope? scope)
+    public bool IsAgentAvailable(AIAgent agent, AgentAvailabilityContext context, IAIAgentSurface? surface)
     {
-        // No context scope = available everywhere (backwards compatible)
-        if (agent.ContextScope == null)
+        // No scope = available everywhere (backwards compatible)
+        if (agent.Scope == null)
         {
             return true;
         }
 
-        // Get the dimensions this scope cares about
-        var relevantDimensions = scope?.SupportedContextDimensions ?? Array.Empty<string>();
+        // Get the dimensions this surface cares about
+        var relevantDimensions = surface?.SupportedContextDimensions ?? Array.Empty<string>();
 
         // Check deny rules first (they take precedence)
-        if (IsAnyRuleMatched(agent.ContextScope.DenyRules, context, relevantDimensions))
+        if (IsAnyRuleMatched(agent.Scope.DenyRules, context, relevantDimensions))
         {
             return false;
         }
 
         // No allow rules = available everywhere (unless denied above)
-        if (agent.ContextScope.AllowRules.Count == 0)
+        if (agent.Scope.AllowRules.Count == 0)
         {
             return true;
         }
 
         // Check if any allow rule matches
-        return IsAnyRuleMatched(agent.ContextScope.AllowRules, context, relevantDimensions);
+        return IsAnyRuleMatched(agent.Scope.AllowRules, context, relevantDimensions);
     }
 
     /// <summary>
@@ -57,9 +57,9 @@ public class AIAgentContextScopeValidator
     /// </summary>
     /// <param name="rules">The rules to check.</param>
     /// <param name="context">The current context.</param>
-    /// <param name="relevantDimensions">The dimensions the requesting scope cares about.</param>
+    /// <param name="relevantDimensions">The dimensions the requesting surface cares about.</param>
     private bool IsAnyRuleMatched(
-        IReadOnlyList<AIAgentContextScopeRule> rules,
+        IReadOnlyList<AIAgentScopeRule> rules,
         AgentAvailabilityContext context,
         IReadOnlyList<string> relevantDimensions)
     {
@@ -76,17 +76,17 @@ public class AIAgentContextScopeValidator
     /// <summary>
     /// Checks if a single rule matches the current context.
     /// AND logic between properties, OR logic within arrays.
-    /// Only checks dimensions that the scope cares about.
+    /// Only checks dimensions that the surface cares about.
     /// </summary>
     /// <param name="rule">The rule to check.</param>
     /// <param name="context">The current context.</param>
-    /// <param name="relevantDimensions">The dimensions the requesting scope cares about.</param>
+    /// <param name="relevantDimensions">The dimensions the requesting surface cares about.</param>
     private bool IsRuleMatched(
-        AIAgentContextScopeRule rule,
+        AIAgentScopeRule rule,
         AgentAvailabilityContext context,
         IReadOnlyList<string> relevantDimensions)
     {
-        // Check section (if specified AND scope cares about it)
+        // Check section (if specified AND surface cares about it)
         if (rule.SectionAliases?.Count > 0 &&
             relevantDimensions.Contains("section", StringComparer.OrdinalIgnoreCase))
         {
@@ -103,7 +103,7 @@ public class AIAgentContextScopeValidator
             }
         }
 
-        // Check entity type (if specified AND scope cares about it)
+        // Check entity type (if specified AND surface cares about it)
         if (rule.EntityTypeAliases?.Count > 0 &&
             relevantDimensions.Contains("entityType", StringComparer.OrdinalIgnoreCase))
         {
@@ -120,7 +120,7 @@ public class AIAgentContextScopeValidator
             }
         }
 
-        // Check workspace (if specified AND scope cares about it)
+        // Check workspace (if specified AND surface cares about it)
         if (rule.WorkspaceAliases?.Count > 0 &&
             relevantDimensions.Contains("workspace", StringComparer.OrdinalIgnoreCase))
         {

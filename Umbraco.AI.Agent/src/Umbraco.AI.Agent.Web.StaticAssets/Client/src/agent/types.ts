@@ -2,11 +2,11 @@ import type { UmbEntityModel } from "@umbraco-cms/backoffice/entity";
 import type { UaiUserGroupPermissionsMap } from "./user-group-permissions.js";
 
 /**
- * Rule for agent context scope filtering.
+ * Rule for agent scope filtering.
  * All non-null/non-empty properties use AND logic between them.
  * Values within each array use OR logic.
  */
-export interface UaiAgentContextScopeRule {
+export interface UaiAgentScopeRule {
     sectionAliases?: string[] | null;
     entityTypeAliases?: string[] | null;
     workspaceAliases?: string[] | null;
@@ -15,9 +15,9 @@ export interface UaiAgentContextScopeRule {
 /**
  * Defines where an agent is available using allow and deny rules.
  */
-export interface UaiAgentContextScope {
-    allowRules: UaiAgentContextScopeRule[];
-    denyRules: UaiAgentContextScopeRule[];
+export interface UaiAgentScope {
+    allowRules: UaiAgentScopeRule[];
+    denyRules: UaiAgentScopeRule[];
 }
 
 /**
@@ -32,7 +32,7 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     profileId: string | null;
     contextIds: string[];
     surfaceIds: string[];
-    contextScope: UaiAgentContextScope | null;
+    scope: UaiAgentScope | null;
     allowedToolIds: string[];
     allowedToolScopeIds: string[];
     userGroupPermissions: UaiUserGroupPermissionsMap;
@@ -55,7 +55,7 @@ export interface UaiAgentItemModel extends UmbEntityModel {
     profileId: string | null;
     contextIds: string[];
     surfaceIds: string[];
-    contextScope: UaiAgentContextScope | null;
+    scope: UaiAgentScope | null;
     allowedToolIds: string[];
     allowedToolScopeIds: string[];
     isActive: boolean;

@@ -55,7 +55,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.ScopeIds = source.ScopeIds?.ToList() ?? [];
-        target.ContextScope = MapContextScopeFromRequest(source.ContextScope);
+        target.Scope = MapScopeFromRequest(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
         target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
         target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
@@ -72,7 +72,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.ScopeIds = source.ScopeIds?.ToList() ?? [];
-        target.ContextScope = MapContextScopeFromRequest(source.ContextScope);
+        target.Scope = MapScopeFromRequest(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
         target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
         target.UserGroupPermissions = MapUserGroupPermissionsFromRequest(source.UserGroupPermissions);
@@ -90,7 +90,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
         target.SurfaceIds = source.SurfaceIds;
-        target.ContextScope = MapContextScopeToResponse(source.ContextScope);
+        target.Scope = MapScopeToResponse(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds;
         target.AllowedToolScopeIds = source.AllowedToolScopeIds;
         target.UserGroupPermissions = MapUserGroupPermissionsToResponse(source.UserGroupPermissions);
@@ -171,22 +171,22 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
     /// <summary>
     /// Maps context scope from request model to domain model.
     /// </summary>
-    private static AIAgentContextScope? MapContextScopeFromRequest(AIAgentContextScopeModel? source)
+    private static AIAgentScope? MapScopeFromRequest(AIAgentScopeModel? source)
     {
         if (source is null)
         {
             return null;
         }
 
-        return new AIAgentContextScope
+        return new AIAgentScope
         {
-            AllowRules = source.AllowRules.Select(r => new AIAgentContextScopeRule
+            AllowRules = source.AllowRules.Select(r => new AIAgentScopeRule
             {
                 SectionAliases = r.SectionAliases?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),
                 WorkspaceAliases = r.WorkspaceAliases?.ToList()
             }).ToList(),
-            DenyRules = source.DenyRules.Select(r => new AIAgentContextScopeRule
+            DenyRules = source.DenyRules.Select(r => new AIAgentScopeRule
             {
                 SectionAliases = r.SectionAliases?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),
@@ -198,22 +198,22 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
     /// <summary>
     /// Maps context scope from domain model to response model.
     /// </summary>
-    private static AIAgentContextScopeModel? MapContextScopeToResponse(AIAgentContextScope? source)
+    private static AIAgentScopeModel? MapContextScopeToResponse(AIAgentScope? source)
     {
         if (source is null)
         {
             return null;
         }
 
-        return new AIAgentContextScopeModel
+        return new AIAgentScopeModel
         {
-            AllowRules = source.AllowRules.Select(r => new AIAgentContextScopeRuleModel
+            AllowRules = source.AllowRules.Select(r => new AIAgentScopeRuleModel
             {
                 SectionAliases = r.SectionAliases?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),
                 WorkspaceAliases = r.WorkspaceAliases?.ToList()
             }).ToList(),
-            DenyRules = source.DenyRules.Select(r => new AIAgentContextScopeRuleModel
+            DenyRules = source.DenyRules.Select(r => new AIAgentScopeRuleModel
             {
                 SectionAliases = r.SectionAliases?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),

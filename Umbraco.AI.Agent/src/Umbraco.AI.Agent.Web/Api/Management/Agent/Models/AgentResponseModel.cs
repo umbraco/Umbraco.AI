@@ -42,10 +42,10 @@ public class AgentResponseModel
     public IEnumerable<string> SurfaceIds { get; set; } = [];
 
     /// <summary>
-    /// Optional context scope defining where this agent is available.
+    /// Optional scope defining where this agent is available.
     /// If null, agent is available in all contexts (backwards compatible).
     /// </summary>
-    public AIAgentContextScopeModel? ContextScope { get; set; }
+    public AIAgentScopeModel? Scope { get; set; }
 
     /// <summary>
     /// Allowed tool IDs for this agent.

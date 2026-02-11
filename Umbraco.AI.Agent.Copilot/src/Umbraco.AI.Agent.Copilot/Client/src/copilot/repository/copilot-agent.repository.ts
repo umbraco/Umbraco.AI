@@ -6,7 +6,7 @@ import type { UaiCopilotAgentItem } from "../types.js";
 
 /**
  * Repository for copilot agents.
- * Filters UaiAgentRepository observable to copilot-scoped agents.
+ * Filters UaiAgentRepository observable to copilot surface agents.
  */
 export class UaiCopilotAgentRepository {
     #agentRepository: UaiAgentRepository;
@@ -15,11 +15,11 @@ export class UaiCopilotAgentRepository {
     constructor(host: UmbControllerHost) {
         this.#agentRepository = new UaiAgentRepository(host);
 
-        // Filter agent repository observable to copilot scope at the observable level
+        // Filter agent repository observable to copilot surface at the observable level
         this.#copilotAgents$ = this.#agentRepository.agentItems$.pipe(
             map((items) => {
                 return Array.from(items.values())
-                    .filter((agent) => agent.scopeIds.includes("copilot"))
+                    .filter((agent) => agent.surfaceIds.includes("copilot"))
                     .map((agent) => ({
                         id: agent.unique,
                         name: agent.name,
@@ -30,7 +30,7 @@ export class UaiCopilotAgentRepository {
     }
 
     /**
-     * Observable of copilot-scoped agents.
+     * Observable of copilot surface agents.
      * Derived from agent repository observable with copilot filter.
      */
     get agentItems$(): Observable<UaiCopilotAgentItem[]> {

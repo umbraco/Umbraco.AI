@@ -201,7 +201,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             <uui-box headline="Surface">
                 <umb-property-layout
                     label="Surfaces"
-                    description="Select how this agent can be used (e.g., Copilot chat)"
+                    description="Select where this agent can be used (e.g., Copilot chat)"
                 >
                     <uai-agent-surface-picker
                         slot="editor"

@@ -37,9 +37,9 @@ internal class AIAgentEntity
     public string? ContextIds { get; set; }
 
     /// <summary>
-    /// JSON-serialized array of scope IDs.
+    /// JSON-serialized array of surface IDs.
     /// </summary>
-    public string? ScopeIds { get; set; }
+    public string? SurfaceIds { get; set; }
 
     /// <summary>
     /// JSON-serialized context scope (AllowRules and DenyRules).

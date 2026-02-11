@@ -37,9 +37,9 @@ public class AgentItemResponseModel
     public IEnumerable<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
-    /// Scope IDs that categorize this agent for specific purposes.
+    /// Surface IDs that categorize this agent for specific purposes.
     /// </summary>
-    public IEnumerable<string> ScopeIds { get; set; } = [];
+    public IEnumerable<string> SurfaceIds { get; set; } = [];
 
     /// <summary>
     /// List of explicitly allowed tool IDs for this agent.

@@ -40,13 +40,13 @@ public sealed class AIAgent : IAIVersionableEntity
     public IReadOnlyList<Guid> ContextIds { get; set; } = [];
 
     /// <summary>
-    /// Scope IDs that categorize this agent for specific purposes.
+    /// Surface IDs that categorize this agent for specific purposes.
     /// </summary>
     /// <remarks>
-    /// Agents can belong to multiple scopes. An agent with no scopes will appear
-    /// in general listings but not in any scoped queries.
+    /// Agents can belong to multiple surfaces. An agent with no surfaces will appear
+    /// in general listings but not in any surface-specific queries.
     /// </remarks>
-    public IReadOnlyList<string> ScopeIds { get; set; } = [];
+    public IReadOnlyList<string> SurfaceIds { get; set; } = [];
 
     /// <summary>
     /// Optional context scope defining where this agent is available.
@@ -55,7 +55,7 @@ public sealed class AIAgent : IAIVersionableEntity
     /// <remarks>
     /// <para>
     /// Follows the same pattern as <c>AIPromptScope</c> with allow and deny rules.
-    /// Different agent scopes (copilot, API, workflow) may check different context dimensions.
+    /// Different agent surfaces (copilot, API, workflow) may check different context dimensions.
     /// </para>
     /// <para>
     /// Example: A content-only agent would have:

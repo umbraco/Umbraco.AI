@@ -54,7 +54,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
-        target.ScopeIds = source.ScopeIds?.ToList() ?? [];
+        target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
         target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
@@ -71,7 +71,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds?.ToList() ?? [];
-        target.ScopeIds = source.ScopeIds?.ToList() ?? [];
+        target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds?.ToList() ?? [];
         target.AllowedToolScopeIds = source.AllowedToolScopeIds?.ToList() ?? [];
@@ -90,7 +90,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
         target.SurfaceIds = source.SurfaceIds;
-        target.Scope = MapScopeToResponse(source.Scope);
+        target.Scope = MapContextScopeToResponse(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds;
         target.AllowedToolScopeIds = source.AllowedToolScopeIds;
         target.UserGroupPermissions = MapUserGroupPermissionsToResponse(source.UserGroupPermissions);
@@ -169,7 +169,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
     }
 
     /// <summary>
-    /// Maps context scope from request model to domain model.
+    /// Maps agent scope from request model to domain model.
     /// </summary>
     private static AIAgentScope? MapScopeFromRequest(AIAgentScopeModel? source)
     {
@@ -196,7 +196,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
     }
 
     /// <summary>
-    /// Maps context scope from domain model to response model.
+    /// Maps agent scope from domain model to response model.
     /// </summary>
     private static AIAgentScopeModel? MapContextScopeToResponse(AIAgentScope? source)
     {

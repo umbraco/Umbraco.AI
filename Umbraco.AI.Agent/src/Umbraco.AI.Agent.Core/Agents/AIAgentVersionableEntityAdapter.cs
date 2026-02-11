@@ -35,7 +35,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             entity.Description,
             entity.ProfileId,
             ContextIds = entity.ContextIds.Count > 0 ? string.Join(',', entity.ContextIds) : null,
-            ScopeIds = entity.ScopeIds.Count > 0 ? string.Join(',', entity.ScopeIds) : null,
+            SurfaceIds = entity.SurfaceIds.Count > 0 ? string.Join(',', entity.SurfaceIds) : null,
             entity.Instructions,
             entity.IsActive,
             entity.Version,
@@ -75,14 +75,14 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 }
             }
 
-            IReadOnlyList<string> scopeIds = Array.Empty<string>();
-            if (root.TryGetProperty("scopeIds", out var scopeIdsElement) &&
-                scopeIdsElement.ValueKind == JsonValueKind.String)
+            IReadOnlyList<string> surfaceIds = Array.Empty<string>();
+            if (root.TryGetProperty("surfaceIds", out var surfaceIdsElement) &&
+                surfaceIdsElement.ValueKind == JsonValueKind.String)
             {
-                var scopeIdsString = scopeIdsElement.GetString();
-                if (!string.IsNullOrEmpty(scopeIdsString))
+                var surfaceIdsString = surfaceIdsElement.GetString();
+                if (!string.IsNullOrEmpty(surfaceIdsString))
                 {
-                    scopeIds = scopeIdsString
+                    surfaceIds = surfaceIdsString
                         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                         .ToList();
                 }
@@ -97,7 +97,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                     ? descEl.GetString() : null,
                 ProfileId = root.GetProperty("profileId").GetGuid(),
                 ContextIds = contextIds,
-                ScopeIds = scopeIds,
+                SurfaceIds = surfaceIds,
                 Instructions = root.TryGetProperty("instructions", out var instrEl) && instrEl.ValueKind == JsonValueKind.String
                     ? instrEl.GetString() : null,
                 IsActive = root.GetProperty("isActive").GetBoolean(),
@@ -151,11 +151,11 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
         }
 
         // Compare scope IDs
-        var fromScopeIds = string.Join(",", from.ScopeIds);
-        var toScopeIds = string.Join(",", to.ScopeIds);
-        if (fromScopeIds != toScopeIds)
+        var fromSurfaceIds = string.Join(",", from.SurfaceIds);
+        var toSurfaceIds = string.Join(",", to.SurfaceIds);
+        if (fromSurfaceIds != toSurfaceIds)
         {
-            changes.Add(new AIPropertyChange("ScopeIds", fromScopeIds.Length > 0 ? fromScopeIds : "(none)", toScopeIds.Length > 0 ? toScopeIds : "(none)"));
+            changes.Add(new AIPropertyChange("SurfaceIds", fromSurfaceIds.Length > 0 ? fromSurfaceIds : "(none)", toSurfaceIds.Length > 0 ? toSurfaceIds : "(none)"));
         }
 
         if (from.Instructions != to.Instructions)

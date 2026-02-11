@@ -90,7 +90,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
         target.SurfaceIds = source.SurfaceIds;
-        target.Scope = MapContextScopeToResponse(source.Scope);
+        target.Scope = MapScopeToResponse(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds;
         target.AllowedToolScopeIds = source.AllowedToolScopeIds;
         target.UserGroupPermissions = MapUserGroupPermissionsToResponse(source.UserGroupPermissions);
@@ -198,7 +198,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
     /// <summary>
     /// Maps agent scope from domain model to response model.
     /// </summary>
-    private static AIAgentScopeModel? MapContextScopeToResponse(AIAgentScope? source)
+    private static AIAgentScopeModel? MapScopeToResponse(AIAgentScope? source)
     {
         if (source is null)
         {

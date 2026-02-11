@@ -1,11 +1,11 @@
 import { LitElement, html, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { UaiAgentContextScopeRule } from "../../types.js";
+import type { UaiAgentScopeRule } from "../../types.js";
 
-@customElement("uai-agent-context-scope-rule-editor")
-export class UaiAgentContextScopeRuleEditorElement extends LitElement {
+@customElement("uai-agent-scope-rule-editor")
+export class UaiAgentScopeRuleEditorElement extends LitElement {
 	@property({ type: Object })
-	rule?: UaiAgentContextScopeRule;
+	rule?: UaiAgentScopeRule;
 
 	@property({ type: Number })
 	index: number = 0;
@@ -222,6 +222,6 @@ export class UaiAgentContextScopeRuleEditorElement extends LitElement {
 
 declare global {
 	interface HTMLElementTagNameMap {
-		"uai-agent-context-scope-rule-editor": UaiAgentContextScopeRuleEditorElement;
+		"uai-agent-scope-rule-editor": UaiAgentScopeRuleEditorElement;
 	}
 }

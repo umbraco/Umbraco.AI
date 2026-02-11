@@ -213,7 +213,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
             </uui-box>
 
             <uui-box headline="Context Scope (Optional)">
-                <div class="context-scope-description">
+                <div class="scope-description">
                     <p>Control where this agent is available. Uses the same pattern as Prompt scopes.</p>
                     <p>Leave empty to allow everywhere. Deny rules override allow rules.</p>
                 </div>
@@ -230,7 +230,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
                     ${this._model.scope?.allowRules.map(
                         (rule, index) => html`
-                            <uai-agent-context-scope-rule-editor
+                            <uai-agent-scope-rule-editor
                                 .rule=${rule}
                                 .index=${index}
                                 ruleType="allow"
@@ -238,7 +238,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                                 @entity-type-aliases-change=${this.#onRuleEntityTypeAliasesChange}
                                 @workspace-aliases-change=${this.#onRuleWorkspaceAliasesChange}
                                 @remove-rule=${this.#onRemoveRule}>
-                            </uai-agent-context-scope-rule-editor>
+                            </uai-agent-scope-rule-editor>
                         `
                     )}
 
@@ -263,7 +263,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
 
                     ${this._model.scope?.denyRules.map(
                         (rule, index) => html`
-                            <uai-agent-context-scope-rule-editor
+                            <uai-agent-scope-rule-editor
                                 .rule=${rule}
                                 .index=${index}
                                 ruleType="deny"
@@ -271,7 +271,7 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                                 @entity-type-aliases-change=${this.#onRuleEntityTypeAliasesChange}
                                 @workspace-aliases-change=${this.#onRuleWorkspaceAliasesChange}
                                 @remove-rule=${this.#onRemoveRule}>
-                            </uai-agent-context-scope-rule-editor>
+                            </uai-agent-scope-rule-editor>
                         `
                     )}
 
@@ -330,12 +330,12 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 transform: translate(-50%, -50%);
             }
 
-            .context-scope-description {
+            .scope-description {
                 padding: var(--uui-size-space-4) 0;
                 color: var(--uui-color-text-alt);
             }
 
-            .context-scope-description p {
+            .scope-description p {
                 margin: 0 0 var(--uui-size-space-2);
             }
 

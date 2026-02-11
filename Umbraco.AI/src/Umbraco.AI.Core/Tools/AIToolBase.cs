@@ -104,6 +104,40 @@ public abstract class AIToolBase<TArgs> : AIToolBasic, IAITool
     Task<object> IAITool.ExecuteAsync(object? args, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(args);
-        return ExecuteAsync((TArgs)args, cancellationToken);
+
+        if (args is System.Text.Json.JsonElement jsonElement)
+        {
+            try
+            {
+                var deserializedArgs = System.Text.Json.JsonSerializer.Deserialize<TArgs>(jsonElement, Constants.DefaultJsonSerializerOptions);
+                if (deserializedArgs is null)
+                {
+                    throw new ArgumentException(
+                        $"Failed to deserialize arguments to {typeof(TArgs).Name}. " +
+                        $"JSON: {jsonElement.GetRawText()}");
+                }
+
+                return ExecuteAsync(deserializedArgs, cancellationToken);
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                throw new ArgumentException(
+                    $"Invalid arguments for tool '{Id}'. " +
+                    $"Expected type: {typeof(TArgs).Name}. " +
+                    $"JSON: {jsonElement.GetRawText()}. " +
+                    $"Error: {ex.Message}",
+                    ex);
+            }
+        }
+
+        if (args is TArgs typedArgs)
+        {
+            return ExecuteAsync(typedArgs, cancellationToken);
+        }
+
+        throw new ArgumentException(
+            $"Tool '{Id}' received arguments of unexpected type {args.GetType().Name}. " +
+            $"Expected {typeof(TArgs).Name} or JsonElement. " +
+            $"Value: {System.Text.Json.JsonSerializer.Serialize(args)}");
     }
 }

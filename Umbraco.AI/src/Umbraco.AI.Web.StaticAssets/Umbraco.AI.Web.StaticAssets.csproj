@@ -24,8 +24,8 @@
       <Folder Include="wwwroot\" />
     </ItemGroup>
 
-    <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild" DependsOnTargets="GetBuildVersion;GetUmbracoBuildVersion" Condition="Exists('wwwroot\umbraco-package.json')">
-        <Message Text="Update umbraco-package.json files with current build version" Importance="high" />
+    <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild" Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != ''">
+        <Message Text="Update umbraco-package.json files with current build version $(PackageVersion)" Importance="high" />
         <ItemGroup>
             <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
         </ItemGroup>

@@ -42,6 +42,13 @@ internal class AIAgentEntity
     public string? ScopeIds { get; set; }
 
     /// <summary>
+    /// JSON-serialized context scope (AllowRules and DenyRules).
+    /// Defines where the agent is available (section, entity type, workspace).
+    /// Null means available everywhere (backwards compatible).
+    /// </summary>
+    public string? ContextScope { get; set; }
+
+    /// <summary>
     /// JSON-serialized array of allowed tool IDs.
     /// </summary>
     public string? AllowedToolIds { get; set; }

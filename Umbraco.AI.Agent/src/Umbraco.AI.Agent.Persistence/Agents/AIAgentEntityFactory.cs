@@ -27,6 +27,7 @@ internal static class AIAgentEntityFactory
             ProfileId = entity.ProfileId,
             ContextIds = DeserializeContextIds(entity.ContextIds),
             ScopeIds = DeserializeScopeIds(entity.ScopeIds),
+            ContextScope = DeserializeContextScope(entity.ContextScope),
             AllowedToolIds = DeserializeAllowedToolIds(entity.AllowedToolIds),
             AllowedToolScopeIds = DeserializeAllowedToolScopeIds(entity.AllowedToolScopeIds),
             UserGroupPermissions = DeserializeUserGroupPermissions(entity.UserGroupPermissions),
@@ -54,6 +55,7 @@ internal static class AIAgentEntityFactory
             ProfileId = aiAgent.ProfileId,
             ContextIds = SerializeContextIds(aiAgent.ContextIds),
             ScopeIds = SerializeScopeIds(aiAgent.ScopeIds),
+            ContextScope = SerializeContextScope(aiAgent.ContextScope),
             AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds),
             AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds),
             UserGroupPermissions = SerializeUserGroupPermissions(aiAgent.UserGroupPermissions),
@@ -78,6 +80,7 @@ internal static class AIAgentEntityFactory
         entity.ProfileId = aiAgent.ProfileId;
         entity.ContextIds = SerializeContextIds(aiAgent.ContextIds);
         entity.ScopeIds = SerializeScopeIds(aiAgent.ScopeIds);
+        entity.ContextScope = SerializeContextScope(aiAgent.ContextScope);
         entity.AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds);
         entity.AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds);
         entity.UserGroupPermissions = SerializeUserGroupPermissions(aiAgent.UserGroupPermissions);
@@ -222,6 +225,33 @@ internal static class AIAgentEntityFactory
         catch
         {
             return new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        }
+    }
+
+    private static string? SerializeContextScope(AIAgentContextScope? contextScope)
+    {
+        if (contextScope is null)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(contextScope, JsonOptions);
+    }
+
+    private static AIAgentContextScope? DeserializeContextScope(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<AIAgentContextScope>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
         }
     }
 }

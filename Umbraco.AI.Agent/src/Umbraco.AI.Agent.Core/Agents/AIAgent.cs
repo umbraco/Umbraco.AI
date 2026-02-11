@@ -49,6 +49,27 @@ public sealed class AIAgent : IAIVersionableEntity
     public IReadOnlyList<string> ScopeIds { get; set; } = [];
 
     /// <summary>
+    /// Optional context scope defining where this agent is available.
+    /// If null, agent is available in all contexts (backwards compatible).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Follows the same pattern as <c>AIPromptScope</c> with allow and deny rules.
+    /// Different agent scopes (copilot, API, workflow) may check different context dimensions.
+    /// </para>
+    /// <para>
+    /// Example: A content-only agent would have:
+    /// <code>
+    /// ContextScope = new AIAgentContextScope
+    /// {
+    ///     AllowRules = [new AIAgentContextScopeRule { SectionAliases = ["content"] }]
+    /// }
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public AIAgentContextScope? ContextScope { get; set; }
+
+    /// <summary>
     /// Tool IDs explicitly allowed for this agent.
     /// Empty list means no specific tools are allowed (only scopes apply).
     /// </summary>

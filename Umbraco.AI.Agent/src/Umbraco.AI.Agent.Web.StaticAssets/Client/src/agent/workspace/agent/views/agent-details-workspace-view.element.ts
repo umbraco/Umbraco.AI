@@ -4,7 +4,7 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { umbBindToValidation } from "@umbraco-cms/backoffice/validation";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
-import type { UaiAgentDetailModel } from "../../../types.js";
+import type { UaiAgentDetailModel, UaiAgentContextScopeRule, UaiAgentContextScope } from "../../../types.js";
 import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js";
 
 import "@umbraco-cms/backoffice/markdown-editor";
@@ -73,6 +73,84 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #addRule(ruleType: "allow" | "deny") {
+        if (!this._model) return;
+
+        const newRule: UaiAgentContextScopeRule = {
+            sectionAliases: [],
+            entityTypeAliases: [],
+            workspaceAliases: [],
+        };
+
+        const currentScope = this._model.contextScope ?? { allowRules: [], denyRules: [] };
+        const updatedScope: UaiAgentContextScope = {
+            ...currentScope,
+            allowRules: ruleType === "allow" ? [...currentScope.allowRules, newRule] : currentScope.allowRules,
+            denyRules: ruleType === "deny" ? [...currentScope.denyRules, newRule] : currentScope.denyRules,
+        };
+
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextScope: updatedScope }, "contextScope"),
+        );
+    }
+
+    #onRemoveRule(e: CustomEvent) {
+        if (!this._model?.contextScope) return;
+
+        const { index, ruleType } = e.detail;
+        const currentScope = this._model.contextScope;
+
+        const updatedScope: UaiAgentContextScope = {
+            ...currentScope,
+            allowRules: ruleType === "allow"
+                ? currentScope.allowRules.filter((_, i) => i !== index)
+                : currentScope.allowRules,
+            denyRules: ruleType === "deny"
+                ? currentScope.denyRules.filter((_, i) => i !== index)
+                : currentScope.denyRules,
+        };
+
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextScope: updatedScope }, "contextScope"),
+        );
+    }
+
+    #updateRuleProperty(index: number, ruleType: "allow" | "deny", property: keyof UaiAgentContextScopeRule, value: any) {
+        if (!this._model?.contextScope) return;
+
+        const currentScope = this._model.contextScope;
+        const rules = ruleType === "allow" ? [...currentScope.allowRules] : [...currentScope.denyRules];
+
+        if (rules[index]) {
+            rules[index] = { ...rules[index], [property]: value };
+        }
+
+        const updatedScope: UaiAgentContextScope = {
+            ...currentScope,
+            allowRules: ruleType === "allow" ? rules : currentScope.allowRules,
+            denyRules: ruleType === "deny" ? rules : currentScope.denyRules,
+        };
+
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ contextScope: updatedScope }, "contextScope"),
+        );
+    }
+
+    #onRuleSectionAliasesChange(e: CustomEvent) {
+        const { index, ruleType, value } = e.detail;
+        this.#updateRuleProperty(index, ruleType, "sectionAliases", value);
+    }
+
+    #onRuleEntityTypeAliasesChange(e: CustomEvent) {
+        const { index, ruleType, value } = e.detail;
+        this.#updateRuleProperty(index, ruleType, "entityTypeAliases", value);
+    }
+
+    #onRuleWorkspaceAliasesChange(e: CustomEvent) {
+        const { index, ruleType, value } = e.detail;
+        this.#updateRuleProperty(index, ruleType, "workspaceAliases", value);
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -133,6 +211,89 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uai-agent-scope-picker>
                 </umb-property-layout>
             </uui-box>
+
+            <uui-box headline="Context Scope (Optional)">
+                <div class="context-scope-description">
+                    <p>Control where this agent is available. Uses the same pattern as Prompt scopes.</p>
+                    <p>Leave empty to allow everywhere. Deny rules override allow rules.</p>
+                </div>
+
+                <!-- Allow Rules Section -->
+                <div class="scope-section">
+                    <div class="section-header">
+                        <h4>Allow Rules</h4>
+                        <p class="help-text">
+                            Define where the agent IS available.
+                            Leave empty to allow everywhere (unless denied below).
+                        </p>
+                    </div>
+
+                    ${this._model.contextScope?.allowRules.map(
+                        (rule, index) => html`
+                            <uai-agent-context-scope-rule-editor
+                                .rule=${rule}
+                                .index=${index}
+                                ruleType="allow"
+                                @section-aliases-change=${this.#onRuleSectionAliasesChange}
+                                @entity-type-aliases-change=${this.#onRuleEntityTypeAliasesChange}
+                                @workspace-aliases-change=${this.#onRuleWorkspaceAliasesChange}
+                                @remove-rule=${this.#onRemoveRule}>
+                            </uai-agent-context-scope-rule-editor>
+                        `
+                    )}
+
+                    <uui-button
+                        label="Add Allow Rule"
+                        look="placeholder"
+                        @click=${() => this.#addRule("allow")}>
+                        <uui-icon name="icon-add"></uui-icon>
+                        Add Allow Rule
+                    </uui-button>
+                </div>
+
+                <!-- Deny Rules Section -->
+                <div class="scope-section">
+                    <div class="section-header">
+                        <h4>Deny Rules (Optional)</h4>
+                        <p class="help-text">
+                            Define where the agent is NOT available.
+                            Deny rules override allow rules.
+                        </p>
+                    </div>
+
+                    ${this._model.contextScope?.denyRules.map(
+                        (rule, index) => html`
+                            <uai-agent-context-scope-rule-editor
+                                .rule=${rule}
+                                .index=${index}
+                                ruleType="deny"
+                                @section-aliases-change=${this.#onRuleSectionAliasesChange}
+                                @entity-type-aliases-change=${this.#onRuleEntityTypeAliasesChange}
+                                @workspace-aliases-change=${this.#onRuleWorkspaceAliasesChange}
+                                @remove-rule=${this.#onRemoveRule}>
+                            </uai-agent-context-scope-rule-editor>
+                        `
+                    )}
+
+                    <uui-button
+                        label="Add Deny Rule"
+                        look="placeholder"
+                        @click=${() => this.#addRule("deny")}>
+                        <uui-icon name="icon-add"></uui-icon>
+                        Add Deny Rule
+                    </uui-button>
+                </div>
+
+                <!-- Examples Box -->
+                <uui-box look="placeholder" class="examples-box">
+                    <strong>Examples:</strong>
+                    <ul>
+                        <li><strong>Content-only agent:</strong> Allow rule with sectionAliases: "content"</li>
+                        <li><strong>General agent (not in settings):</strong> Deny rule with sectionAliases: "settings"</li>
+                        <li><strong>Document agent:</strong> Allow rule with sectionAliases: "content", entityTypes: "document"</li>
+                    </ul>
+                </uui-box>
+            </uui-box>
         `;
     }
 
@@ -167,6 +328,47 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
+            }
+
+            .context-scope-description {
+                padding: var(--uui-size-space-4) 0;
+                color: var(--uui-color-text-alt);
+            }
+
+            .context-scope-description p {
+                margin: 0 0 var(--uui-size-space-2);
+            }
+
+            .scope-section {
+                margin-top: var(--uui-size-space-5);
+            }
+
+            .section-header {
+                margin-bottom: var(--uui-size-space-4);
+            }
+
+            .section-header h4 {
+                margin: 0 0 var(--uui-size-space-2);
+                font-size: 1.1em;
+            }
+
+            .help-text {
+                margin: 0;
+                color: var(--uui-color-text-alt);
+                font-size: 0.9em;
+            }
+
+            .examples-box {
+                margin-top: var(--uui-size-space-5);
+            }
+
+            .examples-box ul {
+                margin: var(--uui-size-space-3) 0 0;
+                padding-left: var(--uui-size-space-5);
+            }
+
+            .examples-box li {
+                margin-bottom: var(--uui-size-space-2);
             }
         `,
     ];

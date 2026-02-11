@@ -42,6 +42,12 @@ public class AgentResponseModel
     public IEnumerable<string> ScopeIds { get; set; } = [];
 
     /// <summary>
+    /// Optional context scope defining where this agent is available.
+    /// If null, agent is available in all contexts (backwards compatible).
+    /// </summary>
+    public AIAgentContextScopeModel? ContextScope { get; set; }
+
+    /// <summary>
     /// Allowed tool IDs for this agent.
     /// Tools must be explicitly allowed or belong to an allowed scope.
     /// System tools are always allowed.

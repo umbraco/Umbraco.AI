@@ -45,6 +45,12 @@ public class CreateAgentRequestModel
     public IEnumerable<string>? ScopeIds { get; init; }
 
     /// <summary>
+    /// Optional context scope defining where this agent is available.
+    /// If null, agent is available in all contexts (backwards compatible).
+    /// </summary>
+    public AIAgentContextScopeModel? ContextScope { get; init; }
+
+    /// <summary>
     /// Optional allowed tool IDs for this agent.
     /// Tools must be explicitly allowed or belong to an allowed scope.
     /// System tools are always allowed.

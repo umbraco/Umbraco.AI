@@ -54,7 +54,7 @@ public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBas
     /// <inheritdoc />
     protected override IChatClient CreateClient(OpenAIProviderSettings settings, string? modelId)
         => OpenAIProvider.CreateOpenAIClient(settings)
-            .GetChatClient(modelId ?? DefaultChatModel)
+            .GetResponsesChatClient(modelId ?? DefaultChatModel)
             .AsIChatClient();
 
     private static bool IsChatModel(string modelId)

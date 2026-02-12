@@ -164,55 +164,30 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
             </uui-box>
 
-            <uui-box headline="Context Scope (Optional)">
-                <div class="scope-description">
-                    <p>Control where this agent is available. Uses the same pattern as Prompt scopes.</p>
-                    <p>Leave empty to allow everywhere. Deny rules override allow rules.</p>
-                </div>
-
-                <!-- Allow Rules Section -->
-                <div class="scope-section">
-                    <div class="section-header">
-                        <h4>Allow Rules</h4>
-                        <p class="help-text">
-                            Define where the agent IS available.
-                            Leave empty to allow everywhere (unless denied below).
-                        </p>
-                    </div>
-
+            <uui-box headline="Scope">
+                <umb-property-layout
+                    label="Allow"
+                    description="Prompt is allowed where ANY rule matches (OR logic between rules)"
+                >
                     <uai-agent-scope-rules-editor
+                        slot="editor"
                         .rules=${this._model.scope?.allowRules ?? []}
                         addButtonLabel="Add Allow Rule"
                         @rules-change=${this.#onAllowRulesChange}
                     ></uai-agent-scope-rules-editor>
-                </div>
+                </umb-property-layout>
 
-                <!-- Deny Rules Section -->
-                <div class="scope-section">
-                    <div class="section-header">
-                        <h4>Deny Rules (Optional)</h4>
-                        <p class="help-text">
-                            Define where the agent is NOT available.
-                            Deny rules override allow rules.
-                        </p>
-                    </div>
-
+                <umb-property-layout
+                    label="Deny"
+                    description="Prompt is denied where ANY rule matches (overrides allow rules)"
+                >
                     <uai-agent-scope-rules-editor
+                        slot="editor"
                         .rules=${this._model.scope?.denyRules ?? []}
                         addButtonLabel="Add Deny Rule"
                         @rules-change=${this.#onDenyRulesChange}
                     ></uai-agent-scope-rules-editor>
-                </div>
-
-                <!-- Examples Box -->
-                <uui-box look="placeholder" class="examples-box">
-                    <strong>Examples:</strong>
-                    <ul>
-                        <li><strong>Content-only agent:</strong> Allow rule with sectionAliases: "content"</li>
-                        <li><strong>General agent (not in settings):</strong> Deny rule with sectionAliases: "settings"</li>
-                        <li><strong>Document agent:</strong> Allow rule with sectionAliases: "content", entityTypes: "document"</li>
-                    </ul>
-                </uui-box>
+                </umb-property-layout>
             </uui-box>
         `;
     }

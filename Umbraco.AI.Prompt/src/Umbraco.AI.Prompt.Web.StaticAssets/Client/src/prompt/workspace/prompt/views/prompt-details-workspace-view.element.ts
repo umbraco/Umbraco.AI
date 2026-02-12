@@ -186,24 +186,24 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     label="Allow"
                     description="Prompt is allowed where ANY rule matches (OR logic between rules)"
                 >
-                    <uai-scope-rules-editor
+                    <uai-prompt-scope-rules-editor
                         slot="editor"
                         .rules=${scope.allowRules}
                         addButtonLabel="Add Allow Rule"
                         @rules-change=${this.#onAllowRulesChange}
-                    ></uai-scope-rules-editor>
+                    ></uai-prompt-scope-rules-editor>
                 </umb-property-layout>
 
                 <umb-property-layout
                     label="Deny"
                     description="Prompt is denied where ANY rule matches (overrides allow rules)"
                 >
-                    <uai-scope-rules-editor
+                    <uai-prompt-scope-rules-editor
                         slot="editor"
                         .rules=${scope.denyRules}
                         addButtonLabel="Add Deny Rule"
                         @rules-change=${this.#onDenyRulesChange}
-                    ></uai-scope-rules-editor>
+                    ></uai-prompt-scope-rules-editor>
                 </umb-property-layout>
             </uui-box>
 

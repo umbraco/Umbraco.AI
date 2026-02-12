@@ -20,11 +20,4 @@ public class AIAgentScopeRuleModel
     /// Null or empty means any entity type.
     /// </summary>
     public IReadOnlyList<string>? EntityTypeAliases { get; set; }
-
-    /// <summary>
-    /// Workspace aliases where this rule applies (e.g., "Umb.Workspace.Document").
-    /// If any value matches the current workspace, this constraint is satisfied.
-    /// Null or empty means any workspace.
-    /// </summary>
-    public IReadOnlyList<string>? WorkspaceAliases { get; set; }
 }

@@ -13,8 +13,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// new AgentAvailabilityContext
 /// {
 ///     Section = "content",
-///     EntityTypeAlias = "document",
-///     WorkspaceAlias = "Umb.Workspace.Document"
+///     EntityTypeAlias = "document"
 /// }
 /// </code>
 /// </example>
@@ -31,10 +30,4 @@ public sealed class AgentAvailabilityContext
     /// Null if not in an entity context.
     /// </summary>
     public string? EntityTypeAlias { get; init; }
-
-    /// <summary>
-    /// Current workspace alias (e.g., "Umb.Workspace.Document").
-    /// Null if not in a workspace context.
-    /// </summary>
-    public string? WorkspaceAlias { get; init; }
 }

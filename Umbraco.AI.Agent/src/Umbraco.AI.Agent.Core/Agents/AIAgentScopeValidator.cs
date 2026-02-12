@@ -6,14 +6,8 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// Validates agent scope rules, following the same pattern as Prompt scope validation.
 /// </summary>
 /// <remarks>
-/// <para>
 /// This validator is surface-aware: it only checks context dimensions that the requesting
 /// surface declares it cares about via <see cref="IAIAgentSurface.SupportedContextDimensions"/>.
-/// </para>
-/// <para>
-/// For example, if a Copilot surface only checks ["section", "entityType"], then workspace
-/// rules in the agent's scope will be ignored when filtering for that surface.
-/// </para>
 /// </remarks>
 public class AIAgentScopeValidator
 {
@@ -115,23 +109,6 @@ public class AIAgentScopeValidator
 
             // Check if current entity type is in the list (OR logic)
             if (!rule.EntityTypeAliases.Contains(context.EntityTypeAlias, StringComparer.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-        }
-
-        // Check workspace (if specified AND surface cares about it)
-        if (rule.WorkspaceAliases?.Count > 0 &&
-            relevantDimensions.Contains("workspace", StringComparer.OrdinalIgnoreCase))
-        {
-            // No current workspace = doesn't match
-            if (string.IsNullOrEmpty(context.WorkspaceAlias))
-            {
-                return false;
-            }
-
-            // Check if current workspace is in the list (OR logic)
-            if (!rule.WorkspaceAliases.Contains(context.WorkspaceAlias, StringComparer.OrdinalIgnoreCase))
             {
                 return false;
             }

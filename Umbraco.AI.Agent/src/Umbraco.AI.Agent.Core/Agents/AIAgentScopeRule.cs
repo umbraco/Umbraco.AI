@@ -42,12 +42,4 @@ public sealed class AIAgentScopeRule
     /// </summary>
     /// <example>["document", "documentType"]</example>
     public IReadOnlyList<string>? EntityTypeAliases { get; set; }
-
-    /// <summary>
-    /// Workspace aliases where this rule applies (e.g., "Umb.Workspace.Document").
-    /// If any value matches the current workspace, this constraint is satisfied.
-    /// Null or empty means any workspace.
-    /// </summary>
-    /// <example>["Umb.Workspace.Document"]</example>
-    public IReadOnlyList<string>? WorkspaceAliases { get; set; }
 }

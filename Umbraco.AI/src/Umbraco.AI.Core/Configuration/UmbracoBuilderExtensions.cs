@@ -183,6 +183,11 @@ public static partial class UmbracoBuilderExtensions
         // Entity adapter infrastructure
         services.AddSingleton<IAIEntityContextHelper, AIEntityContextHelper>();
 
+        // Entity formatter infrastructure - auto-discover formatters
+        builder.AIEntityFormatters()
+            .Add<AIGenericEntityFormatter>()   // Default formatter (EntityType = null)
+            .Add<AIDocumentEntityFormatter>(); // CMS document/media formatter
+
         // Runtime context infrastructure
         // Single instance implements both accessor (for reading) and scope provider (for creating)
         services.AddSingleton<AIRuntimeContextScopeProvider>();

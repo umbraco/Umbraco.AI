@@ -3,7 +3,7 @@ namespace Umbraco.AI.Core.Tools.Scopes;
 /// <summary>
 /// The content read scope. Tools that perform read operations on content items, such as fetching or analyzing content, should use this scope to ensure proper permission handling and grouping in the UI.
 /// </summary>
-[AIToolScope(ScopeId, Icon = "icon-article", Domain = "Content", ForEntityTypes = new[] { "document", "documentType" })]
+[AIToolScope(ScopeId, Icon = "icon-article", Domain = "Content", ForEntityTypes = ["document"])]
 public sealed class ContentReadScope : AIToolScopeBase
 {
     /// <summary>
@@ -15,7 +15,7 @@ public sealed class ContentReadScope : AIToolScopeBase
 /// <summary>
 /// The content write scope. Tools that perform write operations on content items, such as creating, updating, or deleting content, should use this scope to ensure proper permission handling and grouping in the UI.
 /// </summary>
-[AIToolScope(ScopeId, Icon = "icon-article", IsDestructive = true, Domain = "Content", ForEntityTypes = new[] { "document", "documentType" })]
+[AIToolScope(ScopeId, Icon = "icon-article", IsDestructive = true, Domain = "Content", ForEntityTypes = ["document"])]
 public sealed class ContentWriteScope : AIToolScopeBase
 {
     /// <summary>
@@ -27,7 +27,7 @@ public sealed class ContentWriteScope : AIToolScopeBase
 /// <summary>
 /// The media read scope. Tools that perform read operations on media items, such as fetching or analyzing media, should use this scope to ensure proper permission handling and grouping in the UI.
 /// </summary>
-[AIToolScope(ScopeId, Icon = "icon-picture", Domain = "Media", ForEntityTypes = new[] { "media", "mediaType" })]
+[AIToolScope(ScopeId, Icon = "icon-picture", Domain = "Media", ForEntityTypes = ["media"])]
 public sealed class MediaReadScope : AIToolScopeBase
 {
     /// <summary>
@@ -39,7 +39,7 @@ public sealed class MediaReadScope : AIToolScopeBase
 /// <summary>
 /// The media write scope. Tools that perform write operations on media items, such as creating, updating, or deleting media, should use this scope to ensure proper permission handling and grouping in the UI.
 /// </summary>
-[AIToolScope(ScopeId, Icon = "icon-picture", IsDestructive = true, Domain = "Media", ForEntityTypes = new[] { "media", "mediaType" })]
+[AIToolScope(ScopeId, Icon = "icon-picture", IsDestructive = true, Domain = "Media", ForEntityTypes = ["media"])]
 public sealed class MediaWriteScope : AIToolScopeBase
 {
     /// <summary>

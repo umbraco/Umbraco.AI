@@ -17,19 +17,45 @@ export interface UaiEntityContext {
 
 /**
  * Serialized representation of an entity for LLM context.
+ * Adapters decide the structure of the data field based on entity type.
  */
 export interface UaiSerializedEntity {
     entityType: string;
     unique: string;
     name: string;
-    contentType?: string;
     /** Parent unique when creating a new entity. Undefined for existing entities. */
     parentUnique?: string | null;
-    properties: UaiSerializedProperty[];
+    /**
+     * Free-form entity data as JSON object.
+     * Adapters decide the structure based on entity type.
+     *
+     * For CMS entities, typically contains:
+     * ```typescript
+     * {
+     *   contentType: "blogPost",
+     *   properties: [
+     *     { alias: "title", label: "Title", editorAlias: "Umbraco.TextBox", value: "Hello" }
+     *   ]
+     * }
+     * ```
+     *
+     * For third-party entities, can be any domain-appropriate structure:
+     * ```typescript
+     * {
+     *   sku: "12345",
+     *   price: { amount: 29.99, currency: "USD" },
+     *   variants: [{ color: "red", size: "large" }]
+     * }
+     * ```
+     */
+    data: Record<string, unknown>;
 }
 
 /**
  * Serialized property for LLM context.
+ * @deprecated Entity data is now stored in UaiSerializedEntity.data as free-form JSON.
+ * For CMS entities, properties are nested inside the data field.
+ * This interface is kept for reference only.
  */
 export interface UaiSerializedProperty {
     alias: string;

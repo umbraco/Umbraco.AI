@@ -238,9 +238,11 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             entityType: "document",
             unique: unique ?? "new",
             name,
-            contentType: contentType ?? undefined,
             parentUnique,
-            properties,
+            data: {
+                contentType: contentType ?? undefined,
+                properties,
+            },
         };
     }
 

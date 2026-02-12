@@ -2,6 +2,8 @@ import { css, html, customElement, property, state } from "@umbraco-cms/backoffi
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiAgentScopeRule } from "../../types.js";
+import "../../../core/components/section-tags-input/section-tags-input.element.js";
+import "../../../core/components/entity-type-tags-input/entity-type-tags-input.element.js";
 
 /**
  * Creates an empty agent scope rule.
@@ -57,18 +59,20 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 		this._collapsed = !this._collapsed;
 	}
 
-	#onSectionAliasesChange(event: CustomEvent) {
+	#onSectionAliasesChange(event: Event) {
 		event.stopPropagation();
-		const value = event.detail.value as string[];
+		const target = event.target as HTMLElement & { items: string[] };
+		const value = target.items;
 		this.#dispatchChange({
 			...this.rule,
 			sectionAliases: value.length > 0 ? value : null,
 		});
 	}
 
-	#onEntityTypeAliasesChange(event: CustomEvent) {
+	#onEntityTypeAliasesChange(event: Event) {
 		event.stopPropagation();
-		const value = event.detail.value as string[];
+		const target = event.target as HTMLElement & { items: string[] };
+		const value = target.items;
 		this.#dispatchChange({
 			...this.rule,
 			entityTypeAliases: value.length > 0 ? value : null,
@@ -126,12 +130,11 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 						description="Section pathnames where this rule applies (e.g., 'content', 'media'). Leave empty for any section."
 						orientation="vertical"
 					>
-						<umb-input-multi-text
+						<uai-section-tags-input
 							slot="editor"
-							placeholder="content, media"
-							.value=${this.rule.sectionAliases ?? []}
+							.items=${this.rule.sectionAliases ?? []}
 							@change=${this.#onSectionAliasesChange}
-						></umb-input-multi-text>
+						></uai-section-tags-input>
 					</umb-property-layout>
 
 					<umb-property-layout
@@ -139,12 +142,11 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 						description="Entity types where this rule applies (e.g., 'document', 'media'). Leave empty for any entity type."
 						orientation="vertical"
 					>
-						<umb-input-multi-text
+						<uai-entity-type-tags-input
 							slot="editor"
-							placeholder="document, media"
-							.value=${this.rule.entityTypeAliases ?? []}
+							.items=${this.rule.entityTypeAliases ?? []}
 							@change=${this.#onEntityTypeAliasesChange}
-						></umb-input-multi-text>
+						></uai-entity-type-tags-input>
 					</umb-property-layout>
 
 					<umb-property-layout

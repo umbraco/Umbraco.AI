@@ -3,7 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { Observable, combineLatest } from "@umbraco-cms/backoffice/external/rxjs";
 import { map } from "@umbraco-cms/backoffice/external/rxjs";
-import type { ManifestUaiCopilotCompatibleSection } from "../types/section-compatibility.js";
+import type { ManifestUaiCopilotCompatibleSection } from "../types.js";
 import { ManifestSection } from "@umbraco-cms/backoffice/section";
 
 /**

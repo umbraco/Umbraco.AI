@@ -1,7 +1,7 @@
 import type { ManifestGlobalContext } from "@umbraco-cms/backoffice/extension-registry";
 import { componentManifests } from "./components/manifests.js";
 import { manifests as toolManifests } from "./tools/manifests.js";
-import type { ManifestUaiCopilotCompatibleSection } from "./types/section-compatibility.js";
+import type { ManifestUaiCopilotCompatibleSection } from "./types.js";
 
 const globalContextManifest: ManifestGlobalContext = {
     type: "globalContext",

@@ -268,14 +268,16 @@ export class UaiVersionHistoryElement extends UmbLitElement {
 
     #renderPagination() {
         return html`
-            <uui-pagination
-                .current=${this._currentPage}
-                .total=${this.#totalPages}
-                firstlabel=${this.localize.term('general_first')}
-                previouslabel=${this.localize.term('general_previous')}
-                nextlabel=${this.localize.term('general_next')}
-                lastlabel=${this.localize.term('general_last')}
-                @change=${this.#onPageChange}></uui-pagination>
+            <div class="pagination-wrapper">
+                <uui-pagination
+                    .current=${this._currentPage}
+                    .total=${this.#totalPages}
+                    firstlabel=${this.localize.term('general_first')}
+                    previouslabel=${this.localize.term('general_previous')}
+                    nextlabel=${this.localize.term('general_next')}
+                    lastlabel=${this.localize.term('general_last')}
+                    @change=${this.#onPageChange}></uui-pagination>
+            </div>
         `;
     }
 
@@ -313,6 +315,10 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 padding-bottom: var(--uui-size-space-4);
             }
 
+            .version-item:last-child {
+                border-bottom: none;
+            }
+
             .actions {
                 flex: 1;
                 display: flex;
@@ -338,9 +344,10 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 line-height: 1;
             }
 
-            uui-pagination {
-                display: flex;
-                margin-top: var(--uui-size-space-5);
+            .pagination-wrapper {
+                display: block;
+                padding-top: var(--uui-size-space-5);
+                border-top: 1px solid var(--uui-color-border);
             }
         `,
     ];

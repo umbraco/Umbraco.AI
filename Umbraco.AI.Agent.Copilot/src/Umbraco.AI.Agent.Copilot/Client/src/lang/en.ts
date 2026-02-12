@@ -1,7 +1,7 @@
 import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
 
 export default {
-    uaiAgentScope: {
+    uaiAgentSurface: {
         copilotLabel: "Copilot",
         copilotDescription: "Enable Copilot features for this agent.",
     },

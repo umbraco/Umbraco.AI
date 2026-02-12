@@ -39,14 +39,14 @@ function getRuleSummary(rule: UaiScopeRule): string {
 }
 
 /**
- * Individual scope rule editor with collapsible UI.
+ * Individual prompt scope rule editor with collapsible UI.
  * Uses tag inputs for content types, properties, and property editor UIs.
  *
  * @fires rule-change - Fires when the rule is modified
  * @fires remove - Fires when the remove button is clicked
  */
-@customElement("uai-scope-rule-editor")
-export class UaiScopeRuleEditorElement extends UmbLitElement {
+@customElement("uai-prompt-scope-rule-editor")
+export class UaiPromptScopeRuleEditorElement extends UmbLitElement {
     @property({ type: Object })
     rule: UaiScopeRule = createEmptyRule();
 
@@ -234,10 +234,10 @@ export class UaiScopeRuleEditorElement extends UmbLitElement {
     ];
 }
 
-export default UaiScopeRuleEditorElement;
+export default UaiPromptScopeRuleEditorElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-scope-rule-editor": UaiScopeRuleEditorElement;
+        "uai-prompt-scope-rule-editor": UaiPromptScopeRuleEditorElement;
     }
 }

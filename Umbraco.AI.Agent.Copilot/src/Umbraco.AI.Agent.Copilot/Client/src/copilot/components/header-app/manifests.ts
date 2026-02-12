@@ -2,16 +2,13 @@ import type { ManifestHeaderApp } from "@umbraco-cms/backoffice/extension-regist
 import type { ManifestCondition } from "@umbraco-cms/backoffice/extension-api";
 import type { UaiCopilotSectionConditionConfig } from "./copilot-section.condition.js";
 
-/**
- * Section URL pathnames where the AI Copilot is available.
- * These correspond to the URL path: /section/{pathname}/...
- */
-export const UAI_COPILOT_ALLOWED_SECTION_PATHNAMES = ["content", "media"];
-
 export const UAI_COPILOT_SECTION_CONDITION_ALIAS = "UmbracoAIAgent.Condition.CopilotSection";
 
 /**
  * Custom condition for section filtering.
+ *
+ * Sections declare compatibility via ManifestUaiCopilotCompatibleSection manifests.
+ * The condition dynamically discovers compatible sections instead of using hardcoded lists.
  *
  * WORKAROUND: We use a custom condition instead of Umb.Condition.SectionAlias
  * because the built-in condition doesn't work for headerApp extensions.
@@ -35,7 +32,6 @@ const headerAppManifest: ManifestHeaderApp = {
     conditions: [
         {
             alias: UAI_COPILOT_SECTION_CONDITION_ALIAS,
-            sectionPathnames: UAI_COPILOT_ALLOWED_SECTION_PATHNAMES,
         } as UaiCopilotSectionConditionConfig,
     ],
 };

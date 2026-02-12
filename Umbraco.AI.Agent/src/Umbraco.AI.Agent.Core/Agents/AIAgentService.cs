@@ -64,14 +64,14 @@ internal sealed class AIAgentService : IAIAgentService
         int take,
         string? filter = null,
         Guid? profileId = null,
-        string? scopeId = null,
+        string? surfaceId = null,
         bool? isActive = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetPagedAsync(skip, take, filter, profileId, scopeId, isActive, cancellationToken);
+        => _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, cancellationToken);
 
     /// <inheritdoc />
-    public Task<IEnumerable<AIAgent>> GetAgentsByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
-        => _repository.GetByScopeAsync(scopeId, cancellationToken);
+    public Task<IEnumerable<AIAgent>> GetAgentsBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
+        => _repository.GetBySurfaceAsync(surfaceId, cancellationToken);
 
     /// <inheritdoc />
     public async Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default)

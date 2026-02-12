@@ -59,6 +59,16 @@ export type AGUIToolParametersModel = {
     required?: Array<string> | null;
 };
 
+export type AiAgentScopeModel = {
+    allowRules: Array<AiAgentScopeRuleModel>;
+    denyRules: Array<AiAgentScopeRuleModel>;
+};
+
+export type AiAgentScopeRuleModel = {
+    sections?: Array<string> | null;
+    entityTypes?: Array<string> | null;
+};
+
 export type AiAgentUserGroupPermissionsModel = {
     allowedToolIds: Array<string>;
     allowedToolScopeIds: Array<string>;
@@ -73,7 +83,7 @@ export type AgentItemResponseModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds: Array<string>;
-    scopeIds: Array<string>;
+    surfaceIds: Array<string>;
     allowedToolIds: Array<string>;
     allowedToolScopeIds: Array<string>;
     isActive: boolean;
@@ -88,7 +98,8 @@ export type AgentResponseModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds: Array<string>;
-    scopeIds: Array<string>;
+    surfaceIds: Array<string>;
+    scope?: AiAgentScopeModel | null;
     allowedToolIds: Array<string>;
     allowedToolScopeIds: Array<string>;
     userGroupPermissions: {
@@ -101,7 +112,7 @@ export type AgentResponseModel = {
     version: number;
 };
 
-export type AgentScopeItemResponseModel = {
+export type AgentSurfaceItemResponseModel = {
     id: string;
     icon: string;
 };
@@ -112,7 +123,8 @@ export type CreateAgentRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
-    scopeIds?: Array<string> | null;
+    surfaceIds?: Array<string> | null;
+    scope?: AiAgentScopeModel | null;
     allowedToolIds?: Array<string> | null;
     allowedToolScopeIds?: Array<string> | null;
     userGroupPermissions?: {
@@ -149,7 +161,8 @@ export type UpdateAgentRequestModel = {
     description?: string | null;
     profileId?: string | null;
     contextIds?: Array<string> | null;
-    scopeIds?: Array<string> | null;
+    surfaceIds?: Array<string> | null;
+    scope?: AiAgentScopeModel | null;
     allowedToolIds?: Array<string> | null;
     allowedToolScopeIds?: Array<string> | null;
     userGroupPermissions?: {
@@ -393,25 +406,25 @@ export type AgentAliasExistsResponses = {
 
 export type AgentAliasExistsResponse = AgentAliasExistsResponses[keyof AgentAliasExistsResponses];
 
-export type GetAgentScopesData = {
+export type GetAgentSurfacesData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/agents/scopes';
+    url: '/umbraco/ai/management/api/v1/agents/surfaces';
 };
 
-export type GetAgentScopesErrors = {
+export type GetAgentSurfacesErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type GetAgentScopesResponses = {
+export type GetAgentSurfacesResponses = {
     /**
      * OK
      */
-    200: Array<AgentScopeItemResponseModel>;
+    200: Array<AgentSurfaceItemResponseModel>;
 };
 
-export type GetAgentScopesResponse = GetAgentScopesResponses[keyof GetAgentScopesResponses];
+export type GetAgentSurfacesResponse = GetAgentSurfacesResponses[keyof GetAgentSurfacesResponses];

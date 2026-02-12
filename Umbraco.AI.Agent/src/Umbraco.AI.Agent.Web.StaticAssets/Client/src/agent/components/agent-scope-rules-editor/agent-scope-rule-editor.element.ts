@@ -127,7 +127,7 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 				<div class="rule-content" ?hidden=${this._collapsed}>
 					<umb-property-layout
 						label="Section Aliases"
-						description="Section pathnames where this rule applies (e.g., 'content', 'media'). Leave empty for any section."
+						description="Sections where this rule applies (e.g., 'content', 'media'). Leave empty for any section."
 						orientation="vertical"
 					>
 						<uai-section-tags-input
@@ -138,7 +138,7 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 					</umb-property-layout>
 
 					<umb-property-layout
-						label="Entity Type Aliases"
+						label="Entity Types"
 						description="Entity types where this rule applies (e.g., 'document', 'media'). Leave empty for any entity type."
 						orientation="vertical"
 					>

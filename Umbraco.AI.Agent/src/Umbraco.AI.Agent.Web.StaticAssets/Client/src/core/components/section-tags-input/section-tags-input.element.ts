@@ -49,25 +49,20 @@ export class UaiSectionTagsInputElement extends UmbLitElement {
 			// Ensure it has the meta property with pathname
 			if (ext.type === "section" && "meta" in ext) {
 				const section = ext as any;
-				const pathname = section.meta?.pathname;
-				const label = section.meta?.label;
-				const alias = section.alias;
+				const pathname = this.localize.string(section.meta?.pathname);
 
-				if (typeof pathname === "string") {
-					// Match against alias or pathname
-					const matchesQuery =
-						alias.toLowerCase().includes(lowerQuery) || pathname.toLowerCase().includes(lowerQuery);
+                // Match against alias or pathname
+                const matchesQuery = pathname.toLowerCase().includes(lowerQuery);
 
-					// Don't include already selected items
-					const notSelected = !this.#items.includes(pathname);
+                // Don't include already selected items
+                const notSelected = !this.#items.includes(pathname);
 
-					if (matchesQuery && notSelected) {
-						results.push({
-							id: pathname,
-							text: label ?? pathname,
-						});
-					}
-				}
+                if (matchesQuery && notSelected) {
+                    results.push({
+                        id: pathname,
+                        text: pathname,
+                    });
+                }
 			}
 		}
 

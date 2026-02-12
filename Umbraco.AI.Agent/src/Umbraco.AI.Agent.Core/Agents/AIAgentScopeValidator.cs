@@ -102,13 +102,13 @@ public class AIAgentScopeValidator
             relevantDimensions.Contains("entityType", StringComparer.OrdinalIgnoreCase))
         {
             // No current entity type = doesn't match
-            if (string.IsNullOrEmpty(context.EntityTypeAlias))
+            if (string.IsNullOrEmpty(context.EntityType))
             {
                 return false;
             }
 
             // Check if current entity type is in the list (OR logic)
-            if (!rule.EntityTypes.Contains(context.EntityTypeAlias, StringComparer.OrdinalIgnoreCase))
+            if (!rule.EntityTypes.Contains(context.EntityType, StringComparer.OrdinalIgnoreCase))
             {
                 return false;
             }

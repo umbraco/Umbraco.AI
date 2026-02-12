@@ -13,7 +13,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// new AgentAvailabilityContext
 /// {
 ///     Section = "content",
-///     EntityTypeAlias = "document"
+///     EntityType = "document"
 /// }
 /// </code>
 /// </example>
@@ -26,8 +26,8 @@ public sealed class AgentAvailabilityContext
     public string? Section { get; init; }
 
     /// <summary>
-    /// Current entity type alias (e.g., "document", "media", "documentType").
+    /// Current entity type (e.g., "document", "media", "documentType").
     /// Null if not in an entity context.
     /// </summary>
-    public string? EntityTypeAlias { get; init; }
+    public string? EntityType { get; init; }
 }

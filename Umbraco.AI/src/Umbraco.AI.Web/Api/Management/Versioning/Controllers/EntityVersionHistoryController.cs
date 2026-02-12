@@ -197,9 +197,9 @@ public class EntityVersionHistoryController : VersioningControllerBase
         {
             FromVersion = comparison.FromVersion,
             ToVersion = comparison.ToVersion,
-            Changes = comparison.Changes.Select(c => new PropertyChangeModel
+            Changes = comparison.Changes.Select(c => new ValueChangeModel
             {
-                PropertyName = c.PropertyName,
+                Path = c.Path,
                 OldValue = c.OldValue,
                 NewValue = c.NewValue
             }).ToList()

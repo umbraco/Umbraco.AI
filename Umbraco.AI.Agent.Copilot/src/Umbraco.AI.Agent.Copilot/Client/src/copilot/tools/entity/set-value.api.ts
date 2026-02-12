@@ -2,25 +2,25 @@ import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import { UAI_ENTITY_CONTEXT, type UaiAgentToolApi } from "@umbraco-ai/agent-ui";
 
 /**
- * Frontend tool: Set Property Value
+ * Frontend tool: Set Value
  *
- * Updates a property value on the currently selected entity in the workspace.
+ * Updates a value on the currently selected entity in the workspace.
  * Changes are staged (not persisted) - user must click Save.
  *
  * Consumes the shared UAI_ENTITY_CONTEXT contract, which is provided by the
  * copilot (wrapping workspace entity state) and could be provided by chat
  * (via a side-drawer editor) in the future.
  */
-export default class SetPropertyValueApi extends UmbControllerBase implements UaiAgentToolApi {
+export default class SetValueApi extends UmbControllerBase implements UaiAgentToolApi {
     async execute(args: Record<string, unknown>): Promise<string> {
-        const alias = args.alias as string | undefined;
+        const path = args.path as string | undefined;
         const value = args.value;
 
         // Validate required args
-        if (!alias) {
+        if (!path) {
             return JSON.stringify({
                 success: false,
-                error: "Missing required argument: alias",
+                error: "Missing required argument: path",
             });
         }
 
@@ -40,19 +40,19 @@ export default class SetPropertyValueApi extends UmbControllerBase implements Ua
             });
         }
 
-        // Apply the property change via the shared context
+        // Apply the value change via the shared context
         try {
-            entityContext.setPropertyValue(alias, value);
+            entityContext.setValue(path, value);
 
-            // Success - property change was staged
+            // Success - value change was staged
             return JSON.stringify({
                 success: true,
-                message: `Property "${alias}" updated. Changes are staged - user must save to persist.`,
+                message: `Value "${path}" updated. Changes are staged - user must save to persist.`,
             });
         } catch (error) {
             return JSON.stringify({
                 success: false,
-                error: error instanceof Error ? error.message : "Unknown error applying property change",
+                error: error instanceof Error ? error.message : "Unknown error applying value change",
             });
         }
     }

@@ -63,9 +63,9 @@ internal class PromptExecutionMapDefinition : IMapDefinition
                     TotalTokens = source.Usage.TotalTokenCount
                 }
                 : null,
-            PropertyChanges = source.PropertyChanges?.Select(change => new PropertyChangeModel
+            ValueChanges = source.ValueChanges?.Select(change => new ValueChangeModel
             {
-                Alias = change.Alias,
+                Path = change.Path,
                 Value = change.Value,
                 Culture = change.Culture,
                 Segment = change.Segment

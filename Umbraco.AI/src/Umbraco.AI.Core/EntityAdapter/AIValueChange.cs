@@ -1,15 +1,15 @@
 namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
-/// Represents a request to change a property value.
+/// Represents a request to change a value in entity data using a JSON path.
 /// Changes are staged in the workspace - user must save to persist.
 /// </summary>
-public sealed class AIPropertyChange
+public sealed class AIValueChange
 {
     /// <summary>
-    /// The property alias.
+    /// JSON path to the value (e.g., "title", "price.amount", "inventory.quantity").
     /// </summary>
-    public required string Alias { get; init; }
+    public required string Path { get; init; }
 
     /// <summary>
     /// The new value to set.

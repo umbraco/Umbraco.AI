@@ -3,7 +3,7 @@ import type {
     UaiVersionComparisonResponse,
     UaiVersionHistoryItem,
     UaiVersionHistoryResponse,
-    UaiVersionPropertyChange,
+    UaiVersionValueChange,
 } from "./types.ts";
 
 export const UaiVersionHistoryTypeMapper = {
@@ -30,8 +30,8 @@ export const UaiVersionHistoryTypeMapper = {
             fromVersion: data.fromVersion,
             toVersion: data.toVersion,
             changes: data.changes.map(
-                (c): UaiVersionPropertyChange => ({
-                    propertyName: c.propertyName,
+                (c): UaiVersionValueChange => ({
+                    path: c.path,
                     oldValue: c.oldValue,
                     newValue: c.newValue,
                 }),

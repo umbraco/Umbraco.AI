@@ -118,28 +118,28 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIAgent from, AIAgent to)
+    protected override IReadOnlyList<AIValueChange> CompareVersions(AIAgent from, AIAgent to)
     {
-        var changes = new List<AIPropertyChange>();
+        var changes = new List<AIValueChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIValueChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIValueChange("Name", from.Name, to.Name));
         }
 
         if (from.Description != to.Description)
         {
-            changes.Add(new AIPropertyChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
+            changes.Add(new AIValueChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
         }
 
         if (from.ProfileId != to.ProfileId)
         {
-            changes.Add(new AIPropertyChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
+            changes.Add(new AIValueChange("ProfileId", from.ProfileId.ToString(), to.ProfileId.ToString()));
         }
 
         // Compare context IDs
@@ -147,7 +147,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
         var toContextIds = string.Join(",", to.ContextIds);
         if (fromContextIds != toContextIds)
         {
-            changes.Add(new AIPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
+            changes.Add(new AIValueChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
         }
 
         // Compare scope IDs
@@ -155,17 +155,17 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
         var toSurfaceIds = string.Join(",", to.SurfaceIds);
         if (fromSurfaceIds != toSurfaceIds)
         {
-            changes.Add(new AIPropertyChange("SurfaceIds", fromSurfaceIds.Length > 0 ? fromSurfaceIds : "(none)", toSurfaceIds.Length > 0 ? toSurfaceIds : "(none)"));
+            changes.Add(new AIValueChange("SurfaceIds", fromSurfaceIds.Length > 0 ? fromSurfaceIds : "(none)", toSurfaceIds.Length > 0 ? toSurfaceIds : "(none)"));
         }
 
         if (from.Instructions != to.Instructions)
         {
-            changes.Add(new AIPropertyChange("Instructions", "(modified)", "(modified)"));
+            changes.Add(new AIValueChange("Instructions", "(modified)", "(modified)"));
         }
 
         if (from.IsActive != to.IsActive)
         {
-            changes.Add(new AIPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
+            changes.Add(new AIValueChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
         return changes;

@@ -16,7 +16,7 @@ import {
     type UaiAgentItem,
 } from "@umbraco-ai/agent-ui";
 import { UaiCopilotAgentRepository } from "./repository";
-import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChangeResult } from "@umbraco-ai/core";
+import { UaiEntityAdapterContext, type UaiValueChange, type UaiValueChangeResult } from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
 import { getSectionPathnameFromUrl } from "./section-detector.js";
 
@@ -99,8 +99,8 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#entityAdapterContext.setSelectedEntityKey(key);
     }
 
-    async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
-        return this.#entityAdapterContext.applyPropertyChange(change);
+    async applyValueChange(change: UaiValueChange): Promise<UaiValueChangeResult> {
+        return this.#entityAdapterContext.applyValueChange(change);
     }
 
     constructor(host: UmbControllerHost) {

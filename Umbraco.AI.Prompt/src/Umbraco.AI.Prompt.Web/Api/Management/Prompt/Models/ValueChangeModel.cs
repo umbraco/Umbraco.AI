@@ -3,15 +3,15 @@ using System.ComponentModel.DataAnnotations;
 namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 
 /// <summary>
-/// Represents a property change to be applied to an entity.
+/// Represents a value change to be applied to an entity using a JSON path.
 /// </summary>
-public class PropertyChangeModel
+public class ValueChangeModel
 {
     /// <summary>
-    /// The property alias.
+    /// JSON path to the value (e.g., "title", "price.amount", "inventory.quantity").
     /// </summary>
     [Required]
-    public required string Alias { get; init; }
+    public required string Path { get; init; }
 
     /// <summary>
     /// The new value to set.

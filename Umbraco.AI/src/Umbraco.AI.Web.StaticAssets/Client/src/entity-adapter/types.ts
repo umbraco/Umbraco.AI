@@ -65,12 +65,12 @@ export interface UaiSerializedProperty {
 }
 
 /**
- * Request to change a property value.
+ * Request to change a value at a JSON path in the entity data.
  * Changes are staged in the workspace - user must save to persist.
  */
-export interface UaiPropertyChange {
-    /** Property alias */
-    alias: string;
+export interface UaiValueChange {
+    /** JSON path to the value (e.g., "title", "price.amount", "inventory.quantity") */
+    path: string;
     /** New value to set */
     value: unknown;
     /** Culture for variant content (undefined = invariant) */
@@ -80,9 +80,9 @@ export interface UaiPropertyChange {
 }
 
 /**
- * Result of a property change operation.
+ * Result of a value change operation.
  */
-export interface UaiPropertyChangeResult {
+export interface UaiValueChangeResult {
     /** Whether the change was applied successfully */
     success: boolean;
     /** Human-readable error message if failed */
@@ -144,13 +144,13 @@ export interface UaiEntityAdapterApi {
     serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity>;
 
     /**
-     * Apply a property change to the workspace (staged, not persisted).
+     * Apply a value change to the workspace (staged, not persisted).
      * Optional - some entity types may be read-only.
      * @param workspaceContext The workspace context to modify
-     * @param change The property change to apply
+     * @param change The value change to apply
      * @returns Result indicating success or failure with error message
      */
-    applyPropertyChange?(workspaceContext: unknown, change: UaiPropertyChange): Promise<UaiPropertyChangeResult>;
+    applyValueChange?(workspaceContext: unknown, change: UaiValueChange): Promise<UaiValueChangeResult>;
 }
 
 /**

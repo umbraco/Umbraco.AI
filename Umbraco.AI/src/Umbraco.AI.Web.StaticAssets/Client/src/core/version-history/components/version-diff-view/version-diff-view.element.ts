@@ -1,7 +1,7 @@
 import { css, customElement, html, property, repeat, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import type { UaiVersionPropertyChange } from "../../types.js";
+import type { UaiVersionValueChange } from "../../types.js";
 import { diffWords, type Change } from "diff";
 
 /**
@@ -16,7 +16,7 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
      * The list of property changes to display.
      */
     @property({ attribute: false })
-    changes: UaiVersionPropertyChange[] = [];
+    changes: UaiVersionValueChange[] = [];
 
     override render() {
         if (this.changes.length === 0) {
@@ -40,20 +40,20 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
 
                 ${repeat(
                     this.changes,
-                    (change) => change.propertyName,
+                    (change) => change.path,
                     (change) => this.#renderChange(change),
                 )}
             </uui-table>
         `;
     }
 
-    #renderChange(change: UaiVersionPropertyChange) {
+    #renderChange(change: UaiVersionValueChange) {
         const isAddition = !change.oldValue && change.newValue;
         const isDeletion = change.oldValue && !change.newValue;
 
         return html`
             <uui-table-row>
-                <uui-table-cell>${change.propertyName}</uui-table-cell>
+                <uui-table-cell>${change.path}</uui-table-cell>
                 <uui-table-cell>
                     <div class="diff-container ${isAddition ? "addition" : ""} ${isDeletion ? "deletion" : ""}">
                         ${this.#renderInlineDiff(change.oldValue, change.newValue)}

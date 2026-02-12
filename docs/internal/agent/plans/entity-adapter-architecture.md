@@ -18,7 +18,7 @@
 - [x] Backend context processing (appends to system prompt)
 - [x] Reactive name updates (via `variants` observable)
 - [x] Reactive icon updates (via `structure.ownerContentType` observable)
-- [x] Property mutation API (`applyPropertyChange`) for TextBox/TextArea
+- [x] Property mutation API (`applyValueChange`) for TextBox/TextArea
 
 **Files created/modified:**
 | File | Status |
@@ -46,7 +46,7 @@
 
 - [ ] Extension manifest registration (currently hardcoded adapter)
 - [ ] Media adapter
-- [x] Property mutation API (`applyPropertyChange` on adapters/context)
+- [x] Property mutation API (`applyValueChange` on adapters/context)
 - [x] Frontend tool for property mutation (`setPropertyValue` tool)
 - [x] Enhanced serialization using content type structure (shows all properties, not just those with values)
 - [ ] Complex property editors (block grid, media picker, RichText)
@@ -64,9 +64,9 @@
 
 ```
 Tool Call (LLM)
-  → CopilotContext.applyPropertyChange(change)
-    → EntityAdapterContext.applyPropertyChange(change)
-      → Adapter.applyPropertyChange(workspaceContext, change)
+  → CopilotContext.applyValueChange(change)
+    → EntityAdapterContext.applyValueChange(change)
+      → Adapter.applyValueChange(workspaceContext, change)
         → workspaceContext.setPropertyValue(alias, value, variantId)
 ```
 
@@ -76,19 +76,19 @@ Tool Call (LLM)
 2. **Adapter validation** - Document adapter validates property exists and is a supported editor type.
 3. **Supported editors** - TextBox and TextArea only (consistent with serialization).
 4. **Variant support** - Culture and segment can be specified for variant content.
-5. **Graceful error handling** - Returns `UaiPropertyChangeResult` with success/error instead of throwing.
+5. **Graceful error handling** - Returns `UaiValueChangeResult` with success/error instead of throwing.
 
 **Types Added:**
 
 ```typescript
-interface UaiPropertyChange {
-    alias: string; // Property alias
+interface UaiValueChange {
+    path: string; // JSON path to value
     value: unknown; // New value
     culture?: string; // For variant content (undefined = invariant)
     segment?: string; // For segmented content
 }
 
-interface UaiPropertyChangeResult {
+interface UaiValueChangeResult {
     success: boolean;
     error?: string; // Human-readable error message
 }
@@ -97,11 +97,11 @@ interface UaiPropertyChangeResult {
 **Files Modified:**
 | File | Changes |
 |------|---------|
-| `entity-adapter/types.ts` | Added `UaiPropertyChange`, `UaiPropertyChangeResult`, updated `UaiEntityAdapterApi` |
-| `entity-adapter/adapters/document.adapter.ts` | Added `applyPropertyChange` method |
-| `entity-adapter/entity-adapter.context.ts` | Added `applyPropertyChange` method |
+| `entity-adapter/types.ts` | Added `UaiValueChange`, `UaiValueChangeResult`, updated `UaiEntityAdapterApi` |
+| `entity-adapter/adapters/document.adapter.ts` | Added `applyValueChange` method |
+| `entity-adapter/entity-adapter.context.ts` | Added `applyValueChange` method |
 | `entity-adapter/index.ts` | Exported new types |
-| `copilot/copilot.context.ts` | Added `applyPropertyChange` method |
+| `copilot/copilot.context.ts` | Added `applyValueChange` method |
 
 ---
 
@@ -214,7 +214,7 @@ interface UaiEntityAdapterApi extends UmbApi {
     serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity>;
 
     // Property mutation (staged)
-    applyPropertyChange(workspaceContext: unknown, change: UaiPropertyChange): Promise<UaiPropertyChangeResult>;
+    applyValueChange(workspaceContext: unknown, change: UaiValueChange): Promise<UaiValueChangeResult>;
 
     // Schema for LLM understanding
     getPropertySchema(workspaceContext: unknown): Promise<UaiPropertySchema[]>;
@@ -284,7 +284,7 @@ interface UaiEditorUrlOptions {
 ┌─────────────────────────────────────────────────────────────────┐
 │                       Copilot Context                            │
 │  - Delegates entity operations to Entity Adapter Context        │
-│  - Tools call: getCurrentEntity(), applyPropertyChange(), etc.  │
+│  - Tools call: getCurrentEntity(), applyValueChange(), etc.  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -361,10 +361,10 @@ class UaiEntityAdapterContext extends UmbContextBase {
         return current.adapter.serializeForLlm(current.workspaceContext);
     }
 
-    async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
+    async applyValueChange(change: UaiValueChange): Promise<UaiValueChangeResult> {
         const current = this.getCurrentEntity();
         if (!current) throw new Error("No entity in context");
-        return current.adapter.applyPropertyChange(current.workspaceContext, change);
+        return current.adapter.applyValueChange(current.workspaceContext, change);
     }
 }
 ```
@@ -774,7 +774,7 @@ entityAdapterContext.notifyModalClosed(nestingLevel);
 
 ### Property Change Flow
 
-1. Tool calls `applyPropertyChange({ alias, value, variant })`
+1. Tool calls `applyValueChange({ alias, value, variant })`
 2. Adapter resolves to workspace context's `setPropertyValue()`
 3. Change staged in workspace (user sees unsaved indicator)
 4. User clicks Save to persist

@@ -3,7 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiPromptExecutionRepository } from "../repository/execution/prompt-execution.repository.js";
 import type {
     UaiPromptContextItem,
-    UaiPromptPropertyChange,
+    UaiPromptValueChange,
 } from "../repository/execution/prompt-execution.server.data-source.js";
 
 /**
@@ -33,7 +33,7 @@ export interface UaiPromptExecuteResult {
     /** The generated response content. */
     content: string;
     /** Property changes to apply to the entity. */
-    propertyChanges?: UaiPromptPropertyChange[];
+    valueChanges?: UaiPromptValueChange[];
 }
 
 /**
@@ -113,7 +113,7 @@ export class UaiPromptController extends UmbControllerBase {
                 return {
                     data: {
                         content: data.content,
-                        propertyChanges: data.propertyChanges,
+                        valueChanges: data.valueChanges,
                     },
                 };
             }

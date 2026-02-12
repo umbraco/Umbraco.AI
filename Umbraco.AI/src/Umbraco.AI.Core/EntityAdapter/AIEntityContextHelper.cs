@@ -1,4 +1,4 @@
-using System.Text;
+using System.Text.Json;
 
 namespace Umbraco.AI.Core.EntityAdapter;
 
@@ -7,6 +7,17 @@ namespace Umbraco.AI.Core.EntityAdapter;
 /// </summary>
 internal sealed class AIEntityContextHelper : IAIEntityContextHelper
 {
+    private readonly AIEntityFormatterCollection _formatters;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIEntityContextHelper"/> class.
+    /// </summary>
+    /// <param name="formatters">The entity formatter collection.</param>
+    public AIEntityContextHelper(AIEntityFormatterCollection formatters)
+    {
+        _formatters = formatters;
+    }
+
     /// <inheritdoc />
     public Dictionary<string, object?> BuildContextDictionary(AISerializedEntity entity)
     {
@@ -17,13 +28,44 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
             ["entityType"] = entity.EntityType,
             ["entityId"] = entity.Unique,
             ["entityName"] = entity.Name,
-            ["contentType"] = entity.ContentType,
         };
 
-        // Add each property value with its alias as key
-        foreach (var property in entity.Properties)
+        // Extract contentType from data if present (CMS entities)
+        if (entity.Data.ValueKind == JsonValueKind.Object &&
+            entity.Data.TryGetProperty("contentType", out var contentTypeElement) &&
+            contentTypeElement.ValueKind == JsonValueKind.String)
         {
-            context[property.Alias] = property.Value;
+            context["contentType"] = contentTypeElement.GetString();
+        }
+
+        // Extract property values from data.properties array if present (CMS entities)
+        if (entity.Data.ValueKind == JsonValueKind.Object &&
+            entity.Data.TryGetProperty("properties", out var propertiesElement) &&
+            propertiesElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var propElement in propertiesElement.EnumerateArray())
+            {
+                if (propElement.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                // Get alias and value
+                if (propElement.TryGetProperty("alias", out var aliasElement) &&
+                    aliasElement.ValueKind == JsonValueKind.String)
+                {
+                    var alias = aliasElement.GetString();
+                    if (string.IsNullOrEmpty(alias))
+                        continue;
+
+                    // Extract value
+                    object? value = null;
+                    if (propElement.TryGetProperty("value", out var valueElement))
+                    {
+                        value = ExtractValue(valueElement);
+                    }
+
+                    context[alias] = value;
+                }
+            }
         }
 
         return context;
@@ -34,32 +76,22 @@ internal sealed class AIEntityContextHelper : IAIEntityContextHelper
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        var sb = new StringBuilder();
+        // Get the appropriate formatter for this entity type
+        var formatter = _formatters.GetFormatter(entity.EntityType);
 
-        sb.AppendLine($"## Current Entity Context");
-        sb.AppendLine($"Key: `{entity.Unique}`");
-        sb.AppendLine($"Name: `{entity.Name}`");
-        sb.AppendLine($"Type: `{entity.EntityType}`");
-        sb.AppendLine($"**IMPORTANT** When the user says 'this page', 'this document', 'this entity', 'this media item' or similar, you should use this context entry as the reference.");
+        return formatter.Format(entity);
+    }
 
-        if (!string.IsNullOrEmpty(entity.ContentType))
+    private static object? ExtractValue(JsonElement element)
+    {
+        return element.ValueKind switch
         {
-            sb.AppendLine($"Content type: {entity.ContentType}");
-        }
-
-        if (entity.Properties.Count > 0)
-        {
-            sb.AppendLine();
-            sb.AppendLine("### Properties");
-            sb.AppendLine();
-
-            foreach (var property in entity.Properties)
-            {
-                var valueDisplay = property.Value?.ToString() ?? "(empty)";
-                sb.AppendLine($"- **{property.Label}** (`{property.Alias}`): {valueDisplay}");
-            }
-        }
-
-        return sb.ToString();
+            JsonValueKind.String => element.GetString(),
+            JsonValueKind.Number => element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => element.GetRawText(), // For objects/arrays, return JSON string
+        };
     }
 }

@@ -312,6 +312,7 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 gap: var(--uui-size-space-5);
                 align-items: center;
                 border-bottom: 1px solid var(--uui-color-border);
+                padding-bottom: var(--uui-size-space-4);
             }
 
             .actions {

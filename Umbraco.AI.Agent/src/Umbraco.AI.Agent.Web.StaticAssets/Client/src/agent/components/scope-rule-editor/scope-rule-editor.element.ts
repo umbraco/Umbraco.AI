@@ -1,224 +1,239 @@
-import { LitElement, html, css } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { css, html, customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
+import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiAgentScopeRule } from "../../types.js";
 
+/**
+ * Creates an empty agent scope rule.
+ */
+export function createEmptyAgentScopeRule(): UaiAgentScopeRule {
+	return {
+		sectionAliases: null,
+		entityTypeAliases: null,
+		workspaceAliases: null,
+	};
+}
+
+/**
+ * Generates a human-readable summary for an agent scope rule.
+ */
+function getRuleSummary(rule: UaiAgentScopeRule): string {
+	const parts: string[] = [];
+
+	if (rule.sectionAliases && rule.sectionAliases.length > 0) {
+		parts.push(`Section: ${rule.sectionAliases.join(" | ")}`);
+	}
+
+	if (rule.entityTypeAliases && rule.entityTypeAliases.length > 0) {
+		parts.push(`Entity Type: ${rule.entityTypeAliases.join(" | ")}`);
+	}
+
+	if (rule.workspaceAliases && rule.workspaceAliases.length > 0) {
+		parts.push(`Workspace: ${rule.workspaceAliases.join(" | ")}`);
+	}
+
+	if (parts.length === 0) {
+		return "Matches all contexts";
+	}
+
+	return parts.join(" AND ");
+}
+
+/**
+ * Individual agent scope rule editor with collapsible UI.
+ *
+ * @fires rule-change - Fires when the rule is modified
+ * @fires remove - Fires when the remove button is clicked
+ */
 @customElement("uai-agent-scope-rule-editor")
-export class UaiAgentScopeRuleEditorElement extends LitElement {
+export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 	@property({ type: Object })
-	rule?: UaiAgentScopeRule;
-
-	@property({ type: Number })
-	index: number = 0;
-
-	@property({ type: String })
-	ruleType: "allow" | "deny" = "allow";
+	rule: UaiAgentScopeRule = createEmptyAgentScopeRule();
 
 	@state()
-	private _isExpanded = false;
+	private _collapsed = true;
 
-	/**
-	 * Generates human-readable summary of rule constraints.
-	 * Examples:
-	 * - "Section: content AND Entity Type: document"
-	 * - "Section: media"
-	 * - "All contexts (no restrictions)"
-	 */
-	#getRuleSummary(): string {
-		if (!this.rule) return "Empty rule";
-
-		const parts: string[] = [];
-
-		if (this.rule.sectionAliases?.length) {
-			parts.push(`Section: ${this.rule.sectionAliases.join(", ")}`);
-		}
-
-		if (this.rule.entityTypeAliases?.length) {
-			parts.push(`Entity Type: ${this.rule.entityTypeAliases.join(", ")}`);
-		}
-
-		if (this.rule.workspaceAliases?.length) {
-			parts.push(`Workspace: ${this.rule.workspaceAliases.join(", ")}`);
-		}
-
-		return parts.length > 0 ? parts.join(" AND ") : "All contexts (no restrictions)";
+	#toggleCollapsed() {
+		this._collapsed = !this._collapsed;
 	}
 
-	#onSectionAliasesChange(e: CustomEvent) {
+	#onSectionAliasesChange(event: CustomEvent) {
+		event.stopPropagation();
+		const value = event.detail.value as string[];
+		this.#dispatchChange({
+			...this.rule,
+			sectionAliases: value.length > 0 ? value : null,
+		});
+	}
+
+	#onEntityTypeAliasesChange(event: CustomEvent) {
+		event.stopPropagation();
+		const value = event.detail.value as string[];
+		this.#dispatchChange({
+			...this.rule,
+			entityTypeAliases: value.length > 0 ? value : null,
+		});
+	}
+
+	#onWorkspaceAliasesChange(event: CustomEvent) {
+		event.stopPropagation();
+		const value = event.detail.value as string[];
+		this.#dispatchChange({
+			...this.rule,
+			workspaceAliases: value.length > 0 ? value : null,
+		});
+	}
+
+	#onRemove(event: Event) {
+		event.stopPropagation();
+		this.dispatchEvent(new Event("remove", { bubbles: true, composed: true }));
+	}
+
+	#dispatchChange(rule: UaiAgentScopeRule) {
 		this.dispatchEvent(
-			new CustomEvent("section-aliases-change", {
-				detail: {
-					index: this.index,
-					ruleType: this.ruleType,
-					value: e.detail.value,
-				},
+			new CustomEvent<UaiAgentScopeRule>("rule-change", {
+				detail: rule,
 				bubbles: true,
 				composed: true,
 			})
 		);
-	}
-
-	#onEntityTypeAliasesChange(e: CustomEvent) {
-		this.dispatchEvent(
-			new CustomEvent("entity-type-aliases-change", {
-				detail: {
-					index: this.index,
-					ruleType: this.ruleType,
-					value: e.detail.value,
-				},
-				bubbles: true,
-				composed: true,
-			})
-		);
-	}
-
-	#onWorkspaceAliasesChange(e: CustomEvent) {
-		this.dispatchEvent(
-			new CustomEvent("workspace-aliases-change", {
-				detail: {
-					index: this.index,
-					ruleType: this.ruleType,
-					value: e.detail.value,
-				},
-				bubbles: true,
-				composed: true,
-			})
-		);
-	}
-
-	#onRemove() {
-		this.dispatchEvent(
-			new CustomEvent("remove-rule", {
-				detail: { index: this.index, ruleType: this.ruleType },
-				bubbles: true,
-				composed: true,
-			})
-		);
-	}
-
-	#toggleExpanded() {
-		this._isExpanded = !this._isExpanded;
 	}
 
 	render() {
-		const ruleLabel = this.ruleType === "allow" ? "Allow Rule" : "Deny Rule";
+		const summary = getRuleSummary(this.rule);
 
 		return html`
 			<div class="rule-card">
-				<div class="rule-header" @click=${this.#toggleExpanded}>
-					<div class="rule-summary">
-						<uui-symbol-expand .open=${this._isExpanded}></uui-symbol-expand>
-						<strong>${ruleLabel} ${this.index + 1}:</strong>
-						<span class="summary-text">${this.#getRuleSummary()}</span>
-					</div>
-					<uui-button
-						compact
-						look="secondary"
-						label="Remove rule"
-						@click=${(e: Event) => {
-							e.stopPropagation();
-							this.#onRemove();
-						}}>
-						<uui-icon name="icon-trash"></uui-icon>
-					</uui-button>
+				<div class="rule-header" @click=${this.#toggleCollapsed} aria-expanded=${!this._collapsed}>
+					<uui-symbol-expand ?open=${!this._collapsed}></uui-symbol-expand>
+					<span class="rule-summary">${summary}</span>
+					<uui-action-bar>
+						<uui-button
+							look="secondary"
+							color="default"
+							compact
+							@click=${this.#onRemove}
+							label="Remove rule"
+						>
+							<uui-icon name="icon-trash"></uui-icon>
+						</uui-button>
+					</uui-action-bar>
 				</div>
 
-				${this._isExpanded
-					? html`
-							<div class="rule-content">
-								<umb-property-layout
-									label="Section Aliases"
-									description="Section pathnames where this rule applies (e.g., 'content', 'media'). Leave empty for any section.">
-									<umb-input-multi-text
-										slot="editor"
-										placeholder="content, media"
-										.value=${this.rule?.sectionAliases ?? []}
-										@change=${this.#onSectionAliasesChange}>
-									</umb-input-multi-text>
-								</umb-property-layout>
+				<div class="rule-content" ?hidden=${this._collapsed}>
+					<umb-property-layout
+						label="Section Aliases"
+						description="Section pathnames where this rule applies (e.g., 'content', 'media'). Leave empty for any section."
+						orientation="vertical"
+					>
+						<umb-input-multi-text
+							slot="editor"
+							placeholder="content, media"
+							.value=${this.rule.sectionAliases ?? []}
+							@change=${this.#onSectionAliasesChange}
+						></umb-input-multi-text>
+					</umb-property-layout>
 
-								<umb-property-layout
-									label="Entity Type Aliases"
-									description="Entity types where this rule applies (e.g., 'document', 'media'). Leave empty for any entity type.">
-									<umb-input-multi-text
-										slot="editor"
-										placeholder="document, media"
-										.value=${this.rule?.entityTypeAliases ?? []}
-										@change=${this.#onEntityTypeAliasesChange}>
-									</umb-input-multi-text>
-								</umb-property-layout>
+					<umb-property-layout
+						label="Entity Type Aliases"
+						description="Entity types where this rule applies (e.g., 'document', 'media'). Leave empty for any entity type."
+						orientation="vertical"
+					>
+						<umb-input-multi-text
+							slot="editor"
+							placeholder="document, media"
+							.value=${this.rule.entityTypeAliases ?? []}
+							@change=${this.#onEntityTypeAliasesChange}
+						></umb-input-multi-text>
+					</umb-property-layout>
 
-								<umb-property-layout
-									label="Workspace Aliases"
-									description="Workspace aliases where this rule applies (e.g., 'Umb.Workspace.Document'). Leave empty for any workspace.">
-									<umb-input-multi-text
-										slot="editor"
-										placeholder="Umb.Workspace.Document"
-										.value=${this.rule?.workspaceAliases ?? []}
-										@change=${this.#onWorkspaceAliasesChange}>
-									</umb-input-multi-text>
-								</umb-property-layout>
-							</div>
-					  `
-					: ""}
+					<umb-property-layout
+						label="Workspace Aliases"
+						description="Workspace aliases where this rule applies (e.g., 'Umb.Workspace.Document'). Leave empty for any workspace."
+						orientation="vertical"
+					>
+						<umb-input-multi-text
+							slot="editor"
+							placeholder="Umb.Workspace.Document"
+							.value=${this.rule.workspaceAliases ?? []}
+							@change=${this.#onWorkspaceAliasesChange}
+						></umb-input-multi-text>
+					</umb-property-layout>
+				</div>
 			</div>
 		`;
 	}
 
-	static styles = css`
-		:host {
-			display: block;
-		}
+	static styles = [
+		UmbTextStyles,
+		css`
+			:host {
+				display: block;
+				--umb-scope-rule-entry-actions-opacity: 0;
+			}
 
-		.rule-card {
-			border: 1px solid var(--uui-color-border);
-			border-radius: var(--uui-border-radius);
-			margin-bottom: var(--uui-size-space-4);
-			background: var(--uui-color-surface);
-		}
+			:host(:hover),
+			:host(:focus-within) {
+				--umb-scope-rule-entry-actions-opacity: 1;
+			}
 
-		.rule-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			padding: var(--uui-size-space-4);
-			cursor: pointer;
-			user-select: none;
-		}
+			uui-action-bar {
+				opacity: var(--umb-scope-rule-entry-actions-opacity, 0);
+				transition: opacity 120ms;
+			}
 
-		.rule-header:hover {
-			background: var(--uui-color-surface-emphasis);
-		}
+			.rule-header {
+				display: flex;
+				align-items: center;
+				gap: var(--uui-size-space-3);
+				padding: var(--uui-size-space-1) var(--uui-size-space-4);
+				background: transparent;
+				cursor: pointer;
+				text-align: left;
+				font: inherit;
+				color: inherit;
+				border: 1px solid var(--uui-color-border);
+			}
 
-		.rule-summary {
-			display: flex;
-			align-items: center;
-			gap: var(--uui-size-space-3);
-			flex: 1;
-		}
+			.rule-header:hover,
+			.rule-header:focus {
+				border-color: var(--uui-color-border-emphasis);
+			}
 
-		.summary-text {
-			color: var(--uui-color-text-alt);
-			font-size: 0.9em;
-		}
+			.rule-summary {
+				flex: 1;
+				color: var(--uui-color-text-alt);
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				line-height: 1;
+			}
 
-		.rule-header uui-button {
-			opacity: 0;
-			transition: opacity 0.2s;
-		}
+			.rule-content {
+				padding: var(--uui-size-space-5);
+				display: flex;
+				flex-direction: column;
+				gap: var(--uui-size-space-6);
+				border: 1px solid var(--uui-color-border);
+				border-top: 0;
+			}
 
-		.rule-card:hover .rule-header uui-button {
-			opacity: 1;
-		}
+			.rule-content[hidden] {
+				display: none;
+			}
 
-		.rule-content {
-			padding: var(--uui-size-space-4);
-			padding-top: 0;
-			display: flex;
-			flex-direction: column;
-			gap: var(--uui-size-space-4);
-		}
-	`;
+			.rule-content umb-property-layout {
+				--uui-size-layout-1: 0;
+			}
+
+			uui-symbol-expand {
+				flex-shrink: 0;
+			}
+		`,
+	];
 }
+
+export default UaiAgentScopeRuleEditorElement;
 
 declare global {
 	interface HTMLElementTagNameMap {

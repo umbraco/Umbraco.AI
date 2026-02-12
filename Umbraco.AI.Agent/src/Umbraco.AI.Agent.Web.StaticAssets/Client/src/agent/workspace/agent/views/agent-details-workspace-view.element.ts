@@ -73,20 +73,14 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #addRule(ruleType: "allow" | "deny") {
-        if (!this._model) return;
+    #onAllowRulesChange(event: CustomEvent<UaiAgentScopeRule[]>) {
+        event.stopPropagation();
+        const allowRules = event.detail;
+        const currentScope = this._model?.scope ?? { allowRules: [], denyRules: [] };
 
-        const newRule: UaiAgentScopeRule = {
-            sectionAliases: [],
-            entityTypeAliases: [],
-            workspaceAliases: [],
-        };
-
-        const currentScope = this._model.scope ?? { allowRules: [], denyRules: [] };
         const updatedScope: UaiAgentScope = {
             ...currentScope,
-            allowRules: ruleType === "allow" ? [...currentScope.allowRules, newRule] : currentScope.allowRules,
-            denyRules: ruleType === "deny" ? [...currentScope.denyRules, newRule] : currentScope.denyRules,
+            allowRules,
         };
 
         this.#workspaceContext?.handleCommand(
@@ -94,61 +88,19 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onRemoveRule(e: CustomEvent) {
-        if (!this._model?.scope) return;
-
-        const { index, ruleType } = e.detail;
-        const currentScope = this._model.scope;
+    #onDenyRulesChange(event: CustomEvent<UaiAgentScopeRule[]>) {
+        event.stopPropagation();
+        const denyRules = event.detail;
+        const currentScope = this._model?.scope ?? { allowRules: [], denyRules: [] };
 
         const updatedScope: UaiAgentScope = {
             ...currentScope,
-            allowRules: ruleType === "allow"
-                ? currentScope.allowRules.filter((_, i) => i !== index)
-                : currentScope.allowRules,
-            denyRules: ruleType === "deny"
-                ? currentScope.denyRules.filter((_, i) => i !== index)
-                : currentScope.denyRules,
+            denyRules,
         };
 
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiAgentDetailModel>({ scope: updatedScope }, "scope"),
         );
-    }
-
-    #updateRuleProperty(index: number, ruleType: "allow" | "deny", property: keyof UaiAgentScopeRule, value: any) {
-        if (!this._model?.scope) return;
-
-        const currentScope = this._model.scope;
-        const rules = ruleType === "allow" ? [...currentScope.allowRules] : [...currentScope.denyRules];
-
-        if (rules[index]) {
-            rules[index] = { ...rules[index], [property]: value };
-        }
-
-        const updatedScope: UaiAgentScope = {
-            ...currentScope,
-            allowRules: ruleType === "allow" ? rules : currentScope.allowRules,
-            denyRules: ruleType === "deny" ? rules : currentScope.denyRules,
-        };
-
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ scope: updatedScope }, "scope"),
-        );
-    }
-
-    #onRuleSectionAliasesChange(e: CustomEvent) {
-        const { index, ruleType, value } = e.detail;
-        this.#updateRuleProperty(index, ruleType, "sectionAliases", value);
-    }
-
-    #onRuleEntityTypeAliasesChange(e: CustomEvent) {
-        const { index, ruleType, value } = e.detail;
-        this.#updateRuleProperty(index, ruleType, "entityTypeAliases", value);
-    }
-
-    #onRuleWorkspaceAliasesChange(e: CustomEvent) {
-        const { index, ruleType, value } = e.detail;
-        this.#updateRuleProperty(index, ruleType, "workspaceAliases", value);
     }
 
     render() {
@@ -228,27 +180,11 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         </p>
                     </div>
 
-                    ${this._model.scope?.allowRules.map(
-                        (rule, index) => html`
-                            <uai-agent-scope-rule-editor
-                                .rule=${rule}
-                                .index=${index}
-                                ruleType="allow"
-                                @section-aliases-change=${this.#onRuleSectionAliasesChange}
-                                @entity-type-aliases-change=${this.#onRuleEntityTypeAliasesChange}
-                                @workspace-aliases-change=${this.#onRuleWorkspaceAliasesChange}
-                                @remove-rule=${this.#onRemoveRule}>
-                            </uai-agent-scope-rule-editor>
-                        `
-                    )}
-
-                    <uui-button
-                        label="Add Allow Rule"
-                        look="placeholder"
-                        @click=${() => this.#addRule("allow")}>
-                        <uui-icon name="icon-add"></uui-icon>
-                        Add Allow Rule
-                    </uui-button>
+                    <uai-agent-scope-rules-editor
+                        .rules=${this._model.scope?.allowRules ?? []}
+                        addButtonLabel="Add Allow Rule"
+                        @rules-change=${this.#onAllowRulesChange}
+                    ></uai-agent-scope-rules-editor>
                 </div>
 
                 <!-- Deny Rules Section -->
@@ -261,27 +197,11 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         </p>
                     </div>
 
-                    ${this._model.scope?.denyRules.map(
-                        (rule, index) => html`
-                            <uai-agent-scope-rule-editor
-                                .rule=${rule}
-                                .index=${index}
-                                ruleType="deny"
-                                @section-aliases-change=${this.#onRuleSectionAliasesChange}
-                                @entity-type-aliases-change=${this.#onRuleEntityTypeAliasesChange}
-                                @workspace-aliases-change=${this.#onRuleWorkspaceAliasesChange}
-                                @remove-rule=${this.#onRemoveRule}>
-                            </uai-agent-scope-rule-editor>
-                        `
-                    )}
-
-                    <uui-button
-                        label="Add Deny Rule"
-                        look="placeholder"
-                        @click=${() => this.#addRule("deny")}>
-                        <uui-icon name="icon-add"></uui-icon>
-                        Add Deny Rule
-                    </uui-button>
+                    <uai-agent-scope-rules-editor
+                        .rules=${this._model.scope?.denyRules ?? []}
+                        addButtonLabel="Add Deny Rule"
+                        @rules-change=${this.#onDenyRulesChange}
+                    ></uai-agent-scope-rules-editor>
                 </div>
 
                 <!-- Examples Box -->

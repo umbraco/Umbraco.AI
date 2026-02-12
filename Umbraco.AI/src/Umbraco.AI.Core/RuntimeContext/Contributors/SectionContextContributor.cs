@@ -66,7 +66,11 @@ internal sealed class SectionContextContributor : IAIRuntimeContextContributor
                 var sectionAlias = sectionElement.GetString();
                 if (!string.IsNullOrEmpty(sectionAlias))
                 {
+                    // Store in data bag
                     context.SetValue(Constants.ContextKeys.SectionAlias, sectionAlias);
+
+                    // Add system message to inform the LLM
+                    context.SystemMessageParts.Add(FormatSectionContext(sectionAlias));
                 }
             }
         }
@@ -74,5 +78,10 @@ internal sealed class SectionContextContributor : IAIRuntimeContextContributor
         {
             // Silently ignore deserialization errors
         }
+    }
+
+    private static string FormatSectionContext(string sectionAlias)
+    {
+        return $"## Current Section\nThe user is currently in the '{sectionAlias}' section.";
     }
 }

@@ -45,8 +45,7 @@ internal sealed class AIFunctionFactory : IAIFunctionFactory
     private static AIFunction CreateTypedFunctionCore<TArgs>(IAITool tool) where TArgs : class
     {
         // Create a typed delegate that MEAI can use to infer schema from TArgs
-        Func<TArgs, CancellationToken, Task<object>> execute =
-            (args, ct) => tool.ExecuteAsync(args, ct);
+        Func<TArgs, CancellationToken, Task<object>> execute = tool.ExecuteAsync;
 
         return MeaiAIFunctionFactory.Create(execute, name: tool.Id, description: tool.Description);
     }

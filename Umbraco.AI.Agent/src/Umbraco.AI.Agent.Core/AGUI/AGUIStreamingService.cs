@@ -173,9 +173,8 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         FunctionCallContent functionCall,
         HashSet<string> frontendToolNames)
     {
-        if (string.IsNullOrEmpty(functionCall.CallId))
-            return null;
-
+        // Don't filter out empty CallIds - let EmitToolCall handle ID generation
+        // This fixes the Gemini empty CallId bug where CallId="" instead of null
         var isFrontendTool = frontendToolNames.Contains(functionCall.Name);
 
         return emitter.EmitToolCall(
@@ -189,9 +188,8 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
         AGUIEventEmitter emitter,
         FunctionResultContent functionResult)
     {
-        if (string.IsNullOrEmpty(functionResult.CallId))
-            return null;
-
+        // Don't filter out empty CallIds - let EmitToolResult handle ID correlation
+        // This fixes the Gemini empty CallId bug where CallId="" instead of null
         return emitter.EmitToolResult(functionResult.CallId, functionResult.Result);
     }
 

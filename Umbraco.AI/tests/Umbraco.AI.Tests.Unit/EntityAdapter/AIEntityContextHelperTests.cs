@@ -5,24 +5,21 @@ namespace Umbraco.AI.Tests.Unit.EntityAdapter;
 
 public class AIEntityContextHelperTests
 {
-    private readonly Mock<AIEntityFormatterCollection> _formatterCollectionMock;
+    private readonly AIEntityFormatterCollection _formatterCollection;
     private readonly AIEntityContextHelper _helper;
 
     public AIEntityContextHelperTests()
     {
-        // Create mock formatter collection with a default formatter
-        _formatterCollectionMock = new Mock<AIEntityFormatterCollection>(() => []);
-
+        // Create real formatter collection with a mock formatter
         var defaultFormatterMock = new Mock<IAIEntityFormatter>();
         defaultFormatterMock.Setup(f => f.EntityType).Returns((string?)null);
         defaultFormatterMock.Setup(f => f.Format(It.IsAny<AISerializedEntity>()))
             .Returns("Mocked formatted output");
 
-        _formatterCollectionMock
-            .Setup(c => c.GetFormatter(It.IsAny<string>()))
-            .Returns(defaultFormatterMock.Object);
+        var formatters = new List<IAIEntityFormatter> { defaultFormatterMock.Object };
+        _formatterCollection = new AIEntityFormatterCollection(() => formatters);
 
-        _helper = new AIEntityContextHelper(_formatterCollectionMock.Object);
+        _helper = new AIEntityContextHelper(_formatterCollection);
     }
 
     [Fact]
@@ -312,7 +309,6 @@ public class AIEntityContextHelperTests
         var result = _helper.FormatForLlm(entity);
 
         // Assert
-        _formatterCollectionMock.Verify(c => c.GetFormatter("document"), Times.Once);
         result.ShouldBe("Mocked formatted output");
     }
 

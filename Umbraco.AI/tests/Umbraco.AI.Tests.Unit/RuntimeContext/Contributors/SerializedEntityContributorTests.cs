@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Core;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.RuntimeContext.Contributors;
@@ -34,8 +35,7 @@ public class SerializedEntityContributorTests
 
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = entityJson
         };
 
@@ -75,8 +75,7 @@ public class SerializedEntityContributorTests
 
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = entityJson
         };
 
@@ -115,8 +114,7 @@ public class SerializedEntityContributorTests
 
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = entityJson
         };
 
@@ -152,8 +150,7 @@ public class SerializedEntityContributorTests
 
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = entityJson
         };
 
@@ -182,8 +179,7 @@ public class SerializedEntityContributorTests
 
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = entityJson
         };
 
@@ -202,8 +198,7 @@ public class SerializedEntityContributorTests
         // Arrange
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = "{ invalid json }"
         };
 
@@ -222,8 +217,7 @@ public class SerializedEntityContributorTests
         // Arrange
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = "plain text, not json"
         };
 
@@ -251,8 +245,7 @@ public class SerializedEntityContributorTests
 
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = entityJson
         };
 
@@ -282,8 +275,7 @@ public class SerializedEntityContributorTests
 
         var contextItem = new AIRequestContextItem
         {
-            Key = "entity",
-            Type = "entity",
+            Description = "Test entity",
             Value = entityJson
         };
 

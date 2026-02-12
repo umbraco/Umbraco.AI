@@ -7,8 +7,8 @@ import type { UaiUserGroupPermissionsMap } from "./user-group-permissions.js";
  * Values within each array use OR logic.
  */
 export interface UaiAgentScopeRule {
-    sectionAliases?: string[] | null;
-    entityTypeAliases?: string[] | null;
+    sections?: string[] | null;
+    entityTypes?: string[] | null;
     workspaceAliases?: string[] | null;
 }
 

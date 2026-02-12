@@ -14,7 +14,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <list type="bullet">
 /// <item>Content-only agent: AllowRules with Sections ["content"]</item>
 /// <item>General agent (not in settings): DenyRules with Sections ["settings"]</item>
-/// <item>Document agent: AllowRules with Sections ["content"], EntityTypeAliases ["document"]</item>
+/// <item>Document agent: AllowRules with Sections ["content"], EntityTypes ["document"]</item>
 /// </list>
 /// </para>
 /// </remarks>

@@ -98,7 +98,7 @@ public class AIAgentScopeValidator
         }
 
         // Check entity type (if specified AND surface cares about it)
-        if (rule.EntityTypeAliases?.Count > 0 &&
+        if (rule.EntityTypes?.Count > 0 &&
             relevantDimensions.Contains("entityType", StringComparer.OrdinalIgnoreCase))
         {
             // No current entity type = doesn't match
@@ -108,7 +108,7 @@ public class AIAgentScopeValidator
             }
 
             // Check if current entity type is in the list (OR logic)
-            if (!rule.EntityTypeAliases.Contains(context.EntityTypeAlias, StringComparer.OrdinalIgnoreCase))
+            if (!rule.EntityTypes.Contains(context.EntityTypeAlias, StringComparer.OrdinalIgnoreCase))
             {
                 return false;
             }

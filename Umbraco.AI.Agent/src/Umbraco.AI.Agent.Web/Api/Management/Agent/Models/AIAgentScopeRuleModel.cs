@@ -15,9 +15,9 @@ public class AIAgentScopeRuleModel
     public IReadOnlyList<string>? Sections { get; set; }
 
     /// <summary>
-    /// Entity type aliases where this rule applies (e.g., "document", "media").
+    /// Entity types where this rule applies (e.g., "document", "media").
     /// If any value matches the current entity type, this constraint is satisfied.
     /// Null or empty means any entity type.
     /// </summary>
-    public IReadOnlyList<string>? EntityTypeAliases { get; set; }
+    public IReadOnlyList<string>? EntityTypes { get; set; }
 }

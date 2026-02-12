@@ -21,7 +21,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// new AIAgentScopeRule
 /// {
 ///     Sections = ["content"],
-///     EntityTypeAliases = ["document", "documentType"]
+///     EntityTypes = ["document", "documentType"]
 /// }
 /// </code>
 /// </example>
@@ -36,10 +36,10 @@ public sealed class AIAgentScopeRule
     public IReadOnlyList<string>? Sections { get; set; }
 
     /// <summary>
-    /// Entity type aliases where this rule applies (e.g., "document", "media").
+    /// Entity types where this rule applies (e.g., "document", "media").
     /// If any value matches the current entity type, this constraint is satisfied.
     /// Null or empty means any entity type.
     /// </summary>
     /// <example>["document", "documentType"]</example>
-    public IReadOnlyList<string>? EntityTypeAliases { get; set; }
+    public IReadOnlyList<string>? EntityTypes { get; set; }
 }

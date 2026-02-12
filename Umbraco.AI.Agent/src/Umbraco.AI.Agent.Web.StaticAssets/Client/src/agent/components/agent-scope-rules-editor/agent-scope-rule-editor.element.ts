@@ -10,8 +10,8 @@ import "../../../core/components/entity-type-tags-input/entity-type-tags-input.e
  */
 export function createEmptyAgentScopeRule(): UaiAgentScopeRule {
 	return {
-		sectionAliases: null,
-		entityTypeAliases: null,
+        sections: null,
+		entityTypes: null,
 		workspaceAliases: null,
 	};
 }
@@ -22,12 +22,12 @@ export function createEmptyAgentScopeRule(): UaiAgentScopeRule {
 function getRuleSummary(rule: UaiAgentScopeRule): string {
 	const parts: string[] = [];
 
-	if (rule.sectionAliases && rule.sectionAliases.length > 0) {
-		parts.push(`Section: ${rule.sectionAliases.join(" | ")}`);
+	if (rule.sections && rule.sections.length > 0) {
+		parts.push(`Section: ${rule.sections.join(" | ")}`);
 	}
 
-	if (rule.entityTypeAliases && rule.entityTypeAliases.length > 0) {
-		parts.push(`Entity Type: ${rule.entityTypeAliases.join(" | ")}`);
+	if (rule.entityTypes && rule.entityTypes.length > 0) {
+		parts.push(`Entity Type: ${rule.entityTypes.join(" | ")}`);
 	}
 
 	if (rule.workspaceAliases && rule.workspaceAliases.length > 0) {
@@ -59,23 +59,23 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 		this._collapsed = !this._collapsed;
 	}
 
-	#onSectionAliasesChange(event: Event) {
+	#onSectionsChange(event: Event) {
 		event.stopPropagation();
 		const target = event.target as HTMLElement & { items: string[] };
 		const value = target.items;
 		this.#dispatchChange({
 			...this.rule,
-			sectionAliases: value.length > 0 ? value : null,
+			sections: value.length > 0 ? value : null,
 		});
 	}
 
-	#onEntityTypeAliasesChange(event: Event) {
+	#onEntityTypesChange(event: Event) {
 		event.stopPropagation();
 		const target = event.target as HTMLElement & { items: string[] };
 		const value = target.items;
 		this.#dispatchChange({
 			...this.rule,
-			entityTypeAliases: value.length > 0 ? value : null,
+			entityTypes: value.length > 0 ? value : null,
 		});
 	}
 
@@ -132,8 +132,8 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 					>
 						<uai-section-tags-input
 							slot="editor"
-							.items=${this.rule.sectionAliases ?? []}
-							@change=${this.#onSectionAliasesChange}
+							.items=${this.rule.sections ?? []}
+							@change=${this.#onSectionsChange}
 						></uai-section-tags-input>
 					</umb-property-layout>
 
@@ -144,8 +144,8 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 					>
 						<uai-entity-type-tags-input
 							slot="editor"
-							.items=${this.rule.entityTypeAliases ?? []}
-							@change=${this.#onEntityTypeAliasesChange}
+							.items=${this.rule.entityTypes ?? []}
+							@change=${this.#onEntityTypesChange}
 						></uai-entity-type-tags-input>
 					</umb-property-layout>
 

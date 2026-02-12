@@ -28,7 +28,7 @@ The system consists of two parallel pipelines that converge:
 │  └────────────┬─────────────┘     │  - canHandle()              │               │
 │               │                   │  - extractEntityContext()   │               │
 │               │                   │  - serializeForLlm()        │               │
-│               │                   │  - applyPropertyChange()    │               │
+│               │                   │  - applyValueChange()    │               │
 │               │                   └─────────────────────────────┘               │
 │               │                                                                 │
 │               ▼                                                                 │
@@ -156,8 +156,8 @@ The system consists of two parallel pipelines that converge:
 │  │  AIPromptExecutionResult {                                              │   │
 │  │    Content: string,              // LLM response text                   │   │
 │  │    Usage: UsageDetails,          // Token counts                        │   │
-│  │    PropertyChanges: [            // Optional structured changes         │   │
-│  │      { Alias, Value, Culture?, Segment? }                               │   │
+│  │    ValueChanges: [               // Optional structured changes         │   │
+│  │      { Path, Value, Culture?, Segment? }                                │   │
 │  │    ]                                                                    │   │
 │  │  }                                                                      │   │
 │  │                                                                         │   │
@@ -166,24 +166,24 @@ The system consists of two parallel pipelines that converge:
 │  │  PromptExecutionResponseModel {                                         │   │
 │  │    Content: string,                                                     │   │
 │  │    Usage: UsageModel,                                                   │   │
-│  │    PropertyChanges: PropertyChangeModel[]                               │   │
+│  │    ValueChanges: ValueChangeModel[]                                  │   │
 │  │  }                                                                      │   │
 │  │                                                                         │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │                              │                                                 │
 └──────────────────────────────┼─────────────────────────────────────────────────┘
                                │
-                    HTTP Response (with PropertyChanges[])
+                    HTTP Response (with ValueChanges[])
                                │
                                ▼
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │                    FRONTEND: APPLY PROPERTY CHANGES                            │
 ├────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                │
-│  For each PropertyChangeModel in response:                                     │
+│  For each ValueChangeModel in response:                                     │
 │                                                                                │
-│    UaiPropertyChange {                                                         │
-│      alias: string,           // Property to update                            │
+│    UaiValueChange {                                                         │
+│      path: string,            // JSON path to value                             │
 │      value: unknown,          // New value                                     │
 │      culture?: string,        // For variant content                           │
 │      segment?: string         // For segmented content                         │
@@ -191,11 +191,11 @@ The system consists of two parallel pipelines that converge:
 │                                                                                │
 │                        ↓                                                       │
 │                                                                                │
-│    adapter.applyPropertyChange(workspaceContext, change)                       │
+│    adapter.applyValueChange(workspaceContext, change)                          │
 │                                                                                │
 │                        ↓                                                       │
 │                                                                                │
-│    UaiPropertyChangeResult {                                                   │
+│    UaiValueChangeResult {                                                   │
 │      success: boolean,        // Whether change was applied                    │
 │      error?: string           // Error message if failed                       │
 │    }                                                                           │
@@ -217,7 +217,7 @@ The system consists of two parallel pipelines that converge:
 | `IAIContextResolver`                   | Backend Phase 3   | Resolves knowledge base resources               |
 | `ContextInjectingChatClient`           | Backend Phase 4   | Assembles final LLM request                     |
 | `AIPromptExecutionResult`              | Backend Phase 5   | Packages LLM response with property changes     |
-| `uaiEntityAdapter.applyPropertyChange` | Frontend Response | Stages property changes in workspace            |
+| `uaiEntityAdapter.applyValueChange` | Frontend Response | Stages property changes in workspace            |
 
 ## Data Transformation Summary
 
@@ -245,19 +245,19 @@ Frontend Entity → UaiSerializedEntity → UaiRequestContextItem[]
 LLM Response
      │
      ▼
-AIPromptExecutionResult { Content, Usage, PropertyChanges[] }
+AIPromptExecutionResult { Content, Usage, ValueChanges[] }
      │
      ▼ (API mapping)
-PromptExecutionResponseModel { Content, Usage, PropertyChanges[] }
+PromptExecutionResponseModel { Content, Usage, ValueChanges[] }
      │
      ▼ (HTTP Response)
-Frontend receives PropertyChangeModel[]
+Frontend receives ValueChangeModel[]
      │
      ▼ (for each change)
-adapter.applyPropertyChange(workspaceContext, UaiPropertyChange)
+adapter.applyValueChange(workspaceContext, UaiValueChange)
      │
      ▼
-UaiPropertyChangeResult { success, error? }
+UaiValueChangeResult { success, error? }
      │
      ▼
 Changes STAGED in workspace (user saves to persist)
@@ -346,7 +346,7 @@ The LLM response is packaged into `AIPromptExecutionResult` which may include pr
 
 ```csharp
 // Request to change a property value
-public class AIPropertyChange
+public class AIValueChange
 {
     public required string Alias { get; init; }  // Property alias
     public object? Value { get; init; }          // New value
@@ -355,7 +355,7 @@ public class AIPropertyChange
 }
 
 // Result of applying a property change
-public class AIPropertyChangeResult
+public class AIValueChangeResult
 {
     public required bool Success { get; init; }  // Whether change was applied
     public string? Error { get; init; }          // Error message if failed
@@ -370,11 +370,11 @@ public class PromptExecutionResponseModel
 {
     public required string Content { get; init; }              // LLM response text
     public UsageModel? Usage { get; init; }                    // Token counts
-    public IReadOnlyList<PropertyChangeModel>? PropertyChanges { get; init; }
+    public IReadOnlyList<ValueChangeModel>? ValueChanges { get; init; }
 }
 
 // Property change in API response
-public class PropertyChangeModel
+public class ValueChangeModel
 {
     public required string Alias { get; init; }
     public object? Value { get; init; }
@@ -386,16 +386,16 @@ public class PropertyChangeModel
 **Frontend Types** (`Umbraco.AI/Client/src/entity-adapter/types.ts`):
 
 ```typescript
-// Request to change a property
-interface UaiPropertyChange {
-    alias: string; // Property alias
+// Request to change a value via JSON path
+interface UaiValueChange {
+    path: string; // JSON path to the value (e.g., "title", "price.amount")
     value: unknown; // New value
     culture?: string; // For variant content
     segment?: string; // For segmented content
 }
 
 // Result of property change operation
-interface UaiPropertyChangeResult {
+interface UaiValueChangeResult {
     success: boolean; // Whether change was applied
     error?: string; // Error message if failed
 }
@@ -426,9 +426,9 @@ interface UaiPropertyChangeResult {
 | Content Context Resolver         | `Umbraco.AI.Core/Contexts/Resolvers/ContentContextResolver.cs`                       |
 | Prompt Context Resolver          | `Umbraco.AI.Prompt.Core/Context/PromptContextResolver.cs`                            |
 | Agent Context Resolver           | `Umbraco.AI.Agent.Core/Context/AgentContextResolver.cs`                              |
-| Property Change (Core)           | `Umbraco.AI.Core/EntityAdapter/AIPropertyChange.cs`                                  |
-| Property Change Result (Core)    | `Umbraco.AI.Core/EntityAdapter/AIPropertyChangeResult.cs`                            |
-| Property Change Model (API)      | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PropertyChangeModel.cs`          |
+| Property Change (Core)           | `Umbraco.AI.Core/EntityAdapter/AIValueChange.cs`                                  |
+| Property Change Result (Core)    | `Umbraco.AI.Core/EntityAdapter/AIValueChangeResult.cs`                            |
+| Property Change Model (API)      | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/ValueChangeModel.cs`          |
 | Execution Result (Core)          | `Umbraco.AI.Prompt.Core/Prompts/AIPromptExecutionResult.cs`                          |
 | Execution Response (API)         | `Umbraco.AI.Prompt.Web/Api/Management/Prompt/Models/PromptExecutionResponseModel.cs` |
 

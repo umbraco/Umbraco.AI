@@ -84,6 +84,7 @@ export type AgentItemResponseModel = {
     profileId?: string | null;
     contextIds: Array<string>;
     surfaceIds: Array<string>;
+    scope?: AiAgentScopeModel | null;
     allowedToolIds: Array<string>;
     allowedToolScopeIds: Array<string>;
     isActive: boolean;

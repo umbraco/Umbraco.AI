@@ -10,8 +10,8 @@ import { UmbVariantId } from "@umbraco-cms/backoffice/variant";
 import type {
     UaiEntityAdapterApi,
     UaiEntityContext,
-    UaiPropertyChange,
-    UaiPropertyChangeResult,
+    UaiValueChange,
+    UaiValueChangeResult,
     UaiSerializedEntity,
     UaiSerializedProperty,
 } from "../types.js";
@@ -238,18 +238,21 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             entityType: "document",
             unique: unique ?? "new",
             name,
-            contentType: contentType ?? undefined,
             parentUnique,
-            properties,
+            data: {
+                contentType: contentType ?? undefined,
+                properties,
+            },
         };
     }
 
     /**
-     * Apply a property change to the document workspace.
+     * Apply a value change to the document workspace.
      * Changes are staged in the workspace - user must save to persist.
+     * For CMS documents, the path is treated as the property alias.
      * Only supports text-based properties (TextBox, TextArea) for now.
      */
-    async applyPropertyChange(workspaceContext: unknown, change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
+    async applyValueChange(workspaceContext: unknown, change: UaiValueChange): Promise<UaiValueChangeResult> {
         const ctx = workspaceContext as DocumentWorkspaceContextLike;
 
         // Check if workspace supports property mutation
@@ -260,18 +263,21 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             };
         }
 
+        // For CMS documents, treat path as property alias
+        const propertyAlias = change.path;
+
         // Validate property exists and is a supported type
-        const property = await ctx.structure?.getPropertyStructureByAlias?.(change.alias);
+        const property = await ctx.structure?.getPropertyStructureByAlias?.(propertyAlias);
         if (!property) {
             return {
                 success: false,
-                error: `Property "${change.alias}" not found on this document type`,
+                error: `Property "${propertyAlias}" not found on this document type`,
             };
         }
 
         // Get the current values to check the editor type
         const values = ctx.getValues() ?? [];
-        const existingValue = values.find((v) => v.alias === change.alias);
+        const existingValue = values.find((v) => v.alias === propertyAlias);
 
         // Build variant ID from culture/segment (undefined = invariant)
         const variantId = new UmbVariantId(change.culture ?? null, change.segment ?? null);
@@ -287,12 +293,12 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
         } catch (e) {}
 
         try {
-            await ctx.setPropertyValue(change.alias, valueToSet, variantId);
+            await ctx.setPropertyValue(propertyAlias, valueToSet, variantId);
             return { success: true };
         } catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : "Unknown error applying property change",
+                error: error instanceof Error ? error.message : "Unknown error applying value change",
             };
         }
     }

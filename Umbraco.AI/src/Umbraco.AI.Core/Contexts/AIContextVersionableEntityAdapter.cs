@@ -115,24 +115,24 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIContext from, AIContext to)
+    protected override IReadOnlyList<AIValueChange> CompareVersions(AIContext from, AIContext to)
     {
-        var changes = new List<AIPropertyChange>();
+        var changes = new List<AIValueChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIValueChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIValueChange("Name", from.Name, to.Name));
         }
 
         // Compare resources count
         if (from.Resources.Count != to.Resources.Count)
         {
-            changes.Add(new AIPropertyChange("Resources.Count", from.Resources.Count.ToString(), to.Resources.Count.ToString()));
+            changes.Add(new AIValueChange("Resources.Count", from.Resources.Count.ToString(), to.Resources.Count.ToString()));
         }
 
         // Track added resources
@@ -145,13 +145,13 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
         foreach (var addedId in addedIds)
         {
             var resource = to.Resources.First(r => r.Id == addedId);
-            changes.Add(new AIPropertyChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", null, "Added"));
+            changes.Add(new AIValueChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", null, "Added"));
         }
 
         foreach (var removedId in removedIds)
         {
             var resource = from.Resources.First(r => r.Id == removedId);
-            changes.Add(new AIPropertyChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", "Removed", null));
+            changes.Add(new AIValueChange($"Resources[{resource.Name ?? resource.ResourceTypeId}]", "Removed", null));
         }
 
         // Compare existing resources
@@ -168,34 +168,34 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
         return changes;
     }
 
-    private static IReadOnlyList<AIPropertyChange> CompareResources(AIContextResource from, AIContextResource to)
+    private static IReadOnlyList<AIValueChange> CompareResources(AIContextResource from, AIContextResource to)
     {
-        var changes = new List<AIPropertyChange>();
+        var changes = new List<AIValueChange>();
         var prefix = $"Resources[{from.Name ?? from.ResourceTypeId}]";
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AIPropertyChange($"{prefix}.Name", from.Name, to.Name));
+            changes.Add(new AIValueChange($"{prefix}.Name", from.Name, to.Name));
         }
 
         if (from.Description != to.Description)
         {
-            changes.Add(new AIPropertyChange($"{prefix}.Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
+            changes.Add(new AIValueChange($"{prefix}.Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
         }
 
         if (from.ResourceTypeId != to.ResourceTypeId)
         {
-            changes.Add(new AIPropertyChange($"{prefix}.ResourceTypeId", from.ResourceTypeId, to.ResourceTypeId));
+            changes.Add(new AIValueChange($"{prefix}.ResourceTypeId", from.ResourceTypeId, to.ResourceTypeId));
         }
 
         if (from.SortOrder != to.SortOrder)
         {
-            changes.Add(new AIPropertyChange($"{prefix}.SortOrder", from.SortOrder.ToString(), to.SortOrder.ToString()));
+            changes.Add(new AIValueChange($"{prefix}.SortOrder", from.SortOrder.ToString(), to.SortOrder.ToString()));
         }
 
         if (from.InjectionMode != to.InjectionMode)
         {
-            changes.Add(new AIPropertyChange($"{prefix}.InjectionMode", from.InjectionMode.ToString(), to.InjectionMode.ToString()));
+            changes.Add(new AIValueChange($"{prefix}.InjectionMode", from.InjectionMode.ToString(), to.InjectionMode.ToString()));
         }
 
         // Compare data with deep inspection using shared utility
@@ -204,7 +204,7 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
         if (!success && !Equals(from.Data, to.Data))
         {
             // Fallback if comparison failed
-            changes.Add(new AIPropertyChange($"{prefix}.Data", "(modified)", "(modified)"));
+            changes.Add(new AIValueChange($"{prefix}.Data", "(modified)", "(modified)"));
         }
 
         return changes;

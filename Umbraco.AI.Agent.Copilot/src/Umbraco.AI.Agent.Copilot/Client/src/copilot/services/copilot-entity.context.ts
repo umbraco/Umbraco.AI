@@ -3,6 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiEntityAdapterContext } from "@umbraco-ai/core";
 import type { UaiEntityContextApi } from "@umbraco-ai/agent-ui";
 import { map, Observable } from "rxjs";
+import { getValueByPath, setValueByPath } from "../utils/path.js";
 
 /**
  * Copilot Entity Context
@@ -13,8 +14,8 @@ import { map, Observable } from "rxjs";
  *
  * Provides:
  * - Entity type and key observables
- * - Property value access via serialized entity
- * - Property value mutation via applyPropertyChange
+ * - Value access via JSON path navigation
+ * - Value mutation via applyValueChange
  * - Dirty state tracking
  *
  * This is the copilot's implementation of the entity context contract.
@@ -24,27 +25,26 @@ import { map, Observable } from "rxjs";
 export class UaiCopilotEntityContext extends UmbControllerBase implements UaiEntityContextApi {
     #entityAdapterContext: UaiEntityAdapterContext;
 
-    /** Cache of serialized properties for fast synchronous access */
-    #cachedProperties = new Map<string, unknown>();
+    /** Cache of serialized entity data for fast synchronous access */
+    #cachedData: Record<string, unknown> | null = null;
 
     constructor(host: UmbControllerHost, entityAdapterContext: UaiEntityAdapterContext) {
         super(host);
         this.#entityAdapterContext = entityAdapterContext;
 
-        // Update property cache whenever entity changes
+        // Update data cache whenever entity changes
         this.observe(this.#entityAdapterContext.selectedEntity$, async (entity) => {
             if (!entity) {
-                this.#cachedProperties.clear();
+                this.#cachedData = null;
                 return;
             }
 
-            // Serialize the entity and cache properties
+            // Serialize the entity and cache the data
             const serialized = await this.#entityAdapterContext.serializeSelectedEntity();
-            if (serialized) {
-                this.#cachedProperties.clear();
-                for (const prop of serialized.properties) {
-                    this.#cachedProperties.set(prop.alias, prop.value);
-                }
+            if (serialized && serialized.data && typeof serialized.data === 'object') {
+                this.#cachedData = serialized.data as Record<string, unknown>;
+            } else {
+                this.#cachedData = null;
             }
         });
     }
@@ -70,38 +70,48 @@ export class UaiCopilotEntityContext extends UmbControllerBase implements UaiEnt
         });
     }
 
-    // ─── Property Access ────────────────────────────────────────────────────────
+    // ─── Value Access ───────────────────────────────────────────────────────────
 
     /**
-     * Get a property value from the cached serialized entity.
-     * This is synchronous and uses the cached property map.
-     * @param alias The property alias
-     * @returns The property value, or undefined if not found
+     * Get a value from the cached entity data using a JSON path.
+     * This is synchronous and uses the cached data.
+     * @param path JSON path to the value (e.g., "title", "price.amount")
+     * @returns The value at the path, or undefined if not found
      */
-    getPropertyValue(alias: string): unknown {
-        return this.#cachedProperties.get(alias);
+    getValue(path: string): unknown {
+        if (!this.#cachedData) {
+            return undefined;
+        }
+
+        return getValueByPath(this.#cachedData, path);
     }
 
     /**
-     * Set a property value on the current entity.
+     * Set a value in the current entity using a JSON path.
      * Changes are staged -- the user must click Save to persist.
-     * @param alias The property alias
+     * @param path JSON path to the value (e.g., "title", "price.amount")
      * @param value The value to set
      */
-    setPropertyValue(alias: string, value: unknown): void {
+    setValue(path: string, value: unknown): void {
         // Update the cache optimistically
-        this.#cachedProperties.set(alias, value);
+        if (this.#cachedData) {
+            setValueByPath(this.#cachedData, path, value);
+        }
 
         // Apply the change via the entity adapter (async fire-and-forget)
-        // The applyPropertyChange returns a Promise, but we don't await it here
-        // to keep setPropertyValue synchronous as per the interface
-        this.#entityAdapterContext.applyPropertyChange({
-            alias,
+        // The applyValueChange returns a Promise, but we don't await it here
+        // to keep setValue synchronous as per the interface
+        this.#entityAdapterContext.applyValueChange({
+            path,
             value,
         }).catch((error) => {
-            console.error(`[UaiCopilotEntityContext] Failed to apply property change for ${alias}:`, error);
-            // Revert the optimistic update on error
-            this.#cachedProperties.delete(alias);
+            console.error(`[UaiCopilotEntityContext] Failed to apply value change for ${path}:`, error);
+            // On error, re-serialize to get correct state
+            this.#entityAdapterContext.serializeSelectedEntity().then((serialized) => {
+                if (serialized && serialized.data && typeof serialized.data === 'object') {
+                    this.#cachedData = serialized.data as Record<string, unknown>;
+                }
+            });
         });
     }
 }

@@ -31,11 +31,11 @@ export interface UaiVersionHistoryResponse {
 }
 
 /**
- * Represents a property change between two versions.
+ * Represents a value change between two versions.
  */
-export interface UaiVersionPropertyChange {
-    /** The name of the property that changed. */
-    propertyName: string;
+export interface UaiVersionValueChange {
+    /** The path of the value that changed. */
+    path: string;
     /** The old value (from the source version). */
     oldValue?: string | null;
     /** The new value (from the target version). */
@@ -50,6 +50,6 @@ export interface UaiVersionComparisonResponse {
     fromVersion: number;
     /** The target version number. */
     toVersion: number;
-    /** The list of property changes. */
-    changes: UaiVersionPropertyChange[];
+    /** The list of value changes. */
+    changes: UaiVersionValueChange[];
 }

@@ -22,8 +22,8 @@ import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from ".
 import type {
     UaiDetectedEntity,
     UaiEntityAdapterApi,
-    UaiPropertyChange,
-    UaiPropertyChangeResult,
+    UaiValueChange,
+    UaiValueChangeResult,
     UaiSerializedEntity,
 } from "./types.js";
 
@@ -128,12 +128,12 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
     }
 
     /**
-     * Apply a property change to the currently selected entity.
+     * Apply a value change to the currently selected entity.
      * Changes are staged in the workspace - user must save to persist.
-     * @param change The property change to apply
+     * @param change The value change to apply
      * @returns Result indicating success or failure with error message
      */
-    async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
+    async applyValueChange(change: UaiValueChange): Promise<UaiValueChangeResult> {
         const selected = this.getSelectedEntity();
 
         if (!selected) {
@@ -143,14 +143,14 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
             };
         }
 
-        if (!selected.adapter.applyPropertyChange) {
+        if (!selected.adapter.applyValueChange) {
             return {
                 success: false,
-                error: `Entity type "${selected.entityContext.entityType}" does not support property changes`,
+                error: `Entity type "${selected.entityContext.entityType}" does not support value changes`,
             };
         }
 
-        return selected.adapter.applyPropertyChange(selected.workspaceContext, change);
+        return selected.adapter.applyValueChange(selected.workspaceContext, change);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────

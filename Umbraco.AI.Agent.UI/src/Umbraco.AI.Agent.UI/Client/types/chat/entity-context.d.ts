@@ -25,18 +25,18 @@ export interface UaiEntityContextApi extends UmbContextMinimal {
     /** Observable of the current entity key. */
     readonly entityKey$: Observable<string | undefined>;
     /**
-     * Get a property value from the current entity.
-     * @param alias The property alias
-     * @returns The property value, or undefined if not found
+     * Get a value from the current entity using a JSON path.
+     * @param path JSON path to the value (e.g., "title", "price.amount", "inventory.quantity")
+     * @returns The value at the path, or undefined if not found
      */
-    getPropertyValue(alias: string): unknown;
+    getValue(path: string): unknown;
     /**
-     * Set a property value on the current entity.
+     * Set a value in the current entity using a JSON path.
      * Changes are staged -- the user must click Save to persist.
-     * @param alias The property alias
+     * @param path JSON path to the value (e.g., "title", "price.amount", "inventory.quantity")
      * @param value The value to set
      */
-    setPropertyValue(alias: string, value: unknown): void;
+    setValue(path: string, value: unknown): void;
     /** Observable indicating whether the entity has unsaved changes. */
     readonly isDirty$: Observable<boolean>;
 }

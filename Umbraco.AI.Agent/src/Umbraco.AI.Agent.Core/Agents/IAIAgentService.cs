@@ -39,7 +39,7 @@ public interface IAIAgentService
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
-    /// <param name="scopeId">Optional scope ID filter.</param>
+    /// <param name="surfaceId">Optional surface ID filter.</param>
     /// <param name="isActive">Optional active status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged result containing Agents and total count.</returns>
@@ -48,17 +48,17 @@ public interface IAIAgentService
         int take,
         string? filter = null,
         Guid? profileId = null,
-        string? scopeId = null,
+        string? surfaceId = null,
         bool? isActive = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets all agents that belong to a specific scope.
+    /// Gets all agents that belong to a specific surface.
     /// </summary>
-    /// <param name="scopeId">The scope ID to filter by.</param>
+    /// <param name="surfaceId">The surface ID to filter by.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Agents that have the specified scope ID in their ScopeIds.</returns>
-    Task<IEnumerable<AIAgent>> GetAgentsByScopeAsync(string scopeId, CancellationToken cancellationToken = default);
+    /// <returns>Agents that have the specified surface ID in their SurfaceIds.</returns>
+    Task<IEnumerable<AIAgent>> GetAgentsBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Save a agent (insert if new, update if exists) with validation.

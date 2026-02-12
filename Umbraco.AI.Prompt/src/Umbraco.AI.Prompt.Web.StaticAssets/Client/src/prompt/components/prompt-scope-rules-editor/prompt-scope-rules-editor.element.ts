@@ -2,16 +2,16 @@ import { css, html, customElement, property } from "@umbraco-cms/backoffice/exte
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiScopeRule } from "../../property-actions/types.js";
-import { createEmptyRule } from "./scope-rule-editor.element.js";
+import { createEmptyRule } from "./prompt-scope-rule-editor.element.js";
 
 /**
- * Editor for managing a list of scope rules (allow or deny).
+ * Editor for managing a list of prompt scope rules (allow or deny).
  * Handles adding, removing, and updating rules.
  *
  * @fires rules-change - Fires when the rules array changes
  */
-@customElement("uai-scope-rules-editor")
-export class UaiScopeRulesEditorElement extends UmbLitElement {
+@customElement("uai-prompt-scope-rules-editor")
+export class UaiPromptScopeRulesEditorElement extends UmbLitElement {
     @property({ type: Array })
     rules: UaiScopeRule[] = [];
 
@@ -49,11 +49,11 @@ export class UaiScopeRulesEditorElement extends UmbLitElement {
             <div class="rules-container">
                 ${this.rules.map(
                     (rule, index) => html`
-                        <uai-scope-rule-editor
+                        <uai-prompt-scope-rule-editor
                             .rule=${rule}
                             @rule-change=${(e: CustomEvent<UaiScopeRule>) => this.#onRuleChange(index, e.detail)}
                             @remove=${() => this.#onRemoveRule(index)}
-                        ></uai-scope-rule-editor>
+                        ></uai-prompt-scope-rule-editor>
                     `,
                 )}
                 <uui-button look="placeholder" @click=${this.#onAddRule}>
@@ -84,10 +84,10 @@ export class UaiScopeRulesEditorElement extends UmbLitElement {
     ];
 }
 
-export default UaiScopeRulesEditorElement;
+export default UaiPromptScopeRulesEditorElement;
 
 declare global {
     interface HTMLElementTagNameMap {
-        "uai-scope-rules-editor": UaiScopeRulesEditorElement;
+        "uai-prompt-scope-rules-editor": UaiPromptScopeRulesEditorElement;
     }
 }

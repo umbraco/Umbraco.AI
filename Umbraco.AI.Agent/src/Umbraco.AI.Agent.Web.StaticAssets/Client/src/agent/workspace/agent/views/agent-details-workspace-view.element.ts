@@ -10,8 +10,8 @@ import { UAI_AGENT_WORKSPACE_CONTEXT } from "../agent-workspace.context-token.js
 import "@umbraco-cms/backoffice/markdown-editor";
 
 /**
- * Workspace view for Agent details.
- * Displays system prompt, description, profile, and contexts.
+ * Workspace view for Agent settings.
+ * Configures agent behavior: profile, description, contexts, and instructions.
  */
 @customElement("uai-agent-details-workspace-view")
 export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
@@ -65,14 +65,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onScopeIdsChange(event: UmbChangeEvent) {
-        event.stopPropagation();
-        const picker = event.target as HTMLElement & { value: string[] | undefined };
-        this.#workspaceContext?.handleCommand(
-            new UaiPartialUpdateCommand<UaiAgentDetailModel>({ scopeIds: picker.value ?? [] }, "scopeIds"),
-        );
-    }
-
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -118,19 +110,6 @@ export class UaiAgentDetailsWorkspaceViewElement extends UmbLitElement {
                         required
                         ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
                     ></umb-input-markdown>
-                </umb-property-layout>
-            </uui-box>
-            <uui-box headline="Scope">
-                <umb-property-layout
-                    label="Scopes"
-                    description="Select how this agent can be used (e.g., Copilot chat)"
-                >
-                    <uai-agent-scope-picker
-                        slot="editor"
-                        multiple
-                        .value=${this._model.scopeIds}
-                        @change=${this.#onScopeIdsChange}
-                    ></uai-agent-scope-picker>
                 </umb-property-layout>
             </uui-box>
         `;

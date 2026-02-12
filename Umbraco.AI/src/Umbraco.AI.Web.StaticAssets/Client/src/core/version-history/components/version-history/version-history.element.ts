@@ -337,6 +337,11 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 color: var(--uui-color-text-alt);
                 line-height: 1;
             }
+
+            uui-pagination {
+                display: flex;
+                margin-top: var(--uui-size-space-5);
+            }
         `,
     ];
 }

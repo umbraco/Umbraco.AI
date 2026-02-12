@@ -6,6 +6,10 @@ namespace Umbraco.AI.Core.Tools;
 /// <summary>
 /// Filters tools based on runtime context.
 /// </summary>
+/// <remarks>
+/// Only filters tools that declare ForEntityTypes (context-bound tools).
+/// Tools without entity type restrictions (cross-context tools) are always included.
+/// </remarks>
 public static class AIToolContextFilter
 {
     /// <summary>
@@ -26,20 +30,18 @@ public static class AIToolContextFilter
         if (runtimeContext == null)
             return toolIds;
 
-        // Extract context values
+        // Extract current entity type
         var currentEntityType = runtimeContext.GetValue<string>(Constants.ContextKeys.EntityType);
-        var currentSection = runtimeContext.GetValue<string>(Constants.ContextKeys.SectionAlias);
 
-        // No context values = no filtering (return all)
-        if (string.IsNullOrEmpty(currentEntityType) && string.IsNullOrEmpty(currentSection))
+        // No entity type context = no filtering (return all)
+        if (string.IsNullOrEmpty(currentEntityType))
             return toolIds;
 
-        // Filter tools by context
+        // Filter tools by entity type context
         return toolIds
             .Where(toolId => IsToolRelevantForContext(
                 toolId,
                 currentEntityType,
-                currentSection,
                 toolCollection,
                 scopeCollection))
             .ToList();
@@ -47,8 +49,7 @@ public static class AIToolContextFilter
 
     private static bool IsToolRelevantForContext(
         string toolId,
-        string? currentEntityType,
-        string? currentSection,
+        string currentEntityType,
         AIToolCollection toolCollection,
         AIToolScopeCollection scopeCollection)
     {
@@ -64,25 +65,15 @@ public static class AIToolContextFilter
         if (scope == null)
             return true; // Unknown scope = include (backwards compatible)
 
-        // Check entity type filtering
+        // Check if tool is context-bound (declares entity types)
         var relevantEntityTypes = scope.ForEntityTypes;
-        if (relevantEntityTypes.Count > 0)
+        if (relevantEntityTypes.Count == 0)
         {
-            // Scope declares entity types = check if current context matches
-            if (string.IsNullOrEmpty(currentEntityType))
-            {
-                // No entity context but scope requires it = exclude
-                return false;
-            }
-
-            // Check if current entity type is in the relevant list
-            if (!relevantEntityTypes.Contains(currentEntityType, StringComparer.OrdinalIgnoreCase))
-            {
-                return false; // Entity type mismatch
-            }
+            // No entity types declared = cross-context tool = always include
+            return true;
         }
 
-        // All checks passed
-        return true;
+        // Context-bound tool: check if current entity type matches
+        return relevantEntityTypes.Contains(currentEntityType, StringComparer.OrdinalIgnoreCase);
     }
 }

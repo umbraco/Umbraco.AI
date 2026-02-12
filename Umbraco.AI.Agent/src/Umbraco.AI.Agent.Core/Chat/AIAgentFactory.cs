@@ -72,21 +72,28 @@ internal sealed class AIAgentFactory : IAIAgentFactory
             }
         }
 
-        // STEP 3: Filter tools by runtime context (NEW)
+        // STEP 3: Filter backend tools by runtime context
+        //         Only filters context-bound tools (those with ForEntityTypes declared)
+        //         Cross-context tools (no ForEntityTypes) are always included
         var contextFilteredToolIds = AIToolContextFilter.FilterByContext(
             allowedToolIds,
             runtimeContext,
             _toolCollection,
             _toolScopeCollection);
 
-        // STEP 4: Build tool list using context-filtered tools
+        // STEP 4: Build tool list using context-filtered backend tools
         var tools = new List<AITool>();
         tools.AddRange(_toolCollection.ToAIFunctions(contextFilteredToolIds, _functionFactory));
 
-        // Frontend tools - already filtered by service layer, just add them
+        // STEP 5: Filter frontend tools by runtime context
+        //         Frontend tools are context-bound if their scope declares ForEntityTypes
         if (additionalTools is not null)
         {
-            tools.AddRange(additionalTools);
+            var contextFilteredFrontendTools = FilterFrontendToolsByContext(
+                additionalTools,
+                runtimeContext,
+                _toolScopeCollection);
+            tools.AddRange(contextFilteredFrontendTools);
         }
 
         // Get profile - use default Chat profile if not specified
@@ -120,5 +127,51 @@ internal sealed class AIAgentFactory : IAIAgentFactory
             additionalProperties,
             _runtimeContextScopeProvider,
             _contextContributors);
+    }
+
+    /// <summary>
+    /// Filters frontend tools based on runtime context.
+    /// Only filters context-bound tools (those with scopes that declare ForEntityTypes).
+    /// </summary>
+    private static IEnumerable<AITool> FilterFrontendToolsByContext(
+        IEnumerable<AITool> frontendTools,
+        AIRuntimeContext? runtimeContext,
+        AIToolScopeCollection scopeCollection)
+    {
+        // No runtime context = no filtering (return all)
+        if (runtimeContext == null)
+            return frontendTools;
+
+        // Extract current entity type
+        var currentEntityType = runtimeContext.GetValue<string>(CoreConstants.ContextKeys.EntityType);
+
+        // No entity type context = no filtering (return all)
+        if (string.IsNullOrEmpty(currentEntityType))
+            return frontendTools;
+
+        // Filter tools by entity type context
+        return frontendTools.Where(tool =>
+        {
+            // Check if tool is AIFrontendToolFunction with scope information
+            if (tool is not AIFrontendToolFunction frontendToolFunction)
+                return true; // Unknown tool type = include (backwards compatible)
+
+            // No scope = cross-context tool = include
+            if (string.IsNullOrEmpty(frontendToolFunction.Scope))
+                return true;
+
+            // Get scope and check if it's context-bound
+            var scope = scopeCollection.GetById(frontendToolFunction.Scope);
+            if (scope == null)
+                return true; // Unknown scope = include (backwards compatible)
+
+            // Check if scope is context-bound (declares entity types)
+            var relevantEntityTypes = scope.ForEntityTypes;
+            if (relevantEntityTypes.Count == 0)
+                return true; // No entity types declared = cross-context tool = include
+
+            // Context-bound tool: check if current entity type matches
+            return relevantEntityTypes.Contains(currentEntityType, StringComparer.OrdinalIgnoreCase);
+        });
     }
 }

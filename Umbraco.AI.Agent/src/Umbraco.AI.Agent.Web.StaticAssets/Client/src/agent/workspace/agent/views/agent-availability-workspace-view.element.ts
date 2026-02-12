@@ -86,12 +86,6 @@ export class UaiAgentAvailabilityWorkspaceViewElement extends UmbLitElement {
             </uui-box>
 
             <uui-box headline="Scope">
-                <div class="scope-description">
-                    <p>
-                        Control when this agent appears based on the current context (section and entity type).
-                        Leave empty to show the agent everywhere on selected surfaces.
-                    </p>
-                </div>
 
                 <umb-property-layout
                     label="Allow Rules"

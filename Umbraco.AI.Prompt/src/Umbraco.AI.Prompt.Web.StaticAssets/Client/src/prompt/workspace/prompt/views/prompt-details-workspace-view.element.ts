@@ -7,29 +7,11 @@ import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
 import "@umbraco-ai/core";
 import "@umbraco-cms/backoffice/markdown-editor";
 import type { UaiPromptDetailModel } from "../../../types.js";
-import type { UaiPromptScope, UaiScopeRule } from "../../../property-actions/types.js";
-import { TEXT_BASED_PROPERTY_EDITOR_UIS } from "../../../property-actions/constants.js";
 import { UAI_PROMPT_WORKSPACE_CONTEXT } from "../prompt-workspace.context-token.js";
 
 /**
- * Creates a default scope with one allow rule for all text-based editors.
- */
-function createDefaultScope(): UaiPromptScope {
-    return {
-        allowRules: [
-            {
-                propertyEditorUiAliases: [...TEXT_BASED_PROPERTY_EDITOR_UIS],
-                propertyAliases: null,
-                contentTypeAliases: null,
-            },
-        ],
-        denyRules: [],
-    };
-}
-
-/**
- * Workspace view for Prompt details.
- * Displays instructions, description, scope configuration, and tags.
+ * Workspace view for Prompt settings.
+ * Configures prompt behavior: profile, description, contexts, and instructions.
  */
 @customElement("uai-prompt-details-workspace-view")
 export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
@@ -48,10 +30,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                 });
             }
         });
-    }
-
-    #getScope(): UaiPromptScope {
-        return this._model?.scope ?? createDefaultScope();
     }
 
     #onDescriptionChange(event: Event) {
@@ -98,32 +76,8 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #updateScope(scope: UaiPromptScope) {
-        this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiPromptDetailModel>({ scope }, "scope"));
-    }
-
-    #onAllowRulesChange(event: CustomEvent<UaiScopeRule[]>) {
-        event.stopPropagation();
-        const scope = this.#getScope();
-        this.#updateScope({
-            ...scope,
-            allowRules: event.detail,
-        });
-    }
-
-    #onDenyRulesChange(event: CustomEvent<UaiScopeRule[]>) {
-        event.stopPropagation();
-        const scope = this.#getScope();
-        this.#updateScope({
-            ...scope,
-            denyRules: event.detail,
-        });
-    }
-
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
-
-        const scope = this.#getScope();
 
         return html`
             <uui-box headline="General">
@@ -178,32 +132,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         required
                         ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
                     ></umb-input-markdown>
-                </umb-property-layout>
-            </uui-box>
-
-            <uui-box headline="Scope">
-                <umb-property-layout
-                    label="Allow"
-                    description="Prompt is allowed where ANY rule matches (OR logic between rules)"
-                >
-                    <uai-prompt-scope-rules-editor
-                        slot="editor"
-                        .rules=${scope.allowRules}
-                        addButtonLabel="Add Allow Rule"
-                        @rules-change=${this.#onAllowRulesChange}
-                    ></uai-prompt-scope-rules-editor>
-                </umb-property-layout>
-
-                <umb-property-layout
-                    label="Deny"
-                    description="Prompt is denied where ANY rule matches (overrides allow rules)"
-                >
-                    <uai-prompt-scope-rules-editor
-                        slot="editor"
-                        .rules=${scope.denyRules}
-                        addButtonLabel="Add Deny Rule"
-                        @rules-change=${this.#onDenyRulesChange}
-                    ></uai-prompt-scope-rules-editor>
                 </umb-property-layout>
             </uui-box>
 

@@ -40,7 +40,7 @@ export const manifests: Array<UmbExtensionManifest> = [
         meta: {
             label: "Availability",
             pathname: "availability",
-            icon: "icon-location",
+            icon: "icon-locate",
         },
         conditions: [
             {

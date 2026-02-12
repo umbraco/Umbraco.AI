@@ -79,13 +79,6 @@ export class UaiPromptAvailabilityWorkspaceViewElement extends UmbLitElement {
 
         return html`
             <uui-box headline="Scope">
-                <div class="scope-description">
-                    <p>
-                        Control where this prompt action appears in the backoffice based on property editor, property,
-                        and content type. Leave empty to show the prompt everywhere.
-                    </p>
-                </div>
-
                 <umb-property-layout
                     label="Allow Rules"
                     description="Prompt appears where ANY rule matches (OR logic between rules)"

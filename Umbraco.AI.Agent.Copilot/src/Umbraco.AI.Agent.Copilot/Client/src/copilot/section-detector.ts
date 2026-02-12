@@ -35,49 +35,99 @@ export function isSectionAllowed(pathname: string | null, allowedPathnames: stri
     return pathname ? allowedPathnames.includes(pathname) : false;
 }
 
-import { Observable } from "@umbraco-cms/backoffice/external/rxjs";
+import { Observable, shareReplay } from "@umbraco-cms/backoffice/external/rxjs";
 
+/**
+ * Module-level shared observable instance.
+ * Ensures history API is only monkey-patched once, regardless of subscriber count.
+ */
+let _sharedSectionObservable$: Observable<string | null> | null = null;
+
+/**
+ * Stores original history methods to restore on teardown.
+ */
+let _originalPushState: typeof history.pushState | null = null;
+let _originalReplaceState: typeof history.replaceState | null = null;
+let _onPopState: (() => void) | null = null;
+
+/**
+ * Reference counter to track active subscriptions.
+ */
+let _refCount = 0;
 
 /**
  * Creates an observable that emits the current section whenever navigation occurs.
  * Listens to browser navigation events (popstate, pushState, replaceState) instead of polling.
  *
+ * Uses a shared observable to prevent history API corruption when multiple subscribers exist.
+ * The history methods are only patched once and restored when all subscribers unsubscribe.
+ *
  * @returns Observable<string | null> that emits section pathname on navigation
  */
 export function createSectionObservable(): Observable<string | null> {
-    return new Observable((subscriber) => {
-        // Emit initial value
-        subscriber.next(getSectionPathnameFromUrl());
+    if (!_sharedSectionObservable$) {
+        _sharedSectionObservable$ = new Observable<string | null>((subscriber) => {
+            // Increment ref count
+            _refCount++;
 
-        // Listen to browser back/forward navigation
-        const onPopState = () => {
-            subscriber.next(getSectionPathnameFromUrl());
-        };
+            // Only patch history API on first subscription
+            if (_refCount === 1) {
+                // Emit initial value
+                subscriber.next(getSectionPathnameFromUrl());
 
-        // Intercept pushState and replaceState for SPA navigation
-        const originalPushState = history.pushState;
-        const originalReplaceState = history.replaceState;
+                // Listen to browser back/forward navigation
+                _onPopState = () => {
+                    subscriber.next(getSectionPathnameFromUrl());
+                };
 
-        const wrappedPushState = function (this: History, ...args: Parameters<typeof history.pushState>) {
-            originalPushState.apply(this, args);
-            subscriber.next(getSectionPathnameFromUrl());
-        };
+                // Intercept pushState and replaceState for SPA navigation
+                _originalPushState = history.pushState;
+                _originalReplaceState = history.replaceState;
 
-        const wrappedReplaceState = function (this: History, ...args: Parameters<typeof history.replaceState>) {
-            originalReplaceState.apply(this, args);
-            subscriber.next(getSectionPathnameFromUrl());
-        };
+                const wrappedPushState = function (this: History, ...args: Parameters<typeof history.pushState>) {
+                    _originalPushState!.apply(this, args);
+                    subscriber.next(getSectionPathnameFromUrl());
+                };
 
-        // Install event listeners and method wrappers
-        window.addEventListener("popstate", onPopState);
-        history.pushState = wrappedPushState;
-        history.replaceState = wrappedReplaceState;
+                const wrappedReplaceState = function (this: History, ...args: Parameters<typeof history.replaceState>) {
+                    _originalReplaceState!.apply(this, args);
+                    subscriber.next(getSectionPathnameFromUrl());
+                };
 
-        // Cleanup on unsubscribe
-        return () => {
-            window.removeEventListener("popstate", onPopState);
-            history.pushState = originalPushState;
-            history.replaceState = originalReplaceState;
-        };
-    });
+                // Install event listeners and method wrappers
+                window.addEventListener("popstate", _onPopState);
+                history.pushState = wrappedPushState;
+                history.replaceState = wrappedReplaceState;
+            } else {
+                // For subsequent subscribers, just emit current value
+                subscriber.next(getSectionPathnameFromUrl());
+            }
+
+            // Cleanup on unsubscribe
+            return () => {
+                _refCount--;
+
+                // Only restore history API when last subscriber unsubscribes
+                if (_refCount === 0) {
+                    if (_onPopState) {
+                        window.removeEventListener("popstate", _onPopState);
+                        _onPopState = null;
+                    }
+                    if (_originalPushState) {
+                        history.pushState = _originalPushState;
+                        _originalPushState = null;
+                    }
+                    if (_originalReplaceState) {
+                        history.replaceState = _originalReplaceState;
+                        _originalReplaceState = null;
+                    }
+
+                    // Reset shared observable
+                    _sharedSectionObservable$ = null;
+                }
+            };
+        }).pipe(shareReplay(1));
+    }
+
+    return _sharedSectionObservable$;
 }

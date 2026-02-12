@@ -12,7 +12,6 @@ export function createEmptyAgentScopeRule(): UaiAgentScopeRule {
 	return {
         sections: null,
 		entityTypes: null,
-		workspaceAliases: null,
 	};
 }
 
@@ -28,10 +27,6 @@ function getRuleSummary(rule: UaiAgentScopeRule): string {
 
 	if (rule.entityTypes && rule.entityTypes.length > 0) {
 		parts.push(`Entity Type: ${rule.entityTypes.join(" | ")}`);
-	}
-
-	if (rule.workspaceAliases && rule.workspaceAliases.length > 0) {
-		parts.push(`Workspace: ${rule.workspaceAliases.join(" | ")}`);
 	}
 
 	if (parts.length === 0) {
@@ -76,15 +71,6 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 		this.#dispatchChange({
 			...this.rule,
 			entityTypes: value.length > 0 ? value : null,
-		});
-	}
-
-	#onWorkspaceAliasesChange(event: CustomEvent) {
-		event.stopPropagation();
-		const value = event.detail.value as string[];
-		this.#dispatchChange({
-			...this.rule,
-			workspaceAliases: value.length > 0 ? value : null,
 		});
 	}
 
@@ -147,19 +133,6 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 							.items=${this.rule.entityTypes ?? []}
 							@change=${this.#onEntityTypesChange}
 						></uai-entity-type-tags-input>
-					</umb-property-layout>
-
-					<umb-property-layout
-						label="Workspace Aliases"
-						description="Workspace aliases where this rule applies (e.g., 'Umb.Workspace.Document'). Leave empty for any workspace."
-						orientation="vertical"
-					>
-						<umb-input-multi-text
-							slot="editor"
-							placeholder="Umb.Workspace.Document"
-							.value=${this.rule.workspaceAliases ?? []}
-							@change=${this.#onWorkspaceAliasesChange}
-						></umb-input-multi-text>
 					</umb-property-layout>
 				</div>
 			</div>

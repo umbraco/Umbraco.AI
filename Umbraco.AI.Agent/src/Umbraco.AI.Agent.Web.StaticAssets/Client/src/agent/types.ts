@@ -9,7 +9,6 @@ import type { UaiUserGroupPermissionsMap } from "./user-group-permissions.js";
 export interface UaiAgentScopeRule {
     sections?: string[] | null;
     entityTypes?: string[] | null;
-    workspaceAliases?: string[] | null;
 }
 
 /**

@@ -6,8 +6,9 @@ import type {
 } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { combineLatest } from "@umbraco-cms/backoffice/external/rxjs";
+import { startWith } from "@umbraco-cms/backoffice/external/rxjs";
 import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
-import { observeSectionChanges, isSectionAllowed } from "../../section-detector.js";
+import { createSectionObservable, isSectionAllowed } from "../../section-detector.js";
 
 export interface UaiCopilotSectionConditionConfig extends UmbConditionConfigBase {
     // No config needed - sections are discovered from manifests
@@ -30,48 +31,24 @@ export class UaiCopilotSectionCondition
     implements UmbExtensionCondition
 {
     #sectionRegistry!: UaiCopilotSectionRegistry;
-    #cleanup: (() => void) | null = null;
 
     constructor(host: UmbControllerHost, args: UmbConditionControllerArguments<UaiCopilotSectionConditionConfig>) {
         super(host, args);
 
         this.#sectionRegistry = new UaiCopilotSectionRegistry(this);
 
-        // Combine current section detection with dynamic section registry
-        let currentSection: string | null = null;
-
-        this.#cleanup = observeSectionChanges((pathname) => {
-            currentSection = pathname;
-            this.#updatePermission(currentSection);
-        });
-
-        // Observe registry changes
-        this.observe(
-            this.#sectionRegistry.compatibleSectionPathnames$,
-            () => {
-                this.#updatePermission(currentSection);
-            },
-            "_observeSectionRegistry"
-        );
-    }
-
-    #updatePermission(currentSection: string | null): void {
-        // Get current compatible sections from registry (may be async, so use last known value)
-        // We'll combine observables properly
+        // Combine current section with compatible sections from registry
+        // Use startWith to ensure registry emits immediately (even if empty) so combineLatest works
         this.observe(
             combineLatest([
-                this.#sectionRegistry.compatibleSectionPathnames$,
+                createSectionObservable(),
+                this.#sectionRegistry.compatibleSectionPathnames$.pipe(startWith([])),
             ]),
-            ([compatibleSections]) => {
+            ([currentSection, compatibleSections]) => {
                 this.permitted = isSectionAllowed(currentSection, compatibleSections);
             },
-            "_updatePermission"
+            "_observeSectionPermission"
         );
-    }
-
-    override hostDisconnected(): void {
-        super.hostDisconnected();
-        this.#cleanup?.();
     }
 }
 

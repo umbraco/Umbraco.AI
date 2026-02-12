@@ -1,9 +1,10 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
-import { Observable } from "@umbraco-cms/backoffice/external/rxjs";
-import { switchMap } from "@umbraco-cms/backoffice/external/rxjs";
+import { Observable, combineLatest } from "@umbraco-cms/backoffice/external/rxjs";
+import { map } from "@umbraco-cms/backoffice/external/rxjs";
 import type { ManifestUaiCopilotCompatibleSection } from "../types/section-compatibility.js";
+import { ManifestSection } from "@umbraco-cms/backoffice/section";
 
 /**
  * Registry service for copilot section compatibility.
@@ -20,33 +21,25 @@ export class UaiCopilotSectionRegistry extends UmbControllerBase {
     constructor(host: UmbControllerHost) {
         super(host);
 
-        // Query all copilot section compatibility manifests
-        this.#compatibleSectionPathnames$ = umbExtensionsRegistry
-            .byType("uaiCopilotCompatibleSection")
-            .pipe(
-                switchMap(async (compatibilityManifests) => {
-                    const pathnames: string[] = [];
+        // Observe both compatibility manifests AND section manifests
+        // This ensures we recompute when either changes (sections might load after compatibility manifests)
+        this.#compatibleSectionPathnames$ = combineLatest([
+            umbExtensionsRegistry.byType<string, ManifestUaiCopilotCompatibleSection>("uaiCopilotCompatibleSection"),
+            umbExtensionsRegistry.byType<string, ManifestSection>("section"),
+        ]).pipe(
+            map(([compatibilityManifests, sectionManifests]) => {
+                const pathnames: string[] = [];
 
-                    for (const manifest of compatibilityManifests) {
-                        // Cast to our specific type
-                        const compat = manifest as ManifestUaiCopilotCompatibleSection;
-
-                        // Look up the actual section manifest by alias
-                        const sectionManifest = await umbExtensionsRegistry.getByAlias(compat.section);
-
-                        // Extract pathname from section meta
-                        // Section manifests have meta.pathname property
-                        if (sectionManifest && "meta" in sectionManifest && sectionManifest.meta) {
-                            const meta = sectionManifest.meta as { pathname?: string };
-                            if (meta.pathname) {
-                                pathnames.push(meta.pathname);
-                            }
-                        }
+                for (const compatManifest of compatibilityManifests) {
+                    const sectionManifest = sectionManifests.find((s) => s.alias === compatManifest.section);
+                    if (sectionManifest?.meta?.pathname) {
+                        pathnames.push(sectionManifest.meta.pathname);
                     }
+                }
 
-                    return pathnames;
-                })
-            );
+                return pathnames;
+            })
+        );
     }
 
     /**

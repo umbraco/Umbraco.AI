@@ -65,9 +65,8 @@ export type AiAgentScopeModel = {
 };
 
 export type AiAgentScopeRuleModel = {
-    sectionAliases?: Array<string> | null;
-    entityTypeAliases?: Array<string> | null;
-    workspaceAliases?: Array<string> | null;
+    sections?: Array<string> | null;
+    entityTypes?: Array<string> | null;
 };
 
 export type AiAgentUserGroupPermissionsModel = {

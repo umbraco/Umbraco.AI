@@ -42,6 +42,12 @@ public class AgentItemResponseModel
     public IEnumerable<string> SurfaceIds { get; set; } = [];
 
     /// <summary>
+    /// Defines where this agent is available using allow and deny rules.
+    /// Null means available everywhere (backwards compatible).
+    /// </summary>
+    public AIAgentScopeModel? Scope { get; set; }
+
+    /// <summary>
     /// List of explicitly allowed tool IDs for this agent.
     /// </summary>
     public IEnumerable<string> AllowedToolIds { get; set; } = [];

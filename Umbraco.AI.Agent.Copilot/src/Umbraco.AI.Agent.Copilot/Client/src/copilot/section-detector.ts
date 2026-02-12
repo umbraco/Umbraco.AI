@@ -1,7 +1,7 @@
 /**
  * Section Detection Helper
  *
- * Provides URL-based section detection for the copilot.
+ * Provides URL-based section detection for the copilot via reactive observables.
  *
  * WORKAROUND: This exists because the built-in Umb.Condition.SectionAlias does not work
  * for headerApp extensions. Header apps are rendered outside the section context, so
@@ -13,7 +13,8 @@
  *
  * When fixed, update:
  * - copilot-section.condition.ts: Use Umb.Condition.SectionAlias or UMB_BACKOFFICE_CONTEXT
- * - copilot-sidebar.element.ts: Use context instead of observeSectionChanges()
+ * - copilot-sidebar.element.ts: Use context-based section detection
+ * - copilot-agent.repository.ts: Use context-based section detection
  * - Delete this file (section-detector.ts)
  */
 
@@ -34,57 +35,49 @@ export function isSectionAllowed(pathname: string | null, allowedPathnames: stri
     return pathname ? allowedPathnames.includes(pathname) : false;
 }
 
-/**
- * Callback type for section change notifications.
- */
-export type SectionChangeCallback = (pathname: string | null) => void;
+import { Observable } from "@umbraco-cms/backoffice/external/rxjs";
+
 
 /**
- * Creates a section change observer that notifies when the URL section changes.
- * Returns a cleanup function to stop observing.
+ * Creates an observable that emits the current section whenever navigation occurs.
+ * Listens to browser navigation events (popstate, pushState, replaceState) instead of polling.
  *
- * @param callback - Called whenever the section changes
- * @param pollInterval - How often to check for URL changes (ms). Default: 100
- * @returns Cleanup function to stop observing
+ * @returns Observable<string | null> that emits section pathname on navigation
  */
-export function observeSectionChanges(callback: SectionChangeCallback, pollInterval = 100): () => void {
-    let lastUrl = window.location.href;
-    let lastPathname = getSectionPathnameFromUrl();
+export function createSectionObservable(): Observable<string | null> {
+    return new Observable((subscriber) => {
+        // Emit initial value
+        subscriber.next(getSectionPathnameFromUrl());
 
-    const checkAndNotify = () => {
-        const currentPathname = getSectionPathnameFromUrl();
-        if (currentPathname !== lastPathname) {
-            lastPathname = currentPathname;
-            callback(currentPathname);
-        }
-    };
+        // Listen to browser back/forward navigation
+        const onPopState = () => {
+            subscriber.next(getSectionPathnameFromUrl());
+        };
 
-    const handleNavigation = () => {
-        if (window.location.href !== lastUrl) {
-            lastUrl = window.location.href;
-            checkAndNotify();
-        }
-    };
+        // Intercept pushState and replaceState for SPA navigation
+        const originalPushState = history.pushState;
+        const originalReplaceState = history.replaceState;
 
-    // Listen for navigation events
-    window.addEventListener("popstate", handleNavigation);
-    window.addEventListener("navigated", handleNavigation);
+        const wrappedPushState = function (this: History, ...args: Parameters<typeof history.pushState>) {
+            originalPushState.apply(this, args);
+            subscriber.next(getSectionPathnameFromUrl());
+        };
 
-    // Poll for URL changes as a fallback (some SPA routers don't fire events)
-    const intervalId = setInterval(() => {
-        if (window.location.href !== lastUrl) {
-            lastUrl = window.location.href;
-            checkAndNotify();
-        }
-    }, pollInterval);
+        const wrappedReplaceState = function (this: History, ...args: Parameters<typeof history.replaceState>) {
+            originalReplaceState.apply(this, args);
+            subscriber.next(getSectionPathnameFromUrl());
+        };
 
-    // Notify immediately with current section
-    callback(lastPathname);
+        // Install event listeners and method wrappers
+        window.addEventListener("popstate", onPopState);
+        history.pushState = wrappedPushState;
+        history.replaceState = wrappedReplaceState;
 
-    // Return cleanup function
-    return () => {
-        window.removeEventListener("popstate", handleNavigation);
-        window.removeEventListener("navigated", handleNavigation);
-        clearInterval(intervalId);
-    };
+        // Cleanup on unsubscribe
+        return () => {
+            window.removeEventListener("popstate", onPopState);
+            history.pushState = originalPushState;
+            history.replaceState = originalReplaceState;
+        };
+    });
 }

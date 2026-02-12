@@ -111,6 +111,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.ProfileId = source.ProfileId;
         target.ContextIds = source.ContextIds;
         target.SurfaceIds = source.SurfaceIds;
+        target.Scope = MapScopeToResponse(source.Scope);
         target.AllowedToolIds = source.AllowedToolIds;
         target.AllowedToolScopeIds = source.AllowedToolScopeIds;
         target.IsActive = source.IsActive;

@@ -9,11 +9,11 @@ namespace Umbraco.AI.Core.RuntimeContext.Contributors;
 /// <remarks>
 /// <para>
 /// Frontends can send section information via context items in the format:
-/// <code>{ "sectionAlias": "content" }</code>
+/// <code>{ "section": "content" }</code>
 /// </para>
 /// <para>
-/// The extracted section is stored in <see cref="Constants.ContextKeys.SectionAlias"/>
-/// and can be used for context-aware tool filtering.
+/// The extracted section is stored in <see cref="Constants.ContextKeys.Section"/>
+/// and can be used for context-aware filtering.
 /// </para>
 /// </remarks>
 internal sealed class SectionContextContributor : IAIRuntimeContextContributor
@@ -33,7 +33,7 @@ internal sealed class SectionContextContributor : IAIRuntimeContextContributor
 
     private bool IsSectionContext(AIRequestContextItem item)
     {
-        // Check if the value contains a sectionAlias property
+        // Check if the value contains a section property
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
             return false;
@@ -43,7 +43,7 @@ internal sealed class SectionContextContributor : IAIRuntimeContextContributor
         {
             var value = JsonSerializer.Deserialize<JsonElement>(item.Value, _jsonOptions);
             return value.ValueKind == JsonValueKind.Object
-                && value.TryGetProperty("sectionAlias", out _);
+                && value.TryGetProperty("section", out _);
         }
         catch
         {
@@ -61,16 +61,16 @@ internal sealed class SectionContextContributor : IAIRuntimeContextContributor
         try
         {
             var value = JsonSerializer.Deserialize<JsonElement>(item.Value, _jsonOptions);
-            if (value.TryGetProperty("sectionAlias", out var sectionElement))
+            if (value.TryGetProperty("section", out var sectionElement))
             {
-                var sectionAlias = sectionElement.GetString();
-                if (!string.IsNullOrEmpty(sectionAlias))
+                var section = sectionElement.GetString();
+                if (!string.IsNullOrEmpty(section))
                 {
                     // Store in data bag
-                    context.SetValue(Constants.ContextKeys.SectionAlias, sectionAlias);
+                    context.SetValue(Constants.ContextKeys.Section, section);
 
                     // Add system message to inform the LLM
-                    context.SystemMessageParts.Add(FormatSectionContext(sectionAlias));
+                    context.SystemMessageParts.Add(FormatSectionContext(section));
                 }
             }
         }
@@ -80,8 +80,8 @@ internal sealed class SectionContextContributor : IAIRuntimeContextContributor
         }
     }
 
-    private static string FormatSectionContext(string sectionAlias)
+    private static string FormatSectionContext(string section)
     {
-        return $"## Current Section\nThe user is currently in the '{sectionAlias}' section.";
+        return $"## Current Section\nThe user is currently in the '{section}' section.";
     }
 }

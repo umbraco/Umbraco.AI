@@ -12,7 +12,7 @@ public class AIAgentScopeRuleModel
     /// If any value matches the current section, this constraint is satisfied.
     /// Null or empty means any section.
     /// </summary>
-    public IReadOnlyList<string>? SectionAliases { get; set; }
+    public IReadOnlyList<string>? Sections { get; set; }
 
     /// <summary>
     /// Entity type aliases where this rule applies (e.g., "document", "media").

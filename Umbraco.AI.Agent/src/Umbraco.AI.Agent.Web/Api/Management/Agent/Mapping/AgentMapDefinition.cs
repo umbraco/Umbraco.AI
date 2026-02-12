@@ -182,13 +182,13 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         {
             AllowRules = source.AllowRules.Select(r => new AIAgentScopeRule
             {
-                SectionAliases = r.SectionAliases?.ToList(),
+                Sections = r.Sections?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),
                 WorkspaceAliases = r.WorkspaceAliases?.ToList()
             }).ToList(),
             DenyRules = source.DenyRules.Select(r => new AIAgentScopeRule
             {
-                SectionAliases = r.SectionAliases?.ToList(),
+                Sections = r.Sections?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),
                 WorkspaceAliases = r.WorkspaceAliases?.ToList()
             }).ToList()
@@ -209,13 +209,13 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         {
             AllowRules = source.AllowRules.Select(r => new AIAgentScopeRuleModel
             {
-                SectionAliases = r.SectionAliases?.ToList(),
+                Sections = r.Sections?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),
                 WorkspaceAliases = r.WorkspaceAliases?.ToList()
             }).ToList(),
             DenyRules = source.DenyRules.Select(r => new AIAgentScopeRuleModel
             {
-                SectionAliases = r.SectionAliases?.ToList(),
+                Sections = r.Sections?.ToList(),
                 EntityTypeAliases = r.EntityTypeAliases?.ToList(),
                 WorkspaceAliases = r.WorkspaceAliases?.ToList()
             }).ToList()

@@ -87,17 +87,17 @@ public class AIAgentScopeValidator
         IReadOnlyList<string> relevantDimensions)
     {
         // Check section (if specified AND surface cares about it)
-        if (rule.SectionAliases?.Count > 0 &&
+        if (rule.Sections?.Count > 0 &&
             relevantDimensions.Contains("section", StringComparer.OrdinalIgnoreCase))
         {
             // No current section = doesn't match
-            if (string.IsNullOrEmpty(context.SectionAlias))
+            if (string.IsNullOrEmpty(context.Section))
             {
                 return false;
             }
 
             // Check if current section is in the list (OR logic)
-            if (!rule.SectionAliases.Contains(context.SectionAlias, StringComparer.OrdinalIgnoreCase))
+            if (!rule.Sections.Contains(context.Section, StringComparer.OrdinalIgnoreCase))
             {
                 return false;
             }

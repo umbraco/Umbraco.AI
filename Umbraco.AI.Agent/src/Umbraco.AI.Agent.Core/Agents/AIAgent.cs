@@ -62,7 +62,7 @@ public sealed class AIAgent : IAIVersionableEntity
     /// <code>
     /// Scope = new AIAgentScope
     /// {
-    ///     AllowRules = [new AIAgentScopeRule { SectionAliases = ["content"] }]
+    ///     AllowRules = [new AIAgentScopeRule { Sections = ["content"] }]
     /// }
     /// </code>
     /// </para>

@@ -105,7 +105,7 @@ public static class Constants
         /// Key for section pathname in metadata collections.
         /// </summary>
         /// <example>"content", "media", "settings"</example>
-        public const string SectionAlias = "Umbraco.AI.SectionAlias";
+        public const string Section = "Umbraco.AI.Section";
 
         /// <summary>
         /// Key for log keys in metadata collections.

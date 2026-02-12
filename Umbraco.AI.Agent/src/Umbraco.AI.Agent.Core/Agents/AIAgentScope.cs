@@ -12,9 +12,9 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <para>
 /// This enables flexible context-based filtering:
 /// <list type="bullet">
-/// <item>Content-only agent: AllowRules with sectionAliases ["content"]</item>
-/// <item>General agent (not in settings): DenyRules with sectionAliases ["settings"]</item>
-/// <item>Document agent: AllowRules with sectionAliases ["content"], entityTypeAliases ["document"]</item>
+/// <item>Content-only agent: AllowRules with Sections ["content"]</item>
+/// <item>General agent (not in settings): DenyRules with Sections ["settings"]</item>
+/// <item>Document agent: AllowRules with Sections ["content"], EntityTypeAliases ["document"]</item>
 /// </list>
 /// </para>
 /// </remarks>

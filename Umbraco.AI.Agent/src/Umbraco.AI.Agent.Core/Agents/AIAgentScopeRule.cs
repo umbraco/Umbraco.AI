@@ -13,14 +13,14 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <code>
 /// new AIAgentScopeRule
 /// {
-///     SectionAliases = ["content"]
+///     Sections = ["content"]
 /// }
 /// </code>
 /// Document editing rule (section AND entity type):
 /// <code>
 /// new AIAgentScopeRule
 /// {
-///     SectionAliases = ["content"],
+///     Sections = ["content"],
 ///     EntityTypeAliases = ["document", "documentType"]
 /// }
 /// </code>
@@ -33,7 +33,7 @@ public sealed class AIAgentScopeRule
     /// Null or empty means any section.
     /// </summary>
     /// <example>["content", "media"]</example>
-    public IReadOnlyList<string>? SectionAliases { get; set; }
+    public IReadOnlyList<string>? Sections { get; set; }
 
     /// <summary>
     /// Entity type aliases where this rule applies (e.g., "document", "media").

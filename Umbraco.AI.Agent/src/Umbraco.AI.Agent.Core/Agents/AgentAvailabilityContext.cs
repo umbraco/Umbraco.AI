@@ -12,7 +12,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <code>
 /// new AgentAvailabilityContext
 /// {
-///     SectionAlias = "content",
+///     Section = "content",
 ///     EntityTypeAlias = "document",
 ///     WorkspaceAlias = "Umb.Workspace.Document"
 /// }
@@ -24,7 +24,7 @@ public sealed class AgentAvailabilityContext
     /// Current section pathname (e.g., "content", "media", "settings").
     /// Null if not in a section context.
     /// </summary>
-    public string? SectionAlias { get; init; }
+    public string? Section { get; init; }
 
     /// <summary>
     /// Current entity type alias (e.g., "document", "media", "documentType").

@@ -268,16 +268,14 @@ export class UaiVersionHistoryElement extends UmbLitElement {
 
     #renderPagination() {
         return html`
-            <div class="pagination">
-                <uui-pagination
-                    .current=${this._currentPage}
-                    .total=${this.#totalPages}
-                    firstlabel=${this.localize.term('general_first')}
-                    previouslabel=${this.localize.term('general_previous')}
-                    nextlabel=${this.localize.term('general_next')}
-                    lastlabel=${this.localize.term('general_last')}
-                    @change=${this.#onPageChange}></uui-pagination>
-            </div>
+            <uui-pagination
+                .current=${this._currentPage}
+                .total=${this.#totalPages}
+                firstlabel=${this.localize.term('general_first')}
+                previouslabel=${this.localize.term('general_previous')}
+                nextlabel=${this.localize.term('general_next')}
+                lastlabel=${this.localize.term('general_last')}
+                @change=${this.#onPageChange}></uui-pagination>
         `;
     }
 
@@ -338,16 +336,6 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 font-size: var(--uui-size-4);
                 color: var(--uui-color-text-alt);
                 line-height: 1;
-            }
-
-            .pagination {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: var(--uui-size-space-3);
-                padding: var(--uui-size-space-4) 0;
-                border-top: 1px solid var(--uui-color-border);
-                margin-top: var(--uui-size-space-4);
             }
         `,
     ];

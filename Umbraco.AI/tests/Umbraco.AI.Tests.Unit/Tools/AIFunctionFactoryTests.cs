@@ -8,12 +8,14 @@ namespace Umbraco.AI.Tests.Unit.Tools;
 public class AIFunctionFactoryTests
 {
     private readonly AIFunctionFactory _factory;
-    private readonly Mock<AIToolScopeCollection> _scopeCollectionMock;
+    private readonly List<IAIToolScope> _scopes;
+    private readonly AIToolScopeCollection _scopeCollection;
 
     public AIFunctionFactoryTests()
     {
-        _scopeCollectionMock = new Mock<AIToolScopeCollection>(Array.Empty<IAIToolScope>());
-        _factory = new AIFunctionFactory(_scopeCollectionMock.Object);
+        _scopes = new List<IAIToolScope>();
+        _scopeCollection = new AIToolScopeCollection(() => _scopes);
+        _factory = new AIFunctionFactory(_scopeCollection);
     }
 
     #region Create (single tool)
@@ -62,7 +64,7 @@ public class AIFunctionFactoryTests
         scopeMock.Setup(s => s.Id).Returns("content-read");
         scopeMock.Setup(s => s.ForEntityTypes).Returns(new List<string> { "document", "documentType" });
 
-        _scopeCollectionMock.Setup(c => c.GetById("content-read")).Returns(scopeMock.Object);
+        _scopes.Add(scopeMock.Object);
 
         var tool = new FakeTool(
             id: "get-content",
@@ -88,7 +90,7 @@ public class AIFunctionFactoryTests
         scopeMock.Setup(s => s.Id).Returns("search");
         scopeMock.Setup(s => s.ForEntityTypes).Returns(new List<string>()); // Empty
 
-        _scopeCollectionMock.Setup(c => c.GetById("search")).Returns(scopeMock.Object);
+        _scopes.Add(scopeMock.Object);
 
         var tool = new FakeTool(
             id: "search-all",

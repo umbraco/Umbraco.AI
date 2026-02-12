@@ -8,6 +8,7 @@ import { UaiUnifiedVersionHistoryRepository } from "../../repository/unified-ver
 import { UmbUserItemModel, UmbUserItemRepository } from "@umbraco-cms/backoffice/user";
 import { formatDateTime } from "../../../utils";
 import { UAI_EMPTY_GUID } from "../../../index.js";
+import { UUIPaginationEvent } from "@umbraco-cms/backoffice/external/uui";
 
 const PAGE_SIZE = 10;
 
@@ -176,18 +177,9 @@ export class UaiVersionHistoryElement extends UmbLitElement {
         }
     }
 
-    #onPreviousPage() {
-        if (this._currentPage > 1) {
-            this._currentPage--;
-            this.#loadVersionHistory();
-        }
-    }
-
-    #onNextPage() {
-        if (this._currentPage < this.#totalPages) {
-            this._currentPage++;
-            this.#loadVersionHistory();
-        }
+    #onPageChange(event: UUIPaginationEvent) {
+        this._currentPage= event.target.current;
+        this.#loadVersionHistory();
     }
 
     override render() {
@@ -277,20 +269,14 @@ export class UaiVersionHistoryElement extends UmbLitElement {
     #renderPagination() {
         return html`
             <div class="pagination">
-                <uui-button look="secondary" compact ?disabled=${this._currentPage <= 1} @click=${this.#onPreviousPage}>
-                    <uui-icon name="icon-arrow-left"></uui-icon>
-                </uui-button>
-                <span class="page-info">
-                    ${this.localize.term("uaiVersionHistory_pageInfo", [this._currentPage, this.#totalPages])}
-                </span>
-                <uui-button
-                    look="secondary"
-                    compact
-                    ?disabled=${this._currentPage >= this.#totalPages}
-                    @click=${this.#onNextPage}
-                >
-                    <uui-icon name="icon-arrow-right"></uui-icon>
-                </uui-button>
+                <uui-pagination
+                    .current=${this._currentPage}
+                    .total=${this.#totalPages}
+                    firstlabel=${this.localize.term('general_first')}
+                    previouslabel=${this.localize.term('general_previous')}
+                    nextlabel=${this.localize.term('general_next')}
+                    lastlabel=${this.localize.term('general_last')}
+                    @change=${this.#onPageChange}></uui-pagination>
             </div>
         `;
     }
@@ -360,11 +346,6 @@ export class UaiVersionHistoryElement extends UmbLitElement {
                 padding: var(--uui-size-space-4) 0;
                 border-top: 1px solid var(--uui-color-border);
                 margin-top: var(--uui-size-space-4);
-            }
-
-            .page-info {
-                color: var(--uui-color-text-alt);
-                font-size: 0.9em;
             }
         `,
     ];

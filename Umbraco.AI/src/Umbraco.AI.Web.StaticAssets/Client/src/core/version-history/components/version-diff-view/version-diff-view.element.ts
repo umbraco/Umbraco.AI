@@ -34,7 +34,7 @@ export class UaiVersionDiffViewElement extends UmbLitElement {
                 <uui-table-column></uui-table-column>
 
                 <uui-table-head>
-                    <uui-table-head-cell>${this.localize.term("general_alias")}</uui-table-head-cell>
+                    <uui-table-head-cell>${this.localize.term("general_name")}</uui-table-head-cell>
                     <uui-table-head-cell>${this.localize.term("general_value")}</uui-table-head-cell>
                 </uui-table-head>
 

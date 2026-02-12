@@ -116,6 +116,7 @@ export type AgentResponseModel = {
 export type AgentSurfaceItemResponseModel = {
     id: string;
     icon: string;
+    supportedScopeDimensions: Array<string>;
 };
 
 export type CreateAgentRequestModel = {

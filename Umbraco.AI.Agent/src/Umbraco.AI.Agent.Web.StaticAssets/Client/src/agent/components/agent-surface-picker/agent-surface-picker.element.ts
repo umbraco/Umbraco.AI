@@ -14,6 +14,7 @@ interface UaiAgentSurfaceItemModel {
     icon: string;
     name: string;
     description: string;
+    supportedScopeDimensions:string[];
 }
 
 @customElement(elementName)
@@ -102,6 +103,7 @@ export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
                         icon: surface.icon,
                         name: this.localize.term(`uaiAgentSurface_${surface.id}Label`) || surface.id,
                         description: this.localize.term(`uaiAgentSurface_${surface.id}Description`) || "",
+                        supportedScopeDimensions: surface.supportedScopeDimensions || [],
                     };
                 })
                 .filter((item): item is UaiAgentSurfaceItemModel => item !== undefined);
@@ -145,6 +147,7 @@ export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
                 value: surface.id,
                 label: this.localize.term(`uaiAgentSurface_${surface.id}Label`) || surface.id,
                 description: this.localize.term(`uaiAgentSurface_${surface.id}Description`) || "",
+                supportedScopeDimensions: surface.supportedScopeDimensions || [],
                 icon: surface.icon,
             }));
     }
@@ -198,6 +201,11 @@ export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
         return html`
             <uui-ref-node name=${item.name} detail=${item.description} readonly>
                 <umb-icon slot="icon" name=${item.icon}></umb-icon>
+                ${repeat(
+                    item.supportedScopeDimensions ?? [],
+                    (dim) => dim,
+                    (dim) => html`<uui-tag slot="tag" color="default" look="secondary">${dim}</uui-tag> `,
+                )}
                 ${!this.readonly
                     ? html`
                           <uui-action-bar slot="actions">
@@ -264,6 +272,10 @@ export class UaiAgentSurfacePickerElement extends UmbFormControlMixin<
             uui-ref-node::before {
                 border-radius: var(--uui-border-radius);
                 border: 1px solid var(--uui-color-divider-standalone);
+            }
+
+            uui-tag {
+                margin-left: var(--uui-size-space-2);
             }
         `,
     ];

@@ -6,8 +6,8 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// Validates agent scope rules, following the same pattern as Prompt scope validation.
 /// </summary>
 /// <remarks>
-/// This validator is surface-aware: it only checks context dimensions that the requesting
-/// surface declares it cares about via <see cref="IAIAgentSurface.SupportedContextDimensions"/>.
+/// This validator is surface-aware: it only checks scope dimensions that the requesting
+/// surface declares it cares about via <see cref="IAIAgentSurface.SupportedScopeDimensions"/>.
 /// </remarks>
 public class AIAgentScopeValidator
 {
@@ -27,7 +27,7 @@ public class AIAgentScopeValidator
         }
 
         // Get the dimensions this surface cares about
-        var relevantDimensions = surface?.SupportedContextDimensions ?? Array.Empty<string>();
+        var relevantDimensions = surface?.SupportedScopeDimensions ?? Array.Empty<string>();
 
         // Check deny rules first (they take precedence)
         if (IsAnyRuleMatched(agent.Scope.DenyRules, context, relevantDimensions))

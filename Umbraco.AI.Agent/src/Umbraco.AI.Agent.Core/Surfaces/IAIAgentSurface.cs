@@ -39,16 +39,15 @@ public interface IAIAgentSurface
     string Icon { get; }
 
     /// <summary>
-    /// Gets the context dimensions this surface uses for filtering agents.
+    /// Gets the scope dimensions this surface uses for filtering agents.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Context dimensions define which aspects of the current context this surface
+    /// Scope dimensions define which aspects of the current scope this surface
     /// considers when determining agent availability. Common dimensions include:
     /// <list type="bullet">
     ///   <item><c>"section"</c> - The current section (e.g., "content", "media")</item>
     ///   <item><c>"entityType"</c> - The current entity type (e.g., "document", "media")</item>
-    ///   <item><c>"workspace"</c> - The current workspace (e.g., "Umb.Workspace.Document")</item>
     /// </list>
     /// </para>
     /// <para>
@@ -57,10 +56,10 @@ public interface IAIAgentSurface
     /// while an API surface might only check ["entityType"] since APIs don't have sections.
     /// </para>
     /// <para>
-    /// Empty list means the surface doesn't perform context-based filtering (all agents
+    /// Empty list means the surface doesn't perform scope-based filtering (all agents
     /// with this surface are available everywhere).
     /// </para>
     /// </remarks>
     /// <example>["section", "entityType"]</example>
-    IReadOnlyList<string> SupportedContextDimensions { get; }
+    IReadOnlyList<string> SupportedScopeDimensions { get; }
 }

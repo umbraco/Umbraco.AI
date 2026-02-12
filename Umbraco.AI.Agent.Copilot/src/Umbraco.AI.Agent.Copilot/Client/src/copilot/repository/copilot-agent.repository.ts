@@ -8,7 +8,7 @@ import type { UaiCopilotAgentItem } from "../types.js";
 import { createSectionObservable } from "../section-detector.js";
 
 /**
- * Context dimensions that the copilot surface cares about for agent filtering.
+ * Scope dimensions that the copilot surface cares about for agent filtering.
  * The copilot is section-aware and entity-aware, so it checks both dimensions.
  */
 const COPILOT_RELEVANT_DIMENSIONS = ["section", "entityType"] as const;

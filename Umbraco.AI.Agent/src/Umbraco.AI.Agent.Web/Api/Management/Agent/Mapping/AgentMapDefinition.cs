@@ -28,7 +28,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
             Alias = string.Empty,
             Name = string.Empty
         }, MapFromUpdateRequest);
-        
+
         // Surface mappings
         mapper.Define<IAIAgentSurface, AgentSurfaceItemResponseModel>((_, _) => new AgentSurfaceItemResponseModel(), MapToResponse);
     }
@@ -123,6 +123,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
     {
         target.Id = source.Id;
         target.Icon = source.Icon;
+        target.SupportedScopeDimensions = source.SupportedScopeDimensions;
     }
 
     /// <summary>

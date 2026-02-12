@@ -55,7 +55,7 @@ public sealed class AIAgent : IAIVersionableEntity
     /// <remarks>
     /// <para>
     /// Follows the same pattern as <c>AIPromptScope</c> with allow and deny rules.
-    /// Different agent surfaces (copilot, API, workflow) may check different context dimensions.
+    /// Different agent surfaces (copilot, API, workflow) may check different scope dimensions.
     /// </para>
     /// <para>
     /// Example: A content-only agent would have:

@@ -21,4 +21,9 @@ public class AgentSurfaceItemResponseModel
     /// The icon to display for this surface.
     /// </summary>
     public string Icon { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The dimensions that agents on this surface can be scoped by. This is used to determine which agents are shown when a specific scope is selected.
+    /// </summary>
+    public IEnumerable<string> SupportedScopeDimensions{ get; set; } = [];
 }

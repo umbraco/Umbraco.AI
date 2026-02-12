@@ -5,7 +5,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 /// <remarks>
 /// This model captures the runtime context where an agent is being queried.
-/// Different agent scopes may check different context dimensions.
+/// Different agent scopes may check different scope dimensions.
 /// </remarks>
 /// <example>
 /// Copilot context in content section editing a document:

@@ -40,7 +40,7 @@ public sealed class AIAgentSurfaceAttribute : Attribute
     public string Icon { get; set; } = "icon-tag";
 
     /// <summary>
-    /// Gets or sets the context dimensions this surface uses for filtering agents.
+    /// Gets or sets the scope dimensions this surface uses for filtering agents.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -57,7 +57,7 @@ public sealed class AIAgentSurfaceAttribute : Attribute
     /// </para>
     /// </remarks>
     /// <example>new[] { "section", "entityType" }</example>
-    public string[]? SupportedContextDimensions { get; set; }
+    public string[]? SupportedScopeDimensions { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentSurfaceAttribute"/> class.

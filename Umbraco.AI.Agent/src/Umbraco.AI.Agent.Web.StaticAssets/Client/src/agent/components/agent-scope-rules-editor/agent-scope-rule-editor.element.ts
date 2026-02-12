@@ -112,7 +112,7 @@ export class UaiAgentScopeRuleEditorElement extends UmbLitElement {
 
 				<div class="rule-content" ?hidden=${this._collapsed}>
 					<umb-property-layout
-						label="Section Aliases"
+						label="Sections"
 						description="Sections where this rule applies (e.g., 'content', 'media'). Leave empty for any section."
 						orientation="vertical"
 					>

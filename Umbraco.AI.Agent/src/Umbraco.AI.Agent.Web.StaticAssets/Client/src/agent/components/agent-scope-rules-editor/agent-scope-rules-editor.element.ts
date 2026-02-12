@@ -2,7 +2,7 @@ import { css, html, customElement, property } from "@umbraco-cms/backoffice/exte
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UaiAgentScopeRule } from "../../types.js";
-import { createEmptyAgentScopeRule } from "./scope-rule-editor.element.js";
+import { createEmptyAgentScopeRule } from "./agent-scope-rule-editor.element.js";
 
 /**
  * Editor for managing a list of agent scope rules.

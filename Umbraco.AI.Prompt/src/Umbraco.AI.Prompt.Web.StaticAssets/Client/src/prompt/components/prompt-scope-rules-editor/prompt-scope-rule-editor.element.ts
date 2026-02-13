@@ -122,7 +122,7 @@ export class UaiPromptScopeRuleEditorElement extends UmbLitElement {
 
                 <div class="rule-content" ?hidden=${this._collapsed}>
                     <umb-property-layout
-                        label="Content Type Aliases"
+                        label="Content Types"
                         description="Select content types where this rule applies. Empty = any."
                         orientation="vertical"
                     >
@@ -135,7 +135,7 @@ export class UaiPromptScopeRuleEditorElement extends UmbLitElement {
                     </umb-property-layout>
 
                     <umb-property-layout
-                        label="Property Aliases"
+                        label="Properties"
                         description="Select properties where this rule applies. Empty = any."
                         orientation="vertical"
                     >

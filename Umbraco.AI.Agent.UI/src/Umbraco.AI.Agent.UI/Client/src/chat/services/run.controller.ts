@@ -62,6 +62,9 @@ export class UaiRunController extends UmbControllerBase {
     readonly agentState$ = this.#agentState.asObservable();
     readonly isRunning$ = this.agentState$.pipe(map((state) => state !== undefined));
 
+    #resolvedAgent = new BehaviorSubject<{ agentId: string; agentName: string; agentAlias: string } | undefined>(undefined);
+    readonly resolvedAgent$ = this.#resolvedAgent.asObservable();
+
     /** Expose tool renderer manager for context provision */
     get toolRendererManager(): UaiToolRendererManager {
         return this.#toolRendererManager;
@@ -138,6 +141,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next(undefined);
         this.#currentToolCalls = [];
         this.#currentAssistantMessageId = null;
+        this.#resolvedAgent.next(undefined);
     }
 
     abortRun(): void {
@@ -148,6 +152,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next(undefined);
         this.#currentToolCalls = [];
         this.#currentAssistantMessageId = null;
+        this.#resolvedAgent.next(undefined);
     }
 
     regenerateLastMessage(): void {
@@ -263,6 +268,12 @@ export class UaiRunController extends UmbControllerBase {
                     this.#agentState.next(merged);
                 },
                 onMessagesSnapshot: (messages) => this.#messages.next(messages),
+                onCustomEvent: (name, value) => {
+                    if (name === "agent_selected") {
+                        const agentInfo = value as { agentId: string; agentName: string; agentAlias: string };
+                        this.#resolvedAgent.next(agentInfo);
+                    }
+                },
                 onError: (error) => {
                     console.error("Run error:", error);
                     this.#agentState.next(undefined);

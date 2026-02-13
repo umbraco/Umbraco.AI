@@ -227,6 +227,12 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
         const context: Array<{ description: string; value: string }> = [];
 
+        // Add surface context
+        context.push({
+            description: "surface",
+            value: JSON.stringify({ surface: "copilot" }),
+        });
+
         // Add section context
         const currentSection = getSectionPathnameFromUrl();
         if (currentSection) {

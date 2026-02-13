@@ -107,18 +107,25 @@ public class RunAgentController : AgentControllerBase
             // Build availability context from AG-UI context items
             var context = BuildAvailabilityContext(request.Context);
 
-            // Use surface from context, fallback to "copilot" for backward compatibility
-            var surfaceId = context.Surface ?? "copilot";
+            if (context.Surface is null)
+            {
+                return Results.BadRequest(new ProblemDetails
+                {
+                    Title = "Surface is required for auto agent selection",
+                    Detail = "The AG-UI context must include a surface to use 'auto' agent selection.",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
 
             autoSelectedAgent = await _agentService.SelectAgentForPromptAsync(
-                userPrompt, surfaceId, context, cancellationToken);
+                userPrompt, context.Surface, context, cancellationToken);
 
             if (autoSelectedAgent is null)
             {
                 return Results.NotFound(new ProblemDetails
                 {
                     Title = "No active agents found",
-                    Detail = $"No active agents found in '{surfaceId}' surface for the current context.",
+                    Detail = $"No active agents found in '{context.Surface}' surface for the current context.",
                     Status = StatusCodes.Status404NotFound
                 });
             }

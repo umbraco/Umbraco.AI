@@ -1,5 +1,6 @@
 import { sectionMenuManifests } from "./menu/manifests.js";
 import { sectionSidebarManifests } from "./sidebar/manifests.js";
+import { dashboardManifests } from "./dashboard/manifests.js";
 import { UAI_SECTION_ALIAS } from "./constants.ts";
 
 const section: UmbExtensionManifest = {
@@ -21,5 +22,6 @@ const section: UmbExtensionManifest = {
 export const sectionManifests = [
     ...sectionMenuManifests,
     ...sectionSidebarManifests,
+    ...dashboardManifests,
     section
 ];

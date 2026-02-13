@@ -124,6 +124,14 @@ export function createContextObservable(): Observable<ContextInfo> {
 }
 
 /**
+ * Extracts the section pathname from the current URL.
+ * Backward compatibility wrapper for getContextFromUrl().
+ */
+export function getSectionPathnameFromUrl(): string | null {
+	return getContextFromUrl().section;
+}
+
+/**
  * Checks if a section pathname is in the allowed list.
  */
 export function isSectionAllowed(pathname: string | null, allowedPathnames: string[]): boolean {

@@ -29,7 +29,7 @@ internal static class AIJsonComparer
         object? from,
         object? to,
         string basePath,
-        List<AIPropertyChange> changes,
+        List<AIValueChange> changes,
         Func<string, bool>? isSensitive = null)
     {
         // Handle null cases
@@ -40,13 +40,13 @@ internal static class AIJsonComparer
 
         if (from == null)
         {
-            changes.Add(new AIPropertyChange(basePath, null, "(configured)"));
+            changes.Add(new AIValueChange(basePath, null, "(configured)"));
             return true;
         }
 
         if (to == null)
         {
-            changes.Add(new AIPropertyChange(basePath, "(configured)", null));
+            changes.Add(new AIValueChange(basePath, "(configured)", null));
             return true;
         }
 
@@ -97,7 +97,7 @@ internal static class AIJsonComparer
         JsonElement from,
         JsonElement to,
         string path,
-        List<AIPropertyChange> changes,
+        List<AIValueChange> changes,
         Func<string, bool>? isSensitive = null)
     {
         // Handle different value kinds
@@ -135,7 +135,7 @@ internal static class AIJsonComparer
         JsonElement from,
         JsonElement to,
         string path,
-        List<AIPropertyChange> changes,
+        List<AIValueChange> changes,
         Func<string, bool>? isSensitive)
     {
         var fromProps = from.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
@@ -176,7 +176,7 @@ internal static class AIJsonComparer
         JsonElement from,
         JsonElement to,
         string path,
-        List<AIPropertyChange> changes)
+        List<AIValueChange> changes)
     {
         var fromArray = from.EnumerateArray().ToList();
         var toArray = to.EnumerateArray().ToList();
@@ -185,7 +185,7 @@ internal static class AIJsonComparer
         if (fromArray.Count != toArray.Count ||
             from.GetRawText() != to.GetRawText())
         {
-            changes.Add(new AIPropertyChange(
+            changes.Add(new AIValueChange(
                 path,
                 $"[{fromArray.Count} items]",
                 $"[{toArray.Count} items]"));
@@ -199,7 +199,7 @@ internal static class AIJsonComparer
         string path,
         JsonElement from,
         JsonElement to,
-        List<AIPropertyChange> changes,
+        List<AIValueChange> changes,
         Func<string, bool>? isSensitive)
     {
         var sensitive = isSensitive?.Invoke(path) ?? false;
@@ -222,7 +222,7 @@ internal static class AIJsonComparer
             toValue = FormatValue(to);
         }
 
-        changes.Add(new AIPropertyChange(path, fromValue, toValue));
+        changes.Add(new AIValueChange(path, fromValue, toValue));
     }
 
     /// <summary>

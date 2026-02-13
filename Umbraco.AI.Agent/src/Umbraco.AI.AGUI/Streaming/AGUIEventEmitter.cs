@@ -32,6 +32,7 @@ public sealed class AGUIEventEmitter
     private readonly HashSet<string> _frontendToolCallIds = new();
 
     private string _currentMessageId;
+    private string? _lastGeneratedCallId;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AGUIEventEmitter"/> class.
@@ -97,28 +98,40 @@ public sealed class AGUIEventEmitter
     /// <summary>
     /// Emits a <see cref="ToolCallChunkEvent"/> for a tool call.
     /// </summary>
-    /// <param name="toolCallId">The tool call identifier.</param>
+    /// <param name="toolCallId">The tool call identifier (may be null or empty for providers like Gemini).</param>
     /// <param name="toolCallName">The name of the tool being called.</param>
     /// <param name="arguments">The tool arguments (will be serialized to JSON).</param>
     /// <param name="isFrontendTool">Whether this is a frontend tool (execution on client).</param>
     /// <returns>The tool call chunk event, or <c>null</c> if this tool call was already emitted.</returns>
+    /// <remarks>
+    /// If the provider doesn't supply a CallId (e.g., Google Gemini), a unique ID is generated
+    /// and tracked for correlation with the immediate subsequent tool result.
+    /// </remarks>
     public ToolCallChunkEvent? EmitToolCall(
-        string toolCallId,
+        string? toolCallId,
         string toolCallName,
         object? arguments,
         bool isFrontendTool)
     {
-        if (string.IsNullOrEmpty(toolCallId))
-            return null;
+        // Generate ID if provider doesn't supply one (workaround for Gemini empty CallId bug)
+        var effectiveCallId = string.IsNullOrEmpty(toolCallId)
+            ? $"generated-{Guid.NewGuid()}"
+            : toolCallId;
 
-        // Skip if already emitted
-        if (!_emittedToolCallIds.Add(toolCallId))
+        // Track generated ID for result correlation
+        if (string.IsNullOrEmpty(toolCallId))
+        {
+            _lastGeneratedCallId = effectiveCallId;
+        }
+
+        // Skip if already emitted (deduplication)
+        if (!_emittedToolCallIds.Add(effectiveCallId))
             return null;
 
         // Track frontend tools for outcome determination
         if (isFrontendTool)
         {
-            _frontendToolCallIds.Add(toolCallId);
+            _frontendToolCallIds.Add(effectiveCallId);
         }
 
         var argsJson = arguments != null
@@ -127,7 +140,7 @@ public sealed class AGUIEventEmitter
 
         return new ToolCallChunkEvent
         {
-            ToolCallId = toolCallId,
+            ToolCallId = effectiveCallId,
             ToolCallName = toolCallName,
             ParentMessageId = _currentMessageId,
             Delta = argsJson,
@@ -138,21 +151,38 @@ public sealed class AGUIEventEmitter
     /// <summary>
     /// Emits a <see cref="ToolCallResultEvent"/> for a tool result.
     /// </summary>
-    /// <param name="toolCallId">The tool call identifier.</param>
+    /// <param name="toolCallId">The tool call identifier (may be null or empty for providers like Gemini).</param>
     /// <param name="result">The tool result (will be serialized to JSON).</param>
     /// <returns>The tool call result event, or <c>null</c> if this is a frontend tool result.</returns>
     /// <remarks>
+    /// <para>
     /// Frontend tool results are not emitted because the client executes them.
     /// After emitting a tool result, a new message ID is generated to support
     /// multi-block UI layouts.
+    /// </para>
+    /// <para>
+    /// If the provider doesn't supply a CallId (e.g., Google Gemini), this method
+    /// uses the last generated ID from <see cref="EmitToolCall"/> to correlate the result.
+    /// </para>
     /// </remarks>
-    public ToolCallResultEvent? EmitToolResult(string toolCallId, object? result)
+    public ToolCallResultEvent? EmitToolResult(string? toolCallId, object? result)
     {
-        if (string.IsNullOrEmpty(toolCallId))
+        // Use last generated ID if provider doesn't supply one (workaround for Gemini)
+        var effectiveCallId = string.IsNullOrEmpty(toolCallId)
+            ? _lastGeneratedCallId
+            : toolCallId;
+
+        if (string.IsNullOrEmpty(effectiveCallId))
             return null;
 
+        // Consume the generated ID after use
+        if (string.IsNullOrEmpty(toolCallId))
+        {
+            _lastGeneratedCallId = null;
+        }
+
         // Skip frontend tool results - client executes them
-        if (_frontendToolCallIds.Contains(toolCallId))
+        if (_frontendToolCallIds.Contains(effectiveCallId))
             return null;
 
         var resultJson = result != null
@@ -166,7 +196,7 @@ public sealed class AGUIEventEmitter
         return new ToolCallResultEvent
         {
             MessageId = resultMessageId,
-            ToolCallId = toolCallId,
+            ToolCallId = effectiveCallId,
             Content = resultJson,
             Role = AGUIMessageRole.Tool,
             Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Extensions;
 using Umbraco.AI.Web.Api.Common.Models;
-using Umbraco.Cms.Web.Common.Authorization;
+using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 
@@ -13,7 +13,7 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 /// Controller for deleting prompts.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class DeletePromptController : PromptControllerBase
 {
     private readonly IAIPromptService _aiPromptService;

@@ -5,19 +5,20 @@ import type {
     UmbExtensionCondition,
 } from "@umbraco-cms/backoffice/extension-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { observeSectionChanges, isSectionAllowed } from "../../section-detector.js";
+import { combineLatest } from "@umbraco-cms/backoffice/external/rxjs";
+import { startWith } from "@umbraco-cms/backoffice/external/rxjs";
+import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
+import { createSectionObservable, isSectionAllowed } from "../../context-observer.js";
 
 export interface UaiCopilotSectionConditionConfig extends UmbConditionConfigBase {
-    /**
-     * The section pathnames where the copilot should be available.
-     * These are the URL path segments (e.g., "content", "media").
-     */
-    sectionPathnames: string[];
+    // No config needed - sections are discovered from manifests
 }
 
 /**
- * Condition that checks if the current URL section is in the allowed list.
- * Uses URL-based detection which works at the header level.
+ * Condition that checks if the current URL section is compatible with copilot.
+ * Uses dynamic manifest-based discovery instead of hardcoded section lists.
+ *
+ * Sections declare compatibility via ManifestUaiCopilotCompatibleSection manifests.
  *
  * WORKAROUND: This custom condition exists because Umb.Condition.SectionAlias
  * does not work for headerApp extensions (header apps are outside section context).
@@ -29,19 +30,25 @@ export class UaiCopilotSectionCondition
     extends UmbConditionBase<UaiCopilotSectionConditionConfig>
     implements UmbExtensionCondition
 {
-    #cleanup: (() => void) | null = null;
+    #sectionRegistry!: UaiCopilotSectionRegistry;
 
     constructor(host: UmbControllerHost, args: UmbConditionControllerArguments<UaiCopilotSectionConditionConfig>) {
         super(host, args);
 
-        this.#cleanup = observeSectionChanges((pathname) => {
-            this.permitted = isSectionAllowed(pathname, this.config.sectionPathnames);
-        });
-    }
+        this.#sectionRegistry = new UaiCopilotSectionRegistry(this);
 
-    override hostDisconnected(): void {
-        super.hostDisconnected();
-        this.#cleanup?.();
+        // Combine current section with compatible sections from registry
+        // Use startWith to ensure registry emits immediately (even if empty) so combineLatest works
+        this.observe(
+            combineLatest([
+                createSectionObservable(),
+                this.#sectionRegistry.compatibleSectionPathnames$.pipe(startWith([])),
+            ]),
+            ([currentSection, compatibleSections]) => {
+                this.permitted = isSectionAllowed(currentSection, compatibleSections);
+            },
+            "_observeSectionPermission"
+        );
     }
 }
 

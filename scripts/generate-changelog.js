@@ -297,11 +297,17 @@ async function generateChangelog(product, version, options = {}) {
             };
 
             // Process references (PR/issue links)
+            // Only include numeric issue references (filter out code references like #isDisabled)
             if (transformedCommit.references && transformedCommit.references.length > 0) {
-                transformedCommit.references = transformedCommit.references.map((ref) => ({
-                    ...ref,
-                    url: ref.issue ? `https://github.com/umbraco/Umbraco.AI/pull/${ref.issue}` : ref.url,
-                }));
+                transformedCommit.references = transformedCommit.references
+                    .filter((ref) => {
+                        // Only keep references that are numeric issue IDs
+                        return ref.issue && /^\d+$/.test(ref.issue);
+                    })
+                    .map((ref) => ({
+                        ...ref,
+                        url: ref.issue ? `https://github.com/umbraco/Umbraco.AI/pull/${ref.issue}` : ref.url,
+                    }));
             }
 
             return transformedCommit;

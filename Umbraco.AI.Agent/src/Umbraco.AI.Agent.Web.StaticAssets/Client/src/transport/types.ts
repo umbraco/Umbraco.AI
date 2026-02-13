@@ -36,6 +36,8 @@ export interface UaiChatMessage {
     toolCalls?: UaiToolCallInfo[];
     /** Required for tool role messages - the ID of the tool call this is responding to */
     toolCallId?: string;
+    /** Optional agent name for attribution (set when auto mode selects an agent) */
+    agentName?: string;
     timestamp: Date;
 }
 
@@ -149,6 +151,8 @@ export interface AgentClientCallbacks {
     onStateDelta?: (delta: Partial<UaiAgentState>) => void;
     /** Called when a messages snapshot is received */
     onMessagesSnapshot?: (messages: UaiChatMessage[]) => void;
+    /** Called when a custom event is received */
+    onCustomEvent?: (name: string, value: unknown) => void;
     /** Called on error */
     onError?: (error: Error) => void;
 }
@@ -250,6 +254,13 @@ export interface MessagesSnapshotEvent extends TypedBaseEvent {
     messages: unknown[];
 }
 
+/** CUSTOM event */
+export interface CustomEvent extends TypedBaseEvent {
+    type: typeof AGUIEventType.CUSTOM;
+    name: string;
+    value: unknown;
+}
+
 /** Union of all typed AG-UI events */
 export type AGUITypedEvent =
     | TextMessageStartEvent
@@ -263,4 +274,5 @@ export type AGUITypedEvent =
     | RunErrorEvent
     | StateSnapshotEvent
     | StateDeltaEvent
-    | MessagesSnapshotEvent;
+    | MessagesSnapshotEvent
+    | CustomEvent;

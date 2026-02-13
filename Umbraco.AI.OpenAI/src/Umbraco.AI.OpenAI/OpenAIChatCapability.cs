@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
@@ -12,7 +13,7 @@ namespace Umbraco.AI.OpenAI;
 public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBase<OpenAIProviderSettings>(provider)
 {
     private const string DefaultChatModel = "gpt-4o";
-    
+
     private new OpenAIProvider Provider => (OpenAIProvider)base.Provider;
 
     /// <summary>
@@ -52,9 +53,10 @@ public class OpenAIChatCapability(OpenAIProvider provider) : AIChatCapabilityBas
     }
 
     /// <inheritdoc />
+    [Experimental("OPENAI001")]
     protected override IChatClient CreateClient(OpenAIProviderSettings settings, string? modelId)
         => OpenAIProvider.CreateOpenAIClient(settings)
-            .GetChatClient(modelId ?? DefaultChatModel)
+            .GetResponsesClient(modelId ?? DefaultChatModel)
             .AsIChatClient();
 
     private static bool IsChatModel(string modelId)

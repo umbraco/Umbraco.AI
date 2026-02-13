@@ -32,6 +32,9 @@ public abstract class AIToolScopeBase : IAIToolScope, IDiscoverable
     /// <inheritdoc />
     public string Domain { get; }
 
+    /// <inheritdoc />
+    public IReadOnlyList<string> ForEntityTypes { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AIToolScopeBase"/> class.
     /// </summary>
@@ -48,5 +51,6 @@ public abstract class AIToolScopeBase : IAIToolScope, IDiscoverable
         Icon = attribute.Icon;
         IsDestructive = attribute.IsDestructive;
         Domain = attribute.Domain;
+        ForEntityTypes = attribute.ForEntityTypes ?? Array.Empty<string>();
     }
 }

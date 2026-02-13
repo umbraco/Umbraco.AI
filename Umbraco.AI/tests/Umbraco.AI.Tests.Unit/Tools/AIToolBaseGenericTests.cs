@@ -53,7 +53,7 @@ public class AIToolBaseGenericTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithWrongArgsType_ThrowsInvalidCastException()
+    public async Task ExecuteAsync_WithWrongArgsType_ThrowsArgumentException()
     {
         // Arrange
         var tool = new TypedTestTool();
@@ -63,7 +63,7 @@ public class AIToolBaseGenericTests
         var act = () => ((IAITool)tool).ExecuteAsync(wrongArgs, CancellationToken.None);
 
         // Assert
-        await Should.ThrowAsync<InvalidCastException>(act);
+        await Should.ThrowAsync<ArgumentException>(act);
     }
 
     #endregion

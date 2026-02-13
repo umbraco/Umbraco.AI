@@ -2,8 +2,8 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Services;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Prompt.Web.Api.Management.Utils.Controllers;
 
@@ -11,7 +11,7 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Utils.Controllers;
 /// Controller for retrieving content type and property aliases.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class AliasLookupController : UtilsControllerBase
 {
     private readonly IContentTypeService _contentTypeService;

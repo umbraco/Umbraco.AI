@@ -21,8 +21,8 @@ public class ResultOptionModel
     public string? Description { get; init; }
 
     /// <summary>
-    /// The property change to apply when this option is selected.
+    /// The value change to apply when this option is selected.
     /// Null for informational-only options.
     /// </summary>
-    public PropertyChangeModel? PropertyChange { get; init; }
+    public ValueChangeModel? ValueChange { get; init; }
 }

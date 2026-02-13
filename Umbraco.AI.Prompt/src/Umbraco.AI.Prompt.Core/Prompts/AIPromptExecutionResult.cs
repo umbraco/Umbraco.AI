@@ -18,7 +18,6 @@ public class AIPromptExecutionResult
     /// </summary>
     public UsageDetails? Usage { get; init; }
 
-    /// <summary>
     /// Available result options. Always present, may be empty.
     /// - Empty array: Informational only (OptionCount = 0)
     /// - Single item: One value to insert (OptionCount = 1)
@@ -47,9 +46,9 @@ public class AIPromptExecutionResult
         public string? Description { get; init; }
 
         /// <summary>
-        /// The property change to apply when this option is selected.
+        /// The value change to apply when this option is selected.
         /// Null for informational-only options.
         /// </summary>
-        public AIPropertyChange? PropertyChange { get; init; }
+        public AIValueChange? ValueChange { get; init; }
     }
 }

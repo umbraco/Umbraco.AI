@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **core,agent,prompt:** Fix validation blocking by calling checkValidity() method ([1766901](https://github.com/umbraco/Umbraco.AI/commit/1766901e5e308235aed721bdbfc90d84e3c07fd5))
 * **core,agent,prompt:** Fix validation issues from code review ([5984276](https://github.com/umbraco/Umbraco.AI/commit/5984276e463b7dccd625edf1181c4c950b6555a7))
 * **core,agent,prompt:** Properly block save on duplicate alias via validation messages ([908d1c8](https://github.com/umbraco/Umbraco.AI/commit/908d1c8592755e08a88e92ef0e246b0783479da5))
-* **core,agent,prompt:** Use setCustomValidity for visual error display ([346f0e8](https://github.com/umbraco/Umbraco.AI/commit/346f0e8ad04776c0b39c67d39695ce00962c7520)), closes [#checkAliasUniqueness](https://github.com/umbraco/Umbraco.AI/issues/checkAliasUniqueness)
+* **core,agent,prompt:** Use setCustomValidity for visual error display ([346f0e8](https://github.com/umbraco/Umbraco.AI/commit/346f0e8ad04776c0b39c67d39695ce00962c7520))
 * **prompt:** Fix TypeScript compilation errors ([f12955a](https://github.com/umbraco/Umbraco.AI/commit/f12955a06e998d3adb61fbcf449f1da668809728))
 * **prompt:** Fixed prompt package being too liberal with the umbraco-marketplace tag ([93280bc](https://github.com/umbraco/Umbraco.AI/commit/93280bcb1f0fd6c0a413aaf1aca684dc56e6125f))
 * **prompt:** Prevent registrar from being garbage collected ([84947cd](https://github.com/umbraco/Umbraco.AI/commit/84947cd9a7542dc1f491c63ea06dca39fe4d071d))

@@ -1,13 +1,15 @@
+using System.Text.Json;
+
 namespace Umbraco.AI.Core.EntityAdapter;
 
 /// <summary>
 /// Represents a serialized entity for LLM context.
-/// Contains the entity's identity and properties in a format suitable for AI processing.
+/// Contains the entity's identity and free-form data in a format suitable for AI processing.
 /// </summary>
 public sealed class AISerializedEntity
 {
     /// <summary>
-    /// The entity type (e.g., "document", "media").
+    /// The entity type (e.g., "document", "media", "commerce-product").
     /// </summary>
     public required string EntityType { get; init; }
 
@@ -23,18 +25,16 @@ public sealed class AISerializedEntity
     public required string Name { get; init; }
 
     /// <summary>
-    /// The content type alias (e.g., document type alias).
-    /// </summary>
-    public string? ContentType { get; init; }
-
-    /// <summary>
     /// The unique identifier of the parent entity when creating a new entity.
     /// Null for existing entities or when parent is root.
     /// </summary>
     public string? ParentUnique { get; init; }
 
     /// <summary>
-    /// The serialized properties of the entity.
+    /// The entity data as a JSON object.
+    /// Adapters decide the structure based on entity type.
+    /// For CMS entities, this typically contains { contentType, properties }.
+    /// For third-party entities, this can be any domain-appropriate JSON structure.
     /// </summary>
-    public IReadOnlyList<AISerializedProperty> Properties { get; init; } = [];
+    public required JsonElement Data { get; init; }
 }

@@ -14,12 +14,12 @@ export interface UaiPromptContextItem {
 }
 
 /**
- * Represents a property change to be applied to the entity.
- * Matches backend PropertyChangeModel and Core's UaiPropertyChange.
+ * Represents a value change to be applied to the entity.
+ * Matches backend ValueChangeModel and Core's UaiValueChange.
  */
-export interface UaiPromptPropertyChange {
-    /** The property alias. */
-    alias: string;
+export interface UaiPromptValueChange {
+    /** JSON path to the value (e.g., "title", "price.amount"). */
+    path: string;
     /** The new value to set. */
     value: unknown;
     /** The culture for variant content. */
@@ -59,7 +59,7 @@ export interface UaiPromptExecutionResponse {
         totalTokens?: number;
     };
     /** Property changes to apply to the entity. */
-    propertyChanges?: UaiPromptPropertyChange[];
+    valueChanges?: UaiPromptValueChange[];
 }
 
 /**
@@ -115,8 +115,8 @@ export class UaiPromptExecutionServerDataSource {
                           totalTokens: data.usage.totalTokens ?? undefined,
                       }
                     : undefined,
-                propertyChanges: data.propertyChanges?.map((change) => ({
-                    alias: change.alias,
+                valueChanges: data.valueChanges?.map((change) => ({
+                    path: change.path,
                     value: change.value,
                     culture: change.culture ?? undefined,
                     segment: change.segment ?? undefined,

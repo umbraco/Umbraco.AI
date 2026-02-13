@@ -12,6 +12,9 @@ export default {
         scopesDescription: "Categorize this agent for specific purposes (e.g., Copilot chat)",
         noToolScopesAvailable: "No tool scopes available",
 
+        selectSurface: "Select Surface",
+        noSurfacesAvailable: "No surfaces available. Surfaces are registered by add-on packages.",
+
         // Tool permissions
         toolScopeOverrides: "Tool Scope Overrides",
         toolIdOverrides: "Tool Overrides",

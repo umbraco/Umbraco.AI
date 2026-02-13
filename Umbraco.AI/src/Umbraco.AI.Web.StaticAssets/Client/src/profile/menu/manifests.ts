@@ -1,5 +1,6 @@
 import type { ManifestMenuItem } from "@umbraco-cms/backoffice/menu";
 import { UAI_PROFILE_ROOT_ENTITY_TYPE, UAI_PROFILE_ICON } from "../constants.js";
+import { UAI_CORE_MENU_ALIAS } from "../../section/constants.ts";
 
 export const profileMenuManifests: ManifestMenuItem[] = [
     {
@@ -11,7 +12,7 @@ export const profileMenuManifests: ManifestMenuItem[] = [
             label: "Profiles",
             icon: UAI_PROFILE_ICON,
             entityType: UAI_PROFILE_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAI.Menu.Settings"],
+            menus: [UAI_CORE_MENU_ALIAS],
         },
     },
 ];

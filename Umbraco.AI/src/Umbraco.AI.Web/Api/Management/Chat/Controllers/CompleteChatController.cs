@@ -11,7 +11,6 @@ using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Api.Management.Chat.Models;
 using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Chat.Controllers;
 

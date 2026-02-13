@@ -95,12 +95,12 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             const result = await umbOpenModal(this, modalToken, { data });
 
             if (result.action === "insert") {
-                // Apply any property changes returned by the AI
-                if (result.propertyChanges?.length && this.#workspaceContext) {
+                // Apply any value changes returned by the AI
+                if (result.valueChanges?.length && this.#workspaceContext) {
                     const adapter = await this.#resolveAdapter();
-                    if (adapter?.applyPropertyChange) {
-                        for (const change of result.propertyChanges) {
-                            await adapter.applyPropertyChange(this.#workspaceContext, change);
+                    if (adapter?.applyValueChange) {
+                        for (const change of result.valueChanges) {
+                            await adapter.applyValueChange(this.#workspaceContext, change);
                         }
                     }
                 }

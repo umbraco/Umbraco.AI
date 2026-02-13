@@ -201,7 +201,7 @@ export type EmbeddingResponseModel = {
 export type EntityVersionComparisonResponseModel = {
     fromVersion: number;
     toVersion: number;
-    changes: Array<PropertyChangeModel>;
+    changes: Array<ValueChangeModel>;
 };
 
 export type EntityVersionHistoryResponseModel = {
@@ -308,12 +308,6 @@ export type ProfileSettingsModel = {
     [key: string]: never;
 };
 
-export type PropertyChangeModel = {
-    propertyName: string;
-    oldValue?: string | null;
-    newValue?: string | null;
-};
-
 export type ProviderItemResponseModel = {
     id: string;
     name: string;
@@ -408,6 +402,12 @@ export type UsageTimeSeriesPointModel = {
     outputTokens: number;
     successCount: number;
     failureCount: number;
+};
+
+export type ValueChangeModel = {
+    path: string;
+    oldValue?: string | null;
+    newValue?: string | null;
 };
 
 export type GetUsageBreakdownByModelData = {

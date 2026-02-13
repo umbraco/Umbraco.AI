@@ -63,7 +63,7 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
-        string? scopeId = null,
+        string? surfaceId = null,
         bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
@@ -86,12 +86,12 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
                 query = query.Where(e => e.ProfileId == profileId.Value);
             }
 
-            if (!string.IsNullOrWhiteSpace(scopeId))
+            if (!string.IsNullOrWhiteSpace(surfaceId))
             {
-                // Filter agents that have the scopeId in their ScopeIds JSON array
+                // Filter agents that have the surfaceId in their SurfaceIds JSON array
                 // Using LIKE to search within JSON array (works for both SQL Server and SQLite)
-                var scopePattern = $"\"{scopeId}\"";
-                query = query.Where(e => e.ScopeIds != null && e.ScopeIds.Contains(scopePattern));
+                var surfacePattern = $"\"{surfaceId}\"";
+                query = query.Where(e => e.SurfaceIds != null && e.SurfaceIds.Contains(surfacePattern));
             }
 
             if (isActive.HasValue)
@@ -116,16 +116,16 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Core.Agents.AIAgent>> GetByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Core.Agents.AIAgent>> GetBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
-            // Filter agents that have the scopeId in their ScopeIds JSON array
-            var scopePattern = $"\"{scopeId}\"";
+            // Filter agents that have the surfaceId in their SurfaceIds JSON array
+            var surfacePattern = $"\"{surfaceId}\"";
             return await db.Agents.AsNoTracking()
-                .Where(e => e.ScopeIds != null && e.ScopeIds.Contains(scopePattern))
+                .Where(e => e.SurfaceIds != null && e.SurfaceIds.Contains(surfacePattern))
                 .OrderBy(e => e.Name)
                 .ToListAsync(cancellationToken);
         });

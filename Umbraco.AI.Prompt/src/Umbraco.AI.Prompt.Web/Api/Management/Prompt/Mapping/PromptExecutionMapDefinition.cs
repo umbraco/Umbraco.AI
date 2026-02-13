@@ -68,13 +68,13 @@ internal class PromptExecutionMapDefinition : IMapDefinition
                 Label = option.Label,
                 DisplayValue = option.DisplayValue,
                 Description = option.Description,
-                PropertyChange = option.PropertyChange is not null
-                    ? new PropertyChangeModel
+                ValueChange = option.ValueChange is not null
+                    ? new ValueChangeModel
                     {
-                        Alias = option.PropertyChange.Alias,
-                        Value = option.PropertyChange.Value,
-                        Culture = option.PropertyChange.Culture,
-                        Segment = option.PropertyChange.Segment
+                        Path = option.ValueChange.Path,
+                        Value = option.ValueChange.Value,
+                        Culture = option.ValueChange.Culture,
+                        Segment = option.ValueChange.Segment
                     }
                     : null
             }).ToList()

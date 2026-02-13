@@ -26,7 +26,8 @@ internal static class AIAgentEntityFactory
             Description = entity.Description,
             ProfileId = entity.ProfileId,
             ContextIds = DeserializeContextIds(entity.ContextIds),
-            ScopeIds = DeserializeScopeIds(entity.ScopeIds),
+            SurfaceIds = DeserializeSurfaceIds(entity.SurfaceIds),
+            Scope = DeserializeScope(entity.Scope),
             AllowedToolIds = DeserializeAllowedToolIds(entity.AllowedToolIds),
             AllowedToolScopeIds = DeserializeAllowedToolScopeIds(entity.AllowedToolScopeIds),
             UserGroupPermissions = DeserializeUserGroupPermissions(entity.UserGroupPermissions),
@@ -53,7 +54,8 @@ internal static class AIAgentEntityFactory
             Description = aiAgent.Description,
             ProfileId = aiAgent.ProfileId,
             ContextIds = SerializeContextIds(aiAgent.ContextIds),
-            ScopeIds = SerializeScopeIds(aiAgent.ScopeIds),
+            SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds),
+            Scope = SerializeScope(aiAgent.Scope),
             AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds),
             AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds),
             UserGroupPermissions = SerializeUserGroupPermissions(aiAgent.UserGroupPermissions),
@@ -77,7 +79,8 @@ internal static class AIAgentEntityFactory
         entity.Description = aiAgent.Description;
         entity.ProfileId = aiAgent.ProfileId;
         entity.ContextIds = SerializeContextIds(aiAgent.ContextIds);
-        entity.ScopeIds = SerializeScopeIds(aiAgent.ScopeIds);
+        entity.SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds);
+        entity.Scope = SerializeScope(aiAgent.Scope);
         entity.AllowedToolIds = SerializeAllowedToolIds(aiAgent.AllowedToolIds);
         entity.AllowedToolScopeIds = SerializeAllowedToolScopeIds(aiAgent.AllowedToolScopeIds);
         entity.UserGroupPermissions = SerializeUserGroupPermissions(aiAgent.UserGroupPermissions);
@@ -116,17 +119,17 @@ internal static class AIAgentEntityFactory
         }
     }
 
-    private static string? SerializeScopeIds(IReadOnlyList<string> scopeIds)
+    private static string? SerializeSurfaceIds(IReadOnlyList<string> surfaceIds)
     {
-        if (scopeIds.Count == 0)
+        if (surfaceIds.Count == 0)
         {
             return null;
         }
 
-        return JsonSerializer.Serialize(scopeIds, JsonOptions);
+        return JsonSerializer.Serialize(surfaceIds, JsonOptions);
     }
 
-    private static IReadOnlyList<string> DeserializeScopeIds(string? json)
+    private static IReadOnlyList<string> DeserializeSurfaceIds(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -222,6 +225,33 @@ internal static class AIAgentEntityFactory
         catch
         {
             return new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        }
+    }
+
+    private static string? SerializeScope(AIAgentScope? scope)
+    {
+        if (scope is null)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(scope, JsonOptions);
+    }
+
+    private static AIAgentScope? DeserializeScope(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<AIAgentScope>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
         }
     }
 }

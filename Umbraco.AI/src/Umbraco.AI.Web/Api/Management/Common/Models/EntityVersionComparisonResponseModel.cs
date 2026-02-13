@@ -20,22 +20,22 @@ public class EntityVersionComparisonResponseModel
     public int ToVersion { get; set; }
 
     /// <summary>
-    /// The list of property changes between the versions.
+    /// The list of value changes between the versions.
     /// </summary>
     [Required]
-    public IEnumerable<PropertyChangeModel> Changes { get; set; } = [];
+    public IEnumerable<ValueChangeModel> Changes { get; set; } = [];
 }
 
 /// <summary>
-/// Represents a single property change between versions.
+/// Represents a single value change between versions.
 /// </summary>
-public class PropertyChangeModel
+public class ValueChangeModel
 {
     /// <summary>
-    /// The name of the property that changed.
+    /// The path of the value that changed.
     /// </summary>
     [Required]
-    public string PropertyName { get; set; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
 
     /// <summary>
     /// The old value (from the source version).

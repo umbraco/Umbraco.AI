@@ -12,13 +12,13 @@ public sealed class AIVersionComparison
     /// <param name="entityType">The type of the entity being compared.</param>
     /// <param name="fromVersion">The older version number.</param>
     /// <param name="toVersion">The newer version number.</param>
-    /// <param name="changes">The list of property changes.</param>
+    /// <param name="changes">The list of value changes.</param>
     public AIVersionComparison(
         Guid entityId,
         string entityType,
         int fromVersion,
         int toVersion,
-        IReadOnlyList<AIPropertyChange> changes)
+        IReadOnlyList<AIValueChange> changes)
     {
         EntityId = entityId;
         EntityType = entityType;
@@ -48,7 +48,7 @@ public sealed class AIVersionComparison
     public int ToVersion { get; }
 
     /// <summary>
-    /// Gets the list of property changes between the versions.
+    /// Gets the list of value changes between the versions.
     /// </summary>
-    public IReadOnlyList<AIPropertyChange> Changes { get; }
+    public IReadOnlyList<AIValueChange> Changes { get; }
 }

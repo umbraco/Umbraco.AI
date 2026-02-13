@@ -7,7 +7,7 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
-using AIPropertyChange = Umbraco.AI.Core.EntityAdapter.AIPropertyChange;
+using AIValueChange = Umbraco.AI.Core.EntityAdapter.AIValueChange;
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Prompt.Core.Prompts;
@@ -260,9 +260,9 @@ internal sealed class AIPromptService : IAIPromptService
                         Label = "Result",
                         DisplayValue = responseText,
                         Description = null,
-                        PropertyChange = new AIPropertyChange
+                        ValueChange = new AIValueChange
                         {
-                            Alias = request.PropertyAlias,
+                            Path = request.PropertyAlias,
                             Value = responseText,
                             Culture = request.Culture,
                             Segment = request.Segment
@@ -445,9 +445,9 @@ internal sealed class AIPromptService : IAIPromptService
                     Label = labelProp.GetString() ?? "Option",
                     DisplayValue = displayValue,
                     Description = description,
-                    PropertyChange = new AIPropertyChange
+                    ValueChange = new AIValueChange
                     {
-                        Alias = request.PropertyAlias,
+                        Path = request.PropertyAlias,
                         Value = displayValue,
                         Culture = request.Culture,
                         Segment = request.Segment

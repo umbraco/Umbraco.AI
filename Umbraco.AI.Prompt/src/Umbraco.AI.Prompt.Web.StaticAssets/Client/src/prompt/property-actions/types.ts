@@ -80,7 +80,7 @@ export interface UaiPromptResultOption {
     label: string;
     displayValue: string;
     description?: string | null;
-    propertyChange?: UaiPromptPropertyChange | null;
+    valueChange?: UaiPromptValueChange | null;
 }
 
 /**
@@ -109,12 +109,12 @@ export interface UaiPromptPreviewModalData {
 }
 
 /**
- * Property change to be applied to the entity.
- * Matches core UaiPropertyChange type.
+ * Value change to be applied to the entity.
+ * Matches core UaiValueChange type.
  */
-export interface UaiPromptPropertyChange {
-    /** The property alias. */
-    alias: string;
+export interface UaiPromptValueChange {
+    /** JSON path to the value (e.g., "title", "price.amount"). */
+    path: string;
     /** The new value to set. */
     value: unknown;
     /** The culture for variant content. */
@@ -129,8 +129,8 @@ export interface UaiPromptPropertyChange {
 export interface UaiPromptPreviewModalValue {
     action: "insert" | "copy" | "cancel";
     content?: string;
-    /** Property changes to apply to the entity. */
-    propertyChanges?: UaiPromptPropertyChange[];
+    /** Value changes to apply to the entity. */
+    valueChanges?: UaiPromptValueChange[];
 }
 
 /**

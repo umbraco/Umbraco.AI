@@ -254,6 +254,13 @@ export interface MessagesSnapshotEvent extends TypedBaseEvent {
     messages: unknown[];
 }
 
+/** CUSTOM event */
+export interface CustomEvent extends TypedBaseEvent {
+    type: typeof AGUIEventType.CUSTOM;
+    name: string;
+    value: unknown;
+}
+
 /** Union of all typed AG-UI events */
 export type AGUITypedEvent =
     | TextMessageStartEvent
@@ -267,4 +274,5 @@ export type AGUITypedEvent =
     | RunErrorEvent
     | StateSnapshotEvent
     | StateDeltaEvent
-    | MessagesSnapshotEvent;
+    | MessagesSnapshotEvent
+    | CustomEvent;

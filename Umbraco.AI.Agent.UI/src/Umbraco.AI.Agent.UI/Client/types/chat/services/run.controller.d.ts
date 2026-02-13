@@ -30,6 +30,11 @@ export declare class UaiRunController extends UmbControllerBase {
     readonly streamingContent$: import("rxjs").Observable<string>;
     readonly agentState$: import("rxjs").Observable<UaiAgentState | undefined>;
     readonly isRunning$: import("rxjs").Observable<boolean>;
+    readonly resolvedAgent$: import("rxjs").Observable<{
+        agentId: string;
+        agentName: string;
+        agentAlias: string;
+    } | undefined>;
     /** Expose tool renderer manager for context provision */
     get toolRendererManager(): UaiToolRendererManager;
     constructor(host: UmbControllerHost, hitlContext: UaiHitlContext, config: UaiRunControllerConfig);

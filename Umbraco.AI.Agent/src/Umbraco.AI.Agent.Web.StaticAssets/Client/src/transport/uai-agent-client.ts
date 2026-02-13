@@ -1,6 +1,6 @@
 import { type Message, type BaseEvent, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
-import type {
+import {
     UaiChatMessage,
     UaiToolCallInfo,
     UaiInterruptInfo,
@@ -17,7 +17,7 @@ import type {
     RunErrorEvent,
     StateSnapshotEvent,
     StateDeltaEvent,
-    MessagesSnapshotEvent,
+    MessagesSnapshotEvent, CustomEvent,
 } from "./types.js";
 
 /**
@@ -245,13 +245,13 @@ export class UaiAgentClient {
                 this.#handleMessagesSnapshot(event as MessagesSnapshotEvent);
                 break;
 
+            case AGUIEventType.CUSTOM:
+                const customEvent = event as CustomEvent;
+                this.#callbacks.onCustomEvent?.(customEvent.name, customEvent.value);
+                break;
+
             default:
-                // Handle CUSTOM event type
-                // AG-UI client may not export CUSTOM in EventType enum, so check for string match
-                if ((event as any).type === "CUSTOM") {
-                    const customEvent = event as { name: string; value: unknown };
-                    this.#callbacks.onCustomEvent?.(customEvent.name, customEvent.value);
-                }
+                console.warn("Received unhandled event type:", event.type);
                 break;
         }
     }

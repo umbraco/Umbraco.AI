@@ -5,7 +5,7 @@ import { map, distinctUntilChanged, switchMap } from "@umbraco-cms/backoffice/ex
 import { UaiAgentRepository, type UaiAgentScope, type UaiAgentScopeRule } from "@umbraco-ai/agent";
 import { UAI_ENTITY_CONTEXT, type UaiEntityContextApi } from "@umbraco-ai/agent-ui";
 import type { UaiCopilotAgentItem } from "../types.js";
-import { createSectionObservable } from "../section-detector.js";
+import { createSectionObservable } from "../context-observer.js";
 
 /**
  * Context dimensions that the copilot surface cares about for agent filtering.

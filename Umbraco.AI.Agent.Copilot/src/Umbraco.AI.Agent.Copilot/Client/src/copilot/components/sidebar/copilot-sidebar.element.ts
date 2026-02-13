@@ -3,7 +3,7 @@ import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
 import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
-import { createSectionObservable, isSectionAllowed } from "../../section-detector.js";
+import { createSectionObservable, isSectionAllowed } from "../../context-observer.js";
 
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")

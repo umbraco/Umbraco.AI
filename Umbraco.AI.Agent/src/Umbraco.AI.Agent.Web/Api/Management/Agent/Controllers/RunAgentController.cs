@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Web.Api.Common.Models;
@@ -74,16 +76,46 @@ public class RunAgentController : AgentControllerBase
         AGUIRunRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Resolve agent ID from ID or alias
-        var agentId = await _agentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
-        if (agentId is null)
+        Guid? agentId;
+        AIAgent? autoSelectedAgent = null;
+
+        // Handle "auto" alias for automatic agent selection
+        if (agentIdOrAlias.IsAlias && string.Equals(agentIdOrAlias.Alias, "auto", StringComparison.OrdinalIgnoreCase))
         {
-            return Results.NotFound(new ProblemDetails
+            // Extract the last user message for classification
+            var lastUserMessage = request.Messages?
+                .LastOrDefault(m => string.Equals(m.Role, "user", StringComparison.OrdinalIgnoreCase));
+
+            var userPrompt = lastUserMessage?.Content ?? string.Empty;
+
+            autoSelectedAgent = await _agentService.SelectAgentForPromptAsync(
+                userPrompt, "copilot", cancellationToken);
+
+            if (autoSelectedAgent is null)
             {
-                Title = "AIAgent not found",
-                Detail = "The specified agent could not be found.",
-                Status = StatusCodes.Status404NotFound
-            });
+                return Results.NotFound(new ProblemDetails
+                {
+                    Title = "No active agents found",
+                    Detail = "No active agents found in copilot surface.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            agentId = autoSelectedAgent.Id;
+        }
+        else
+        {
+            // Resolve agent ID from ID or alias
+            agentId = await _agentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
+            if (agentId is null)
+            {
+                return Results.NotFound(new ProblemDetails
+                {
+                    Title = "AIAgent not found",
+                    Detail = "The specified agent could not be found.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
         }
 
         // Extract tool metadata from ForwardedProps and rejoin with tools
@@ -96,7 +128,43 @@ public class RunAgentController : AgentControllerBase
             frontendTools,
             cancellationToken);
 
+        // Prepend agent_selected event if auto mode was used
+        if (autoSelectedAgent is not null)
+        {
+            events = PrependAgentSelectedEvent(events, autoSelectedAgent);
+        }
+
         return new AGUIEventStreamResult(events);
+    }
+
+    /// <summary>
+    /// Prepends an agent_selected custom event to the AG-UI stream.
+    /// This informs the frontend which agent was automatically selected in auto mode.
+    /// </summary>
+    /// <param name="innerStream">The original AG-UI event stream.</param>
+    /// <param name="selectedAgent">The agent that was selected.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>AG-UI event stream with agent_selected event prepended.</returns>
+    private static async IAsyncEnumerable<IAGUIEvent> PrependAgentSelectedEvent(
+        IAsyncEnumerable<IAGUIEvent> innerStream,
+        AIAgent selectedAgent,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        yield return new CustomEvent
+        {
+            Name = "agent_selected",
+            Value = new
+            {
+                agentId = selectedAgent.Id,
+                agentName = selectedAgent.Name,
+                agentAlias = selectedAgent.Alias
+            }
+        };
+
+        await foreach (var evt in innerStream.WithCancellation(cancellationToken))
+        {
+            yield return evt;
+        }
     }
 
     /// <summary>

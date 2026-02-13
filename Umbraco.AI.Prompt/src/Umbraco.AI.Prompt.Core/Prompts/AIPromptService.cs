@@ -195,8 +195,8 @@ internal sealed class AIPromptService : IAIPromptService
         // 7.5. Inject format instructions for multiple options
         if (prompt.OptionCount >= 2)
         {
-            var formatInstructions = $"""
-                IMPORTANT: Return your response as a JSON object with an "options" array containing {prompt.OptionCount} options.
+            var formatInstructions = $$"""
+                IMPORTANT: Return your response as a JSON object with an "options" array containing {{prompt.OptionCount}} options.
                 Each option must have:
                 - "label": A short title (2-5 words)
                 - "value": The actual content
@@ -204,23 +204,23 @@ internal sealed class AIPromptService : IAIPromptService
 
                 Example format:
                 ```json
-                {{
+                {
                   "options": [
-                    {{
+                    {
                       "label": "Formal Tone",
                       "value": "The content in formal style...",
                       "description": "Professional and business-appropriate"
-                    }},
-                    {{
+                    },
+                    {
                       "label": "Casual Style",
                       "value": "The content in casual style...",
                       "description": "Friendly and conversational"
-                    }}
+                    }
                   ]
-                }}
+                }
                 ```
 
-                Generate exactly {prompt.OptionCount} distinct options for the user to choose from.
+                Generate exactly {{prompt.OptionCount}} distinct options for the user to choose from.
                 """;
 
             messages.Insert(0, new ChatMessage(ChatRole.System, formatInstructions));
@@ -342,30 +342,30 @@ internal sealed class AIPromptService : IAIPromptService
         // If parsing failed and we haven't exceeded retries, try again with enhanced instructions
         if (retryCount < MaxRetries)
         {
-            var enhancedInstructions = $"""
+            var enhancedInstructions = $$"""
                 CRITICAL: Your previous response was not in the correct format.
                 You MUST return ONLY a valid JSON object with this exact structure:
 
-                {{
+                {
                   "options": [
-                    {{
+                    {
                       "label": "Option 1 Title",
                       "value": "The actual content for option 1",
                       "description": "Brief explanation"
-                    }},
-                    {{
+                    },
+                    {
                       "label": "Option 2 Title",
                       "value": "The actual content for option 2",
                       "description": "Brief explanation"
-                    }}
+                    }
                   ]
-                }}
+                }
 
                 Do NOT include any explanatory text before or after the JSON.
                 Wrap the JSON in a ```json code block.
-                Provide {prompt.OptionCount} distinct options.
+                Provide {{prompt.OptionCount}} distinct options.
 
-                Parse error from previous attempt: {parseResult.Error}
+                Parse error from previous attempt: {{parseResult.Error}}
                 """;
 
             // Remove old format instructions and add enhanced ones

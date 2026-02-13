@@ -203,8 +203,8 @@ internal sealed class AIAgentService : IAIAgentService
         var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
 
         // Send classification prompt
-        var response = await chatClient.CompleteAsync([new ChatMessage(ChatRole.User, classificationPrompt)], cancellationToken: cancellationToken);
-        var responseText = response.Message.Text ?? string.Empty;
+        var response = await chatClient.GetResponseAsync([new ChatMessage(ChatRole.User, classificationPrompt)], options: null, cancellationToken);
+        var responseText = response.Text ?? string.Empty;
 
         // Parse the GUID from the response
         var selectedAgentId = ParseAgentIdFromResponse(responseText);

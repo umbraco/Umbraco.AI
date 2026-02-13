@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Events.Special;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Web.Api.Common.Models;
@@ -84,7 +85,7 @@ public class RunAgentController : AgentControllerBase
         {
             // Extract the last user message for classification
             var lastUserMessage = request.Messages?
-                .LastOrDefault(m => string.Equals(m.Role, "user", StringComparison.OrdinalIgnoreCase));
+                .LastOrDefault(m => m.Role ==  AGUIMessageRole.User);
 
             var userPrompt = lastUserMessage?.Content ?? string.Empty;
 

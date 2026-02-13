@@ -36,6 +36,8 @@ export interface UaiChatMessage {
     toolCalls?: UaiToolCallInfo[];
     /** Required for tool role messages - the ID of the tool call this is responding to */
     toolCallId?: string;
+    /** Optional agent name for attribution (set when auto mode selects an agent) */
+    agentName?: string;
     timestamp: Date;
 }
 

@@ -205,6 +205,7 @@ export class UaiRunController extends UmbControllerBase {
                             role: "assistant",
                             content: "",
                             timestamp: new Date(),
+                            agentName: this.#resolvedAgent.value?.agentName,
                         };
                         this.#messages.next([...messages, newMessage]);
                         this.#currentAssistantMessageId = newMessage.id;
@@ -214,6 +215,7 @@ export class UaiRunController extends UmbControllerBase {
                             role: "assistant",
                             content: "",
                             timestamp: new Date(),
+                            agentName: this.#resolvedAgent.value?.agentName,
                         };
                         this.#messages.next([...messages, newMessage]);
                         this.#currentAssistantMessageId = newMessage.id;
@@ -245,6 +247,7 @@ export class UaiRunController extends UmbControllerBase {
                             content: "",
                             toolCalls: [toolCall],
                             timestamp: new Date(),
+                            agentName: this.#resolvedAgent.value?.agentName,
                         };
                         messages.push(newMessage);
                         this.#currentAssistantMessageId = newMessage.id;

@@ -90,7 +90,7 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             }
 
             // Store entity type
-            context.Data[Constants.ContextKeys.EntityType] = entity.EntityType;
+            context.SetValue(Constants.ContextKeys.EntityType, entity.EntityType);
 
             // Build template variables from entity
             var variables = _contextHelper.BuildContextDictionary(entity);

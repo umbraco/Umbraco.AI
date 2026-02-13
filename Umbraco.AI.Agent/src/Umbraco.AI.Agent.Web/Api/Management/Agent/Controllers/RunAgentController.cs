@@ -5,13 +5,17 @@ using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Special;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Web.Api.Common.Models;
+
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
@@ -38,13 +42,23 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 public class RunAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _agentService;
+    private readonly IAGUIContextConverter _contextConverter;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RunAgentController"/> class.
     /// </summary>
-    public RunAgentController(IAIAgentService agentService)
+    public RunAgentController(
+        IAIAgentService agentService,
+        IAGUIContextConverter contextConverter,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors)
     {
         _agentService = agentService;
+        _contextConverter = contextConverter;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
     }
 
     /// <summary>
@@ -135,7 +149,7 @@ public class RunAgentController : AgentControllerBase
         // Prepend agent_selected event if auto mode was used
         if (autoSelectedAgent is not null)
         {
-            events = PrependAgentSelectedEvent(events, autoSelectedAgent);
+            events = PrependAgentSelectedEvent(events, autoSelectedAgent, cancellationToken);
         }
 
         return new AGUIEventStreamResult(events);
@@ -238,31 +252,40 @@ public class RunAgentController : AgentControllerBase
     }
 
     /// <summary>
-    /// Builds an AgentAvailabilityContext from AG-UI context items.
+    /// Builds an AgentAvailabilityContext from AG-UI context items using the runtime context infrastructure.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Creates a temporary runtime context scope and processes the context items through contributors
+    /// to properly extract section and entity type values. This ensures consistent context extraction
+    /// using the same infrastructure as the main agent execution pipeline.
+    /// </para>
+    /// <para>
+    /// Note: This results in context items being processed twice (once for classification, once for
+    /// execution), but this overhead is negligible compared to the LLM classification call.
+    /// </para>
+    /// </remarks>
     /// <param name="contextItems">The AG-UI context items from the request.</param>
     /// <returns>An AgentAvailabilityContext with extracted section and entity type.</returns>
-    private static AgentAvailabilityContext BuildAvailabilityContext(IEnumerable<AGUIContextItem>? contextItems)
+    private AgentAvailabilityContext BuildAvailabilityContext(IEnumerable<AGUIContextItem>? contextItems)
     {
         if (contextItems is null)
         {
             return new AgentAvailabilityContext();
         }
 
-        string? section = null;
-        string? entityType = null;
+        // Convert AG-UI context items to runtime context items
+        var requestContextItems = _contextConverter.ConvertToRequestContextItems(contextItems);
 
-        foreach (var item in contextItems)
-        {
-            if (string.Equals(item.Description, "section", StringComparison.OrdinalIgnoreCase))
-            {
-                section = item.Value;
-            }
-            else if (string.Equals(item.Description, "entityType", StringComparison.OrdinalIgnoreCase))
-            {
-                entityType = item.Value;
-            }
-        }
+        // Create temporary runtime context scope
+        using var scope = _scopeProvider.CreateScope(requestContextItems);
+
+        // Populate the context via contributors (same as ScopedAIAgent does)
+        _contributors.Populate(scope.Context);
+
+        // Extract values from the properly populated runtime context
+        var section = scope.Context.GetValue<string>(CoreConstants.ContextKeys.Section);
+        var entityType = scope.Context.GetValue<string>(CoreConstants.ContextKeys.EntityType);
 
         return new AgentAvailabilityContext
         {

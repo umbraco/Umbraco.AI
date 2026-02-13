@@ -36,5 +36,11 @@ public static class Constants
         /// Key for thread ID in metadata collections.
         /// </summary>
         public const string ThreadId = "Umbraco.AI.Agent.ThreadId";
+
+        /// <summary>
+        /// Key for surface ID in runtime context.
+        /// Identifies which UI surface the request originated from (e.g., "copilot", "workspace").
+        /// </summary>
+        public const string Surface = "Umbraco.AI.Agent.Surface";
     }
 }

@@ -15,6 +15,7 @@ using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Web.Api.Common.Models;
 
+using AgentConstants = Umbraco.AI.Agent.Core.Constants;
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
@@ -106,15 +107,18 @@ public class RunAgentController : AgentControllerBase
             // Build availability context from AG-UI context items
             var context = BuildAvailabilityContext(request.Context);
 
+            // Use surface from context, fallback to "copilot" for backward compatibility
+            var surfaceId = context.Surface ?? "copilot";
+
             autoSelectedAgent = await _agentService.SelectAgentForPromptAsync(
-                userPrompt, "copilot", context, cancellationToken);
+                userPrompt, surfaceId, context, cancellationToken);
 
             if (autoSelectedAgent is null)
             {
                 return Results.NotFound(new ProblemDetails
                 {
                     Title = "No active agents found",
-                    Detail = "No active agents found in copilot surface for the current context.",
+                    Detail = $"No active agents found in '{surfaceId}' surface for the current context.",
                     Status = StatusCodes.Status404NotFound
                 });
             }
@@ -284,11 +288,13 @@ public class RunAgentController : AgentControllerBase
         _contributors.Populate(scope.Context);
 
         // Extract values from the properly populated runtime context
+        var surface = scope.Context.GetValue<string>(AgentConstants.ContextKeys.Surface);
         var section = scope.Context.GetValue<string>(CoreConstants.ContextKeys.Section);
         var entityType = scope.Context.GetValue<string>(CoreConstants.ContextKeys.EntityType);
 
         return new AgentAvailabilityContext
         {
+            Surface = surface,
             Section = section,
             EntityType = entityType
         };

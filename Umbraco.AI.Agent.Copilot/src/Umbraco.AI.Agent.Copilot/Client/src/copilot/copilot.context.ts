@@ -160,6 +160,9 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.provideContext(UAI_CHAT_CONTEXT, this);
         this.provideContext(UAI_HITL_CONTEXT, this.#hitlContext);
         this.provideContext(UAI_ENTITY_CONTEXT, this.#entityContext);
+
+        // Initialize agent repository immediately to load agents
+        this.loadAgents();
     }
 
     // ─── Agent Catalog Actions ─────────────────────────────────────────────────

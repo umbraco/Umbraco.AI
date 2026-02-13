@@ -25,7 +25,7 @@ export class UaiChatMessageElement extends UmbLitElement {
         }
 
         return html`<div class="agent-attribution">
-            <uui-icon name="icon-bot"></uui-icon>
+            <uui-icon name="icon-bot"></uui-icon> 
             ${this.message.agentName}
         </div>`;
     }

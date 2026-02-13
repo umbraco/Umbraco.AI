@@ -2,7 +2,11 @@ import { html, css, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UaiPromptController } from "../controllers/prompt.controller.js";
-import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue, UaiPromptValueChange } from "./types.js";
+import type {
+    UaiPromptPreviewModalData,
+    UaiPromptPreviewModalValue,
+    UaiPromptResultOption,
+} from "./types.js";
 
 /**
  * Modal element for previewing prompt content with insert/copy options.
@@ -29,7 +33,10 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     private _error?: string;
 
     @state()
-    private _valueChanges?: UaiPromptValueChange[];
+    private _resultOptions?: UaiPromptResultOption[];
+
+    @state()
+    private _selectedOptionIndex?: number;
 
     @state()
     private _characterCount = 0;
@@ -73,7 +80,14 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         } else if (data) {
             this._response = data.content;
             this._characterCount = data.content.length;
-            this._valueChanges = data.valueChanges;
+            this._resultOptions = data.resultOptions;
+
+            // Auto-select for single option, reset for multiple options
+            if (this._resultOptions && this._resultOptions.length > 1) {
+                this._selectedOptionIndex = undefined; // Reset selection for multiple options
+            } else if (this._resultOptions && this._resultOptions.length === 1) {
+                this._selectedOptionIndex = 0; // Auto-select single option
+            }
         }
 
         this._loading = false;
@@ -84,10 +98,18 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     }
 
     async #onInsert() {
+        // Get value changes from selected option (or single option)
+        const valueChanges =
+            this._resultOptions && this._selectedOptionIndex !== undefined
+                ? [this._resultOptions[this._selectedOptionIndex].valueChange].filter(
+                      (vc): vc is NonNullable<typeof vc> => vc !== null && vc !== undefined,
+                  )
+                : [];
+
         this.updateValue({
             action: "insert",
             content: this._response,
-            valueChanges: this._valueChanges,
+            valueChanges: valueChanges,
         });
         this._submitModal();
     }
@@ -122,6 +144,10 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         this._rejectModal();
     }
 
+    #onOptionSelect(index: number) {
+        this._selectedOptionIndex = index;
+    }
+
     #renderCharacterIndicator() {
         if (!this._response || this._characterCount === 0) return nothing;
 
@@ -149,6 +175,36 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         `;
     }
 
+    #renderMultipleOptions() {
+        if (!this._resultOptions?.length) return nothing;
+
+        return html`
+            <div class="options-container">
+                <p class="options-instruction">Select one option to insert:</p>
+                ${this._resultOptions.map(
+                    (option, index) => html`
+                        <div
+                            class="option-card ${this._selectedOptionIndex === index ? "selected" : ""}"
+                            @click=${() => this.#onOptionSelect(index)}
+                        >
+                            <uui-radio-button
+                                name="result-option"
+                                .checked=${this._selectedOptionIndex === index}
+                            ></uui-radio-button>
+                            <div class="option-content">
+                                <div class="option-label">${option.label}</div>
+                                <div class="option-value">${option.displayValue}</div>
+                                ${option.description
+                                    ? html`<div class="option-description">${option.description}</div>`
+                                    : nothing}
+                            </div>
+                        </div>
+                    `,
+                )}
+            </div>
+        `;
+    }
+
     #renderResponse() {
         if (this._error) {
             return html`
@@ -172,7 +228,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         if (this._response) {
             return html`
                 <uui-scroll-container class="response-container">
-                    <div class="response-content">${this._response}</div>
+                    ${this._resultOptions && this._resultOptions.length > 1
+                        ? this.#renderMultipleOptions()
+                        : html`<div class="response-content">${this._response}</div>`}
                 </uui-scroll-container>
                 ${this.#renderCharacterIndicator()}
             `;
@@ -219,15 +277,24 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                         <uui-icon name=${this._copied ? "icon-check" : "icon-clipboard"}></uui-icon>
                         ${this._copied ? "Copied!" : "Copy Response"}
                     </uui-button>
-                    <uui-button
-                        label="Insert Response"
-                        look="primary"
-                        ?disabled=${!this._response || this._loading}
-                        @click=${this.#onInsert}
-                    >
-                        <uui-icon name="icon-enter"></uui-icon>
-                        Insert Response
-                    </uui-button>
+                    ${this._resultOptions &&
+                    this._resultOptions.length > 0 &&
+                    this._resultOptions.some((opt) => opt.valueChange !== null && opt.valueChange !== undefined)
+                        ? html`
+                              <uui-button
+                                  label="Insert Response"
+                                  look="primary"
+                                  ?disabled=${!this._response ||
+                                  this._loading ||
+                                  this._selectedOptionIndex === undefined ||
+                                  !this._resultOptions[this._selectedOptionIndex]?.valueChange}
+                                  @click=${this.#onInsert}
+                              >
+                                  <uui-icon name="icon-enter"></uui-icon>
+                                  Insert Response
+                              </uui-button>
+                          `
+                        : nothing}
                 </div>
             </umb-body-layout>
         `;
@@ -376,6 +443,65 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
             uui-button uui-icon {
                 margin-right: var(--uui-size-space-1);
+            }
+
+            .options-container {
+                padding: var(--uui-size-space-5);
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-space-3);
+            }
+
+            .options-instruction {
+                margin: 0 0 var(--uui-size-space-2) 0;
+                font-weight: 500;
+                color: var(--uui-color-text);
+            }
+
+            .option-card {
+                display: flex;
+                gap: var(--uui-size-space-3);
+                padding: var(--uui-size-space-4);
+                border: 1px solid var(--uui-color-border);
+                border-radius: var(--uui-border-radius);
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .option-card:hover {
+                background: var(--uui-color-surface-alt);
+                border-color: var(--uui-color-interactive);
+            }
+
+            .option-card.selected {
+                background: color-mix(in srgb, var(--uui-color-interactive) 10%, transparent);
+                border-color: var(--uui-color-interactive);
+                border-width: 2px;
+            }
+
+            .option-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: var(--uui-size-space-2);
+            }
+
+            .option-label {
+                font-weight: 600;
+                color: var(--uui-color-text);
+            }
+
+            .option-value {
+                font-size: var(--uui-type-small-size);
+                color: var(--uui-color-text);
+                white-space: pre-wrap;
+                line-height: 1.5;
+            }
+
+            .option-description {
+                font-size: var(--uui-type-small-size);
+                color: var(--uui-color-text-alt);
+                font-style: italic;
             }
         `,
     ];

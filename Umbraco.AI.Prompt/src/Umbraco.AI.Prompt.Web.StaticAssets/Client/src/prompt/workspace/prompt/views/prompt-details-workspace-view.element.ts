@@ -76,6 +76,15 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onOptionCountChange(event: Event) {
+        event.stopPropagation();
+        const input = event.target as HTMLInputElement;
+        const optionCount = parseInt(input.value) || 1;
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ optionCount }, "optionCount"),
+        );
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -122,6 +131,24 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         ?checked=${this._model.includeEntityContext}
                         @change=${this.#onIncludeEntityContextChange}
                     ></uui-toggle>
+                </umb-property-layout>
+
+                <umb-property-layout label="Option Count">
+                    <uui-input
+                        slot="editor"
+                        type="number"
+                        min="0"
+                        .value=${this._model.optionCount?.toString() ?? "1"}
+                        @change=${this.#onOptionCountChange}
+                    ></uui-input>
+                    <div slot="description">
+                        <p>Number of result options to generate:</p>
+                        <ul style="margin: var(--uui-size-space-2) 0; padding-left: var(--uui-size-space-5);">
+                            <li><strong>0</strong> - Informational only (no insertion)</li>
+                            <li><strong>1</strong> - Single value (default)</li>
+                            <li><strong>2+</strong> - Multiple options (user selects one)</li>
+                        </ul>
+                    </div>
                 </umb-property-layout>
 
                 <umb-property-layout label="Instructions" description="The prompt instructions template" mandatory>

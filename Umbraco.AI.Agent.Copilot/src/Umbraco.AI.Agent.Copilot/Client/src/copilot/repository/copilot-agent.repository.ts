@@ -139,10 +139,6 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
      * Checks if a single rule matches the current context.
      * AND logic between properties, OR logic within arrays.
      * Only checks dimensions that the copilot surface cares about.
-     *
-     * When context values are null (not yet detected), we skip that dimension check
-     * to allow agents to appear while context is being detected. This prevents
-     * agents from disappearing on initial load.
      */
     #isRuleMatched(rule: UaiAgentScopeRule, context: AgentAvailabilityContext): boolean {
         // Check section (if specified AND copilot cares about it)
@@ -151,12 +147,14 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
             rule.sections.length > 0 &&
             COPILOT_RELEVANT_DIMENSIONS.includes("section")
         ) {
-            // If section context not yet available, skip this check (allow to pass)
-            if (context.section !== null) {
-                // Check if current section is in the list (OR logic, case-insensitive)
-                if (!rule.sections.some((s: string) => s.toLowerCase() === context.section!.toLowerCase())) {
-                    return false;
-                }
+            // No current section = doesn't match
+            if (!context.section) {
+                return false;
+            }
+
+            // Check if current section is in the list (OR logic, case-insensitive)
+            if (!rule.sections.some((s: string) => s.toLowerCase() === context.section!.toLowerCase())) {
+                return false;
             }
         }
 
@@ -166,12 +164,14 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
             rule.entityTypes.length > 0 &&
             COPILOT_RELEVANT_DIMENSIONS.includes("entityType")
         ) {
-            // If entity type context not yet available, skip this check (allow to pass)
-            if (context.entityType !== null) {
-                // Check if current entity type is in the list (OR logic, case-insensitive)
-                if (!rule.entityTypes.some((t: string) => t.toLowerCase() === context.entityType!.toLowerCase())) {
-                    return false;
-                }
+            // No current entity type = doesn't match
+            if (!context.entityType) {
+                return false;
+            }
+
+            // Check if current entity type is in the list (OR logic, case-insensitive)
+            if (!rule.entityTypes.some((t: string) => t.toLowerCase() === context.entityType!.toLowerCase())) {
+                return false;
             }
         }
 

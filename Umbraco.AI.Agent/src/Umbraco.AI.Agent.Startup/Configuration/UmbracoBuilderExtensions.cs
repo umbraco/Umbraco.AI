@@ -1,8 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Configuration;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Persistence.Configuration;
 using Umbraco.AI.Agent.Web.Configuration;
+using Umbraco.AI.Core.RuntimeContext.Contributors;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.Agent.Extensions;
@@ -28,6 +31,10 @@ public static class UmbracoBuilderExtensions
         builder.AddUmbracoAIAgentCore();
         builder.AddUmbracoAIAgentPersistence();
         builder.AddUmbracoAIAgentWeb();
+
+        // Runtime context contributors
+        builder.AIRuntimeContextContributors()
+            .InsertBefore<DefaultSystemMessageContributor, SurfaceContextContributor>();
 
         return builder;
     }

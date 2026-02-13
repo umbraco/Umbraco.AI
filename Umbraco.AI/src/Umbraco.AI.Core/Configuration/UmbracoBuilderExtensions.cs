@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using OpenIddict.Validation.AspNetCore;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.Analytics.Usage.Middleware;
@@ -203,7 +204,7 @@ public static partial class UmbracoBuilderExtensions
 
         // Register media image resolver
         builder.Services.AddSingleton<IAIUmbracoMediaResolver, AIUmbracoMediaResolver>();
-        
+
         // AuditLog infrastructure
         // Note: IAIAuditLogRepository is registered by persistence layer
         services.AddSingleton<IAIAuditLogFactory, AIAuditLogFactory>();

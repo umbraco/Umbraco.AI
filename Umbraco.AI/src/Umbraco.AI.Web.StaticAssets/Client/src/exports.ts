@@ -7,3 +7,5 @@ export * from "./profile/exports.js";
 export * from "./request-context/exports.js";
 export * from "./tool/exports.js";
 export * from "./workspace-registry/exports.js";
+export * from "./section/exports.js";
+export * from "./constants.js";

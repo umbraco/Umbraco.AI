@@ -13,6 +13,7 @@
         <PackageReference Include="Umbraco.Cms.Core" />
         <PackageReference Include="Umbraco.Cms.Infrastructure" />
         <PackageReference Include="Umbraco.Cms.Web.Common" />
+        <PackageReference Include="Umbraco.Cms.Api.Management" />
     </ItemGroup>
 
     <ItemGroup>

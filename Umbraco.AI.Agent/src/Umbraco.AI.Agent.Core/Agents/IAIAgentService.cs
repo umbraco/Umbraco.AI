@@ -116,6 +116,18 @@ public interface IAIAgentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Selects the most appropriate agent for a user prompt from agents in the given surface.
+    /// </summary>
+    /// <param name="userPrompt">The user's message to classify.</param>
+    /// <param name="surfaceId">The surface to filter agents (e.g., "copilot").</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The selected agent, or null if no agents available.</returns>
+    Task<AIAgent?> SelectAgentForPromptAsync(
+        string userPrompt,
+        string surfaceId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Streams an agent execution with AG-UI events.
     /// </summary>
     /// <remarks>

@@ -1,10 +1,14 @@
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
@@ -27,6 +31,8 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAGUIContextConverter _contextConverter;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly AIToolCollection _toolCollection;
+    private readonly IAIProfileService _profileService;
+    private readonly IAIChatClientFactory _chatClientFactory;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -35,6 +41,8 @@ internal sealed class AIAgentService : IAIAgentService
         IAGUIStreamingService streamingService,
         IAGUIContextConverter contextConverter,
         AIToolCollection toolCollection,
+        IAIProfileService profileService,
+        IAIChatClientFactory chatClientFactory,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -43,6 +51,8 @@ internal sealed class AIAgentService : IAIAgentService
         _streamingService = streamingService;
         _contextConverter = contextConverter;
         _toolCollection = toolCollection;
+        _profileService = profileService;
+        _chatClientFactory = chatClientFactory;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -138,6 +148,107 @@ internal sealed class AIAgentService : IAIAgentService
 
         var result = AIAgentToolHelper.IsToolAllowed(agent, toolId, _toolCollection, resolvedUserGroupIds);
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> SelectAgentForPromptAsync(
+        string userPrompt,
+        string surfaceId,
+        CancellationToken cancellationToken = default)
+    {
+        // 1. Get all agents in the surface
+        var allAgents = await GetAgentsBySurfaceAsync(surfaceId, cancellationToken);
+
+        // 2. Filter to only active agents
+        var activeAgents = allAgents.Where(a => a.IsActive).ToList();
+
+        // 3. If no agents available, return null
+        if (activeAgents.Count == 0)
+        {
+            return null;
+        }
+
+        // 4. If only one agent, return it directly (no LLM call needed)
+        if (activeAgents.Count == 1)
+        {
+            return activeAgents[0];
+        }
+
+        // 5. Multiple agents - use LLM to classify
+        var classificationPrompt = BuildClassificationPrompt(activeAgents, userPrompt);
+
+        // Get the default chat profile
+        var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
+        if (profile is null)
+        {
+            // No default profile available, fall back to first agent
+            return activeAgents[0];
+        }
+
+        // Create chat client
+        var chatClient = await _chatClientFactory.CreateClientAsync(profile, cancellationToken);
+
+        // Send classification prompt
+        var response = await chatClient.CompleteAsync([new ChatMessage(ChatRole.User, classificationPrompt)], cancellationToken: cancellationToken);
+        var responseText = response.Message.Text ?? string.Empty;
+
+        // Parse the GUID from the response
+        var selectedAgentId = ParseAgentIdFromResponse(responseText);
+
+        if (selectedAgentId.HasValue)
+        {
+            var selectedAgent = activeAgents.FirstOrDefault(a => a.Id == selectedAgentId.Value);
+            if (selectedAgent is not null)
+            {
+                return selectedAgent;
+            }
+        }
+
+        // Fallback to first agent if parsing fails
+        return activeAgents[0];
+    }
+
+    /// <summary>
+    /// Builds a classification prompt for agent selection.
+    /// </summary>
+    private static string BuildClassificationPrompt(IList<AIAgent> agents, string userPrompt)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("You are an agent router. Given the user's message, select the most appropriate agent.");
+        sb.AppendLine("Return ONLY the agent ID (the GUID) on a single line, nothing else.");
+        sb.AppendLine();
+        sb.AppendLine("Available agents:");
+
+        foreach (var agent in agents)
+        {
+            var description = string.IsNullOrWhiteSpace(agent.Description)
+                ? "No description"
+                : agent.Description;
+
+            sb.AppendLine($"[{agent.Id}] {agent.Name}: {description}");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine($"User message: {userPrompt}");
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Parses an agent ID (GUID) from the LLM response.
+    /// </summary>
+    private static Guid? ParseAgentIdFromResponse(string response)
+    {
+        // Try to find a GUID in the response using regex
+        var guidPattern = @"[{(]?[0-9a-fA-F]{8}[-]?([0-9a-fA-F]{4}[-]?){3}[0-9a-fA-F]{12}[)}]?";
+        var match = Regex.Match(response, guidPattern);
+
+        if (match.Success && Guid.TryParse(match.Value, out var agentId))
+        {
+            return agentId;
+        }
+
+        return null;
     }
 
     /// <summary>

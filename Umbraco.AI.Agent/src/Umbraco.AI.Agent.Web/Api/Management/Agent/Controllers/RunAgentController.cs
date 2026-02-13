@@ -88,15 +88,18 @@ public class RunAgentController : AgentControllerBase
 
             var userPrompt = lastUserMessage?.Content ?? string.Empty;
 
+            // Build availability context from AG-UI context items
+            var context = BuildAvailabilityContext(request.Context);
+
             autoSelectedAgent = await _agentService.SelectAgentForPromptAsync(
-                userPrompt, "copilot", cancellationToken);
+                userPrompt, "copilot", context, cancellationToken);
 
             if (autoSelectedAgent is null)
             {
                 return Results.NotFound(new ProblemDetails
                 {
                     Title = "No active agents found",
-                    Detail = "No active agents found in copilot surface.",
+                    Detail = "No active agents found in copilot surface for the current context.",
                     Status = StatusCodes.Status404NotFound
                 });
             }
@@ -231,6 +234,40 @@ public class RunAgentController : AgentControllerBase
         {
             return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
         }
+    }
+
+    /// <summary>
+    /// Builds an AgentAvailabilityContext from AG-UI context items.
+    /// </summary>
+    /// <param name="contextItems">The AG-UI context items from the request.</param>
+    /// <returns>An AgentAvailabilityContext with extracted section and entity type.</returns>
+    private static AgentAvailabilityContext BuildAvailabilityContext(IEnumerable<AGUIContextItem>? contextItems)
+    {
+        if (contextItems is null)
+        {
+            return new AgentAvailabilityContext();
+        }
+
+        string? section = null;
+        string? entityType = null;
+
+        foreach (var item in contextItems)
+        {
+            if (string.Equals(item.Description, "section", StringComparison.OrdinalIgnoreCase))
+            {
+                section = item.Value;
+            }
+            else if (string.Equals(item.Description, "entityType", StringComparison.OrdinalIgnoreCase))
+            {
+                entityType = item.Value;
+            }
+        }
+
+        return new AgentAvailabilityContext
+        {
+            Section = section,
+            EntityType = entityType
+        };
     }
 
     private class ToolMetadataDto

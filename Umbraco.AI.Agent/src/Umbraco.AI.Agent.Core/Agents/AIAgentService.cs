@@ -4,10 +4,12 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
@@ -33,6 +35,8 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly AIToolCollection _toolCollection;
     private readonly IAIProfileService _profileService;
     private readonly IAIChatClientFactory _chatClientFactory;
+    private readonly AIAgentScopeValidator _scopeValidator;
+    private readonly AIAgentSurfaceCollection _surfaceCollection;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -43,6 +47,8 @@ internal sealed class AIAgentService : IAIAgentService
         AIToolCollection toolCollection,
         IAIProfileService profileService,
         IAIChatClientFactory chatClientFactory,
+        AIAgentScopeValidator scopeValidator,
+        AIAgentSurfaceCollection surfaceCollection,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -53,6 +59,8 @@ internal sealed class AIAgentService : IAIAgentService
         _toolCollection = toolCollection;
         _profileService = profileService;
         _chatClientFactory = chatClientFactory;
+        _scopeValidator = scopeValidator;
+        _surfaceCollection = surfaceCollection;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -154,35 +162,41 @@ internal sealed class AIAgentService : IAIAgentService
     public async Task<AIAgent?> SelectAgentForPromptAsync(
         string userPrompt,
         string surfaceId,
+        AgentAvailabilityContext context,
         CancellationToken cancellationToken = default)
     {
         // 1. Get all agents in the surface
         var allAgents = await GetAgentsBySurfaceAsync(surfaceId, cancellationToken);
 
-        // 2. Filter to only active agents
-        var activeAgents = allAgents.Where(a => a.IsActive).ToList();
+        // 2. Get the surface for scope validation
+        var surface = _surfaceCollection.FirstOrDefault(s => string.Equals(s.Id, surfaceId, StringComparison.OrdinalIgnoreCase));
 
-        // 3. If no agents available, return null
-        if (activeAgents.Count == 0)
+        // 3. Filter to only active agents that are available in the current context
+        var availableAgents = allAgents
+            .Where(a => a.IsActive && _scopeValidator.IsAgentAvailable(a, context, surface))
+            .ToList();
+
+        // 4. If no agents available, return null
+        if (availableAgents.Count == 0)
         {
             return null;
         }
 
-        // 4. If only one agent, return it directly (no LLM call needed)
-        if (activeAgents.Count == 1)
+        // 5. If only one agent, return it directly (no LLM call needed)
+        if (availableAgents.Count == 1)
         {
-            return activeAgents[0];
+            return availableAgents[0];
         }
 
-        // 5. Multiple agents - use LLM to classify
-        var classificationPrompt = BuildClassificationPrompt(activeAgents, userPrompt);
+        // 6. Multiple agents - use LLM to classify
+        var classificationPrompt = BuildClassificationPrompt(availableAgents, userPrompt);
 
         // Get the default chat profile
         var profile = await _profileService.GetDefaultProfileAsync(AICapability.Chat, cancellationToken);
         if (profile is null)
         {
             // No default profile available, fall back to first agent
-            return activeAgents[0];
+            return availableAgents[0];
         }
 
         // Create chat client
@@ -197,7 +211,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         if (selectedAgentId.HasValue)
         {
-            var selectedAgent = activeAgents.FirstOrDefault(a => a.Id == selectedAgentId.Value);
+            var selectedAgent = availableAgents.FirstOrDefault(a => a.Id == selectedAgentId.Value);
             if (selectedAgent is not null)
             {
                 return selectedAgent;
@@ -205,7 +219,7 @@ internal sealed class AIAgentService : IAIAgentService
         }
 
         // Fallback to first agent if parsing fails
-        return activeAgents[0];
+        return availableAgents[0];
     }
 
     /// <summary>

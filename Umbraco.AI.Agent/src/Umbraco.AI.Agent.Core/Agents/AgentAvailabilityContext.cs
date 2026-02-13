@@ -12,6 +12,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <code>
 /// new AgentAvailabilityContext
 /// {
+///     Surface = "copilot",
 ///     Section = "content",
 ///     EntityType = "document"
 /// }
@@ -19,6 +20,12 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </example>
 public sealed class AgentAvailabilityContext
 {
+    /// <summary>
+    /// UI surface ID (e.g., "copilot", "workspace", "dashboard").
+    /// Used to filter agents by which surface they're available in.
+    /// </summary>
+    public string? Surface { get; init; }
+
     /// <summary>
     /// Current section pathname (e.g., "content", "media", "settings").
     /// Null if not in a section context.

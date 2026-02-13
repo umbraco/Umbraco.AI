@@ -18,7 +18,7 @@ import {
 import { UaiCopilotAgentRepository } from "./repository";
 import { UaiEntityAdapterContext, type UaiValueChange, type UaiValueChangeResult } from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
-import { getSectionPathnameFromUrl } from "./section-detector.js";
+import { getSectionPathnameFromUrl } from "./context-observer.js";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -67,6 +67,10 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
 
     get isRunning$() {
         return this.#runController.isRunning$;
+    }
+
+    get resolvedAgent$() {
+        return this.#runController.resolvedAgent$;
     }
 
     // ─── Tool Management ───────────────────────────────────────────────────────
@@ -123,14 +127,25 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         });
 
         this.observe(this.#agentRepository.agentItems$, (agents) => {
-            this.#agents.setValue(agents);
+            let displayAgents = [...agents];
 
-            if (!this.#selectedAgent.getValue() && agents.length > 0) {
-                this.#selectedAgent.setValue(agents[0]);
+            // Add "Auto" option when agents are available
+            if (agents.length > 0) {
+                displayAgents = [
+                    { id: "auto", name: "Auto", alias: "auto" },
+                    ...agents,
+                ];
+            }
+
+            this.#agents.setValue(displayAgents);
+
+            // Default to "Auto" when agents are available
+            if (!this.#selectedAgent.getValue() && displayAgents.length > 0) {
+                this.#selectedAgent.setValue(displayAgents[0]);
             }
 
             const currentSelected = this.#selectedAgent.getValue();
-            if (currentSelected && !agents.find((a) => a.id === currentSelected.id)) {
+            if (currentSelected && !displayAgents.find((a) => a.id === currentSelected.id)) {
                 this.#selectedAgent.setValue(undefined);
             }
         });
@@ -211,6 +226,12 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
 
         const context: Array<{ description: string; value: string }> = [];
+
+        // Add surface context
+        context.push({
+            description: "surface",
+            value: JSON.stringify({ surface: "copilot" }),
+        });
 
         // Add section context
         const currentSection = getSectionPathnameFromUrl();

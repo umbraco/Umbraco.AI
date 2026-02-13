@@ -8,7 +8,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { combineLatest } from "@umbraco-cms/backoffice/external/rxjs";
 import { startWith } from "@umbraco-cms/backoffice/external/rxjs";
 import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
-import { createSectionObservable, isSectionAllowed } from "../../section-detector.js";
+import { createSectionObservable, isSectionAllowed } from "../../context-observer.js";
 
 export interface UaiCopilotSectionConditionConfig extends UmbConditionConfigBase {
     // No config needed - sections are discovered from manifests

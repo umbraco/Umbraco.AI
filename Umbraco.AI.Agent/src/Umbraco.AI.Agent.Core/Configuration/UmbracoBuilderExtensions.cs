@@ -4,6 +4,7 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Models;
+using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
@@ -37,6 +38,9 @@ public static class UmbracoBuilderExtensions
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAIAgentRepository, InMemoryAIAgentRepository>();
 
+        // Register scope validator
+        builder.Services.AddSingleton<AIAgentScopeValidator>();
+
         // Register service
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
 
@@ -51,6 +55,9 @@ public static class UmbracoBuilderExtensions
 
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();
+
+        // Register surface context contributor
+        builder.AIRuntimeContextContributors().Append<SurfaceContextContributor>();
 
         // Register tool reordering middleware before function invocation
         // This ensures server-side tools execute before frontend tools trigger termination

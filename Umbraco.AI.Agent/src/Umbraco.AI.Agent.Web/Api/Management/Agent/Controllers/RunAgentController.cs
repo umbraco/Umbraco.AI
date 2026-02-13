@@ -1,14 +1,22 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Asp.Versioning;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
+using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Events.Special;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Web.Api.Common.Models;
+
+using AgentConstants = Umbraco.AI.Agent.Core.Constants;
+using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
@@ -35,13 +43,23 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 public class RunAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _agentService;
+    private readonly IAGUIContextConverter _contextConverter;
+    private readonly IAIRuntimeContextScopeProvider _scopeProvider;
+    private readonly AIRuntimeContextContributorCollection _contributors;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RunAgentController"/> class.
     /// </summary>
-    public RunAgentController(IAIAgentService agentService)
+    public RunAgentController(
+        IAIAgentService agentService,
+        IAGUIContextConverter contextConverter,
+        IAIRuntimeContextScopeProvider scopeProvider,
+        AIRuntimeContextContributorCollection contributors)
     {
         _agentService = agentService;
+        _contextConverter = contextConverter;
+        _scopeProvider = scopeProvider;
+        _contributors = contributors;
     }
 
     /// <summary>
@@ -74,16 +92,59 @@ public class RunAgentController : AgentControllerBase
         AGUIRunRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Resolve agent ID from ID or alias
-        var agentId = await _agentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
-        if (agentId is null)
+        Guid? agentId;
+        AIAgent? autoSelectedAgent = null;
+
+        // Handle "auto" alias for automatic agent selection
+        if (agentIdOrAlias.IsAlias && string.Equals(agentIdOrAlias.Alias, "auto", StringComparison.OrdinalIgnoreCase))
         {
-            return Results.NotFound(new ProblemDetails
+            // Extract the last user message for classification
+            var lastUserMessage = request.Messages?
+                .LastOrDefault(m => m.Role ==  AGUIMessageRole.User);
+
+            var userPrompt = lastUserMessage?.Content ?? string.Empty;
+
+            // Build availability context from AG-UI context items
+            var context = BuildAvailabilityContext(request.Context);
+
+            if (context.Surface is null)
             {
-                Title = "AIAgent not found",
-                Detail = "The specified agent could not be found.",
-                Status = StatusCodes.Status404NotFound
-            });
+                return Results.BadRequest(new ProblemDetails
+                {
+                    Title = "Surface is required for auto agent selection",
+                    Detail = "The AG-UI context must include a surface to use 'auto' agent selection.",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
+
+            autoSelectedAgent = await _agentService.SelectAgentForPromptAsync(
+                userPrompt, context.Surface, context, cancellationToken);
+
+            if (autoSelectedAgent is null)
+            {
+                return Results.NotFound(new ProblemDetails
+                {
+                    Title = "No active agents found",
+                    Detail = $"No active agents found in '{context.Surface}' surface for the current context.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            agentId = autoSelectedAgent.Id;
+        }
+        else
+        {
+            // Resolve agent ID from ID or alias
+            agentId = await _agentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
+            if (agentId is null)
+            {
+                return Results.NotFound(new ProblemDetails
+                {
+                    Title = "AIAgent not found",
+                    Detail = "The specified agent could not be found.",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
         }
 
         // Extract tool metadata from ForwardedProps and rejoin with tools
@@ -96,7 +157,43 @@ public class RunAgentController : AgentControllerBase
             frontendTools,
             cancellationToken);
 
+        // Prepend agent_selected event if auto mode was used
+        if (autoSelectedAgent is not null)
+        {
+            events = PrependAgentSelectedEvent(events, autoSelectedAgent, cancellationToken);
+        }
+
         return new AGUIEventStreamResult(events);
+    }
+
+    /// <summary>
+    /// Prepends an agent_selected custom event to the AG-UI stream.
+    /// This informs the frontend which agent was automatically selected in auto mode.
+    /// </summary>
+    /// <param name="innerStream">The original AG-UI event stream.</param>
+    /// <param name="selectedAgent">The agent that was selected.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>AG-UI event stream with agent_selected event prepended.</returns>
+    private static async IAsyncEnumerable<IAGUIEvent> PrependAgentSelectedEvent(
+        IAsyncEnumerable<IAGUIEvent> innerStream,
+        AIAgent selectedAgent,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        yield return new CustomEvent
+        {
+            Name = "agent_selected",
+            Value = new
+            {
+                agentId = selectedAgent.Id,
+                agentName = selectedAgent.Name,
+                agentAlias = selectedAgent.Alias
+            }
+        };
+
+        await foreach (var evt in innerStream.WithCancellation(cancellationToken))
+        {
+            yield return evt;
+        }
     }
 
     /// <summary>
@@ -163,6 +260,51 @@ public class RunAgentController : AgentControllerBase
         {
             return new Dictionary<string, ToolMetadataDto>(StringComparer.OrdinalIgnoreCase);
         }
+    }
+
+    /// <summary>
+    /// Builds an AgentAvailabilityContext from AG-UI context items using the runtime context infrastructure.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Creates a temporary runtime context scope and processes the context items through contributors
+    /// to properly extract section and entity type values. This ensures consistent context extraction
+    /// using the same infrastructure as the main agent execution pipeline.
+    /// </para>
+    /// <para>
+    /// Note: This results in context items being processed twice (once for classification, once for
+    /// execution), but this overhead is negligible compared to the LLM classification call.
+    /// </para>
+    /// </remarks>
+    /// <param name="contextItems">The AG-UI context items from the request.</param>
+    /// <returns>An AgentAvailabilityContext with extracted section and entity type.</returns>
+    private AgentAvailabilityContext BuildAvailabilityContext(IEnumerable<AGUIContextItem>? contextItems)
+    {
+        if (contextItems is null)
+        {
+            return new AgentAvailabilityContext();
+        }
+
+        // Convert AG-UI context items to runtime context items
+        var requestContextItems = _contextConverter.ConvertToRequestContextItems(contextItems);
+
+        // Create temporary runtime context scope
+        using var scope = _scopeProvider.CreateScope(requestContextItems);
+
+        // Populate the context via contributors (same as ScopedAIAgent does)
+        _contributors.Populate(scope.Context);
+
+        // Extract values from the properly populated runtime context
+        var surface = scope.Context.GetValue<string>(AgentConstants.ContextKeys.Surface);
+        var section = scope.Context.GetValue<string>(CoreConstants.ContextKeys.Section);
+        var entityType = scope.Context.GetValue<string>(CoreConstants.ContextKeys.EntityType);
+
+        return new AgentAvailabilityContext
+        {
+            Surface = surface,
+            Section = section,
+            EntityType = entityType
+        };
     }
 
     private class ToolMetadataDto

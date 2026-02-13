@@ -1,7 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { Observable, combineLatest, BehaviorSubject } from "@umbraco-cms/backoffice/external/rxjs";
-import { map, distinctUntilChanged, switchMap } from "@umbraco-cms/backoffice/external/rxjs";
+import { map, distinctUntilChanged, switchMap, startWith } from "@umbraco-cms/backoffice/external/rxjs";
 import { UaiAgentRepository, type UaiAgentScope, type UaiAgentScopeRule } from "@umbraco-ai/agent";
 import { UAI_ENTITY_CONTEXT, type UaiEntityContextApi } from "@umbraco-ai/agent-ui";
 import type { UaiCopilotAgentItem } from "../types.js";
@@ -55,7 +55,12 @@ export class UaiCopilotAgentRepository extends UmbControllerBase {
         );
 
         // Combine agent items with current context to filter reactively
-        this.#copilotAgents$ = combineLatest([this.#agentRepository.agentItems$, section$, entityType$]).pipe(
+        // Use startWith to ensure combineLatest emits immediately even if some observables haven't emitted yet
+        this.#copilotAgents$ = combineLatest([
+            this.#agentRepository.agentItems$,
+            section$.pipe(startWith(null)),
+            entityType$.pipe(startWith(null))
+        ]).pipe(
             map(([items, section, entityType]) => {
                 const context: AgentAvailabilityContext = {
                     section,

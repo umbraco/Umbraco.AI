@@ -19,6 +19,14 @@ export class UaiChatMessageElement extends UmbLitElement {
     @property({ type: Boolean, attribute: "is-running" })
     isRunning = false;
 
+    #renderAgentAttribution() {
+        if (this.message.role !== "assistant" || !this.message.agentName) {
+            return html``;
+        }
+
+        return html`<div class="agent-attribution">via ${this.message.agentName}</div>`;
+    }
+
     #renderContent() {
         if (!this.message.content) {
             return html``;
@@ -76,7 +84,7 @@ export class UaiChatMessageElement extends UmbLitElement {
         return html`
             <div class="message ${this.message.role}">
                 <div class="message-content">
-                    ${this.#renderContent()} ${this.#renderToolCalls()} ${this.#renderActions()}
+                    ${this.#renderAgentAttribution()} ${this.#renderContent()} ${this.#renderToolCalls()} ${this.#renderActions()}
                 </div>
             </div>
         `;
@@ -186,6 +194,14 @@ export class UaiChatMessageElement extends UmbLitElement {
 
         .message-actions.hidden {
             visibility: hidden;
+        }
+
+        .agent-attribution {
+            font-size: 0.75rem;
+            color: var(--uui-color-text-alt);
+            margin-bottom: var(--uui-size-space-1);
+            display: block;
+            opacity: 0.8;
         }
     `;
 }

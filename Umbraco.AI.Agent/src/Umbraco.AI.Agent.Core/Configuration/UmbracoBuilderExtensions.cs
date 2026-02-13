@@ -38,6 +38,9 @@ public static class UmbracoBuilderExtensions
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAIAgentRepository, InMemoryAIAgentRepository>();
 
+        // Register scope validator
+        builder.Services.AddSingleton<AIAgentScopeValidator>();
+
         // Register service
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
 

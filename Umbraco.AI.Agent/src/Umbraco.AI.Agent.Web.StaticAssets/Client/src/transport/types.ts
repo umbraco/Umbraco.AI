@@ -149,6 +149,8 @@ export interface AgentClientCallbacks {
     onStateDelta?: (delta: Partial<UaiAgentState>) => void;
     /** Called when a messages snapshot is received */
     onMessagesSnapshot?: (messages: UaiChatMessage[]) => void;
+    /** Called when a custom event is received */
+    onCustomEvent?: (name: string, value: unknown) => void;
     /** Called on error */
     onError?: (error: Error) => void;
 }

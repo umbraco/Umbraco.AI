@@ -244,6 +244,15 @@ export class UaiAgentClient {
             case AGUIEventType.MESSAGES_SNAPSHOT:
                 this.#handleMessagesSnapshot(event as MessagesSnapshotEvent);
                 break;
+
+            default:
+                // Handle CUSTOM event type
+                // AG-UI client may not export CUSTOM in EventType enum, so check for string match
+                if ((event as any).type === "CUSTOM") {
+                    const customEvent = event as { name: string; value: unknown };
+                    this.#callbacks.onCustomEvent?.(customEvent.name, customEvent.value);
+                }
+                break;
         }
     }
 

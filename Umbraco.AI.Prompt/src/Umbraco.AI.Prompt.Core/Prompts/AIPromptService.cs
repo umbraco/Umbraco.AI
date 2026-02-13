@@ -81,6 +81,12 @@ internal sealed class AIPromptService : IAIPromptService
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Instructions);
 
+        // Validate option count
+        if (prompt.OptionCount < 0)
+        {
+            throw new ArgumentException("OptionCount must be >= 0", nameof(prompt.OptionCount));
+        }
+
         // Generate new ID if needed
         if (prompt.Id == Guid.Empty)
         {

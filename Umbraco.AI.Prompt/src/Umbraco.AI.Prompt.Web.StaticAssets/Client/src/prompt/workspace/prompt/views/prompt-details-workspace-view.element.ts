@@ -221,7 +221,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     ? html`
                           <umb-property-layout
                               label="Number of Options"
-                              description="How many options the AI should generate (minimum 2)"
+                              description="How many options the AI should generate (minimum 2, maximum 5)"
                           >
                               <uui-input
                                   slot="editor"

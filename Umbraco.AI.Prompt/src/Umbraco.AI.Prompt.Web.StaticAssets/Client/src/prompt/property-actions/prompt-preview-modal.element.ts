@@ -110,23 +110,13 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         this._submitModal();
     }
 
-    async #onCopy() {
-        if (!this._response) return;
-
+    async #copyValueToClipboard(value: string) {
         try {
-            await navigator.clipboard.writeText(this._response);
-            this._copied = true;
-
-            // Show notification
+            await navigator.clipboard.writeText(value);
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
             notificationContext?.peek("positive", {
-                data: { message: "Response copied to clipboard" },
+                data: { message: "Value copied to clipboard" },
             });
-
-            // Reset copied state after 2 seconds
-            setTimeout(() => {
-                this._copied = false;
-            }, 2000);
         } catch {
             const notificationContext = await this.getContext(UMB_NOTIFICATION_CONTEXT);
             notificationContext?.peek("danger", {
@@ -144,6 +134,23 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         this._selectedOptionIndex = index;
     }
 
+    #renderCopyButton(value:string) {
+        return html`
+            <uui-action-bar class="copy-action">
+                <uui-button
+                    label="Copy"
+                    look="secondary"
+                    compact
+                    @click=${(e: Event) => {
+                        e.stopPropagation();
+                        this.#copyValueToClipboard(value);
+                    }}>
+                    <uui-icon name="icon-clipboard-copy"></uui-icon>
+                </uui-button>
+            </uui-action-bar>
+        `;
+    }
+
     #renderMultipleOptions() {
         if (!this._resultOptions?.length) return nothing;
 
@@ -152,23 +159,31 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 ${this._resultOptions.map(
                     (option, index) => html`
                         <div
-                            class="option-card ${this._selectedOptionIndex === index ? "selected" : ""}"
+                            class="option-card ${this._selectedOptionIndex === index ? "selected" : ""} copy-container"
                             @click=${() => this.#onOptionSelect(index)}
                         >
-                            <uui-radio-button
-                                name="result-option"
-                                .checked=${this._selectedOptionIndex === index}
-                            ></uui-radio-button>
                             <div class="option-content">
-                                <div class="option-label">${option.label}</div>
-                                ${option.description
-                                    ? html`<div class="option-description">${option.description}</div>`
-                                    : nothing}
                                 <div class="option-value">${option.displayValue}</div>
+                                <div class="option-label">
+                                    <span>${option.label}</span>
+                                    ${option.description
+                                        ? html` • ${option.description}`
+                                        : nothing}
+                                </div>
+                                ${this.#renderCopyButton(option.displayValue)}
                             </div>
                         </div>
                     `,
                 )}
+            </div>
+        `;
+    }
+
+    #renderSingleOption() {
+        return html`
+            <div class="response-content copy-container">
+                <div style="white-space: pre-wrap;word-break: break-word;">${this._response}</div>
+                ${this.#renderCopyButton(this._response)}
             </div>
         `;
     }
@@ -187,7 +202,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         if (this._loading) {
             return html`
                 <div class="loading-container">
-                    <uui-loader-bar></uui-loader-bar>
+                    <uui-loader></uui-loader>
                 </div>
             `;
         }
@@ -197,7 +212,8 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 <uui-scroll-container class="response-container ${this._resultOptions && this._resultOptions.length > 1 ? "multiple" : ""}">
                     ${this._resultOptions && this._resultOptions.length > 1
                         ? this.#renderMultipleOptions()
-                        : html`<div class="response-content">${this._response}</div>`}
+                        : this.#renderSingleOption()
+                    }
                 </uui-scroll-container>
             `;
         }
@@ -207,55 +223,52 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
     override render() {
         return html`
-            <umb-body-layout>
-                <div slot="header" class="response-header">
-                    <h3 class="headline">${this.data?.promptName ?? "Prompt Preview"}</h3>
-                    ${this.data?.promptDescription
-                        ? html`<p class="description">${this.data.promptDescription}</p>`
-                        : nothing}
+            <uui-dialog-layout>
+
+                <div class="response-header">
+                    <div>
+                        <h3 class="headline">${this.data?.promptName ?? "Prompt Preview"}</h3>
+                        ${this.data?.promptDescription
+                            ? html`<p class="description">${this.data.promptDescription}</p>`
+                            : nothing}
+                    </div>
+                    ${this._response && !this._loading
+                        ? html`
+                        <uui-action-bar>
+                            <uui-button class="regenerate-btn"  label="Regenerate" look="default" compact @click=${this.#onRetry}>
+                                <uui-icon name="icon-sync"></uui-icon>
+                            </uui-button>
+                        </uui-action-bar>
+                        ` : nothing}
                 </div>
-                ${this._response && !this._loading
-                    ? html`
-                      <uui-button class="regenerate-btn" slot="navigation" label="Regenerate" look="default" compact @click=${this.#onRetry}>
-                          <uui-icon name="icon-sync"></uui-icon>
-                          Regenerate
-                      </uui-button>`
-                    : nothing}
+
+
                 <div id="content">
                     ${this.#renderResponse()}
                 </div>
 
                 <div slot="actions">
                     <uui-button label="Cancel" @click=${this.#onCancel}> Cancel </uui-button>
-                    <uui-button
-                        label=${this._copied ? "Copied!" : "Copy Response"}
-                        look="secondary"
-                        ?disabled=${!this._response || this._loading}
-                        @click=${this.#onCopy}
-                    >
-                        <uui-icon name=${this._copied ? "icon-check" : "icon-clipboard"}></uui-icon>
-                        ${this._copied ? "Copied!" : "Copy Response"}
-                    </uui-button>
                     ${this._resultOptions &&
-                    this._resultOptions.length > 0 &&
-                    this._resultOptions.some((opt) => opt.valueChange !== null && opt.valueChange !== undefined)
+                        this._resultOptions.length > 0 &&
+                        this._resultOptions.some((opt) => opt.valueChange !== null && opt.valueChange !== undefined)
                         ? html`
                               <uui-button
-                                  label="Insert Response"
+                                  label="Insert"
                                   look="primary"
+                                  color="positive"
                                   ?disabled=${!this._response ||
                                   this._loading ||
                                   this._selectedOptionIndex === undefined ||
                                   !this._resultOptions[this._selectedOptionIndex]?.valueChange}
                                   @click=${this.#onInsert}
                               >
-                                  <uui-icon name="icon-enter"></uui-icon>
-                                  Insert Response
+                                  Insert
                               </uui-button>
                           `
                         : nothing}
                 </div>
-            </umb-body-layout>
+            </uui-dialog-layout>
         `;
     }
 
@@ -269,10 +282,6 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 width: 650px;
                 max-width: 100%;
                 box-sizing: border-box;
-            }
-
-            .regenerate-btn {
-                margin-right: var(--uui-size-space-6);
             }
 
             .headline {
@@ -298,10 +307,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
             .response-container {
                 flex: 1;
-                min-height: 200px;
+                min-height: 100px;
                 border: 1px solid var(--uui-color-border);
                 border-radius: var(--uui-border-radius);
-                background: var(--uui-color-surface-alt);
                 overflow: auto;
             }
 
@@ -309,10 +317,15 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                border: 0;
             }
 
+            .response-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: var(--uui-size-space-5);
+            }
+
             .response-content {
                 margin: 0;
-                white-space: pre-wrap;
-                word-break: break-word;
                 font-family: var(--uui-font-family);
                 font-size: var(--uui-type-default-size);
                 line-height: 1.6;
@@ -347,7 +360,6 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 padding: var(--uui-size-space-4);
                 border: 1px solid var(--uui-color-danger);
                 border-radius: var(--uui-border-radius);
-                background: var(--uui-color-danger-emphasis);
                 color: var(--uui-color-danger-standalone);
             }
 
@@ -382,7 +394,6 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
 
             .option-card {
                 display: flex;
-                gap: var(--uui-size-space-3);
                 padding: var(--uui-size-space-4);
                 border: 1px solid var(--uui-color-border);
                 border-radius: var(--uui-border-radius);
@@ -391,12 +402,10 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             }
 
             .option-card:hover {
-                background: var(--uui-color-surface-alt);
                 border-color: var(--uui-color-focus);
             }
 
             .option-card.selected {
-                background: #fff;
                 border-color: var(--uui-color-focus);
                 border-width: 2px;
             }
@@ -408,23 +417,37 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             }
 
             .option-label {
+                font-size: var(--uui-type-small-size);
+                color: var(--uui-color-text-alt);
+                line-height: 1;
+                opacity: 0.6;
+            }
+
+            .option-label span {
                 font-weight: 600;
-                color: var(--uui-color-text);
             }
 
             .option-value {
                 color: var(--uui-color-text);
                 white-space: pre-wrap;
                 line-height: 1.5;
-                margin-top: var(--uui-size-space-4);
+                margin-bottom: var(--uui-size-space-1);
             }
 
-            .option-description {
-                font-size: var(--uui-type-small-size);
-                color: var(--uui-color-text-alt);
-                font-style: italic;
-                line-height: 1;
-                opacity: 0.6;
+            .copy-container {
+                position: relative;
+            }
+
+            .copy-action {
+                position: absolute;
+                top: var(--uui-size-space-2);
+                right: var(--uui-size-space-2);
+                opacity: var(--umb-block-list-entry-actions-opacity, 0);
+                transition: opacity 120ms;
+            }
+
+            .copy-container:hover .copy-action {
+                opacity: 1;
             }
         `,
     ];

@@ -6,8 +6,8 @@ using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Api.Management.Test.Models;
+using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 
@@ -15,7 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// Controller to get a test by ID or alias.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class ByIdOrAliasTestController : TestControllerBase
 {
     private readonly IAITestService _testService;

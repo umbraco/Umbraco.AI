@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Management.Configuration;
-using Umbraco.Cms.Web.Common.Authorization;
+using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 
@@ -13,7 +13,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// Controller to delete a test.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class DeleteTestController : TestControllerBase
 {
     private readonly IAITestService _testService;

@@ -118,6 +118,27 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         return "multiple";
     }
 
+    #getResultTypeOptions(): Array<{ name: string; value: string; selected?: boolean }> {
+        const currentType = this.#getResultType();
+        return [
+            {
+                name: "Informational",
+                value: "informational",
+                selected: currentType === "informational",
+            },
+            {
+                name: "Single Option",
+                value: "single",
+                selected: currentType === "single",
+            },
+            {
+                name: "Multiple Options",
+                value: "multiple",
+                selected: currentType === "multiple",
+            },
+        ];
+    }
+
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
@@ -183,12 +204,9 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     <uui-select
                         slot="editor"
                         .value=${this.#getResultType()}
+                        .options=${this.#getResultTypeOptions()}
                         @change=${this.#onResultTypeChange}
-                    >
-                        <uui-select-option value="informational">Informational</uui-select-option>
-                        <uui-select-option value="single">Single Option</uui-select-option>
-                        <uui-select-option value="multiple">Multiple Options</uui-select-option>
-                    </uui-select>
+                    ></uui-select>
                     <div slot="description" style="margin-top: var(--uui-size-space-2);">
                         <ul style="margin: 0; padding-left: var(--uui-size-space-5); list-style: disc;">
                             <li><strong>Informational:</strong> Display only, no value insertion</li>

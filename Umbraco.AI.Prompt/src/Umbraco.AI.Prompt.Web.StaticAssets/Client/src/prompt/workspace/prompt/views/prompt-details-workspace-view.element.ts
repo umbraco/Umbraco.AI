@@ -76,13 +76,46 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
         );
     }
 
-    #onOptionCountChange(event: Event) {
+    #onResultTypeChange(event: UmbChangeEvent) {
         event.stopPropagation();
-        const input = event.target as HTMLInputElement;
-        const optionCount = parseInt(input.value) || 1;
+        const select = event.target as HTMLElement & { value: string };
+        const resultType = select.value;
+
+        let optionCount: number;
+        switch (resultType) {
+            case "informational":
+                optionCount = 0;
+                break;
+            case "single":
+                optionCount = 1;
+                break;
+            case "multiple":
+                // Default to 2 when switching to multiple
+                optionCount = this._model?.optionCount && this._model.optionCount >= 2 ? this._model.optionCount : 2;
+                break;
+            default:
+                optionCount = 1;
+        }
+
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiPromptDetailModel>({ optionCount }, "optionCount"),
         );
+    }
+
+    #onOptionCountChange(event: Event) {
+        event.stopPropagation();
+        const input = event.target as HTMLInputElement;
+        const optionCount = Math.max(2, parseInt(input.value) || 2);
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>({ optionCount }, "optionCount"),
+        );
+    }
+
+    #getResultType(): string {
+        const count = this._model?.optionCount ?? 1;
+        if (count === 0) return "informational";
+        if (count === 1) return "single";
+        return "multiple";
     }
 
     render() {
@@ -133,24 +166,6 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                     ></uui-toggle>
                 </umb-property-layout>
 
-                <umb-property-layout label="Option Count">
-                    <uui-input
-                        slot="editor"
-                        type="number"
-                        min="0"
-                        .value=${this._model.optionCount?.toString() ?? "1"}
-                        @change=${this.#onOptionCountChange}
-                    ></uui-input>
-                    <div slot="description">
-                        <p>Number of result options to generate:</p>
-                        <ul style="margin: var(--uui-size-space-2) 0; padding-left: var(--uui-size-space-5);">
-                            <li><strong>0</strong> - Informational only (no insertion)</li>
-                            <li><strong>1</strong> - Single value (default)</li>
-                            <li><strong>2+</strong> - Multiple options (user selects one)</li>
-                        </ul>
-                    </div>
-                </umb-property-layout>
-
                 <umb-property-layout label="Instructions" description="The prompt instructions template" mandatory>
                     <umb-input-markdown
                         slot="editor"
@@ -160,6 +175,47 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         ${umbBindToValidation(this, "$.instructions", this._model.instructions)}
                     ></umb-input-markdown>
                 </umb-property-layout>
+
+                <umb-property-layout
+                    label="Result Type"
+                    description="How the AI response should be structured for user interaction"
+                >
+                    <uui-select
+                        slot="editor"
+                        .value=${this.#getResultType()}
+                        @change=${this.#onResultTypeChange}
+                    >
+                        <uui-select-option value="informational">Informational</uui-select-option>
+                        <uui-select-option value="single">Single Option</uui-select-option>
+                        <uui-select-option value="multiple">Multiple Options</uui-select-option>
+                    </uui-select>
+                    <div slot="description" style="margin-top: var(--uui-size-space-2);">
+                        <ul style="margin: 0; padding-left: var(--uui-size-space-5); list-style: disc;">
+                            <li><strong>Informational:</strong> Display only, no value insertion</li>
+                            <li><strong>Single Option:</strong> One result with direct insertion</li>
+                            <li><strong>Multiple Options:</strong> User selects from AI-generated options</li>
+                        </ul>
+                    </div>
+                </umb-property-layout>
+
+                ${this.#getResultType() === "multiple"
+                    ? html`
+                          <umb-property-layout
+                              label="Number of Options"
+                              description="How many options the AI should generate (minimum 2)"
+                          >
+                              <uui-input
+                                  slot="editor"
+                                  type="number"
+                                  min="2"
+                                  max="10"
+                                  step="1"
+                                  .value=${this._model.optionCount?.toString() ?? "2"}
+                                  @change=${this.#onOptionCountChange}
+                              ></uui-input>
+                          </umb-property-layout>
+                      `
+                    : nothing}
             </uui-box>
 
             ${this._model.tags.length > 0

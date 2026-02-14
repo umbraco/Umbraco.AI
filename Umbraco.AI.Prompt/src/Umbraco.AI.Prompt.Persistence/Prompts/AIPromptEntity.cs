@@ -56,6 +56,11 @@ internal class AIPromptEntity
     public bool IncludeEntityContext { get; set; } = true;
 
     /// <summary>
+    /// The number of result options the AI should generate.
+    /// </summary>
+    public int OptionCount { get; set; } = 1;
+
+    /// <summary>
     /// JSON-serialized scope configuration.
     /// </summary>
     public string? Scope { get; set; }

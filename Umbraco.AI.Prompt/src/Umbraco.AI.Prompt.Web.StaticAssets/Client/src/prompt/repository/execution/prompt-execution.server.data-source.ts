@@ -47,6 +47,16 @@ export interface UaiPromptExecutionRequest {
 }
 
 /**
+ * A single result option that can be displayed and optionally applied.
+ */
+export interface UaiPromptResultOption {
+    label: string;
+    displayValue: string;
+    description?: string | null;
+    valueChange?: UaiPromptValueChange | null;
+}
+
+/**
  * Response model for prompt execution.
  */
 export interface UaiPromptExecutionResponse {
@@ -58,8 +68,13 @@ export interface UaiPromptExecutionResponse {
         outputTokens?: number;
         totalTokens?: number;
     };
-    /** Property changes to apply to the entity. */
-    valueChanges?: UaiPromptValueChange[];
+    /**
+     * Available result options. Always present, may be empty.
+     * - Empty array: Informational only
+     * - Single item: One value to insert
+     * - Multiple items: User selects one
+     */
+    resultOptions: UaiPromptResultOption[];
 }
 
 /**
@@ -115,12 +130,20 @@ export class UaiPromptExecutionServerDataSource {
                           totalTokens: data.usage.totalTokens ?? undefined,
                       }
                     : undefined,
-                valueChanges: data.valueChanges?.map((change) => ({
-                    path: change.path,
-                    value: change.value,
-                    culture: change.culture ?? undefined,
-                    segment: change.segment ?? undefined,
-                })),
+                resultOptions:
+                    data.resultOptions?.map((option) => ({
+                        label: option.label,
+                        displayValue: option.displayValue,
+                        description: option.description ?? undefined,
+                        valueChange: option.valueChange
+                            ? {
+                                  path: option.valueChange.path,
+                                  value: option.valueChange.value,
+                                  culture: option.valueChange.culture ?? undefined,
+                                  segment: option.valueChange.segment ?? undefined,
+                              }
+                            : undefined,
+                    })) ?? [],
             },
         };
     }

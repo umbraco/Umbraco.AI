@@ -38,6 +38,8 @@ public static class UmbracoAIUmbracoBuilderExtensions
                 options.JsonSerializerOptions.Converters.Add(new IdOrAliasJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 options.JsonSerializerOptions.Converters.Add(new JsonStringTypeConverter());
+                options.JsonSerializerOptions.Converters.Add(new UtcDateTimeJsonConverter());
+                options.JsonSerializerOptions.Converters.Add(new UtcNullableDateTimeJsonConverter());
 
                 configure?.Invoke(options.JsonSerializerOptions);
             });

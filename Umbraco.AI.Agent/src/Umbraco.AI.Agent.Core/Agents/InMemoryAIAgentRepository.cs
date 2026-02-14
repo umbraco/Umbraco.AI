@@ -46,7 +46,7 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
-        string? scopeId = null,
+        string? surfaceId = null,
         bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
@@ -64,9 +64,9 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
             query = query.Where(p => p.ProfileId == profileId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(scopeId))
+        if (!string.IsNullOrWhiteSpace(surfaceId))
         {
-            query = query.Where(p => p.ScopeIds.Contains(scopeId, StringComparer.OrdinalIgnoreCase));
+            query = query.Where(p => p.SurfaceIds.Contains(surfaceId, StringComparer.OrdinalIgnoreCase));
         }
 
         if (isActive.HasValue)
@@ -85,10 +85,10 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AIAgent>> GetByScopeAsync(string scopeId, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIAgent>> GetBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
     {
         var agents = _agents.Values
-            .Where(p => p.ScopeIds.Contains(scopeId, StringComparer.OrdinalIgnoreCase))
+            .Where(p => p.SurfaceIds.Contains(surfaceId, StringComparer.OrdinalIgnoreCase))
             .ToList();
         return Task.FromResult<IEnumerable<AIAgent>>(agents);
     }

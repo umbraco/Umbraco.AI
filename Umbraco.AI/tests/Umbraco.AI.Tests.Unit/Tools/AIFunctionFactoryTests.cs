@@ -1,4 +1,6 @@
+using Moq;
 using Umbraco.AI.Core.Tools;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Tests.Common.Fakes;
 
 namespace Umbraco.AI.Tests.Unit.Tools;
@@ -6,10 +8,14 @@ namespace Umbraco.AI.Tests.Unit.Tools;
 public class AIFunctionFactoryTests
 {
     private readonly AIFunctionFactory _factory;
+    private readonly List<IAIToolScope> _scopes;
+    private readonly AIToolScopeCollection _scopeCollection;
 
     public AIFunctionFactoryTests()
     {
-        _factory = new AIFunctionFactory();
+        _scopes = new List<IAIToolScope>();
+        _scopeCollection = new AIToolScopeCollection(() => _scopes);
+        _factory = new AIFunctionFactory(_scopeCollection);
     }
 
     #region Create (single tool)
@@ -48,6 +54,58 @@ public class AIFunctionFactoryTests
         function.ShouldNotBeNull();
         function.Name.ShouldBe("typed-tool");
         function.Description.ShouldBe("Does something with args");
+    }
+
+    [Fact]
+    public void Create_WithToolScopeMetadata_EnrichesDescriptionWithForEntityTypes()
+    {
+        // Arrange
+        var scopeMock = new Mock<IAIToolScope>();
+        scopeMock.Setup(s => s.Id).Returns("content-read");
+        scopeMock.Setup(s => s.ForEntityTypes).Returns(new List<string> { "document", "documentType" });
+
+        _scopes.Add(scopeMock.Object);
+
+        var tool = new FakeTool(
+            id: "get-content",
+            name: "Get Content",
+            description: "Retrieves content documents",
+            scopeId: "content-read");
+
+        // Act
+        var function = _factory.Create(tool);
+
+        // Assert
+        function.ShouldNotBeNull();
+        function.Name.ShouldBe("get-content");
+        function.Description.ShouldContain("Retrieves content documents");
+        function.Description.ShouldContain("[Suitable for entity types: document, documentType]");
+    }
+
+    [Fact]
+    public void Create_WithoutForEntityTypes_DoesNotEnrichDescription()
+    {
+        // Arrange
+        var scopeMock = new Mock<IAIToolScope>();
+        scopeMock.Setup(s => s.Id).Returns("search");
+        scopeMock.Setup(s => s.ForEntityTypes).Returns(new List<string>()); // Empty
+
+        _scopes.Add(scopeMock.Object);
+
+        var tool = new FakeTool(
+            id: "search-all",
+            name: "Search All",
+            description: "Searches all content",
+            scopeId: "search");
+
+        // Act
+        var function = _factory.Create(tool);
+
+        // Assert
+        function.ShouldNotBeNull();
+        function.Name.ShouldBe("search-all");
+        function.Description.ShouldBe("Searches all content"); // Unchanged
+        function.Description.ShouldNotContain("[Suitable for");
     }
 
     #endregion

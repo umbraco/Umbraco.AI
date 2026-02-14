@@ -1,6 +1,6 @@
 import { customElement, property, css, html, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaiAgentToolStatus, UaiAgentToolElementProps } from "../uai-agent-tool.extension.js";
+import type { UaiAgentToolStatus, UaiAgentToolElementProps } from "@umbraco-ai/agent-ui";
 import type { WeatherData } from "./show-weather.api.js";
 
 /**

@@ -2,9 +2,9 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Umbraco.AI.Core.Contexts;
-using Umbraco.AI.Web.Api.Management.Configuration;
-using Umbraco.Cms.Web.Common.Authorization;
+using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 
@@ -12,7 +12,7 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 /// Controller to check if a context alias exists.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class ContextAliasExistsController : ContextControllerBase
 {
     private readonly IAIContextService _contextService;

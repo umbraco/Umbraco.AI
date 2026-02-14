@@ -7,7 +7,7 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Security;
-using AIPropertyChange = Umbraco.AI.Core.EntityAdapter.AIPropertyChange;
+using AIValueChange = Umbraco.AI.Core.EntityAdapter.AIValueChange;
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Prompt.Core.Prompts;
@@ -203,10 +203,10 @@ internal sealed class AIPromptService : IAIPromptService
         {
             Content = response.Text ?? string.Empty,
             Usage = response.Usage,
-            PropertyChanges = [
-                new AIPropertyChange
+            ValueChanges = [
+                new AIValueChange
                 {
-                    Alias = request.PropertyAlias,
+                    Path = request.PropertyAlias,
                     Value = response.Text ?? string.Empty,
                     Culture = request.Culture,
                     Segment = request.Segment

@@ -3,22 +3,27 @@ name: 🤖 Claude Code Review
 on:
     pull_request:
         types: [opened, synchronize, ready_for_review, reopened]
-        # Optional: Only run on specific file changes
+        # Optional: Only run on specific file changes to save credits
         # paths:
+        #   - "src/**/*.cs"
         #   - "src/**/*.ts"
         #   - "src/**/*.tsx"
-        #   - "src/**/*.js"
-        #   - "src/**/*.jsx"
+        #   - "!**/*.md"
+        #   - "!**/package-lock.json"
 
 jobs:
     claude-review:
-        # Optional: Filter by PR author
-        # if: |
-        #   github.event.pull_request.user.login == 'external-contributor' ||
-        #   github.event.pull_request.user.login == 'new-developer' ||
-        #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+        # Skip draft PRs and WIP PRs to save credits
+        if: |
+            github.event.pull_request.draft == false &&
+            !contains(github.event.pull_request.title, '[WIP]') &&
+            !contains(github.event.pull_request.title, 'WIP:')
 
         runs-on: ubuntu-latest
+
+        # Timeout to prevent runaway costs
+        timeout-minutes: 15
+
         permissions:
             contents: read
             pull-requests: write
@@ -31,7 +36,35 @@ jobs:
               with:
                   fetch-depth: 1
 
+            # Log review metrics for monitoring
+            - name: Log review metrics
+              run: |
+                  echo "📊 Review Metrics:"
+                  echo "  PR: #${{ github.event.pull_request.number }}"
+                  echo "  Author: ${{ github.event.pull_request.user.login }}"
+                  echo "  Association: ${{ github.event.pull_request.author_association }}"
+                  echo "  Title: ${{ github.event.pull_request.title }}"
+
+            # Check PR size to prevent abuse from large PRs
+            - name: Check PR size
+              id: pr-size
+              run: |
+                  FILES_CHANGED=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files | length')
+                  echo "files_changed=$FILES_CHANGED"
+                  echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
+
+                  if [ "$FILES_CHANGED" -gt 100 ]; then
+                    echo "⚠️ PR has $FILES_CHANGED files. Skipping automated review for large PRs."
+                    echo "skip=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "✅ PR has $FILES_CHANGED files. Proceeding with review."
+                    echo "skip=false" >> $GITHUB_OUTPUT
+                  fi
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
             - name: Run Claude Code Review
+              if: steps.pr-size.outputs.skip == 'false'
               id: claude-review
               uses: anthropics/claude-code-action@v1
               with:
@@ -44,3 +77,16 @@ jobs:
                   prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
                   # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
                   # or https://code.claude.com/docs/en/cli-reference for available options
+
+            # Notify on large PR skip
+            - name: Comment on large PR
+              if: steps.pr-size.outputs.skip == 'true'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: '🤖 **Automated review skipped** - This PR modifies more than 100 files. A maintainer will review it manually.\n\nIf you believe this PR should receive an automated review, please contact a maintainer.'
+                      })

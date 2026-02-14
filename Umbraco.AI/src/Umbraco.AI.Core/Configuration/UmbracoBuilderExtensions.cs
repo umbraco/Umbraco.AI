@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using OpenIddict.Validation.AspNetCore;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.Analytics.Usage.Middleware;
@@ -185,6 +186,11 @@ public static partial class UmbracoBuilderExtensions
         // Entity adapter infrastructure
         services.AddSingleton<IAIEntityContextHelper, AIEntityContextHelper>();
 
+        // Entity formatter infrastructure - auto-discover formatters
+        builder.AIEntityFormatters()
+            .Add<AIGenericEntityFormatter>()   // Default formatter (EntityType = null)
+            .Add<AIDocumentEntityFormatter>(); // CMS document/media formatter
+
         // Runtime context infrastructure
         // Single instance implements both accessor (for reading) and scope provider (for creating)
         services.AddSingleton<AIRuntimeContextScopeProvider>();
@@ -195,11 +201,12 @@ public static partial class UmbracoBuilderExtensions
         builder.AIRuntimeContextContributors()
             .Append<UserContextContributor>()           // Ambient: adds current user info
             .Append<SerializedEntityContributor>()      // Item-based: processes serialized entities
+            .Append<SectionContextContributor>()        // Item-based: extracts section pathname for context filtering
             .Append<DefaultSystemMessageContributor>(); // Fallback: handles remaining items
 
         // Register media image resolver
         builder.Services.AddSingleton<IAIUmbracoMediaResolver, AIUmbracoMediaResolver>();
-        
+
         // AuditLog infrastructure
         // Note: IAIAuditLogRepository is registered by persistence layer
         services.AddSingleton<IAIAuditLogFactory, AIAuditLogFactory>();

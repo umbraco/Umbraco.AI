@@ -1,6 +1,9 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
+
+using OpenIddict.Validation.AspNetCore;
+
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Umbraco.AI.Web;
 using Umbraco.AI.Web.Api;
@@ -19,6 +22,7 @@ using Umbraco.AI.Web.Api.Management.Profile.Mapping;
 using Umbraco.AI.Web.Api.Management.Provider.Mapping;
 using Umbraco.AI.Web.Api.Management.Settings.Mapping;
 using Umbraco.AI.Web.Api.Management.Tool.Mapping;
+using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Api.Common.OpenApi;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
@@ -39,6 +43,18 @@ public static class UmbracoBuilderExtensions
     {
         builder.AddUmbracoAIManagementApi();
         builder.AddUmbracoAIMapDefinitions();
+
+        // Security
+        builder.Services.AddAuthorization(o =>
+        {
+            o.AddPolicy(AIAuthorizationPolicies.SectionAccessAI, policy =>
+            {
+                policy.AuthenticationSchemes.Add(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
+#pragma warning disable CS0618 // Type or member is obsolete
+                policy.RequireClaim(Umbraco.Cms.Core.Constants.Security.AllowedApplicationsClaimType, "Uai.Section.AI");
+#pragma warning restore CS0618 // Type or member is obsolete
+            });
+        });
 
         return builder;
     }
@@ -99,12 +115,12 @@ public static class UmbracoBuilderExtensions
                     return;
 
                 configureSwagger(options);
-                
+
                 options.DocumentFilter<MimeTypeDocumentFilter>(apiName);
                 options.OperationFilter<UmbracoAIManagementApiBackOfficeSecurityRequirementsOperationFilter>(apiName);
                 options.OperationFilter<SwaggerOperationFilter>(apiName);
                 options.OperationFilter<SseResponseOperationFilter>(apiName);
-                
+
                 // Map IdOrAlias to string in OpenAPI schema for cleaner client generation
                 if (!options.SchemaGeneratorOptions.CustomTypeMappings.ContainsKey(typeof(IdOrAlias)))
                 {
@@ -121,9 +137,9 @@ public static class UmbracoBuilderExtensions
 
         builder.Services.AddSingleton<IOperationIdHandler, UmbracoAIApiOperationIdHandler>();
         builder.Services.AddSingleton<ISchemaIdHandler, UmbracoAIApiSchemaIdHandler>();
-        
+
         builder.AddJsonOptions(apiName, configureJson);
-        
+
         return builder;
     }
 }

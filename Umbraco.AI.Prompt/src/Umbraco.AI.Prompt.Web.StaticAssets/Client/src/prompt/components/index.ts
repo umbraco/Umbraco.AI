@@ -1,1 +1,1 @@
-export * from "./scope-rules-editor/index.js";
+export * from "./prompt-scope-rules-editor/index.js";

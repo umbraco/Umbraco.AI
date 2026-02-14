@@ -1,6 +1,6 @@
 import { type Message, type BaseEvent, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
 import { UaiHttpAgent } from "./uai-http-agent.js";
-import type {
+import {
     UaiChatMessage,
     UaiToolCallInfo,
     UaiInterruptInfo,
@@ -17,7 +17,7 @@ import type {
     RunErrorEvent,
     StateSnapshotEvent,
     StateDeltaEvent,
-    MessagesSnapshotEvent,
+    MessagesSnapshotEvent, CustomEvent,
 } from "./types.js";
 
 /**
@@ -243,6 +243,15 @@ export class UaiAgentClient {
 
             case AGUIEventType.MESSAGES_SNAPSHOT:
                 this.#handleMessagesSnapshot(event as MessagesSnapshotEvent);
+                break;
+
+            case AGUIEventType.CUSTOM:
+                const customEvent = event as CustomEvent;
+                this.#callbacks.onCustomEvent?.(customEvent.name, customEvent.value);
+                break;
+
+            default:
+                console.warn("Received unhandled event type:", event.type);
                 break;
         }
     }

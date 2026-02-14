@@ -19,8 +19,8 @@ public class AIPromptExecutionResult
     public UsageDetails? Usage { get; init; }
 
     /// <summary>
-    /// Optional property changes to be applied to the entity.
-    /// Returned when the prompt generates structured output for property updates.
+    /// Optional value changes to be applied to the entity.
+    /// Returned when the prompt generates structured output for value updates.
     /// </summary>
-    public IReadOnlyList<AIPropertyChange>? PropertyChanges { get; init; }
+    public IReadOnlyList<AIValueChange>? ValueChanges { get; init; }
 }

@@ -1,10 +1,10 @@
 import { UMB_WORKSPACE_PATH_PATTERN } from "@umbraco-cms/backoffice/workspace";
 import { UmbPathPattern } from "@umbraco-cms/backoffice/router";
+import { UAI_AI_SECTION_PATHNAME } from "../../../constants.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "../../constants.js";
-import { UMB_SETTINGS_SECTION_PATHNAME } from "@umbraco-cms/backoffice/settings";
 
 export const UAI_PROFILE_WORKSPACE_PATH = UMB_WORKSPACE_PATH_PATTERN.generateAbsolute({
-    sectionName: UMB_SETTINGS_SECTION_PATHNAME,
+    sectionName: UAI_AI_SECTION_PATHNAME,
     entityType: UAI_PROFILE_ENTITY_TYPE,
 });
 

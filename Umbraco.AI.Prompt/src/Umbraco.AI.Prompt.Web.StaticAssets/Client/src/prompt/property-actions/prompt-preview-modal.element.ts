@@ -2,7 +2,7 @@ import { html, css, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UaiPromptController } from "../controllers/prompt.controller.js";
-import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue, UaiPromptPropertyChange } from "./types.js";
+import type { UaiPromptPreviewModalData, UaiPromptPreviewModalValue, UaiPromptValueChange } from "./types.js";
 
 /**
  * Modal element for previewing prompt content with insert/copy options.
@@ -29,7 +29,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     private _error?: string;
 
     @state()
-    private _propertyChanges?: UaiPromptPropertyChange[];
+    private _valueChanges?: UaiPromptValueChange[];
 
     @state()
     private _characterCount = 0;
@@ -73,7 +73,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         } else if (data) {
             this._response = data.content;
             this._characterCount = data.content.length;
-            this._propertyChanges = data.propertyChanges;
+            this._valueChanges = data.valueChanges;
         }
 
         this._loading = false;
@@ -87,7 +87,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
         this.updateValue({
             action: "insert",
             content: this._response,
-            propertyChanges: this._propertyChanges,
+            valueChanges: this._valueChanges,
         });
         this._submitModal();
     }

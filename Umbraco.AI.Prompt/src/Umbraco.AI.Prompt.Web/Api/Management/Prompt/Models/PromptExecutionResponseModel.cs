@@ -18,8 +18,8 @@ public class PromptExecutionResponseModel
     public UsageModel? Usage { get; init; }
 
     /// <summary>
-    /// Optional property changes to be applied to the entity.
-    /// Returned when the prompt generates structured output for property updates.
+    /// Optional value changes to be applied to the entity.
+    /// Returned when the prompt generates structured output for value updates.
     /// </summary>
-    public IReadOnlyList<PropertyChangeModel>? PropertyChanges { get; init; }
+    public IReadOnlyList<ValueChangeModel>? ValueChanges { get; init; }
 }

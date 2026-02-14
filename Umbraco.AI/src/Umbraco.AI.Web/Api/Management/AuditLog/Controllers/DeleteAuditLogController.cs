@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.AuditLog;
-using Umbraco.Cms.Web.Common.Authorization;
+using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 
@@ -11,7 +11,7 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 /// Controller to delete an audit-log.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class DeleteAuditLogController : AuditLogControllerBase
 {
     private readonly IAIAuditLogService _auditLogService;

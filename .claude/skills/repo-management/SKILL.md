@@ -25,11 +25,14 @@ Initial repository setup for new developers:
 
 ### 2. Release Management (`/release-management`)
 
-Generate release manifests for packaging:
+Complete release preparation orchestration:
 
-- Interactive product selection
-- Creates `release-manifest.json`
-- Required for `release/*` branches
+- Detects changed products and analyzes commits
+- Recommends version bumps (major/minor/patch)
+- Updates version.json files
+- Generates release-manifest.json
+- Generates CHANGELOG.md files
+- Creates release branch with all changes committed
 
 ### 3. Changelog Generation (`/changelog-management`)
 
@@ -52,8 +55,8 @@ Common build tasks:
 
 1. **Present menu** - Use AskUserQuestion to show available operations:
     - "Setup repository"
-    - "Generate release manifest"
-    - "Generate changelog"
+    - "Prepare release (full orchestration)"
+    - "Generate changelog only"
     - "Build solution"
     - "Watch frontends"
 
@@ -67,13 +70,13 @@ Common build tasks:
 
 ## When to Use Each Operation
 
-| Operation       | When to Use                                             |
-| --------------- | ------------------------------------------------------- |
-| Setup           | First time cloning repo, new dev onboarding             |
-| Release Manager | Creating `release/*` or `hotfix/*` branch               |
-| Changelog       | Before pushing release branch, generating release notes |
-| Build           | After pulling changes, switching branches               |
-| Watch           | Active frontend development                             |
+| Operation        | When to Use                                          |
+| ---------------- | ---------------------------------------------------- |
+| Setup            | First time cloning repo, new dev onboarding          |
+| Release Manager  | Preparing a complete release (end-to-end automation) |
+| Changelog        | Updating individual product changelog only           |
+| Build            | After pulling changes, switching branches            |
+| Watch            | Active frontend development                          |
 
 ## Important Context
 
@@ -91,16 +94,22 @@ User invokes: /repo-management
 You present menu:
 "What would you like to do?"
 - Setup repository (new clone/dev setup)
-- Generate release manifest (for release/hotfix)
-- Generate changelog (for release documentation)
+- Prepare release (full orchestration)
+- Generate changelog only
 - Build solution
 - Watch frontends
 
-User selects: "Generate release manifest"
+User selects: "Prepare release"
 
 You invoke: /release-management
 
-After completion, you remind:
-- Next: Generate changelogs with /changelog-management
-- CI will validate manifest on push
+The release-management skill will:
+- Detect changed products
+- Analyze commits and recommend version bumps
+- Update version.json files
+- Generate release-manifest.json
+- Generate all changelogs
+- Create release branch
+
+After completion, you show summary and next steps.
 ```

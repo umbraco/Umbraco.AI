@@ -47,6 +47,8 @@ start Umbraco.AI.local.sln
 Umbraco.AI/                    # Monorepo root
 ├── Umbraco.AI/                # Core AI layer (1.x)
 ├── Umbraco.AI.Agent/          # Agent add-on (1.x)
+├── Umbraco.AI.Agent.UI/       # Agent UI library (1.x)
+├── Umbraco.AI.Agent.Copilot/  # Agent copilot UI (1.x)
 ├── Umbraco.AI.Prompt/         # Prompt add-on (1.x)
 ├── Umbraco.AI.OpenAI/         # OpenAI provider (1.x)
 ├── Umbraco.AI.Anthropic/      # Anthropic provider (1.x)
@@ -694,6 +696,7 @@ Scopes are automatically discovered from product `changelog.config.json` files:
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | **Umbraco.AI**                  | `core`, `profile`, `chat`, `embedding`, `connection`, `middleware`, `registry`, `settings`, `providers`, `ui`, `frontend`, `api` |
 | **Umbraco.AI.Agent**            | `agent`                                                                                                                          |
+| **Umbraco.AI.Agent.UI**         | `agent-ui`                                                                                                                       |
 | **Umbraco.AI.Agent.Copilot**    | `copilot`, `tools`, `approval`                                                                                                   |
 | **Umbraco.AI.Prompt**           | `prompt`                                                                                                                         |
 | **Umbraco.AI.OpenAI**           | `openai`                                                                                                                         |

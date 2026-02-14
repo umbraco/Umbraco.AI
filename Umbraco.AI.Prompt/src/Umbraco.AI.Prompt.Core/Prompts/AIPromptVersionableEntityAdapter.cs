@@ -132,33 +132,33 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIPrompt from, AIPrompt to)
+    protected override IReadOnlyList<AIValueChange> CompareVersions(AIPrompt from, AIPrompt to)
     {
-        var changes = new List<AIPropertyChange>();
+        var changes = new List<AIValueChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIValueChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIValueChange("Name", from.Name, to.Name));
         }
 
         if (from.Description != to.Description)
         {
-            changes.Add(new AIPropertyChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
+            changes.Add(new AIValueChange("Description", from.Description ?? "(empty)", to.Description ?? "(empty)"));
         }
 
         if (from.Instructions != to.Instructions)
         {
-            changes.Add(new AIPropertyChange("Instructions", from.Instructions, to.Instructions));
+            changes.Add(new AIValueChange("Instructions", from.Instructions, to.Instructions));
         }
 
         if (from.ProfileId != to.ProfileId)
         {
-            changes.Add(new AIPropertyChange("ProfileId", from.ProfileId?.ToString() ?? "(none)", to.ProfileId?.ToString() ?? "(none)"));
+            changes.Add(new AIValueChange("ProfileId", from.ProfileId?.ToString() ?? "(none)", to.ProfileId?.ToString() ?? "(none)"));
         }
 
         // Compare context IDs
@@ -166,7 +166,7 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
         var toContextIds = string.Join(",", to.ContextIds);
         if (fromContextIds != toContextIds)
         {
-            changes.Add(new AIPropertyChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
+            changes.Add(new AIValueChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
         }
 
         // Compare tags
@@ -174,17 +174,17 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
         var toTags = string.Join(",", to.Tags);
         if (fromTags != toTags)
         {
-            changes.Add(new AIPropertyChange("Tags", fromTags.Length > 0 ? fromTags : "(none)", toTags.Length > 0 ? toTags : "(none)"));
+            changes.Add(new AIValueChange("Tags", fromTags.Length > 0 ? fromTags : "(none)", toTags.Length > 0 ? toTags : "(none)"));
         }
 
         if (from.IsActive != to.IsActive)
         {
-            changes.Add(new AIPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
+            changes.Add(new AIValueChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
         if (from.IncludeEntityContext != to.IncludeEntityContext)
         {
-            changes.Add(new AIPropertyChange("IncludeEntityContext", from.IncludeEntityContext.ToString(), to.IncludeEntityContext.ToString()));
+            changes.Add(new AIValueChange("IncludeEntityContext", from.IncludeEntityContext.ToString(), to.IncludeEntityContext.ToString()));
         }
 
         // Compare scope
@@ -192,7 +192,7 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
         var toScopeJson = to.Scope is not null ? SerializeScope(to.Scope) : null;
         if (fromScopeJson != toScopeJson)
         {
-            changes.Add(new AIPropertyChange("Scope", fromScopeJson, toScopeJson));
+            changes.Add(new AIValueChange("Scope", fromScopeJson, toScopeJson));
         }
 
         return changes;

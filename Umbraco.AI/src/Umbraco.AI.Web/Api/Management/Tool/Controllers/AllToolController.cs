@@ -1,13 +1,12 @@
 using Asp.Versioning;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Web.Api.Management.Tool.Models;
+using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Tool.Controllers;
 
@@ -15,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Tool.Controllers;
 /// Controller to get all registered tools.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class AllToolController : ToolControllerBase
 {
     private readonly AIToolCollection _tools;

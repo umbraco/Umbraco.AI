@@ -2,13 +2,15 @@ import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
-import { UAI_COPILOT_ALLOWED_SECTION_PATHNAMES } from "../header-app/manifests.js";
-import { observeSectionChanges, isSectionAllowed } from "../../section-detector.js";
+import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
+import { createSectionObservable, isSectionAllowed } from "../../context-observer.js";
 
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
     #copilotContext?: UaiCopilotContext;
+    #sectionRegistry!: UaiCopilotSectionRegistry;
+    #compatibleSections: string[] = [];
 
     readonly #sidebarWidth = 450;
 
@@ -22,6 +24,19 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
 
     constructor() {
         super();
+
+        // Initialize section registry
+        this.#sectionRegistry = new UaiCopilotSectionRegistry(this);
+
+        // Observe compatible sections
+        this.observe(
+            this.#sectionRegistry.compatibleSectionPathnames$,
+            (pathnames) => {
+                this.#compatibleSections = pathnames;
+            },
+            "_observeCompatibleSections"
+        );
+
         this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
             if (context) {
                 this.#copilotContext = context;
@@ -36,19 +51,20 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
         });
 
         // Auto-close copilot when navigating to a section that doesn't support it
-        this.#cleanupSectionObserver = observeSectionChanges((pathname) => {
-            if (!isSectionAllowed(pathname, UAI_COPILOT_ALLOWED_SECTION_PATHNAMES)) {
-                this.#copilotContext?.close();
-            }
-        });
+        this.observe(
+            createSectionObservable(),
+            (pathname) => {
+                if (!isSectionAllowed(pathname, this.#compatibleSections)) {
+                    this.#copilotContext?.close();
+                }
+            },
+            "_observeSectionChanges"
+        );
     }
-
-    #cleanupSectionObserver: (() => void) | null = null;
 
     override disconnectedCallback() {
         super.disconnectedCallback();
         this.#updateContentOffset(false); // Reset margin when component unmounts
-        this.#cleanupSectionObserver?.();
     }
 
     #handleClose() {
@@ -68,7 +84,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                 </header>
                 <uai-entity-selector></uai-entity-selector>
                 <div class="sidebar-content">
-                    <uai-copilot-chat></uai-copilot-chat>
+                    <uai-chat></uai-chat>
                 </div>
             </aside>
         `;
@@ -128,7 +144,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
             font-size: 16px;
         }
 
-        uai-copilot-chat {
+        uai-chat {
             flex: 1;
             display: block;
         }

@@ -53,6 +53,22 @@ public sealed class AIToolScopeAttribute : Attribute
     public string Domain { get; set; } = "General";
 
     /// <summary>
+    /// Gets or sets the entity types this scope is relevant for.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Specifies which entity types this scope's tools work with. Used for runtime
+    /// context filtering to only include tools when relevant.
+    /// </para>
+    /// <para>
+    /// Empty or null means available for all entity types (e.g., general tools).
+    /// Non-empty restricts to specific types (e.g., ["document", "media"]).
+    /// </para>
+    /// </remarks>
+    /// <example>new[] { "document", "documentType" }</example>
+    public string[]? ForEntityTypes { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AIToolScopeAttribute"/> class.
     /// </summary>
     /// <param name="id">The unique identifier for the scope.</param>

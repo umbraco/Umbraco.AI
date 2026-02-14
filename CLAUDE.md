@@ -11,6 +11,7 @@ This is a monorepo containing Umbraco.AI and its add-on packages:
 | **Umbraco.AI**                  | Core AI integration layer for Umbraco CMS  | `Umbraco.AI/`                  |
 | **Umbraco.AI.Prompt**           | Prompt template management add-on          | `Umbraco.AI.Prompt/`           |
 | **Umbraco.AI.Agent**            | AI agent management add-on                 | `Umbraco.AI.Agent/`            |
+| **Umbraco.AI.Agent.UI**         | Reusable chat UI infrastructure (library)  | `Umbraco.AI.Agent.UI/`         |
 | **Umbraco.AI.Agent.Copilot**    | Copilot chat UI for agents (frontend-only) | `Umbraco.AI.Agent.Copilot/`    |
 | **Umbraco.AI.OpenAI**           | OpenAI provider plugin                     | `Umbraco.AI.OpenAI/`           |
 | **Umbraco.AI.Anthropic**        | Anthropic provider plugin                  | `Umbraco.AI.Anthropic/`        |
@@ -125,7 +126,7 @@ This monorepo uses **npm workspaces** for efficient dependency management. Add-o
 # Install all workspace dependencies (run from root)
 npm install
 
-# Build all frontends (sequential: core -> prompt -> agent)
+# Build all frontends (sequential: core -> prompt -> agent -> agent-ui -> copilot)
 npm run build
 
 # Watch all frontends in parallel
@@ -138,9 +139,13 @@ npm run generate-client  # Automatically discovers port via named pipe
 npm run build:core
 npm run build:prompt
 npm run build:agent
+npm run build:agent-ui
+npm run build:copilot
 npm run watch:core
 npm run watch:prompt
 npm run watch:agent
+npm run watch:agent-ui
+npm run watch:copilot
 ```
 
 **Workspace Benefits:**
@@ -163,6 +168,8 @@ Umbraco.AI (Core)
     ├── Umbraco.AI.MicrosoftFoundry (Provider - depends on Core)
     ├── Umbraco.AI.Prompt (Add-on - depends on Core)
     └── Umbraco.AI.Agent (Add-on - depends on Core)
+            ├── Umbraco.AI.Agent.UI (Frontend library - depends on Agent)
+            └── Umbraco.AI.Agent.Copilot (Chat UI - depends on Agent + Agent.UI)
 ```
 
 ### Standard Project Structure
@@ -226,6 +233,7 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | `commitlint.config.js`                  | Commit message validation with dynamic scope loading                                   |
 | `release-manifest.json`                 | Release/hotfix pack list (required on `release/*`, optional on `hotfix/*`)             |
 | `pack-manifest` (artifact)              | CI-generated metadata for deployed packages (used by release pipeline for git tagging) |
+| `<Product>/version.json`                | Per-product version (updated by `/release-management` skill)                           |
 | `<Product>/changelog.config.json`       | Per-product scopes for changelog generation (auto-discovered)                          |
 | `<Product>/CHANGELOG.md`                | Per-product changelog (auto-generated from git history)                                |
 
@@ -254,6 +262,106 @@ Frontend projects are in `src/*/Web.StaticAssets/Client/` and compile to `wwwroo
 - Umbraco CMS 17.x
 - Central Package Management via `Directory.Packages.props`
 
+## Release Management Skills
+
+The repository includes Claude Code skills to automate and orchestrate the release process:
+
+### `/release-management` - Release Orchestration
+
+**Use when:** Preparing a complete release from start to finish
+
+**What it does:**
+1. **Detects changed products** since their last release tags
+2. **Analyzes commits** using conventional commit format to recommend version bumps:
+   - BREAKING CHANGE or `!` → Major (1.0.0 → 2.0.0)
+   - `feat:` commits → Minor (1.0.0 → 1.1.0)
+   - `fix:`, `perf:` → Patch (1.0.0 → 1.0.1)
+3. **Confirms versions** with the user (allows adjustments)
+4. **Creates release branch** using calendar-based naming (e.g., `release/2026.02.1`) and switches to it
+   - Branch name is independent from product versions (follows `release/YYYY.MM.N` convention per CONTRIBUTING.md)
+   - N is an incrementing number for each release in that month (1, 2, 3, etc.)
+   - A single release like `release/2026.02.1` can contain multiple products at different versions
+5. **Updates `version.json`** files for each product
+6. **Generates `release-manifest.json`** (calls `/release-manifest-management`)
+7. **Generates `CHANGELOG.md`** files (calls `/changelog-management` for each product)
+8. **Validates** all files are consistent
+9. **Commits all changes** to the release branch
+
+**Example:**
+```bash
+/release-management
+
+# Output:
+# Detected changes since last release:
+# - Umbraco.AI: 1.0.0 → 1.1.0 (3 feat, 2 fix commits)
+# - Umbraco.AI.OpenAI: 1.0.0 → 1.0.1 (1 fix commit)
+#
+# Confirm versions? [Yes/Adjust/Cancel]
+# → Creates release/2026.02.1 branch (calendar-based naming with increment)
+# → Switches to release branch
+# → Updates all files on the release branch
+# → Commits everything with proper message
+```
+
+### `/release-manifest-management` - Manifest Generation
+
+**Use when:** You only need to create/update the `release-manifest.json` file
+
+**What it does:**
+- Discovers all `Umbraco.AI*` products
+- Presents numbered menu for selection
+- Generates `release-manifest.json` with selected products
+
+**Note:** Typically called by `/release-management`, but can be used standalone.
+
+### `/changelog-management` - Changelog Generation
+
+**Use when:** Updating a single product's changelog without full release preparation
+
+**What it does:**
+- Lists available products
+- Generates `CHANGELOG.md` from conventional commit history
+- Can generate for specific version or preview unreleased changes
+
+**Example:**
+```bash
+/changelog-management
+
+# Prompts for:
+# - Product selection
+# - Version number (or --unreleased)
+# - Generates CHANGELOG.md
+```
+
+### `/repo-management` - Unified Interface
+
+**Use when:** Unsure which operation to perform
+
+**What it does:**
+- Presents interactive menu of all repository management operations
+- Delegates to specialized skills (`/release-management`, `/changelog-management`, etc.)
+- Includes build, setup, and frontend watch operations
+
+### Version Bump Decision Logic
+
+The `/release-management` skill analyzes conventional commits to determine version bumps:
+
+```
+Priority (highest first):
+1. BREAKING CHANGE in commit body → Major bump
+2. ! after scope (e.g., feat!:) → Major bump
+3. feat: or feat(<scope>): → Minor bump
+4. fix: or perf: → Patch bump
+5. Only docs/chore/refactor → Ask user (suggest patch)
+```
+
+### Cross-Product Dependencies
+
+When bumping Umbraco.AI (Core) to a new major version, the skill:
+- Checks `Directory.Packages.props` files for dependency ranges
+- Warns about add-ons that require the current major version
+- Recommends updating dependent products in the same release
+
 ## Release and Hotfix Branch Packaging
 
 ### Release Manifest
@@ -266,21 +374,25 @@ On `release/*` branches, CI **requires** a `release-manifest.json` at repo root:
 
 **Generating the manifest:**
 
-Use the interactive script to select which products to include:
+Use the `/release-management` skill for complete release orchestration (recommended), or use `/release-manifest-management` for manifest-only generation:
 
 ```bash
-# Windows
-.\scripts\generate-release-manifest.ps1
+# Full release orchestration (recommended)
+/release-management
 
-# Linux/Mac
-./scripts/generate-release-manifest.sh
+# Manifest-only generation
+/release-manifest-management
+
+# Or use scripts directly:
+.\scripts\generate-release-manifest.ps1  # Windows
+./scripts/generate-release-manifest.sh   # Linux/Mac
 ```
 
-The script will:
+The manifest generation process:
 
-1. Scan for all `Umbraco.AI*` product folders
-2. Present an interactive multiselect interface
-3. Generate `release-manifest.json` at the repository root
+1. Scans for all `Umbraco.AI*` product folders
+2. Presents an interactive multiselect interface
+3. Generates `release-manifest.json` at the repository root
 
 The manifest is treated as the authoritative list of packages to pack and release. CI will fail if any changed product is missing from the list. This ensures intentional releases and prevents accidental package publishing.
 
@@ -461,23 +573,23 @@ Commits are validated by commitlint on commit (soft warnings - allows non-conven
 
 ### Generating Changelogs
 
-Changelogs are generated manually before creating a release:
+Changelogs are generated before creating a release. Use the `/release-management` skill for automatic generation of all changelogs, or `/changelog-management` for individual products:
 
 ```bash
-# List available products
-npm run changelog:list
+# Full release orchestration (generates all changelogs automatically)
+/release-management
 
-# Generate changelog for a specific product
+# Individual product changelog
+/changelog-management
+
+# Or use scripts directly:
+npm run changelog:list  # List available products
 npm run changelog -- --product=Umbraco.AI --version=1.1.0
-
-# Generate for unreleased changes
 npm run changelog -- --product=Umbraco.AI --unreleased
 
-# PowerShell wrapper
-.\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0
-
-# Bash wrapper
-./scripts/generate-changelog.sh --product=Umbraco.AI --version=1.1.0
+# Platform-specific wrappers
+.\scripts\generate-changelog.ps1 -Product Umbraco.AI -Version 1.1.0  # Windows
+./scripts/generate-changelog.sh --product=Umbraco.AI --version=1.1.0  # Linux/Mac
 ```
 
 Each product has a `changelog.config.json` file defining its scopes. The generation script automatically discovers all products by scanning for these config files - no hardcoded product lists.

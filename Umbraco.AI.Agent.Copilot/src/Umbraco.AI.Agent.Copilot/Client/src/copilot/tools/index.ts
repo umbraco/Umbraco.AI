@@ -1,2 +1,4 @@
-export * from "./uai-agent-tool.extension.js";
-export * from "./tool-status.element.js";
+export type {
+    ManifestUaiAgentToolRenderer,
+    ManifestUaiAgentFrontendTool,
+} from "@umbraco-ai/agent-ui";

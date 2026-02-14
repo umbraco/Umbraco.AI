@@ -53,7 +53,7 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAIVersionableEn
         => RestoreFromSnapshot(json);
 
     /// <inheritdoc />
-    public IReadOnlyList<AIPropertyChange> CompareVersions(object from, object to)
+    public IReadOnlyList<AIValueChange> CompareVersions(object from, object to)
     {
         ArgumentNullException.ThrowIfNull(from);
         ArgumentNullException.ThrowIfNull(to);
@@ -86,12 +86,12 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAIVersionableEn
     protected abstract TEntity? RestoreFromSnapshot(string json);
 
     /// <summary>
-    /// Compares two entity versions and returns the list of property changes.
+    /// Compares two entity versions and returns the list of value changes.
     /// </summary>
     /// <param name="from">The older entity version.</param>
     /// <param name="to">The newer entity version.</param>
-    /// <returns>A list of property changes between the versions.</returns>
-    protected abstract IReadOnlyList<AIPropertyChange> CompareVersions(TEntity from, TEntity to);
+    /// <returns>A list of value changes between the versions.</returns>
+    protected abstract IReadOnlyList<AIValueChange> CompareVersions(TEntity from, TEntity to);
 
     /// <inheritdoc />
     public abstract Task RollbackAsync(Guid entityId, int version, CancellationToken cancellationToken = default);

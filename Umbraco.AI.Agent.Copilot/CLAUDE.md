@@ -6,14 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-`Umbraco.AI.Agent.Copilot` is a **frontend-only package** that provides the copilot chat UI for Umbraco AI agents. It has no backend code - all backend functionality comes from `Umbraco.AI.Agent`.
+`Umbraco.AI.Agent.Copilot` is a **frontend-only package** that provides the copilot chat UI for Umbraco AI agents. It builds on top of `Umbraco.AI.Agent.UI` (the reusable chat infrastructure) and provides the copilot-specific implementation.
 
 ### What This Package Contains
 
-- Copilot sidebar UI (chat interface in backoffice)
-- Tool extension system (frontend tool registration and execution)
-- Approval element system (HITL approval workflows)
-- AG-UI client integration (streaming protocol)
+- Copilot sidebar container (chat interface in backoffice sidebar)
+- Header button (quick access from backoffice header)
+- AG-UI transport layer (streaming protocol implementation)
+- Copilot context (integrates with `UaiChatContextApi` from Agent.UI)
+- Entity context integration (connects copilot with entity-aware features)
+- Copilot-specific tool implementations
 - Localization for copilot features
 
 ### What This Package Does NOT Contain
@@ -22,6 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - No backend APIs (uses `Umbraco.AI.Agent` APIs)
 - No database access
 - No Umbraco Composer
+- No shared chat components (provided by `Umbraco.AI.Agent.UI`)
 
 ## Build Commands
 
@@ -45,17 +48,17 @@ Umbraco.AI.Agent.Copilot/
 │       ├── Client/
 │       │   ├── src/
 │       │   │   ├── copilot/              # Main copilot module
-│       │   │   │   ├── components/       # UI components
-│       │   │   │   │   ├── chat/         # Chat UI elements
+│       │   │   │   ├── components/       # Copilot-specific components
 │       │   │   │   │   ├── sidebar/      # Sidebar container
 │       │   │   │   │   └── header-app/   # Header button
-│       │   │   │   ├── services/         # Services
-│       │   │   │   │   ├── tool.manager.ts
-│       │   │   │   │   └── frontend-tool.executor.ts
-│       │   │   │   ├── transport/        # AG-UI integration
-│       │   │   │   ├── tools/            # Tool extension system
-│       │   │   │   ├── approval/         # HITL approval system
-│       │   │   │   └── interrupts/       # Interrupt handlers
+│       │   │   │   ├── transport/        # AG-UI transport implementation
+│       │   │   │   │   └── uai-http-agent.ts
+│       │   │   │   ├── copilot.context.ts # Implements UaiChatContextApi
+│       │   │   │   ├── tools/            # Copilot-specific tools
+│       │   │   │   │   ├── entity/       # Entity-aware tools
+│       │   │   │   │   ├── umbraco/      # Umbraco integration tools
+│       │   │   │   │   └── examples/     # Example tools
+│       │   │   │   └── frontend-tool.repository.ts # Tool registry
 │       │   │   ├── lang/                 # Localization
 │       │   │   ├── manifests.ts          # Extension manifests
 │       │   │   └── index.ts              # Package exports
@@ -67,60 +70,95 @@ Umbraco.AI.Agent.Copilot/
 │       └── Umbraco.AI.Agent.Copilot.csproj
 ├── Directory.Build.props
 ├── Umbraco.AI.Agent.Copilot.sln
+├── changelog.config.json
+├── version.json
 ├── README.md
 └── CLAUDE.md
 ```
 
 ## Key Concepts
 
-### Tool Extension System
+### Copilot Context
 
-Tools are registered via the Umbraco extension registry:
-
-```typescript
-// Register a frontend tool
-const manifest: ManifestUaiAgentTool = {
-    type: "uaiAgentTool",
-    alias: "MyTool",
-    name: "My Custom Tool",
-    meta: {
-        toolName: "my_tool",
-        description: "Does something useful",
-        parameters: {
-            type: "object",
-            properties: {
-                input: { type: "string" },
-            },
-        },
-    },
-    api: () => import("./my-tool.api.js"), // Execution logic
-    element: () => import("./my-tool.element.js"), // Custom UI (optional)
-};
-```
-
-### Approval Element System
-
-HITL approval elements for agent actions:
+The copilot implements `UaiChatContextApi` from Agent.UI:
 
 ```typescript
-// Register an approval element
-const manifest: ManifestUaiAgentApprovalElement = {
-    type: "uaiAgentApprovalElement",
-    alias: "MyApproval",
-    name: "My Approval Handler",
-    forToolName: "my_tool", // Tool this approves
-    element: () => import("./my-approval.element.js"),
-};
+// Located in src/copilot/copilot.context.ts
+export class UaiCopilotContext extends UmbContextBase<UmbElement> implements UaiChatContextApi {
+    private _runController: UaiRunController;
+
+    constructor(host: UmbElement) {
+        super(host);
+
+        // Initialize run controller with AG-UI transport
+        this._runController = new UaiRunController(this, {
+            transport: new UaiHttpAgent(/* config */),
+            frontendToolManager: new UaiFrontendToolManager(this),
+        });
+    }
+
+    // Implement UaiChatContextApi methods
+    async startRun(request: AGUIRunRequestModel) {
+        return this._runController.start(request);
+    }
+    // ... other methods
+}
 ```
 
 ### AG-UI Transport
 
-The copilot uses AG-UI (Agent UI) protocol for streaming communication:
+The copilot provides the AG-UI transport implementation:
 
 ```typescript
-// Located in src/copilot/transport/
-// - uai-http-agent.ts - HTTP transport implementation
-// - Handles streaming responses from agent API
+// Located in src/copilot/transport/uai-http-agent.ts
+export class UaiHttpAgent implements AGUIAgent {
+    async run(request: AGUIRunRequest): Promise<AGUIRunResponse> {
+        // Streams agent responses from backend API
+        // Handles tool execution, HITL interrupts, etc.
+    }
+}
+```
+
+### Tool System
+
+The copilot uses the tool system from Agent.UI:
+
+**Tool Renderers** (defined in copilot-specific manifests):
+```typescript
+const manifest: ManifestUaiAgentToolRenderer = {
+    type: "uaiAgentToolRenderer", // From Agent.UI
+    alias: "SearchUmbraco",
+    forToolName: "search_umbraco",
+    element: () => import("./search-umbraco.element.js"),
+};
+```
+
+**Frontend Tools** (copilot-specific implementations):
+```typescript
+const manifest: ManifestUaiAgentFrontendTool = {
+    type: "uaiAgentFrontendTool", // From Agent.UI
+    alias: "GetPageInfo",
+    meta: {
+        toolName: "get_page_info",
+        description: "Gets info about the current page",
+        parameters: { /* schema */ },
+    },
+    api: () => import("./get-page-info.api.js"),
+};
+```
+
+### Frontend Tool Repository
+
+The copilot maintains a registry of available frontend tools:
+
+```typescript
+// Located in src/copilot/tools/frontend-tool.repository.ts
+export class UaiFrontendToolRepository {
+    // Registers all copilot tools with UaiFrontendToolManager
+    registerTools(manager: UaiFrontendToolManager) {
+        // Tools are auto-discovered from extension manifests
+    }
+}
 ```
 
 ## Dependencies
@@ -130,16 +168,18 @@ The copilot uses AG-UI (Agent UI) protocol for streaming communication:
 ```json
 {
     "peerDependencies": {
-        "@umbraco-ai/core": "^17.0.0",
-        "@umbraco-ai/agent": "^17.0.0",
+        "@umbraco-ai/core": "^1.0.0",
+        "@umbraco-ai/agent": "^1.0.0",
+        "@umbraco-ai/agent-ui": "^1.0.0",
         "@umbraco-cms/backoffice": "^17.1.0"
     },
     "dependencies": {
-        "@ag-ui/client": "^0.0.42",
-        "rxjs": "^7.8.2"
+        "@ag-ui/client": "^0.0.42"
     }
 }
 ```
+
+**Note:** `rxjs` is provided by `@umbraco-ai/agent-ui`.
 
 ### NuGet Dependencies
 
@@ -153,6 +193,14 @@ None - this is a frontend-only package. The .csproj is a Razor Class Library tha
 // Import API client and types from agent package
 import { AgentsService } from "@umbraco-ai/agent";
 import type { AGUIRunRequestModel } from "@umbraco-ai/agent";
+```
+
+### Importing from Agent.UI Package
+
+```typescript
+// Import shared chat infrastructure
+import { UaiRunController, UaiFrontendToolManager } from "@umbraco-ai/agent-ui";
+import type { UaiChatContextApi, ManifestUaiAgentToolRenderer } from "@umbraco-ai/agent-ui";
 ```
 
 ### Importing from Core Package
@@ -180,7 +228,7 @@ This package is frontend-only. Testing approaches:
 2. **Unit tests** - Use vitest for component/service unit tests (if added)
 3. **Integration testing** - Test with demo site that has both Agent and Copilot installed
 
-## Relationship with Agent Package
+## Relationship with Other Packages
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -190,8 +238,18 @@ This package is frontend-only. Testing approaches:
 │  │  (Services)  │ │  (Database)  │ │   (APIs)     │ │
 │  └──────────────┘ └──────────────┘ └──────────────┘ │
 │  ┌──────────────────────────────────────────────────┤
-│  │         Web.StaticAssets (Agent UI)              │
+│  │         Web.StaticAssets (Agent Management UI)   │
 │  │    - Agent workspace, collection, editing        │
+│  └──────────────────────────────────────────────────┤
+└─────────────────────────────────────────────────────┘
+                          │
+                          │ depends on (npm)
+                          ▼
+┌─────────────────────────────────────────────────────┐
+│            Umbraco.AI.Agent.UI (Reusable)            │
+│  ┌──────────────────────────────────────────────────┤
+│  │       Shared Chat Infrastructure                 │
+│  │    - Components, services, contexts              │
 │  └──────────────────────────────────────────────────┤
 └─────────────────────────────────────────────────────┘
                           │
@@ -200,25 +258,32 @@ This package is frontend-only. Testing approaches:
 ┌─────────────────────────────────────────────────────┐
 │            Umbraco.AI.Agent.Copilot                  │
 │  ┌──────────────────────────────────────────────────┤
-│  │         Web.StaticAssets (Copilot UI)            │
-│  │    - Chat sidebar, tool execution, HITL          │
+│  │         Copilot-Specific UI                      │
+│  │    - Sidebar, header button, AG-UI transport     │
 │  └──────────────────────────────────────────────────┤
 └─────────────────────────────────────────────────────┘
 ```
 
 ## Common Tasks
 
-### Adding a New Tool
+### Adding a Copilot-Specific Tool
 
-1. Create tool API class implementing `UaiAgentToolApi`
-2. Create tool manifest with `type: 'uaiAgentTool'`
-3. Optionally create custom element for tool UI
+1. Create tool API class implementing the tool interface
+2. Create tool manifest with `type: 'uaiAgentFrontendTool'` (from Agent.UI)
+3. Add to `frontend-tool.repository.ts`
+4. Register in manifests.ts
+
+### Adding a Tool Renderer
+
+1. Create renderer element extending `LitElement`
+2. Create manifest with `type: 'uaiAgentToolRenderer'` (from Agent.UI)
+3. Set `forToolName` to match the tool
 4. Register in manifests.ts
 
 ### Adding HITL Approval
 
-1. Create approval element extending `UaiAgentApprovalElement`
-2. Create manifest with `type: 'uaiAgentApprovalElement'`
+1. Create approval element extending `UmbElementMixin(LitElement)`
+2. Create manifest with `type: 'uaiAgentApprovalElement'` (from Agent.UI)
 3. Set `forToolName` to match the tool requiring approval
 4. Register in manifests.ts
 

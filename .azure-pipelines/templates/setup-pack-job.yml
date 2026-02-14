@@ -10,7 +10,13 @@ parameters:
     - name: downloadLevel1
       type: boolean
       default: false
+    - name: downloadLevel2
+      type: boolean
+      default: false
     - name: level1Products
+      type: object
+      default: []
+    - name: level2Products
       type: object
       default: []
     - name: condition
@@ -47,6 +53,20 @@ steps:
     # Download Level 1 packages as local feed (if any Level 1 was packed)
     - ${{ if eq(parameters.downloadLevel1, true) }}:
           - ${{ each product in parameters.level1Products }}:
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download ${{ product.name }} packages (local feed)
+                  condition: |
+                      and(
+                        ${{ parameters.condition }},
+                        eq(variables['${{ product.changeVar }}'], 'true')
+                      )
+                  inputs:
+                      artifact: ${{ product.name }}-packages
+                      path: $(Build.SourcesDirectory)/artifacts/nupkg
+
+    # Download Level 2 packages as local feed (if any Level 2 was packed)
+    - ${{ if eq(parameters.downloadLevel2, true) }}:
+          - ${{ each product in parameters.level2Products }}:
                 - task: DownloadPipelineArtifact@2
                   displayName: Download ${{ product.name }} packages (local feed)
                   condition: |

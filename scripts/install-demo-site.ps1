@@ -118,7 +118,11 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt" -SolutionFolder "Prompt"
 Write-Host "Adding Umbraco.AI.Agent projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Agent" -SolutionFolder "Agent"
 
-# Step 8.1: Add Agent Copilot projects
+# Step 8.1: Add Agent UI projects
+Write-Host "Adding Umbraco.AI.Agent.UI projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.UI" -SolutionFolder "AgentUI"
+
+# Step 8.2: Add Agent Copilot projects
 Write-Host "Adding Umbraco.AI.Agent.Copilot projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot" -SolutionFolder "AgentCopilot"
 
@@ -185,6 +189,11 @@ if (Test-Path "Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Startup/Umbraco.AI.Prompt
 if (Test-Path "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Startup/Umbraco.AI.Agent.Startup.csproj"
     dotnet add $demoProject reference "Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Umbraco.AI.Agent.Web.StaticAssets.csproj"
+}
+
+# Agent UI library (frontend-only static assets)
+if (Test-Path "Umbraco.AI.Agent.UI\src\Umbraco.AI.Agent.UI\Umbraco.AI.Agent.UI.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Agent.UI\src\Umbraco.AI.Agent.UI\Umbraco.AI.Agent.UI.csproj"
 }
 
 # Agent Copilot add-on (frontend-only static assets)

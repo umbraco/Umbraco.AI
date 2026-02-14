@@ -50,7 +50,7 @@ export type PromptExecutionRequestModel = {
 export type PromptExecutionResponseModel = {
     content: string;
     usage?: UsageModel | null;
-    propertyChanges?: Array<PropertyChangeModel> | null;
+    valueChanges?: Array<ValueChangeModel> | null;
 };
 
 export type PromptItemResponseModel = {
@@ -79,13 +79,6 @@ export type PromptResponseModel = {
     dateCreated: string;
     dateModified: string;
     version: number;
-};
-
-export type PropertyChangeModel = {
-    alias: string;
-    value?: unknown;
-    culture?: string | null;
-    segment?: string | null;
 };
 
 export type RequestContextItemModel = {
@@ -135,6 +128,13 @@ export type ValidationProblemDetails = {
     [key: string]: unknown | string | null | string | null | number | null | string | null | string | null | {
         [key: string]: Array<string>;
     } | undefined;
+};
+
+export type ValueChangeModel = {
+    path: string;
+    value?: unknown;
+    culture?: string | null;
+    segment?: string | null;
 };
 
 export type GetAllPromptsData = {

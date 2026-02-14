@@ -60,6 +60,20 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
                 table: "umbracoAIEntityVersion",
                 type: "TEXT",
                 nullable: true);
+
+            // umbracoAISettings
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAISettings");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAISettings");
+            migrationBuilder.AddColumn<Guid>(
+                name: "CreatedByUserId",
+                table: "umbracoAISettings",
+                type: "TEXT",
+                nullable: true);
+            migrationBuilder.AddColumn<Guid>(
+                name: "ModifiedByUserId",
+                table: "umbracoAISettings",
+                type: "TEXT",
+                nullable: true);
         }
 
         /// <inheritdoc />
@@ -112,6 +126,20 @@ namespace Umbraco.AI.Persistence.Sqlite.Migrations
             migrationBuilder.AddColumn<int>(
                 name: "CreatedByUserId",
                 table: "umbracoAIEntityVersion",
+                type: "INTEGER",
+                nullable: true);
+
+            // umbracoAISettings - revert to INTEGER
+            migrationBuilder.DropColumn(name: "CreatedByUserId", table: "umbracoAISettings");
+            migrationBuilder.DropColumn(name: "ModifiedByUserId", table: "umbracoAISettings");
+            migrationBuilder.AddColumn<int>(
+                name: "CreatedByUserId",
+                table: "umbracoAISettings",
+                type: "INTEGER",
+                nullable: true);
+            migrationBuilder.AddColumn<int>(
+                name: "ModifiedByUserId",
+                table: "umbracoAISettings",
                 type: "INTEGER",
                 nullable: true);
         }

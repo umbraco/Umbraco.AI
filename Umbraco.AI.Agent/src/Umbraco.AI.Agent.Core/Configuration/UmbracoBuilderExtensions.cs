@@ -4,7 +4,9 @@ using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Models;
+using Umbraco.AI.Agent.Core.RuntimeContext;
 using Umbraco.AI.Agent.Core.Scopes;
+using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Core.Tests;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
@@ -38,6 +40,9 @@ public static class UmbracoBuilderExtensions
         // Register in-memory repository as fallback (replaced by persistence layer)
         builder.Services.AddSingleton<IAIAgentRepository, InMemoryAIAgentRepository>();
 
+        // Register scope validator
+        builder.Services.AddSingleton<AIAgentScopeValidator>();
+
         // Register service
         builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
 
@@ -53,6 +58,9 @@ public static class UmbracoBuilderExtensions
         // Register agent context resolver
         builder.AIContextResolvers().Append<AgentContextResolver>();
 
+        // Register surface context contributor
+        builder.AIRuntimeContextContributors().Append<SurfaceContextContributor>();
+
         // Register tool reordering middleware before function invocation
         // This ensures server-side tools execute before frontend tools trigger termination
         builder.AIChatMiddleware().InsertBefore<AIFunctionInvokingChatMiddleware, AIToolReorderingChatMiddleware>();
@@ -60,9 +68,9 @@ public static class UmbracoBuilderExtensions
         // Register versionable entity adapter for agents
         builder.AIVersionableEntityAdapters().Add<AIAgentVersionableEntityAdapter>();
 
-        // Auto-discover agent scopes via [AIAgentScope] attribute
-        builder.AIAgentScopes()
-            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentScope, AIAgentScopeAttribute>(cache: true));
+        // Auto-discover agent surfaces via [AIAgentSurface] attribute
+        builder.AIAgentSurfaces()
+            .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentSurface, AIAgentSurfaceAttribute>(cache: true));
 
         // Register agent test feature for AI testing
         builder.AITestFeatures().Add<AgentTestFeature>();

@@ -4,12 +4,12 @@ Copilot chat UI for Umbraco AI Agent. This package provides the backoffice sideb
 
 ## Overview
 
-`Umbraco.AI.Agent.Copilot` is a **frontend-only package** that provides the chat UI layer for AI agents:
+`Umbraco.AI.Agent.Copilot` is a **frontend-only package** that provides the copilot chat UI for AI agents. It builds on top of `Umbraco.AI.Agent.UI` (the reusable chat infrastructure) and adds:
 
 - **Copilot Sidebar** - Chat interface that appears in the Umbraco backoffice
-- **Tool Execution System** - Framework for frontend-executable tools
-- **HITL Approval System** - Human-in-the-loop approval workflows
-- **AG-UI Integration** - Streaming protocol for real-time AI responses
+- **Header Button** - Quick access to the copilot from the backoffice header
+- **AG-UI Transport** - Streaming protocol implementation for real-time AI responses
+- **Copilot-Specific Features** - Context awareness and entity integration
 
 ## Installation
 
@@ -23,25 +23,33 @@ dotnet add package Umbraco.AI.Agent.Copilot
 
 ## Dependencies
 
-| Package            | Description                            |
-| ------------------ | -------------------------------------- |
-| `Umbraco.AI.Agent` | Agent definition management (required) |
-| `Umbraco.AI`       | Core AI infrastructure (transitive)    |
+| Package                | Description                            |
+| ---------------------- | -------------------------------------- |
+| `Umbraco.AI.Agent`     | Agent definition management (required) |
+| `Umbraco.AI.Agent.UI`  | Reusable chat infrastructure (required)|
+| `Umbraco.AI`           | Core AI infrastructure (transitive)    |
 
 ## Architecture
 
-This is a **frontend-only package** containing:
-
-- TypeScript/Lit web components for the copilot UI
-- Tool extension system for registering custom tools
-- Approval element system for HITL workflows
-- AG-UI client for streaming communication
+This is a **frontend-only package** that consumes `Umbraco.AI.Agent.UI` for shared chat infrastructure and adds copilot-specific features:
 
 ```
-Umbraco.AI.Agent (Backend APIs, Agent Management UI)
+Umbraco.AI.Agent (Backend APIs, Agent Management)
          │
-         ▼
-Umbraco.AI.Agent.Copilot (Chat UI, Tool Execution)
+         ├── Umbraco.AI.Agent.UI (Reusable Chat Infrastructure)
+         │           │
+         │           ├── Chat components, services, contexts
+         │           ├── Tool renderer system
+         │           ├── Frontend tool execution
+         │           └── HITL approval system
+         │           │
+         │           ▼
+         └── Umbraco.AI.Agent.Copilot (Copilot-Specific UI)
+                     │
+                     ├── Copilot sidebar container
+                     ├── Header button
+                     ├── AG-UI transport layer
+                     └── Entity context integration
 ```
 
 ## Usage Scenarios

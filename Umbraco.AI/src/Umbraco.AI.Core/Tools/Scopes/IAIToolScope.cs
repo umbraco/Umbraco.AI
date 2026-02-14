@@ -50,4 +50,29 @@ public interface IAIToolScope
     /// Used to group related scopes in the UI (e.g., "Content", "Media", "General").
     /// </remarks>
     string Domain { get; }
+
+    /// <summary>
+    /// Gets the entity types this scope is relevant for.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Specifies which entity types this scope's tools are designed to work with.
+    /// Used for runtime context filtering - tools are only included when the current
+    /// context matches one of the declared entity types.
+    /// </para>
+    /// <para>
+    /// Empty list means the scope is available for all entity types (e.g., "search", "navigation").
+    /// Non-empty list restricts the scope to specific entity types (e.g., ["document", "media"]).
+    /// </para>
+    /// <para>
+    /// Examples:
+    /// <list type="bullet">
+    ///   <item>Content scopes: ["document", "documentType"]</item>
+    ///   <item>Media scopes: ["media", "mediaType"]</item>
+    ///   <item>General scopes: [] (available everywhere)</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <example>["document", "media"]</example>
+    IReadOnlyList<string> ForEntityTypes { get; }
 }

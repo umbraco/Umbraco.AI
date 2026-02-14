@@ -1,5 +1,6 @@
 import type { ManifestMenuItem } from "@umbraco-cms/backoffice/menu";
 import { UAI_CONNECTION_ROOT_ENTITY_TYPE, UAI_CONNECTION_ICON } from "../constants.js";
+import { UAI_CORE_MENU_ALIAS } from "../../section/constants.ts";
 
 export const connectionMenuManifests: ManifestMenuItem[] = [
     {
@@ -11,7 +12,7 @@ export const connectionMenuManifests: ManifestMenuItem[] = [
             label: "Connections",
             icon: UAI_CONNECTION_ICON,
             entityType: UAI_CONNECTION_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAI.Menu.Settings"],
+            menus: [UAI_CORE_MENU_ALIAS],
         },
     },
 ];

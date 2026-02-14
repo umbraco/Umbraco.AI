@@ -206,6 +206,7 @@ export class UaiPromptDetailsWorkspaceViewElement extends UmbLitElement {
                         .value=${this.#getResultType()}
                         .options=${this.#getResultTypeOptions()}
                         @change=${this.#onResultTypeChange}
+                        style="width: 100%;"
                     ></uui-select>
                     <div slot="description" style="margin-top: var(--uui-size-space-2);">
                         <ul style="margin: 0; padding-left: var(--uui-size-space-5); list-style: disc;">

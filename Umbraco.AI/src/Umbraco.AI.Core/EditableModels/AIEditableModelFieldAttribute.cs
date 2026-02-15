@@ -46,7 +46,8 @@ public class AIEditableModelFieldAttribute : Attribute
     /// <summary>
     /// Optional group name used to visually group related fields in the UI.
     /// Fields with the same group name are rendered together in a separate section.
-    /// The value can be a literal string or a localization key (prefixed with #).
+    /// The value should be a simple PascalCase identifier (e.g., "Features", "Advanced").
+    /// The localization key is constructed by convention: <c>#uaiGroups_{modelKey}{Group}Label</c>.
     /// </summary>
     public string? Group { get; set; }
 }

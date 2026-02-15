@@ -67,8 +67,9 @@ public class AIEditableModelField
     public bool IsSensitive { get; set; }
 
     /// <summary>
-    /// Optional group name used to visually group related fields in the UI.
-    /// Fields with the same group name are rendered together in a separate section.
+    /// Optional localization key for visually grouping related fields in the UI.
+    /// Fields with the same group are rendered together in a separate section.
+    /// Constructed by convention from the attribute: <c>#uaiGroups_{modelKey}{Group}Label</c>.
     /// </summary>
     public string? Group { get; set; }
 }

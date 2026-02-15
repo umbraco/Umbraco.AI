@@ -99,6 +99,9 @@ export default {
         oldValue: "Old",
         newValue: "New",
     },
+    uaiGroups: {
+        generalLabel: "General",
+    },
     uaiFields: {
         // Text resource fields
         textContentLabel: "Content",

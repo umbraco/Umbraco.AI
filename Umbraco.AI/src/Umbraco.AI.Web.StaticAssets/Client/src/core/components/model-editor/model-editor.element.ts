@@ -150,18 +150,31 @@ export class UaiModelEditorElement extends UmbLitElement {
     /**
      * Groups fields by their group property.
      * Returns an array of [groupName, fields] tuples where groupName is null for ungrouped fields.
-     * Preserves declaration order of groups (first occurrence determines position).
+     * Ungrouped fields always appear first, followed by named groups in declaration order.
      */
     #groupFields(fields: UaiEditableModelFieldModel[]): Array<[string | null, UaiEditableModelFieldModel[]]> {
-        const groups = new Map<string | null, UaiEditableModelFieldModel[]>();
+        const grouped = new Map<string, UaiEditableModelFieldModel[]>();
+        const ungrouped: UaiEditableModelFieldModel[] = [];
+
         for (const field of fields) {
-            const group = field.group ?? null;
-            if (!groups.has(group)) {
-                groups.set(group, []);
+            if (field.group) {
+                if (!grouped.has(field.group)) {
+                    grouped.set(field.group, []);
+                }
+                grouped.get(field.group)!.push(field);
+            } else {
+                ungrouped.push(field);
             }
-            groups.get(group)!.push(field);
         }
-        return Array.from(groups.entries());
+
+        const result: Array<[string | null, UaiEditableModelFieldModel[]]> = [];
+        if (ungrouped.length > 0) {
+            result.push([null, ungrouped]);
+        }
+        for (const [group, fields] of grouped) {
+            result.push([group, fields]);
+        }
+        return result;
     }
 
     #renderField(field: UaiEditableModelFieldModel) {
@@ -197,12 +210,12 @@ export class UaiModelEditorElement extends UmbLitElement {
         return html`
             <umb-property-dataset .value=${this._propertyValues} @change=${this.#onChange}>
                 ${hasGroups
-                    ? this.#groupFields(this.schema.fields).map(([groupName, fields]) =>
-                          groupName
-                              ? html`<uui-box headline=${this.localize.string(groupName)}>
-                                    ${fields.map((f) => this.#renderField(f))}
-                                </uui-box>`
-                              : fields.map((f) => this.#renderField(f)),
+                    ? this.#groupFields(this.schema.fields).map(
+                          ([groupName, fields]) =>
+                              html`<uui-box
+                                  headline=${this.localize.string(groupName ?? "#uaiGroups_generalLabel")}>
+                                  ${fields.map((f) => this.#renderField(f))}
+                              </uui-box>`,
                       )
                     : this.schema.fields.map((f) => this.#renderField(f))}
             </umb-property-dataset>
@@ -226,6 +239,10 @@ export class UaiModelEditorElement extends UmbLitElement {
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
                 margin-top: var(--uui-size-layout-1);
+            }
+
+            uui-box:first-child {
+                margin-top: 0;
             }
         `,
     ];

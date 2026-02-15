@@ -1,4 +1,5 @@
 import type { ManifestGlobalContext } from "@umbraco-cms/backoffice/extension-registry";
+import type { ManifestUaiRequestContextContributor } from "@umbraco-ai/core";
 import { componentManifests } from "./components/manifests.js";
 import { manifests as toolManifests } from "./tools/manifests.js";
 import type { ManifestUaiCopilotCompatibleSection } from "./types.js";
@@ -31,9 +32,24 @@ export const copilotSectionManifests: Array<ManifestUaiCopilotCompatibleSection>
     },
 ];
 
+/**
+ * Copilot-specific request context contributors.
+ * The surface contributor identifies the copilot surface to the backend.
+ */
+export const copilotRequestContextManifests: ManifestUaiRequestContextContributor[] = [
+    {
+        type: "uaiRequestContextContributor",
+        alias: "UmbracoAI.Copilot.RequestContextContributor.Surface",
+        name: "Copilot Surface Request Context Contributor",
+        api: () => import("./contributors/surface.contributor.js"),
+        weight: 50,
+    },
+];
+
 export const copilotManifests = [
     ...componentManifests,
     ...toolManifests,
     ...copilotSectionManifests,
+    ...copilotRequestContextManifests,
     globalContextManifest,
 ];

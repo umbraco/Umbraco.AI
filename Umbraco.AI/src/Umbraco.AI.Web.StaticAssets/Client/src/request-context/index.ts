@@ -24,3 +24,12 @@ export type { UaiRequestContextItem } from "./types.js";
 
 // Helpers
 export { createEntityContextItem, createSelectionContextItem } from "./helpers.js";
+
+// Contributor infrastructure
+export {
+	UaiRequestContext,
+	UAI_REQUEST_CONTEXT_CONTRIBUTOR_EXTENSION_TYPE,
+	type UaiRequestContextContributorApi,
+	type ManifestUaiRequestContextContributor,
+} from "./extension-type.js";
+export { UaiRequestContextCollector } from "./request-context-collector.js";

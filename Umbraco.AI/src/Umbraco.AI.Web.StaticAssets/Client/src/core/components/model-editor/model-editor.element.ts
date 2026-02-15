@@ -159,32 +159,28 @@ export class UaiModelEditorElement extends UmbLitElement {
 
     /**
      * Groups fields by their group property.
-     * Returns an array of [groupName, fields] tuples where groupName is null for ungrouped fields.
-     * Ungrouped fields always appear first, followed by named groups in declaration order.
+     * Fields without a group are placed in "General". General always appears first,
+     * followed by named groups in declaration order.
      */
-    #groupFields(fields: UaiEditableModelFieldModel[]): Array<[string | null, UaiEditableModelFieldModel[]]> {
-        const grouped = new Map<string, UaiEditableModelFieldModel[]>();
-        const ungrouped: UaiEditableModelFieldModel[] = [];
+    #groupFields(fields: UaiEditableModelFieldModel[]): Array<[string, UaiEditableModelFieldModel[]]> {
+        const generalKey = "#uaiGroups_generalLabel";
+        const groups = new Map<string, UaiEditableModelFieldModel[]>();
+        groups.set(generalKey, []);
 
         for (const field of fields) {
-            if (field.group) {
-                if (!grouped.has(field.group)) {
-                    grouped.set(field.group, []);
-                }
-                grouped.get(field.group)!.push(field);
-            } else {
-                ungrouped.push(field);
+            const key = field.group ? this.#groupLocalizationKey(field.group) : generalKey;
+            if (!groups.has(key)) {
+                groups.set(key, []);
             }
+            groups.get(key)!.push(field);
         }
 
-        const result: Array<[string | null, UaiEditableModelFieldModel[]]> = [];
-        if (ungrouped.length > 0) {
-            result.push([null, ungrouped]);
+        // Remove General if empty (all fields have explicit groups)
+        if (groups.get(generalKey)!.length === 0) {
+            groups.delete(generalKey);
         }
-        for (const [group, fields] of grouped) {
-            result.push([group, fields]);
-        }
-        return result;
+
+        return Array.from(groups.entries());
     }
 
     #renderField(field: UaiEditableModelFieldModel) {
@@ -215,23 +211,14 @@ export class UaiModelEditorElement extends UmbLitElement {
             return html` <p class="placeholder-text">${this.emptyMessage ?? "No configurable fields."}</p> `;
         }
 
-        const hasGroups = this.schema.fields.some((f) => f.group);
-
         return html`
             <umb-property-dataset .value=${this._propertyValues} @change=${this.#onChange}>
-                ${hasGroups
-                    ? this.#groupFields(this.schema.fields).map(
-                          ([groupName, fields]) =>
-                              html`<uui-box
-                                  headline=${this.localize.string(
-                                      groupName
-                                          ? this.#groupLocalizationKey(groupName)
-                                          : "#uaiGroups_generalLabel",
-                                  )}>
-                                  ${fields.map((f) => this.#renderField(f))}
-                              </uui-box>`,
-                      )
-                    : this.schema.fields.map((f) => this.#renderField(f))}
+                ${this.#groupFields(this.schema.fields).map(
+                    ([groupKey, fields]) =>
+                        html`<uui-box headline=${this.localize.string(groupKey)}>
+                            ${fields.map((f) => this.#renderField(f))}
+                        </uui-box>`,
+                )}
             </umb-property-dataset>
         `;
     }

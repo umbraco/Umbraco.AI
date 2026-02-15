@@ -148,6 +148,16 @@ export class UaiModelEditorElement extends UmbLitElement {
     }
 
     /**
+     * Constructs a localization key for a group name.
+     * Converts PascalCase group names to camelCase localization keys.
+     * e.g., "Advanced" → "#uaiGroups_advancedLabel"
+     */
+    #groupLocalizationKey(group: string): string {
+        const camelCase = group.charAt(0).toLowerCase() + group.slice(1);
+        return `#uaiGroups_${camelCase}Label`;
+    }
+
+    /**
      * Groups fields by their group property.
      * Returns an array of [groupName, fields] tuples where groupName is null for ungrouped fields.
      * Ungrouped fields always appear first, followed by named groups in declaration order.
@@ -213,7 +223,11 @@ export class UaiModelEditorElement extends UmbLitElement {
                     ? this.#groupFields(this.schema.fields).map(
                           ([groupName, fields]) =>
                               html`<uui-box
-                                  headline=${this.localize.string(groupName ?? "#uaiGroups_generalLabel")}>
+                                  headline=${this.localize.string(
+                                      groupName
+                                          ? this.#groupLocalizationKey(groupName)
+                                          : "#uaiGroups_generalLabel",
+                                  )}>
                                   ${fields.map((f) => this.#renderField(f))}
                               </uui-box>`,
                       )

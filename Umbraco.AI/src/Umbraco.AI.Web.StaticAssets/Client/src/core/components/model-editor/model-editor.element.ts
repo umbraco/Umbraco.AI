@@ -1,8 +1,8 @@
-import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UmbPropertyValueData, UmbPropertyDatasetElement } from "@umbraco-cms/backoffice/property";
-import type { UaiEditableModelSchemaModel } from "../../types.js";
+import type { UaiEditableModelFieldModel, UaiEditableModelSchemaModel } from "../../types.js";
 
 /**
  * Event detail for model editor value changes.
@@ -147,6 +147,42 @@ export class UaiModelEditorElement extends UmbLitElement {
         return Object.entries(config).map(([alias, value]) => ({ alias, value }));
     }
 
+    /**
+     * Groups fields by their group property.
+     * Returns an array of [groupName, fields] tuples where groupName is null for ungrouped fields.
+     * Preserves declaration order of groups (first occurrence determines position).
+     */
+    #groupFields(fields: UaiEditableModelFieldModel[]): Array<[string | null, UaiEditableModelFieldModel[]]> {
+        const groups = new Map<string | null, UaiEditableModelFieldModel[]>();
+        for (const field of fields) {
+            const group = field.group ?? null;
+            if (!groups.has(group)) {
+                groups.set(group, []);
+            }
+            groups.get(group)!.push(field);
+        }
+        return Array.from(groups.entries());
+    }
+
+    #renderField(field: UaiEditableModelFieldModel) {
+        return html`
+            <umb-property
+                label=${this.localize.string(field.label)}
+                description=${this.localize.string(field.description ?? "")}
+                alias=${field.key}
+                property-editor-ui-alias=${field.editorUiAlias ?? "Umb.PropertyEditorUi.TextBox"}
+                .config=${field.editorConfig ? this.#toPropertyConfig(field.editorConfig) : []}
+                .validation=${{
+                    mandatory: field.isRequired,
+                    mandatoryMessage: field.isRequired
+                        ? this.localize.string("This field is required")
+                        : undefined,
+                }}
+            >
+            </umb-property>
+        `;
+    }
+
     override render() {
         if (!this.schema) {
             return html`<uui-loader-bar></uui-loader-bar>`;
@@ -156,26 +192,19 @@ export class UaiModelEditorElement extends UmbLitElement {
             return html` <p class="placeholder-text">${this.emptyMessage ?? "No configurable fields."}</p> `;
         }
 
+        const hasGroups = this.schema.fields.some((f) => f.group);
+
         return html`
             <umb-property-dataset .value=${this._propertyValues} @change=${this.#onChange}>
-                ${this.schema.fields.map(
-                    (field) => html`
-                        <umb-property
-                            label=${this.localize.string(field.label)}
-                            description=${this.localize.string(field.description ?? "")}
-                            alias=${field.key}
-                            property-editor-ui-alias=${field.editorUiAlias ?? "Umb.PropertyEditorUi.TextBox"}
-                            .config=${field.editorConfig ? this.#toPropertyConfig(field.editorConfig) : []}
-                            .validation=${{
-                                mandatory: field.isRequired,
-                                mandatoryMessage: field.isRequired
-                                    ? this.localize.string("This field is required")
-                                    : undefined,
-                            }}
-                        >
-                        </umb-property>
-                    `,
-                )}
+                ${hasGroups
+                    ? this.#groupFields(this.schema.fields).map(([groupName, fields]) =>
+                          groupName
+                              ? html`<uui-box headline=${this.localize.string(groupName)}>
+                                    ${fields.map((f) => this.#renderField(f))}
+                                </uui-box>`
+                              : fields.map((f) => this.#renderField(f)),
+                      )
+                    : this.schema.fields.map((f) => this.#renderField(f))}
             </umb-property-dataset>
         `;
     }
@@ -192,6 +221,11 @@ export class UaiModelEditorElement extends UmbLitElement {
                 padding: var(--uui-size-space-5) 0;
                 color: var(--uui-color-text-alt);
                 font-style: italic;
+            }
+
+            uui-box {
+                --uui-box-default-padding: 0 var(--uui-size-space-5);
+                margin-top: var(--uui-size-layout-1);
             }
         `,
     ];

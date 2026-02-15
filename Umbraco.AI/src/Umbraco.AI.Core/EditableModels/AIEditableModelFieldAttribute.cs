@@ -42,6 +42,13 @@ public class AIEditableModelFieldAttribute : Attribute
     /// When true, the field value will be encrypted during persistence and the UI may mask the value.
     /// </summary>
     public bool IsSensitive { get; set; }
+
+    /// <summary>
+    /// Optional group name used to visually group related fields in the UI.
+    /// Fields with the same group name are rendered together in a separate section.
+    /// The value can be a literal string or a localization key (prefixed with #).
+    /// </summary>
+    public string? Group { get; set; }
 }
 
 /// <summary>

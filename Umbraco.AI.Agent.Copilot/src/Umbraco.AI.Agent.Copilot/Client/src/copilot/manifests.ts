@@ -34,14 +34,15 @@ export const copilotSectionManifests: Array<ManifestUaiCopilotCompatibleSection>
 
 /**
  * Copilot-specific request context contributors.
- * The surface contributor identifies the copilot surface to the backend.
+ * Uses the "surface" kind from Agent.UI — only meta.surface is needed.
  */
 export const copilotRequestContextManifests: ManifestUaiRequestContextContributor[] = [
     {
         type: "uaiRequestContextContributor",
+        kind: "surface",
         alias: "UmbracoAI.Copilot.RequestContextContributor.Surface",
         name: "Copilot Surface Request Context Contributor",
-        api: () => import("./contributors/surface.contributor.js"),
+        meta: { surface: "copilot" },
         weight: 50,
     },
 ];

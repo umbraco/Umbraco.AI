@@ -48,8 +48,11 @@ export interface UaiRequestContextContributorApi extends UmbApi {
 	 * Add items via `context.add(item)`. No-op to contribute nothing.
 	 *
 	 * @param context The mutable request context to contribute to.
+	 * @param meta Optional manifest meta – passed from the manifest's `meta`
+	 *             property so kind-based contributors can read configuration
+	 *             without hardcoding values.
 	 */
-	contribute(context: UaiRequestContext): Promise<void>;
+	contribute(context: UaiRequestContext, meta?: Record<string, unknown>): Promise<void>;
 }
 
 /**
@@ -73,10 +76,21 @@ export interface UaiRequestContextContributorApi extends UmbApi {
  *     api: () => import("./section.contributor.js"),
  *     weight: 100,
  * };
+ *
+ * // Kind-based contributor (api provided by kind, meta configures it)
+ * const surfaceManifest: ManifestUaiRequestContextContributor = {
+ *     type: "uaiRequestContextContributor",
+ *     kind: "surface",
+ *     alias: "UmbracoAI.Copilot.RequestContextContributor.Surface",
+ *     name: "Copilot Surface Request Context Contributor",
+ *     meta: { surface: "copilot" },
+ * };
  * ```
  */
 export interface ManifestUaiRequestContextContributor extends ManifestApi<UaiRequestContextContributorApi> {
 	type: typeof UAI_REQUEST_CONTEXT_CONTRIBUTOR_EXTENSION_TYPE;
+	/** Optional metadata passed to the contributor's `contribute()` method. */
+	meta?: Record<string, unknown>;
 }
 
 declare global {

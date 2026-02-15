@@ -45,7 +45,7 @@ export class UaiRequestContextCollector extends UmbControllerBase {
 			try {
 				const api = await this.#getOrLoadApi(manifest);
 				if (api) {
-					await api.contribute(context);
+					await api.contribute(context, manifest.meta);
 				}
 			} catch (e) {
 				console.error(`[UaiRequestContextCollector] Contributor ${manifest.alias} failed:`, e);

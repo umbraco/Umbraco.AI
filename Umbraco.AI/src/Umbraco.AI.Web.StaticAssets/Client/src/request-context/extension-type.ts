@@ -80,9 +80,9 @@ export interface UaiRequestContextContributorApi extends UmbApi {
  * // Kind-based contributor (api provided by kind, meta configures it)
  * const surfaceManifest: ManifestUaiRequestContextContributor = {
  *     type: "uaiRequestContextContributor",
- *     kind: "surface",
- *     alias: "UmbracoAI.Copilot.RequestContextContributor.Surface",
- *     name: "Copilot Surface Request Context Contributor",
+ *     kind: "agentSurface",
+ *     alias: "UmbracoAI.Copilot.RequestContextContributor.AgentSurface",
+ *     name: "Copilot Agent Surface Request Context Contributor",
  *     meta: { surface: "copilot" },
  * };
  * ```

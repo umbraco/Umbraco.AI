@@ -1,23 +1,23 @@
 import type { UaiRequestContextContributorApi, UaiRequestContext } from "@umbraco-ai/core";
 /**
- * Generic surface request context contributor.
+ * Generic agent surface request context contributor.
  *
  * Reads the surface name from the manifest's `meta.surface` and
- * contributes a surface context item. Reusable by any chat surface
- * via the `kind: "surface"` manifest kind.
+ * contributes an agent surface context item. Reusable by any chat surface
+ * via the `kind: "agentSurface"` manifest kind.
  *
  * @example Registration via kind:
  * ```typescript
  * const manifest: ManifestUaiRequestContextContributor = {
  *     type: "uaiRequestContextContributor",
- *     kind: "surface",
+ *     kind: "agentSurface",
  *     alias: "UmbracoAI.Copilot.RequestContextContributor.Surface",
- *     name: "Copilot Surface Contributor",
+ *     name: "Copilot Agent Surface Contributor",
  *     meta: { surface: "copilot" },
  * };
  * ```
  */
-export default class UaiSurfaceRequestContextContributor implements UaiRequestContextContributorApi {
+export default class UaiAgentSurfaceRequestContextContributor implements UaiRequestContextContributorApi {
     contribute(context: UaiRequestContext, meta?: Record<string, unknown>): Promise<void>;
     destroy(): void;
 }

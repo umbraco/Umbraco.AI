@@ -5,6 +5,7 @@ using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Tests.Unit.Services;
 
@@ -13,12 +14,14 @@ public class AIConnectionServiceTests
     private readonly Mock<IAIConnectionRepository> _repositoryMock;
     private readonly Mock<IAIEditableModelResolver> _settingsResolverMock;
     private readonly Mock<IAIEntityVersionService> _versionServiceMock;
+    private readonly Mock<IEventAggregator> _eventAggregatorMock;
 
     public AIConnectionServiceTests()
     {
         _repositoryMock = new Mock<IAIConnectionRepository>();
         _settingsResolverMock = new Mock<IAIEditableModelResolver>();
         _versionServiceMock = new Mock<IAIEntityVersionService>();
+        _eventAggregatorMock = new Mock<IEventAggregator>();
     }
 
     private AIConnectionService CreateService(params IAIProvider[] providers)
@@ -28,7 +31,8 @@ public class AIConnectionServiceTests
             _repositoryMock.Object,
             collection,
             _settingsResolverMock.Object,
-            _versionServiceMock.Object);
+            _versionServiceMock.Object,
+            _eventAggregatorMock.Object);
     }
 
     #region GetConnectionAsync

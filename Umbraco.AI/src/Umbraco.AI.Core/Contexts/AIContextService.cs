@@ -21,7 +21,7 @@ internal sealed class AIContextService : IAIContextService
     /// </summary>
     /// <param name="repository">The context repository.</param>
     /// <param name="versionService">The unified versioning service.</param>
-    /// <param name="notificationPublisher">The notification publisher.</param>
+    /// <param name="eventAggregator">The event aggregator for publishing notifications.</param>
     /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user tracking.</param>
     public AIContextService(
         IAIContextRepository repository,

@@ -192,7 +192,8 @@ public class AIProfileServiceTests
             _repositoryMock.Object,
             emptySettingsService.Object,
             optionsWithNullAlias.Object,
-            _versionServiceMock.Object);
+            _versionServiceMock.Object,
+            _eventAggregatorMock.Object);
 
         // Act
         var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AICapability.Chat);

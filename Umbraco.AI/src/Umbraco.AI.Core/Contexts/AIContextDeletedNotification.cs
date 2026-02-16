@@ -1,0 +1,16 @@
+using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Models.Notifications;
+using Umbraco.Cms.Core.Events;
+
+namespace Umbraco.AI.Core.Contexts;
+
+/// <summary>
+/// Published after an AIContext is deleted (not cancelable).
+/// </summary>
+public sealed class AIContextDeletedNotification : AIEntityDeletedNotification<AIContext>
+{
+    public AIContextDeletedNotification(Guid entityId, EventMessages messages)
+        : base(entityId, messages)
+    {
+    }
+}

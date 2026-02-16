@@ -109,8 +109,9 @@ export class UaiPromptController extends UmbControllerBase {
             );
 
             if (error) {
+                const detail = (error as any)?.detail;
                 return {
-                    error: error instanceof Error ? error : new Error("Failed to execute prompt"),
+                    error: error instanceof Error ? error : new Error(`Failed to execute prompt${detail ? `: ${detail}` : ""}`),
                 };
             }
 

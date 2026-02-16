@@ -195,7 +195,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 <div class="error-container">
                     <uui-icon name="icon-alert"></uui-icon>
                     <span>${this._error}</span>
-                    <uui-button label="Retry" look="secondary" compact @click=${this.#onRetry}> Retry </uui-button>
+                    <uui-button label="Retry" look="secondary" compact @click=${this.#onRetry}>
+                        <uui-icon name="icon-sync"></uui-icon>
+                    </uui-button>
                 </div>
             `;
         }

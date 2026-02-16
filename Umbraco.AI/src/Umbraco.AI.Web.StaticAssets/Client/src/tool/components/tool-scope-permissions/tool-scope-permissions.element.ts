@@ -229,7 +229,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
                     </div>
                     <div class="scope-description">${scope.description}</div>
                 </label>
-                <uui-tag look="secondary" style="margin-right: var(--uui-size-space-4)">${toolCountLabel}</uui-tag>
+                <uui-tag look="secondary" style="margin-right: var(--uui-size-space-2)">${toolCountLabel}</uui-tag>
             </div>
         `;
     }

@@ -10,6 +10,16 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 public sealed class AIAgentExecutedNotification : StatefulNotification
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIAgentExecutedNotification"/> class.
+    /// </summary>
+    /// <param name="agent">The agent that was executed.</param>
+    /// <param name="request">The execution run request.</param>
+    /// <param name="frontendTools">The frontend tools provided for this execution.</param>
+    /// <param name="duration">The execution duration.</param>
+    /// <param name="isSuccess">Whether the execution completed successfully.</param>
+    /// <param name="error">The error that occurred during execution, if any.</param>
+    /// <param name="messages">Event messages from the execution operation.</param>
     public AIAgentExecutedNotification(
         AIAgent agent,
         AGUIRunRequest request,

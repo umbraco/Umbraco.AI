@@ -10,6 +10,13 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 public sealed class AIAgentExecutingNotification : CancelableNotification
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIAgentExecutingNotification"/> class.
+    /// </summary>
+    /// <param name="agent">The agent being executed.</param>
+    /// <param name="request">The execution run request.</param>
+    /// <param name="frontendTools">The frontend tools provided for this execution.</param>
+    /// <param name="messages">Event messages for cancellation reasons.</param>
     public AIAgentExecutingNotification(
         AIAgent agent,
         AGUIRunRequest request,

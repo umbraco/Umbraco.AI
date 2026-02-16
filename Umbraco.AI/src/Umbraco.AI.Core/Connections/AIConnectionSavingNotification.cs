@@ -9,6 +9,11 @@ namespace Umbraco.AI.Core.Connections;
 /// </summary>
 public sealed class AIConnectionSavingNotification : AIEntitySavingNotification<AIConnection>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIConnectionSavingNotification"/> class.
+    /// </summary>
+    /// <param name="entity">The connection being saved.</param>
+    /// <param name="messages">Event messages for cancellation reasons.</param>
     public AIConnectionSavingNotification(AIConnection entity, EventMessages messages)
         : base(entity, messages)
     {

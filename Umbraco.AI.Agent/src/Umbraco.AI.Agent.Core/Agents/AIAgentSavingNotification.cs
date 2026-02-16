@@ -9,8 +9,12 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 public sealed class AIAgentSavingNotification : AIEntitySavingNotification<AIAgent>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIAgentSavingNotification"/> class.
+    /// </summary>
+    /// <param name="entity">The agent being saved.</param>
+    /// <param name="messages">Event messages for cancellation reasons.</param>
     public AIAgentSavingNotification(AIAgent entity, EventMessages messages)
         : base(entity, messages)
-    {
-    }
+    { }
 }

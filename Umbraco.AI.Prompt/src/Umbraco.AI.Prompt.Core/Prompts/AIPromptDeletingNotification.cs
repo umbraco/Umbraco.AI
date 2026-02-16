@@ -9,6 +9,11 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 public sealed class AIPromptDeletingNotification : AIEntityDeletingNotification<AIPrompt>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIPromptDeletingNotification"/> class.
+    /// </summary>
+    /// <param name="entityId">The ID of the prompt being deleted.</param>
+    /// <param name="messages">Event messages for cancellation reasons.</param>
     public AIPromptDeletingNotification(Guid entityId, EventMessages messages)
         : base(entityId, messages)
     {

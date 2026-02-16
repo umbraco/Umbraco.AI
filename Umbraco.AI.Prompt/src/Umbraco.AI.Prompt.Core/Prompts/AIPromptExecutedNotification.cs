@@ -8,6 +8,13 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 public sealed class AIPromptExecutedNotification : StatefulNotification
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIPromptExecutedNotification"/> class.
+    /// </summary>
+    /// <param name="prompt">The prompt that was executed.</param>
+    /// <param name="request">The execution request context.</param>
+    /// <param name="result">The execution result with response and usage data.</param>
+    /// <param name="messages">Event messages from the execution operation.</param>
     public AIPromptExecutedNotification(
         AIPrompt prompt,
         AIPromptExecutionRequest request,

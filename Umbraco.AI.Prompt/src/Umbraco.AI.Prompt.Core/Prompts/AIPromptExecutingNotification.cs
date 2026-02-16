@@ -8,6 +8,12 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 public sealed class AIPromptExecutingNotification : CancelableNotification
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIPromptExecutingNotification"/> class.
+    /// </summary>
+    /// <param name="prompt">The prompt being executed.</param>
+    /// <param name="request">The execution request context.</param>
+    /// <param name="messages">Event messages for cancellation reasons.</param>
     public AIPromptExecutingNotification(AIPrompt prompt, AIPromptExecutionRequest request, EventMessages messages)
         : base(messages)
     {

@@ -9,6 +9,11 @@ namespace Umbraco.AI.Core.Models.Notifications;
 /// <typeparam name="T">The entity type that was deleted.</typeparam>
 public abstract class AIEntityDeletedNotification<T> : StatefulNotification
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIEntityDeletedNotification{T}"/> class.
+    /// </summary>
+    /// <param name="entityId"></param>
+    /// <param name="messages"></param>
     protected AIEntityDeletedNotification(Guid entityId, EventMessages messages)
     {
         EntityId = entityId;

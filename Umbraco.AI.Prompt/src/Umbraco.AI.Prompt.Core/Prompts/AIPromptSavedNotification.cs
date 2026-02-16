@@ -9,6 +9,11 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 public sealed class AIPromptSavedNotification : AIEntitySavedNotification<AIPrompt>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIPromptSavedNotification"/> class.
+    /// </summary>
+    /// <param name="entity">The prompt that was saved.</param>
+    /// <param name="messages">Event messages from the save operation.</param>
     public AIPromptSavedNotification(AIPrompt entity, EventMessages messages)
         : base(entity, messages)
     {

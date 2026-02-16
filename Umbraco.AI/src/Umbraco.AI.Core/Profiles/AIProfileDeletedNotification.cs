@@ -9,6 +9,11 @@ namespace Umbraco.AI.Core.Profiles;
 /// </summary>
 public sealed class AIProfileDeletedNotification : AIEntityDeletedNotification<AIProfile>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AIProfileDeletedNotification"/> class.
+    /// </summary>
+    /// <param name="entityId">The ID of the profile that was deleted.</param>
+    /// <param name="messages">Event messages from the delete operation.</param>
     public AIProfileDeletedNotification(Guid entityId, EventMessages messages)
         : base(entityId, messages)
     {

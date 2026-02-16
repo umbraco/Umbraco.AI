@@ -21,9 +21,6 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     #abortController?: AbortController;
 
     @state()
-    private _copied = false;
-
-    @state()
     private _loading = false;
 
     @state()

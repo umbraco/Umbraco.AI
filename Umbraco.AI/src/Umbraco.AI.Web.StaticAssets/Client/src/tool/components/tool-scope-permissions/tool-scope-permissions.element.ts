@@ -46,6 +46,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
      */
     override set value(val: string[] | undefined) {
         this._selection = val ? [...val] : [];
+        this.requestUpdate();
     }
     override get value(): string[] | undefined {
         return this._selection.length > 0 ? this._selection : undefined;
@@ -169,6 +170,87 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
         }
     }
 
+    #getTotalScopeCount(): number {
+        return this._groups.reduce((total, group) => total + group.scopes.length, 0);
+    }
+
+    #getSelectAllState(): { checked: boolean; indeterminate: boolean } {
+        const totalScopes = this.#getTotalScopeCount();
+
+        if (totalScopes === 0) {
+            return { checked: false, indeterminate: false };
+        }
+
+        // Count only selected scopes that are actually visible (not filtered out)
+        const visibleScopeIds = new Set(
+            this._groups.flatMap((group) => group.scopes.map((scope) => scope.id))
+        );
+        const visibleSelectedCount = this._selection.filter(id => visibleScopeIds.has(id)).length;
+
+        if (visibleSelectedCount === 0) {
+            return { checked: false, indeterminate: false };
+        } else if (visibleSelectedCount === totalScopes) {
+            return { checked: true, indeterminate: false };
+        } else {
+            return { checked: false, indeterminate: true };
+        }
+    }
+
+    #onSelectAllToggle(event: Event) {
+        if (this.readonly) return;
+
+        const target = event.target as HTMLInputElement;
+        const isChecking = target.checked;
+
+        if (isChecking) {
+            // Select all scopes
+            this._selection = this._groups.flatMap((group) => group.scopes.map((scope) => scope.id));
+        } else {
+            // Deselect all scopes
+            this._selection = [];
+        }
+
+        this.dispatchEvent(new UmbChangeEvent());
+    }
+
+    #handleSelectAllLabelClick() {
+        if (this.readonly) return;
+
+        const state = this.#getSelectAllState();
+        const shouldCheck = !state.checked;
+
+        if (shouldCheck) {
+            // Select all scopes
+            this._selection = this._groups.flatMap((group) => group.scopes.map((scope) => scope.id));
+        } else {
+            // Deselect all scopes
+            this._selection = [];
+        }
+
+        this.dispatchEvent(new UmbChangeEvent());
+    }
+
+    #renderSelectAll() {
+        const state = this.#getSelectAllState();
+
+        return html`
+            <div class="select-all-container">
+                <uui-toggle
+                    ?checked=${state.checked}
+                    ?indeterminate=${state.indeterminate}
+                    ?disabled=${this.readonly}
+                    @change=${this.#onSelectAllToggle}
+                    label=${this.localize.term("uaiToolScopes_selectAll")}
+                >
+                </uui-toggle>
+                <label class="select-all-label" @click=${this.#handleSelectAllLabelClick}>
+                    <div class="select-all-text">${this.localize.term("uaiToolScopes_selectAll")}</div>
+                    <div class="scope-description">${this.localize.term("uaiToolScopes_selectAllDescription")}</div>
+                </label>
+            </div>
+        `;
+    }
+
     override render() {
         if (this._loading) {
             return html`<uui-loader-bar></uui-loader-bar>`;
@@ -180,11 +262,14 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
 
         return html`
             <div class="container">
-                ${repeat(
-                    this._groups,
-                    (group) => group.domain,
-                    (group) => this.#renderGroup(group),
-                )}
+                ${this.#renderSelectAll()}
+                <div class="groups-container">
+                    ${repeat(
+                        this._groups,
+                        (group) => group.domain,
+                        (group) => this.#renderGroup(group),
+                    )}
+                </div>
             </div>
         `;
     }
@@ -241,6 +326,33 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
             }
 
             .container {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .select-all-container {
+                display: flex;
+                gap: var(--uui-size-space-4);
+                align-items: start;
+                padding-bottom: var(--uui-size-space-4);
+                margin-bottom: var(--uui-size-space-5);
+                border-bottom: 2px solid var(--uui-color-emphasis);
+            }
+
+            .select-all-label {
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+                cursor: pointer;
+            }
+
+            .select-all-text {
+                font-weight: 700;
+                font-size: 14px;
+                color: var(--uui-color-text);
+            }
+
+            .groups-container {
                 display: flex;
                 flex-direction: column;
                 gap: var(--uui-size-space-6);
@@ -300,6 +412,10 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
             }
 
             :host([readonly]) .scope-label {
+                cursor: default;
+            }
+
+            :host([readonly]) .select-all-label {
                 cursor: default;
             }
         `,

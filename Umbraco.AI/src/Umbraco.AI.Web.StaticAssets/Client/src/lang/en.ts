@@ -78,6 +78,10 @@ export default {
         fetchWebpageLabel: "Fetch Web Page",
         fetchWebpageDescription: "Fetch and extract text content from a web page",
     },
+    uaiToolScopes: {
+        selectAll: "Select All",
+        selectAllDescription: "Select or deselect all tool permissions at once",
+    },
     uaiAuditLog: {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,
     },

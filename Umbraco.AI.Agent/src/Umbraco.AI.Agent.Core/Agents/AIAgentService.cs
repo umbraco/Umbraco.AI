@@ -358,6 +358,25 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
+        // Publish executing notification (before execution)
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIAgentExecutingNotification(agent, request, frontendTools, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
+            yield return errorEmitter.EmitRunStarted();
+            yield return errorEmitter.EmitError($"Agent execution cancelled: {errorMessages}", "EXECUTION_CANCELLED");
+            yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent execution cancelled: {errorMessages}"));
+            yield break;
+        }
+
+        // Track execution start time
+        var startTime = DateTime.UtcNow;
+
         // 2. Convert AG-UI context and create frontend tools with permission filtering
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
 
@@ -422,11 +441,73 @@ internal sealed class AIAgentService : IAIAgentService
             additionalProperties,
             cancellationToken);
 
-        // 5. Stream via AG-UI streaming service
+        // 5. Stream via AG-UI streaming service and publish executed notification when done
         //    No additionalSystemPrompt needed - ScopedAIAgent handles it
-        await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
+        await foreach (var evt in StreamWithNotificationAsync(
+            agentInst,
+            agent,
+            request,
+            frontendTools,
+            convertedFrontendTools,
+            executingNotification,
+            eventMessages,
+            startTime,
+            cancellationToken))
         {
             yield return evt;
+        }
+    }
+
+    /// <summary>
+    /// Streams agent events and publishes executed notification when complete.
+    /// This method wraps the streaming service to capture execution outcome and duration.
+    /// </summary>
+    private async IAsyncEnumerable<IAGUIEvent> StreamWithNotificationAsync(
+        Microsoft.Agents.AI.AIAgent agentInst,
+        AIAgent agentDefinition,
+        AGUIRunRequest request,
+        IEnumerable<AIFrontendTool>? frontendTools,
+        IList<AITool>? convertedFrontendTools,
+        AIAgentExecutingNotification executingNotification,
+        EventMessages eventMessages,
+        DateTime startTime,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        Exception? executionError = null;
+        bool streamCompleted = false;
+
+        try
+        {
+            await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
+            {
+                yield return evt;
+            }
+            streamCompleted = true;
+        }
+        finally
+        {
+            // Calculate duration
+            var duration = DateTime.UtcNow - startTime;
+
+            // Capture exception if stream didn't complete
+            if (!streamCompleted)
+            {
+                // Exception context is available but we don't have direct access to it here
+                // The exception will propagate after finally completes
+            }
+
+            // Publish executed notification (after execution completes or fails)
+            var executedNotification = new AIAgentExecutedNotification(
+                agentDefinition,
+                request,
+                frontendTools,
+                duration,
+                streamCompleted, // isSuccess based on whether stream completed
+                executionError,
+                eventMessages)
+                .WithStateFrom(executingNotification);
+
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
         }
     }
 }

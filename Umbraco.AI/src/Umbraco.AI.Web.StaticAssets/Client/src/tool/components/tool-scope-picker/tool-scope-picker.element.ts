@@ -3,7 +3,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UaiToolRepository, type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import { type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import { UaiToolController } from "../../controllers/tool.controller.js";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
 import { toCamelCase } from "../../utils.js";
@@ -45,6 +46,12 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
     public readonly = false;
 
     /**
+     * Hide scopes that have no tools.
+     */
+    @property({ type: Boolean })
+    hideEmptyScopes = false;
+
+    /**
      * The selected tool scope ID(s).
      */
     override set value(val: string[] | undefined) {
@@ -64,7 +71,15 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
     @state()
     private _loading = false;
 
-    #toolRepository = new UaiToolRepository(this);
+    @state()
+    private _toolCounts: Record<string, number> = {};
+
+    #toolController = new UaiToolController(this);
+
+    override async connectedCallback() {
+        super.connectedCallback();
+        this._toolCounts = await this.#toolController.getToolCountsByScope();
+    }
 
     #setValue(val: string[] | undefined) {
         const newSelection = val ?? [];
@@ -96,7 +111,7 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
 
         this._loading = true;
 
-        const { data, error } = await this.#toolRepository.getToolScopes();
+        const { data, error } = await this.#toolController.getToolScopes();
 
         if (!error && data) {
             // Preserve selection order
@@ -109,10 +124,11 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                     const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
                     const localizedDescription =
                         this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
+                    const toolCount = this._toolCounts[scope.id] ?? 0;
 
                     return {
                         id: scope.id,
-                        name: localizedName,
+                        name: `${localizedName} (${toolCount})`,
                         description: localizedDescription,
                         domain: scope.domain || "General",
                         icon: scope.icon || "icon-wand",
@@ -148,7 +164,7 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
     }
 
     async #fetchAvailableScopes(): Promise<UaiPickableItemModel[]> {
-        const { data } = await this.#toolRepository.getToolScopes();
+        const { data } = await this.#toolController.getToolScopes();
 
         if (!data) return [];
 
@@ -157,15 +173,19 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
             .filter((scope: ToolScopeItemResponseModel) =>
                 !this._selection.some((id) => id.toLowerCase() === scope.id.toLowerCase())
             )
+            .filter((scope: ToolScopeItemResponseModel) =>
+                !this.hideEmptyScopes || (this._toolCounts[scope.id] ?? 0) > 0
+            )
             .map((scope: ToolScopeItemResponseModel) => {
                 const camelCaseId = toCamelCase(scope.id);
                 const localizedName = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.id;
                 const localizedDescription =
                     this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
+                const toolCount = this._toolCounts[scope.id] ?? 0;
 
                 return {
                     value: scope.id,
-                    label: localizedName,
+                    label: `${localizedName} (${toolCount})`,
                     description: localizedDescription,
                     icon: scope.icon || "icon-wand",
                 };

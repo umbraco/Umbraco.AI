@@ -29,6 +29,10 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 <td><strong>Custom Tools</strong></td>
 <td>Create tools that AI agents can use to perform actions</td>
 </tr>
+<tr>
+<td><strong>Notifications</strong></td>
+<td>Subscribe to entity lifecycle events for validation and automation</td>
+</tr>
 </tbody>
 </table>
 
@@ -52,6 +56,13 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 - You want AI agents to interact with your systems
 - You need to expose business logic to AI
 - You want to enable AI to query databases or APIs
+
+### Subscribe to Notifications When
+
+- You need to validate operations before they execute
+- You want to audit changes for compliance
+- You need to trigger automation in response to events
+- You want to maintain data consistency across systems
 
 ## Architecture Overview
 
@@ -89,4 +100,8 @@ Umbraco.AI is designed to be extensible. You can add support for new AI provider
 
 {% content-ref url="tools/README.md" %}
 [Custom Tools](tools/README.md)
+{% endcontent-ref %}
+
+{% content-ref url="notifications/README.md" %}
+[Notifications](notifications/README.md)
 {% endcontent-ref %}

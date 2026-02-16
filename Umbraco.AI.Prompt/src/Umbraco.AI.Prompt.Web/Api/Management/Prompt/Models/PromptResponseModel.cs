@@ -62,6 +62,11 @@ public class PromptResponseModel
     public bool IncludeEntityContext { get; set; }
 
     /// <summary>
+    /// The number of result options the AI should generate.
+    /// </summary>
+    public int OptionCount { get; set; }
+
+    /// <summary>
     /// Creation timestamp.
     /// </summary>
     public DateTime DateCreated { get; set; }

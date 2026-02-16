@@ -67,6 +67,9 @@ namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("OptionCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid?>("ProfileId")
                         .HasColumnType("TEXT");
 

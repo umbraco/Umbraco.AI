@@ -5,6 +5,8 @@
  * AI tools to interact with Umbraco entities being edited.
  */
 
+import { UmbApi } from "@umbraco-cms/backoffice/extension-api";
+
 /**
  * Represents the identity of an entity being edited.
  * Supports hierarchical relationships via recursive parentContext.
@@ -97,7 +99,7 @@ export interface UaiValueChangeResult {
  * - Serializing entity data for LLM consumption
  * - Applying property changes (optional)
  */
-export interface UaiEntityAdapterApi {
+export interface UaiEntityAdapterApi extends UmbApi {
     readonly entityType: string;
 
     /**

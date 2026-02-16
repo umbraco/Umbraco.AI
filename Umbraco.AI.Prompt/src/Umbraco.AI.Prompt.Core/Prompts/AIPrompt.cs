@@ -63,6 +63,14 @@ public sealed class AIPrompt : IAIVersionableEntity
     public bool IncludeEntityContext { get; set; } = true;
 
     /// <summary>
+    /// The number of result options the AI should generate.
+    /// - 0 = Informational only (no value insertion)
+    /// - 1 = Single value (default)
+    /// - 2+ = Multiple options (user selects one)
+    /// </summary>
+    public int OptionCount { get; set; } = 1;
+
+    /// <summary>
     /// Scope configuration defining where this prompt can run.
     /// Controls both UI display and server-side enforcement.
     /// If null, the prompt is not allowed anywhere (denied by default).

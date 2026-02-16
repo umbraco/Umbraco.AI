@@ -308,6 +308,14 @@ export class UaiDocumentAdapter implements UaiEntityAdapterApi {
             (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16),
         );
     };
+
+    /**
+     * Cleanup method required by UmbApi base type.
+     * Currently no resources to clean up as the adapter is stateless.
+     */
+    destroy(): void {
+        // No cleanup needed - adapter maintains no subscriptions or resources
+    }
 }
 
 export default UaiDocumentAdapter;

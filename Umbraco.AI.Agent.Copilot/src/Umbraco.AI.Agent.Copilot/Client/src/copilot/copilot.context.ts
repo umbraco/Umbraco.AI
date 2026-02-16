@@ -16,9 +16,8 @@ import {
     type UaiAgentItem,
 } from "@umbraco-ai/agent-ui";
 import { UaiCopilotAgentRepository } from "./repository";
-import { UaiEntityAdapterContext, type UaiValueChange, type UaiValueChangeResult } from "@umbraco-ai/core";
+import { UaiEntityAdapterContext, UaiRequestContextCollector, type UaiValueChange, type UaiValueChangeResult } from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
-import { getSectionPathnameFromUrl } from "./context-observer.js";
 
 /**
  * Facade context providing a unified API for all Copilot functionality.
@@ -36,6 +35,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     #hitlContext: UaiHitlContext;
     #entityAdapterContext: UaiEntityAdapterContext;
     #entityContext: UaiCopilotEntityContext;
+    #requestContextCollector: UaiRequestContextCollector;
     #_toolRendererManager: UaiToolRendererManager;
     #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
@@ -116,6 +116,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         const frontendToolManager = new UaiFrontendToolManager(host);
         this.#entityAdapterContext = new UaiEntityAdapterContext(host);
         this.#entityContext = new UaiCopilotEntityContext(host, this.#entityAdapterContext);
+        this.#requestContextCollector = new UaiRequestContextCollector(host);
 
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager: this.#_toolRendererManager,
@@ -223,33 +224,11 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     // ─── Run Actions ───────────────────────────────────────────────────────────
 
     async sendUserMessage(content: string): Promise<void> {
-        const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
-
-        const context: Array<{ description: string; value: string }> = [];
-
-        // Add surface context
-        context.push({
-            description: "surface",
-            value: JSON.stringify({ surface: "copilot" }),
-        });
-
-        // Add section context
-        const currentSection = getSectionPathnameFromUrl();
-        if (currentSection) {
-            context.push({
-                description: `Current section: ${currentSection}`,
-                value: JSON.stringify({ section: currentSection }),
-            });
-        }
-
-        // Add entity context
-        if (entityContext) {
-            context.push({
-                description: `Currently editing ${entityContext.entityType}: ${entityContext.name}`,
-                value: JSON.stringify(entityContext),
-            });
-        }
-
+        const items = await this.#requestContextCollector.collect();
+        const context = items.map((item) => ({
+            description: item.description,
+            value: item.value ?? "",
+        }));
         this.#runController.sendUserMessage(content, context);
     }
 

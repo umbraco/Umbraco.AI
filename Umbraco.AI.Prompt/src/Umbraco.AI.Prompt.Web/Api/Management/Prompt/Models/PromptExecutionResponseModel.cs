@@ -18,8 +18,10 @@ public class PromptExecutionResponseModel
     public UsageModel? Usage { get; init; }
 
     /// <summary>
-    /// Optional value changes to be applied to the entity.
-    /// Returned when the prompt generates structured output for value updates.
+    /// Available result options. Always present, may be empty.
+    /// - Empty array: Informational only
+    /// - Single item: One value to insert
+    /// - Multiple items: User selects one
     /// </summary>
-    public IReadOnlyList<ValueChangeModel>? ValueChanges { get; init; }
+    public required IReadOnlyList<ResultOptionModel> ResultOptions { get; init; }
 }

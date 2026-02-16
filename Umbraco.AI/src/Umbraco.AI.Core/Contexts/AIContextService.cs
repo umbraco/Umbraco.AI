@@ -185,6 +185,18 @@ internal sealed class AIContextService : IAIContextService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish rolling back notification (before rollback)
+        var messages = new EventMessages();
+        var rollingBackNotification = new AIContextRollingBackNotification(contextId, targetVersion, messages);
+        await _eventAggregator.PublishAsync(rollingBackNotification, cancellationToken);
+
+        // Check if cancelled
+        if (rollingBackNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Context rollback cancelled: {errorMessages}");
+        }
+
         // Save the current state to version history before rolling back
         await _versionService.SaveVersionAsync(currentContext, userId, null, cancellationToken);
 
@@ -205,6 +217,13 @@ internal sealed class AIContextService : IAIContextService
             }).ToList(),
         };
 
-        return await _repository.SaveAsync(rolledBackContext, userId, cancellationToken);
+        var savedContext = await _repository.SaveAsync(rolledBackContext, userId, cancellationToken);
+
+        // Publish rolled back notification (after rollback)
+        var rolledBackNotification = new AIContextRolledBackNotification(savedContext, targetVersion, messages)
+            .WithStateFrom(rollingBackNotification);
+        await _eventAggregator.PublishAsync(rolledBackNotification, cancellationToken);
+
+        return savedContext;
     }
 }

@@ -326,6 +326,18 @@ internal sealed class AIConnectionService : IAIConnectionService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish rolling back notification (before rollback)
+        var messages = new EventMessages();
+        var rollingBackNotification = new AIConnectionRollingBackNotification(connectionId, targetVersion, messages);
+        await _eventAggregator.PublishAsync(rollingBackNotification, cancellationToken);
+
+        // Check if cancelled
+        if (rollingBackNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Connection rollback cancelled: {errorMessages}");
+        }
+
         // Save the current state to version history before rolling back
         await _versionService.SaveVersionAsync(currentConnection, userId, null, cancellationToken);
 
@@ -342,7 +354,14 @@ internal sealed class AIConnectionService : IAIConnectionService
             // The repository will handle version increment and dates
         };
 
-        return await _repository.SaveAsync(rolledBackConnection, userId, cancellationToken);
+        var savedConnection = await _repository.SaveAsync(rolledBackConnection, userId, cancellationToken);
+
+        // Publish rolled back notification (after rollback)
+        var rolledBackNotification = new AIConnectionRolledBackNotification(savedConnection, targetVersion, messages)
+            .WithStateFrom(rollingBackNotification);
+        await _eventAggregator.PublishAsync(rolledBackNotification, cancellationToken);
+
+        return savedConnection;
     }
 
     /// <inheritdoc />

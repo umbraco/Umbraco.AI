@@ -217,6 +217,18 @@ internal sealed class AIProfileService : IAIProfileService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish rolling back notification (before rollback)
+        var messages = new EventMessages();
+        var rollingBackNotification = new AIProfileRollingBackNotification(profileId, targetVersion, messages);
+        await _eventAggregator.PublishAsync(rollingBackNotification, cancellationToken);
+
+        // Check if cancelled
+        if (rollingBackNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Profile rollback cancelled: {errorMessages}");
+        }
+
         // Save the current state to version history before rolling back
         await _versionService.SaveVersionAsync(currentProfile, userId, null, cancellationToken);
 
@@ -235,7 +247,14 @@ internal sealed class AIProfileService : IAIProfileService
             // The repository will handle version increment and dates
         };
 
-        return await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
+        var savedProfile = await _repository.SaveAsync(rolledBackProfile, userId, cancellationToken);
+
+        // Publish rolled back notification (after rollback)
+        var rolledBackNotification = new AIProfileRolledBackNotification(savedProfile, targetVersion, messages)
+            .WithStateFrom(rollingBackNotification);
+        await _eventAggregator.PublishAsync(rolledBackNotification, cancellationToken);
+
+        return savedProfile;
     }
 
     /// <inheritdoc />

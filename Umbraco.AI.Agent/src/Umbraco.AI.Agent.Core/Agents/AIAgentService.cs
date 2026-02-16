@@ -14,7 +14,9 @@ using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 using CoreConstants = Umbraco.AI.Core.Constants;
@@ -37,6 +39,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIAgentScopeValidator _scopeValidator;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
+    private readonly INotificationPublisher _notificationPublisher;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -49,6 +52,7 @@ internal sealed class AIAgentService : IAIAgentService
         IAIChatClientFactory chatClientFactory,
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
+        INotificationPublisher notificationPublisher,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -61,6 +65,7 @@ internal sealed class AIAgentService : IAIAgentService
         _chatClientFactory = chatClientFactory;
         _scopeValidator = scopeValidator;
         _surfaceCollection = surfaceCollection;
+        _notificationPublisher = notificationPublisher;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -113,6 +118,18 @@ internal sealed class AIAgentService : IAIAgentService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AIAgentSavingNotification(agent, messages);
+        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Agent save cancelled: {errorMessages}");
+        }
+
         // Save version snapshot of existing entity before update
         var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
         if (existing is not null)
@@ -120,12 +137,42 @@ internal sealed class AIAgentService : IAIAgentService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        return await _repository.SaveAsync(agent, userId, cancellationToken);
+        // Perform save
+        var savedAgent = await _repository.SaveAsync(agent, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AIAgentSavedNotification(savedAgent, messages)
+            .WithStateFrom(savingNotification);
+        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+
+        return savedAgent;
     }
 
     /// <inheritdoc />
-    public Task<bool> DeleteAgentAsync(Guid id, CancellationToken cancellationToken = default)
-        => _repository.DeleteAsync(id, cancellationToken);
+    public async Task<bool> DeleteAgentAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AIAgentDeletingNotification(id, messages);
+        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Agent delete cancelled: {errorMessages}");
+        }
+
+        // Perform delete
+        var result = await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AIAgentDeletedNotification(id, messages)
+            .WithStateFrom(deletingNotification);
+        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
+
+        return result;
+    }
 
     /// <inheritdoc />
     public Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)

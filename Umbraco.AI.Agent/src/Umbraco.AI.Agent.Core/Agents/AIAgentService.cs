@@ -443,39 +443,7 @@ internal sealed class AIAgentService : IAIAgentService
 
         // 5. Stream via AG-UI streaming service and publish executed notification when done
         //    No additionalSystemPrompt needed - ScopedAIAgent handles it
-        await foreach (var evt in StreamWithNotificationAsync(
-            agentInst,
-            agent,
-            request,
-            frontendTools,
-            convertedFrontendTools,
-            executingNotification,
-            eventMessages,
-            startTime,
-            cancellationToken))
-        {
-            yield return evt;
-        }
-    }
-
-    /// <summary>
-    /// Streams agent events and publishes executed notification when complete.
-    /// This method wraps the streaming service to capture execution outcome and duration.
-    /// </summary>
-    private async IAsyncEnumerable<IAGUIEvent> StreamWithNotificationAsync(
-        Microsoft.Agents.AI.AIAgent agentInst,
-        AIAgent agentDefinition,
-        AGUIRunRequest request,
-        IEnumerable<AIFrontendTool>? frontendTools,
-        IList<AITool>? convertedFrontendTools,
-        AIAgentExecutingNotification executingNotification,
-        EventMessages eventMessages,
-        DateTime startTime,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        Exception? executionError = null;
         bool streamCompleted = false;
-
         try
         {
             await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
@@ -489,21 +457,13 @@ internal sealed class AIAgentService : IAIAgentService
             // Calculate duration
             var duration = DateTime.UtcNow - startTime;
 
-            // Capture exception if stream didn't complete
-            if (!streamCompleted)
-            {
-                // Exception context is available but we don't have direct access to it here
-                // The exception will propagate after finally completes
-            }
-
             // Publish executed notification (after execution completes or fails)
             var executedNotification = new AIAgentExecutedNotification(
-                agentDefinition,
+                agent,
                 request,
                 frontendTools,
                 duration,
                 streamCompleted, // isSuccess based on whether stream completed
-                executionError,
                 eventMessages)
                 .WithStateFrom(executingNotification);
 

@@ -18,7 +18,6 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
     /// <param name="frontendTools">The frontend tools provided for this execution.</param>
     /// <param name="duration">The execution duration.</param>
     /// <param name="isSuccess">Whether the execution completed successfully.</param>
-    /// <param name="error">The error that occurred during execution, if any.</param>
     /// <param name="messages">Event messages from the execution operation.</param>
     public AIAgentExecutedNotification(
         AIAgent agent,
@@ -26,7 +25,6 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
         IEnumerable<AIFrontendTool>? frontendTools,
         TimeSpan duration,
         bool isSuccess,
-        Exception? error,
         EventMessages messages)
     {
         Agent = agent;
@@ -34,7 +32,6 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
         FrontendTools = frontendTools;
         Duration = duration;
         IsSuccess = isSuccess;
-        Error = error;
         Messages = messages;
     }
 
@@ -62,11 +59,6 @@ public sealed class AIAgentExecutedNotification : StatefulNotification
     /// Gets whether the execution completed successfully.
     /// </summary>
     public bool IsSuccess { get; }
-
-    /// <summary>
-    /// Gets the error that occurred during execution, if any.
-    /// </summary>
-    public Exception? Error { get; }
 
     /// <summary>
     /// Gets the event messages.

@@ -162,6 +162,7 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                             class="option-card ${this._selectedOptionIndex === index ? "selected" : ""} copy-container"
                             @click=${() => this.#onOptionSelect(index)}
                         >
+                            <umb-icon name="icon-wand color-blue" class="option-icon"></umb-icon>
                             <div class="option-content">
                                 <div class="option-value">${option.displayValue}</div>
                                 <div class="option-label">
@@ -182,11 +183,14 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
     #renderSingleOption() {
         return html`
             <div class="response-content copy-container">
+                <umb-icon name="icon-wand color-blue" class="option-icon"></umb-icon>
                 <div style="white-space: pre-wrap;word-break: break-word;">${this._response}</div>
                 ${this.#renderCopyButton(this._response)}
             </div>
         `;
     }
+
+
 
     #renderResponse() {
         if (this._error) {
@@ -325,6 +329,9 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             }
 
             .response-content {
+                display: flex;
+                gap: var(--uui-size-space-3);
+                align-items: flex-start;
                 margin: 0;
                 font-family: var(--uui-font-family);
                 font-size: var(--uui-type-default-size);
@@ -399,6 +406,8 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
                 border-radius: var(--uui-border-radius);
                 cursor: pointer;
                 transition: all 0.2s;
+                gap: var(--uui-size-space-3);
+                align-items: flex-start;
             }
 
             .option-card:hover {
@@ -408,6 +417,10 @@ export class UaiPromptPreviewModalElement extends UmbModalBaseElement<
             .option-card.selected {
                 border-color: var(--uui-color-focus);
                 border-width: 2px;
+            }
+
+            .option-icon {
+                margin-top: var(--uui-size-space-1);
             }
 
             .option-content {

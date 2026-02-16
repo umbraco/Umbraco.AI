@@ -15,21 +15,21 @@ internal sealed class AIProfileService : IAIProfileService
     private readonly AIOptions _options;
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
-    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIProfileService(
         IAIProfileRepository repository,
         IAISettingsService settingsService,
         IOptions<AIOptions> options,
         IAIEntityVersionService versionService,
-        INotificationPublisher notificationPublisher,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _settingsService = settingsService;
         _options = options.Value;
         _versionService = versionService;
-        _notificationPublisher = notificationPublisher;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -126,7 +126,7 @@ internal sealed class AIProfileService : IAIProfileService
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIProfileSavingNotification(profile, messages);
-        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
 
         // Check if cancelled
         if (savingNotification.Cancel)
@@ -148,7 +148,7 @@ internal sealed class AIProfileService : IAIProfileService
         // Publish saved notification (after save)
         var savedNotification = new AIProfileSavedNotification(savedProfile, messages)
             .WithStateFrom(savingNotification);
-        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
 
         return savedProfile;
     }
@@ -160,7 +160,7 @@ internal sealed class AIProfileService : IAIProfileService
         // Publish deleting notification (before delete)
         var messages = new EventMessages();
         var deletingNotification = new AIProfileDeletingNotification(id, messages);
-        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
 
         // Check if cancelled
         if (deletingNotification.Cancel)
@@ -178,7 +178,7 @@ internal sealed class AIProfileService : IAIProfileService
         // Publish deleted notification (after delete)
         var deletedNotification = new AIProfileDeletedNotification(id, messages)
             .WithStateFrom(deletingNotification);
-        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
 
         return result;
     }

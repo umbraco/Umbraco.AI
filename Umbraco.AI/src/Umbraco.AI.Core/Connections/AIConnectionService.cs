@@ -18,21 +18,21 @@ internal sealed class AIConnectionService : IAIConnectionService
     private readonly IAIEditableModelResolver _modelResolver;
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
-    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIConnectionService(
         IAIConnectionRepository repository,
         AIProviderCollection providers,
         IAIEditableModelResolver modelResolver,
         IAIEntityVersionService versionService,
-        INotificationPublisher notificationPublisher,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _providers = providers;
         _modelResolver = modelResolver;
         _versionService = versionService;
-        _notificationPublisher = notificationPublisher;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -114,7 +114,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIConnectionSavingNotification(connection, messages);
-        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
 
         // Check if cancelled
         if (savingNotification.Cancel)
@@ -136,7 +136,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         // Publish saved notification (after save)
         var savedNotification = new AIConnectionSavedNotification(savedConnection, messages)
             .WithStateFrom(savingNotification);
-        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
 
         return savedConnection;
     }
@@ -156,7 +156,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         // Publish deleting notification (before delete)
         var messages = new EventMessages();
         var deletingNotification = new AIConnectionDeletingNotification(id, messages);
-        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
 
         // Check if cancelled
         if (deletingNotification.Cancel)
@@ -174,7 +174,7 @@ internal sealed class AIConnectionService : IAIConnectionService
         // Publish deleted notification (after delete)
         var deletedNotification = new AIConnectionDeletedNotification(id, messages)
             .WithStateFrom(deletingNotification);
-        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
     }
 
     /// <inheritdoc />

@@ -39,7 +39,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIAgentScopeValidator _scopeValidator;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
-    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -52,7 +52,7 @@ internal sealed class AIAgentService : IAIAgentService
         IAIChatClientFactory chatClientFactory,
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
-        INotificationPublisher notificationPublisher,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -65,7 +65,7 @@ internal sealed class AIAgentService : IAIAgentService
         _chatClientFactory = chatClientFactory;
         _scopeValidator = scopeValidator;
         _surfaceCollection = surfaceCollection;
-        _notificationPublisher = notificationPublisher;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -121,7 +121,7 @@ internal sealed class AIAgentService : IAIAgentService
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIAgentSavingNotification(agent, messages);
-        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
 
         // Check if cancelled
         if (savingNotification.Cancel)
@@ -143,7 +143,7 @@ internal sealed class AIAgentService : IAIAgentService
         // Publish saved notification (after save)
         var savedNotification = new AIAgentSavedNotification(savedAgent, messages)
             .WithStateFrom(savingNotification);
-        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
 
         return savedAgent;
     }
@@ -154,7 +154,7 @@ internal sealed class AIAgentService : IAIAgentService
         // Publish deleting notification (before delete)
         var messages = new EventMessages();
         var deletingNotification = new AIAgentDeletingNotification(id, messages);
-        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
 
         // Check if cancelled
         if (deletingNotification.Cancel)
@@ -169,7 +169,7 @@ internal sealed class AIAgentService : IAIAgentService
         // Publish deleted notification (after delete)
         var deletedNotification = new AIAgentDeletedNotification(id, messages)
             .WithStateFrom(deletingNotification);
-        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
 
         return result;
     }

@@ -29,7 +29,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly IAIRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AIRuntimeContextContributorCollection _contextContributors;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
-    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIPromptService(
         IAIPromptRepository repository,
@@ -41,7 +41,7 @@ internal sealed class AIPromptService : IAIPromptService
         IAIFunctionFactory functionFactory,
         IAIRuntimeContextScopeProvider runtimeContextScopeProvider,
         AIRuntimeContextContributorCollection contextContributors,
-        INotificationPublisher notificationPublisher,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -53,7 +53,7 @@ internal sealed class AIPromptService : IAIPromptService
         _functionFactory = functionFactory;
         _runtimeContextScopeProvider = runtimeContextScopeProvider;
         _contextContributors = contextContributors;
-        _notificationPublisher = notificationPublisher;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -113,7 +113,7 @@ internal sealed class AIPromptService : IAIPromptService
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIPromptSavingNotification(prompt, messages);
-        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
 
         // Check if cancelled
         if (savingNotification.Cancel)
@@ -135,7 +135,7 @@ internal sealed class AIPromptService : IAIPromptService
         // Publish saved notification (after save)
         var savedNotification = new AIPromptSavedNotification(savedPrompt, messages)
             .WithStateFrom(savingNotification);
-        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
 
         return savedPrompt;
     }
@@ -146,7 +146,7 @@ internal sealed class AIPromptService : IAIPromptService
         // Publish deleting notification (before delete)
         var messages = new EventMessages();
         var deletingNotification = new AIPromptDeletingNotification(id, messages);
-        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
 
         // Check if cancelled
         if (deletingNotification.Cancel)
@@ -161,7 +161,7 @@ internal sealed class AIPromptService : IAIPromptService
         // Publish deleted notification (after delete)
         var deletedNotification = new AIPromptDeletedNotification(id, messages)
             .WithStateFrom(deletingNotification);
-        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
 
         return result;
     }

@@ -14,7 +14,7 @@ internal sealed class AIContextService : IAIContextService
     private readonly IAIContextRepository _repository;
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
-    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IEventAggregator _eventAggregator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIContextService"/> class.
@@ -26,12 +26,12 @@ internal sealed class AIContextService : IAIContextService
     public AIContextService(
         IAIContextRepository repository,
         IAIEntityVersionService versionService,
-        INotificationPublisher notificationPublisher,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _versionService = versionService;
-        _notificationPublisher = notificationPublisher;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -85,7 +85,7 @@ internal sealed class AIContextService : IAIContextService
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIContextSavingNotification(context, messages);
-        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
 
         // Check if cancelled
         if (savingNotification.Cancel)
@@ -107,7 +107,7 @@ internal sealed class AIContextService : IAIContextService
         // Publish saved notification (after save)
         var savedNotification = new AIContextSavedNotification(savedContext, messages)
             .WithStateFrom(savingNotification);
-        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
 
         return savedContext;
     }
@@ -118,7 +118,7 @@ internal sealed class AIContextService : IAIContextService
         // Publish deleting notification (before delete)
         var messages = new EventMessages();
         var deletingNotification = new AIContextDeletingNotification(id, messages);
-        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
 
         // Check if cancelled
         if (deletingNotification.Cancel)
@@ -136,7 +136,7 @@ internal sealed class AIContextService : IAIContextService
         // Publish deleted notification (after delete)
         var deletedNotification = new AIContextDeletedNotification(id, messages)
             .WithStateFrom(deletingNotification);
-        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
 
         return result;
     }

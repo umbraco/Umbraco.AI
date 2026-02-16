@@ -142,14 +142,14 @@ export class UaiResourceOptionsModalElement extends UmbModalBaseElement<
                         </umb-property-layout>
                     </uui-box>
 
-                    <uui-box headline="Data">
-                        <uai-model-editor
-                            .schema=${this.data?.resourceType?.dataSchema}
-                            .model=${this._resourceData}
-                            @change=${this.#onDataChange}
-                        >
-                        </uai-model-editor>
-                    </uui-box>
+                    <uai-model-editor
+                        .schema=${this.data?.resourceType?.dataSchema}
+                        .model=${this._resourceData}
+                        @change=${this.#onDataChange}
+                        default-group="#uaiFieldGroups_dataLabel"
+                        style="margin-top: var(--uui-size-layout-1);"
+                    >
+                    </uai-model-editor>
                 </div>
                 <div slot="actions">
                     <uui-button label="Cancel" @click=${this.#handleCancel}> Cancel </uui-button>

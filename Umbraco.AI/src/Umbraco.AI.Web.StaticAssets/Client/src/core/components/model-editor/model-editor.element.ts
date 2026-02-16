@@ -46,6 +46,12 @@ export class UaiModelEditorElement extends UmbLitElement {
     @property({ type: String, attribute: "empty-message" })
     emptyMessage?: string;
 
+    /**
+     * Placeholder text shown when the schema has no fields.
+     */
+    @property({ type: String, attribute: "default-group" })
+    defaultGroup?: string;
+
     @state()
     private _propertyValues: UmbPropertyValueData[] = [];
 
@@ -153,7 +159,7 @@ export class UaiModelEditorElement extends UmbLitElement {
      * followed by named groups in declaration order.
      */
     #groupFields(fields: UaiEditableModelFieldModel[]): Array<[string, UaiEditableModelFieldModel[]]> {
-        const generalKey = "#uaiFieldGroups_generalLabel";
+        const generalKey = this.defaultGroup ?? "#uaiFieldGroups_generalLabel";
         const groups = new Map<string, UaiEditableModelFieldModel[]>();
         groups.set(generalKey, []);
 

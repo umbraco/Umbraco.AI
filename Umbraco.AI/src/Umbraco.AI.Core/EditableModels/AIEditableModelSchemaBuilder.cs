@@ -58,7 +58,7 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
             ValidationRules = InferValidationAttributes(property),
             SortOrder = attr?.SortOrder ?? 0,
             IsSensitive = attr?.IsSensitive ?? false,
-            Group = (attr?.Group).IsNullOrWhiteSpace() ? "#uaiFieldGroups_generalLabel" :
+            Group = (attr?.Group).IsNullOrWhiteSpace() ? null :
                 attr.Group.StartsWith("#") ? attr.Group :  $"#uaiFieldGroups_{attr.Group.ToCamelCase()}Label"
         };
     }

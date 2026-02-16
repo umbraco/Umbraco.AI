@@ -5,7 +5,9 @@ using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Extensions;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 using AIValueChange = Umbraco.AI.Core.EntityAdapter.AIValueChange;
 using CoreConstants = Umbraco.AI.Core.Constants;
@@ -27,6 +29,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly IAIRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AIRuntimeContextContributorCollection _contextContributors;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly INotificationPublisher _notificationPublisher;
 
     public AIPromptService(
         IAIPromptRepository repository,
@@ -38,6 +41,7 @@ internal sealed class AIPromptService : IAIPromptService
         IAIFunctionFactory functionFactory,
         IAIRuntimeContextScopeProvider runtimeContextScopeProvider,
         AIRuntimeContextContributorCollection contextContributors,
+        INotificationPublisher notificationPublisher,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -49,6 +53,7 @@ internal sealed class AIPromptService : IAIPromptService
         _functionFactory = functionFactory;
         _runtimeContextScopeProvider = runtimeContextScopeProvider;
         _contextContributors = contextContributors;
+        _notificationPublisher = notificationPublisher;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -105,6 +110,18 @@ internal sealed class AIPromptService : IAIPromptService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AIPromptSavingNotification(prompt, messages);
+        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Prompt save cancelled: {errorMessages}");
+        }
+
         // Save version snapshot of existing entity before update
         var existing = await _repository.GetByIdAsync(prompt.Id, cancellationToken);
         if (existing is not null)
@@ -112,12 +129,42 @@ internal sealed class AIPromptService : IAIPromptService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        return await _repository.SaveAsync(prompt, userId, cancellationToken);
+        // Perform save
+        var savedPrompt = await _repository.SaveAsync(prompt, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AIPromptSavedNotification(savedPrompt, messages)
+            .WithStateFrom(savingNotification);
+        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+
+        return savedPrompt;
     }
 
     /// <inheritdoc />
-    public Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default)
-        => _repository.DeleteAsync(id, cancellationToken);
+    public async Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AIPromptDeletingNotification(id, messages);
+        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Prompt delete cancelled: {errorMessages}");
+        }
+
+        // Perform delete
+        var result = await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AIPromptDeletedNotification(id, messages)
+            .WithStateFrom(deletingNotification);
+        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
+
+        return result;
+    }
 
     /// <inheritdoc />
     public Task<bool> PromptAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)

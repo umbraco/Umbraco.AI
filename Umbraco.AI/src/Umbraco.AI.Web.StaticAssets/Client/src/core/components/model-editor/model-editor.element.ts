@@ -1,4 +1,4 @@
-import { css, customElement, html, nothing, property, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import type { UmbPropertyValueData, UmbPropertyDatasetElement } from "@umbraco-cms/backoffice/property";

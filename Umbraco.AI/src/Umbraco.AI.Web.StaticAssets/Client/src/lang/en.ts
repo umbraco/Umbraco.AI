@@ -101,6 +101,8 @@ export default {
     },
     uaiGroups: {
         generalLabel: "General",
+        advancedLabel: "Advanced",
+        featuresLabel: "Features",
     },
     uaiFields: {
         // Text resource fields

@@ -137,6 +137,7 @@ export class UaiToolPermissionsOverrideEditorModalElement extends UmbModalBaseEl
 							.inheritedScopeIds=${this.data.agentDefaults.allowedToolScopeIds}
 							.allowedScopeIds=${this._allowedToolScopeIds}
 							.deniedScopeIds=${this._deniedToolScopeIds}
+							.hideEmptyScopes=${true}
 							@change=${this._onToolScopePermissionsChange}>
 						</uai-tool-scope-permissions-override>
 					</uui-box>

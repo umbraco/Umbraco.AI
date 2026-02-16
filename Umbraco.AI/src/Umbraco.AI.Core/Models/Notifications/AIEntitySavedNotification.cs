@@ -10,13 +10,18 @@ namespace Umbraco.AI.Core.Models.Notifications;
 public abstract class AIEntitySavedNotification<T> : StatefulNotification
 {
     protected AIEntitySavedNotification(T entity, EventMessages messages)
-        : base(messages)
     {
         Entity = entity;
+        Messages = messages;
     }
 
     /// <summary>
     /// Gets the entity that was saved.
     /// </summary>
     public T Entity { get; }
+
+    /// <summary>
+    /// Gets the event messages.
+    /// </summary>
+    public EventMessages Messages { get; }
 }

@@ -10,13 +10,18 @@ namespace Umbraco.AI.Core.Models.Notifications;
 public abstract class AIEntityDeletedNotification<T> : StatefulNotification
 {
     protected AIEntityDeletedNotification(Guid entityId, EventMessages messages)
-        : base(messages)
     {
         EntityId = entityId;
+        Messages = messages;
     }
 
     /// <summary>
     /// Gets the ID of the entity that was deleted.
     /// </summary>
     public Guid EntityId { get; }
+
+    /// <summary>
+    /// Gets the event messages.
+    /// </summary>
+    public EventMessages Messages { get; }
 }

@@ -14,6 +14,7 @@ using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Cache;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Tests.Integration;
 
@@ -443,6 +444,9 @@ public class EndToEndServiceFlowTests : IDisposable
         services.AddSingleton<IAppPolicyCache>(NoAppCache.Instance);
         services.AddSingleton<IAISettingsRepository, InMemoryAISettingsRepository>();
         services.AddSingleton<IAISettingsService, AISettingsService>();
+
+        // Event aggregator (required by services that publish notifications)
+        services.AddSingleton(new Mock<IEventAggregator>().Object);
 
         // Unified versioning service (stub implementation for tests)
         services.AddSingleton<AIVersionableEntityAdapterCollection>(_ =>

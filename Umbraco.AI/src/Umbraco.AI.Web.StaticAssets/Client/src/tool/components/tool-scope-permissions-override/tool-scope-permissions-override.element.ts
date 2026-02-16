@@ -10,7 +10,8 @@ import {
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UaiToolRepository, type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import { type ToolScopeItemResponseModel } from "../../repository/tool.repository.js";
+import { UaiToolController } from "../../controllers/tool.controller.js";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
 import { toCamelCase } from "../../utils.js";
@@ -38,13 +39,19 @@ export interface UaiToolScopePermission {
  */
 @customElement("uai-tool-scope-permissions-override")
 export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
-	#toolRepository = new UaiToolRepository(this);
+	#toolController = new UaiToolController(this);
 
 	/**
 	 * Map of scope ID to full scope data.
 	 */
 	@state()
 	private _scopeDataMap = new Map<string, ToolScopeItemResponseModel>();
+
+	/**
+	 * Tool counts by scope ID.
+	 */
+	@state()
+	private _toolCounts: Record<string, number> = {};
 
 	/**
 	 * Inherited scope IDs from agent defaults.
@@ -70,9 +77,16 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	@property({ type: Boolean })
 	readonly = false;
 
+	/**
+	 * Hide scopes that have no tools.
+	 */
+	@property({ type: Boolean })
+	hideEmptyScopes = false;
+
 	override connectedCallback(): void {
 		super.connectedCallback();
 		this._loadScopeData();
+		this._loadToolCounts();
 	}
 
 	override updated(changedProperties: Map<string, unknown>): void {
@@ -90,7 +104,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	 * Load full scope data for all scopes.
 	 */
 	private async _loadScopeData(): Promise<void> {
-		const { data } = await this.#toolRepository.getToolScopes();
+		const { data } = await this.#toolController.getToolScopes();
 		if (!data) return;
 
 		const scopeMap = new Map<string, ToolScopeItemResponseModel>();
@@ -98,6 +112,13 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 			scopeMap.set(scope.id, scope);
 		}
 		this._scopeDataMap = scopeMap;
+	}
+
+	/**
+	 * Load tool counts for all scopes.
+	 */
+	private async _loadToolCounts(): Promise<void> {
+		this._toolCounts = await this.#toolController.getToolCountsByScope();
 	}
 
 	/**
@@ -128,7 +149,14 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 			}
 		}
 
-		return Array.from(scopes.values());
+		const allScopes = Array.from(scopes.values());
+
+		// Filter empty scopes if hideEmptyScopes is true
+		if (this.hideEmptyScopes) {
+			return allScopes.filter(scope => (this._toolCounts[scope.scopeId] ?? 0) > 0);
+		}
+
+		return allScopes;
 	}
 
 	/**
@@ -144,6 +172,11 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 				selectionMode: "multiple",
 				title: this.localize.term("uaiAgent_addScope") || "Add Tool Scopes",
 				noResultsMessage: this.localize.term("uaiAgent_noToolScopesAvailable") || "No tool scopes available",
+				tagTemplate: (item) => {
+					const toolCount = this._toolCounts[item.value] ?? 0;
+					const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
+					return html`<uui-tag slot="tag" look="secondary">${toolCountLabel}</uui-tag>`;
+				},
 			},
 		});
 
@@ -171,7 +204,7 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 	 * Fetch available tool scopes for the picker modal.
 	 */
 	private async _fetchAvailableScopes(): Promise<UaiPickableItemModel[]> {
-		const { data } = await this.#toolRepository.getToolScopes();
+		const { data } = await this.#toolController.getToolScopes();
 
 		if (!data) return [];
 
@@ -179,6 +212,9 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 		return data
 			.filter((scope: ToolScopeItemResponseModel) =>
 				!this.allowedScopeIds.includes(scope.id) && !this.inheritedScopeIds.includes(scope.id)
+			)
+			.filter((scope: ToolScopeItemResponseModel) =>
+				!this.hideEmptyScopes || (this._toolCounts[scope.id] ?? 0) > 0
 			)
 			.map((scope: ToolScopeItemResponseModel) => {
 				const camelCaseId = toCamelCase(scope.id);
@@ -242,14 +278,17 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 		const name = this.localize.term(`uaiToolScope_${camelCaseId}Label`) || scope.scopeId;
 		const description = this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
 		const icon = scopeData?.icon || "icon-wand";
+		const toolCount = this._toolCounts[scope.scopeId] ?? 0;
+		const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
 
 		return html`
 			<uui-ref-node name=${name} detail=${description}>
 				<umb-icon slot="icon" name=${icon}></umb-icon>
+				<uui-tag slot="tag" look="secondary" style="margin-right: var(--uui-size-space-2);">${toolCountLabel}</uui-tag>
 				${when(
 					scope.state === "inherited",
 					() => html`
-						<uui-tag slot="tag" look="secondary">${this.localize.term("uaiGeneral_inherited")}</uui-tag>
+						<uui-tag slot="tag" look="primary">${this.localize.term("uaiGeneral_inherited")}</uui-tag>
 						${when(
 							!this.readonly,
 							() => html`

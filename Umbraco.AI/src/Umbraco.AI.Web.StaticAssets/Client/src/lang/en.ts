@@ -9,6 +9,7 @@ export default {
         denied: "Denied",
         allow: "Allow",
         deny: "Deny",
+        toolCount: (count: number) => count === 1 ? "1 tool" : `${count} tools`,
     },
     uaiLabels: {
         name: "Name",

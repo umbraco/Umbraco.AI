@@ -87,7 +87,7 @@ public sealed class TranslationScope : AIToolScopeBase
 /// <summary>
 /// The web scope. Tools that perform operations related to web content, such as fetching data from the web or performing web-related analysis, should use this scope to ensure proper permission handling and grouping in the UI.
 /// </summary>
-[AIToolScope(ScopeId, Icon = "icon-globe-inverted-americas-alt", Domain = "General")]
+[AIToolScope(ScopeId, Icon = "icon-globe", Domain = "General")]
 public sealed class WebScope : AIToolScopeBase
 {
     /// <summary>

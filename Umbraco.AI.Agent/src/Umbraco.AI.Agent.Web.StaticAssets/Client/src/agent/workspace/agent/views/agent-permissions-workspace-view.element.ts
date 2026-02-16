@@ -93,6 +93,7 @@ export class UaiAgentPermissionsWorkspaceViewElement extends UmbLitElement {
                         slot="editor"
                         multiple
                         .value=${this._model.allowedToolScopeIds}
+                        .hideEmptyScopes=${true}
                         @change=${this.#onAllowedToolScopeIdsChange}
                     ></uai-tool-scope-permissions>
                 </umb-property-layout>

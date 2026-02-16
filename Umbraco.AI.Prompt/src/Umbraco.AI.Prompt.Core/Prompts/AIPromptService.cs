@@ -5,7 +5,9 @@ using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Extensions;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 using AIValueChange = Umbraco.AI.Core.EntityAdapter.AIValueChange;
 using CoreConstants = Umbraco.AI.Core.Constants;
@@ -27,6 +29,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly IAIRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AIRuntimeContextContributorCollection _contextContributors;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIPromptService(
         IAIPromptRepository repository,
@@ -38,6 +41,7 @@ internal sealed class AIPromptService : IAIPromptService
         IAIFunctionFactory functionFactory,
         IAIRuntimeContextScopeProvider runtimeContextScopeProvider,
         AIRuntimeContextContributorCollection contextContributors,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -49,6 +53,7 @@ internal sealed class AIPromptService : IAIPromptService
         _functionFactory = functionFactory;
         _runtimeContextScopeProvider = runtimeContextScopeProvider;
         _contextContributors = contextContributors;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -105,6 +110,18 @@ internal sealed class AIPromptService : IAIPromptService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AIPromptSavingNotification(prompt, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Prompt save cancelled: {errorMessages}");
+        }
+
         // Save version snapshot of existing entity before update
         var existing = await _repository.GetByIdAsync(prompt.Id, cancellationToken);
         if (existing is not null)
@@ -112,12 +129,42 @@ internal sealed class AIPromptService : IAIPromptService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        return await _repository.SaveAsync(prompt, userId, cancellationToken);
+        // Perform save
+        var savedPrompt = await _repository.SaveAsync(prompt, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AIPromptSavedNotification(savedPrompt, messages)
+            .WithStateFrom(savingNotification);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
+
+        return savedPrompt;
     }
 
     /// <inheritdoc />
-    public Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default)
-        => _repository.DeleteAsync(id, cancellationToken);
+    public async Task<bool> DeletePromptAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AIPromptDeletingNotification(id, messages);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Prompt delete cancelled: {errorMessages}");
+        }
+
+        // Perform delete
+        var result = await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AIPromptDeletedNotification(id, messages)
+            .WithStateFrom(deletingNotification);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
+
+        return result;
+    }
 
     /// <inheritdoc />
     public Task<bool> PromptAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
@@ -144,6 +191,18 @@ internal sealed class AIPromptService : IAIPromptService
         {
             throw new InvalidOperationException(
                 $"Prompt execution denied: {scopeValidation.DenialReason}");
+        }
+
+        // Publish executing notification (before execution)
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIPromptExecutingNotification(prompt, request, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Prompt execution cancelled: {errorMessages}");
         }
 
         // Create a runtime context scope for this execution
@@ -241,7 +300,7 @@ internal sealed class AIPromptService : IAIPromptService
         var responseText = response.Text ?? string.Empty;
 
         // 11. Build ResultOptions based on option count
-        return prompt.OptionCount switch
+        var result = prompt.OptionCount switch
         {
             0 => new AIPromptExecutionResult
             {
@@ -282,6 +341,13 @@ internal sealed class AIPromptService : IAIPromptService
 
             _ => throw new InvalidOperationException($"Invalid option count: {prompt.OptionCount}")
         };
+
+        // Publish executed notification (after execution)
+        var executedNotification = new AIPromptExecutedNotification(prompt, request, result, eventMessages)
+            .WithStateFrom(executingNotification);
+        await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+
+        return result;
     }
 
     /// <summary>

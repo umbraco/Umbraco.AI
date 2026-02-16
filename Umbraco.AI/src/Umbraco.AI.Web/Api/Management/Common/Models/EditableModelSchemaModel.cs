@@ -51,7 +51,7 @@ public class EditableModelFieldModel
     public object? EditorConfig { get; set; }
 
     /// <summary>
-    /// The default value of the setting.
+    /// The default value of the setting from the model's property initializer.
     /// </summary>
     public object? DefaultValue { get; set; }
 

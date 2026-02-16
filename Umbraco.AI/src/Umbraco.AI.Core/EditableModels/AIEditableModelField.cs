@@ -46,7 +46,7 @@ public class AIEditableModelField
     public object? EditorConfig { get; set; }
 
     /// <summary>
-    /// The default value of the field.
+    /// The default value of the field from the model's property initializer.
     /// </summary>
     public object? DefaultValue { get; set; }
 

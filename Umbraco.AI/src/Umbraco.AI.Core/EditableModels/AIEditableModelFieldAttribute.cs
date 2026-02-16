@@ -28,11 +28,6 @@ public class AIEditableModelFieldAttribute : Attribute
     public string? EditorConfig { get; set; }
 
     /// <summary>
-    /// Default value for the field.
-    /// </summary>
-    public object? DefaultValue { get; set; }
-
-    /// <summary>
     /// Sort order for displaying fields in UI.
     /// </summary>
     public int SortOrder { get; set; }

@@ -65,7 +65,6 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
 
     override connectedCallback() {
         super.connectedCallback();
-        this.#loadScopes();
         this.#loadToolCounts();
     }
 
@@ -78,7 +77,8 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
 
     async #loadToolCounts() {
         this._toolCounts = await this.#toolController.getToolCountsByScope();
-        this.requestUpdate(); // Trigger re-render with counts
+        // Load scopes after counts are available to ensure proper filtering
+        this.#loadScopes();
     }
 
     async #loadScopes() {

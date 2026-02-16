@@ -74,6 +74,16 @@ export interface UaiPromptContextItem {
 }
 
 /**
+ * A single result option that can be displayed and optionally applied.
+ */
+export interface UaiPromptResultOption {
+    label: string;
+    displayValue: string;
+    description?: string | null;
+    valueChange?: UaiPromptValueChange | null;
+}
+
+/**
  * Data passed to the prompt preview modal.
  * Contains entity context for server-side execution.
  */
@@ -91,6 +101,11 @@ export interface UaiPromptPreviewModalData {
     context?: UaiPromptContextItem[];
     /** Maximum characters from property editor config (for character indicator) */
     maxChars?: number;
+    /**
+     * Number of options the prompt should generate.
+     * 0 = informational, 1 = single, 2+ = multiple
+     */
+    optionCount: number;
 }
 
 /**

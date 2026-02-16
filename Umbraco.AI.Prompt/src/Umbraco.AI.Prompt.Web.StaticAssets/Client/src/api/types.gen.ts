@@ -14,6 +14,7 @@ export type CreatePromptRequestModel = {
     tags?: Array<string> | null;
     scope?: ScopeModel | null;
     includeEntityContext: boolean;
+    optionCount: number;
 };
 
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
@@ -50,7 +51,7 @@ export type PromptExecutionRequestModel = {
 export type PromptExecutionResponseModel = {
     content: string;
     usage?: UsageModel | null;
-    valueChanges?: Array<ValueChangeModel> | null;
+    resultOptions: Array<ResultOptionModel>;
 };
 
 export type PromptItemResponseModel = {
@@ -76,6 +77,7 @@ export type PromptResponseModel = {
     isActive: boolean;
     scope?: ScopeModel | null;
     includeEntityContext: boolean;
+    optionCount: number;
     dateCreated: string;
     dateModified: string;
     version: number;
@@ -84,6 +86,13 @@ export type PromptResponseModel = {
 export type RequestContextItemModel = {
     description: string;
     value?: string | null;
+};
+
+export type ResultOptionModel = {
+    label: string;
+    displayValue: string;
+    description?: string | null;
+    valueChange?: ValueChangeModel | null;
 };
 
 export type ScopeModel = {
@@ -108,6 +117,7 @@ export type UpdatePromptRequestModel = {
     isActive: boolean;
     scope?: ScopeModel | null;
     includeEntityContext: boolean;
+    optionCount: number;
 };
 
 export type UsageModel = {

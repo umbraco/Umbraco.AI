@@ -64,4 +64,12 @@ public class UpdatePromptRequestModel
     /// Whether to include the full entity context as a system message during prompt execution.
     /// </summary>
     public bool IncludeEntityContext { get; init; } = true;
+
+    /// <summary>
+    /// The number of result options the AI should generate.
+    /// - 0 = Informational only
+    /// - 1 = Single value (default)
+    /// - 2+ = Multiple options
+    /// </summary>
+    public int OptionCount { get; init; } = 1;
 }

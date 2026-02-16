@@ -3,7 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UaiPromptExecutionRepository } from "../repository/execution/prompt-execution.repository.js";
 import type {
     UaiPromptContextItem,
-    UaiPromptValueChange,
+    UaiPromptResultOption,
 } from "../repository/execution/prompt-execution.server.data-source.js";
 
 /**
@@ -32,8 +32,13 @@ export interface UaiPromptExecuteOptions {
 export interface UaiPromptExecuteResult {
     /** The generated response content. */
     content: string;
-    /** Property changes to apply to the entity. */
-    valueChanges?: UaiPromptValueChange[];
+    /**
+     * Available result options. Always present, may be empty.
+     * - Empty array: Informational only
+     * - Single item: One value to insert
+     * - Multiple items: User selects one
+     */
+    resultOptions: UaiPromptResultOption[];
 }
 
 /**
@@ -113,7 +118,7 @@ export class UaiPromptController extends UmbControllerBase {
                 return {
                     data: {
                         content: data.content,
-                        valueChanges: data.valueChanges,
+                        resultOptions: data.resultOptions,
                     },
                 };
             }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -374,8 +375,8 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
-        // Track execution start time
-        var startTime = DateTime.UtcNow;
+        // Track execution duration with high-resolution timer
+        var stopwatch = Stopwatch.StartNew();
 
         // 2. Convert AG-UI context and create frontend tools with permission filtering
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
@@ -454,8 +455,8 @@ internal sealed class AIAgentService : IAIAgentService
         }
         finally
         {
-            // Calculate duration
-            var duration = DateTime.UtcNow - startTime;
+            // Calculate duration using high-resolution timer
+            var duration = stopwatch.Elapsed;
 
             // Publish executed notification (after execution completes or fails)
             var executedNotification = new AIAgentExecutedNotification(

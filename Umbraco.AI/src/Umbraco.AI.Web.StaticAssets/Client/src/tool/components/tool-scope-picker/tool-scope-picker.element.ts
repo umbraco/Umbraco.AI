@@ -17,6 +17,7 @@ interface UaiToolScopeItemModel {
     description: string;
     domain: string;
     icon: string;
+    toolCount: number;
 }
 
 /**
@@ -128,10 +129,11 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
 
                     return {
                         id: scope.id,
-                        name: `${localizedName} (${toolCount})`,
+                        name: localizedName,
                         description: localizedDescription,
                         domain: scope.domain || "General",
                         icon: scope.icon || "icon-wand",
+                        toolCount: toolCount,
                     };
                 })
                 .filter((item): item is UaiToolScopeItemModel => item !== undefined);
@@ -182,10 +184,11 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
                 const localizedDescription =
                     this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
                 const toolCount = this._toolCounts[scope.id] ?? 0;
+                const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
 
                 return {
                     value: scope.id,
-                    label: `${localizedName} (${toolCount})`,
+                    label: `${localizedName} (${toolCountLabel})`,
                     description: localizedDescription,
                     icon: scope.icon || "icon-wand",
                 };
@@ -235,9 +238,11 @@ export class UaiToolScopePickerElement extends UmbFormControlMixin<string[] | un
     }
 
     #renderItem(item: UaiToolScopeItemModel) {
+        const toolCountLabel = this.localize.term("uaiGeneral_toolCount", item.toolCount);
         return html`
             <uui-ref-node name=${item.name} detail=${item.description} readonly>
                 <umb-icon slot="icon" name=${item.icon}></umb-icon>
+                <uui-tag slot="tag" look="secondary">${toolCountLabel}</uui-tag>
                 <uui-tag slot="tag" look="secondary">${item.domain}</uui-tag>
                 ${!this.readonly
                     ? html`

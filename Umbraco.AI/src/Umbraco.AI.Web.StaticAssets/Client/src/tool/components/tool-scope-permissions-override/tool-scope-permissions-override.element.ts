@@ -217,10 +217,11 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 				const localizedDescription =
 					this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
 				const toolCount = this._toolCounts[scope.id] ?? 0;
+				const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
 
 				return {
 					value: scope.id,
-					label: `${localizedName} (${toolCount})`,
+					label: `${localizedName} (${toolCountLabel})`,
 					description: localizedDescription,
 					icon: scope.icon || "icon-wand",
 				};
@@ -275,10 +276,12 @@ export class UaiToolScopePermissionsOverrideElement extends UmbLitElement {
 		const description = this.localize.term(`uaiToolScope_${camelCaseId}Description`) || "";
 		const icon = scopeData?.icon || "icon-wand";
 		const toolCount = this._toolCounts[scope.scopeId] ?? 0;
+		const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
 
 		return html`
-			<uui-ref-node name="${name} (${toolCount})" detail=${description}>
+			<uui-ref-node name=${name} detail=${description}>
 				<umb-icon slot="icon" name=${icon}></umb-icon>
+				<uui-tag slot="tag" look="secondary">${toolCountLabel}</uui-tag>
 				${when(
 					scope.state === "inherited",
 					() => html`

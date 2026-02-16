@@ -211,7 +211,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
         const isChecked = this.#isSelected(scope.id);
         const scopeId = `scope-${scope.id}`;
         const toolCount = this._toolCounts[scope.id] ?? 0;
-        const displayName = `${scope.name} (${toolCount})`;
+        const toolCountLabel = this.localize.term("uaiGeneral_toolCount", toolCount);
 
         return html`
             <div class="scope-item">
@@ -220,13 +220,16 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
                     ?checked=${isChecked}
                     ?disabled=${this.readonly}
                     @change=${(e: Event) => this.#onToggle(scope.id, e)}
-                    label=${displayName}
+                    label=${scope.name}
                 >
                 </uui-toggle>
                 <label for=${scopeId} class="scope-label" @click=${() => this.#toggleScope(scope.id)}>
-                    <div class="scope-name">${displayName}</div>
+                    <div class="scope-name">
+                        ${scope.name}
+                    </div>
                     <div class="scope-description">${scope.description}</div>
                 </label>
+                <uui-tag look="secondary" style="margin-right: var(--uui-size-space-4)">${toolCountLabel}</uui-tag>
             </div>
         `;
     }
@@ -265,8 +268,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
             }
 
             .scope-item {
-                display: grid;
-                grid-template-columns: auto 1fr;
+                display: flex;
                 gap: var(--uui-size-space-4);
                 align-items: start;
                 margin-bottom: var(--uui-size-space-2);
@@ -274,6 +276,7 @@ export class UaiToolScopePermissionsElement extends UmbFormControlMixin<
 
             .scope-label {
                 display: flex;
+                flex: 1;
                 flex-direction: column;
                 cursor: pointer;
             }

@@ -2,6 +2,8 @@ using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Versioning;
+using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Core.Connections;
@@ -16,18 +18,21 @@ internal sealed class AIConnectionService : IAIConnectionService
     private readonly IAIEditableModelResolver _modelResolver;
     private readonly IAIEntityVersionService _versionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly INotificationPublisher _notificationPublisher;
 
     public AIConnectionService(
         IAIConnectionRepository repository,
         AIProviderCollection providers,
         IAIEditableModelResolver modelResolver,
         IAIEntityVersionService versionService,
+        INotificationPublisher notificationPublisher,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _providers = providers;
         _modelResolver = modelResolver;
         _versionService = versionService;
+        _notificationPublisher = notificationPublisher;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -106,6 +111,18 @@ internal sealed class AIConnectionService : IAIConnectionService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AIConnectionSavingNotification(connection, messages);
+        await _notificationPublisher.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Connection save cancelled: {errorMessages}");
+        }
+
         // Check if this is an update - if so, create a version snapshot of the current state
         var existing = await _repository.GetAsync(connection.Id, cancellationToken);
         if (existing is not null)
@@ -113,8 +130,15 @@ internal sealed class AIConnectionService : IAIConnectionService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        // Save to repository
-        return await _repository.SaveAsync(connection, userId, cancellationToken);
+        // Perform save
+        var savedConnection = await _repository.SaveAsync(connection, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AIConnectionSavedNotification(savedConnection, messages)
+            .WithStateFrom(savingNotification);
+        await _notificationPublisher.PublishAsync(savedNotification, cancellationToken);
+
+        return savedConnection;
     }
 
     /// <inheritdoc />
@@ -129,10 +153,28 @@ internal sealed class AIConnectionService : IAIConnectionService
         // TODO: Check if connection is in use by profiles before deletion
         // This will require IAIProfileService when implemented
 
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AIConnectionDeletingNotification(id, messages);
+        await _notificationPublisher.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Connection delete cancelled: {errorMessages}");
+        }
+
         // Delete version history for this entity
         await _versionService.DeleteVersionsAsync(id, "Connection", cancellationToken);
 
+        // Perform delete
         await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AIConnectionDeletedNotification(id, messages)
+            .WithStateFrom(deletingNotification);
+        await _notificationPublisher.PublishAsync(deletedNotification, cancellationToken);
     }
 
     /// <inheritdoc />

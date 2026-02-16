@@ -193,6 +193,18 @@ internal sealed class AIPromptService : IAIPromptService
                 $"Prompt execution denied: {scopeValidation.DenialReason}");
         }
 
+        // Publish executing notification (before execution)
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIPromptExecutingNotification(prompt, request, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Prompt execution cancelled: {errorMessages}");
+        }
+
         // Create a runtime context scope for this execution
         using var runtimeContextScope = _runtimeContextScopeProvider.CreateScope(request.Context ?? []);
         var runtimeContext = runtimeContextScope.Context;
@@ -288,7 +300,7 @@ internal sealed class AIPromptService : IAIPromptService
         var responseText = response.Text ?? string.Empty;
 
         // 11. Build ResultOptions based on option count
-        return prompt.OptionCount switch
+        var result = prompt.OptionCount switch
         {
             0 => new AIPromptExecutionResult
             {
@@ -329,6 +341,13 @@ internal sealed class AIPromptService : IAIPromptService
 
             _ => throw new InvalidOperationException($"Invalid option count: {prompt.OptionCount}")
         };
+
+        // Publish executed notification (after execution)
+        var executedNotification = new AIPromptExecutedNotification(prompt, request, result, eventMessages)
+            .WithStateFrom(executingNotification);
+        await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
+
+        return result;
     }
 
     /// <summary>

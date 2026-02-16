@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Serialization;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.EditableModels;
 
@@ -57,7 +58,8 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
             ValidationRules = InferValidationAttributes(property),
             SortOrder = attr?.SortOrder ?? 0,
             IsSensitive = attr?.IsSensitive ?? false,
-            Group = attr?.Group ?? $"#uaiFieldGroups_{modelKey}{property.Name}Label"
+            Group = (attr?.Group).IsNullOrWhiteSpace() ? "#uaiFieldGroups_generalLabel" :
+                attr.Group.StartsWith("#") ? attr.Group :  $"#uaiFieldGroups_{attr.Group.ToCamelCase()}Label"
         };
     }
 

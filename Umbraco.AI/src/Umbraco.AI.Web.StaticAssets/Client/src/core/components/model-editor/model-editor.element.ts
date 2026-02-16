@@ -148,27 +148,17 @@ export class UaiModelEditorElement extends UmbLitElement {
     }
 
     /**
-     * Constructs a localization key for a group name.
-     * Converts PascalCase group names to camelCase localization keys.
-     * e.g., "Advanced" → "#uaiGroups_advancedLabel"
-     */
-    #groupLocalizationKey(group: string): string {
-        const camelCase = group.charAt(0).toLowerCase() + group.slice(1);
-        return `#uaiGroups_${camelCase}Label`;
-    }
-
-    /**
      * Groups fields by their group property.
      * Fields without a group are placed in "General". General always appears first,
      * followed by named groups in declaration order.
      */
     #groupFields(fields: UaiEditableModelFieldModel[]): Array<[string, UaiEditableModelFieldModel[]]> {
-        const generalKey = "#uaiGroups_generalLabel";
+        const generalKey = "#uaiFieldGroups_generalLabel";
         const groups = new Map<string, UaiEditableModelFieldModel[]>();
         groups.set(generalKey, []);
 
         for (const field of fields) {
-            const key = field.group ? this.#groupLocalizationKey(field.group) : generalKey;
+            const key = field.group ?? generalKey;
             if (!groups.has(key)) {
                 groups.set(key, []);
             }

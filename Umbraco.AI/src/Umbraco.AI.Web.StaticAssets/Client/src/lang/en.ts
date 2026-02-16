@@ -99,11 +99,6 @@ export default {
         oldValue: "Old",
         newValue: "New",
     },
-    uaiGroups: {
-        generalLabel: "General",
-        advancedLabel: "Advanced",
-        featuresLabel: "Features",
-    },
     uaiFields: {
         // Text resource fields
         textContentLabel: "Content",
@@ -128,6 +123,11 @@ export default {
         amazonSecretAccessKeyDescription: "The AWS Secret Access Key for authenticating with Bedrock services",
         amazonEndpointLabel: "Custom Endpoint",
         amazonEndpointDescription: "Custom endpoint URL for Bedrock services (optional)",
+    },
+    uaiFieldGroups: {
+        generalLabel: "General",
+        advancedLabel: "Advanced",
+        featuresLabel: "Features",
     },
     uaiValidation: {
         required: "This field is required",

@@ -1,6 +1,7 @@
 import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
-import { createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-api";
+import { createExtensionApi } from "@umbraco-cms/backoffice/extension-api";
+import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { UaiToolRepository } from "../repository/tool.repository.js";
 import type { UaiFrontendToolRepositoryApi } from "@umbraco-ai/core";
 
@@ -50,13 +51,16 @@ export class UaiToolController extends UmbControllerBase {
 
 			// Fetch frontend tools
 			try {
-				const frontendRepo = await createExtensionApiByAlias<UaiFrontendToolRepositoryApi>(
-					this._host,
-					"Uai.Repository.FrontendTool"
-				);
-				const frontendTools = await frontendRepo.getTools();
-				for (const tool of frontendTools) {
-					counts[tool.scopeId] = (counts[tool.scopeId] ?? 0) + 1;
+				// Get the frontend tool repository manifest by alias
+				const manifest = umbExtensionsRegistry.getByAlias("Uai.Repository.FrontendTool");
+				if (manifest) {
+					const frontendRepo = await createExtensionApi<UaiFrontendToolRepositoryApi>(this, manifest);
+					if (frontendRepo) {
+						const frontendTools = await frontendRepo.getTools();
+						for (const tool of frontendTools) {
+							counts[tool.scopeId] = (counts[tool.scopeId] ?? 0) + 1;
+						}
+					}
 				}
 			} catch {
 				// Frontend tool repository may not be available (Agent.UI not installed)

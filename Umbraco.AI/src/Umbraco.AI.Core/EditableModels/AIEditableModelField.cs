@@ -65,4 +65,10 @@ public class AIEditableModelField
     /// When true, the field value will be encrypted during persistence and the UI may mask the value.
     /// </summary>
     public bool IsSensitive { get; set; }
+
+    /// <summary>
+    /// Optional group identifier for visually grouping related fields in the UI.
+    /// Fields with the same group are rendered together in a separate section.
+    /// </summary>
+    public string? Group { get; set; }
 }

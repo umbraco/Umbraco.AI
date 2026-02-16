@@ -66,6 +66,7 @@ public class CommonMapDefinition : IMapDefinition
         target.DefaultValue = source.DefaultValue;
         target.SortOrder = source.SortOrder;
         target.IsRequired = source.ValidationRules.OfType<RequiredAttribute>().Any();
+        target.Group = source.Group;
     }
 
     // Umbraco.Code.MapAll -CreatedByUserName

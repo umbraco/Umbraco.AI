@@ -19,6 +19,7 @@ export const UaiCommonTypeMapper = {
             defaultValue: response.defaultValue ?? undefined,
             sortOrder: response.sortOrder,
             isRequired: response.isRequired,
+            group: response.group ?? undefined,
         };
     },
 };

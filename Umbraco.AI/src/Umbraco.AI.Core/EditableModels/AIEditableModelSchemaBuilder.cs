@@ -37,7 +37,8 @@ internal sealed class AIEditableModelSchemaBuilder : IAIEditableModelSchemaBuild
             DefaultValue = attr?.DefaultValue,
             ValidationRules = InferValidationAttributes(property),
             SortOrder = attr?.SortOrder ?? 0,
-            IsSensitive = attr?.IsSensitive ?? false
+            IsSensitive = attr?.IsSensitive ?? false,
+            Group = attr?.Group
         };
     }
 

@@ -178,6 +178,7 @@ export type EditableModelFieldModel = {
     defaultValue?: unknown;
     sortOrder: number;
     isRequired: boolean;
+    group?: string | null;
 };
 
 export type EditableModelSchemaModel = {

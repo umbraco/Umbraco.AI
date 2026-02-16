@@ -18,4 +18,5 @@ export interface UaiEditableModelFieldModel {
     defaultValue?: unknown;
     sortOrder: number;
     isRequired: boolean;
+    group?: string;
 }

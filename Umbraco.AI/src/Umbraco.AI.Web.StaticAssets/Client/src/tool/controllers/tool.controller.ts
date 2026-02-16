@@ -2,7 +2,7 @@ import { UmbControllerBase } from "@umbraco-cms/backoffice/class-api";
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-registry";
 import { UaiToolRepository } from "../repository/tool.repository.js";
-import type { UaiFrontendToolRepositoryApi } from "@umbraco-ai/core";
+import type { UaiFrontendToolRepositoryApi } from "../frontend-tool-repository.js";
 
 /**
  * Controller for tool operations including scope and counting.

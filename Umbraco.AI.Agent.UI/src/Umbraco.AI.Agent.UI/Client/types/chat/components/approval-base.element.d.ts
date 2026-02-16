@@ -25,7 +25,7 @@ export declare class UaiApprovalBaseElement extends UmbLitElement {
     private _isLoading;
     private _error?;
     updated(changedProperties: Map<string, unknown>): void;
-    render(): import("lit-html").TemplateResult<1> | typeof nothing | UaiAgentApprovalElement;
+    render(): import("lit-html").TemplateResult<1> | UaiAgentApprovalElement | typeof nothing;
     static styles: import("lit").CSSResult;
 }
 export default UaiApprovalBaseElement;

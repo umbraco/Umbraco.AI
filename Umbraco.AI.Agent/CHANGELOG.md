@@ -62,11 +62,9 @@ Updated:
 3. Backend tools always available (LLM decides based on context + metadata)
 4. Frontend tools filtered to current entity type only
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 * **agent:** API endpoint changed from /agents/scopes to /agents/surfaces.
 Database column ScopeIds renamed to SurfaceIds (migration required).
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ### build
 

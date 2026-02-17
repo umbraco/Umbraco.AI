@@ -217,6 +217,15 @@ async function generateChangelog(product, version, options = {}) {
                 return null;
             }
 
+            // Strip "Co-Authored-By" lines from commit body
+            if (commit.body) {
+                commit.body = commit.body
+                    .split('\n')
+                    .filter(line => !line.trim().startsWith('Co-Authored-By:'))
+                    .join('\n')
+                    .trim();
+            }
+
             // Filter by scope (primary filter)
             if (commit.scope) {
                 const scopes = commit.scope.split(",").map((s) => s.trim());

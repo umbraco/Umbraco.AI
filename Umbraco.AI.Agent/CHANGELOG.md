@@ -5,6 +5,7 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## [1.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.1.0...Umbraco.AI.Agent@1.2.0) (2026-02-17)
 
 ### ⚠ Breaking change
@@ -97,6 +98,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 * **agent:** Add missing Scope property configuration to DbContext ([f550079](https://github.com/umbraco/Umbraco.AI/commit/f5500792e5c30a15e040b83ec46f4e0336cb995e))
 * **agent:** Fix build errors in auto mode implementation ([432ef45](https://github.com/umbraco/Umbraco.AI/commit/432ef45ed7f67501e91a82b1762c8cdfb48e25df))
+* **agent:** Fixed wrong @umbraco-ai/core peer dependency ([f0e75cc](https://github.com/umbraco/Umbraco.AI/commit/f0e75cc00ecd83b64fd01163f8d8625208c24b24))
 * **agent:** Generate CallId when provider returns empty string ([8edbf6f](https://github.com/umbraco/Umbraco.AI/commit/8edbf6f90e3ecb1a76ecc05115d82d0c0ad52956))
 * **agent:** Regenerate migrations with proper Designer files ([0815e64](https://github.com/umbraco/Umbraco.AI/commit/0815e6400262a54a1ce0b9e87cc6435080690734))
 * **agent:** Register AIAgentScopeValidator in DI container ([04aa65f](https://github.com/umbraco/Umbraco.AI/commit/04aa65f810514f3de19eba1929ef93b94187fc5c))
@@ -128,7 +130,6 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 * **agent:** Use runtime context infrastructure for context extraction ([1474d1a](https://github.com/umbraco/Umbraco.AI/commit/1474d1a48c165bcd366e691b6f485e5481eca1e0))
 * **core,agent,copilot:** Rename SectionAlias to Section ([353e167](https://github.com/umbraco/Umbraco.AI/commit/353e1670fdcdc09f88c9055d81d7b688b693bccc))
 * **prompt,agent:** Rename scope rule components for consistency ([9115f0e](https://github.com/umbraco/Umbraco.AI/commit/9115f0eebc35cf06611d3792bad921d67038d6fb))
-
 ## [1.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@1.0.0...Umbraco.AI.Agent@1.1.0) (2026-02-10)
 
 ### feat

@@ -109,28 +109,28 @@ internal sealed class AIConnectionVersionableEntityAdapter : AIVersionableEntity
     }
 
     /// <inheritdoc />
-    protected override IReadOnlyList<AIPropertyChange> CompareVersions(AIConnection from, AIConnection to)
+    protected override IReadOnlyList<AIValueChange> CompareVersions(AIConnection from, AIConnection to)
     {
-        var changes = new List<AIPropertyChange>();
+        var changes = new List<AIValueChange>();
 
         if (from.Alias != to.Alias)
         {
-            changes.Add(new AIPropertyChange("Alias", from.Alias, to.Alias));
+            changes.Add(new AIValueChange("Alias", from.Alias, to.Alias));
         }
 
         if (from.Name != to.Name)
         {
-            changes.Add(new AIPropertyChange("Name", from.Name, to.Name));
+            changes.Add(new AIValueChange("Name", from.Name, to.Name));
         }
 
         if (from.ProviderId != to.ProviderId)
         {
-            changes.Add(new AIPropertyChange("ProviderId", from.ProviderId, to.ProviderId));
+            changes.Add(new AIValueChange("ProviderId", from.ProviderId, to.ProviderId));
         }
 
         if (from.IsActive != to.IsActive)
         {
-            changes.Add(new AIPropertyChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
+            changes.Add(new AIValueChange("IsActive", from.IsActive.ToString(), to.IsActive.ToString()));
         }
 
         // Compare settings with deep inspection
@@ -146,7 +146,7 @@ internal sealed class AIConnectionVersionableEntityAdapter : AIVersionableEntity
     /// Since connection settings are untyped (object?), we use JSON serialization to compare
     /// the actual property values. Sensitive values are masked in the change output.
     /// </remarks>
-    private void CompareSettings(object? from, object? to, string providerId, List<AIPropertyChange> changes)
+    private void CompareSettings(object? from, object? to, string providerId, List<AIValueChange> changes)
     {
         // Get provider schema to identify sensitive fields
         var schema = GetSchemaForProvider(providerId);
@@ -167,7 +167,7 @@ internal sealed class AIConnectionVersionableEntityAdapter : AIVersionableEntity
         if (!success && !Equals(from, to))
         {
             // Fallback if comparison failed
-            changes.Add(new AIPropertyChange("Settings", "(modified)", "(modified)"));
+            changes.Add(new AIValueChange("Settings", "(modified)", "(modified)"));
         }
     }
 

@@ -286,7 +286,7 @@ The provider will be discovered automatically on startup.
 
 After installation:
 
-1. Navigate to **Settings** > **AI** > **Connections**
+1. Navigate to the **AI** section > **Connections**
 2. Click **Create Connection**
 3. Your provider should appear in the provider dropdown
 4. Configure settings and save

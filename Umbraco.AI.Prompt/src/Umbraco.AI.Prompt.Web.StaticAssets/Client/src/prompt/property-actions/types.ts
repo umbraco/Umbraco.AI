@@ -74,6 +74,16 @@ export interface UaiPromptContextItem {
 }
 
 /**
+ * A single result option that can be displayed and optionally applied.
+ */
+export interface UaiPromptResultOption {
+    label: string;
+    displayValue: string;
+    description?: string | null;
+    valueChange?: UaiPromptValueChange | null;
+}
+
+/**
  * Data passed to the prompt preview modal.
  * Contains entity context for server-side execution.
  */
@@ -91,15 +101,20 @@ export interface UaiPromptPreviewModalData {
     context?: UaiPromptContextItem[];
     /** Maximum characters from property editor config (for character indicator) */
     maxChars?: number;
+    /**
+     * Number of options the prompt should generate.
+     * 0 = informational, 1 = single, 2+ = multiple
+     */
+    optionCount: number;
 }
 
 /**
- * Property change to be applied to the entity.
- * Matches core UaiPropertyChange type.
+ * Value change to be applied to the entity.
+ * Matches core UaiValueChange type.
  */
-export interface UaiPromptPropertyChange {
-    /** The property alias. */
-    alias: string;
+export interface UaiPromptValueChange {
+    /** JSON path to the value (e.g., "title", "price.amount"). */
+    path: string;
     /** The new value to set. */
     value: unknown;
     /** The culture for variant content. */
@@ -114,8 +129,8 @@ export interface UaiPromptPropertyChange {
 export interface UaiPromptPreviewModalValue {
     action: "insert" | "copy" | "cancel";
     content?: string;
-    /** Property changes to apply to the entity. */
-    propertyChanges?: UaiPromptPropertyChange[];
+    /** Value changes to apply to the entity. */
+    valueChanges?: UaiPromptValueChange[];
 }
 
 /**

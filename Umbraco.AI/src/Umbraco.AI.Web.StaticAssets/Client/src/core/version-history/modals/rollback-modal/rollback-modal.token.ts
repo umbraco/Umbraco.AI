@@ -1,5 +1,5 @@
 import { UmbModalToken } from "@umbraco-cms/backoffice/modal";
-import type { UaiVersionPropertyChange } from "../../types.js";
+import type { UaiVersionValueChange } from "../../types.js";
 
 /**
  * Data passed to the rollback modal.
@@ -10,7 +10,7 @@ export interface UaiRollbackModalData {
     /** The target version being compared (usually the current version). */
     toVersion: number;
     /** The list of property changes between the versions. */
-    changes: UaiVersionPropertyChange[];
+    changes: UaiVersionValueChange[];
 }
 
 /**

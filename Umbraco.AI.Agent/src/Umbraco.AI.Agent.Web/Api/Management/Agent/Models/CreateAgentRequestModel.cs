@@ -40,9 +40,15 @@ public class CreateAgentRequestModel
     public IEnumerable<Guid>? ContextIds { get; init; }
 
     /// <summary>
-    /// Optional scope IDs that categorize this agent for specific purposes.
+    /// Optional surface IDs that categorize this agent for specific purposes.
     /// </summary>
-    public IEnumerable<string>? ScopeIds { get; init; }
+    public IEnumerable<string>? SurfaceIds { get; init; }
+
+    /// <summary>
+    /// Optional scope defining where this agent is available.
+    /// If null, agent is available in all contexts (backwards compatible).
+    /// </summary>
+    public AIAgentScopeModel? Scope { get; init; }
 
     /// <summary>
     /// Optional allowed tool IDs for this agent.

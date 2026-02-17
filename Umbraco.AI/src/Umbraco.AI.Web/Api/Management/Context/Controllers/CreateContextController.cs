@@ -2,13 +2,14 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Management.Common.OperationStatus;
 using Umbraco.AI.Web.Api.Management.Configuration;
 using Umbraco.AI.Web.Api.Management.Context.Models;
+using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
-using Umbraco.Cms.Web.Common.Authorization;
 
 namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 
@@ -16,7 +17,7 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 /// Controller to create a new context.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class CreateContextController : ContextControllerBase
 {
     private readonly IAIContextService _contextService;

@@ -2,13 +2,16 @@ import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { html, css } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
-import { UAI_COPILOT_ALLOWED_SECTION_PATHNAMES } from "../header-app/manifests.js";
-import { observeSectionChanges, isSectionAllowed } from "../../section-detector.js";
+import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
+import { createSectionObservable, isSectionAllowed } from "../../context-observer.js";
+import { agentClientReady } from "@umbraco-ai/agent";
 
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
 export class UaiCopilotSidebarElement extends UmbLitElement {
     #copilotContext?: UaiCopilotContext;
+    #sectionRegistry!: UaiCopilotSectionRegistry;
+    #compatibleSections: string[] = [];
 
     readonly #sidebarWidth = 450;
 
@@ -22,7 +25,20 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
 
     constructor() {
         super();
-        this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
+
+        // Initialize section registry
+        this.#sectionRegistry = new UaiCopilotSectionRegistry(this);
+
+        // Observe compatible sections
+        this.observe(
+            this.#sectionRegistry.compatibleSectionPathnames$,
+            (pathnames) => {
+                this.#compatibleSections = pathnames;
+            },
+            "_observeCompatibleSections"
+        );
+
+        this.consumeContext(UAI_COPILOT_CONTEXT, async (context) => {
             if (context) {
                 this.#copilotContext = context;
                 this.observe(context.isOpen, (isOpen) => {
@@ -30,25 +46,27 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                     this._isOpen = isOpen;
                     this.#updateContentOffset(isOpen);
                 });
-                // Load agents once context is available (ensures proper timing)
+                // Wait for agent package's client to be configured before loading agents
+                await agentClientReady;
                 context.loadAgents();
             }
         });
 
         // Auto-close copilot when navigating to a section that doesn't support it
-        this.#cleanupSectionObserver = observeSectionChanges((pathname) => {
-            if (!isSectionAllowed(pathname, UAI_COPILOT_ALLOWED_SECTION_PATHNAMES)) {
-                this.#copilotContext?.close();
-            }
-        });
+        this.observe(
+            createSectionObservable(),
+            (pathname) => {
+                if (!isSectionAllowed(pathname, this.#compatibleSections)) {
+                    this.#copilotContext?.close();
+                }
+            },
+            "_observeSectionChanges"
+        );
     }
-
-    #cleanupSectionObserver: (() => void) | null = null;
 
     override disconnectedCallback() {
         super.disconnectedCallback();
         this.#updateContentOffset(false); // Reset margin when component unmounts
-        this.#cleanupSectionObserver?.();
     }
 
     #handleClose() {

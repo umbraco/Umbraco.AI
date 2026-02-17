@@ -91,7 +91,7 @@ public class SearchService
 
 Configure a default profile through the backoffice:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select your embedding profile from the **Default Embedding Profile** dropdown
 3. Click **Save**
 

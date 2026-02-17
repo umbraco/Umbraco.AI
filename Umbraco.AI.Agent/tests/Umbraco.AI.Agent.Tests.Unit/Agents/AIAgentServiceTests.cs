@@ -34,6 +34,10 @@ public class AIAgentServiceTests
             null!, // IAGUIStreamingService
             null!, // IAGUIContextConverter
             _toolCollection,
+            null!, // IAIProfileService
+            null!, // IAIChatClientFactory
+            null!, // AIAgentScopeValidator
+            null!, // AIAgentSurfaceCollection
             null  // IBackOfficeSecurityAccessor
         );
     }

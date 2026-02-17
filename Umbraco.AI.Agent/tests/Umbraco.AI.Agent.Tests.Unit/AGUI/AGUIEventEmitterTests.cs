@@ -174,7 +174,7 @@ public class AGUIEventEmitterTests
     }
 
     [Fact]
-    public void EmitToolCall_EmptyToolCallId_ReturnsNull()
+    public void EmitToolCall_EmptyToolCallId_GeneratesId()
     {
         // Arrange
         var emitter = new AGUIEventEmitter(TestThreadId, TestRunId);
@@ -182,8 +182,10 @@ public class AGUIEventEmitterTests
         // Act
         var evt = emitter.EmitToolCall(string.Empty, "tool", null, false);
 
-        // Assert
-        evt.ShouldBeNull();
+        // Assert - Empty ID triggers fallback generation (workaround for Gemini)
+        evt.ShouldNotBeNull();
+        evt.ToolCallId.ShouldStartWith("generated-");
+        evt.ToolCallName.ShouldBe("tool");
     }
 
     [Fact]

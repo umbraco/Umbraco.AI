@@ -35,7 +35,8 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
 
     private bool IsSerializedEntity(AIRequestContextItem item)
     {
-        // Check if the value contains entity structure by looking for entityType and properties
+        // Check if the value contains entity structure by looking for required fields
+        // Lightweight check: only verifies field presence, not values (performance optimization)
         if (string.IsNullOrWhiteSpace(item.Value) || !item.Value.DetectIsJson())
         {
             return false;
@@ -46,7 +47,10 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             var value = JsonSerializer.Deserialize<JsonElement>(item.Value, _jsonOptions);
             return value.ValueKind == JsonValueKind.Object
                 && value.TryGetProperty("entityType", out _)
-                && value.TryGetProperty("properties", out _);
+                && value.TryGetProperty("unique", out _)
+                && value.TryGetProperty("name", out _)
+                && value.TryGetProperty("data", out var dataElement)
+                && dataElement.ValueKind == JsonValueKind.Object;
         }
         catch
         {
@@ -86,7 +90,7 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
             }
 
             // Store entity type
-            context.Data[Constants.ContextKeys.EntityType] = entity.EntityType;
+            context.SetValue(Constants.ContextKeys.EntityType, entity.EntityType);
 
             // Build template variables from entity
             var variables = _contextHelper.BuildContextDictionary(entity);
@@ -107,6 +111,7 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
 
     private static AISerializedEntity? DeserializeEntity(JsonElement element)
     {
+        // Thorough value validation (called after lightweight IsSerializedEntity check)
         try
         {
             var entityType = element.GetProperty("entityType").GetString();
@@ -118,46 +123,17 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
                 return null;
             }
 
-            string? contentType = null;
-            if (element.TryGetProperty("contentType", out var contentTypeElement))
+            // Extract data field (required)
+            if (!element.TryGetProperty("data", out var dataElement) || dataElement.ValueKind != JsonValueKind.Object)
             {
-                contentType = contentTypeElement.GetString();
+                return null;
             }
 
+            // Extract parentUnique (optional)
             string? parentUnique = null;
             if (element.TryGetProperty("parentUnique", out var parentUniqueElement))
             {
                 parentUnique = parentUniqueElement.GetString();
-            }
-
-            var properties = new List<AISerializedProperty>();
-            if (element.TryGetProperty("properties", out var propsElement) && propsElement.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var prop in propsElement.EnumerateArray())
-                {
-                    var alias = prop.TryGetProperty("alias", out var a) ? a.GetString() : null;
-                    var label = prop.TryGetProperty("label", out var l) ? l.GetString() : null;
-                    var editorAlias = prop.TryGetProperty("editorAlias", out var e) ? e.GetString() : null;
-
-                    if (string.IsNullOrEmpty(alias) || string.IsNullOrEmpty(label) || string.IsNullOrEmpty(editorAlias))
-                    {
-                        continue;
-                    }
-
-                    object? value = null;
-                    if (prop.TryGetProperty("value", out var v))
-                    {
-                        value = ConvertJsonElement(v);
-                    }
-
-                    properties.Add(new AISerializedProperty
-                    {
-                        Alias = alias,
-                        Label = label,
-                        EditorAlias = editorAlias,
-                        Value = value
-                    });
-                }
             }
 
             return new AISerializedEntity
@@ -165,28 +141,13 @@ internal sealed class SerializedEntityContributor : IAIRuntimeContextContributor
                 EntityType = entityType,
                 Unique = unique,
                 Name = name,
-                ContentType = contentType,
                 ParentUnique = parentUnique,
-                Properties = properties
+                Data = dataElement.Clone() // Clone to avoid referencing original document
             };
         }
         catch
         {
             return null;
         }
-    }
-
-    private static object? ConvertJsonElement(JsonElement element)
-    {
-        return element.ValueKind switch
-        {
-            JsonValueKind.String => element.GetString(),
-            JsonValueKind.Number => element.TryGetInt64(out var l) ? l : element.GetDouble(),
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            JsonValueKind.Null => null,
-            JsonValueKind.Undefined => null,
-            _ => element
-        };
     }
 }

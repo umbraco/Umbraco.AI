@@ -11,9 +11,9 @@ public class AmazonProviderSettings
     /// <summary>
     /// The AWS region for Bedrock services (e.g., "us-east-1").
     /// </summary>
-    [AIField(DefaultValue = "us-east-1")]
+    [AIField]
     [Required]
-    public string? Region { get; set; }
+    public string? Region { get; set; } = "us-east-1";
 
     /// <summary>
     /// The AWS Access Key ID for authenticating with Bedrock services.

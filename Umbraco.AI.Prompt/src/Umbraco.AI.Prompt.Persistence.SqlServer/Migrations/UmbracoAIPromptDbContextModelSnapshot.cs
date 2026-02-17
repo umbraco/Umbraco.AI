@@ -72,6 +72,9 @@ namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("OptionCount")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("ProfileId")
                         .HasColumnType("uniqueidentifier");
 

@@ -5,6 +5,8 @@
  * AI tools to interact with Umbraco entities being edited.
  */
 
+import { UmbApi } from "@umbraco-cms/backoffice/extension-api";
+
 /**
  * Represents the identity of an entity being edited.
  * Supports hierarchical relationships via recursive parentContext.
@@ -17,19 +19,45 @@ export interface UaiEntityContext {
 
 /**
  * Serialized representation of an entity for LLM context.
+ * Adapters decide the structure of the data field based on entity type.
  */
 export interface UaiSerializedEntity {
     entityType: string;
     unique: string;
     name: string;
-    contentType?: string;
     /** Parent unique when creating a new entity. Undefined for existing entities. */
     parentUnique?: string | null;
-    properties: UaiSerializedProperty[];
+    /**
+     * Free-form entity data as JSON object.
+     * Adapters decide the structure based on entity type.
+     *
+     * For CMS entities, typically contains:
+     * ```typescript
+     * {
+     *   contentType: "blogPost",
+     *   properties: [
+     *     { alias: "title", label: "Title", editorAlias: "Umbraco.TextBox", value: "Hello" }
+     *   ]
+     * }
+     * ```
+     *
+     * For third-party entities, can be any domain-appropriate structure:
+     * ```typescript
+     * {
+     *   sku: "12345",
+     *   price: { amount: 29.99, currency: "USD" },
+     *   variants: [{ color: "red", size: "large" }]
+     * }
+     * ```
+     */
+    data: Record<string, unknown>;
 }
 
 /**
  * Serialized property for LLM context.
+ * @deprecated Entity data is now stored in UaiSerializedEntity.data as free-form JSON.
+ * For CMS entities, properties are nested inside the data field.
+ * This interface is kept for reference only.
  */
 export interface UaiSerializedProperty {
     alias: string;
@@ -39,12 +67,12 @@ export interface UaiSerializedProperty {
 }
 
 /**
- * Request to change a property value.
+ * Request to change a value at a JSON path in the entity data.
  * Changes are staged in the workspace - user must save to persist.
  */
-export interface UaiPropertyChange {
-    /** Property alias */
-    alias: string;
+export interface UaiValueChange {
+    /** JSON path to the value (e.g., "title", "price.amount", "inventory.quantity") */
+    path: string;
     /** New value to set */
     value: unknown;
     /** Culture for variant content (undefined = invariant) */
@@ -54,9 +82,9 @@ export interface UaiPropertyChange {
 }
 
 /**
- * Result of a property change operation.
+ * Result of a value change operation.
  */
-export interface UaiPropertyChangeResult {
+export interface UaiValueChangeResult {
     /** Whether the change was applied successfully */
     success: boolean;
     /** Human-readable error message if failed */
@@ -71,7 +99,7 @@ export interface UaiPropertyChangeResult {
  * - Serializing entity data for LLM consumption
  * - Applying property changes (optional)
  */
-export interface UaiEntityAdapterApi {
+export interface UaiEntityAdapterApi extends UmbApi {
     readonly entityType: string;
 
     /**
@@ -118,13 +146,13 @@ export interface UaiEntityAdapterApi {
     serializeForLlm(workspaceContext: unknown): Promise<UaiSerializedEntity>;
 
     /**
-     * Apply a property change to the workspace (staged, not persisted).
+     * Apply a value change to the workspace (staged, not persisted).
      * Optional - some entity types may be read-only.
      * @param workspaceContext The workspace context to modify
-     * @param change The property change to apply
+     * @param change The value change to apply
      * @returns Result indicating success or failure with error message
      */
-    applyPropertyChange?(workspaceContext: unknown, change: UaiPropertyChange): Promise<UaiPropertyChangeResult>;
+    applyValueChange?(workspaceContext: unknown, change: UaiValueChange): Promise<UaiValueChangeResult>;
 }
 
 /**

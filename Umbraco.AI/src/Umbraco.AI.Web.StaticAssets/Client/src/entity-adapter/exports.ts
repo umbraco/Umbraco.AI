@@ -14,8 +14,8 @@ export {
     type UaiDetectedEntity,
     type UaiEntityAdapterApi,
     type UaiEntityContext,
-    type UaiPropertyChange,
-    type UaiPropertyChangeResult,
+    type UaiValueChange,
+    type UaiValueChangeResult,
     type UaiSerializedEntity,
     type UaiSerializedProperty,
 } from "./index.js";

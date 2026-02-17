@@ -16,7 +16,7 @@ import {
     type UaiAgentItem,
 } from "@umbraco-ai/agent-ui";
 import { UaiCopilotAgentRepository } from "./repository";
-import { UaiEntityAdapterContext, type UaiPropertyChange, type UaiPropertyChangeResult } from "@umbraco-ai/core";
+import { UaiEntityAdapterContext, UaiRequestContextCollector, type UaiValueChange, type UaiValueChangeResult } from "@umbraco-ai/core";
 import { UaiCopilotEntityContext } from "./services/copilot-entity.context.js";
 
 /**
@@ -35,6 +35,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     #hitlContext: UaiHitlContext;
     #entityAdapterContext: UaiEntityAdapterContext;
     #entityContext: UaiCopilotEntityContext;
+    #requestContextCollector: UaiRequestContextCollector;
     #_toolRendererManager: UaiToolRendererManager;
     #agents = new UmbArrayState<UaiAgentItem>([], (x) => x.id);
     #selectedAgent = new UmbBasicState<UaiAgentItem | undefined>(undefined);
@@ -68,6 +69,10 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         return this.#runController.isRunning$;
     }
 
+    get resolvedAgent$() {
+        return this.#runController.resolvedAgent$;
+    }
+
     // ─── Tool Management ───────────────────────────────────────────────────────
 
     get toolRendererManager(): UaiToolRendererManager {
@@ -98,8 +103,8 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         this.#entityAdapterContext.setSelectedEntityKey(key);
     }
 
-    async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
-        return this.#entityAdapterContext.applyPropertyChange(change);
+    async applyValueChange(change: UaiValueChange): Promise<UaiValueChangeResult> {
+        return this.#entityAdapterContext.applyValueChange(change);
     }
 
     constructor(host: UmbControllerHost) {
@@ -111,6 +116,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         const frontendToolManager = new UaiFrontendToolManager(host);
         this.#entityAdapterContext = new UaiEntityAdapterContext(host);
         this.#entityContext = new UaiCopilotEntityContext(host, this.#entityAdapterContext);
+        this.#requestContextCollector = new UaiRequestContextCollector(host);
 
         this.#runController = new UaiRunController(host, this.#hitlContext, {
             toolRendererManager: this.#_toolRendererManager,
@@ -122,14 +128,25 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         });
 
         this.observe(this.#agentRepository.agentItems$, (agents) => {
-            this.#agents.setValue(agents);
+            let displayAgents = [...agents];
 
-            if (!this.#selectedAgent.getValue() && agents.length > 0) {
-                this.#selectedAgent.setValue(agents[0]);
+            // Add "Auto" option when agents are available
+            if (agents.length > 0) {
+                displayAgents = [
+                    { id: "auto", name: "Auto", alias: "auto" },
+                    ...agents,
+                ];
+            }
+
+            this.#agents.setValue(displayAgents);
+
+            // Default to "Auto" when agents are available
+            if (!this.#selectedAgent.getValue() && displayAgents.length > 0) {
+                this.#selectedAgent.setValue(displayAgents[0]);
             }
 
             const currentSelected = this.#selectedAgent.getValue();
-            if (currentSelected && !agents.find((a) => a.id === currentSelected.id)) {
+            if (currentSelected && !displayAgents.find((a) => a.id === currentSelected.id)) {
                 this.#selectedAgent.setValue(undefined);
             }
         });
@@ -207,16 +224,11 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
     // ─── Run Actions ───────────────────────────────────────────────────────────
 
     async sendUserMessage(content: string): Promise<void> {
-        const entityContext = await this.#entityAdapterContext.serializeSelectedEntity();
-
-        const context: Array<{ description: string; value: string }> = [];
-        if (entityContext) {
-            context.push({
-                description: `Currently editing ${entityContext.entityType}: ${entityContext.name}`,
-                value: JSON.stringify(entityContext),
-            });
-        }
-
+        const items = await this.#requestContextCollector.collect();
+        const context = items.map((item) => ({
+            description: item.description,
+            value: item.value ?? "",
+        }));
         this.#runController.sendUserMessage(content, context);
     }
 

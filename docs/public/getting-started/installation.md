@@ -68,7 +68,16 @@ dotnet build
 
 {% endcode %}
 
-When you run your Umbraco site, the AI section will appear in the backoffice Settings area.
+When you run your Umbraco site, a new **AI** section will appear in the backoffice.
+
+{% hint style="info" %}
+**User Permissions**: The AI section is a standalone section in the backoffice (not under Settings). You may need to grant your user group access to the AI section:
+1. Navigate to **Users** > **User Groups**
+2. Edit the relevant user group (for example, Administrators)
+3. Under **Sections**, ensure **AI** is checked
+4. Save the user group
+5. Refresh your browser to see the AI section
+{% endhint %}
 
 ## Next Steps
 

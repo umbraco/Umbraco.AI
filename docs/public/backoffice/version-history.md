@@ -9,7 +9,7 @@ Umbraco.AI automatically tracks version history for connections, profiles, conte
 
 ## Viewing Version History
 
-1. Navigate to the entity (e.g., **Settings** > **AI** > **Profiles**)
+1. Navigate to the entity (e.g., the **AI** section > **Profiles**)
 2. Select the entity you want to view
 3. Click the **Version History** tab (or icon)
 

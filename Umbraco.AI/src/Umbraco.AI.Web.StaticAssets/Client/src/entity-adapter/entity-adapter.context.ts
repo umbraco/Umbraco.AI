@@ -15,15 +15,15 @@ import {
     type Observable,
     type Subscription,
 } from "@umbraco-cms/backoffice/external/rxjs";
-import { loadManifestApi } from "@umbraco-cms/backoffice/extension-api";
+import { createExtensionApi } from "@umbraco-cms/backoffice/extension-api";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import { UAI_WORKSPACE_REGISTRY_CONTEXT, type UaiWorkspaceRegistryContext } from "../workspace-registry/index.js";
 import { UAI_ENTITY_ADAPTER_EXTENSION_TYPE, type ManifestEntityAdapter } from "./extension-type.js";
 import type {
     UaiDetectedEntity,
     UaiEntityAdapterApi,
-    UaiPropertyChange,
-    UaiPropertyChangeResult,
+    UaiValueChange,
+    UaiValueChangeResult,
     UaiSerializedEntity,
 } from "./types.js";
 
@@ -53,20 +53,30 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
     /** Subscriptions to workspace observables, keyed by entity key */
     readonly #subscriptions = new Map<string, Subscription[]>();
 
+    /** Promise that resolves when initial workspace registry consumption and refresh is complete */
+    readonly #initialized: Promise<void>;
+
     constructor(host: UmbControllerHost) {
         super(host);
 
-        // Consume the workspace registry context
-        this.consumeContext(UAI_WORKSPACE_REGISTRY_CONTEXT, (registry) => {
-            if (!registry) return;
+        // Create initialization promise that resolves when workspace registry is consumed and initial refresh is done
+        this.#initialized = new Promise<void>((resolve) => {
+            // Consume the workspace registry context
+            this.consumeContext(UAI_WORKSPACE_REGISTRY_CONTEXT, async (registry) => {
+                if (!registry) {
+                    resolve(); // Resolve even if no registry (no entities available)
+                    return;
+                }
 
-            this.#workspaceRegistry = registry;
+                this.#workspaceRegistry = registry;
 
-            // Observe workspace registry changes
-            this.observe(registry.changes$, () => this.#refresh());
+                // Observe workspace registry changes
+                this.observe(registry.changes$, () => this.#refresh());
 
-            // Initial detection
-            this.#refresh();
+                // Initial detection - wait for it to complete before resolving
+                await this.#refresh();
+                resolve();
+            });
         });
     }
 
@@ -120,20 +130,28 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
     /**
      * Serialize the selected entity for LLM context injection.
      * Returns undefined if no entity is selected.
+     * Waits for initialization to complete before attempting to serialize.
      */
     async serializeSelectedEntity(): Promise<UaiSerializedEntity | undefined> {
+        // Wait for workspace registry to be consumed and entities to be detected
+        await this.#initialized;
+
         const selected = this.getSelectedEntity();
         if (!selected) return undefined;
         return selected.adapter.serializeForLlm(selected.workspaceContext);
     }
 
     /**
-     * Apply a property change to the currently selected entity.
+     * Apply a value change to the currently selected entity.
      * Changes are staged in the workspace - user must save to persist.
-     * @param change The property change to apply
+     * Waits for initialization to complete before attempting to apply changes.
+     * @param change The value change to apply
      * @returns Result indicating success or failure with error message
      */
-    async applyPropertyChange(change: UaiPropertyChange): Promise<UaiPropertyChangeResult> {
+    async applyValueChange(change: UaiValueChange): Promise<UaiValueChangeResult> {
+        // Wait for workspace registry to be consumed and entities to be detected
+        await this.#initialized;
+
         const selected = this.getSelectedEntity();
 
         if (!selected) {
@@ -143,14 +161,14 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
             };
         }
 
-        if (!selected.adapter.applyPropertyChange) {
+        if (!selected.adapter.applyValueChange) {
             return {
                 success: false,
-                error: `Entity type "${selected.entityContext.entityType}" does not support property changes`,
+                error: `Entity type "${selected.entityContext.entityType}" does not support value changes`,
             };
         }
 
-        return selected.adapter.applyPropertyChange(selected.workspaceContext, change);
+        return selected.adapter.applyValueChange(selected.workspaceContext, change);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -167,12 +185,9 @@ export class UaiEntityAdapterContext extends UmbControllerBase {
             let adapter = this.#adaptersCache.get(manifest.alias);
             if (!adapter) {
                 try {
-                    const ApiModule = await loadManifestApi(manifest.api);
-                    if (ApiModule) {
-                        const ApiClass = (ApiModule as any).default ?? ApiModule;
-                        const newAdapter: UaiEntityAdapterApi = new ApiClass();
-                        this.#adaptersCache.set(manifest.alias, newAdapter);
-                        adapter = newAdapter;
+                    adapter = await createExtensionApi<UaiEntityAdapterApi>(this, manifest);
+                    if (adapter) {
+                        this.#adaptersCache.set(manifest.alias, adapter);
                     }
                 } catch (e) {
                     console.error(`[UaiEntityAdapterContext] Failed to load adapter ${manifest.alias}:`, e);

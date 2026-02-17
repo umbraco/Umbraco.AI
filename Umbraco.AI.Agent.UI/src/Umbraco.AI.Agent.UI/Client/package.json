@@ -14,11 +14,9 @@
         "build:app": "tsc -p tsconfig.json && vite build",
         "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)"
     },
-    "peerDependencies": {
-        "@umbraco-ai/agent": "^1.0.0",
-        "@umbraco-cms/backoffice": "^17.1.0"
-    },
     "dependencies": {
+        "@umbraco-ai/agent": "^1.0.0",
+        "@umbraco-cms/backoffice": "^17.1.0",
         "rxjs": "^7.8.2"
     },
     "devDependencies": {

@@ -55,7 +55,7 @@ export class UaiConnectionDetailsWorkspaceViewElement extends UmbLitElement {
     render() {
         if (!this._model) return html`<uui-loader></uui-loader>`;
 
-        return html`<uui-box headline="General"> ${this.#renderProviderSettings()} </uui-box>`;
+        return this.#renderProviderSettings();
     }
 
     #renderProviderSettings() {

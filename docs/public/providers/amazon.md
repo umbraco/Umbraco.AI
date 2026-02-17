@@ -112,7 +112,7 @@ Before using a model, you must enable it in your AWS account:
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Connections**
+1. Navigate to the **AI** section > **Connections**
 2. Click **Create Connection**
 3. Select **Amazon Bedrock** as the provider
 4. Enter your AWS credentials and region

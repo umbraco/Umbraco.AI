@@ -51,7 +51,7 @@ public class EditableModelFieldModel
     public object? EditorConfig { get; set; }
 
     /// <summary>
-    /// The default value of the setting.
+    /// The default value of the setting from the model's property initializer.
     /// </summary>
     public object? DefaultValue { get; set; }
 
@@ -64,4 +64,9 @@ public class EditableModelFieldModel
     /// Whether this setting is required.
     /// </summary>
     public bool IsRequired { get; set; }
+
+    /// <summary>
+    /// Optional group name used to visually group related fields in the UI.
+    /// </summary>
+    public string? Group { get; set; }
 }

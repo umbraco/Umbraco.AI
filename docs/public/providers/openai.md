@@ -79,7 +79,7 @@ Keep your API key secure. Never commit it to source control or expose it in clie
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Connections**
+1. Navigate to the **AI** section > **Connections**
 2. Click **Create Connection**
 3. Select **OpenAI** as the provider
 4. Enter your API key

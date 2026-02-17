@@ -23,7 +23,7 @@ Settings are a singleton entity - there is only one settings record for the enti
 
 The recommended way to configure default profiles is through the backoffice:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select your default chat profile from the dropdown
 3. Select your default embedding profile (if applicable)
 4. Click **Save**
@@ -126,7 +126,7 @@ See [Audit Logs](../backoffice/audit-logs.md) for more information.
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select default profiles from the dropdowns
 3. Save changes
 

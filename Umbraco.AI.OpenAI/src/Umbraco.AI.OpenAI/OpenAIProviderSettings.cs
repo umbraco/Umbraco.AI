@@ -24,6 +24,6 @@ public class OpenAIProviderSettings
     /// <summary>
     /// Custom API endpoint URL.
     /// </summary>
-    [AIField(DefaultValue = "https://api.openai.com/v1")]
-    public string? Endpoint { get; set; }
+    [AIField]
+    public string? Endpoint { get; set; } = "https://api.openai.com/v1";
 }

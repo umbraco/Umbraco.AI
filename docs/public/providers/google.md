@@ -70,7 +70,7 @@ Gemini 1.5 Pro has a 2 million token context window - the largest available, ide
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Connections**
+1. Navigate to the **AI** section > **Connections**
 2. Click **Create Connection**
 3. Select **Google** as the provider
 4. Enter your API key

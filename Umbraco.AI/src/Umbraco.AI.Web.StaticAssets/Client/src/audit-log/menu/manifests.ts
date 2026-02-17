@@ -2,6 +2,7 @@ import type { ManifestMenuItem } from "@umbraco-cms/backoffice/menu";
 import { UAI_AUDIT_LOG_ROOT_ENTITY_TYPE } from "../entity.js";
 import { UAI_AUDIT_LOG_ICON } from "../collection/constants.js";
 import { UAI_AUDIT_LOG_MENU_ITEM_ALIAS } from "../constants.js";
+import { UAI_CORE_MENU_ALIAS } from "../../section/constants.ts";
 
 export const auditLogMenuManifests: ManifestMenuItem[] = [
     {
@@ -13,7 +14,7 @@ export const auditLogMenuManifests: ManifestMenuItem[] = [
             label: "Logs",
             icon: UAI_AUDIT_LOG_ICON,
             entityType: UAI_AUDIT_LOG_ROOT_ENTITY_TYPE,
-            menus: ["UmbracoAI.Menu.Settings"],
+            menus: [UAI_CORE_MENU_ALIAS],
         },
     },
 ];

@@ -9,7 +9,7 @@ Profiles combine a connection with model settings for specific use cases. Create
 
 ## Viewing Profiles
 
-1. Navigate to **Settings** > **AI** > **Profiles**
+1. Navigate to the **AI** section > **Profiles**
 2. The profile list shows all configured profiles
 3. Use filters to find profiles by capability (Chat, Embedding)
 4. Click a profile to view or edit its details
@@ -75,7 +75,7 @@ Embedding profiles currently use model defaults. Select the appropriate embeddin
 
 To use a profile as the default when no profile is specified in code:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select your chat profile from the **Default Chat Profile** dropdown
 3. Select your embedding profile from the **Default Embedding Profile** dropdown
 4. Click **Save**

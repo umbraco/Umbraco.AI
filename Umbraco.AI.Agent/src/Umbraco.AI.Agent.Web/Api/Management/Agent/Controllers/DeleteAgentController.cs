@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Web.Api.Common.Models;
-using Umbraco.Cms.Web.Common.Authorization;
+using Umbraco.AI.Web.Authorization;
 
 namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 
@@ -13,7 +13,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 /// Controller for deleting Agents.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
+[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
 public class DeleteAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _AIAgentService;

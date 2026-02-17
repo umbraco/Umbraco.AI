@@ -4,6 +4,7 @@ using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Tests.Common.Builders;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Tests.Unit.Services;
 
@@ -13,6 +14,7 @@ public class AIProfileServiceTests
     private readonly Mock<IAISettingsService> _settingsServiceMock;
     private readonly Mock<IOptions<AIOptions>> _optionsMock;
     private readonly Mock<IAIEntityVersionService> _versionServiceMock;
+    private readonly Mock<IEventAggregator> _eventAggregatorMock;
     private readonly AIProfileService _service;
 
     public AIProfileServiceTests()
@@ -21,6 +23,7 @@ public class AIProfileServiceTests
         _settingsServiceMock = new Mock<IAISettingsService>();
         _optionsMock = new Mock<IOptions<AIOptions>>();
         _versionServiceMock = new Mock<IAIEntityVersionService>();
+        _eventAggregatorMock = new Mock<IEventAggregator>();
         _optionsMock.Setup(x => x.Value).Returns(new AIOptions
         {
             DefaultChatProfileAlias = "default-chat",
@@ -31,7 +34,7 @@ public class AIProfileServiceTests
         _settingsServiceMock.Setup(x => x.GetSettingsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AISettings());
 
-        _service = new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object);
+        _service = new AIProfileService(_repositoryMock.Object, _settingsServiceMock.Object, _optionsMock.Object, _versionServiceMock.Object, _eventAggregatorMock.Object);
     }
 
     #region GetProfileAsync
@@ -189,7 +192,8 @@ public class AIProfileServiceTests
             _repositoryMock.Object,
             emptySettingsService.Object,
             optionsWithNullAlias.Object,
-            _versionServiceMock.Object);
+            _versionServiceMock.Object,
+            _eventAggregatorMock.Object);
 
         // Act
         var act = () => serviceWithNullOptions.GetDefaultProfileAsync(AICapability.Chat);

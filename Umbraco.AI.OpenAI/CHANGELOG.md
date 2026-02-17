@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.OpenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@1.1.0...Umbraco.AI.OpenAI@1.1.1) (2026-02-17)
+
+### build
+
+* **openai,anthropic,google,microsoft-foundry,amazon:** Add version updates to umbraco-package.json ([46038a4](https://github.com/umbraco/Umbraco.AI/commit/46038a48f0e36c21f2fa50407466f96caec08f41))
+* **openai:** Regenerate package lock file ([51844a4](https://github.com/umbraco/Umbraco.AI/commit/51844a4ade566c6ae8a8eaeb1a3d77c92fa81a10))
+
+### fix
+
+* **openai:** Fixed incorrectly API usage for Responses API ([8482f91](https://github.com/umbraco/Umbraco.AI/commit/8482f9147e8070ec74eaae303764605097ab2f42))
+* **openai:** Migrate to Responses API for GPT-4o compatibility ([cecad4b](https://github.com/umbraco/Umbraco.AI/commit/cecad4bb68f1f91f60a9114654971807c370eba4)), closes [#50](https://github.com/umbraco/Umbraco.AI/issues/50)
+
 ## [1.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.OpenAI@1.0.0...Umbraco.AI.OpenAI@1.1.0) (2026-02-10)
 
 ### fix

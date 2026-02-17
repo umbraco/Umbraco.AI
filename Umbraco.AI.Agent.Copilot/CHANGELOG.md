@@ -5,6 +5,35 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-alpha3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@1.0.0-alpha2...Umbraco.AI.Agent.Copilot@1.0.0-alpha3) (2026-02-17)
+
+### feat
+
+* **agent,copilot:** Add surface context contributor and frontend integration ([017aca1](https://github.com/umbraco/Umbraco.AI/commit/017aca1cb889a068035a771cd765360e03ed33e3))
+* **copilot:** Add auto mode with synthetic Auto agent ([3a681df](https://github.com/umbraco/Umbraco.AI/commit/3a681df936544367ae79ab589eb9c2287f100d23))
+* **copilot:** Add dynamic section compatibility system ([58b8af9](https://github.com/umbraco/Umbraco.AI/commit/58b8af9897f1ce5e35d3968bb74ec773de4a2387))
+* **copilot:** Always show Auto option in agent dropdown ([32c3a9a](https://github.com/umbraco/Umbraco.AI/commit/32c3a9a2be23b456dadfdd8228d2505ce2b1667d))
+* **copilot:** Improve context-aware filtering with reactive observables ([a6305fe](https://github.com/umbraco/Umbraco.AI/commit/a6305fe18c0139b2912f5f33fa1ec2babe1645be))
+* **copilot:** Send section context to backend for tool filtering ([1a90ac0](https://github.com/umbraco/Umbraco.AI/commit/1a90ac08312590a26143c2a9b332b72764cbbf03))
+* **core,copilot:** Add manifest-driven request context contributor system ([ec3f985](https://github.com/umbraco/Umbraco.AI/commit/ec3f98503ed98b96e86f3a6c78f9320922eccb3b))
+
+### fix
+
+* **copilot:** Add missing section-compatibility.ts file ([d96d84c](https://github.com/umbraco/Umbraco.AI/commit/d96d84c38af4d5a3ea8f79802692166aca9d666a))
+* **copilot:** Ensure agent list renders immediately on page load ([185b9cd](https://github.com/umbraco/Umbraco.AI/commit/185b9cd5a2e33eb936f109f26e1199906d9046e1))
+* **copilot:** Fix section-detector import paths ([c39633c](https://github.com/umbraco/Umbraco.AI/commit/c39633cea8709ec14764c7423f7fd89ac91fc57b))
+* **copilot:** Prevent history API corruption with multiple section observers ([5450850](https://github.com/umbraco/Umbraco.AI/commit/545085058ad474dbf0b6712f3bc2121ff6221c15))
+* **core,agent,prompt,copilot:** Add client ready promises to prevent race conditions ([8b961db](https://github.com/umbraco/Umbraco.AI/commit/8b961dbf5c0c8e74198772c6ff44e570238e7c1d))
+* **tools:** Filter non-numeric issue references from changelogs ([5e70577](https://github.com/umbraco/Umbraco.AI/commit/5e70577235083b4b488c0512ba1736aaf83f7775)), closes [#36](https://github.com/umbraco/Umbraco.AI/issues/36) [#33](https://github.com/umbraco/Umbraco.AI/issues/33)
+
+### refactor
+
+* **agent,copilot:** Rename context dimensions to scope dimensions ([a888be0](https://github.com/umbraco/Umbraco.AI/commit/a888be09565460ad1b41f3ace9fce3f696e9c948))
+* **copilot:** Consolidate section compatibility types into base types.ts ([b9d9067](https://github.com/umbraco/Umbraco.AI/commit/b9d906753b26bccd6859b251d97f8aa74ea66521))
+* **copilot:** Rename section-detector to context-observer ([edd7eec](https://github.com/umbraco/Umbraco.AI/commit/edd7eecfc2a310ed3ddd50f1a56f7b0051ba30ad))
+* **core,agent-ui,copilot:** Extract surface contributor into reusable kind ([7e2100c](https://github.com/umbraco/Umbraco.AI/commit/7e2100c5c3a69f81b71988378fc6997f4beaa5c5))
+* **core,agent-ui,copilot:** Rename surface kind to agentSurface ([c578ef3](https://github.com/umbraco/Umbraco.AI/commit/c578ef3aa9a88f925241b2ea811dc83563d19a5c))
+* **core,agent,copilot:** Rename SectionAlias to Section ([353e167](https://github.com/umbraco/Umbraco.AI/commit/353e1670fdcdc09f88c9055d81d7b688b693bccc))
 
 ## [1.0.0-alpha2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@1.0.0-alpha1...Umbraco.AI.Agent.Copilot@1.0.0-alpha2) (2026-02-10)
 

@@ -198,20 +198,68 @@ This is independent from product version numbers (which follow semantic versioni
 
 **Workflow:**
 
-1. **Determine current date** - Get current year and month for default branch name
-
-2. **Find next release number** - Check existing release branches for current month:
+1. **Determine current date** - Get current year and month for default branch name:
    ```bash
-   # Find existing release branches for current month
-   git branch -a | grep "release/2026.02" | wc -l
-   # Next number is count + 1
+   # Get current year and month
+   date +"%Y.%m"  # Example output: 2026.02
    ```
+
+2. **Find next release number** - Check existing date-based release tags on GitHub:
+   ```bash
+   # Fetch all tags from remote to ensure we have the latest
+   git fetch --tags
+
+   # Find existing release tags for current month (e.g., 2026.02.*)
+   # IMPORTANT: This pattern only matches date-based release tags (YYYY.MM.COUNT),
+   # not product version tags (Product@VERSION)
+   git tag --list "2026.02.*" --sort=-version:refname
+
+   # Example output (only date-based tags):
+   # 2026.02.3
+   # 2026.02.2
+   # 2026.02.1
+   #
+   # This will NOT match product tags like:
+   # Umbraco.AI@1.1.0
+   # Umbraco.AI.OpenAI@2.0.0
+
+   # Parse the highest number and increment by 1
+   # If no tags exist for current month, start with 1
+   ```
+
+   **Tag Parsing Logic:**
+
+   The repository uses **two types of tags**:
+   - **Date-based release tags**: `YYYY.MM.N` (e.g., `2026.02.1`) - Represent complete release events
+   - **Product version tags**: `Product@Version` (e.g., `Umbraco.AI@1.1.0`) - Track individual product versions
+
+   **For release branch naming, we only care about date-based tags:**
+   - Date tags follow the format `YYYY.MM.N` where N is an incrementing counter
+   - Created by the release pipeline when a release is deployed
+   - Multiple products can be released together under one date tag (e.g., `2026.02.1` might include Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5)
+   - The pattern `git tag --list "YYYY.MM.*"` only matches date-based tags, not product tags
+   - Find the latest date tag for the current month and increment N
+   - If no date tags exist for current month, N starts at 1
 
 3. **Ask user for branch name**:
    ```
    Create release branch using recommended calendar naming?
 
-   Suggested: release/2026.02.1 (first release in February 2026)
+   Latest release tag for February 2026: 2026.02.2
+   Suggested branch name: release/2026.02.3 (next release in February 2026)
+
+   Options:
+   - Use suggested name (release/2026.02.3)
+   - Enter custom name (e.g., release/v1.1.0 for version-based)
+   - Cancel
+   ```
+
+   **If no tags exist for current month:**
+   ```
+   Create release branch using recommended calendar naming?
+
+   No previous releases found for February 2026.
+   Suggested branch name: release/2026.02.1 (first release in February 2026)
 
    Options:
    - Use suggested name (release/2026.02.1)
@@ -416,8 +464,10 @@ User approves updates
 You update only the Core-related ranges (Agent, Prompt ranges remain unchanged)
 
 Phase 5: Create release branch
-You detect: No existing release/2026.02.* branches
-You suggest: release/2026.02.1 (first release in February 2026)
+You fetch tags from remote
+You check for existing YYYY.MM.* tags (e.g., 2026.02.*)
+You find: 2026.02.1 (latest release tag for February 2026)
+You suggest: release/2026.02.2 (next release in February 2026)
 You create the branch and switch to it
 All subsequent work happens on this branch
 

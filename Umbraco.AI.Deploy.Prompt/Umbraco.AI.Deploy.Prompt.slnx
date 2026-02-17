@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Umbraco.AI.Deploy.Prompt/Umbraco.AI.Deploy.Prompt.csproj" />
+  </Folder>
+  <Project Path="../Umbraco.AI.Deploy/src/Umbraco.AI.Deploy/Umbraco.AI.Deploy.csproj" />
+  <Project Path="../Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Core/Umbraco.AI.Prompt.Core.csproj" />
+  <Project Path="../Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence.Sqlite/Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />
+  <Project Path="../Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence.SqlServer/Umbraco.AI.Prompt.Persistence.SqlServer.csproj" />
+  <Project Path="../Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Persistence/Umbraco.AI.Prompt.Persistence.csproj" />
+  <Project Path="../Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Startup/Umbraco.AI.Prompt.Startup.csproj" />
+  <Project Path="../Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web/Umbraco.AI.Prompt.Web.csproj" />
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Core/Umbraco.AI.Core.csproj" />
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Persistence.Sqlite/Umbraco.AI.Persistence.Sqlite.csproj" />
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Persistence.SqlServer/Umbraco.AI.Persistence.SqlServer.csproj" />
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Persistence/Umbraco.AI.Persistence.csproj" />
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Startup/Umbraco.AI.Startup.csproj" />
+  <Project Path="../Umbraco.AI/src/Umbraco.AI.Web/Umbraco.AI.Web.csproj" />
+</Solution>

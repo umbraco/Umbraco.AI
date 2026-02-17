@@ -16,13 +16,14 @@ Guide users through the complete release preparation process:
 2. **Analyze commits** to recommend version bumps (major/minor/patch)
 3. **Confirm versions** with the user
 4. **Update Directory.Packages.props** inter-product dependency ranges (with user approval)
-5. **Create release branch** (e.g., `release/2026.02.1`) and switch to it
-6. **Dependency validation** - Check for cross-product conflicts
-7. **Update version.json** files for each product
-8. **Generate release-manifest.json** via `/release-manifest-management`
-9. **Generate CHANGELOG.md** files via `/changelog-management`
-10. **Validate** all files are consistent
-11. **Commit all changes** to the release branch
+5. **Update package.peer-dependencies.json** npm peer dependency ranges (with user approval)
+6. **Create release branch** (e.g., `release/2026.02.1`) and switch to it
+7. **Dependency validation** - Check for cross-product conflicts
+8. **Update version.json** files for each product
+9. **Generate release-manifest.json** via `/release-manifest-management`
+10. **Generate CHANGELOG.md** files via `/changelog-management`
+11. **Validate** all files are consistent
+12. **Commit all changes** to the release branch
 
 ## Workflow
 
@@ -111,7 +112,7 @@ Use **AskUserQuestion** to confirm or adjust versions:
 - Validate version format (X.Y.Z)
 - Warn if version doesn't follow semver conventions
 
-### Phase 4: Update Inter-Product Dependency Ranges
+### Phase 4: Update Inter-Product Dependency Ranges (.NET)
 
 After confirming versions, update the `Directory.Packages.props` file to reflect new minimum version requirements **only for products with breaking changes**.
 
@@ -183,7 +184,83 @@ After confirming versions, update the `Directory.Packages.props` file to reflect
 - These changes will be staged and committed with other release files
 - If unsure, err on the side of NOT updating (keeps more flexibility for consumers)
 
-### Phase 5: Create Release Branch
+### Phase 4.5: Update Inter-Product Peer Dependencies (npm)
+
+After updating `Directory.Packages.props`, update `package.peer-dependencies.json` to keep npm peer dependencies in sync with .NET dependency ranges.
+
+**Important:** This phase uses the same version decisions from Phase 3. No need to re-analyze commits.
+
+**Workflow:**
+
+1. **Read current package.peer-dependencies.json**:
+   ```bash
+   cat package.peer-dependencies.json
+   ```
+
+2. **Use confirmed versions from Phase 3**:
+   - Take the list of products being released with their new versions
+   - Same information used in Phase 4 for `Directory.Packages.props`
+
+3. **Determine which npm ranges need updating**:
+   - For each product being released, check if it has an npm package (has `Client/package.json` with `types` field)
+   - Map the new version to npm semver range:
+     - New version 2.0.0 → `^2.0.0`
+     - New version 1.3.0 → `^1.3.0`
+     - New version 1.2.1 → `^1.2.1`
+   - Update ALL products being released (not just breaking changes) to ensure consistency
+
+4. **Present proposed changes** to user:
+   ```
+   package.peer-dependencies.json updates:
+
+   Products being released:
+   - Umbraco.AI → 1.3.0
+   - Umbraco.AI.Agent → 1.2.0
+   - Umbraco.AI.Prompt → 2.0.0
+
+   The following npm peer dependency ranges will be updated:
+   - @umbraco-ai/core: ^1.2.0 → ^1.3.0
+   - @umbraco-ai/agent: ^1.1.0 → ^1.2.0
+   - @umbraco-ai/prompt: ^1.0.0 → ^2.0.0
+   ```
+
+5. **Validate consistency** with Directory.Packages.props:
+   - Verify that npm ranges match .NET minimum versions from Phase 4
+   - Warn if any mismatches detected (shouldn't happen if Phase 4 was done correctly)
+
+6. **Ask for approval** using AskUserQuestion:
+   - **Default option**: "Update npm peer dependency ranges (recommended)"
+   - **Alternative options**:
+     - "Skip npm updates" - Continue without updating ranges
+     - "Adjust manually later" - Skip now, remind user to update manually
+
+7. **If approved, update the file**:
+   ```bash
+   # Use Edit tool to update package.peer-dependencies.json
+   ```
+
+8. **Confirm updates**:
+   ```
+   ✓ Updated npm peer dependency ranges in package.peer-dependencies.json
+   ```
+
+**Mapping versions to npm ranges:**
+
+| New Version | npm Range | Meaning                                    |
+|-------------|-----------|-------------------------------------------|
+| 1.2.0       | `^1.2.0`  | ≥1.2.0 and <2.0.0                         |
+| 1.3.0       | `^1.3.0`  | ≥1.3.0 and <2.0.0                         |
+| 2.0.0       | `^2.0.0`  | ≥2.0.0 and <3.0.0                         |
+| 17.1.0      | `^17.1.0` | ≥17.1.0 and <18.0.0                       |
+
+**Important Notes:**
+- Uses the same version decisions from Phase 3 (no re-analysis needed)
+- Updates ALL products being released (ensures consistency)
+- npm ranges should mirror the new minimum versions
+- External dependencies like `@umbraco-cms/backoffice` are also managed here
+- These changes will be staged and committed with other release files
+
+### Phase 6: Create Release Branch
 
 **IMPORTANT:** Create the release branch BEFORE making any file changes.
 
@@ -284,7 +361,7 @@ This is independent from product version numbers (which follow semantic versioni
     - Umbraco.AI.Prompt 2.0.0
     ```
 
-### Phase 6: Dependency Validation
+### Phase 7: Dependency Validation
 
 Check for cross-product dependency issues:
 
@@ -305,7 +382,7 @@ Check for cross-product dependency issues:
     - Or: Keep Umbraco.AI at 1.x for this release
     ```
 
-### Phase 7: Update version.json Files
+### Phase 8: Update version.json Files
 
 For each product with confirmed version:
 
@@ -324,7 +401,7 @@ For each product with confirmed version:
 
 3. **Verify update** by reading the file back
 
-### Phase 8: Generate Release Manifest
+### Phase 9: Generate Release Manifest
 
 Invoke `/release-manifest-management` skill with product list:
 - Build comma-separated list of all products being released
@@ -332,7 +409,7 @@ Invoke `/release-manifest-management` skill with product list:
 - Example: `--products="Umbraco.AI,Umbraco.AI.Agent,Umbraco.AI.OpenAI"`
 - Skill will generate manifest automatically without prompting
 
-### Phase 9: Generate Changelogs
+### Phase 10: Generate Changelogs
 
 For each product in the manifest:
 
@@ -343,7 +420,7 @@ For each product in the manifest:
 
 2. **Verify changelog** was generated correctly
 
-### Phase 10: Validation
+### Phase 11: Validation
 
 Verify all files are consistent:
 
@@ -352,7 +429,7 @@ Verify all files are consistent:
 3. **Check release-manifest.json** includes all intended products
 4. **Report any issues** to user
 
-### Phase 11: Commit Changes
+### Phase 12: Commit Changes
 
 **All work has been done on the release branch.** Now commit everything:
 
@@ -360,6 +437,7 @@ Verify all files are consistent:
     ```bash
     git add release-manifest.json
     git add Directory.Packages.props
+    git add package.peer-dependencies.json
     git add */version.json
     git add */CHANGELOG.md
     ```
@@ -463,7 +541,15 @@ You present proposed dependency range updates for Core packages only
 User approves updates
 You update only the Core-related ranges (Agent, Prompt ranges remain unchanged)
 
-Phase 5: Create release branch
+Phase 4.5: Update package.peer-dependencies.json
+You read package.peer-dependencies.json
+You use the same confirmed versions from Phase 3
+You map new versions to npm peer dependency ranges
+You present proposed npm range updates for ALL products being released
+User approves updates
+You update npm peer dependency ranges (e.g., 1.3.0 → ^1.3.0)
+
+Phase 6: Create release branch
 You fetch tags from remote
 You check for existing YYYY.MM.* tags (e.g., 2026.02.*)
 You find: 2026.02.1 (latest release tag for February 2026)
@@ -471,25 +557,25 @@ You suggest: release/2026.02.2 (next release in February 2026)
 You create the branch and switch to it
 All subsequent work happens on this branch
 
-Phase 6: Check dependencies
+Phase 7: Check dependencies
 You check Directory.Packages.props
 You warn: Prompt requires Core 1.x, but Core is going to 1.1.0 - compatible!
 
-Phase 7: Update version.json
+Phase 8: Update version.json
 You edit all three version.json files on the release branch
 
-Phase 8: Generate manifest
+Phase 9: Generate manifest
 You invoke /release-manifest-management --products="Umbraco.AI,Umbraco.AI.OpenAI,Umbraco.AI.Prompt"
 Manifest created with 3 products (no user prompt needed)
 
-Phase 9: Generate changelogs
+Phase 10: Generate changelogs
 You invoke /changelog-management for each product
 All changelogs generated
 
-Phase 10: Validate
+Phase 11: Validate
 You verify all files are correct
 
-Phase 11: Commit changes
+Phase 12: Commit changes
 You commit all changes to the release branch
 You show summary and next steps
 ```

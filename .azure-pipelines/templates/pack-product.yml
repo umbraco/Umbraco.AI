@@ -100,37 +100,8 @@ steps:
           cd "$CLIENT_DIR"
 
           # Update package.json version and cleanse for publishing
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-
-            // Update version to match NuGet version
-            pkg.version = '$VERSION';
-            console.log('Updated package.json version to: ' + pkg.version);
-
-            // Cleanse package.json for publishing
-            console.log('Cleansing package.json for publishing...');
-
-            // Remove devDependencies
-            delete pkg.devDependencies;
-
-            // Convert dependencies to peerDependencies
-            // Existing peerDependencies take precedence over converted dependencies
-            if (pkg.dependencies) {
-              pkg.peerDependencies = {
-                ...pkg.dependencies,
-                ...(pkg.peerDependencies || {})
-              };
-              delete pkg.dependencies;
-            }
-
-            // Remove scripts (not needed in published package)
-            delete pkg.scripts;
-
-            // Write back to disk
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-            console.log('Package cleansing complete');
-          "
+          # Uses package.peer-dependencies.json to resolve workspace references
+          node $(Build.SourcesDirectory)/scripts/build/cleanse-package-json.js "$VERSION" "$PRODUCT" "$(Build.SourcesDirectory)"
 
           # Create artifacts/npm directory
           mkdir -p $(Build.SourcesDirectory)/artifacts/npm

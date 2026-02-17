@@ -170,6 +170,94 @@ public class AIEditableModelSerializerTests
         _protectorMock.Verify(p => p.Protect(It.IsAny<string>()), Times.Never);
     }
 
+    [Fact]
+    public void Serialize_WithConfigurationReference_DoesNotEncrypt()
+    {
+        // Arrange
+        var model = new TestModel { ApiKey = "$OpenAI:ApiKey", Endpoint = "https://api.example.com" };
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "apiKey",
+            Label = "API Key",
+            IsSensitive = true
+        }, new AIEditableModelField
+        {
+            Key = "endpoint",
+            Label = "Endpoint",
+            IsSensitive = false
+        });
+
+        // Act
+        var result = _serializer.Serialize(model, schema);
+
+        // Assert
+        result.ShouldContain("\"apiKey\":\"$OpenAI:ApiKey\""); // Not encrypted - kept as-is
+        result.ShouldContain("\"endpoint\":\"https://api.example.com\"");
+        _protectorMock.Verify(p => p.Protect(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void Serialize_WithMixedConfigReferenceAndActualSecret_EncryptsOnlySecret()
+    {
+        // Arrange
+        var model = new AwsModel
+        {
+            AccessKeyId = "$AWS:AccessKeyId",  // Config reference
+            SecretAccessKey = "actual-secret-key",  // Real secret
+            Region = "us-east-1"
+        };
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "accessKeyId",
+            Label = "Access Key ID",
+            IsSensitive = true
+        }, new AIEditableModelField
+        {
+            Key = "secretAccessKey",
+            Label = "Secret Access Key",
+            IsSensitive = true
+        }, new AIEditableModelField
+        {
+            Key = "region",
+            Label = "Region",
+            IsSensitive = false
+        });
+
+        // Act
+        var result = _serializer.Serialize(model, schema);
+
+        // Assert
+        result.ShouldContain("\"accessKeyId\":\"$AWS:AccessKeyId\""); // Not encrypted
+        result.ShouldContain("\"secretAccessKey\":\"ENC:actual-secret-key\""); // Encrypted
+        result.ShouldContain("\"region\":\"us-east-1\"");
+        _protectorMock.Verify(p => p.Protect("actual-secret-key"), Times.Once);
+        _protectorMock.Verify(p => p.Protect("$AWS:AccessKeyId"), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("$ConnectionStrings:MyApi")]
+    [InlineData("$OpenAI:ApiKey")]
+    [InlineData("$Azure:Endpoint")]
+    [InlineData("$EnvironmentVariable")]
+    public void Serialize_WithVariousConfigReferences_DoesNotEncrypt(string configReference)
+    {
+        // Arrange
+        var model = new TestModel { ApiKey = configReference, Endpoint = "https://api.example.com" };
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "apiKey",
+            Label = "API Key",
+            IsSensitive = true
+        });
+
+        // Act
+        var result = _serializer.Serialize(model, schema);
+
+        // Assert
+        result.ShouldContain($"\"apiKey\":\"{configReference}\""); // Not encrypted
+        _protectorMock.Verify(p => p.Protect(It.IsAny<string>()), Times.Never);
+    }
+
     #endregion
 
     #region Deserialize

@@ -341,6 +341,44 @@ public class AIEditableModelSerializerTests
         result.GetProperty("enabled").GetBoolean().ShouldBeTrue();
     }
 
+    [Fact]
+    public void Serialize_WithPreviouslyEncryptedConfigReference_MigratesAutomatically()
+    {
+        // This test verifies backward compatibility with data encrypted before the $ skip optimization.
+        // Scenario: Config reference was encrypted in database before this change, now it should
+        // decrypt normally on load, then persist unencrypted on save.
+
+        // Arrange - Simulate a config reference that was encrypted with old behavior
+        var configReference = "$OpenAI:ApiKey";
+        var oldEncryptedJson = """{"apiKey":"ENC:$OpenAI:ApiKey","endpoint":"https://api.example.com"}""";
+        var schema = CreateSchema(new AIEditableModelField
+        {
+            Key = "apiKey",
+            Label = "API Key",
+            IsSensitive = true
+        });
+
+        // Act 1: Load existing encrypted data (simulates reading from database)
+        var deserializedElement = (JsonElement)_serializer.Deserialize(oldEncryptedJson);
+
+        // Assert 1: Should decrypt correctly
+        deserializedElement.GetProperty("apiKey").GetString().ShouldBe(configReference);
+        _protectorMock.Verify(p => p.Unprotect("ENC:$OpenAI:ApiKey"), Times.Once);
+
+        // Act 2: Save it again (simulates update operation)
+        var model = new TestModel
+        {
+            ApiKey = deserializedElement.GetProperty("apiKey").GetString(),
+            Endpoint = deserializedElement.GetProperty("endpoint").GetString()
+        };
+        var reserializedJson = _serializer.Serialize(model, schema);
+
+        // Assert 2: Should NOT re-encrypt (automatic migration to unencrypted)
+        reserializedJson.ShouldContain("\"apiKey\":\"$OpenAI:ApiKey\""); // Plain, not encrypted
+        reserializedJson.ShouldNotContain("ENC:"); // No encryption prefix
+        _protectorMock.Verify(p => p.Protect(It.IsAny<string>()), Times.Never); // Never encrypted on save
+    }
+
     #endregion
 
     #region Round Trip

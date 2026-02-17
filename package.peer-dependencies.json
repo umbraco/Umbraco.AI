@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "_comment": "Default peer dependency version ranges for npm packages. Products can override by creating their own package.peer-dependencies.json. Should be kept in sync with minimum versions in Directory.Packages.props.",
+  "@umbraco-ai/core": "^1.2.0",
+  "@umbraco-ai/agent": "^1.2.0",
+  "@umbraco-ai/agent-ui": "^1.0.0",
+  "@umbraco-ai/agent-copilot": "^1.0.0",
+  "@umbraco-ai/prompt": "^1.2.0",
+  "@umbraco-cms/backoffice": "^17.1.0"
+}

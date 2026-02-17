@@ -58,7 +58,7 @@ Profiles provide these benefits:
 
 Configure a default profile through the backoffice:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select "content-writer" from the **Default Chat Profile** dropdown
 3. Click **Save**
 
@@ -120,7 +120,7 @@ When you make a request:
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Profiles**
+1. Navigate to the **AI** section > **Profiles**
 2. Create, edit, or delete profiles through the UI
 
 ### Via Code

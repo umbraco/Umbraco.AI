@@ -10,8 +10,12 @@ Umbraco.AI adds an AI section to the Umbraco backoffice where you can manage con
 ## Accessing the AI Section
 
 1. Log in to the Umbraco backoffice
-2. Navigate to **Settings**
-3. Expand the **AI** section in the tree
+2. Click on the **AI** section in the main navigation
+3. Expand the tree to access Connections, Profiles, and Settings
+
+{% hint style="info" %}
+The AI section is a standalone section in the backoffice (not under Settings). If you don't see it, ensure your user group has been granted access to the AI section, then refresh your browser.
+{% endhint %}
 
 ## What You Can Manage
 

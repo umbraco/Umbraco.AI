@@ -45,7 +45,7 @@ Umbraco.AI provides built-in scopes for common tool categories:
 
 #### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Agents**
+1. Navigate to the **AI** section > **Agents**
 2. Open an agent or create a new one
 3. Go to the **Permissions** tab
 4. Under **Tool Scope Permissions**, select the scopes to allow
@@ -98,7 +98,7 @@ Use explicit tool permissions when you need to:
 
 #### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Agents**
+1. Navigate to the **AI** section > **Agents**
 2. Open an agent or create a new one
 3. Go to the **Permissions** tab
 4. Under **Explicit Tool Permissions**, click **Add Tool**
@@ -188,7 +188,7 @@ User group overrides **replace** the agent's base permissions entirely. They do 
 
 #### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Agents**
+1. Navigate to the **AI** section > **Agents**
 2. Open an agent
 3. Go to the **Permissions** tab
 4. Under **User Group Permission Overrides**, click **Add Override**

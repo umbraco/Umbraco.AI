@@ -9,7 +9,7 @@ Connections store the credentials needed to communicate with AI providers. Manag
 
 ## Viewing Connections
 
-1. Navigate to **Settings** > **AI** > **Connections**
+1. Navigate to the **AI** section > **Connections**
 2. The connection list shows all configured connections
 3. Click a connection to view or edit its details
 

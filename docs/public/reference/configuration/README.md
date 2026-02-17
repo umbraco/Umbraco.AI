@@ -11,7 +11,7 @@ Umbraco.AI supports configuration through both the backoffice and `appsettings.j
 
 The recommended way to configure default profiles is through the backoffice:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select your default chat profile
 3. Select your default embedding profile
 4. Click **Save**

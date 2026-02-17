@@ -41,7 +41,7 @@ dotnet add package Umbraco.AI.Prompt
 
 ### 1. Create a Prompt
 
-In the backoffice, navigate to **Settings** > **AI** > **Prompts** and create a new prompt:
+In the backoffice, navigate to the **AI** section > **Prompts** and create a new prompt:
 
 | Field        | Value                                                                |
 | ------------ | -------------------------------------------------------------------- |

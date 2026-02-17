@@ -15,9 +15,13 @@ A connection stores the credentials and settings needed to communicate with an A
 ## Create a Connection
 
 1. Log in to the Umbraco backoffice
-2. Navigate to **Settings** > **AI**
+2. Navigate to the **AI** section
 3. Click **Connections** in the tree
 4. Click **Create Connection**
+
+{% hint style="info" %}
+If you don't see the AI section, ensure your user group has access to it. See the [Installation](installation.md#verify-installation) guide for details on granting section access.
+{% endhint %}
 
 ## Configure the Connection
 

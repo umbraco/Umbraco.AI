@@ -1,7 +1,7 @@
+using Umbraco.AI.Core.Models.Notifications;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Deploy.Core;
 using Umbraco.Deploy.Core.Connectors.ServiceConnectors;
-using Umbraco.Deploy.Core.NotificationHandlers;
 using Umbraco.Deploy.Infrastructure.Disk;
 
 namespace Umbraco.AI.Deploy.NotificationHandlers;
@@ -9,11 +9,13 @@ namespace Umbraco.AI.Deploy.NotificationHandlers;
 /// <summary>
 /// Base class for handling saved notifications for Umbraco.AI entities.
 /// Automatically writes artifacts to disk when entities are saved.
+/// NOTE: Umbraco.AI uses AIEntitySavedNotification with singular Entity property,
+/// not Umbraco's standard SavedNotification with SavedEntities collection.
 /// </summary>
 public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandlerBase<TEntity, TNotification>
-    : SavedDeployRefresherNotificationAsyncHandlerBase<TEntity, TNotification, TEntity>
+    : INotificationAsyncHandler<TNotification>
     where TEntity : class
-    where TNotification : SavedNotification<TEntity>
+    where TNotification : AIEntitySavedNotification<TEntity>
 {
     private readonly IServiceConnectorFactory _serviceConnectorFactory;
     private readonly IDiskEntityService _diskEntityService;
@@ -35,11 +37,13 @@ public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandle
         diskEntityService.RegisterDiskEntityType(entityType);
     }
 
-    protected override async Task HandleAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken)
+    public async Task HandleAsync(TNotification notification, CancellationToken cancellationToken)
     {
-        // Get artifacts for saved entities (reverse to get latest unique entity)
+        var entity = notification.Entity;
+
+        // Get artifact for saved entity
         var artifacts = await _serviceConnectorFactory
-            .GetArtifactsAsync(_entityType, entities.Reverse().DistinctBy(GetEntityId), new DictionaryCache(), cancellationToken)
+            .GetArtifactsAsync(_entityType, new[] { entity }, new DictionaryCache(), cancellationToken)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -49,9 +53,6 @@ public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandle
         // Update signatures
         _signatureService.SetSignatures(artifacts);
     }
-
-    protected override IEnumerable<TEntity> GetEntities(IEnumerable<TNotification> notifications)
-        => notifications.SelectMany(x => x.SavedEntities);
 
     protected abstract object GetEntityId(TEntity entity);
 }

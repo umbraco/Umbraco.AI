@@ -8,9 +8,9 @@ By default, Deploy:
 
 - **Excludes encrypted values** - Values starting with `ENC:` are not deployed
 - **Allows configuration references** - Values starting with `$` (e.g., `$OpenAI:ApiKey`) are deployed
-- **Excludes sensitive fields** - Fields marked as sensitive by providers are not deployed
+- **Allows sensitive fields** - Fields marked as sensitive can be deployed if they use configuration references
 
-This ensures API keys and secrets stay safe while allowing configuration references to be deployed.
+This ensures encrypted values stay safe while allowing configuration references for sensitive fields to be deployed.
 
 ## Configuration Settings
 
@@ -23,7 +23,7 @@ Add these settings to your `appsettings.json`:
       "Deploy": {
         "Connections": {
           "IgnoreEncrypted": true,
-          "IgnoreSensitive": true,
+          "IgnoreSensitive": false,
           "IgnoreSettings": []
         }
       }
@@ -54,24 +54,25 @@ When `true`, blocks encrypted values (starting with `ENC:`) from being deployed,
 
 ### IgnoreSensitive
 
-**Default:** `true`
+**Default:** `false`
 
 When `true`, blocks all values from fields marked as sensitive by providers, even configuration references.
 
 ```json
-"IgnoreSensitive": true
+"IgnoreSensitive": false
 ```
 
-**Example behavior:**
+**Example behavior (when `false`):**
 
 For a field marked as sensitive (e.g., `ApiKey`):
 
 | Value in Database | Deployed? |
 |-------------------|-----------|
-| `$OpenAI:ApiKey` | ❌ No (sensitive field blocked entirely) |
-| `sk-abc123...` | ❌ No (sensitive field blocked entirely) |
+| `$OpenAI:ApiKey` | ✅ Yes (configuration reference allowed) |
+| `ENC:abc123...` | ❌ No (blocked by IgnoreEncrypted) |
+| `sk-abc123...` | ✅ Yes (plain value allowed - not recommended) |
 
-**When to set to `false`:** If you want to deploy configuration references for sensitive fields. Only do this if you're using configuration references for all secrets and never hardcoding API keys.
+**When to set to `true`:** Only if you want to completely block sensitive fields from deployment, even configuration references. This is the most restrictive option.
 
 ### IgnoreSettings
 
@@ -96,25 +97,9 @@ When Deploy evaluates whether to include a setting value, it checks in this orde
 
 ## Recommended Configurations
 
-### Maximum Security (Default)
+### Balanced Security (Default)
 
-Blocks all sensitive data, only allows configuration references:
-
-```json
-{
-  "Connections": {
-    "IgnoreEncrypted": true,
-    "IgnoreSensitive": true,
-    "IgnoreSettings": []
-  }
-}
-```
-
-**Use when:** You want maximum protection and use configuration references for all secrets.
-
-### Allow Configuration References for Sensitive Fields
-
-Allows `$` references for sensitive fields:
+Blocks encrypted values but allows configuration references for sensitive fields:
 
 ```json
 {
@@ -126,7 +111,23 @@ Allows `$` references for sensitive fields:
 }
 ```
 
-**Use when:** You exclusively use configuration references and never hardcode API keys.
+**Use when:** You use configuration references for secrets and need to deploy them.
+
+### Maximum Security
+
+Blocks all sensitive fields entirely, even configuration references:
+
+```json
+{
+  "Connections": {
+    "IgnoreEncrypted": true,
+    "IgnoreSensitive": true,
+    "IgnoreSettings": []
+  }
+}
+```
+
+**Use when:** You want absolute protection and manage sensitive fields outside of Deploy.
 
 ### Block Specific Fields Only
 

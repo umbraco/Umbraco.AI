@@ -147,7 +147,7 @@ dependencies.Add(new UmbracoAIArtifactDependency(
       "Deploy": {
         "Connections": {
           "IgnoreEncrypted": true,
-          "IgnoreSensitive": true,
+          "IgnoreSensitive": false,
           "IgnoreSettings": ["SpecificFieldName"]
         }
       }

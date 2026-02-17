@@ -19,7 +19,7 @@ public class UmbracoAIDeployConnectionSettings
     /// BLOCKS: All values from sensitive fields, even $ configuration references
     /// Most restrictive - use for fields that should never be deployed.
     /// </summary>
-    public bool IgnoreSensitive { get; set; } = true;
+    public bool IgnoreSensitive { get; set; } = false;
 
     /// <summary>
     /// Specific settings field names to always ignore during deployment.

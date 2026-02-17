@@ -350,7 +350,7 @@ stages:
     # Runs in parallel with GenerateSBOM after Build (through ValidateChangelogs dependency)
     # ============================================================
     - stage: Pack
-      displayName: Pack NuGet Packages
+      displayName: Pack NuGet & NPM Packages
       dependsOn:
           - Build
           - ValidateChangelogs

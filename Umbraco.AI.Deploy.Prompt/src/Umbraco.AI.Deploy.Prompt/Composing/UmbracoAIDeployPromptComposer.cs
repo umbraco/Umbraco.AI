@@ -1,6 +1,6 @@
 using Umbraco.AI.Deploy.Composing;
 using Umbraco.AI.Deploy.Prompt.NotificationHandlers;
-using Umbraco.AI.Prompt.Core.Composing;
+using Umbraco.AI.Prompt.Startup.Configuration;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;

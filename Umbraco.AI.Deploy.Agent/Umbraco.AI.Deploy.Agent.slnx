@@ -2,6 +2,9 @@
   <Folder Name="/src/">
     <Project Path="src/Umbraco.AI.Deploy.Agent/Umbraco.AI.Deploy.Agent.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Umbraco.AI.Deploy.Agent.Tests.Unit/Umbraco.AI.Deploy.Agent.Tests.Unit.csproj" />
+  </Folder>
   <Project Path="../Umbraco.AI.Agent/src/Umbraco.AI.Agent.Core/Umbraco.AI.Agent.Core.csproj" />
   <Project Path="../Umbraco.AI.Agent/src/Umbraco.AI.Agent.Persistence.Sqlite/Umbraco.AI.Agent.Persistence.Sqlite.csproj" />
   <Project Path="../Umbraco.AI.Agent/src/Umbraco.AI.Agent.Persistence.SqlServer/Umbraco.AI.Agent.Persistence.SqlServer.csproj" />

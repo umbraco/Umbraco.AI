@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
@@ -18,6 +23,8 @@ public class UmbracoAIContextServiceConnector(
     private readonly IAIContextService _contextService = contextService;
 
     protected override int[] ProcessPasses => [2];
+    protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+    protected override string OpenUdiName => "All Umbraco AI Contexts";
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Context;
 
     public override Task<AIContext?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)

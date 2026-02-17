@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
@@ -22,6 +27,8 @@ public class UmbracoAIProfileServiceConnector(
     private readonly IAIConnectionService _connectionService = connectionService;
 
     protected override int[] ProcessPasses => [2, 4];
+    protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+    protected override string OpenUdiName => "All Umbraco AI Profiles";
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Profile;
 
     public override Task<AIProfile?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
@@ -98,11 +105,17 @@ public class UmbracoAIProfileServiceConnector(
     {
         var artifact = state.Artifact;
 
-        // Deserialize settings from JsonElement
-        Dictionary<string, object?>? settings = null;
+        // Deserialize settings from JsonElement based on capability
+        IAIProfileSettings? settings = null;
         if (artifact.Settings.HasValue)
         {
-            settings = JsonSerializer.Deserialize<Dictionary<string, object?>>(artifact.Settings.Value);
+            var capability = (AICapability)artifact.Capability;
+            settings = capability switch
+            {
+                AICapability.Chat => JsonSerializer.Deserialize<AIChatProfileSettings>(artifact.Settings.Value),
+                AICapability.Embedding => JsonSerializer.Deserialize<AIEmbeddingProfileSettings>(artifact.Settings.Value),
+                _ => null
+            };
         }
 
         // Create AIModelRef from artifact properties
@@ -131,8 +144,17 @@ public class UmbracoAIProfileServiceConnector(
         {
             // Update existing profile
             var profile = state.Entity;
+
+            // Validate that capability hasn't changed (it's init-only, so we can't change it)
+            if (profile.Capability != (AICapability)artifact.Capability)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot change profile capability from {profile.Capability} to {(AICapability)artifact.Capability}. " +
+                    "Profile capability is immutable after creation.");
+            }
+
+            // Update mutable properties
             profile.Name = artifact.Name;
-            profile.Capability = (AICapability)artifact.Capability;
             profile.Model = modelRef;
             profile.Settings = settings;
             profile.Tags = artifact.Tags.ToList();

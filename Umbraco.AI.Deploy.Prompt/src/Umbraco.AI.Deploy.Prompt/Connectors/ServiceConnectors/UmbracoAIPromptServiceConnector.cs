@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
@@ -22,6 +27,8 @@ public class UmbracoAIPromptServiceConnector(
 {
     private readonly IAIPromptService _promptService = promptService;
 
+    protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+    protected override string OpenUdiName => "All Umbraco AI Prompts";
     public override string UdiEntityType => UmbracoAIPromptConstants.UdiEntityType.Prompt;
 
     public override Task<AIPrompt?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)

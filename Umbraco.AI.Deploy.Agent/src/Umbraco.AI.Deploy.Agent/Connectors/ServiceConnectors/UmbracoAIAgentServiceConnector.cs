@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy.Agent.Artifacts;
@@ -22,6 +27,8 @@ public class UmbracoAIAgentServiceConnector(
 {
     private readonly IAIAgentService _agentService = agentService;
 
+    protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+    protected override string OpenUdiName => "All Umbraco AI Agents";
     public override string UdiEntityType => UmbracoAIAgentConstants.UdiEntityType.Agent;
 
     public override Task<AIAgent?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)

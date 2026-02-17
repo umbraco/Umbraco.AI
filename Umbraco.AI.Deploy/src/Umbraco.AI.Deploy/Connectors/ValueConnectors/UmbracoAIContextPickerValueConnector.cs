@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Deploy.Core.Connectors.ValueConnectors;
 
 namespace Umbraco.AI.Deploy.Connectors.ValueConnectors;
@@ -43,12 +48,21 @@ public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
         IContextCache contextCache,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(value) || !UdiHelper.TryParseGuidUdi(value, out GuidUdi? udi))
+        if (string.IsNullOrWhiteSpace(value))
             return Task.FromResult<object?>(null);
 
-        // TODO: Validate context exists via IAIContextService (when Context feature is fully implemented)
-        // For now, return GUID directly
+        // Try to parse as UDI first (artifact format)
+        if (UdiParser.TryParse(value, out Udi? udi) && udi is GuidUdi guidUdi)
+        {
+            // TODO: Validate context exists via IAIContextService (when Context feature is fully implemented)
+            // For now, return GUID directly
+            return Task.FromResult<object?>(guidUdi.Guid.ToString());
+        }
 
-        return Task.FromResult<object?>(udi.Guid.ToString());
+        // Fallback: try to parse as GUID directly (legacy format)
+        if (Guid.TryParse(value, out _))
+            return Task.FromResult<object?>(value);
+
+        return Task.FromResult<object?>(null);
     }
 }

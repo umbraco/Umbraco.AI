@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Deploy.Artifacts;
@@ -20,6 +25,8 @@ public class UmbracoAIConnectionServiceConnector(
     private readonly IAIConnectionService _connectionService = connectionService;
 
     protected override int[] ProcessPasses => [2];
+    protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+    protected override string OpenUdiName => "All Umbraco AI Connections";
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Connection;
 
     public override Task<AIConnection?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
@@ -27,7 +34,7 @@ public class UmbracoAIConnectionServiceConnector(
 
     public override async IAsyncEnumerable<AIConnection> GetEntitiesAsync(CancellationToken cancellationToken = default)
     {
-        var connections = await _connectionService.GetAllConnectionsAsync(cancellationToken);
+        var connections = await _connectionService.GetConnectionsAsync(null, cancellationToken);
         foreach (var connection in connections)
         {
             yield return connection;

@@ -1,5 +1,5 @@
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Agent.Core.Composing;
+using Umbraco.AI.Agent.Startup.Configuration;
 using Umbraco.AI.Deploy.Agent.NotificationHandlers;
 using Umbraco.AI.Deploy.Composing;
 using Umbraco.Cms.Core;

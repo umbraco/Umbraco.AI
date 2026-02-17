@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;

@@ -188,7 +188,7 @@ After confirming versions, update the `Directory.Packages.props` file to reflect
 
 After updating `Directory.Packages.props`, update `package.peer-dependencies.json` to keep npm peer dependencies in sync with .NET dependency ranges.
 
-**Important:** npm peer dependency ranges should mirror the minimum versions from `Directory.Packages.props`.
+**Important:** This phase uses the same version decisions from Phase 3. No need to re-analyze commits.
 
 **Workflow:**
 
@@ -197,76 +197,66 @@ After updating `Directory.Packages.props`, update `package.peer-dependencies.jso
    cat package.peer-dependencies.json
    ```
 
-2. **Identify products with breaking changes** (same as Phase 4):
-   - Products with BREAKING CHANGE in commit bodies
-   - Products with `!` after scope (e.g., `feat!:`, `refactor!:`)
-   - Products where breaking changes were downplayed to minor (still breaking!)
+2. **Use confirmed versions from Phase 3**:
+   - Take the list of products being released with their new versions
+   - Same information used in Phase 4 for `Directory.Packages.props`
 
 3. **Determine which npm ranges need updating**:
-   - For each product with breaking changes, check if it has an npm package (has `Client/package.json` with `types` field)
-   - **Only update npm peer dependency ranges for products with breaking changes**:
-     - **Major bump** (1.2.0 → 2.0.0): Update to `^2.0.0`
-     - **Minor bump from downplayed breaking change** (1.2.0 → 1.3.0): Update to `^1.3.0`
-   - **Do NOT update ranges for products without breaking changes**
+   - For each product being released, check if it has an npm package (has `Client/package.json` with `types` field)
+   - Map the new version to npm semver range:
+     - New version 2.0.0 → `^2.0.0`
+     - New version 1.3.0 → `^1.3.0`
+     - New version 1.2.1 → `^1.2.1`
+   - Update ALL products being released (not just breaking changes) to ensure consistency
 
-4. **Present proposed changes** to user (if any breaking changes detected):
+4. **Present proposed changes** to user:
    ```
    package.peer-dependencies.json updates:
 
-   Breaking changes detected in:
-   - Umbraco.AI.Core (BREAKING CHANGE: DetailLevel removal)
+   Products being released:
+   - Umbraco.AI → 1.3.0
+   - Umbraco.AI.Agent → 1.2.0
+   - Umbraco.AI.Prompt → 2.0.0
 
    The following npm peer dependency ranges will be updated:
    - @umbraco-ai/core: ^1.2.0 → ^1.3.0
-
-   Products without breaking changes (Agent, Prompt) will keep existing ranges.
+   - @umbraco-ai/agent: ^1.1.0 → ^1.2.0
+   - @umbraco-ai/prompt: ^1.0.0 → ^2.0.0
    ```
 
 5. **Validate consistency** with Directory.Packages.props:
-   ```bash
-   # Compare minimum versions between .NET and npm
-   # Warn if mismatches detected
+   - Verify that npm ranges match .NET minimum versions from Phase 4
+   - Warn if any mismatches detected (shouldn't happen if Phase 4 was done correctly)
 
-   Example:
-   ⚠️  Version Mismatch:
-   - Directory.Packages.props: Umbraco.AI.Core [1.3.0, 1.999.999)
-   - package.peer-dependencies.json: @umbraco-ai/core ^1.2.0
-
-   The npm range should match the .NET minimum version (1.3.0).
-   ```
-
-6. **Ask for approval** using AskUserQuestion (only if breaking changes detected):
+6. **Ask for approval** using AskUserQuestion:
    - **Default option**: "Update npm peer dependency ranges (recommended)"
    - **Alternative options**:
      - "Skip npm updates" - Continue without updating ranges
      - "Adjust manually later" - Skip now, remind user to update manually
 
-7. **If no breaking changes detected**:
-   ```
-   ✓ No breaking changes detected - npm peer dependency ranges remain unchanged
-   ```
-
-8. **If approved, update the file**:
+7. **If approved, update the file**:
    ```bash
    # Use Edit tool to update package.peer-dependencies.json
    ```
 
-9. **Confirm updates**:
+8. **Confirm updates**:
    ```
    ✓ Updated npm peer dependency ranges in package.peer-dependencies.json
    ```
 
-**Mapping .NET to npm ranges:**
+**Mapping versions to npm ranges:**
 
-| .NET Range                | npm Range | Notes                                      |
-|---------------------------|-----------|-------------------------------------------|
-| `[1.2.0, 1.999.999)`      | `^1.2.0`  | Both mean: ≥1.2.0 and <2.0.0             |
-| `[2.0.0, 2.999.999)`      | `^2.0.0`  | Both mean: ≥2.0.0 and <3.0.0             |
-| `[17.1.0, 17.999.999)`    | `^17.1.0` | Both mean: ≥17.1.0 and <18.0.0           |
+| New Version | npm Range | Meaning                                    |
+|-------------|-----------|-------------------------------------------|
+| 1.2.0       | `^1.2.0`  | ≥1.2.0 and <2.0.0                         |
+| 1.3.0       | `^1.3.0`  | ≥1.3.0 and <2.0.0                         |
+| 2.0.0       | `^2.0.0`  | ≥2.0.0 and <3.0.0                         |
+| 17.1.0      | `^17.1.0` | ≥17.1.0 and <18.0.0                       |
 
 **Important Notes:**
-- npm ranges should always mirror the minimum version from Directory.Packages.props
-- Only update for products with breaking changes (same logic as Phase 4)
+- Uses the same version decisions from Phase 3 (no re-analysis needed)
+- Updates ALL products being released (ensures consistency)
+- npm ranges should mirror the new minimum versions
 - External dependencies like `@umbraco-cms/backoffice` are also managed here
 - These changes will be staged and committed with other release files
 
@@ -553,11 +543,11 @@ You update only the Core-related ranges (Agent, Prompt ranges remain unchanged)
 
 Phase 4.5: Update package.peer-dependencies.json
 You read package.peer-dependencies.json
-You identify same products with BREAKING CHANGES
-You map .NET minimum versions to npm peer dependency ranges
-You present proposed npm range updates for Core packages only
+You use the same confirmed versions from Phase 3
+You map new versions to npm peer dependency ranges
+You present proposed npm range updates for ALL products being released
 User approves updates
-You update npm peer dependency ranges to match .NET minimum versions
+You update npm peer dependency ranges (e.g., 1.3.0 → ^1.3.0)
 
 Phase 6: Create release branch
 You fetch tags from remote

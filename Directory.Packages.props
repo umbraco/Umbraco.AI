@@ -23,6 +23,11 @@
     <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[17.1.0, 17.999.999)" />
   </ItemGroup>
 
+  <!-- Umbraco Deploy -->
+  <ItemGroup>
+    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[17.0.0, 17.999.999)" />
+  </ItemGroup>
+
   <!-- Microsoft.Extensions.AI -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.2.0" />

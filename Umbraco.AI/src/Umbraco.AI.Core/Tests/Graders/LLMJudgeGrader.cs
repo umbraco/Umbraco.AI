@@ -16,7 +16,7 @@ public class LLMJudgeGraderConfig
     [AIField(
         Label = "Judge Profile ID",
         Description = "AI profile to use for judgment (leave empty for default)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
         SortOrder = 1)]
     public Guid? ProfileId { get; set; }
 
@@ -26,7 +26,7 @@ public class LLMJudgeGraderConfig
     [AIField(
         Label = "Evaluation Criteria",
         Description = "What aspects to evaluate",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         EditorConfig = "[{\"alias\":\"rows\",\"value\":3}]",
         SortOrder = 2)]
     public string EvaluationCriteria { get; set; } = "Evaluate the quality, accuracy, and relevance of the response.";
@@ -37,7 +37,7 @@ public class LLMJudgeGraderConfig
     [AIField(
         Label = "Pass Threshold",
         Description = "Minimum score to pass (0-1)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Slider",
+        EditorUiAlias = "Umb.PropertyEditorUi.Slider",
         EditorConfig = "[{\"alias\":\"minValue\",\"value\":0},{\"alias\":\"maxValue\",\"value\":1},{\"alias\":\"step\",\"value\":0.1}]",
         SortOrder = 3)]
     public double PassThreshold { get; set; } = 0.7;
@@ -83,7 +83,7 @@ public class LLMJudgeGrader : AITestGraderBase
                 ?? new LLMJudgeGraderConfig();
 
         // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.FinalOutputJson);
+        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
 
         // Build judgment prompt
         var judgmentPrompt = $$"""

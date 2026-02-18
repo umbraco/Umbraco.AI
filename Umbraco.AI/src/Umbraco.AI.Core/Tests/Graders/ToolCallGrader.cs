@@ -14,7 +14,7 @@ public class ToolCallGraderConfig
     [AIField(
         Label = "Expected Tools",
         Description = "Tool names to validate (comma-separated for multiple)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
         SortOrder = 1)]
     public string ExpectedTools { get; set; } = string.Empty;
 
@@ -24,7 +24,7 @@ public class ToolCallGraderConfig
     [AIField(
         Label = "Validation Mode",
         Description = "How to validate tool calls",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
         EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"Any\",\"All\",\"Exact\",\"None\"]}]",
         SortOrder = 2)]
     public string ValidationMode { get; set; } = "Any";
@@ -35,7 +35,7 @@ public class ToolCallGraderConfig
     [AIField(
         Label = "Validate Order",
         Description = "Whether tool calls must appear in the specified order",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Toggle",
+        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 3)]
     public bool ValidateOrder { get; set; }
 }

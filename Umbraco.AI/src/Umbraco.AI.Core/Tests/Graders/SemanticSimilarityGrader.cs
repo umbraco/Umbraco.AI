@@ -15,7 +15,7 @@ public class SemanticSimilarityGraderConfig
     [AIField(
         Label = "Expected Content",
         Description = "The expected semantic content",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         EditorConfig = "[{\"alias\":\"rows\",\"value\":3}]",
         SortOrder = 1)]
     public string ExpectedContent { get; set; } = string.Empty;
@@ -26,7 +26,7 @@ public class SemanticSimilarityGraderConfig
     [AIField(
         Label = "Embedding Profile ID",
         Description = "AI profile to use for embeddings (leave empty for default)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
         SortOrder = 2)]
     public Guid? ProfileId { get; set; }
 
@@ -36,7 +36,7 @@ public class SemanticSimilarityGraderConfig
     [AIField(
         Label = "Similarity Threshold",
         Description = "Minimum cosine similarity to pass (0-1)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Slider",
+        EditorUiAlias = "Umb.PropertyEditorUi.Slider",
         EditorConfig = "[{\"alias\":\"minValue\",\"value\":0},{\"alias\":\"maxValue\",\"value\":1},{\"alias\":\"step\",\"value\":0.05}]",
         SortOrder = 3)]
     public double SimilarityThreshold { get; set; } = 0.8;
@@ -93,7 +93,7 @@ public class SemanticSimilarityGrader : AITestGraderBase
         }
 
         // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.FinalOutputJson);
+        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
 
         if (string.IsNullOrWhiteSpace(actualValue))
         {

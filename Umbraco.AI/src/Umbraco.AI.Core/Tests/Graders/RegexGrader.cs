@@ -15,7 +15,7 @@ public class RegexGraderConfig
     [AIField(
         Label = "Regex Pattern",
         Description = "Regular expression pattern to match",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         SortOrder = 1)]
     public string Pattern { get; set; } = string.Empty;
 
@@ -25,7 +25,7 @@ public class RegexGraderConfig
     [AIField(
         Label = "Ignore Case",
         Description = "Case-insensitive matching",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Toggle",
+        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 2)]
     public bool IgnoreCase { get; set; } = true;
 
@@ -35,7 +35,7 @@ public class RegexGraderConfig
     [AIField(
         Label = "Multiline",
         Description = "Enable multiline mode (^ and $ match line boundaries)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Toggle",
+        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 3)]
     public bool Multiline { get; set; }
 }
@@ -75,7 +75,7 @@ public class RegexGrader : AITestGraderBase
                 ?? new RegexGraderConfig();
 
         // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.FinalOutputJson);
+        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
 
         // Build regex options
         var options = RegexOptions.None;

@@ -14,7 +14,7 @@ public class ExactMatchGraderConfig
     [AIField(
         Label = "Expected Value",
         Description = "The exact value to match",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         SortOrder = 1)]
     public string ExpectedValue { get; set; } = string.Empty;
 
@@ -24,7 +24,7 @@ public class ExactMatchGraderConfig
     [AIField(
         Label = "Ignore Case",
         Description = "Case-insensitive comparison",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Toggle",
+        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 2)]
     public bool IgnoreCase { get; set; }
 
@@ -34,7 +34,7 @@ public class ExactMatchGraderConfig
     [AIField(
         Label = "Trim Whitespace",
         Description = "Trim leading/trailing whitespace",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Toggle",
+        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 3)]
     public bool TrimWhitespace { get; set; } = true;
 }
@@ -74,7 +74,7 @@ public class ExactMatchGrader : AITestGraderBase
                 ?? new ExactMatchGraderConfig();
 
         // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.FinalOutputJson);
+        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
 
         // Apply transformations
         var actual = config.TrimWhitespace ? actualValue.Trim() : actualValue;

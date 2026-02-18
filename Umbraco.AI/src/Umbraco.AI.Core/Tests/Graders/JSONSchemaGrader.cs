@@ -15,7 +15,7 @@ public class JSONSchemaGraderConfig
     [AIField(
         Label = "Expected JSON Keys",
         Description = "Required JSON keys (comma-separated, dot-notation for nested)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         SortOrder = 1)]
     public string ExpectedKeys { get; set; } = string.Empty;
 
@@ -25,7 +25,7 @@ public class JSONSchemaGraderConfig
     [AIField(
         Label = "Require All Keys",
         Description = "All expected keys must be present",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Toggle",
+        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 2)]
     public bool RequireAllKeys { get; set; } = true;
 }
@@ -66,7 +66,7 @@ public class JSONSchemaGrader : AITestGraderBase
                 ?? new JSONSchemaGraderConfig();
 
         // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.FinalOutputJson);
+        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
 
         // Parse expected keys
         var expectedKeys = config.ExpectedKeys

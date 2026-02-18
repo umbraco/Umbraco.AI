@@ -86,21 +86,21 @@ public class LLMJudgeGrader : AITestGraderBase
         var actualValue = ExtractContentFromOutput(outcome.FinalOutputJson);
 
         // Build judgment prompt
-        var judgmentPrompt = $"""
+        var judgmentPrompt = $$"""
 You are an AI test evaluator. Evaluate the following output based on these criteria:
 
-{config.EvaluationCriteria}
+{{config.EvaluationCriteria}}
 
 Output to evaluate:
-{actualValue}
+{{actualValue}}
 
 Provide your evaluation in the following JSON format:
-{{
+{
   "score": <number between 0 and 1>,
   "reasoning": "<explanation of your evaluation>",
   "strengths": ["<strength 1>", "<strength 2>"],
   "weaknesses": ["<weakness 1>", "<weakness 2>"]
-}}
+}
 
 Be objective and consistent in your evaluation.
 """;

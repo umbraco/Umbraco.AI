@@ -14,7 +14,7 @@ public class ContainsGraderConfig
     [AIField(
         Label = "Search Pattern",
         Description = "The substring to find in the output",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         SortOrder = 1)]
     public string SearchPattern { get; set; } = string.Empty;
 
@@ -24,7 +24,6 @@ public class ContainsGraderConfig
     [AIField(
         Label = "Ignore Case",
         Description = "Case-insensitive search",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 2)]
     public bool IgnoreCase { get; set; } = true;
 }
@@ -64,7 +63,7 @@ public class ContainsGrader : AITestGraderBase
                 ?? new ContainsGraderConfig();
 
         // Extract actual value from final output
-        var actualValue = ExtractContentFromOutput(outcome.FinalOutputJson);
+        var actualValue = ExtractContentFromOutput(outcome.OutputValue);
 
         // Perform substring check
         var comparisonType = config.IgnoreCase

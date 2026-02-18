@@ -22,15 +22,21 @@ public class UmbracoAISettingsServiceConnector(
     private readonly IAISettingsService _settingsService = settingsService;
     private readonly IAIProfileService _profileService = profileService;
 
+    /// <inheritdoc />
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Settings;
 
     /// <summary>
     /// Settings uses Pass 2 and Pass 4 for profile dependency resolution.
     /// </summary>
     protected override int[] ProcessPasses => [2, 4];
+
+    /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+
+    /// <inheritdoc />
     protected override string OpenUdiName => "Umbraco AI Settings";
 
+    /// <inheritdoc />
     public override async Task<AISettings?> GetEntityAsync(Guid id, CancellationToken ct = default)
     {
         // Settings is a singleton, but we verify the ID matches
@@ -40,6 +46,7 @@ public class UmbracoAISettingsServiceConnector(
         return await _settingsService.GetSettingsAsync(ct);
     }
 
+    /// <inheritdoc />
     public override IAsyncEnumerable<AISettings> GetEntitiesAsync(CancellationToken ct = default)
     {
         // Settings is a singleton - return a single instance
@@ -52,8 +59,10 @@ public class UmbracoAISettingsServiceConnector(
         yield return settings;
     }
 
+    /// <inheritdoc />
     public override string GetEntityName(AISettings entity) => "AI Settings";
 
+    /// <inheritdoc />
     public override async Task<AISettingsArtifact?> GetArtifactAsync(
         GuidUdi? udi,
         AISettings? entity,
@@ -92,6 +101,7 @@ public class UmbracoAISettingsServiceConnector(
         return artifact;
     }
 
+    /// <inheritdoc />
     public override async Task ProcessAsync(
         ArtifactDeployState<AISettingsArtifact, AISettings> state,
         IDeployContext context,

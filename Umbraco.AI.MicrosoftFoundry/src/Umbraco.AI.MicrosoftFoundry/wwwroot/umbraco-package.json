@@ -1,17 +1,17 @@
 {
-    "name": "Umbraco AI Microsoft Foundry Provider",
-    "$schema": "../umbraco-package-schema.json",
-    "extensions": [
-        {
-            "type": "localization",
-            "alias": "Uai.MicrosoftFoundry.Localization.En",
-            "weight": -100,
-            "name": "English",
-            "meta": {
-                "culture": "en"
-            },
-            "js": "/App_Plugins/UmbracoAIMicrosoftFoundry/lang/en.js"
-        }
-    ],
-    "version": ""
+  "name": "Umbraco AI Microsoft Foundry Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.MicrosoftFoundry.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/UmbracoAIMicrosoftFoundry/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
 }

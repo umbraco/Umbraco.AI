@@ -22,9 +22,9 @@ public class UmbracoAISettingsServiceConnector(
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Settings;
 
     /// <summary>
-    /// Settings uses Pass 2 and Pass 4 for profile dependency resolution.
+    /// Settings uses Pass 3 after profiles (Pass 2) to ensure that default profile dependencies can be resolved during deployment.
     /// </summary>
-    protected override int[] ProcessPasses => [2, 4];
+    protected override int[] ProcessPasses => [3];
 
     /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
@@ -112,31 +112,13 @@ public class UmbracoAISettingsServiceConnector(
 
         switch (pass)
         {
-            case 2:
-                await Pass2Async(state, context, ct);
-                break;
-            case 4:
-                await Pass4Async(state, context, ct);
+            case 3:
+                await Pass3Async(state, context, ct);
                 break;
         }
     }
 
-    private async Task Pass2Async(
-        ArtifactDeployState<AISettingsArtifact, AISettings> state,
-        IDeployContext context,
-        CancellationToken ct)
-    {
-        // Settings is a singleton - always exists, just update it
-        var settings = await settingsService.GetSettingsAsync(ct);
-
-        // Pass 2: Set profile IDs to null (will be resolved in Pass 4)
-        settings.DefaultChatProfileId = null;
-        settings.DefaultEmbeddingProfileId = null;
-
-        await settingsService.SaveSettingsAsync(settings, ct);
-    }
-
-    private async Task Pass4Async(
+    private async Task Pass3Async(
         ArtifactDeployState<AISettingsArtifact, AISettings> state,
         IDeployContext context,
         CancellationToken ct)

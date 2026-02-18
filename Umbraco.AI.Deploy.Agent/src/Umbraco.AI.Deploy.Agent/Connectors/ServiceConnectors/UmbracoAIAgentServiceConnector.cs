@@ -122,6 +122,9 @@ public class UmbracoAIAgentServiceConnector(
     {
         var artifact = state.Artifact;
 
+        // Resolve optional profile dependency
+        var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
+
         // Deserialize Scope from JsonElement
         AIAgentScope? scope = null;
         if (artifact.Scope.HasValue)
@@ -138,9 +141,6 @@ public class UmbracoAIAgentServiceConnector(
 
         if (state.Entity == null)
         {
-            // Use base class helper to resolve optional ProfileId from ProfileUdi
-            var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
-
             // Create new agent (ProfileId will be resolved in Pass 4)
             var agent = new AIAgent
             {
@@ -177,7 +177,7 @@ public class UmbracoAIAgentServiceConnector(
             agent.Instructions = artifact.Instructions;
             agent.IsActive = artifact.IsActive;
             agent.ModifiedByUserId = artifact.ModifiedByUserId;
-            // ProfileId will be updated in Pass 4
+            agent.ProfileId = profileId;
 
             state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
         }

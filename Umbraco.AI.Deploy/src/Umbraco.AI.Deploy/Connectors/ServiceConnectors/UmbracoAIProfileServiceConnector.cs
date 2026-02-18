@@ -114,6 +114,15 @@ public class UmbracoAIProfileServiceConnector(
     {
         var artifact = state.Artifact;
 
+        // Resolve ConnectionId from ConnectionUdi
+        artifact.ConnectionUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Connection);
+
+        var connection = await connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
+        if (connection == null)
+        {
+            throw new InvalidOperationException($"Connection with ID {artifact.ConnectionUdi.Guid} not found. Ensure the connection is deployed before the profile.");
+        }
+
         // Deserialize settings from JsonElement based on capability
         IAIProfileSettings? settings = null;
         if (artifact.Settings.HasValue)
@@ -132,21 +141,12 @@ public class UmbracoAIProfileServiceConnector(
 
         if (state.Entity == null)
         {
-            // Resolve ConnectionId from ConnectionUdi
-            artifact.ConnectionUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Connection);
-
-            var connection = await connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
-            if (connection == null)
-            {
-                throw new InvalidOperationException($"Connection with ID {artifact.ConnectionUdi.Guid} not found. Ensure the connection is deployed before the profile.");
-            }
-
             // Create new profile (ConnectionId will be resolved in Pass 4)
             // For now, use a placeholder - we'll update it in Pass 4
             var profile = new AIProfile
             {
                 ConnectionId = connection.Id, // Set ConnectionId to resolved value
-                Alias = artifact.Alias,
+                Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Capability = (AICapability)artifact.Capability,
                 Model = modelRef,
@@ -177,7 +177,7 @@ public class UmbracoAIProfileServiceConnector(
             profile.Settings = settings;
             profile.Tags = artifact.Tags.ToList();
             profile.ModifiedByUserId = artifact.ModifiedByUserId;
-            // ConnectionId will be updated in Pass 4
+            profile.ConnectionId = connection.Id;
 
             state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
         }

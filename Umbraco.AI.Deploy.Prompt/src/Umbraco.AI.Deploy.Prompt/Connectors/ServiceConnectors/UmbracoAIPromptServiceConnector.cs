@@ -109,6 +109,9 @@ public class UmbracoAIPromptServiceConnector(
     {
         var artifact = state.Artifact;
 
+        // Resolve optional profile dependency
+        var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
+
         // Deserialize Scope from JsonElement
         AIPromptScope? scope = null;
         if (artifact.Scope.HasValue)
@@ -118,8 +121,6 @@ public class UmbracoAIPromptServiceConnector(
 
         if (state.Entity == null)
         {
-            var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
-
             // Create new prompt (ProfileId will be resolved in Pass 4)
             var prompt = new AIPrompt
             {
@@ -154,7 +155,7 @@ public class UmbracoAIPromptServiceConnector(
             prompt.OptionCount = artifact.OptionCount;
             prompt.Scope = scope;
             prompt.ModifiedByUserId = artifact.ModifiedByUserId;
-            // ProfileId will be updated in Pass 4
+            prompt.ProfileId = profileId;
 
             state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
         }

@@ -324,18 +324,15 @@ stages:
     # ============================================================
     # Validate Changelogs - Only runs on release and hotfix branches
     # Ensures CHANGELOGs are present and match version.json
+    # Runs in parallel with GenerateSBOM after Build
     # ============================================================
     - stage: ValidateChangelogs
       displayName: Validate Changelogs
-      dependsOn:
-          - Build
-          - GenerateSBOM
+      dependsOn: Build
       # Only validate on release and hotfix branches (not main or dev)
-      # Allow GenerateSBOM to be skipped (PR builds)
       condition: |
           and(
-            in(dependencies.Build.result, 'Succeeded'),
-            in(dependencies.GenerateSBOM.result, 'Succeeded', 'Skipped'),
+            succeeded(),
             ne(variables['Build.Reason'], 'PullRequest'),
             or(
               startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
@@ -361,19 +358,18 @@ stages:
     # ============================================================
     # Pack Stage - Only runs on push to main/dev/hotfix/release branches
     # Uses dynamic change detection to only pack products that changed
+    # Runs in parallel with GenerateSBOM after Build (through ValidateChangelogs dependency)
     # ============================================================
     - stage: Pack
-      displayName: Pack NuGet Packages
+      displayName: Pack NuGet & NPM Packages
       dependsOn:
           - Build
-          - GenerateSBOM
           - ValidateChangelogs
       # Only pack on push (not PR) to main/dev/hotfix/release branches
-      # GenerateSBOM and ValidateChangelogs may be skipped, which is OK
+      # ValidateChangelogs may be skipped (on main/dev branches), which is OK
       condition: |
           and(
             in(dependencies.Build.result, 'Succeeded'),
-            in(dependencies.GenerateSBOM.result, 'Succeeded', 'Skipped'),
             in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
             ne(variables['Build.Reason'], 'PullRequest'),
             or(
@@ -942,12 +938,13 @@ stages:
                       publishLocation: pipeline
 
     # ============================================================
-    # Finalize - set build number once after all NBGV steps
+    # Finalize - set build number after both parallel paths complete
+    # Waits for both GenerateSBOM and Pack stages
     # ============================================================
     - stage: Finalize
       displayName: Finalize Build
       dependsOn:
-          - Build
+          - GenerateSBOM
           - Pack
       condition: not(canceled())
       jobs:

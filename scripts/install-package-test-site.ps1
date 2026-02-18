@@ -1,9 +1,9 @@
-# Nightly Feed Test Site Setup Script
-# Creates a fresh Umbraco site with all Umbraco.AI packages from the nightly feed
+# Package Test Site Setup Script
+# Creates a fresh Umbraco site with all Umbraco.AI packages from nightly/prerelease/release feeds
 
 param(
-    [string]$SiteName = "Umbraco.AI.NightlySite",
-    [ValidateSet("nightly", "prereleases")]
+    [string]$SiteName = "Umbraco.AI.PackageTestSite",
+    [ValidateSet("nightly", "prereleases", "release")]
     [string]$Feed = "nightly",
     [switch]$SkipTemplateInstall,
     [switch]$Force
@@ -15,6 +15,7 @@ $ErrorActionPreference = "Stop"
 $FeedUrls = @{
     "nightly" = "https://www.myget.org/F/umbraconightly/api/v3/index.json"
     "prereleases" = "https://www.myget.org/F/umbracoprereleases/api/v3/index.json"
+    "release" = "https://api.nuget.org/v3/index.json"
 }
 
 $FeedUrl = $FeedUrls[$Feed]
@@ -45,9 +46,12 @@ if ($Force -and (Test-Path $sitePath)) {
     Remove-Item -Recurse -Force $sitePath
 }
 
-# Clear NuGet cache to ensure fresh packages from nightly feed
-Write-Host "Clearing NuGet cache to fetch fresh packages..." -ForegroundColor Green
-dotnet nuget locals all --clear
+# Clear NuGet cache for pre-release feeds (nightly builds change frequently)
+# Skip cache clear for release feed (stable packages don't change)
+if ($Feed -ne "release") {
+    Write-Host "Clearing NuGet cache to fetch fresh packages..." -ForegroundColor Green
+    dotnet nuget locals all --clear
+}
 
 # Step 1: Install Umbraco templates
 if (-not $SkipTemplateInstall) {
@@ -76,13 +80,30 @@ Write-Host "Configuring NuGet sources and package routing..." -ForegroundColor G
 Push-Location "demo\$SiteName"
 
 # Determine feed name
-$feedName = if ($Feed -eq "nightly") { "UmbracoNightly" } else { "UmbracoPreReleases" }
+$feedName = switch ($Feed) {
+    "nightly" { "UmbracoNightly" }
+    "prereleases" { "UmbracoPreReleases" }
+    "release" { "NuGet.org" }
+}
 
 # Create complete nuget.config with sources and PackageSourceMapping
 $nugetConfig = "nuget.config"
-Write-Host "Creating nuget.config with package source mapping..." -ForegroundColor Gray
 
-$configContent = @"
+# For release feed, use simpler config (NuGet.org only)
+if ($Feed -eq "release") {
+    Write-Host "Creating nuget.config for NuGet.org..." -ForegroundColor Gray
+    $configContent = @"
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+</configuration>
+"@
+} else {
+    Write-Host "Creating nuget.config with package source mapping..." -ForegroundColor Gray
+    $configContent = @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
@@ -105,6 +126,7 @@ $configContent = @"
   </packageSourceMapping>
 </configuration>
 "@
+}
 
 $configContent | Out-File -FilePath $nugetConfig -Encoding utf8 -Force
 
@@ -114,40 +136,43 @@ Pop-Location
 Write-Host "Installing Umbraco.AI packages from $Feed feed..." -ForegroundColor Green
 Push-Location "demo\$SiteName"
 
+# Determine if we need --prerelease flag (only for nightly/prereleases, not for release)
+$prereleaseFlag = if ($Feed -eq "release") { @() } else { @("--prerelease") }
+
 # Install Core first to establish the version baseline
 Write-Host "  Installing Umbraco.AI.Core..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Core --prerelease
+dotnet add package Umbraco.AI.Core @prereleaseFlag
 
 # Core meta-package (includes Startup + Web.StaticAssets)
 Write-Host "  Installing Umbraco.AI..." -ForegroundColor Gray
-dotnet add package Umbraco.AI --prerelease
+dotnet add package Umbraco.AI @prereleaseFlag
 
 # Provider packages
 Write-Host "  Installing Umbraco.AI.OpenAI..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.OpenAI --prerelease
+dotnet add package Umbraco.AI.OpenAI @prereleaseFlag
 
 Write-Host "  Installing Umbraco.AI.Anthropic..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Anthropic --prerelease
+dotnet add package Umbraco.AI.Anthropic @prereleaseFlag
 
 Write-Host "  Installing Umbraco.AI.Google..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Google --prerelease
+dotnet add package Umbraco.AI.Google @prereleaseFlag
 
 Write-Host "  Installing Umbraco.AI.Amazon..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Amazon --prerelease
+dotnet add package Umbraco.AI.Amazon @prereleaseFlag
 
 Write-Host "  Installing Umbraco.AI.MicrosoftFoundry..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.MicrosoftFoundry --prerelease
+dotnet add package Umbraco.AI.MicrosoftFoundry @prereleaseFlag
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 Write-Host "  Installing Umbraco.AI.Prompt..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Prompt --prerelease
+dotnet add package Umbraco.AI.Prompt @prereleaseFlag
 
 Write-Host "  Installing Umbraco.AI.Agent..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Agent --prerelease
+dotnet add package Umbraco.AI.Agent @prereleaseFlag
 
 # Agent Copilot (frontend-only static assets)
 Write-Host "  Installing Umbraco.AI.Agent.Copilot..." -ForegroundColor Gray
-dotnet add package Umbraco.AI.Agent.Copilot --prerelease
+dotnet add package Umbraco.AI.Agent.Copilot @prereleaseFlag
 
 Pop-Location
 

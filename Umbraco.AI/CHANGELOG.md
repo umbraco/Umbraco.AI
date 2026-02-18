@@ -86,7 +86,6 @@ After: { entityType, data: { contentType, properties[] } }
 3. Backend tools always available (LLM decides based on context + metadata)
 4. Frontend tools filtered to current entity type only
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 * hide/show model property depending on loadingModels ([1c68091](https://github.com/umbraco/Umbraco.AI/commit/1c68091778d63a68888c667ec7c4b1ef6e2a232c))
 * removing wrapper class from div ([1cf1ece](https://github.com/umbraco/Umbraco.AI/commit/1cf1ece58f3e3974a70f6cd75d5b836a70dfb06d))
@@ -176,7 +175,6 @@ The three boolean flags provide clearer, more flexible control than abstract
 detail levels. Users can still disable any persistence option in
 appsettings.json if needed for privacy.
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 ### feat
 

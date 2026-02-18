@@ -92,10 +92,15 @@ public class AgentTestFeature : AITestFeatureBase
         var currentMessageContent = new List<string>();
         string? currentMessageId = null;
 
+        // Convert AGUITools to AIFrontendTools (with default metadata for testing)
+        IEnumerable<AIFrontendTool>? frontendTools = testCase.Tools?
+            .Select(t => new AIFrontendTool(t, Scope: null, IsDestructive: false))
+            .ToList();
+
         try
         {
             // TODO: Handle profileIdOverride and contextIdsOverride once agent service supports it
-            await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, testCase.Tools, cancellationToken))
+            await foreach (var evt in _agentService.StreamAgentAsync(agentId, request, frontendTools, cancellationToken))
             {
                 // Track lifecycle events
                 if (evt is RunStartedEvent runStarted)
@@ -109,8 +114,8 @@ public class AgentTestFeature : AITestFeatureBase
                 }
                 else if (evt is RunErrorEvent runError)
                 {
-                    error = runError.Error;
-                    messages.Add(new { role = "error", content = runError.Error });
+                    error = runError.Message;
+                    messages.Add(new { role = "error", content = runError.Message });
                 }
                 // Track message events
                 else if (evt is TextMessageStartEvent msgStart)
@@ -122,12 +127,12 @@ public class AgentTestFeature : AITestFeatureBase
                 {
                     if (msgChunk.MessageId == currentMessageId)
                     {
-                        currentMessageContent.Add(msgChunk.Chunk ?? string.Empty);
+                        currentMessageContent.Add(msgChunk.Delta ?? string.Empty);
                     }
                 }
                 else if (evt is TextMessageContentEvent msgContent)
                 {
-                    currentMessageContent.Add(msgContent.Content ?? string.Empty);
+                    currentMessageContent.Add(msgContent.Delta ?? string.Empty);
                 }
                 else if (evt is TextMessageEndEvent msgEnd)
                 {
@@ -146,7 +151,7 @@ public class AgentTestFeature : AITestFeatureBase
                     toolCalls.Add(new
                     {
                         id = toolStart.ToolCallId,
-                        name = toolStart.Name,
+                        name = toolStart.ToolCallName,
                         status = "started"
                     });
                 }
@@ -155,7 +160,7 @@ public class AgentTestFeature : AITestFeatureBase
                     toolCalls.Add(new
                     {
                         id = toolArgs.ToolCallId,
-                        args = toolArgs.Args,
+                        args = toolArgs.Delta,
                         status = "args_received"
                     });
                 }
@@ -172,7 +177,7 @@ public class AgentTestFeature : AITestFeatureBase
                     toolCalls.Add(new
                     {
                         id = toolResult.ToolCallId,
-                        result = toolResult.Result,
+                        result = toolResult.Content,
                         status = "result_received"
                     });
                 }
@@ -182,8 +187,7 @@ public class AgentTestFeature : AITestFeatureBase
                     reasoning.Add(new
                     {
                         type = "step_started",
-                        stepId = stepStart.StepId,
-                        stepType = stepStart.StepType
+                        stepName = stepStart.StepName
                     });
                 }
                 else if (evt is StepFinishedEvent stepFinished)
@@ -191,7 +195,7 @@ public class AgentTestFeature : AITestFeatureBase
                     reasoning.Add(new
                     {
                         type = "step_finished",
-                        stepId = stepFinished.StepId
+                        stepName = stepFinished.StepName
                     });
                 }
             }

@@ -1,53 +1,62 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
-using Umbraco.AI.Deploy.Extensions;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
-using Umbraco.Deploy.Core;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 
+/// <summary>
+/// Service connector for Umbraco AI Contexts, responsible for synchronizing AI Context entities during deploy operations.
+/// </summary>
 [UdiDefinition(UmbracoAIConstants.UdiEntityType.Context, UdiType.GuidUdi)]
 public class UmbracoAIContextServiceConnector(
     IAIContextService contextService,
     UmbracoAIDeploySettingsAccessor settingsAccessor)
     : UmbracoAIEntityServiceConnectorBase<AIContextArtifact, AIContext>(settingsAccessor)
 {
-    private readonly IAIContextService _contextService = contextService;
-
+    /// <inheritdoc />
     protected override int[] ProcessPasses => [2];
+
+    /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+
+    /// <inheritdoc />
     protected override string OpenUdiName => "All Umbraco AI Contexts";
+
+    /// <inheritdoc />
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Context;
 
+    /// <inheritdoc />
     public override Task<AIContext?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => _contextService.GetContextAsync(id, cancellationToken);
+        => contextService.GetContextAsync(id, cancellationToken);
 
-    public override async IAsyncEnumerable<AIContext> GetEntitiesAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<AIContext> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var contexts = await _contextService.GetContextsAsync(cancellationToken);
+        var contexts = await contextService.GetContextsAsync(cancellationToken);
         foreach (var context in contexts)
         {
             yield return context;
         }
     }
 
+    /// <inheritdoc />
     public override string GetEntityName(AIContext entity)
         => entity.Name;
 
+    /// <inheritdoc />
     public override Task<AIContextArtifact?> GetArtifactAsync(
-        GuidUdi? udi,
+        GuidUdi udi,
         AIContext? entity,
         CancellationToken cancellationToken = default)
     {
-        if (entity == null) return Task.FromResult<AIContextArtifact?>(null);
+        if (entity == null)
+        {
+            return Task.FromResult<AIContextArtifact?>(null);
+        }
 
         var dependencies = new ArtifactDependencyCollection();
 
@@ -71,6 +80,7 @@ public class UmbracoAIContextServiceConnector(
         return Task.FromResult<AIContextArtifact?>(artifact);
     }
 
+    /// <inheritdoc />
     public override async Task ProcessAsync(
         ArtifactDeployState<AIContextArtifact, AIContext> state,
         IDeployContext context,
@@ -106,14 +116,14 @@ public class UmbracoAIContextServiceConnector(
             // Create new context
             var aiContext = new AIContext
             {
-                Alias = artifact.Alias,
+                Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Resources = resources ?? [],
                 CreatedByUserId = artifact.CreatedByUserId,
                 ModifiedByUserId = artifact.ModifiedByUserId
             };
 
-            state.Entity = await _contextService.SaveContextAsync(aiContext, cancellationToken);
+            state.Entity = await contextService.SaveContextAsync(aiContext, cancellationToken);
         }
         else
         {
@@ -123,7 +133,7 @@ public class UmbracoAIContextServiceConnector(
             aiContext.Resources = resources ?? [];
             aiContext.ModifiedByUserId = artifact.ModifiedByUserId;
 
-            state.Entity = await _contextService.SaveContextAsync(aiContext, cancellationToken);
+            state.Entity = await contextService.SaveContextAsync(aiContext, cancellationToken);
         }
     }
 }

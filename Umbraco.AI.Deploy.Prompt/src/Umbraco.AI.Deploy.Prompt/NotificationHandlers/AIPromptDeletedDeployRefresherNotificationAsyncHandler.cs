@@ -11,6 +11,4 @@ internal sealed class AIPromptDeletedDeployRefresherNotificationAsyncHandler(
     : UmbracoAIEntityDeletedDeployRefresherNotificationAsyncHandlerBase<AIPrompt, AIPromptDeletedNotification>(
         diskEntityService,
         signatureService,
-        UmbracoAIPromptConstants.UdiEntityType.Prompt)
-{
-}
+        UmbracoAIPromptConstants.UdiEntityType.Prompt);

@@ -1,21 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
-using Umbraco.AI.Deploy.Extensions;
 using Umbraco.AI.Deploy.Prompt.Artifacts;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
-using Umbraco.Deploy.Core;
 
 namespace Umbraco.AI.Deploy.Prompt.Connectors.ServiceConnectors;
 
+/// <summary>
+/// Service connector for Umbraco AI Prompts, responsible for connecting the deployment process to the IAIPromptService to retrieve and save prompts during deployment.
+/// </summary>
 [UdiDefinition(UmbracoAIPromptConstants.UdiEntityType.Prompt, UdiType.GuidUdi)]
 public class UmbracoAIPromptServiceConnector(
     IAIPromptService promptService,
@@ -25,29 +22,36 @@ public class UmbracoAIPromptServiceConnector(
         profileService,
         settingsAccessor)
 {
-    private readonly IAIPromptService _promptService = promptService;
-
+    /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+
+    /// <inheritdoc />
     protected override string OpenUdiName => "All Umbraco AI Prompts";
+
+    /// <inheritdoc />
     public override string UdiEntityType => UmbracoAIPromptConstants.UdiEntityType.Prompt;
 
+    /// <inheritdoc />
     public override Task<AIPrompt?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => _promptService.GetPromptAsync(id, cancellationToken);
+        => promptService.GetPromptAsync(id, cancellationToken);
 
-    public override async IAsyncEnumerable<AIPrompt> GetEntitiesAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<AIPrompt> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var prompts = await _promptService.GetPromptsAsync(cancellationToken);
+        var prompts = await promptService.GetPromptsAsync(cancellationToken);
         foreach (var prompt in prompts)
         {
             yield return prompt;
         }
     }
 
+    /// <inheritdoc />
     public override string GetEntityName(AIPrompt entity)
         => entity.Name;
 
+    /// <inheritdoc />
     public override Task<AIPromptArtifact?> GetArtifactAsync(
-        GuidUdi? udi,
+        GuidUdi udi,
         AIPrompt? entity,
         CancellationToken cancellationToken = default)
     {
@@ -81,6 +85,7 @@ public class UmbracoAIPromptServiceConnector(
         return Task.FromResult<AIPromptArtifact?>(artifact);
     }
 
+    /// <inheritdoc />
     public override async Task ProcessAsync(
         ArtifactDeployState<AIPromptArtifact, AIPrompt> state,
         IDeployContext context,
@@ -119,7 +124,7 @@ public class UmbracoAIPromptServiceConnector(
             // Create new prompt (ProfileId will be resolved in Pass 4)
             var prompt = new AIPrompt
             {
-                Alias = artifact.Alias,
+                Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Description = artifact.Description,
                 Instructions = artifact.Instructions,
@@ -134,7 +139,7 @@ public class UmbracoAIPromptServiceConnector(
                 ModifiedByUserId = artifact.ModifiedByUserId
             };
 
-            state.Entity = await _promptService.SavePromptAsync(prompt, cancellationToken);
+            state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
         }
         else
         {
@@ -152,7 +157,7 @@ public class UmbracoAIPromptServiceConnector(
             prompt.ModifiedByUserId = artifact.ModifiedByUserId;
             // ProfileId will be updated in Pass 4
 
-            state.Entity = await _promptService.SavePromptAsync(prompt, cancellationToken);
+            state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
         }
     }
 
@@ -170,6 +175,6 @@ public class UmbracoAIPromptServiceConnector(
         var prompt = state.Entity!;
         prompt.ProfileId = profileId;
 
-        state.Entity = await _promptService.SavePromptAsync(prompt, cancellationToken);
+        state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
     }
 }

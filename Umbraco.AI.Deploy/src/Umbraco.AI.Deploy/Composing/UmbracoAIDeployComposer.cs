@@ -11,8 +11,12 @@ using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.Deploy.Composing;
 
+/// <summary>
+/// Composer for Umbraco AI Deploy integration, responsible for registering services, UDI types, and notification handlers to manage AI-related artifacts during deployment.
+/// </summary>
 public class UmbracoAIDeployComposer : IComposer
 {
+    /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)
     {
         // Configuration

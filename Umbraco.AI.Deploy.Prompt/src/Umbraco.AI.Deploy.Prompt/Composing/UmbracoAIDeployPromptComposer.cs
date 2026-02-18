@@ -8,10 +8,14 @@ using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.Deploy.Prompt.Composing;
 
+/// <summary>
+/// Composer for Umbraco AI Deploy Prompt package, responsible for registering UDI types and notification handlers related to AI Prompts in the deployment process.
+/// </summary>
 [ComposeAfter(typeof(UmbracoAIDeployComposer))]
 [ComposeAfter(typeof(UmbracoAIPromptComposer))]
 public class UmbracoAIDeployPromptComposer : IComposer
 {
+    /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)
     {
         // Register UDI type

@@ -1,21 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy.Agent.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
-using Umbraco.AI.Deploy.Extensions;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
-using Umbraco.Deploy.Core;
 
 namespace Umbraco.AI.Deploy.Agent.Connectors.ServiceConnectors;
 
+/// <summary>
+/// Service connector for deploying Umbraco AI Agents. Handles export and import of agents, including their dependencies on profiles and user groups.
+/// </summary>
 [UdiDefinition(UmbracoAIAgentConstants.UdiEntityType.Agent, UdiType.GuidUdi)]
 public class UmbracoAIAgentServiceConnector(
     IAIAgentService agentService,
@@ -25,29 +22,36 @@ public class UmbracoAIAgentServiceConnector(
         profileService,
         settingsAccessor)
 {
-    private readonly IAIAgentService _agentService = agentService;
-
+    /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+
+    /// <inheritdoc />
     protected override string OpenUdiName => "All Umbraco AI Agents";
+
+    /// <inheritdoc />
     public override string UdiEntityType => UmbracoAIAgentConstants.UdiEntityType.Agent;
 
+    /// <inheritdoc />
     public override Task<AIAgent?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => _agentService.GetAgentAsync(id, cancellationToken);
+        => agentService.GetAgentAsync(id, cancellationToken);
 
-    public override async IAsyncEnumerable<AIAgent> GetEntitiesAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<AIAgent> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var agents = await _agentService.GetAgentsAsync(cancellationToken);
+        var agents = await agentService.GetAgentsAsync(cancellationToken);
         foreach (var agent in agents)
         {
             yield return agent;
         }
     }
 
+    /// <inheritdoc />
     public override string GetEntityName(AIAgent entity)
         => entity.Name;
 
+    /// <inheritdoc />
     public override Task<AIAgentArtifact?> GetArtifactAsync(
-        GuidUdi? udi,
+        GuidUdi udi,
         AIAgent? entity,
         CancellationToken cancellationToken = default)
     {
@@ -94,6 +98,7 @@ public class UmbracoAIAgentServiceConnector(
         return Task.FromResult<AIAgentArtifact?>(artifact);
     }
 
+    /// <inheritdoc />
     public override async Task ProcessAsync(
         ArtifactDeployState<AIAgentArtifact, AIAgent> state,
         IDeployContext context,
@@ -139,7 +144,7 @@ public class UmbracoAIAgentServiceConnector(
             // Create new agent (ProfileId will be resolved in Pass 4)
             var agent = new AIAgent
             {
-                Alias = artifact.Alias,
+                Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Description = artifact.Description,
                 ProfileId = null, // Will be resolved in Pass 4
@@ -155,7 +160,7 @@ public class UmbracoAIAgentServiceConnector(
                 ModifiedByUserId = artifact.ModifiedByUserId
             };
 
-            state.Entity = await _agentService.SaveAgentAsync(agent, cancellationToken);
+            state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
         }
         else
         {
@@ -174,7 +179,7 @@ public class UmbracoAIAgentServiceConnector(
             agent.ModifiedByUserId = artifact.ModifiedByUserId;
             // ProfileId will be updated in Pass 4
 
-            state.Entity = await _agentService.SaveAgentAsync(agent, cancellationToken);
+            state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
         }
     }
 
@@ -192,6 +197,6 @@ public class UmbracoAIAgentServiceConnector(
         var agent = state.Entity!;
         agent.ProfileId = profileId;
 
-        state.Entity = await _agentService.SaveAgentAsync(agent, cancellationToken);
+        state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
     }
 }

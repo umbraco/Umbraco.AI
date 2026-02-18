@@ -10,6 +10,4 @@ internal sealed class AIContextDeletedDeployRefresherNotificationAsyncHandler(
     : UmbracoAIEntityDeletedDeployRefresherNotificationAsyncHandlerBase<AIContext, AIContextDeletedNotification>(
         diskEntityService,
         signatureService,
-        UmbracoAIConstants.UdiEntityType.Context)
-{
-}
+        UmbracoAIConstants.UdiEntityType.Context);

@@ -1,21 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
-using Umbraco.AI.Deploy.Extensions;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
-using Umbraco.Deploy.Core;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 
+/// <summary>
+/// Service connector for Umbraco AI Profiles, responsible for deploying AIProfile entities based on AIProfileArtifact definitions.
+/// This connector handles the creation and updating of AI Profiles, including resolving dependencies on AI Connections.
+/// The deployment process is split into multiple passes to ensure that dependencies are resolved in the correct order
+/// (e.g., Connections must be deployed before Profiles that depend on them).
+/// </summary>
 [UdiDefinition(UmbracoAIConstants.UdiEntityType.Profile, UdiType.GuidUdi)]
 public class UmbracoAIProfileServiceConnector(
     IAIProfileService profileService,
@@ -23,35 +23,46 @@ public class UmbracoAIProfileServiceConnector(
     UmbracoAIDeploySettingsAccessor settingsAccessor)
     : UmbracoAIEntityServiceConnectorBase<AIProfileArtifact, AIProfile>(settingsAccessor)
 {
-    private readonly IAIProfileService _profileService = profileService;
-    private readonly IAIConnectionService _connectionService = connectionService;
-
+    /// <inheritdoc />
     protected override int[] ProcessPasses => [2, 4];
+
+    /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+
+    /// <inheritdoc />
     protected override string OpenUdiName => "All Umbraco AI Profiles";
+
+    /// <inheritdoc />
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Profile;
 
+    /// <inheritdoc />
     public override Task<AIProfile?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => _profileService.GetProfileAsync(id, cancellationToken);
+        => profileService.GetProfileAsync(id, cancellationToken);
 
-    public override async IAsyncEnumerable<AIProfile> GetEntitiesAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<AIProfile> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var profiles = await _profileService.GetAllProfilesAsync(cancellationToken);
+        var profiles = await profileService.GetAllProfilesAsync(cancellationToken);
         foreach (var profile in profiles)
         {
             yield return profile;
         }
     }
 
+    /// <inheritdoc />
     public override string GetEntityName(AIProfile entity)
         => entity.Name;
 
+    /// <inheritdoc />
     public override Task<AIProfileArtifact?> GetArtifactAsync(
-        GuidUdi? udi,
+        GuidUdi udi,
         AIProfile? entity,
         CancellationToken cancellationToken = default)
     {
-        if (entity == null) return Task.FromResult<AIProfileArtifact?>(null);
+        if (entity == null)
+        {
+            return Task.FromResult<AIProfileArtifact?>(null);
+        }
 
         var dependencies = new ArtifactDependencyCollection();
 
@@ -79,6 +90,7 @@ public class UmbracoAIProfileServiceConnector(
         return Task.FromResult<AIProfileArtifact?>(artifact);
     }
 
+    /// <inheritdoc />
     public override async Task ProcessAsync(
         ArtifactDeployState<AIProfileArtifact, AIProfile> state,
         IDeployContext context,
@@ -138,7 +150,7 @@ public class UmbracoAIProfileServiceConnector(
                 ModifiedByUserId = artifact.ModifiedByUserId
             };
 
-            state.Entity = await _profileService.SaveProfileAsync(profile, cancellationToken);
+            state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
         }
         else
         {
@@ -161,7 +173,7 @@ public class UmbracoAIProfileServiceConnector(
             profile.ModifiedByUserId = artifact.ModifiedByUserId;
             // ConnectionId will be updated in Pass 4
 
-            state.Entity = await _profileService.SaveProfileAsync(profile, cancellationToken);
+            state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
         }
     }
 
@@ -175,7 +187,7 @@ public class UmbracoAIProfileServiceConnector(
         // Resolve ConnectionId from ConnectionUdi
         artifact.ConnectionUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Connection);
 
-        var connection = await _connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
+        var connection = await connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
         if (connection == null)
         {
             throw new InvalidOperationException($"Connection with ID {artifact.ConnectionUdi.Guid} not found. Ensure the connection is deployed before the profile.");
@@ -185,6 +197,6 @@ public class UmbracoAIProfileServiceConnector(
         var profile = state.Entity!;
         profile.ConnectionId = connection.Id;
 
-        state.Entity = await _profileService.SaveProfileAsync(profile, cancellationToken);
+        state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
     }
 }

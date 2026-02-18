@@ -1,55 +1,68 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
-using Umbraco.AI.Deploy.Extensions;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
-using Umbraco.Deploy.Core;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 
+/// <summary>
+/// Service connector for Umbraco AI Connections, responsible for synchronizing AIConnection entities with their
+/// corresponding AIConnectionArtifact during deploy operations. This connector handles retrieval, artifact creation,
+/// and processing of AI Connections while ensuring sensitive settings are filtered according to configuration.
+/// </summary>
+/// <param name="connectionService"></param>
+/// <param name="settingsAccessor"></param>
 [UdiDefinition(UmbracoAIConstants.UdiEntityType.Connection, UdiType.GuidUdi)]
 public class UmbracoAIConnectionServiceConnector(
     IAIConnectionService connectionService,
     UmbracoAIDeploySettingsAccessor settingsAccessor)
     : UmbracoAIEntityServiceConnectorBase<AIConnectionArtifact, AIConnection>(settingsAccessor)
 {
-    private readonly IAIConnectionService _connectionService = connectionService;
-
+    /// <inheritdoc />
     protected override int[] ProcessPasses => [2];
+
+    /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+
+    /// <inheritdoc />
     protected override string OpenUdiName => "All Umbraco AI Connections";
+
+    /// <inheritdoc />
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Connection;
 
+    /// <inheritdoc />
     public override Task<AIConnection?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => _connectionService.GetConnectionAsync(id, cancellationToken);
+        => connectionService.GetConnectionAsync(id, cancellationToken);
 
-    public override async IAsyncEnumerable<AIConnection> GetEntitiesAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<AIConnection> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var connections = await _connectionService.GetConnectionsAsync(null, cancellationToken);
+        var connections = await connectionService.GetConnectionsAsync(null, cancellationToken);
         foreach (var connection in connections)
         {
             yield return connection;
         }
     }
 
+    /// <inheritdoc />
     public override string GetEntityName(AIConnection entity)
         => entity.Name;
 
+    /// <inheritdoc />
     public override Task<AIConnectionArtifact?> GetArtifactAsync(
-        GuidUdi? udi,
+        GuidUdi udi,
         AIConnection? entity,
         CancellationToken cancellationToken = default)
     {
-        if (entity == null) return Task.FromResult<AIConnectionArtifact?>(null);
+        if (entity == null)
+        {
+            return Task.FromResult<AIConnectionArtifact?>(null);
+        }
 
         var dependencies = new ArtifactDependencyCollection();
 
@@ -73,6 +86,7 @@ public class UmbracoAIConnectionServiceConnector(
         return Task.FromResult<AIConnectionArtifact?>(artifact);
     }
 
+    /// <inheritdoc />
     public override async Task ProcessAsync(
         ArtifactDeployState<AIConnectionArtifact, AIConnection> state,
         IDeployContext context,
@@ -108,7 +122,7 @@ public class UmbracoAIConnectionServiceConnector(
             // Create new connection
             var connection = new AIConnection
             {
-                Alias = artifact.Alias,
+                Alias = artifact.Alias!,
                 Name = artifact.Name,
                 ProviderId = artifact.ProviderId,
                 Settings = settings,
@@ -117,7 +131,7 @@ public class UmbracoAIConnectionServiceConnector(
                 ModifiedByUserId = artifact.ModifiedByUserId
             };
 
-            state.Entity = await _connectionService.SaveConnectionAsync(connection, cancellationToken);
+            state.Entity = await connectionService.SaveConnectionAsync(connection, cancellationToken);
         }
         else
         {
@@ -128,7 +142,7 @@ public class UmbracoAIConnectionServiceConnector(
             connection.IsActive = artifact.IsActive;
             connection.ModifiedByUserId = artifact.ModifiedByUserId;
 
-            state.Entity = await _connectionService.SaveConnectionAsync(connection, cancellationToken);
+            state.Entity = await connectionService.SaveConnectionAsync(connection, cancellationToken);
         }
     }
 
@@ -140,7 +154,10 @@ public class UmbracoAIConnectionServiceConnector(
     /// </summary>
     private JsonElement? FilterSensitiveSettings(object? settings)
     {
-        if (settings == null) return null;
+        if (settings == null)
+        {
+            return null;
+        }
 
         // Convert settings to dictionary for filtering
         Dictionary<string, object?>? settingsDict;
@@ -154,7 +171,10 @@ public class UmbracoAIConnectionServiceConnector(
             settingsDict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
         }
 
-        if (settingsDict == null) return null;
+        if (settingsDict == null)
+        {
+            return null;
+        }
 
         // Get settings type for attribute checking
         var settingsType = settings.GetType();
@@ -167,7 +187,9 @@ public class UmbracoAIConnectionServiceConnector(
 
                 // Layer 1: IgnoreSettings - highest precedence, always block these specific fields
                 if (_settingsAccessor.Settings.Connections.IgnoreSettings.Contains(key))
+                {
                     return false;
+                }
 
                 // Check if field is marked [AIField(IsSensitive = true)]
                 var property = settingsType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
@@ -176,7 +198,9 @@ public class UmbracoAIConnectionServiceConnector(
 
                 // Layer 2: IgnoreSensitive - block sensitive fields entirely (including $ refs)
                 if (_settingsAccessor.Settings.Connections.IgnoreSensitive && isFieldMarkedSensitive)
+                {
                     return false;
+                }
 
                 // Check value characteristics
                 bool isConfigReference = value?.StartsWith("$") == true;
@@ -184,7 +208,9 @@ public class UmbracoAIConnectionServiceConnector(
 
                 // Layer 3: IgnoreEncrypted - block encrypted values but allow $ config references
                 if (_settingsAccessor.Settings.Connections.IgnoreEncrypted && isEncryptedValue)
+                {
                     return !isConfigReference;  // Block encrypted, allow $ refs
+                }
 
                 return true;  // Include all other fields
             })

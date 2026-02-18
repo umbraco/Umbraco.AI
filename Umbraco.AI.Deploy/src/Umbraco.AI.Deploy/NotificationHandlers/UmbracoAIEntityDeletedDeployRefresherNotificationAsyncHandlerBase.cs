@@ -1,10 +1,6 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Core.Models.Notifications;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Events;
-using Umbraco.Cms.Core.Notifications;
 using Umbraco.Deploy.Core;
 using Umbraco.Deploy.Infrastructure.Disk;
 
@@ -24,6 +20,12 @@ public abstract class UmbracoAIEntityDeletedDeployRefresherNotificationAsyncHand
     private readonly ISignatureService _signatureService;
     private readonly string _entityType;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIEntityDeletedDeployRefresherNotificationAsyncHandlerBase{TEntity, TNotification}"/> class.
+    /// </summary>
+    /// <param name="diskEntityService"></param>
+    /// <param name="signatureService"></param>
+    /// <param name="entityType"></param>
     protected UmbracoAIEntityDeletedDeployRefresherNotificationAsyncHandlerBase(
         IDiskEntityService diskEntityService,
         ISignatureService signatureService,
@@ -37,6 +39,7 @@ public abstract class UmbracoAIEntityDeletedDeployRefresherNotificationAsyncHand
         diskEntityService.RegisterDiskEntityType(entityType);
     }
 
+    /// <inheritdoc />
     public Task HandleAsync(TNotification notification, CancellationToken cancellationToken)
     {
         var entityId = notification.EntityId;

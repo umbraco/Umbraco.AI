@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Deploy.Configuration;
@@ -21,7 +18,10 @@ public abstract class UmbracoAIProfileDependentEntityServiceConnectorBase<TArtif
     where TArtifact : DeployArtifactBase<GuidUdi>
     where TEntity : IAIVersionableEntity
 {
-    protected readonly IAIProfileService _profileService = profileService;
+    /// <summary>
+    /// Service to manage AI profiles, used for resolving profile dependencies.
+    /// </summary>
+    private readonly IAIProfileService _profileService = profileService;
 
     /// <summary>
     /// Profile-dependent entities use Pass 2/4 pattern.
@@ -38,7 +38,9 @@ public abstract class UmbracoAIProfileDependentEntityServiceConnectorBase<TArtif
         ArtifactDependencyCollection dependencies)
     {
         if (!profileId.HasValue)
+        {
             return null;
+        }
 
         var profileUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Profile, profileId.Value);
         dependencies.Add(new UmbracoAIArtifactDependency(profileUdi, ArtifactDependencyMode.Match));
@@ -53,7 +55,9 @@ public abstract class UmbracoAIProfileDependentEntityServiceConnectorBase<TArtif
         CancellationToken ct)
     {
         if (profileUdi == null)
+        {
             return null;
+        }
 
         profileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
 

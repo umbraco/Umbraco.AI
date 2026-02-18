@@ -4,7 +4,6 @@ using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
-using Umbraco.Deploy.Core;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 
@@ -19,9 +18,6 @@ public class UmbracoAISettingsServiceConnector(
     UmbracoAIDeploySettingsAccessor settingsAccessor)
     : UmbracoAIEntityServiceConnectorBase<AISettingsArtifact, AISettings>(settingsAccessor)
 {
-    private readonly IAISettingsService _settingsService = settingsService;
-    private readonly IAIProfileService _profileService = profileService;
-
     /// <inheritdoc />
     public override string UdiEntityType => UmbracoAIConstants.UdiEntityType.Settings;
 
@@ -41,9 +37,11 @@ public class UmbracoAISettingsServiceConnector(
     {
         // Settings is a singleton, but we verify the ID matches
         if (id != AISettings.SettingsId)
+        {
             return null;
+        }
 
-        return await _settingsService.GetSettingsAsync(ct);
+        return await settingsService.GetSettingsAsync(ct);
     }
 
     /// <inheritdoc />
@@ -55,7 +53,7 @@ public class UmbracoAISettingsServiceConnector(
 
     private async IAsyncEnumerable<AISettings> GetSingletonAsync(CancellationToken ct)
     {
-        var settings = await _settingsService.GetSettingsAsync(ct);
+        var settings = await settingsService.GetSettingsAsync(ct);
         yield return settings;
     }
 
@@ -64,12 +62,14 @@ public class UmbracoAISettingsServiceConnector(
 
     /// <inheritdoc />
     public override async Task<AISettingsArtifact?> GetArtifactAsync(
-        GuidUdi? udi,
+        GuidUdi udi,
         AISettings? entity,
         CancellationToken ct = default)
     {
         if (entity == null)
+        {
             return null;
+        }
 
         var dependencies = new ArtifactDependencyCollection();
 
@@ -127,13 +127,13 @@ public class UmbracoAISettingsServiceConnector(
         CancellationToken ct)
     {
         // Settings is a singleton - always exists, just update it
-        var settings = await _settingsService.GetSettingsAsync(ct);
+        var settings = await settingsService.GetSettingsAsync(ct);
 
         // Pass 2: Set profile IDs to null (will be resolved in Pass 4)
         settings.DefaultChatProfileId = null;
         settings.DefaultEmbeddingProfileId = null;
 
-        await _settingsService.SaveSettingsAsync(settings, ct);
+        await settingsService.SaveSettingsAsync(settings, ct);
     }
 
     private async Task Pass4Async(
@@ -141,13 +141,13 @@ public class UmbracoAISettingsServiceConnector(
         IDeployContext context,
         CancellationToken ct)
     {
-        var settings = await _settingsService.GetSettingsAsync(ct);
+        var settings = await settingsService.GetSettingsAsync(ct);
 
         // Resolve optional chat profile dependency
         if (state.Artifact.DefaultChatProfileUdi != null)
         {
             state.Artifact.DefaultChatProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var chatProfile = await _profileService.GetProfileAsync(state.Artifact.DefaultChatProfileUdi.Guid, ct);
+            var chatProfile = await profileService.GetProfileAsync(state.Artifact.DefaultChatProfileUdi.Guid, ct);
             settings.DefaultChatProfileId = chatProfile?.Id;
         }
         else
@@ -159,7 +159,7 @@ public class UmbracoAISettingsServiceConnector(
         if (state.Artifact.DefaultEmbeddingProfileUdi != null)
         {
             state.Artifact.DefaultEmbeddingProfileUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Profile);
-            var embeddingProfile = await _profileService.GetProfileAsync(state.Artifact.DefaultEmbeddingProfileUdi.Guid, ct);
+            var embeddingProfile = await profileService.GetProfileAsync(state.Artifact.DefaultEmbeddingProfileUdi.Guid, ct);
             settings.DefaultEmbeddingProfileId = embeddingProfile?.Id;
         }
         else
@@ -167,6 +167,6 @@ public class UmbracoAISettingsServiceConnector(
             settings.DefaultEmbeddingProfileId = null;
         }
 
-        await _settingsService.SaveSettingsAsync(settings, ct);
+        await settingsService.SaveSettingsAsync(settings, ct);
     }
 }

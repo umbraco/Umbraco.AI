@@ -1,10 +1,20 @@
 namespace Umbraco.AI.Deploy.Configuration;
 
+/// <summary>
+/// Configuration settings for Umbraco.AI Deploy.
+/// </summary>
 public class UmbracoAIDeploySettings
 {
+    /// <summary>
+    /// Connection deployment settings (filtering sensitive data).
+    /// </summary>
     public UmbracoAIDeployConnectionSettings Connections { get; set; } = new();
 }
 
+/// <summary>
+/// Configuration settings for AI Connection deployment.
+/// Controls how sensitive settings are filtered during deployment.
+/// </summary>
 public class UmbracoAIDeployConnectionSettings
 {
     /// <summary>

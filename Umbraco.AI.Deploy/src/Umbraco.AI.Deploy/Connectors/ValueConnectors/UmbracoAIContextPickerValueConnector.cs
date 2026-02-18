@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
 using Umbraco.Cms.Core.Models;
@@ -15,8 +11,10 @@ namespace Umbraco.AI.Deploy.Connectors.ValueConnectors;
 /// </summary>
 public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
 {
+    /// <inheritdoc />
     public override IEnumerable<string> PropertyEditorAliases => ["Uai.ContextPicker"];
 
+    /// <inheritdoc />
     public override Task<string?> ToArtifactAsync(
         object? value,
         IPropertyType propertyType,
@@ -27,10 +25,14 @@ public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
         var svalue = value as string;
 
         if (string.IsNullOrWhiteSpace(svalue))
+        {
             return Task.FromResult<string?>(null);
+        }
 
         if (!Guid.TryParse(svalue, out Guid contextId))
+        {
             return Task.FromResult<string?>(null);
+        }
 
         // TODO: Validate context exists via IAIContextService (when Context feature is fully implemented)
         // For now, create UDI without validation
@@ -41,6 +43,7 @@ public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
         return Task.FromResult<string?>(udi.ToString());
     }
 
+    /// <inheritdoc />
     public override Task<object?> FromArtifactAsync(
         string? value,
         IPropertyType propertyType,
@@ -49,7 +52,9 @@ public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(value))
+        {
             return Task.FromResult<object?>(null);
+        }
 
         // Try to parse as UDI first (artifact format)
         if (UdiParser.TryParse(value, out Udi? udi) && udi is GuidUdi guidUdi)
@@ -61,7 +66,9 @@ public class UmbracoAIContextPickerValueConnector : ValueConnectorBase
 
         // Fallback: try to parse as GUID directly (legacy format)
         if (Guid.TryParse(value, out _))
+        {
             return Task.FromResult<object?>(value);
+        }
 
         return Task.FromResult<object?>(null);
     }

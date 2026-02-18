@@ -1,10 +1,6 @@
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Models.Notifications;
 using Umbraco.Cms.Core.Events;
-using Umbraco.Cms.Core.Notifications;
 using Umbraco.Deploy.Core;
 using Umbraco.Deploy.Core.Connectors.ServiceConnectors;
 using Umbraco.Deploy.Infrastructure.Disk;
@@ -28,6 +24,13 @@ public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandle
     private readonly ISignatureService _signatureService;
     private readonly string _entityType;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandlerBase{TEntity, TNotification}"/> class.
+    /// </summary>
+    /// <param name="serviceConnectorFactory"></param>
+    /// <param name="diskEntityService"></param>
+    /// <param name="signatureService"></param>
+    /// <param name="entityType"></param>
     protected UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandlerBase(
         IServiceConnectorFactory serviceConnectorFactory,
         IDiskEntityService diskEntityService,
@@ -43,18 +46,19 @@ public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandle
         diskEntityService.RegisterDiskEntityType(entityType);
     }
 
+    /// <inheritdoc />
     public async Task HandleAsync(TNotification notification, CancellationToken cancellationToken)
     {
         var entity = notification.Entity;
 
         // Get artifact for saved entity
         var artifacts = await _serviceConnectorFactory
-            .GetArtifactsAsync(_entityType, new[] { entity }, new DictionaryCache(), cancellationToken)
+            .GetArtifactsAsync(_entityType, [entity], new DictionaryCache(), cancellationToken)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         // Write to disk
-        await _diskEntityService.WriteArtifactsAsync(artifacts).ConfigureAwait(false);
+        await _diskEntityService.WriteArtifactsAsync(artifacts, cancellationToken).ConfigureAwait(false);
 
         // Update signatures
         _signatureService.SetSignatures(artifacts);

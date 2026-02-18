@@ -88,4 +88,34 @@ public interface IAITestService
         IEnumerable<Guid>? contextIdsOverride = null,
         Guid? batchId = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes multiple tests in batch and returns metrics for each.
+    /// All tests in the batch share the same batch ID for grouping.
+    /// </summary>
+    /// <param name="testIds">The test IDs to execute.</param>
+    /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
+    /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dictionary of test ID to metrics.</returns>
+    Task<IDictionary<Guid, AITestMetrics>> RunTestBatchAsync(
+        IEnumerable<Guid> testIds,
+        Guid? profileIdOverride = null,
+        IEnumerable<Guid>? contextIdsOverride = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes all tests with the specified tags and returns metrics for each.
+    /// All tests in the batch share the same batch ID for grouping.
+    /// </summary>
+    /// <param name="tags">The tags to filter tests by. Tests must have ALL specified tags.</param>
+    /// <param name="profileIdOverride">Optional profile ID to override for all tests.</param>
+    /// <param name="contextIdsOverride">Optional context IDs to override for all tests.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dictionary of test ID to metrics.</returns>
+    Task<IDictionary<Guid, AITestMetrics>> RunTestsByTagsAsync(
+        IEnumerable<string> tags,
+        Guid? profileIdOverride = null,
+        IEnumerable<Guid>? contextIdsOverride = null,
+        CancellationToken cancellationToken = default);
 }

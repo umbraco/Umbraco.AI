@@ -127,4 +127,64 @@ internal sealed class AITestService : IAITestService
         // Delegate to test runner
         return await _testRunner.ExecuteTestAsync(test, profileIdOverride, contextIdsOverride, batchId, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<IDictionary<Guid, AITestMetrics>> RunTestBatchAsync(
+        IEnumerable<Guid> testIds,
+        Guid? profileIdOverride = null,
+        IEnumerable<Guid>? contextIdsOverride = null,
+        CancellationToken cancellationToken = default)
+    {
+        var testIdsList = testIds.ToList();
+        if (testIdsList.Count == 0)
+        {
+            return new Dictionary<Guid, AITestMetrics>();
+        }
+
+        // Generate a batch ID for all tests in this batch
+        var batchId = Guid.NewGuid();
+
+        // Execute all tests with the same batch ID
+        var results = new Dictionary<Guid, AITestMetrics>();
+        foreach (var testId in testIdsList)
+        {
+            try
+            {
+                var metrics = await RunTestAsync(testId, profileIdOverride, contextIdsOverride, batchId, cancellationToken);
+                results[testId] = metrics;
+            }
+            catch (InvalidOperationException)
+            {
+                // Test not found - skip it
+                continue;
+            }
+        }
+
+        return results;
+    }
+
+    /// <inheritdoc />
+    public async Task<IDictionary<Guid, AITestMetrics>> RunTestsByTagsAsync(
+        IEnumerable<string> tags,
+        Guid? profileIdOverride = null,
+        IEnumerable<Guid>? contextIdsOverride = null,
+        CancellationToken cancellationToken = default)
+    {
+        var tagsList = tags.ToList();
+        if (tagsList.Count == 0)
+        {
+            return new Dictionary<Guid, AITestMetrics>();
+        }
+
+        // Get all tests
+        var allTests = await GetTestsAsync(cancellationToken);
+
+        // Filter tests that have ALL specified tags
+        var matchingTests = allTests.Where(test =>
+            tagsList.All(tag => test.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase)));
+
+        // Execute the matching tests as a batch
+        var testIds = matchingTests.Select(t => t.Id);
+        return await RunTestBatchAsync(testIds, profileIdOverride, contextIdsOverride, cancellationToken);
+    }
 }

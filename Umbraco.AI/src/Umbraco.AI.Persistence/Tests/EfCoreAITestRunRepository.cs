@@ -72,6 +72,54 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
     }
 
     /// <inheritdoc />
+    public async Task<Umbraco.Cms.Core.Models.PagedModel<AITestRun>> GetPagedAsync(
+        Guid? testId = null,
+        Guid? batchId = null,
+        AITestRunStatus? status = null,
+        int skip = 0,
+        int take = 20,
+        CancellationToken cancellationToken = default)
+    {
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        var result = await scope.ExecuteWithContextAsync(async db =>
+        {
+            IQueryable<AITestRunEntity> query = db.TestRuns;
+
+            // Apply filters
+            if (testId.HasValue)
+            {
+                query = query.Where(r => r.TestId == testId.Value);
+            }
+
+            if (batchId.HasValue)
+            {
+                query = query.Where(r => r.BatchId == batchId.Value);
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(r => r.Status == (int)status.Value);
+            }
+
+            int total = await query.CountAsync(cancellationToken);
+
+            List<AITestRunEntity> items = await query
+                .OrderByDescending(r => r.ExecutedAt)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+
+            return (items, total);
+        });
+
+        scope.Complete();
+        return new Umbraco.Cms.Core.Models.PagedModel<AITestRun>(
+            result.total,
+            result.items.Select(AITestRunFactory.BuildDomain));
+    }
+
+    /// <inheritdoc />
     public async Task<AITestRun?> GetLatestByTestIdAsync(Guid testId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();

@@ -241,6 +241,7 @@ public static partial class UmbracoBuilderExtensions
         // Note: IAITestRepository and IAITestRunRepository are registered by persistence layer
         services.AddSingleton<IAITestRunner, AITestRunner>();
         services.AddSingleton<IAITestService, AITestService>();
+        services.AddSingleton<IAITestRunService, AITestRunService>();
 
         return builder;
     }

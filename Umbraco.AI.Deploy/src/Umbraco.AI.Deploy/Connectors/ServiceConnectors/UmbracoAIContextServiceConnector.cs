@@ -69,12 +69,7 @@ public class UmbracoAIContextServiceConnector(
         {
             Alias = entity.Alias,
             Name = entity.Name,
-            Resources = resources,
-            DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified,
-            CreatedByUserId = entity.CreatedByUserId,
-            ModifiedByUserId = entity.ModifiedByUserId,
-            Version = entity.Version
+            Resources = resources
         };
 
         return Task.FromResult<AIContextArtifact?>(artifact);
@@ -111,29 +106,20 @@ public class UmbracoAIContextServiceConnector(
             resources = JsonSerializer.Deserialize<List<AIContextResource>>(artifact.Resources.Value);
         }
 
-        if (state.Entity == null)
-        {
-            // Create new context
-            var aiContext = new AIContext
+        // Get or create AIContext entity
+        var aiContext = state.Entity
+            ?? new AIContext
             {
+                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
-                Resources = resources ?? [],
-                CreatedByUserId = artifact.CreatedByUserId,
-                ModifiedByUserId = artifact.ModifiedByUserId
             };
 
-            state.Entity = await contextService.SaveContextAsync(aiContext, cancellationToken);
-        }
-        else
-        {
-            // Update existing context
-            var aiContext = state.Entity;
-            aiContext.Name = artifact.Name;
-            aiContext.Resources = resources ?? [];
-            aiContext.ModifiedByUserId = artifact.ModifiedByUserId;
+        // Update entity properties
+        aiContext.Alias = artifact.Alias!;
+        aiContext.Name = artifact.Name;
+        aiContext.Resources = resources ?? [];
 
-            state.Entity = await contextService.SaveContextAsync(aiContext, cancellationToken);
-        }
+        state.Entity = await contextService.SaveContextAsync(aiContext, cancellationToken);
     }
 }

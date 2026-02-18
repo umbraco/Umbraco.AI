@@ -60,29 +60,4 @@ public class AIAgentArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depen
     /// Whether the agent is active.
     /// </summary>
     public bool IsActive { get; set; }
-
-    /// <summary>
-    /// When the agent was created.
-    /// </summary>
-    public DateTime DateCreated { get; set; }
-
-    /// <summary>
-    /// When the agent was last modified.
-    /// </summary>
-    public DateTime DateModified { get; set; }
-
-    /// <summary>
-    /// The key (GUID) of the user who created the agent.
-    /// </summary>
-    public Guid? CreatedByUserId { get; set; }
-
-    /// <summary>
-    /// The key (GUID) of the user who last modified the agent.
-    /// </summary>
-    public Guid? ModifiedByUserId { get; set; }
-
-    /// <summary>
-    /// The version number of the agent.
-    /// </summary>
-    public int Version { get; set; }
 }

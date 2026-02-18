@@ -91,11 +91,7 @@ public class UmbracoAISettingsServiceConnector(
         var artifact = new AISettingsArtifact(udi, dependencies)
         {
             DefaultChatProfileUdi = chatProfileUdi,
-            DefaultEmbeddingProfileUdi = embeddingProfileUdi,
-            DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified,
-            CreatedByUserId = entity.CreatedByUserId,
-            ModifiedByUserId = entity.ModifiedByUserId
+            DefaultEmbeddingProfileUdi = embeddingProfileUdi
         };
 
         return artifact;

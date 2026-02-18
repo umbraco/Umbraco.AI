@@ -87,12 +87,7 @@ public class UmbracoAIAgentServiceConnector(
                 ? JsonSerializer.SerializeToElement(entity.UserGroupPermissions)
                 : null,
             Instructions = entity.Instructions,
-            IsActive = entity.IsActive,
-            DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified,
-            CreatedByUserId = entity.CreatedByUserId,
-            ModifiedByUserId = entity.ModifiedByUserId,
-            Version = entity.Version
+            IsActive = entity.IsActive
         };
 
         return Task.FromResult<AIAgentArtifact?>(artifact);
@@ -139,47 +134,29 @@ public class UmbracoAIAgentServiceConnector(
             userGroupPermissions = JsonSerializer.Deserialize<Dictionary<Guid, AIAgentUserGroupPermissions>>(artifact.UserGroupPermissions.Value);
         }
 
-        if (state.Entity == null)
-        {
-            // Create new agent (ProfileId will be resolved in Pass 4)
-            var agent = new AIAgent
+        // Get or create agent entity
+        var agent = state.Entity
+            ?? new AIAgent
             {
+                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
-                Name = artifact.Name,
-                Description = artifact.Description,
-                ProfileId = profileId,
-                ContextIds = artifact.ContextIds.ToList(),
-                SurfaceIds = artifact.SurfaceIds.ToList(),
-                Scope = scope,
-                AllowedToolIds = artifact.AllowedToolIds.ToList(),
-                AllowedToolScopeIds = artifact.AllowedToolScopeIds.ToList(),
-                UserGroupPermissions = userGroupPermissions ?? new Dictionary<Guid, AIAgentUserGroupPermissions>(),
-                Instructions = artifact.Instructions,
-                IsActive = artifact.IsActive,
-                CreatedByUserId = artifact.CreatedByUserId,
-                ModifiedByUserId = artifact.ModifiedByUserId
+                Name = artifact.Name
             };
 
-            state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
-        }
-        else
-        {
-            // Update existing agent
-            var agent = state.Entity;
-            agent.Name = artifact.Name;
-            agent.Description = artifact.Description;
-            agent.ContextIds = artifact.ContextIds.ToList();
-            agent.SurfaceIds = artifact.SurfaceIds.ToList();
-            agent.Scope = scope;
-            agent.AllowedToolIds = artifact.AllowedToolIds.ToList();
-            agent.AllowedToolScopeIds = artifact.AllowedToolScopeIds.ToList();
-            agent.UserGroupPermissions = userGroupPermissions ?? new Dictionary<Guid, AIAgentUserGroupPermissions>();
-            agent.Instructions = artifact.Instructions;
-            agent.IsActive = artifact.IsActive;
-            agent.ModifiedByUserId = artifact.ModifiedByUserId;
-            agent.ProfileId = profileId;
+        // Update properties from artifact
+        agent.Alias = artifact.Alias!;
+        agent.Name = artifact.Name;
+        agent.Description = artifact.Description;
+        agent.ProfileId = profileId;
+        agent.ContextIds = artifact.ContextIds.ToList();
+        agent.SurfaceIds = artifact.SurfaceIds.ToList();
+        agent.Scope = scope;
+        agent.AllowedToolIds = artifact.AllowedToolIds.ToList();
+        agent.AllowedToolScopeIds = artifact.AllowedToolScopeIds.ToList();
+        agent.UserGroupPermissions = userGroupPermissions ?? new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        agent.Instructions = artifact.Instructions;
+        agent.IsActive = artifact.IsActive;
 
-            state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
-        }
+        state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
     }
 }

@@ -79,12 +79,7 @@ public class UmbracoAIProfileServiceConnector(
             ModelModelId = entity.Model.ModelId,
             ConnectionUdi = connectionUdi,
             Settings = entity.Settings != null ? JsonSerializer.SerializeToElement(entity.Settings) : null,
-            Tags = entity.Tags.ToList(),
-            DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified,
-            CreatedByUserId = entity.CreatedByUserId,
-            ModifiedByUserId = entity.ModifiedByUserId,
-            Version = entity.Version
+            Tags = entity.Tags.ToList()
         };
 
         return Task.FromResult<AIProfileArtifact?>(artifact);
@@ -139,47 +134,25 @@ public class UmbracoAIProfileServiceConnector(
         // Create AIModelRef from artifact properties
         var modelRef = new AIModelRef(artifact.ModelProviderId, artifact.ModelModelId);
 
-        if (state.Entity == null)
-        {
-            // Create new profile (ConnectionId will be resolved in Pass 4)
-            // For now, use a placeholder - we'll update it in Pass 4
-            var profile = new AIProfile
+        // Get or create profile entity
+        var profile = state.Entity
+            ?? new AIProfile
             {
-                ConnectionId = connection.Id, // Set ConnectionId to resolved value
+                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Capability = (AICapability)artifact.Capability,
-                Model = modelRef,
-                Settings = settings,
-                Tags = artifact.Tags.ToList(),
-                CreatedByUserId = artifact.CreatedByUserId,
-                ModifiedByUserId = artifact.ModifiedByUserId
+                ConnectionId = connection.Id
             };
 
-            state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
-        }
-        else
-        {
-            // Update existing profile
-            var profile = state.Entity;
+        // Update mutable properties
+        profile.Alias = artifact.Alias!;
+        profile.Name = artifact.Name;
+        profile.ConnectionId = connection.Id;
+        profile.Model = modelRef;
+        profile.Settings = settings;
+        profile.Tags = artifact.Tags.ToList();
 
-            // Validate that capability hasn't changed (it's init-only, so we can't change it)
-            if (profile.Capability != (AICapability)artifact.Capability)
-            {
-                throw new InvalidOperationException(
-                    $"Cannot change profile capability from {profile.Capability} to {(AICapability)artifact.Capability}. " +
-                    "Profile capability is immutable after creation.");
-            }
-
-            // Update mutable properties
-            profile.Name = artifact.Name;
-            profile.Model = modelRef;
-            profile.Settings = settings;
-            profile.Tags = artifact.Tags.ToList();
-            profile.ModifiedByUserId = artifact.ModifiedByUserId;
-            profile.ConnectionId = connection.Id;
-
-            state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
-        }
+        state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
     }
 }

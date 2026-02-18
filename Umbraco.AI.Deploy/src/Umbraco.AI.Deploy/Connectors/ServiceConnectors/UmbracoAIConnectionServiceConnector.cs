@@ -75,12 +75,7 @@ public class UmbracoAIConnectionServiceConnector(
             Name = entity.Name,
             ProviderId = entity.ProviderId,
             Settings = filteredSettings,
-            IsActive = entity.IsActive,
-            DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified,
-            CreatedByUserId = entity.CreatedByUserId,
-            ModifiedByUserId = entity.ModifiedByUserId,
-            Version = entity.Version
+            IsActive = entity.IsActive
         };
 
         return Task.FromResult<AIConnectionArtifact?>(artifact);
@@ -117,33 +112,23 @@ public class UmbracoAIConnectionServiceConnector(
             settings = JsonSerializer.Deserialize<Dictionary<string, object?>>(artifact.Settings.Value);
         }
 
-        if (state.Entity == null)
-        {
-            // Create new connection
-            var connection = new AIConnection
+        // Create new connection or update existing one
+        var connection = state.Entity
+            ?? new AIConnection
             {
+                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
-                ProviderId = artifact.ProviderId,
-                Settings = settings,
-                IsActive = artifact.IsActive,
-                CreatedByUserId = artifact.CreatedByUserId,
-                ModifiedByUserId = artifact.ModifiedByUserId
+                ProviderId = artifact.ProviderId
             };
 
-            state.Entity = await connectionService.SaveConnectionAsync(connection, cancellationToken);
-        }
-        else
-        {
-            // Update existing connection
-            var connection = state.Entity;
-            connection.Name = artifact.Name;
-            connection.Settings = settings;
-            connection.IsActive = artifact.IsActive;
-            connection.ModifiedByUserId = artifact.ModifiedByUserId;
+        // Update properties from artifact
+        connection.Alias = artifact.Alias!;
+        connection.Name = artifact.Name;
+        connection.Settings = settings;
+        connection.IsActive = artifact.IsActive;
 
-            state.Entity = await connectionService.SaveConnectionAsync(connection, cancellationToken);
-        }
+        state.Entity = await connectionService.SaveConnectionAsync(connection, cancellationToken);
     }
 
     /// <summary>

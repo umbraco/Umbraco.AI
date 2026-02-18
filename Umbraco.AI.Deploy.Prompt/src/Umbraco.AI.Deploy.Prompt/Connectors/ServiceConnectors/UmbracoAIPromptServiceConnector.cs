@@ -74,12 +74,7 @@ public class UmbracoAIPromptServiceConnector(
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
             OptionCount = entity.OptionCount,
-            Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
-            DateCreated = entity.DateCreated,
-            DateModified = entity.DateModified,
-            CreatedByUserId = entity.CreatedByUserId,
-            ModifiedByUserId = entity.ModifiedByUserId,
-            Version = entity.Version
+            Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null
         };
 
         return Task.FromResult<AIPromptArtifact?>(artifact);
@@ -119,45 +114,29 @@ public class UmbracoAIPromptServiceConnector(
             scope = JsonSerializer.Deserialize<AIPromptScope>(artifact.Scope.Value);
         }
 
-        if (state.Entity == null)
-        {
-            // Create new prompt (ProfileId will be resolved in Pass 4)
-            var prompt = new AIPrompt
+        // Get or create prompt entity
+        var prompt = state.Entity
+            ?? new AIPrompt
             {
+                Id = artifact.Udi.Guid,
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
-                Description = artifact.Description,
                 Instructions = artifact.Instructions,
-                ProfileId = profileId,
-                ContextIds = artifact.ContextIds.ToList(),
-                Tags = artifact.Tags.ToList(),
-                IsActive = artifact.IsActive,
-                IncludeEntityContext = artifact.IncludeEntityContext,
-                OptionCount = artifact.OptionCount,
-                Scope = scope,
-                CreatedByUserId = artifact.CreatedByUserId,
-                ModifiedByUserId = artifact.ModifiedByUserId
             };
 
-            state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
-        }
-        else
-        {
-            // Update existing prompt
-            var prompt = state.Entity;
-            prompt.Name = artifact.Name;
-            prompt.Description = artifact.Description;
-            prompt.Instructions = artifact.Instructions;
-            prompt.ContextIds = artifact.ContextIds.ToList();
-            prompt.Tags = artifact.Tags.ToList();
-            prompt.IsActive = artifact.IsActive;
-            prompt.IncludeEntityContext = artifact.IncludeEntityContext;
-            prompt.OptionCount = artifact.OptionCount;
-            prompt.Scope = scope;
-            prompt.ModifiedByUserId = artifact.ModifiedByUserId;
-            prompt.ProfileId = profileId;
+        // Update properties from artifact
+        prompt.Alias = artifact.Alias!;
+        prompt.Name = artifact.Name;
+        prompt.Description = artifact.Description;
+        prompt.ProfileId = profileId;
+        prompt.Instructions = artifact.Instructions;
+        prompt.ContextIds = artifact.ContextIds.ToList();
+        prompt.Tags = artifact.Tags.ToList();
+        prompt.IsActive = artifact.IsActive;
+        prompt.IncludeEntityContext = artifact.IncludeEntityContext;
+        prompt.OptionCount = artifact.OptionCount;
+        prompt.Scope = scope;
 
-            state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
-        }
+        state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
     }
 }

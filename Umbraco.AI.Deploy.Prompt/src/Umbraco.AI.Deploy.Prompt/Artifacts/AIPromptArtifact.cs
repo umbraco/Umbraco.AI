@@ -55,29 +55,4 @@ public class AIPromptArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depe
     /// Scoping rules serialized as JSON (where the prompt is available).
     /// </summary>
     public JsonElement? Scope { get; set; }
-
-    /// <summary>
-    /// When the prompt was created.
-    /// </summary>
-    public DateTime DateCreated { get; set; }
-
-    /// <summary>
-    /// When the prompt was last modified.
-    /// </summary>
-    public DateTime DateModified { get; set; }
-
-    /// <summary>
-    /// The key (GUID) of the user who created the prompt.
-    /// </summary>
-    public Guid? CreatedByUserId { get; set; }
-
-    /// <summary>
-    /// The key (GUID) of the user who last modified the prompt.
-    /// </summary>
-    public Guid? ModifiedByUserId { get; set; }
-
-    /// <summary>
-    /// The version number of the prompt.
-    /// </summary>
-    public int Version { get; set; }
 }

@@ -24,7 +24,7 @@ public class UmbracoAIProfileServiceConnector(
     : UmbracoAIEntityServiceConnectorBase<AIProfileArtifact, AIProfile>(settingsAccessor)
 {
     /// <inheritdoc />
-    protected override int[] ProcessPasses => [2, 4];
+    protected override int[] ProcessPasses => [2];
 
     /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
@@ -104,9 +104,6 @@ public class UmbracoAIProfileServiceConnector(
             case 2:
                 await Pass2Async(state, context, cancellationToken);
                 break;
-            case 4:
-                await Pass4Async(state, context, cancellationToken);
-                break;
         }
     }
 
@@ -135,15 +132,24 @@ public class UmbracoAIProfileServiceConnector(
 
         if (state.Entity == null)
         {
+            // Resolve ConnectionId from ConnectionUdi
+            artifact.ConnectionUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Connection);
+
+            var connection = await connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
+            if (connection == null)
+            {
+                throw new InvalidOperationException($"Connection with ID {artifact.ConnectionUdi.Guid} not found. Ensure the connection is deployed before the profile.");
+            }
+
             // Create new profile (ConnectionId will be resolved in Pass 4)
             // For now, use a placeholder - we'll update it in Pass 4
             var profile = new AIProfile
             {
+                ConnectionId = connection.Id, // Set ConnectionId to resolved value
                 Alias = artifact.Alias,
                 Name = artifact.Name,
                 Capability = (AICapability)artifact.Capability,
                 Model = modelRef,
-                ConnectionId = Guid.Empty, // Placeholder - resolved in Pass 4
                 Settings = settings,
                 Tags = artifact.Tags.ToList(),
                 CreatedByUserId = artifact.CreatedByUserId,
@@ -175,28 +181,5 @@ public class UmbracoAIProfileServiceConnector(
 
             state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
         }
-    }
-
-    private async Task Pass4Async(
-        ArtifactDeployState<AIProfileArtifact, AIProfile> state,
-        IDeployContext context,
-        CancellationToken cancellationToken)
-    {
-        var artifact = state.Artifact;
-
-        // Resolve ConnectionId from ConnectionUdi
-        artifact.ConnectionUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Connection);
-
-        var connection = await connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
-        if (connection == null)
-        {
-            throw new InvalidOperationException($"Connection with ID {artifact.ConnectionUdi.Guid} not found. Ensure the connection is deployed before the profile.");
-        }
-
-        // Update profile with resolved ConnectionId
-        var profile = state.Entity!;
-        profile.ConnectionId = connection.Id;
-
-        state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
     }
 }

@@ -24,11 +24,9 @@ public abstract class UmbracoAIProfileDependentEntityServiceConnectorBase<TArtif
     private readonly IAIProfileService _profileService = profileService;
 
     /// <summary>
-    /// Profile-dependent entities use Pass 2/4 pattern.
-    /// Pass 2: Create/update entity with basic properties
-    /// Pass 4: Resolve optional ProfileId from ProfileUdi
+    /// Profile-dependent entities use Pass 3 as Pass 2 is when the profile is created.
     /// </summary>
-    protected override int[] ProcessPasses => [2, 4];
+    protected override int[] ProcessPasses => [3];
 
     /// <summary>
     /// Helper to add optional profile dependency to artifact.

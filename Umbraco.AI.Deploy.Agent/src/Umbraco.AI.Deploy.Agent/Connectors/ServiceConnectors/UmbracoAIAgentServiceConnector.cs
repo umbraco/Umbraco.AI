@@ -109,16 +109,13 @@ public class UmbracoAIAgentServiceConnector(
 
         switch (pass)
         {
-            case 2:
-                await Pass2Async(state, context, cancellationToken);
-                break;
-            case 4:
-                await Pass4Async(state, context, cancellationToken);
+            case 3:
+                await Pass3Async(state, context, cancellationToken);
                 break;
         }
     }
 
-    private async Task Pass2Async(
+    private async Task Pass3Async(
         ArtifactDeployState<AIAgentArtifact, AIAgent> state,
         IDeployContext context,
         CancellationToken cancellationToken)
@@ -141,13 +138,16 @@ public class UmbracoAIAgentServiceConnector(
 
         if (state.Entity == null)
         {
+            // Use base class helper to resolve optional ProfileId from ProfileUdi
+            var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
+
             // Create new agent (ProfileId will be resolved in Pass 4)
             var agent = new AIAgent
             {
                 Alias = artifact.Alias!,
                 Name = artifact.Name,
                 Description = artifact.Description,
-                ProfileId = null, // Will be resolved in Pass 4
+                ProfileId = profileId,
                 ContextIds = artifact.ContextIds.ToList(),
                 SurfaceIds = artifact.SurfaceIds.ToList(),
                 Scope = scope,
@@ -181,22 +181,5 @@ public class UmbracoAIAgentServiceConnector(
 
             state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
         }
-    }
-
-    private async Task Pass4Async(
-        ArtifactDeployState<AIAgentArtifact, AIAgent> state,
-        IDeployContext context,
-        CancellationToken cancellationToken)
-    {
-        var artifact = state.Artifact;
-
-        // Use base class helper to resolve optional ProfileId from ProfileUdi
-        var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
-
-        // Update agent with resolved ProfileId
-        var agent = state.Entity!;
-        agent.ProfileId = profileId;
-
-        state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
     }
 }

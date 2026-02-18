@@ -96,16 +96,13 @@ public class UmbracoAIPromptServiceConnector(
 
         switch (pass)
         {
-            case 2:
-                await Pass2Async(state, context, cancellationToken);
-                break;
-            case 4:
-                await Pass4Async(state, context, cancellationToken);
+            case 3:
+                await Pass3Async(state, context, cancellationToken);
                 break;
         }
     }
 
-    private async Task Pass2Async(
+    private async Task Pass3Async(
         ArtifactDeployState<AIPromptArtifact, AIPrompt> state,
         IDeployContext context,
         CancellationToken cancellationToken)
@@ -121,6 +118,8 @@ public class UmbracoAIPromptServiceConnector(
 
         if (state.Entity == null)
         {
+            var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
+
             // Create new prompt (ProfileId will be resolved in Pass 4)
             var prompt = new AIPrompt
             {
@@ -128,7 +127,7 @@ public class UmbracoAIPromptServiceConnector(
                 Name = artifact.Name,
                 Description = artifact.Description,
                 Instructions = artifact.Instructions,
-                ProfileId = null, // Will be resolved in Pass 4
+                ProfileId = profileId,
                 ContextIds = artifact.ContextIds.ToList(),
                 Tags = artifact.Tags.ToList(),
                 IsActive = artifact.IsActive,
@@ -159,22 +158,5 @@ public class UmbracoAIPromptServiceConnector(
 
             state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
         }
-    }
-
-    private async Task Pass4Async(
-        ArtifactDeployState<AIPromptArtifact, AIPrompt> state,
-        IDeployContext context,
-        CancellationToken cancellationToken)
-    {
-        var artifact = state.Artifact;
-
-        // Use base class helper to resolve optional ProfileId from ProfileUdi
-        var profileId = await ResolveProfileIdAsync(artifact.ProfileUdi, cancellationToken);
-
-        // Update prompt with resolved ProfileId
-        var prompt = state.Entity!;
-        prompt.ProfileId = profileId;
-
-        state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
     }
 }

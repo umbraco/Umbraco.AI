@@ -24,7 +24,7 @@ public class UmbracoAIConnectionServiceConnector(
     : UmbracoAIEntityServiceConnectorBase<AIConnectionArtifact, AIConnection>(settingsAccessor)
 {
     /// <inheritdoc />
-    protected override int[] ProcessPasses => [2];
+    protected override int[] ProcessPasses => [1];
 
     /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
@@ -97,13 +97,13 @@ public class UmbracoAIConnectionServiceConnector(
 
         switch (pass)
         {
-            case 2:
-                await Pass2Async(state, context, cancellationToken);
+            case 1:
+                await Pass1Async(state, context, cancellationToken);
                 break;
         }
     }
 
-    private async Task Pass2Async(
+    private async Task Pass1Async(
         ArtifactDeployState<AIConnectionArtifact, AIConnection> state,
         IDeployContext context,
         CancellationToken cancellationToken)

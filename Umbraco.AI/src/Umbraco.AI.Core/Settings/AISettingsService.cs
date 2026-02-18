@@ -46,7 +46,8 @@ internal sealed class AISettingsService : IAISettingsService
         _cache.Insert(SettingsCacheKey,() => settingResult);
 
         // Publish saved notification for Deploy integration
-        var savedNotification = new AISettingsSavedNotification(settingResult, new[] { settingResult });
+        var messages = new EventMessages();
+        var savedNotification = new AISettingsSavedNotification(settingResult, messages);
         await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
 
         return settingResult;

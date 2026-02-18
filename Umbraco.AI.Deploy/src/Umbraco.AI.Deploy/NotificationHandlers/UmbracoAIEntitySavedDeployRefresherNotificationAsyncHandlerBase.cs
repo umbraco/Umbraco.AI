@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Models.Notifications;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Notifications;
@@ -19,7 +20,7 @@ namespace Umbraco.AI.Deploy.NotificationHandlers;
 /// </summary>
 public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandlerBase<TEntity, TNotification>
     : INotificationAsyncHandler<TNotification>
-    where TEntity : class
+    where TEntity : IAIEntity
     where TNotification : AIEntitySavedNotification<TEntity>
 {
     private readonly IServiceConnectorFactory _serviceConnectorFactory;
@@ -59,5 +60,9 @@ public abstract class UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandle
         _signatureService.SetSignatures(artifacts);
     }
 
-    protected abstract object GetEntityId(TEntity entity);
+    /// <summary>
+    /// Gets the entity ID. Default implementation returns <see cref="IAIEntity.Id"/>.
+    /// Override if the entity uses a different identifier property.
+    /// </summary>
+    protected virtual object GetEntityId(TEntity entity) => entity.Id;
 }

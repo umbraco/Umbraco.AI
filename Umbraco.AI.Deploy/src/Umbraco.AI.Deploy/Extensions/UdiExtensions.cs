@@ -1,4 +1,4 @@
-using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core;
 
 namespace Umbraco.AI.Deploy.Extensions;
@@ -11,6 +11,6 @@ internal static class UdiExtensions
     /// <summary>
     /// Creates a GuidUdi for an AI entity with the specified entity type.
     /// </summary>
-    public static GuidUdi GetUdi(this IAIVersionableEntity entity, string udiEntityType)
+    public static GuidUdi GetUdi(this IAIEntity entity, string udiEntityType)
         => new(udiEntityType, entity.Id);
 }

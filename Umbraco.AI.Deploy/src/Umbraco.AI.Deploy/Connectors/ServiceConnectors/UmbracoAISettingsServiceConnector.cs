@@ -28,6 +28,8 @@ public class UmbracoAISettingsServiceConnector(
     /// Settings uses Pass 2 and Pass 4 for profile dependency resolution.
     /// </summary>
     protected override int[] ProcessPasses => [2, 4];
+    protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
+    protected override string OpenUdiName => "Umbraco AI Settings";
 
     public override async Task<AISettings?> GetEntityAsync(Guid id, CancellationToken ct = default)
     {

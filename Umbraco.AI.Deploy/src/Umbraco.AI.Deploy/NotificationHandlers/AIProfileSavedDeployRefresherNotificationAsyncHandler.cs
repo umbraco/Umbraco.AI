@@ -13,7 +13,5 @@ internal sealed class AIProfileSavedDeployRefresherNotificationAsyncHandler(
         serviceConnectorFactory,
         diskEntityService,
         signatureService,
-        UmbracoAIConstants.UdiEntityType.Profile)
-{
-    protected override object GetEntityId(AIProfile entity) => entity.Id;
-}
+        UmbracoAIConstants.UdiEntityType.Profile);
+

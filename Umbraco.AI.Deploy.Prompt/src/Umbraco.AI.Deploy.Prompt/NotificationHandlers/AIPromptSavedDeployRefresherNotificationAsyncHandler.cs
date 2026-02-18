@@ -14,7 +14,5 @@ internal sealed class AIPromptSavedDeployRefresherNotificationAsyncHandler(
         serviceConnectorFactory,
         diskEntityService,
         signatureService,
-        UmbracoAIPromptConstants.UdiEntityType.Prompt)
-{
-    protected override object GetEntityId(AIPrompt entity) => entity.Id;
-}
+        UmbracoAIPromptConstants.UdiEntityType.Prompt);
+

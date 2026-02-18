@@ -1,4 +1,5 @@
 using Umbraco.AI.Core.Models.Notifications;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Core.Settings;
 
@@ -11,9 +12,9 @@ public sealed class AISettingsSavedNotification : AIEntitySavedNotification<AISe
     /// Initializes a new instance of the <see cref="AISettingsSavedNotification"/> class.
     /// </summary>
     /// <param name="entity">The settings entity that was saved.</param>
-    /// <param name="savedEntities">All settings entities that were saved in this operation.</param>
-    public AISettingsSavedNotification(AISettings entity, IEnumerable<AISettings> savedEntities)
-        : base(entity, savedEntities)
+    /// <param name="messages">Event messages from the save operation.</param>
+    public AISettingsSavedNotification(AISettings entity, EventMessages messages)
+        : base(entity, messages)
     {
     }
 }

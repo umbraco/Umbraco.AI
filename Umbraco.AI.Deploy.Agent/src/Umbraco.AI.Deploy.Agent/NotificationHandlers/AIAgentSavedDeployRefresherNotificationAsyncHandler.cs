@@ -14,7 +14,5 @@ internal sealed class AIAgentSavedDeployRefresherNotificationAsyncHandler(
         serviceConnectorFactory,
         diskEntityService,
         signatureService,
-        UmbracoAIAgentConstants.UdiEntityType.Agent)
-{
-    protected override object GetEntityId(AIAgent entity) => entity.Id;
-}
+        UmbracoAIAgentConstants.UdiEntityType.Agent);
+

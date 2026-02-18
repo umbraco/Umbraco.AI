@@ -1,4 +1,5 @@
 using Umbraco.AI.Core.Models.Notifications;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.AI.Core.Settings;
 
@@ -11,9 +12,9 @@ public sealed class AISettingsDeletedNotification : AIEntityDeletedNotification<
     /// Initializes a new instance of the <see cref="AISettingsDeletedNotification"/> class.
     /// </summary>
     /// <param name="entityId">The ID of the settings entity that was deleted.</param>
-    /// <param name="deletedEntities">All settings entities that were deleted in this operation.</param>
-    public AISettingsDeletedNotification(Guid entityId, IEnumerable<Guid> deletedEntities)
-        : base(entityId, deletedEntities)
+    /// <param name="messages">Event messages from the delete operation.</param>
+    public AISettingsDeletedNotification(Guid entityId, EventMessages messages)
+        : base(entityId, messages)
     {
     }
 }

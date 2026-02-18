@@ -8,16 +8,13 @@ namespace Umbraco.AI.Deploy.NotificationHandlers;
 /// <summary>
 /// Handles AI settings saved notifications and writes deployment artifacts.
 /// </summary>
-internal sealed class AISettingsSavedDeployRefresherNotificationAsyncHandler
-    : UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandlerBase<AISettings, AISettingsSavedNotification>
-{
-    public AISettingsSavedDeployRefresherNotificationAsyncHandler(
-        IServiceConnectorFactory serviceConnectorFactory,
-        IDiskEntityService diskEntityService,
-        ISignatureService signatureService)
-        : base(serviceConnectorFactory, diskEntityService, signatureService, UmbracoAIConstants.UdiEntityType.Settings)
-    {
-    }
+internal sealed class AISettingsSavedDeployRefresherNotificationAsyncHandler(
+    IServiceConnectorFactory serviceConnectorFactory,
+    IDiskEntityService diskEntityService,
+    ISignatureService signatureService)
+    : UmbracoAIEntitySavedDeployRefresherNotificationAsyncHandlerBase<AISettings, AISettingsSavedNotification>(
+        serviceConnectorFactory,
+        diskEntityService,
+        signatureService,
+        UmbracoAIConstants.UdiEntityType.Settings);
 
-    protected override object GetEntityId(AISettings entity) => entity.Id;
-}

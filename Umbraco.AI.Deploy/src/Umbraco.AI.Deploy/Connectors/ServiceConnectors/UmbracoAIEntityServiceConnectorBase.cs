@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Extensions;
 using Umbraco.Cms.Core;
@@ -15,13 +15,13 @@ namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 
 /// <summary>
 /// Base class for Umbraco.AI entity service connectors.
-/// Provides common functionality for deploying AI entities (Connections, Profiles, Contexts).
+/// Provides common functionality for deploying AI entities (Connections, Profiles, Contexts, Settings).
 /// </summary>
 public abstract class UmbracoAIEntityServiceConnectorBase<TArtifact, TEntity>(
     UmbracoAIDeploySettingsAccessor settingsAccessor)
     : ServiceConnectorBase<TArtifact, GuidUdi, TEntity>
     where TArtifact : DeployArtifactBase<GuidUdi>
-    where TEntity : IAIVersionableEntity
+    where TEntity : IAIEntity
 {
     protected readonly UmbracoAIDeploySettingsAccessor _settingsAccessor = settingsAccessor;
 

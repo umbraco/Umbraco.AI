@@ -140,7 +140,7 @@ public class PromptTestFeature : AITestFeatureBase
                     outputTokens = result.Usage.OutputTokenCount,
                     totalTokens = result.Usage.TotalTokenCount
                 } : null,
-                propertyChanges = result.PropertyChanges
+                resultOptions = result.ResultOptions
             })
         };
     }

@@ -16,7 +16,7 @@ public class AgentTestTestCase
     [AIField(
         Label = "Messages",
         Description = "Initial messages to send to the agent (JSON array)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         EditorConfig = "[{\"alias\":\"rows\",\"value\":5}]",
         SortOrder = 1)]
     public List<AGUIMessage> Messages { get; set; } = [];
@@ -27,7 +27,7 @@ public class AgentTestTestCase
     [AIField(
         Label = "Tools",
         Description = "Optional tools available to the agent (JSON array)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         EditorConfig = "[{\"alias\":\"rows\",\"value\":3}]",
         SortOrder = 2)]
     public List<AGUITool>? Tools { get; set; }
@@ -38,7 +38,7 @@ public class AgentTestTestCase
     [AIField(
         Label = "Initial State",
         Description = "Optional initial state (JSON object)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         EditorConfig = "[{\"alias\":\"rows\",\"value\":3}]",
         SortOrder = 3)]
     public JsonElement? State { get; set; }
@@ -49,7 +49,7 @@ public class AgentTestTestCase
     [AIField(
         Label = "Context Items",
         Description = "Optional context items (JSON array)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextArea",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextArea",
         EditorConfig = "[{\"alias\":\"rows\",\"value\":3}]",
         SortOrder = 4)]
     public List<AGUIContextItem>? Context { get; set; }
@@ -60,7 +60,7 @@ public class AgentTestTestCase
     [AIField(
         Label = "Thread ID",
         Description = "Optional thread ID (defaults to test ID)",
-        PropertyEditorUiAlias = "Umb.PropertyEditorUi.TextBox",
+        EditorUiAlias = "Umb.PropertyEditorUi.TextBox",
         SortOrder = 5)]
     public string? ThreadId { get; set; }
 }

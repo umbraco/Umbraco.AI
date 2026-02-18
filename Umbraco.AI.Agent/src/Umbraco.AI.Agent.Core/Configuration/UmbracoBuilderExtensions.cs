@@ -5,11 +5,11 @@ using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Agent.Core.Models;
 using Umbraco.AI.Agent.Core.RuntimeContext;
-using Umbraco.AI.Agent.Core.Scopes;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Agent.Core.Tests;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 

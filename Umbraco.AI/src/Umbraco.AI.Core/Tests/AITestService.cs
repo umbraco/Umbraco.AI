@@ -101,7 +101,7 @@ internal sealed class AITestService : IAITestService
         ArgumentException.ThrowIfNullOrWhiteSpace(test.TestTypeId);
 
         // Validate test case JSON is not empty
-        if (string.IsNullOrWhiteSpace(test.TestCase.TestCaseJson))
+        if (string.IsNullOrWhiteSpace(test.TestCaseJson))
         {
             throw new InvalidOperationException("Test case JSON cannot be empty");
         }

@@ -40,9 +40,10 @@ public sealed class AITest : IAIVersionableEntity
     public required AITestTarget Target { get; set; }
 
     /// <summary>
-    /// Test input configuration - structure depends on TestTypeId.
+    /// Test input configuration as JSON - structure depends on TestTypeId.
+    /// Deserialized to the type specified by IAITestFeature.TestCaseType.
     /// </summary>
-    public required AITestCase TestCase { get; set; }
+    public required string TestCaseJson { get; set; }
 
     /// <summary>
     /// Success criteria - graders that evaluate the test output.

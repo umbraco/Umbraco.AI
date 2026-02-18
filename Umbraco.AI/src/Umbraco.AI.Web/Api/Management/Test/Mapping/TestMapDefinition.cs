@@ -25,7 +25,7 @@ public class TestMapDefinition : IMapDefinition
                 TargetId = source.Target.TargetId,
                 IsAlias = source.Target.IsAlias
             },
-            TestCaseJson = source.TestCase.TestCaseJson,
+            TestCaseJson = source.TestCaseJson,
             Graders = source.Graders.Select(g => new TestGraderModel
             {
                 Id = g.Id,
@@ -71,10 +71,7 @@ public class TestMapDefinition : IMapDefinition
                 TargetId = source.Target.TargetId,
                 IsAlias = source.Target.IsAlias
             },
-            TestCase = new AITestCase
-            {
-                TestCaseJson = source.TestCaseJson
-            },
+            TestCaseJson = source.TestCaseJson,
             Graders = source.Graders.Select(g => new AITestGrader
             {
                 Id = g.Id,
@@ -102,10 +99,7 @@ public class TestMapDefinition : IMapDefinition
                 TargetId = source.Target.TargetId,
                 IsAlias = source.Target.IsAlias
             },
-            TestCase = new AITestCase
-            {
-                TestCaseJson = source.TestCaseJson
-            },
+            TestCaseJson = source.TestCaseJson,
             Graders = source.Graders.Select(g => new AITestGrader
             {
                 Id = g.Id,

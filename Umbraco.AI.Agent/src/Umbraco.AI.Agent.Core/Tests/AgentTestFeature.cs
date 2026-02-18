@@ -47,7 +47,7 @@ public class AgentTestFeature : AITestFeatureBase
         CancellationToken cancellationToken)
     {
         // Deserialize test case from test.TestCaseJson
-        var testCase = JsonSerializer.Deserialize<AgentTestTestCase>(test.TestCase.TestCaseJson);
+        var testCase = JsonSerializer.Deserialize<AgentTestTestCase>(test.TestCaseJson);
         if (testCase == null)
         {
             throw new InvalidOperationException("Failed to deserialize test case");

@@ -97,10 +97,7 @@ public class UpdateTestController : TestControllerBase
                 TargetId = requestModel.Target.TargetId,
                 IsAlias = requestModel.Target.IsAlias
             },
-            TestCase = new AITestCase
-            {
-                TestCaseJson = requestModel.TestCaseJson
-            },
+            TestCaseJson = requestModel.TestCaseJson,
             Graders = requestModel.Graders.Select(g => new AITestGrader
             {
                 Id = g.Id,

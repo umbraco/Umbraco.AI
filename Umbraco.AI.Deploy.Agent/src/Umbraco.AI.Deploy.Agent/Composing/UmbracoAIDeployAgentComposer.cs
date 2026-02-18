@@ -18,8 +18,9 @@ public class UmbracoAIDeployAgentComposer : IComposer
     /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)
     {
-        // Register UDI type
-        UdiParser.RegisterUdiType(UmbracoAIAgentConstants.UdiEntityType.Agent, UdiType.GuidUdi);
+        // Register component for UDI and disk entity type registration
+        builder.Components()
+            .Append<UmbracoAIDeployAgentComponent>();
 
         // Register notification handlers
         builder.AddNotificationAsyncHandler<AIAgentSavedNotification, AIAgentSavedDeployRefresherNotificationAsyncHandler>();

@@ -18,8 +18,9 @@ public class UmbracoAIDeployPromptComposer : IComposer
     /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)
     {
-        // Register UDI type
-        UdiParser.RegisterUdiType(UmbracoAIPromptConstants.UdiEntityType.Prompt, UdiType.GuidUdi);
+        // Register component for UDI and disk entity type registration
+        builder.Components()
+            .Append<UmbracoAIDeployPromptComponent>();
 
         // Register notification handlers
         builder.AddNotificationAsyncHandler<AIPromptSavedNotification, AIPromptSavedDeployRefresherNotificationAsyncHandler>();

@@ -25,8 +25,9 @@ public class UmbracoAIDeployComposer : IComposer
 
         builder.Services.AddSingleton<UmbracoAIDeploySettingsAccessor>();
 
-        // Register UDI types
-        RegisterUdiTypes();
+        // Register component for UDI and disk entity type registration
+        builder.Components()
+            .Append<UmbracoAIDeployComponent>();
 
         // Register notification handlers for automatic artifact management
         builder.AddNotificationAsyncHandler<AIContextSavedNotification, AIContextSavedDeployRefresherNotificationAsyncHandler>();
@@ -37,13 +38,5 @@ public class UmbracoAIDeployComposer : IComposer
         builder.AddNotificationAsyncHandler<AIProfileDeletedNotification, AIProfileDeletedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AISettingsSavedNotification, AISettingsSavedDeployRefresherNotificationAsyncHandler>();
         // Note: Settings is a singleton and cannot be deleted
-    }
-
-    private static void RegisterUdiTypes()
-    {
-        UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Context, UdiType.GuidUdi);
-        UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Connection, UdiType.GuidUdi);
-        UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Profile, UdiType.GuidUdi);
-        UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Settings, UdiType.GuidUdi);
     }
 }

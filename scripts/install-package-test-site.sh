@@ -1,11 +1,11 @@
 #!/bin/bash
-# Nightly Feed Test Site Setup Script
-# Creates a fresh Umbraco site with all Umbraco.AI packages from the nightly feed
+# Package Test Site Setup Script
+# Creates a fresh Umbraco site with all Umbraco.AI packages from nightly/prerelease/release feeds
 
 set -e
 
 # Default values
-SITE_NAME="Umbraco.AI.NightlySite"
+SITE_NAME="Umbraco.AI.PackageTestSite"
 FEED="nightly"
 SKIP_TEMPLATE_INSTALL=false
 FORCE=false
@@ -14,6 +14,7 @@ FORCE=false
 declare -A FEED_URLS=(
     ["nightly"]="https://www.myget.org/F/umbraconightly/api/v3/index.json"
     ["prereleases"]="https://www.myget.org/F/umbracoprereleases/api/v3/index.json"
+    ["release"]="https://api.nuget.org/v3/index.json"
 )
 
 # Determine repository root (parent of scripts folder)
@@ -32,8 +33,8 @@ while [[ $# -gt 0 ]]; do
             ;;
         --feed)
             FEED="$2"
-            if [[ "$FEED" != "nightly" && "$FEED" != "prereleases" ]]; then
-                echo "Error: --feed must be 'nightly' or 'prereleases'"
+            if [[ "$FEED" != "nightly" && "$FEED" != "prereleases" && "$FEED" != "release" ]]; then
+                echo "Error: --feed must be 'nightly', 'prereleases', or 'release'"
                 exit 1
             fi
             shift 2
@@ -50,8 +51,8 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  -n, --name SITENAME              Site name (default: Umbraco.AI.NightlySite)"
-            echo "      --feed FEED                  Feed to use: 'nightly' or 'prereleases' (default: nightly)"
+            echo "  -n, --name SITENAME              Site name (default: Umbraco.AI.PackageTestSite)"
+            echo "      --feed FEED                  Feed to use: 'nightly', 'prereleases', or 'release' (default: nightly)"
             echo "  -s, --skip-template-install      Skip reinstalling Umbraco.Templates"
             echo "  -f, --force                      Recreate site if it already exists"
             echo "  -h, --help                       Show this help message"
@@ -89,9 +90,12 @@ if [ "$FORCE" = true ] && [ -d "$SITE_PATH" ]; then
     rm -rf "$SITE_PATH"
 fi
 
-# Clear NuGet cache to ensure fresh packages from nightly feed
-echo "Clearing NuGet cache to fetch fresh packages..."
-dotnet nuget locals all --clear
+# Clear NuGet cache for pre-release feeds (nightly builds change frequently)
+# Skip cache clear for release feed (stable packages don't change)
+if [ "$FEED" != "release" ]; then
+    echo "Clearing NuGet cache to fetch fresh packages..."
+    dotnet nuget locals all --clear
+fi
 
 # Step 1: Install Umbraco templates
 if [ "$SKIP_TEMPLATE_INSTALL" = false ]; then
@@ -120,15 +124,34 @@ echo "Configuring NuGet sources and package routing..."
 pushd "demo/$SITE_NAME" > /dev/null
 
 # Determine feed name
-if [ "$FEED" = "nightly" ]; then
-    FEED_NAME="UmbracoNightly"
-else
-    FEED_NAME="UmbracoPreReleases"
-fi
+case "$FEED" in
+    "nightly")
+        FEED_NAME="UmbracoNightly"
+        ;;
+    "prereleases")
+        FEED_NAME="UmbracoPreReleases"
+        ;;
+    "release")
+        FEED_NAME="NuGet.org"
+        ;;
+esac
 
 # Create complete nuget.config with sources and PackageSourceMapping
-echo "Creating nuget.config with package source mapping..."
-cat > nuget.config << NUGET_EOF
+# For release feed, use simpler config (NuGet.org only)
+if [ "$FEED" = "release" ]; then
+    echo "Creating nuget.config for NuGet.org..."
+    cat > nuget.config << NUGET_EOF
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+</configuration>
+NUGET_EOF
+else
+    echo "Creating nuget.config with package source mapping..."
+    cat > nuget.config << NUGET_EOF
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
@@ -151,6 +174,7 @@ cat > nuget.config << NUGET_EOF
   </packageSourceMapping>
 </configuration>
 NUGET_EOF
+fi
 
 popd > /dev/null
 
@@ -158,40 +182,47 @@ popd > /dev/null
 echo "Installing Umbraco.AI packages from $FEED feed..."
 pushd "demo/$SITE_NAME" > /dev/null
 
+# Determine if we need --prerelease flag (only for nightly/prereleases, not for release)
+if [ "$FEED" = "release" ]; then
+    PRERELEASE_FLAG=""
+else
+    PRERELEASE_FLAG="--prerelease"
+fi
+
 # Install Core first to establish the version baseline
 echo "  Installing Umbraco.AI.Core..."
-dotnet add package Umbraco.AI.Core --prerelease
+dotnet add package Umbraco.AI.Core $PRERELEASE_FLAG
 
 # Core meta-package (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI..."
-dotnet add package Umbraco.AI --prerelease
+dotnet add package Umbraco.AI $PRERELEASE_FLAG
 
 # Provider packages
 echo "  Installing Umbraco.AI.OpenAI..."
-dotnet add package Umbraco.AI.OpenAI --prerelease
+dotnet add package Umbraco.AI.OpenAI $PRERELEASE_FLAG
 
 echo "  Installing Umbraco.AI.Anthropic..."
-dotnet add package Umbraco.AI.Anthropic --prerelease
+dotnet add package Umbraco.AI.Anthropic $PRERELEASE_FLAG
 
 echo "  Installing Umbraco.AI.Google..."
-dotnet add package Umbraco.AI.Google --prerelease
+dotnet add package Umbraco.AI.Google $PRERELEASE_FLAG
 
 echo "  Installing Umbraco.AI.Amazon..."
-dotnet add package Umbraco.AI.Amazon --prerelease
+dotnet add package Umbraco.AI.Amazon $PRERELEASE_FLAG
 
 echo "  Installing Umbraco.AI.MicrosoftFoundry..."
-dotnet add package Umbraco.AI.MicrosoftFoundry --prerelease
+dotnet add package Umbraco.AI.MicrosoftFoundry $PRERELEASE_FLAG
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI.Prompt..."
-dotnet add package Umbraco.AI.Prompt --prerelease
+dotnet add package Umbraco.AI.Prompt $PRERELEASE_FLAG
 
 echo "  Installing Umbraco.AI.Agent..."
-dotnet add package Umbraco.AI.Agent --prerelease
+dotnet add package Umbraco.AI.Agent $PRERELEASE_FLAG
 
 # Agent Copilot (frontend-only static assets)
 echo "  Installing Umbraco.AI.Agent.Copilot..."
-dotnet add package Umbraco.AI.Agent.Copilot --prerelease
+dotnet add package Umbraco.AI.Agent.Copilot $PRERELEASE_FLAG
 
 popd > /dev/null
 

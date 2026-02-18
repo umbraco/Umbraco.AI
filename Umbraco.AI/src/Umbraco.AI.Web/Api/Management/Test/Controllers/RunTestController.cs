@@ -31,19 +31,20 @@ public class RunTestController : TestControllerBase
     }
 
     /// <summary>
-    /// Execute a test and get the run result.
-    /// Creates a new test run and executes the test N times (based on test.RunCount).
-    /// Returns the full run result with transcripts, outcomes, and pass@k metrics.
+    /// Execute a test and get the metrics result.
+    /// Executes the test N times (based on test.RunCount) and calculates pass@k metrics.
+    /// Returns metrics including total/passed runs, pass@k, pass^k, and run IDs.
+    /// Use the returned run IDs to retrieve individual run details via the test run endpoints.
     /// </summary>
     /// <param name="idOrAlias">The test ID or alias.</param>
     /// <param name="requestModel">Optional overrides for profile and context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The test run result.</returns>
+    /// <returns>The test execution metrics.</returns>
     [HttpPost("{idOrAlias}/run")]
     [MapToApiVersion("1.0")]
-    [ProducesResponseType(typeof(TestRunResponseModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TestMetricsResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TestRunResponseModel>> RunTest(
+    public async Task<ActionResult<TestMetricsResponseModel>> RunTest(
         string idOrAlias,
         [FromBody] RunTestRequestModel? requestModel,
         CancellationToken cancellationToken = default)
@@ -63,14 +64,15 @@ public class RunTestController : TestControllerBase
             return NotFound(CreateProblemDetails("Test not found", "The requested test could not be found."));
         }
 
-        // Execute the test
-        var testRun = await _testService.RunTestAsync(
+        // Execute the test and get metrics
+        var metrics = await _testService.RunTestAsync(
             existing.Id,
             requestModel?.ProfileIdOverride,
             requestModel?.ContextIdsOverride,
+            batchId: null,
             cancellationToken);
 
-        var responseModel = _umbracoMapper.Map<TestRunResponseModel>(testRun)!;
+        var responseModel = _umbracoMapper.Map<TestMetricsResponseModel>(metrics)!;
         return Ok(responseModel);
     }
 }

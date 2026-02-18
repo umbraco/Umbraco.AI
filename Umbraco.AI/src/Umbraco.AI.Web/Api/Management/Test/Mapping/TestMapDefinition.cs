@@ -155,5 +155,16 @@ public class TestMapDefinition : IMapDefinition
             MetadataJson = source.MetadataJson,
             BatchId = source.BatchId
         });
+
+        // AITestMetrics -> TestMetricsResponseModel
+        mapper.Define<AITestMetrics, TestMetricsResponseModel>((source, context) => new TestMetricsResponseModel
+        {
+            TestId = source.TestId,
+            TotalRuns = source.TotalRuns,
+            PassedRuns = source.PassedRuns,
+            PassAtK = source.PassAtK,
+            PassToTheK = source.PassToTheK,
+            RunIds = source.RunIds
+        });
     }
 }

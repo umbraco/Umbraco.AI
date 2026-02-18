@@ -113,10 +113,11 @@ internal sealed class AITestService : IAITestService
     }
 
     /// <inheritdoc />
-    public async Task<AITestRun> RunTestAsync(
+    public async Task<AITestMetrics> RunTestAsync(
         Guid testId,
         Guid? profileIdOverride = null,
         IEnumerable<Guid>? contextIdsOverride = null,
+        Guid? batchId = null,
         CancellationToken cancellationToken = default)
     {
         // Get the test
@@ -124,6 +125,6 @@ internal sealed class AITestService : IAITestService
             ?? throw new InvalidOperationException($"Test {testId} not found");
 
         // Delegate to test runner
-        return await _testRunner.ExecuteTestAsync(test, profileIdOverride, contextIdsOverride, cancellationToken);
+        return await _testRunner.ExecuteTestAsync(test, profileIdOverride, contextIdsOverride, batchId, cancellationToken);
     }
 }

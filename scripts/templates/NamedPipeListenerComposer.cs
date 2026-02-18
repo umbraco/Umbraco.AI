@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -11,8 +12,8 @@ using Umbraco.Cms.Web.Common.ApplicationBuilder;
 namespace Umbraco.AI.DemoSite.Composers;
 
 /// <summary>
-/// Configures Kestrel to listen on a named pipe for the demo site.
-/// This enables tools to connect via HTTP over named pipes without port discovery.
+/// Configures Kestrel to listen on a named pipe (Windows) or Unix socket (macOS/Linux) for the demo site.
+/// This enables tools to connect via HTTP without port discovery.
 /// </summary>
 public class NamedPipeListenerComposer : IComposer
 {
@@ -35,7 +36,7 @@ public class NamedPipeListenerComposer : IComposer
                             var server = context.RequestServices.GetRequiredService<IServer>();
                             var addressesFeature = server.Features.Get<IServerAddressesFeature>();
                             var address = addressesFeature?.Addresses
-                                .FirstOrDefault(a => a.StartsWith("https") && !a.Contains("pipe:"))
+                                .FirstOrDefault(a => a.StartsWith("https") && !a.Contains("pipe:") && !a.Contains("unix:"))
                                 ?? "https://localhost:44355";
 
                             context.Response.ContentType = "text/plain";
@@ -49,7 +50,7 @@ public class NamedPipeListenerComposer : IComposer
 }
 
 /// <summary>
-/// Configures Kestrel server options to add a named pipe listener.
+/// Configures Kestrel server options to add a named pipe (Windows) or Unix socket (macOS/Linux) listener.
 /// </summary>
 public class NamedPipeKestrelConfiguration(IHostEnvironment hostEnvironment, IConfiguration configuration)
     : IConfigureOptions<KestrelServerOptions>
@@ -59,7 +60,22 @@ public class NamedPipeKestrelConfiguration(IHostEnvironment hostEnvironment, ICo
         if (!hostEnvironment.IsDevelopment())
             return;
 
-        options.ListenNamedPipe($"umbraco.demosite.{GetUniqueIdentifier()}");
+        var pipeName = $"umbraco.demosite.{GetUniqueIdentifier()}";
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            options.ListenNamedPipe(pipeName);
+        }
+        else
+        {
+            var socketPath = $"/tmp/{pipeName}";
+
+            // Clean up stale socket file from a previous crash
+            if (File.Exists(socketPath))
+                File.Delete(socketPath);
+
+            options.ListenUnixSocket(socketPath);
+        }
 
         // Read URLs from configuration or use dynamic HTTPS
         var urls = configuration["ASPNETCORE_URLS"] ?? configuration["urls"];

@@ -1,5 +1,6 @@
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Web.Api.Management.Test.Models;
+using Umbraco.AI.Web.Api.Management.TestRun.Models;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Web.Api.Management.Test.Mapping;
@@ -165,6 +166,45 @@ public class TestMapDefinition : IMapDefinition
             PassAtK = source.PassAtK,
             PassToTheK = source.PassToTheK,
             RunIds = source.RunIds
+        });
+
+        // AITestRunComparison -> TestRunComparisonResponseModel
+        mapper.Define<AITestRunComparison, TestRunComparisonResponseModel>((source, context) => new TestRunComparisonResponseModel
+        {
+            BaselineRun = context.Map<TestRunResponseModel>(source.BaselineRun)!,
+            ComparisonRun = context.Map<TestRunResponseModel>(source.ComparisonRun)!,
+            IsRegression = source.IsRegression,
+            IsImprovement = source.IsImprovement,
+            DurationChangeMs = source.DurationChangeMs,
+            GraderComparisons = source.GraderComparisons.Select(gc => new TestGraderComparisonResponseModel
+            {
+                GraderId = gc.GraderId,
+                GraderName = gc.GraderName,
+                BaselineResult = gc.BaselineResult != null ? new TestGraderResultResponseModel
+                {
+                    GraderId = gc.BaselineResult.GraderId,
+                    Passed = gc.BaselineResult.Passed,
+                    Score = gc.BaselineResult.Score,
+                    ActualValue = gc.BaselineResult.ActualValue,
+                    ExpectedValue = gc.BaselineResult.ExpectedValue,
+                    FailureMessage = gc.BaselineResult.FailureMessage,
+                    MetadataJson = gc.BaselineResult.MetadataJson,
+                    Severity = gc.BaselineResult.Severity.ToString()
+                } : null,
+                ComparisonResult = gc.ComparisonResult != null ? new TestGraderResultResponseModel
+                {
+                    GraderId = gc.ComparisonResult.GraderId,
+                    Passed = gc.ComparisonResult.Passed,
+                    Score = gc.ComparisonResult.Score,
+                    ActualValue = gc.ComparisonResult.ActualValue,
+                    ExpectedValue = gc.ComparisonResult.ExpectedValue,
+                    FailureMessage = gc.ComparisonResult.FailureMessage,
+                    MetadataJson = gc.ComparisonResult.MetadataJson,
+                    Severity = gc.ComparisonResult.Severity.ToString()
+                } : null,
+                Changed = gc.Changed,
+                ScoreChange = gc.ScoreChange
+            }).ToList()
         });
     }
 }

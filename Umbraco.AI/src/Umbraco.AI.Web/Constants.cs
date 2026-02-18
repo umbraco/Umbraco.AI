@@ -217,6 +217,7 @@ public class Constants
                 public const string GroupName = "Versions";
             }
 
+            /// <summary>
             /// Defines constants for Test features.
             /// </summary>
             public static class Test

@@ -6,6 +6,12 @@ import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 export * from "./index.js";
 export * from "./exports.js";
 
+// Promise that resolves when the core client is configured with auth
+let coreClientReadyResolve: (() => void) | undefined;
+export const coreClientReady = new Promise<void>((resolve) => {
+    coreClientReadyResolve = resolve;
+});
+
 // Entry point initialization
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
     console.log("Umbraco AI Entrypoint initialized");
@@ -20,6 +26,12 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
             baseUrl: config?.base ?? "",
             credentials: config?.credentials ?? "same-origin",
         });
+
+        // Resolve the ready promise once auth is configured
+        if (coreClientReadyResolve) {
+            coreClientReadyResolve();
+            coreClientReadyResolve = undefined;
+        }
     });
 };
 

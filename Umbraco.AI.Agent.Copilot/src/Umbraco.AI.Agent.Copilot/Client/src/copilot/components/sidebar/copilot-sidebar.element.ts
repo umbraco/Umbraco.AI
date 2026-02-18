@@ -4,6 +4,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UAI_COPILOT_CONTEXT, type UaiCopilotContext } from "../../copilot.context.js";
 import { UaiCopilotSectionRegistry } from "../../services/copilot-section-registry.js";
 import { createSectionObservable, isSectionAllowed } from "../../context-observer.js";
+import { agentClientReady } from "@umbraco-ai/agent";
 
 /** Shell sidebar that binds layout controls to the Copilot context. */
 @customElement("uai-copilot-sidebar")
@@ -37,7 +38,7 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
             "_observeCompatibleSections"
         );
 
-        this.consumeContext(UAI_COPILOT_CONTEXT, (context) => {
+        this.consumeContext(UAI_COPILOT_CONTEXT, async (context) => {
             if (context) {
                 this.#copilotContext = context;
                 this.observe(context.isOpen, (isOpen) => {
@@ -45,7 +46,8 @@ export class UaiCopilotSidebarElement extends UmbLitElement {
                     this._isOpen = isOpen;
                     this.#updateContentOffset(isOpen);
                 });
-                // Load agents once context is available (ensures proper timing)
+                // Wait for agent package's client to be configured before loading agents
+                await agentClientReady;
                 context.loadAgents();
             }
         });

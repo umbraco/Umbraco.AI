@@ -29,7 +29,7 @@ Restart your application to run database migrations.
 
 ## Step 2: Create an Agent in Backoffice
 
-1. Navigate to **Settings** > **AI** > **Agents**
+1. Navigate to the **AI** section > **Agents**
 2. Click **Create Agent**
 3. Fill in the details:
 

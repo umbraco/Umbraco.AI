@@ -9,6 +9,7 @@ export default {
         denied: "Denied",
         allow: "Allow",
         deny: "Deny",
+        toolCount: (count: number) => count === 1 ? "1 tool" : `${count} tools`,
     },
     uaiLabels: {
         name: "Name",
@@ -77,6 +78,10 @@ export default {
         fetchWebpageLabel: "Fetch Web Page",
         fetchWebpageDescription: "Fetch and extract text content from a web page",
     },
+    uaiToolScopes: {
+        selectAll: "Select All",
+        selectAllDescription: "Select or deselect all tool permissions at once",
+    },
     uaiAuditLog: {
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} log entry(ies)?`,
     },
@@ -123,6 +128,12 @@ export default {
         amazonSecretAccessKeyDescription: "The AWS Secret Access Key for authenticating with Bedrock services",
         amazonEndpointLabel: "Custom Endpoint",
         amazonEndpointDescription: "Custom endpoint URL for Bedrock services (optional)",
+    },
+    uaiFieldGroups: {
+        generalLabel: "General",
+        advancedLabel: "Advanced",
+        featuresLabel: "Features",
+        dataLabel: "Data",
     },
     uaiValidation: {
         required: "This field is required",

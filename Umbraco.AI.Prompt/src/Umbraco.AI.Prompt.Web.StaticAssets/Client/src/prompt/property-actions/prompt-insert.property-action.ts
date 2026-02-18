@@ -85,6 +85,7 @@ export class UaiPromptInsertPropertyAction extends UmbPropertyActionBase<UaiProm
             segment: this.#propertyContext.getVariantId?.()?.segment ?? undefined,
             context,
             maxChars,
+            optionCount: 1, // Default value, actual value determined by prompt configuration
         };
 
         // Select modal token based on UI mode

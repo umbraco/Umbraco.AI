@@ -9,9 +9,8 @@ AI Settings provide a central place to configure system-wide defaults, including
 
 ## Accessing Settings
 
-1. Navigate to **Settings** in the left sidebar
-2. Expand **AI**
-3. Click **Settings**
+1. Navigate to the **AI** section in the main navigation
+2. Click **Settings** in the tree
 
 ## Available Settings
 
@@ -43,7 +42,7 @@ When set, this profile is used by:
 
 ## Configuring Settings
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select the desired profiles from the dropdowns
 3. Click **Save**
 
@@ -85,7 +84,7 @@ When no default is configured:
 
 Changes to settings are tracked in the audit log:
 
-1. Navigate to **Settings** > **AI** > **Audit Logs**
+1. Navigate to the **AI** section > **Audit Logs**
 2. Filter by entity type "Settings"
 
 ## Related

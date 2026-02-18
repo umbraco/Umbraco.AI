@@ -71,7 +71,7 @@ Claude's 200K token context window is ideal for processing long documents, exten
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Connections**
+1. Navigate to the **AI** section > **Connections**
 2. Click **Create Connection**
 3. Select **Anthropic** as the provider
 4. Enter your API key

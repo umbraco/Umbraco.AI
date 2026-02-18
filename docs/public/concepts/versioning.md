@@ -188,7 +188,7 @@ public async Task<AIVersionCleanupResult> CleanupOldVersions()
 
 ### Via Backoffice
 
-1. Navigate to the entity (e.g., **Settings** > **AI** > **Profiles**)
+1. Navigate to the entity (e.g., the **AI** section > **Profiles**)
 2. Select the entity you want to view
 3. Click the **Version History** tab
 4. View, compare, or restore previous versions

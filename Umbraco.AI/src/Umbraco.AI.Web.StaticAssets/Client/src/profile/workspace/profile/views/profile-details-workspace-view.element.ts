@@ -153,12 +153,12 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
         const chatSettings: UaiChatProfileSettings = isChatSettings(currentSettings)
             ? { ...currentSettings, ...updates }
             : {
-                  $type: "chat",
-                  temperature: updates.temperature ?? null,
-                  maxTokens: updates.maxTokens ?? null,
-                  systemPromptTemplate: updates.systemPromptTemplate ?? null,
-                  contextIds: updates.contextIds ?? [],
-              };
+                $type: "chat",
+                temperature: updates.temperature ?? null,
+                maxTokens: updates.maxTokens ?? null,
+                systemPromptTemplate: updates.systemPromptTemplate ?? null,
+                contextIds: updates.contextIds ?? [],
+            };
 
         this.#workspaceContext?.handleCommand(
             new UaiPartialUpdateCommand<UaiProfileDetailModel>({ settings: chatSettings }, "settings"),
@@ -303,21 +303,20 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 </umb-property-layout>
 
                 <umb-property-layout label="Model" description="Select the AI model to use" mandatory>
-                    ${this._loadingModels
-                        ? html`<uui-loader-bar slot="editor"></uui-loader-bar>`
-                        : html`
-                              <uui-select
-                                  slot="editor"
-                                  name="model"
-                                  .value=${this.#getCurrentModelValue()}
-                                  .options=${this.#getModelOptions()}
-                                  @change=${this.#onModelChange}
-                                  placeholder="Select a model"
-                                  ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
-                                  required
-                                  ${umbBindToValidation(this, "$.model", this._model.model)}
-                              ></uui-select>
-                          `}
+                    <div slot="editor">
+                        ${this._loadingModels ? html`<uui-loader-bar></uui-loader-bar>` : nothing}
+                        <uui-select
+                            name="model" 
+                            .value=${this.#getCurrentModelValue()}
+                            .options=${this.#getModelOptions()}
+                            @change=${this.#onModelChange}
+                            placeholder="Select a model"
+                            ?disabled=${!this._model.connectionId || this._availableModels.length === 0}
+                            required
+                            ${umbBindToValidation(this, "$.model", this._model.model)}
+                            class="${this._loadingModels ? "hidden" : ""}" 
+                        ></uui-select>
+                    </div>
                 </umb-property-layout>
             </uui-box>
 
@@ -376,6 +375,10 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
+            }
+
+            .hidden {
+                display: none;
             }
         `,
     ];

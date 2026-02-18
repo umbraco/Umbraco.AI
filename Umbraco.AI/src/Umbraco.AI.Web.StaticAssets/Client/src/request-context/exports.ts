@@ -5,3 +5,9 @@
  */
 
 export { type UaiRequestContextItem, createEntityContextItem, createSelectionContextItem } from "./index.js";
+export {
+	UaiRequestContext,
+	type UaiRequestContextContributorApi,
+	type ManifestUaiRequestContextContributor,
+} from "./extension-type.js";
+export { UaiRequestContextCollector } from "./request-context-collector.js";

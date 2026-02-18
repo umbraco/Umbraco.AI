@@ -213,7 +213,7 @@ Original:
 
 ### Via Backoffice
 
-1. Navigate to **Settings** > **AI** > **Prompts**
+1. Navigate to the **AI** section > **Prompts**
 2. Create or edit a prompt
 3. Configure the scope settings
 4. Set `IsActive` to true

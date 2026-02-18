@@ -13,7 +13,7 @@ A profile combines a connection with model settings for a specific use case. Pro
 
 ## Create a Profile
 
-1. In the Umbraco backoffice, navigate to **Settings** > **AI**
+1. In the Umbraco backoffice, navigate to the **AI** section
 2. Click **Profiles** in the tree
 3. Click **Create Profile**
 
@@ -47,7 +47,7 @@ Leave settings empty to use the model's default values. Only set values you want
 
 To use this profile when no profile is specified in code:
 
-1. Navigate to **Settings** > **AI** > **Settings**
+1. Navigate to the **AI** section > **Settings**
 2. Select "Content Assistant" from the **Default Chat Profile** dropdown
 3. Click **Save**
 

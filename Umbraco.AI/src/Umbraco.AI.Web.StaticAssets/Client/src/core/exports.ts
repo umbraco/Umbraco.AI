@@ -1,6 +1,7 @@
 export * from "./components/exports.js";
 export * from "./events/exports.js";
 export * from "./command/exports.js";
+export * from "./menu/exports.js";
 export * from "./modals/index.js";
 export * from "./utils/exports.js";
 export * from "./entity-action/delete/exports.js";

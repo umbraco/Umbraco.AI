@@ -8,6 +8,12 @@ export * from "./index.js";
 // Re-export the public API
 export * from "./exports.js";
 
+// Promise that resolves when the agent client is configured with auth
+let agentClientReadyResolve: (() => void) | undefined;
+export const agentClientReady = new Promise<void>((resolve) => {
+    agentClientReadyResolve = resolve;
+});
+
 // Entry point initialization
 export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
     console.log("Umbraco AI Agent Entrypoint initialized");
@@ -20,6 +26,12 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
             baseUrl: config?.base ?? "",
             credentials: config?.credentials ?? "same-origin",
         });
+
+        // Resolve the ready promise once auth is configured
+        if (agentClientReadyResolve) {
+            agentClientReadyResolve();
+            agentClientReadyResolve = undefined;
+        }
     });
 };
 

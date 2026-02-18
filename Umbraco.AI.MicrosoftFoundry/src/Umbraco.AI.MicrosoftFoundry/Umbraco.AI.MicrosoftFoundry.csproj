@@ -31,4 +31,12 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <Target Name="UpdatePackageManifestVersion" BeforeTargets="BeforeBuild" Condition="Exists('wwwroot\umbraco-package.json') AND '$(PackageVersion)' != ''">
+    <Message Text="Update umbraco-package.json files with current build version $(PackageVersion)" Importance="high" />
+    <ItemGroup>
+      <_PackageManifestFiles Include="wwwroot\umbraco-package.json" />
+    </ItemGroup>
+    <JsonPathUpdateValue JsonFile="%(_PackageManifestFiles.FullPath)" Path="$.version" Value="&quot;$(PackageVersion)&quot;" />
+  </Target>
+
 </Project>

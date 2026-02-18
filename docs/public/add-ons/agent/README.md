@@ -46,7 +46,7 @@ For the **Copilot chat sidebar** with frontend tools and HITL approval, install 
 
 ### 1. Create an Agent
 
-In the backoffice, navigate to **Settings** > **AI** > **Agents** and create a new agent:
+In the backoffice, navigate to the **AI** section > **Agents** and create a new agent:
 
 | Field        | Value                                                                        |
 | ------------ | ---------------------------------------------------------------------------- |

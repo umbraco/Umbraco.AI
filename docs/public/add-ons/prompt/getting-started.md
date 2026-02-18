@@ -29,7 +29,7 @@ Restart your application to run database migrations.
 
 ## Step 2: Create a Prompt in Backoffice
 
-1. Navigate to **Settings** > **AI** > **Prompts**
+1. Navigate to the **AI** section > **Prompts**
 2. Click **Create Prompt**
 3. Fill in the details:
 

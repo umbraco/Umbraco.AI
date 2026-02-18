@@ -18,6 +18,6 @@ public class AnthropicProviderSettings
     /// <summary>
     /// Custom API endpoint URL.
     /// </summary>
-    [AIField(DefaultValue = "https://api.anthropic.com")]
-    public string? Endpoint { get; set; }
+    [AIField]
+    public string? Endpoint { get; set; } = "https://api.anthropic.com";
 }

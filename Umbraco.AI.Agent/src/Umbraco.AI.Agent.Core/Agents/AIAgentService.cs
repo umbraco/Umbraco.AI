@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -14,7 +15,9 @@ using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 
 using CoreConstants = Umbraco.AI.Core.Constants;
@@ -37,6 +40,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAIChatClientFactory _chatClientFactory;
     private readonly AIAgentScopeValidator _scopeValidator;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
+    private readonly IEventAggregator _eventAggregator;
 
     public AIAgentService(
         IAIAgentRepository repository,
@@ -49,6 +53,7 @@ internal sealed class AIAgentService : IAIAgentService
         IAIChatClientFactory chatClientFactory,
         AIAgentScopeValidator scopeValidator,
         AIAgentSurfaceCollection surfaceCollection,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
@@ -61,6 +66,7 @@ internal sealed class AIAgentService : IAIAgentService
         _chatClientFactory = chatClientFactory;
         _scopeValidator = scopeValidator;
         _surfaceCollection = surfaceCollection;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -113,6 +119,18 @@ internal sealed class AIAgentService : IAIAgentService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AIAgentSavingNotification(agent, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Agent save cancelled: {errorMessages}");
+        }
+
         // Save version snapshot of existing entity before update
         var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
         if (existing is not null)
@@ -120,12 +138,42 @@ internal sealed class AIAgentService : IAIAgentService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        return await _repository.SaveAsync(agent, userId, cancellationToken);
+        // Perform save
+        var savedAgent = await _repository.SaveAsync(agent, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AIAgentSavedNotification(savedAgent, messages)
+            .WithStateFrom(savingNotification);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
+
+        return savedAgent;
     }
 
     /// <inheritdoc />
-    public Task<bool> DeleteAgentAsync(Guid id, CancellationToken cancellationToken = default)
-        => _repository.DeleteAsync(id, cancellationToken);
+    public async Task<bool> DeleteAgentAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AIAgentDeletingNotification(id, messages);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Agent delete cancelled: {errorMessages}");
+        }
+
+        // Perform delete
+        var result = await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AIAgentDeletedNotification(id, messages)
+            .WithStateFrom(deletingNotification);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
+
+        return result;
+    }
 
     /// <inheritdoc />
     public Task<bool> AgentAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
@@ -311,6 +359,25 @@ internal sealed class AIAgentService : IAIAgentService
             yield break;
         }
 
+        // Publish executing notification (before execution)
+        var eventMessages = new EventMessages();
+        var executingNotification = new AIAgentExecutingNotification(agent, request, frontendTools, eventMessages);
+        await _eventAggregator.PublishAsync(executingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (executingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", eventMessages.GetAll().Select(m => m.Message));
+            var errorEmitter = new AGUIEventEmitter(request.ThreadId, request.RunId);
+            yield return errorEmitter.EmitRunStarted();
+            yield return errorEmitter.EmitError($"Agent execution cancelled: {errorMessages}", "EXECUTION_CANCELLED");
+            yield return errorEmitter.EmitRunFinished(new InvalidOperationException($"Agent execution cancelled: {errorMessages}"));
+            yield break;
+        }
+
+        // Track execution duration with high-resolution timer
+        var stopwatch = Stopwatch.StartNew();
+
         // 2. Convert AG-UI context and create frontend tools with permission filtering
         var contextItems = _contextConverter.ConvertToRequestContextItems(request.Context);
 
@@ -375,11 +442,33 @@ internal sealed class AIAgentService : IAIAgentService
             additionalProperties,
             cancellationToken);
 
-        // 5. Stream via AG-UI streaming service
+        // 5. Stream via AG-UI streaming service and publish executed notification when done
         //    No additionalSystemPrompt needed - ScopedAIAgent handles it
-        await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
+        bool streamCompleted = false;
+        try
         {
-            yield return evt;
+            await foreach (var evt in _streamingService.StreamAgentAsync(agentInst, request, convertedFrontendTools, cancellationToken))
+            {
+                yield return evt;
+            }
+            streamCompleted = true;
+        }
+        finally
+        {
+            // Calculate duration using high-resolution timer
+            var duration = stopwatch.Elapsed;
+
+            // Publish executed notification (after execution completes or fails)
+            var executedNotification = new AIAgentExecutedNotification(
+                agent,
+                request,
+                frontendTools,
+                duration,
+                streamCompleted, // isSuccess based on whether stream completed
+                eventMessages)
+                .WithStateFrom(executingNotification);
+
+            await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
         }
     }
 }

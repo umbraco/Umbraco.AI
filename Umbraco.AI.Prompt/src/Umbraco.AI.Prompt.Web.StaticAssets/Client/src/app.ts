@@ -6,6 +6,12 @@ import { UMB_AUTH_CONTEXT } from "@umbraco-cms/backoffice/auth";
 // Re-export everything from the main index
 export * from "./index.js";
 
+// Promise that resolves when the prompt client is configured with auth
+let promptClientReadyResolve: (() => void) | undefined;
+export const promptClientReady = new Promise<void>((resolve) => {
+    promptClientReadyResolve = resolve;
+});
+
 // Keep registrar alive for the lifetime of the app (prevents garbage collection)
 let promptRegistrar: UmbPromptRegistrarController | null = null;
 
@@ -20,6 +26,12 @@ export const onInit: UmbEntryPointOnInit = (_host, _extensionRegistry) => {
             baseUrl: config?.base ?? "",
             credentials: config?.credentials ?? "same-origin",
         });
+
+        // Resolve the ready promise once auth is configured
+        if (promptClientReadyResolve) {
+            promptClientReadyResolve();
+            promptClientReadyResolve = undefined;
+        }
 
         // Register prompt property actions after authentication is established
         // Store in module variable to prevent garbage collection

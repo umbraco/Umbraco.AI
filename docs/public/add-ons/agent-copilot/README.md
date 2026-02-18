@@ -55,7 +55,7 @@ dotnet add package Umbraco.AI.Agent.Copilot
 
 ### 2. Create an Agent
 
-In the backoffice, navigate to **Settings** > **AI** > **Agents** and create an agent configured for Copilot use.
+In the backoffice, navigate to the **AI** section > **Agents** and create an agent configured for Copilot use.
 
 ### 3. Configure Default Copilot Agent
 

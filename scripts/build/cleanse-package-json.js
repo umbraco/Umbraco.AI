@@ -2,7 +2,7 @@
  * Cleanses package.json for npm publishing:
  * - Updates version to match NuGet version
  * - Converts dependencies to peerDependencies
- * - Resolves workspace references (*) using package.peer-dependencies.json
+ * - Resolves workspace references (*) using peerDependencyVersions from root package.json
  * - Removes devDependencies and scripts
  *
  * Usage: node cleanse-package-json.js <version> <product> <sourceDirectory>
@@ -29,37 +29,22 @@ const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 pkg.version = version;
 console.log(`Updated package.json version to: ${pkg.version}`);
 
-// Load peer dependency version ranges
+// Load peer dependency version ranges from root package.json
 console.log('Loading peer dependency version ranges...');
 
 let peerDepRanges = {};
 
-// Load root package.peer-dependencies.json
-const rootPeerDepsPath = join(sourceDirectory, 'package.peer-dependencies.json');
-if (existsSync(rootPeerDepsPath)) {
-  const rootConfig = JSON.parse(readFileSync(rootPeerDepsPath, 'utf8'));
-  // Remove special keys like $schema and _comment
-  Object.keys(rootConfig).forEach(key => {
-    if (!key.startsWith('$') && !key.startsWith('_')) {
-      peerDepRanges[key] = rootConfig[key];
-    }
-  });
-  console.log('  ✓ Loaded root peer dependency ranges');
+const rootPackageJsonPath = join(sourceDirectory, 'package.json');
+if (existsSync(rootPackageJsonPath)) {
+  const rootPackageJson = JSON.parse(readFileSync(rootPackageJsonPath, 'utf8'));
+  if (rootPackageJson.peerDependencyVersions) {
+    peerDepRanges = { ...rootPackageJson.peerDependencyVersions };
+    console.log('  ✓ Loaded root peer dependency ranges from package.json');
+  } else {
+    console.warn('  ⚠ No peerDependencyVersions found in root package.json');
+  }
 } else {
-  console.warn('  ⚠ No root package.peer-dependencies.json found');
-}
-
-// Load product-level package.peer-dependencies.json (if exists)
-const productPeerDepsPath = join(sourceDirectory, product, 'package.peer-dependencies.json');
-if (existsSync(productPeerDepsPath)) {
-  const productConfig = JSON.parse(readFileSync(productPeerDepsPath, 'utf8'));
-  // Remove special keys and merge (product overrides root)
-  Object.keys(productConfig).forEach(key => {
-    if (!key.startsWith('$') && !key.startsWith('_')) {
-      peerDepRanges[key] = productConfig[key];
-    }
-  });
-  console.log('  ✓ Loaded product-level peer dependency ranges (overrides applied)');
+  console.warn('  ⚠ Root package.json not found');
 }
 
 console.log('');
@@ -72,15 +57,23 @@ delete pkg.devDependencies;
 console.log('  ✓ Removed devDependencies');
 
 // Convert dependencies to peerDependencies with version range resolution
+// Resolution order (highest precedence first):
+// 1. Existing peerDependencies in package.json
+// 2. Root peerDependencyVersions
+// 3. Original dependency version
 if (pkg.dependencies) {
   const convertedDeps = {};
   const resolutions = [];
 
   Object.keys(pkg.dependencies).forEach(dep => {
+    // Skip if already defined in peerDependencies (rule 1: package's own peerDeps take precedence)
+    if (pkg.peerDependencies && pkg.peerDependencies[dep]) {
+      return;
+    }
+
     let version = pkg.dependencies[dep];
 
-    // If package is defined in peer-dependencies.json, ALWAYS use that version
-    // This ensures package.peer-dependencies.json is the single source of truth
+    // Rule 2: Check root peerDependencyVersions
     if (peerDepRanges[dep]) {
       const oldVersion = version;
       version = peerDepRanges[dep];
@@ -88,14 +81,14 @@ if (pkg.dependencies) {
         resolutions.push(`    ${dep}: ${oldVersion} → ${version}`);
       }
     } else if (version === '*' || version.startsWith('workspace:')) {
-      // Warn if workspace reference has no configured range
+      // Rule 3: No configured range, warn but keep as-is
       console.warn(`  ⚠ Warning: No peer dependency range configured for ${dep}, keeping as-is`);
     }
 
     convertedDeps[dep] = version;
   });
 
-  // Merge with existing peerDependencies (existing take precedence)
+  // Merge converted dependencies with existing peerDependencies (existing take precedence)
   pkg.peerDependencies = {
     ...convertedDeps,
     ...(pkg.peerDependencies || {})

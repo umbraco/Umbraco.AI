@@ -16,7 +16,7 @@ Guide users through the complete release preparation process:
 2. **Analyze commits** to recommend version bumps (major/minor/patch)
 3. **Confirm versions** with the user
 4. **Update Directory.Packages.props** inter-product dependency ranges (with user approval)
-5. **Update package.peer-dependencies.json** npm peer dependency ranges (with user approval)
+5. **Update peerDependencyVersions in root package.json** npm peer dependency ranges (with user approval)
 6. **Create release branch** (e.g., `release/2026.02.1`) and switch to it
 7. **Dependency validation** - Check for cross-product conflicts
 8. **Update version.json** files for each product
@@ -186,15 +186,15 @@ After confirming versions, update the `Directory.Packages.props` file to reflect
 
 ### Phase 4.5: Update Inter-Product Peer Dependencies (npm)
 
-After updating `Directory.Packages.props`, update `package.peer-dependencies.json` to keep npm peer dependencies in sync with .NET dependency ranges.
+After updating `Directory.Packages.props`, update `peerDependencyVersions` in root `package.json` to keep npm peer dependencies in sync with .NET dependency ranges.
 
 **Important:** This phase uses the same version decisions from Phase 3. No need to re-analyze commits.
 
 **Workflow:**
 
-1. **Read current package.peer-dependencies.json**:
+1. **Read current peerDependencyVersions from root package.json**:
    ```bash
-   cat package.peer-dependencies.json
+   cat package.json
    ```
 
 2. **Use confirmed versions from Phase 3**:
@@ -211,7 +211,7 @@ After updating `Directory.Packages.props`, update `package.peer-dependencies.jso
 
 4. **Present proposed changes** to user:
    ```
-   package.peer-dependencies.json updates:
+   peerDependencyVersions updates (in root package.json):
 
    Products being released:
    - Umbraco.AI → 1.3.0
@@ -236,12 +236,12 @@ After updating `Directory.Packages.props`, update `package.peer-dependencies.jso
 
 7. **If approved, update the file**:
    ```bash
-   # Use Edit tool to update package.peer-dependencies.json
+   # Use Edit tool to update peerDependencyVersions in root package.json
    ```
 
 8. **Confirm updates**:
    ```
-   ✓ Updated npm peer dependency ranges in package.peer-dependencies.json
+   ✓ Updated npm peer dependency ranges in root package.json (peerDependencyVersions)
    ```
 
 **Mapping versions to npm ranges:**
@@ -437,7 +437,7 @@ Verify all files are consistent:
     ```bash
     git add release-manifest.json
     git add Directory.Packages.props
-    git add package.peer-dependencies.json
+    git add package.json
     git add */version.json
     git add */CHANGELOG.md
     ```
@@ -541,13 +541,13 @@ You present proposed dependency range updates for Core packages only
 User approves updates
 You update only the Core-related ranges (Agent, Prompt ranges remain unchanged)
 
-Phase 4.5: Update package.peer-dependencies.json
-You read package.peer-dependencies.json
+Phase 4.5: Update peerDependencyVersions in root package.json
+You read peerDependencyVersions from root package.json
 You use the same confirmed versions from Phase 3
 You map new versions to npm peer dependency ranges
 You present proposed npm range updates for ALL products being released
 User approves updates
-You update npm peer dependency ranges (e.g., 1.3.0 → ^1.3.0)
+You update npm peer dependency ranges in root package.json (e.g., 1.3.0 → ^1.3.0)
 
 Phase 6: Create release branch
 You fetch tags from remote

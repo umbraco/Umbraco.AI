@@ -7,16 +7,18 @@ using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Deploy.Agent.Connectors.ServiceConnectors;
 
 /// <summary>
-/// Service connector for deploying Umbraco AI Agents. Handles export and import of agents, including their dependencies on profiles and user groups.
+/// Service connector for deploying Umbraco AI Agents. Handles export and import of agents, including their dependencies on profiles. User group permissions are resolved by alias.
 /// </summary>
 [UdiDefinition(UmbracoAIAgentConstants.UdiEntityType.Agent, UdiType.GuidUdi)]
 public class UmbracoAIAgentServiceConnector(
     IAIAgentService agentService,
     IAIProfileService profileService,
+    IUserGroupService userGroupService,
     UmbracoAIDeploySettingsAccessor settingsAccessor)
     : UmbracoAIProfileDependentEntityServiceConnectorBase<AIAgentArtifact, AIAgent>(
         profileService,
@@ -50,25 +52,30 @@ public class UmbracoAIAgentServiceConnector(
         => entity.Name;
 
     /// <inheritdoc />
-    public override Task<AIAgentArtifact?> GetArtifactAsync(
+    public override async Task<AIAgentArtifact?> GetArtifactAsync(
         GuidUdi udi,
         AIAgent? entity,
         CancellationToken cancellationToken = default)
     {
-        if (entity == null) return Task.FromResult<AIAgentArtifact?>(null);
+        if (entity == null) return null;
 
         var dependencies = new ArtifactDependencyCollection();
 
         // Use base class helper for optional profile dependency
         var profileUdi = AddProfileDependency(entity.ProfileId, dependencies);
 
-        // Add user group dependencies (ensure user groups exist in target environment)
+        // Convert user group permissions from GUID-keyed to alias-keyed
+        Dictionary<string, AIAgentUserGroupPermissions>? aliasKeyedPermissions = null;
         if (entity.UserGroupPermissions.Count > 0)
         {
-            foreach (var userGroupId in entity.UserGroupPermissions.Keys)
+            aliasKeyedPermissions = new Dictionary<string, AIAgentUserGroupPermissions>();
+            foreach (var (userGroupId, permissions) in entity.UserGroupPermissions)
             {
-                var userGroupUdi = new GuidUdi("user-group", userGroupId);
-                dependencies.Add(new ArtifactDependency(userGroupUdi, false, ArtifactDependencyMode.Exist));
+                var userGroup = await userGroupService.GetAsync(userGroupId);
+                if (userGroup != null)
+                {
+                    aliasKeyedPermissions[userGroup.Alias] = permissions;
+                }
             }
         }
 
@@ -83,14 +90,14 @@ public class UmbracoAIAgentServiceConnector(
             Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
             AllowedToolIds = entity.AllowedToolIds.ToList(),
             AllowedToolScopeIds = entity.AllowedToolScopeIds.ToList(),
-            UserGroupPermissions = entity.UserGroupPermissions.Count > 0
-                ? JsonSerializer.SerializeToElement(entity.UserGroupPermissions)
+            UserGroupPermissions = aliasKeyedPermissions != null && aliasKeyedPermissions.Count > 0
+                ? JsonSerializer.SerializeToElement(aliasKeyedPermissions)
                 : null,
             Instructions = entity.Instructions,
             IsActive = entity.IsActive
         };
 
-        return Task.FromResult<AIAgentArtifact?>(artifact);
+        return artifact;
     }
 
     /// <inheritdoc />
@@ -124,14 +131,27 @@ public class UmbracoAIAgentServiceConnector(
         AIAgentScope? scope = null;
         if (artifact.Scope.HasValue)
         {
-            scope = JsonSerializer.Deserialize<AIAgentScope>(artifact.Scope.Value);
+            scope = artifact.Scope.Value.Deserialize<AIAgentScope>();
         }
 
-        // Deserialize UserGroupPermissions from JsonElement
-        Dictionary<Guid, AIAgentUserGroupPermissions>? userGroupPermissions = null;
+        // Deserialize UserGroupPermissions and resolve aliases to GUIDs
+        Dictionary<Guid, AIAgentUserGroupPermissions> userGroupPermissions = new();
         if (artifact.UserGroupPermissions.HasValue)
         {
-            userGroupPermissions = artifact.UserGroupPermissions.Value.Deserialize<Dictionary<Guid, AIAgentUserGroupPermissions>>();
+            var aliasKeyedPermissions = artifact.UserGroupPermissions.Value
+                .Deserialize<Dictionary<string, AIAgentUserGroupPermissions>>();
+
+            if (aliasKeyedPermissions != null)
+            {
+                foreach (var (alias, permissions) in aliasKeyedPermissions)
+                {
+                    var userGroup = await userGroupService.GetAsync(alias);
+                    if (userGroup != null)
+                    {
+                        userGroupPermissions[userGroup.Key] = permissions;
+                    }
+                }
+            }
         }
 
         // Get or create agent entity
@@ -153,7 +173,7 @@ public class UmbracoAIAgentServiceConnector(
         agent.Scope = scope;
         agent.AllowedToolIds = artifact.AllowedToolIds.ToList();
         agent.AllowedToolScopeIds = artifact.AllowedToolScopeIds.ToList();
-        agent.UserGroupPermissions = userGroupPermissions ?? new Dictionary<Guid, AIAgentUserGroupPermissions>();
+        agent.UserGroupPermissions = userGroupPermissions;
         agent.Instructions = artifact.Instructions;
         agent.IsActive = artifact.IsActive;
 

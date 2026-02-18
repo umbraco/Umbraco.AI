@@ -11,6 +11,8 @@ using Umbraco.AI.Deploy.Agent.Connectors.ServiceConnectors;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Models.Membership;
+using Umbraco.Cms.Core.Services;
 using Xunit;
 
 namespace Umbraco.AI.Deploy.Agent.Tests.Unit.Connectors.ServiceConnectors;
@@ -19,6 +21,7 @@ public class UmbracoAIAgentServiceConnectorTests
 {
     private readonly Mock<IAIAgentService> _agentServiceMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
+    private readonly Mock<IUserGroupService> _userGroupServiceMock;
     private readonly Mock<UmbracoAIDeploySettingsAccessor> _settingsAccessorMock;
     private readonly UmbracoAIAgentServiceConnector _connector;
 
@@ -26,6 +29,7 @@ public class UmbracoAIAgentServiceConnectorTests
     {
         _agentServiceMock = new Mock<IAIAgentService>();
         _profileServiceMock = new Mock<IAIProfileService>();
+        _userGroupServiceMock = new Mock<IUserGroupService>();
         _settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
 
         _settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
@@ -33,6 +37,7 @@ public class UmbracoAIAgentServiceConnectorTests
         _connector = new UmbracoAIAgentServiceConnector(
             _agentServiceMock.Object,
             _profileServiceMock.Object,
+            _userGroupServiceMock.Object,
             _settingsAccessorMock.Object);
     }
 
@@ -43,6 +48,18 @@ public class UmbracoAIAgentServiceConnectorTests
         var profileId = Guid.NewGuid();
         var userGroupId1 = Guid.NewGuid();
         var userGroupId2 = Guid.NewGuid();
+
+        // Mock user groups with aliases
+        var userGroup1 = new Mock<IUserGroup>();
+        userGroup1.Setup(x => x.Key).Returns(userGroupId1);
+        userGroup1.Setup(x => x.Alias).Returns("editors");
+
+        var userGroup2 = new Mock<IUserGroup>();
+        userGroup2.Setup(x => x.Key).Returns(userGroupId2);
+        userGroup2.Setup(x => x.Alias).Returns("writers");
+
+        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId1)).ReturnsAsync(userGroup1.Object);
+        _userGroupServiceMock.Setup(x => x.GetAsync(userGroupId2)).ReturnsAsync(userGroup2.Object);
 
         var agent = new AIAgent
         {
@@ -93,13 +110,8 @@ public class UmbracoAIAgentServiceConnectorTests
             d.Udi.EntityType == "umbraco-ai-profile" &&
             ((GuidUdi)d.Udi).Guid == profileId);
 
-        // User group dependencies
-        artifact.Dependencies.ShouldContain(d =>
-            d.Udi.EntityType == "user-group" &&
-            ((GuidUdi)d.Udi).Guid == userGroupId1);
-        artifact.Dependencies.ShouldContain(d =>
-            d.Udi.EntityType == "user-group" &&
-            ((GuidUdi)d.Udi).Guid == userGroupId2);
+        // User group permissions are stored by alias, not as dependencies
+        artifact.Dependencies.ShouldNotContain(d => d.Udi.EntityType == "user-group");
 
         // Arrays
         artifact.SurfaceIds.ShouldBe(new[] { "backoffice", "frontend" });
@@ -110,12 +122,17 @@ public class UmbracoAIAgentServiceConnectorTests
         artifact.Scope.ShouldNotBeNull();
         var scope = JsonSerializer.Deserialize<Dictionary<string, object>>(artifact.Scope.Value);
         scope.ShouldNotBeNull();
-        scope.ShouldContainKey("DocumentTypes");
+        scope.ShouldContainKey("AllowRules");
 
+        // User group permissions should be keyed by alias
         artifact.UserGroupPermissions.ShouldNotBeNull();
-        var permissions = JsonSerializer.Deserialize<Dictionary<string, string[]>>(artifact.UserGroupPermissions.Value);
+        var permissions = JsonSerializer.Deserialize<Dictionary<string, AIAgentUserGroupPermissions>>(artifact.UserGroupPermissions.Value);
         permissions.ShouldNotBeNull();
         permissions.Count.ShouldBe(2);
+        permissions.ShouldContainKey("editors");
+        permissions.ShouldContainKey("writers");
+        permissions["editors"].AllowedToolIds.ShouldBe(new[] { "read", "write" });
+        permissions["writers"].AllowedToolIds.ShouldBe(new[] { "read" });
     }
 
     [Fact]

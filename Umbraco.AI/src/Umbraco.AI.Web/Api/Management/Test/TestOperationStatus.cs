@@ -29,4 +29,19 @@ public enum TestOperationStatus
     /// The specified target is invalid.
     /// </summary>
     InvalidTarget,
+
+    /// <summary>
+    /// The run count is invalid (must be at least 1).
+    /// </summary>
+    InvalidRunCount,
+
+    /// <summary>
+    /// The test case JSON is empty or invalid.
+    /// </summary>
+    InvalidTestCase,
+
+    /// <summary>
+    /// The operation was cancelled by a notification handler.
+    /// </summary>
+    Cancelled,
 }

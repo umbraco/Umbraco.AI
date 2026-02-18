@@ -1,14 +1,15 @@
 import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, state } from "@umbraco-cms/backoffice/external/lit";
-import { AITestRepository } from "../repository/test.repository.js";
-import type { TestItemResponseModel } from "../../api/client/index.js";
+import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
+import { AITestRepository } from "../../repository/test.repository.js";
+import type { TestItemResponseModel } from "../../../api/types.gen.js";
 
 /**
  * Root workspace element for AI Tests management.
- * Displays a list of tests with actions to create, edit, run, and delete.
+ * Displays a list of tests with filtering, status indicators, and actions.
  */
 @customElement("umbraco-ai-tests-workspace-root")
-export class UmbracoAITestsWorkspaceRootElement extends LitElement {
+export class UmbracoAITestsWorkspaceRootElement extends UmbElementMixin(LitElement) {
     @state()
     private _tests: TestItemResponseModel[] = [];
 
@@ -18,7 +19,18 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
     @state()
     private _filter = "";
 
-    private _repository = new AITestRepository(this);
+    @state()
+    private _tagFilter = "";
+
+    @state()
+    private _total = 0;
+
+    private _repository!: AITestRepository;
+
+    constructor() {
+        super();
+        this._repository = new AITestRepository(this);
+    }
 
     connectedCallback() {
         super.connectedCallback();
@@ -28,114 +40,149 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
     private async _loadTests() {
         this._isLoading = true;
         try {
-            const result = await this._repository.getAll(this._filter || undefined, undefined, 0, 100);
+            const result = await this._repository.getAllTests(
+                this._filter || undefined,
+                this._tagFilter || undefined,
+                0,
+                100
+            );
             this._tests = result.items;
+            this._total = result.total;
         } catch (error) {
             console.error("Failed to load tests:", error);
+            this._tests = [];
+            this._total = 0;
         } finally {
             this._isLoading = false;
         }
     }
 
-    private _onFilterChange(e: InputEvent) {
-        const target = e.target as HTMLInputElement;
-        this._filter = target.value;
+    private _handleFilterChange(e: Event) {
+        this._filter = (e.target as HTMLInputElement).value;
         this._loadTests();
     }
 
-    private _onCreateClick() {
-        // TODO: Navigate to test create workspace
-        console.log("Create test clicked");
+    private _handleTagFilterChange(e: Event) {
+        this._tagFilter = (e.target as HTMLInputElement).value;
+        this._loadTests();
     }
 
-    private _onEditClick(test: TestItemResponseModel) {
-        // TODO: Navigate to test edit workspace
-        console.log("Edit test:", test.id);
+    private _handleCreate() {
+        // Navigate to create workspace
+        window.location.hash = "#/section/ai/workspace/test/create";
     }
 
-    private async _onRunClick(test: TestItemResponseModel) {
+    private _handleEdit(test: TestItemResponseModel) {
+        // Navigate to edit workspace
+        window.location.hash = `#/section/ai/workspace/test/edit/${test.id}`;
+    }
+
+    private async _handleRun(test: TestItemResponseModel) {
         try {
-            const result = await this._repository.run(test.id);
-            console.log("Test run result:", result);
-            alert(`Test completed! Pass@k: ${result.passAtK.toFixed(2)}, Avg Score: ${result.averageScore.toFixed(2)}`);
+            const metrics = await this._repository.runTest(test.id);
+            alert(
+                `Test executed ${metrics.totalRuns} times\n` +
+                `Passed: ${metrics.passedRuns}/${metrics.totalRuns}\n` +
+                `pass@k: ${(metrics.passAtK * 100).toFixed(1)}%`
+            );
+            this._loadTests();
         } catch (error) {
             console.error("Failed to run test:", error);
             alert("Failed to run test. See console for details.");
         }
     }
 
-    private async _onDeleteClick(test: TestItemResponseModel) {
+    private async _handleDelete(test: TestItemResponseModel) {
         if (!confirm(`Delete test "${test.name}"?`)) {
             return;
         }
+
         try {
-            await this._repository.delete(test.id);
-            await this._loadTests();
+            await this._repository.deleteTest(test.id);
+            this._loadTests();
         } catch (error) {
             console.error("Failed to delete test:", error);
+            alert("Failed to delete test. See console for details.");
         }
+    }
+
+    private _renderTest(test: TestItemResponseModel) {
+        return html`
+            <tr>
+                <td>${test.name}</td>
+                <td>${test.alias}</td>
+                <td>${test.testTypeId}</td>
+                <td>
+                    ${test.tags.map(tag => html`<span class="tag">${tag}</span>`)}
+                </td>
+                <td>${test.runCount}</td>
+                <td class="actions">
+                    <button @click=${() => this._handleEdit(test)} title="Edit">
+                        ✏️
+                    </button>
+                    <button @click=${() => this._handleRun(test)} title="Run">
+                        ▶️
+                    </button>
+                    <button @click=${() => this._handleDelete(test)} title="Delete">
+                        🗑️
+                    </button>
+                </td>
+            </tr>
+        `;
     }
 
     render() {
         if (this._isLoading) {
-            return html`<uui-loader></uui-loader>`;
+            return html`<div class="loading">Loading tests...</div>`;
         }
 
         return html`
-            <div class="workspace-root">
+            <div class="container">
                 <div class="header">
                     <h1>AI Tests</h1>
-                    <uui-button label="Create Test" look="primary" color="positive" @click=${this._onCreateClick}>
-                        Create Test
-                    </uui-button>
+                    <button @click=${this._handleCreate} class="create-button">
+                        + Create Test
+                    </button>
                 </div>
 
                 <div class="filters">
-                    <uui-input
-                        label="Filter"
-                        placeholder="Search tests..."
+                    <input
+                        type="text"
+                        placeholder="Filter by name..."
                         .value=${this._filter}
-                        @input=${this._onFilterChange}
-                    >
-                    </uui-input>
+                        @input=${this._handleFilterChange}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Filter by tags..."
+                        .value=${this._tagFilter}
+                        @input=${this._handleTagFilterChange}
+                    />
                 </div>
 
-                <div class="test-list">
-                    ${this._tests.length === 0
-                        ? html`<p>No tests found. Create your first test!</p>`
-                        : this._tests.map(
-                              (test) => html`
-                                  <div class="test-item">
-                                      <div class="test-info">
-                                          <h3>${test.name}</h3>
-                                          <p>${test.description || "No description"}</p>
-                                          <div class="test-meta">
-                                              <span>Type: ${test.testTypeId}</span>
-                                              <span>Runs: ${test.runCount}</span>
-                                              ${test.tags.length > 0
-                                                  ? html`<span>Tags: ${test.tags.join(", ")}</span>`
-                                                  : ""}
-                                          </div>
-                                      </div>
-                                      <div class="test-actions">
-                                          <uui-button label="Run" look="primary" @click=${() => this._onRunClick(test)}>
-                                              Run
-                                          </uui-button>
-                                          <uui-button label="Edit" @click=${() => this._onEditClick(test)}>
-                                              Edit
-                                          </uui-button>
-                                          <uui-button
-                                              label="Delete"
-                                              color="danger"
-                                              @click=${() => this._onDeleteClick(test)}
-                                          >
-                                              Delete
-                                          </uui-button>
-                                      </div>
-                                  </div>
-                              `,
-                          )}
+                <div class="results-info">
+                    Showing ${this._tests.length} of ${this._total} tests
                 </div>
+
+                ${this._tests.length === 0
+                    ? html`<div class="empty">No tests found. Create one to get started.</div>`
+                    : html`
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Alias</th>
+                                    <th>Test Type</th>
+                                    <th>Tags</th>
+                                    <th>Run Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this._tests.map(test => this._renderTest(test))}
+                            </tbody>
+                        </table>
+                    `}
             </div>
         `;
     }
@@ -143,59 +190,118 @@ export class UmbracoAITestsWorkspaceRootElement extends LitElement {
     static styles = css`
         :host {
             display: block;
-            padding: var(--uui-size-space-5);
+            padding: 20px;
         }
 
-        .workspace-root {
+        .loading,
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--uui-color-text-alt);
+        }
+
+        .container {
             max-width: 1200px;
+            margin: 0 auto;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: var(--uui-size-space-5);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .create-button {
+            padding: 10px 20px;
+            background: var(--uui-color-positive);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .create-button:hover {
+            background: var(--uui-color-positive-emphasis);
         }
 
         .filters {
-            margin-bottom: var(--uui-size-space-4);
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .test-list {
-            display: flex;
-            flex-direction: column;
-            gap: var(--uui-size-space-3);
-        }
-
-        .test-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: var(--uui-size-space-4);
+        .filters input {
+            flex: 1;
+            padding: 8px 12px;
             border: 1px solid var(--uui-color-border);
-            border-radius: var(--uui-border-radius);
+            border-radius: 4px;
+        }
+
+        .results-info {
+            margin-bottom: 10px;
+            color: var(--uui-color-text-alt);
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
             background: var(--uui-color-surface);
+            border-radius: 4px;
+            overflow: hidden;
         }
 
-        .test-info h3 {
-            margin: 0 0 var(--uui-size-space-2);
+        thead {
+            background: var(--uui-color-surface-alt);
         }
 
-        .test-info p {
-            margin: 0 0 var(--uui-size-space-2);
-            color: var(--uui-color-text-alt);
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--uui-color-border);
         }
 
-        .test-meta {
-            display: flex;
-            gap: var(--uui-size-space-3);
-            font-size: var(--uui-type-small-size);
-            color: var(--uui-color-text-alt);
+        th {
+            font-weight: 600;
+            font-size: 14px;
         }
 
-        .test-actions {
-            display: flex;
-            gap: var(--uui-size-space-2);
+        tbody tr:hover {
+            background: var(--uui-color-surface-emphasis);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-right: 4px;
+            background: var(--uui-color-surface-alt);
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .actions {
+            white-space: nowrap;
+        }
+
+        .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            opacity: 0.7;
+        }
+
+        .actions button:hover {
+            opacity: 1;
         }
     `;
 }
@@ -205,3 +311,5 @@ declare global {
         "umbraco-ai-tests-workspace-root": UmbracoAITestsWorkspaceRootElement;
     }
 }
+
+export default UmbracoAITestsWorkspaceRootElement;

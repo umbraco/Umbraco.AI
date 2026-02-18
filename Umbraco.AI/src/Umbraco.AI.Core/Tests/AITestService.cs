@@ -1,5 +1,5 @@
 using Umbraco.AI.Core.Versioning;
-using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Security;
 
 namespace Umbraco.AI.Core.Tests;
@@ -7,22 +7,67 @@ namespace Umbraco.AI.Core.Tests;
 /// <summary>
 /// Service implementation for AI test management operations.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <strong>Design Note: TestRunner vs EventAggregator</strong>
+/// </para>
+/// <para>
+/// Unlike <see cref="Profiles.AIProfileService"/> and <see cref="Connections.AIConnectionService"/>,
+/// this service uses <see cref="IAITestRunner"/> as a core dependency instead of relying primarily
+/// on <see cref="IEventAggregator"/> for extensibility.
+/// </para>
+/// <para>
+/// <strong>Rationale:</strong>
+/// </para>
+/// <list type="bullet">
+/// <item>
+/// <description>
+/// Tests are <strong>execution-focused</strong> - The primary purpose is running tests and
+/// collecting metrics, not just configuration management like Profiles/Connections.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <strong>EventAggregator is still present</strong> - Notifications (Saving, Saved, Deleting,
+/// Deleted, RollingBack, RolledBack) are published for CRUD operations to maintain consistency
+/// with other core entities and allow external extensibility.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <strong>TestRunner handles execution complexity</strong> - Test execution involves running
+/// multiple iterations, managing test harnesses, applying graders, calculating pass@k metrics,
+/// and storing transcripts. This domain logic belongs in a dedicated runner service.
+/// </description>
+/// </item>
+/// <item>
+/// <description>
+/// <strong>Separation of concerns</strong> - CRUD operations (save/delete) use event notifications
+/// for extensibility, while execution operations use the runner for domain logic. This keeps
+/// each concern focused and testable.
+/// </description>
+/// </item>
+/// </list>
+/// </remarks>
 internal sealed class AITestService : IAITestService
 {
     private readonly IAITestRepository _repository;
     private readonly IAIEntityVersionService _versionService;
     private readonly IAITestRunner _testRunner;
+    private readonly IEventAggregator _eventAggregator;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
 
     public AITestService(
         IAITestRepository repository,
         IAIEntityVersionService versionService,
         IAITestRunner testRunner,
+        IEventAggregator eventAggregator,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
         _repository = repository;
         _versionService = versionService;
         _testRunner = testRunner;
+        _eventAggregator = eventAggregator;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
     }
 
@@ -39,16 +84,13 @@ internal sealed class AITestService : IAITestService
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public async Task<PagedModel<AITest>> GetTestsPagedAsync(
+    public Task<(IEnumerable<AITest> Items, int Total)> GetTestsPagedAsync(
         int skip,
         int take,
         string? filter = null,
         IEnumerable<string>? tags = null,
         CancellationToken cancellationToken = default)
-    {
-        var (items, total) = await _repository.GetPagedAsync(filter, null, null, skip, take, cancellationToken);
-        return new PagedModel<AITest>(total, items);
-    }
+        => _repository.GetPagedAsync(filter, null, null, skip, take, cancellationToken);
 
     /// <inheritdoc />
     public async Task<AITest> SaveTestAsync(AITest test, CancellationToken cancellationToken = default)
@@ -86,10 +128,22 @@ internal sealed class AITestService : IAITestService
             throw new InvalidOperationException($"A test with alias '{test.Alias}' already exists.");
         }
 
+        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
+
+        // Publish saving notification (before save)
+        var messages = new EventMessages();
+        var savingNotification = new AITestSavingNotification(test, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Test save cancelled: {errorMessages}");
+        }
+
         // Update timestamp
         test.DateModified = DateTime.UtcNow;
-
-        var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
         // Save version snapshot of existing entity before update
         var existing = await _repository.GetByIdAsync(test.Id, cancellationToken);
@@ -98,12 +152,50 @@ internal sealed class AITestService : IAITestService
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
         }
 
-        return await _repository.SaveAsync(test, userId, cancellationToken);
+        // Perform save
+        var savedTest = await _repository.SaveAsync(test, userId, cancellationToken);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AITestSavedNotification(savedTest, messages);
+        await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
+
+        return savedTest;
     }
 
     /// <inheritdoc />
-    public Task<bool> DeleteTestAsync(Guid id, CancellationToken cancellationToken = default)
-        => _repository.DeleteAsync(id, cancellationToken);
+    public async Task<bool> DeleteTestAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        // Publish deleting notification (before delete)
+        var messages = new EventMessages();
+        var deletingNotification = new AITestDeletingNotification(id, messages);
+        await _eventAggregator.PublishAsync(deletingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (deletingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Test delete cancelled: {errorMessages}");
+        }
+
+        // Delete version history for this entity
+        await _versionService.DeleteVersionsAsync(id, "Test", cancellationToken);
+
+        // Perform delete
+        var result = await _repository.DeleteAsync(id, cancellationToken);
+
+        // Publish deleted notification (after delete)
+        var deletedNotification = new AITestDeletedNotification(id, messages);
+        await _eventAggregator.PublishAsync(deletedNotification, cancellationToken);
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> TestExistsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var test = await _repository.GetByIdAsync(id, cancellationToken);
+        return test is not null;
+    }
 
     /// <inheritdoc />
     public async Task<bool> TestAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)

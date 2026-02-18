@@ -34,6 +34,18 @@ public abstract class TestControllerBase : UmbracoAICoreManagementControllerBase
                 .WithTitle("Invalid target")
                 .WithDetail("The specified target is not valid.")
                 .Build()),
+            TestOperationStatus.InvalidRunCount => BadRequest(problemDetailsBuilder
+                .WithTitle("Invalid run count")
+                .WithDetail("Run count must be at least 1.")
+                .Build()),
+            TestOperationStatus.InvalidTestCase => BadRequest(problemDetailsBuilder
+                .WithTitle("Invalid test case")
+                .WithDetail("Test case JSON cannot be empty.")
+                .Build()),
+            TestOperationStatus.Cancelled => BadRequest(problemDetailsBuilder
+                .WithTitle("Operation cancelled")
+                .WithDetail("The operation was cancelled by a notification handler.")
+                .Build()),
             _ => StatusCode(500, problemDetailsBuilder
                 .WithTitle("Unknown test operation status")
                 .Build())

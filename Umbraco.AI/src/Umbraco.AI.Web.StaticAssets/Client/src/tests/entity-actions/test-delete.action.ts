@@ -36,7 +36,7 @@ export class UaiTestDeleteEntityAction extends UmbEntityActionBase<never> {
 		if (!confirmed) return;
 
 		const repository = new AITestRepository(this);
-		await repository.delete(unique);
+		await repository.deleteTest(unique);
 
 		// Refresh the collection (the entity will be removed automatically)
 		// TODO: Trigger collection refresh or use notification service

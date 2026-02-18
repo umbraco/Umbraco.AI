@@ -56,7 +56,7 @@ public class AllTestController : TestControllerBase
             tagsList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
 
-        var pagedResult = await _testService.GetTestsPagedAsync(
+        var (items, total) = await _testService.GetTestsPagedAsync(
             skip,
             take,
             filter,
@@ -65,8 +65,8 @@ public class AllTestController : TestControllerBase
 
         var viewModel = new PagedViewModel<TestItemResponseModel>
         {
-            Total = pagedResult.Total,
-            Items = _umbracoMapper.MapEnumerable<AITest, TestItemResponseModel>(pagedResult.Items)
+            Total = total,
+            Items = _umbracoMapper.MapEnumerable<AITest, TestItemResponseModel>(items)
         };
 
         return Ok(viewModel);

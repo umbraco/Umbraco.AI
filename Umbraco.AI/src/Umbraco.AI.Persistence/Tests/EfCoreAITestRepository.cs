@@ -55,14 +55,26 @@ internal class EfCoreAITestRepository : IAITestRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AITest>> GetByTagAsync(string tag, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AITest>> GetByTagsAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default)
     {
+        var tagsList = tags.ToList();
+        if (tagsList.Count == 0)
+        {
+            return Enumerable.Empty<AITest>();
+        }
+
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
 
         List<AITestEntity> entities = await scope.ExecuteWithContextAsync(async db =>
-            await db.Tests
-                .Where(t => t.Tags != null && t.Tags.Contains(tag))
-                .ToListAsync(cancellationToken));
+        {
+            // Get all tests and filter in memory for ALL tags (AND logic)
+            var allTests = await db.Tests.Where(t => t.Tags != null).ToListAsync(cancellationToken);
+            return allTests.Where(t =>
+            {
+                var testTags = t.Tags!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return tagsList.All(tag => testTags.Any(testTag => string.Equals(testTag, tag, StringComparison.OrdinalIgnoreCase)));
+            }).ToList();
+        });
 
         scope.Complete();
         return entities.Select(AITestFactory.BuildDomain);

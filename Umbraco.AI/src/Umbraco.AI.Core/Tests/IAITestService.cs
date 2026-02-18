@@ -1,5 +1,3 @@
-using Umbraco.Cms.Core.Models;
-
 namespace Umbraco.AI.Core.Tests;
 
 /// <summary>
@@ -38,8 +36,8 @@ public interface IAITestService
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="tags">Optional tags filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Paged result containing tests and total count.</returns>
-    Task<PagedModel<AITest>> GetTestsPagedAsync(
+    /// <returns>Tuple containing the items and total count.</returns>
+    Task<(IEnumerable<AITest> Items, int Total)> GetTestsPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -62,6 +60,14 @@ public interface IAITestService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted, false if not found.</returns>
     Task<bool> DeleteTestAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a test with the given ID exists.
+    /// </summary>
+    /// <param name="id">The test ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if test exists.</returns>
+    Task<bool> TestExistsAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a test with the given alias exists.

@@ -17,7 +17,7 @@ export const manifests: Array<UmbExtensionManifest> = [
 		type: "workspaceView",
 		alias: "UmbracoAI.WorkspaceView.Test.Edit",
 		name: "Test Edit Workspace View",
-		element: () => import("../test-editor.element.js"),
+		element: () => import("./test-workspace-editor.element.js"),
 		weight: 1000,
 		meta: {
 			label: "Edit",

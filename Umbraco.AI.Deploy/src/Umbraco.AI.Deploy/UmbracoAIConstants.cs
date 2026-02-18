@@ -7,5 +7,6 @@ public static class UmbracoAIConstants
         public const string Context = "umbraco-ai-context";
         public const string Connection = "umbraco-ai-connection";
         public const string Profile = "umbraco-ai-profile";
+        public const string Settings = "umbraco-ai-settings";
     }
 }

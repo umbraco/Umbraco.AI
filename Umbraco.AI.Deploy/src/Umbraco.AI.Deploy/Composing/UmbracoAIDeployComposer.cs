@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.NotificationHandlers;
 using Umbraco.Cms.Core;
@@ -30,6 +31,8 @@ public class UmbracoAIDeployComposer : IComposer
         builder.AddNotificationAsyncHandler<AIConnectionDeletedNotification, AIConnectionDeletedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AIProfileSavedNotification, AIProfileSavedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AIProfileDeletedNotification, AIProfileDeletedDeployRefresherNotificationAsyncHandler>();
+        builder.AddNotificationAsyncHandler<AISettingsSavedNotification, AISettingsSavedDeployRefresherNotificationAsyncHandler>();
+        builder.AddNotificationAsyncHandler<AISettingsDeletedNotification, AISettingsDeletedDeployRefresherNotificationAsyncHandler>();
     }
 
     private static void RegisterUdiTypes()
@@ -37,5 +40,6 @@ public class UmbracoAIDeployComposer : IComposer
         UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Context, UdiType.GuidUdi);
         UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Connection, UdiType.GuidUdi);
         UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Profile, UdiType.GuidUdi);
+        UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Settings, UdiType.GuidUdi);
     }
 }

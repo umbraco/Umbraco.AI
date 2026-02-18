@@ -62,6 +62,37 @@ Use the setup skill for first-time repository configuration:
 - Named pipes auto-cleanup on process exit
 - Multiple worktrees run simultaneously without port conflicts
 
+### Package Testing Site
+
+Test deployed packages from different feeds before and after release:
+
+```bash
+# Test latest nightly builds from MyGet
+.\scripts\install-package-test-site.ps1 -Feed nightly
+
+# Test pre-release packages from MyGet
+.\scripts\install-package-test-site.ps1 -Feed prereleases
+
+# Test stable release packages from NuGet.org
+.\scripts\install-package-test-site.ps1 -Feed release
+
+# Specify custom site name
+.\scripts\install-package-test-site.ps1 -Feed release -SiteName "Umbraco.AI.ReleaseSite"
+
+# Linux/Mac
+./scripts/install-package-test-site.sh --feed=release --name="Umbraco.AI.ReleaseSite"
+```
+
+**Key Differences from Demo Site:**
+
+- Demo site uses project references (for development)
+- Package test site uses deployed NuGet packages (for validation)
+- Sites created in `demo/{SiteName}` folder, separate from development demo
+- Each feed option tests packages from different sources:
+  - `nightly` - Latest builds from MyGet nightly feed
+  - `prereleases` - Pre-release packages from MyGet
+  - `release` - Stable packages from NuGet.org
+
 ## Project Management
 
 **Azure DevOps Configuration:**
@@ -223,6 +254,8 @@ Built on Microsoft.Extensions.AI (M.E.AI) with a "thin wrapper" philosophy.
 | --------------------------------------- | -------------------------------------------------------------------------------------- |
 | `scripts/install-demo-site.ps1`         | Creates unified local dev environment (Windows)                                        |
 | `scripts/install-demo-site.sh`          | Creates unified local dev environment (Linux/Mac)                                      |
+| `scripts/install-package-test-site.ps1` | Creates test site from nightly/prerelease/release feeds (Windows)                      |
+| `scripts/install-package-test-site.sh`  | Creates test site from nightly/prerelease/release feeds (Linux/Mac)                    |
 | `scripts/generate-changelog.ps1`        | Generate changelogs for release (Windows)                                              |
 | `scripts/generate-changelog.sh`         | Generate changelogs for release (Linux/Mac)                                            |
 | `scripts/generate-changelog.js`         | Node.js changelog generator (main implementation)                                      |

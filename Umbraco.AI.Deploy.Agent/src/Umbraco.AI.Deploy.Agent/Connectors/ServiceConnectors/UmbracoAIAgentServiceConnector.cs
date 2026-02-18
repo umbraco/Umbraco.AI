@@ -131,7 +131,7 @@ public class UmbracoAIAgentServiceConnector(
         Dictionary<Guid, AIAgentUserGroupPermissions>? userGroupPermissions = null;
         if (artifact.UserGroupPermissions.HasValue)
         {
-            userGroupPermissions = JsonSerializer.Deserialize<Dictionary<Guid, AIAgentUserGroupPermissions>>(artifact.UserGroupPermissions.Value);
+            userGroupPermissions = artifact.UserGroupPermissions.Value.Deserialize<Dictionary<Guid, AIAgentUserGroupPermissions>>();
         }
 
         // Get or create agent entity

@@ -125,8 +125,8 @@ public class UmbracoAIProfileServiceConnector(
             var capability = (AICapability)artifact.Capability;
             settings = capability switch
             {
-                AICapability.Chat => JsonSerializer.Deserialize<AIChatProfileSettings>(artifact.Settings.Value),
-                AICapability.Embedding => JsonSerializer.Deserialize<AIEmbeddingProfileSettings>(artifact.Settings.Value),
+                AICapability.Chat => artifact.Settings.Value.Deserialize<AIChatProfileSettings>(),
+                AICapability.Embedding => artifact.Settings.Value.Deserialize<AIEmbeddingProfileSettings>(),
                 _ => null
             };
         }

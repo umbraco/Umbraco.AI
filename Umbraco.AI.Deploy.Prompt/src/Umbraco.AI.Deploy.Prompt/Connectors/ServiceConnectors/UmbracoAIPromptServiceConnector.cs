@@ -111,7 +111,7 @@ public class UmbracoAIPromptServiceConnector(
         AIPromptScope? scope = null;
         if (artifact.Scope.HasValue)
         {
-            scope = JsonSerializer.Deserialize<AIPromptScope>(artifact.Scope.Value);
+            scope = artifact.Scope.Value.Deserialize<AIPromptScope>();
         }
 
         // Get or create prompt entity

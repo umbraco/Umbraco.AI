@@ -109,7 +109,7 @@ public class UmbracoAIConnectionServiceConnector(
         Dictionary<string, object?>? settings = null;
         if (artifact.Settings.HasValue)
         {
-            settings = JsonSerializer.Deserialize<Dictionary<string, object?>>(artifact.Settings.Value);
+            settings = artifact.Settings.Value.Deserialize<Dictionary<string, object?>>();
         }
 
         // Create new connection or update existing one
@@ -153,7 +153,7 @@ public class UmbracoAIConnectionServiceConnector(
         else
         {
             var json = JsonSerializer.SerializeToElement(settings);
-            settingsDict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
+            settingsDict = json.Deserialize<Dictionary<string, object?>>();
         }
 
         if (settingsDict == null)

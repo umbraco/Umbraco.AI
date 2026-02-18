@@ -32,7 +32,7 @@ public class UmbracoAIDeployComposer : IComposer
         builder.AddNotificationAsyncHandler<AIProfileSavedNotification, AIProfileSavedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AIProfileDeletedNotification, AIProfileDeletedDeployRefresherNotificationAsyncHandler>();
         builder.AddNotificationAsyncHandler<AISettingsSavedNotification, AISettingsSavedDeployRefresherNotificationAsyncHandler>();
-        builder.AddNotificationAsyncHandler<AISettingsDeletedNotification, AISettingsDeletedDeployRefresherNotificationAsyncHandler>();
+        // Note: Settings is a singleton and cannot be deleted
     }
 
     private static void RegisterUdiTypes()

@@ -1,5 +1,6 @@
 using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Extensions;
 
@@ -42,12 +43,26 @@ internal sealed class AISettingsService : IAISettingsService
         CancellationToken cancellationToken = default)
     {
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
-        var settingResult = await _repository.SaveAsync(settings, userId, cancellationToken);
-        _cache.Insert(SettingsCacheKey,() => settingResult);
 
-        // Publish saved notification for Deploy integration
+        // Publish saving notification (before save)
         var messages = new EventMessages();
-        var savedNotification = new AISettingsSavedNotification(settingResult, messages);
+        var savingNotification = new AISettingsSavingNotification(settings, messages);
+        await _eventAggregator.PublishAsync(savingNotification, cancellationToken);
+
+        // Check if cancelled
+        if (savingNotification.Cancel)
+        {
+            var errorMessages = string.Join("; ", messages.GetAll().Select(m => m.Message));
+            throw new InvalidOperationException($"Settings save cancelled: {errorMessages}");
+        }
+
+        // Perform save
+        var settingResult = await _repository.SaveAsync(settings, userId, cancellationToken);
+        _cache.Insert(SettingsCacheKey, () => settingResult);
+
+        // Publish saved notification (after save)
+        var savedNotification = new AISettingsSavedNotification(settingResult, messages)
+            .WithStateFrom(savingNotification);
         await _eventAggregator.PublishAsync(savedNotification, cancellationToken);
 
         return settingResult;

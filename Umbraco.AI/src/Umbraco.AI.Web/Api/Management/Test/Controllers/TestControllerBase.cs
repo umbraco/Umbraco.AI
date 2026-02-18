@@ -43,8 +43,5 @@ public abstract class TestControllerBase : UmbracoAICoreManagementControllerBase
     /// Creates a NotFound result for a test.
     /// </summary>
     protected IActionResult TestNotFound() =>
-        NotFound(CreateProblemDetails()
-            .WithTitle("Test not found")
-            .WithDetail("The requested test could not be found.")
-            .Build());
+        NotFound(CreateProblemDetails("Test not found", "The requested test could not be found."));
 }

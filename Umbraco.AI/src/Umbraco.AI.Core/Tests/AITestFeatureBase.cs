@@ -50,13 +50,29 @@ public abstract class AITestFeatureBase : IAITestFeature
         Name = attribute.Name;
         Category = attribute.Category;
 
-        _testCaseSchema = new Lazy<AIEditableModelSchema?>(() =>
-            TestCaseType != null ? SchemaBuilder.Build(TestCaseType) : null);
+        _testCaseSchema = new Lazy<AIEditableModelSchema?>(() => BuildSchemaForType(TestCaseType, Id));
     }
 
     /// <inheritdoc />
     public AIEditableModelSchema? GetTestCaseSchema()
         => _testCaseSchema.Value;
+
+    /// <summary>
+    /// Builds a schema for a runtime type using reflection to call the generic method.
+    /// </summary>
+    private AIEditableModelSchema? BuildSchemaForType(Type? type, string modelId)
+    {
+        if (type == null)
+        {
+            return null;
+        }
+
+        var method = typeof(IAIEditableModelSchemaBuilder)
+            .GetMethod(nameof(IAIEditableModelSchemaBuilder.BuildForType))!
+            .MakeGenericMethod(type);
+
+        return (AIEditableModelSchema?)method.Invoke(SchemaBuilder, new object[] { modelId });
+    }
 
     /// <inheritdoc />
     public abstract Task<AITestTranscript> ExecuteAsync(

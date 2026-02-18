@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Embeddings;
 
@@ -111,10 +112,22 @@ public class SemanticSimilarityGrader : AITestGraderBase
         try
         {
             // Generate embeddings for both texts
-            var embeddings = await _embeddingService.GenerateEmbeddingsAsync(
-                [config.ExpectedContent, actualValue],
-                config.ProfileId,
-                cancellationToken);
+            GeneratedEmbeddings<Embedding<float>> embeddings;
+            if (config.ProfileId.HasValue)
+            {
+                embeddings = await _embeddingService.GenerateEmbeddingsAsync(
+                    config.ProfileId.Value,
+                    [config.ExpectedContent, actualValue],
+                    null,
+                    cancellationToken);
+            }
+            else
+            {
+                embeddings = await _embeddingService.GenerateEmbeddingsAsync(
+                    [config.ExpectedContent, actualValue],
+                    null,
+                    cancellationToken);
+            }
 
             if (embeddings.Count != 2)
             {

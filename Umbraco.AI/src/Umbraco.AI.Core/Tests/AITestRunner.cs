@@ -35,148 +35,120 @@ internal sealed class AITestRunner : IAITestRunner
         var testFeature = _testFeatures.FirstOrDefault(f => f.Id == test.TestTypeId)
             ?? throw new InvalidOperationException($"Test feature '{test.TestTypeId}' not found");
 
+        var startTime = DateTime.UtcNow;
+
         // Create test run
         var testRun = new AITestRun
         {
             Id = Guid.NewGuid(),
             TestId = test.Id,
-            DateStarted = DateTime.UtcNow,
-            ProfileIdOverride = profileIdOverride,
-            ContextIdsOverride = contextIdsOverride?.ToList()
+            TestVersion = test.Version,
+            RunNumber = 1, // TODO: Implement batch execution for multiple runs
+            ProfileId = profileIdOverride,
+            ContextIds = contextIdsOverride?.ToList() ?? new List<Guid>(),
+            ExecutedAt = startTime,
+            Status = AITestRunStatus.Running
         };
-
-        var transcripts = new List<AITestTranscript>();
-        var outcomes = new List<AITestOutcome>();
 
         try
         {
-            // Execute test N times
-            for (var i = 0; i < test.RunCount; i++)
+            // Execute the test feature (single run for now)
+            var transcript = await testFeature.ExecuteAsync(
+                test,
+                1, // runNumber
+                testRun.ProfileId,
+                testRun.ContextIds,
+                cancellationToken);
+
+            // Set run ID and save transcript
+            transcript.RunId = testRun.Id;
+            testRun.TranscriptId = transcript.Id;
+
+            // Build outcome from transcript
+            var outcome = new AITestOutcome
             {
-                var runNumber = i + 1;
+                OutputType = AITestOutputType.Text, // TODO: Detect from transcript
+                OutputValue = transcript.FinalOutputJson,
+                FinishReason = "completed", // TODO: Get from transcript
+                TokenUsageJson = null // TODO: Extract from transcript timing/metadata if available
+            };
 
-                // Execute the test feature
-                var transcript = await testFeature.ExecuteAsync(
-                    test,
-                    runNumber,
-                    profileIdOverride,
-                    contextIdsOverride,
-                    cancellationToken);
+            // Store outcome
+            testRun.Outcome = outcome;
 
-                // Set run ID
-                transcript.RunId = testRun.Id;
-
-                // Build outcome
-                var outcome = new AITestOutcome
+            // Grade the outcome using configured graders
+            var graderResults = new List<AITestGraderResult>();
+            foreach (var grader in test.Graders)
+            {
+                var graderImpl = _testGraders.FirstOrDefault(g => g.Id == grader.GraderTypeId);
+                if (graderImpl == null)
                 {
-                    Id = Guid.NewGuid(),
-                    TranscriptId = transcript.Id,
-                    RunNumber = runNumber,
-                    FinalOutputJson = transcript.FinalOutputJson
-                };
-
-                // Grade the outcome using configured graders
-                var graderResults = new List<AITestGraderResult>();
-                foreach (var grader in test.Graders)
-                {
-                    var graderImpl = _testGraders.FirstOrDefault(g => g.Id == grader.GraderTypeId);
-                    if (graderImpl == null)
+                    // Grader not found - record as error
+                    graderResults.Add(new AITestGraderResult
                     {
-                        // Grader not found - record as error
-                        graderResults.Add(new AITestGraderResult
-                        {
-                            GraderId = grader.Id,
-                            Passed = false,
-                            Score = 0.0,
-                            FailureMessage = $"Grader implementation '{grader.GraderTypeId}' not found"
-                        });
-                        continue;
-                    }
-
-                    try
-                    {
-                        var result = await graderImpl.GradeAsync(transcript, outcome, grader, cancellationToken);
-
-                        // Apply negation if configured
-                        if (grader.Negate)
-                        {
-                            result.Passed = !result.Passed;
-                            result.Score = 1.0 - result.Score;
-                            result.FailureMessage = result.Passed
-                                ? null
-                                : $"Negated: {result.FailureMessage ?? "Expected to fail but passed"}";
-                        }
-
-                        // Apply severity
-                        result.Severity = grader.Severity;
-
-                        graderResults.Add(result);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Grader execution failed - record as error
-                        graderResults.Add(new AITestGraderResult
-                        {
-                            GraderId = grader.Id,
-                            Passed = false,
-                            Score = 0.0,
-                            FailureMessage = $"Grader execution failed: {ex.Message}",
-                            Severity = grader.Severity
-                        });
-                    }
+                        GraderId = grader.Id,
+                        Passed = false,
+                        Score = 0.0,
+                        FailureMessage = $"Grader implementation '{grader.GraderTypeId}' not found",
+                        Severity = grader.Severity
+                    });
+                    continue;
                 }
 
-                // Set grader results
-                outcome.GraderResults = graderResults;
-
-                // Calculate aggregate pass/fail (only Error severity counts toward pass/fail)
-                var errorGraders = graderResults.Where(r => r.Severity == AITestGraderSeverity.Error).ToList();
-                outcome.Passed = errorGraders.Count == 0 || errorGraders.All(r => r.Passed);
-
-                // Calculate weighted average score (across all graders)
-                var totalWeight = test.Graders.Sum(g => g.Weight);
-                if (totalWeight > 0)
+                try
                 {
-                    outcome.Score = graderResults
-                        .Select((r, idx) => r.Score * test.Graders[idx].Weight)
-                        .Sum() / totalWeight;
-                }
-                else
-                {
-                    outcome.Score = graderResults.Any() ? graderResults.Average(r => r.Score) : 0.0;
-                }
+                    var result = await graderImpl.GradeAsync(transcript, outcome, grader, cancellationToken);
 
-                transcripts.Add(transcript);
-                outcomes.Add(outcome);
+                    // Apply negation if configured
+                    if (grader.Negate)
+                    {
+                        result.Passed = !result.Passed;
+                        result.Score = 1.0 - result.Score;
+                        result.FailureMessage = result.Passed
+                            ? null
+                            : $"Negated: {result.FailureMessage ?? "Expected to fail but passed"}";
+                    }
+
+                    // Apply severity
+                    result.Severity = grader.Severity;
+
+                    graderResults.Add(result);
+                }
+                catch (Exception ex)
+                {
+                    // Grader execution failed - record as error
+                    graderResults.Add(new AITestGraderResult
+                    {
+                        GraderId = grader.Id,
+                        Passed = false,
+                        Score = 0.0,
+                        FailureMessage = $"Grader execution failed: {ex.Message}",
+                        Severity = grader.Severity
+                    });
+                }
             }
 
-            // Calculate aggregate metrics
-            testRun.TotalRuns = test.RunCount;
-            testRun.PassedRuns = outcomes.Count(o => o.Passed);
-            testRun.FailedRuns = outcomes.Count(o => !o.Passed);
+            // Set grader results on the run
+            testRun.GraderResults = graderResults;
 
-            // Calculate pass@k score (proportion that passed at least once)
-            testRun.PassAtK = testRun.TotalRuns > 0
-                ? (double)testRun.PassedRuns / testRun.TotalRuns
-                : 0.0;
+            // Calculate aggregate pass/fail (only Error severity counts toward pass/fail)
+            var errorGraders = graderResults.Where(r => r.Severity == AITestGraderSeverity.Error).ToList();
+            var passed = errorGraders.Count == 0 || errorGraders.All(r => r.Passed);
 
-            // Calculate average score across all runs
-            testRun.AverageScore = outcomes.Any() ? outcomes.Average(o => o.Score) : 0.0;
-
-            testRun.DateCompleted = DateTime.UtcNow;
-            testRun.Status = AITestRunStatus.Completed;
+            // Set final status
+            testRun.Status = passed ? AITestRunStatus.Passed : AITestRunStatus.Failed;
+            testRun.DurationMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
         }
         catch (Exception ex)
         {
-            testRun.DateCompleted = DateTime.UtcNow;
-            testRun.Status = AITestRunStatus.Failed;
-            testRun.ErrorMessage = ex.Message;
-            testRun.ErrorStackTrace = ex.StackTrace;
+            testRun.Status = AITestRunStatus.Error;
+            testRun.DurationMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+            testRun.MetadataJson = JsonSerializer.Serialize(new
+            {
+                error = ex.Message,
+                stackTrace = ex.StackTrace
+            });
         }
-
-        // Set transcripts and outcomes
-        testRun.Transcripts = transcripts;
-        testRun.Outcomes = outcomes;
 
         // Persist the test run
         await _runRepository.SaveAsync(testRun, cancellationToken);

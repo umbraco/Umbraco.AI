@@ -125,44 +125,35 @@ public class TestMapDefinition : IMapDefinition
         {
             Id = source.Id,
             TestId = source.TestId,
-            DateStarted = source.DateStarted,
-            DateCompleted = source.DateCompleted,
+            TestVersion = source.TestVersion,
+            RunNumber = source.RunNumber,
+            ProfileId = source.ProfileId,
+            ContextIds = source.ContextIds,
+            ExecutedAt = source.ExecutedAt,
+            ExecutedByUserId = source.ExecutedByUserId,
             Status = source.Status.ToString(),
-            TotalRuns = source.TotalRuns,
-            PassedRuns = source.PassedRuns,
-            FailedRuns = source.FailedRuns,
-            PassAtK = source.PassAtK,
-            AverageScore = source.AverageScore,
-            ProfileIdOverride = source.ProfileIdOverride,
-            ContextIdsOverride = source.ContextIdsOverride,
-            ErrorMessage = source.ErrorMessage,
-            Transcripts = source.Transcripts.Select(t => new TestTranscriptResponseModel
+            DurationMs = source.DurationMs,
+            TranscriptId = source.TranscriptId,
+            Outcome = source.Outcome != null ? new TestOutcomeResponseModel
             {
-                Id = t.Id,
-                MessagesJson = t.MessagesJson,
-                ToolCallsJson = t.ToolCallsJson,
-                ReasoningJson = t.ReasoningJson,
-                TimingJson = t.TimingJson,
-                FinalOutputJson = t.FinalOutputJson
+                OutputType = source.Outcome.OutputType.ToString(),
+                OutputValue = source.Outcome.OutputValue,
+                FinishReason = source.Outcome.FinishReason,
+                TokenUsageJson = source.Outcome.TokenUsageJson
+            } : null,
+            GraderResults = source.GraderResults.Select(r => new TestGraderResultResponseModel
+            {
+                GraderId = r.GraderId,
+                Passed = r.Passed,
+                Score = r.Score,
+                ActualValue = r.ActualValue,
+                ExpectedValue = r.ExpectedValue,
+                FailureMessage = r.FailureMessage,
+                MetadataJson = r.MetadataJson,
+                Severity = r.Severity.ToString()
             }).ToList(),
-            Outcomes = source.Outcomes.Select(o => new TestOutcomeResponseModel
-            {
-                Id = o.Id,
-                RunNumber = o.RunNumber,
-                Passed = o.Passed,
-                Score = o.Score,
-                GraderResults = o.GraderResults.Select(r => new TestGraderResultResponseModel
-                {
-                    GraderId = r.GraderId,
-                    Passed = r.Passed,
-                    Score = r.Score,
-                    ActualValue = r.ActualValue,
-                    ExpectedValue = r.ExpectedValue,
-                    FailureMessage = r.FailureMessage,
-                    MetadataJson = r.MetadataJson,
-                    Severity = r.Severity.ToString()
-                }).ToList()
-            }).ToList()
+            MetadataJson = source.MetadataJson,
+            BatchId = source.BatchId
         });
     }
 }

@@ -60,7 +60,7 @@ public class ByIdOrAliasTestController : TestControllerBase
 
         if (test is null)
         {
-            return TestNotFound();
+            return NotFound(CreateProblemDetails("Test not found", "The requested test could not be found."));
         }
 
         var responseModel = _umbracoMapper.Map<TestResponseModel>(test)!;

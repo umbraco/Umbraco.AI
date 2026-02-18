@@ -84,11 +84,43 @@ public class UpdateTestController : TestControllerBase
             return TestOperationStatusResult(TestOperationStatus.InvalidTestType);
         }
 
-        // Map request to existing entity
-        AITest test = _umbracoMapper.Map<AITest>(requestModel)!;
-        test.Id = existing.Id;
-        test.DateCreated = existing.DateCreated;
-        test.Version = existing.Version;
+        // Update existing entity with request values
+        var test = new AITest
+        {
+            Id = existing.Id,
+            Alias = requestModel.Alias,
+            Name = requestModel.Name,
+            Description = requestModel.Description,
+            TestTypeId = requestModel.TestTypeId,
+            Target = new AITestTarget
+            {
+                TargetId = requestModel.Target.TargetId,
+                IsAlias = requestModel.Target.IsAlias
+            },
+            TestCase = new AITestCase
+            {
+                TestCaseJson = requestModel.TestCaseJson
+            },
+            Graders = requestModel.Graders.Select(g => new AITestGrader
+            {
+                Id = g.Id,
+                GraderTypeId = g.GraderTypeId,
+                Name = g.Name,
+                Description = g.Description,
+                ConfigJson = g.ConfigJson,
+                Negate = g.Negate,
+                Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
+                Weight = g.Weight
+            }).ToList(),
+            RunCount = requestModel.RunCount,
+            Tags = requestModel.Tags.ToList(),
+            IsEnabled = existing.IsEnabled,
+            BaselineRunId = existing.BaselineRunId,
+            DateCreated = existing.DateCreated,
+            DateModified = DateTime.UtcNow,
+            Version = existing.Version,
+            CreatedByUserId = existing.CreatedByUserId
+        };
 
         await _testService.SaveTestAsync(test, cancellationToken);
 

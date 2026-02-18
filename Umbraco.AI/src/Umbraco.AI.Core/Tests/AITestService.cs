@@ -39,13 +39,16 @@ internal sealed class AITestService : IAITestService
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AITest>> GetTestsPagedAsync(
+    public async Task<PagedModel<AITest>> GetTestsPagedAsync(
         int skip,
         int take,
         string? filter = null,
         IEnumerable<string>? tags = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetPagedAsync(skip, take, filter, tags, cancellationToken);
+    {
+        var (items, total) = await _repository.GetPagedAsync(filter, null, null, skip, take, cancellationToken);
+        return new PagedModel<AITest>(total, items);
+    }
 
     /// <inheritdoc />
     public async Task<AITest> SaveTestAsync(AITest test, CancellationToken cancellationToken = default)
@@ -103,8 +106,11 @@ internal sealed class AITestService : IAITestService
         => _repository.DeleteAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public Task<bool> TestAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
-        => _repository.AliasExistsAsync(alias, excludeId, cancellationToken);
+    public async Task<bool> TestAliasExistsAsync(string alias, Guid? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        var existingTest = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return existingTest != null && existingTest.Id != excludeId;
+    }
 
     /// <inheritdoc />
     public async Task<AITestRun> RunTestAsync(

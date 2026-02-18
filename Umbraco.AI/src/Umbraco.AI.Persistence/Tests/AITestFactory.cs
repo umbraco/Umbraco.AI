@@ -22,7 +22,7 @@ internal static class AITestFactory
         IReadOnlyList<AITestGrader> graders = Array.Empty<AITestGrader>();
         if (!string.IsNullOrEmpty(entity.GradersJson))
         {
-            graders = JsonSerializer.Deserialize<List<AITestGrader>>(entity.GradersJson) ?? Array.Empty<AITestGrader>();
+            graders = (IReadOnlyList<AITestGrader>?)JsonSerializer.Deserialize<List<AITestGrader>>(entity.GradersJson) ?? Array.Empty<AITestGrader>();
         }
 
         return new AITest

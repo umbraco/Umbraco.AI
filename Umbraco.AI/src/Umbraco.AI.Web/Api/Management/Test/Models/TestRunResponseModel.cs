@@ -20,70 +20,70 @@ public class TestRunResponseModel
     public Guid TestId { get; set; }
 
     /// <summary>
-    /// The date and time (in UTC) when the run started.
+    /// The version of the test at the time of execution.
     /// </summary>
-    public DateTime DateStarted { get; set; }
+    public int TestVersion { get; set; }
 
     /// <summary>
-    /// The date and time (in UTC) when the run completed.
+    /// The run number for this execution.
     /// </summary>
-    public DateTime? DateCompleted { get; set; }
+    public int RunNumber { get; set; }
 
     /// <summary>
-    /// The status of the run (Running, Completed, Failed).
+    /// The profile ID used for this run.
+    /// </summary>
+    public Guid? ProfileId { get; set; }
+
+    /// <summary>
+    /// The context IDs used for this run.
+    /// </summary>
+    public IReadOnlyList<Guid> ContextIds { get; set; } = [];
+
+    /// <summary>
+    /// The date and time (in UTC) when the run was executed.
+    /// </summary>
+    public DateTime ExecutedAt { get; set; }
+
+    /// <summary>
+    /// The user ID who executed this run (if applicable).
+    /// </summary>
+    public Guid? ExecutedByUserId { get; set; }
+
+    /// <summary>
+    /// The status of the run (Running, Passed, Failed, Error).
     /// </summary>
     [Required]
     public string Status { get; set; } = string.Empty;
 
     /// <summary>
-    /// Total number of executions.
+    /// Duration of the test execution in milliseconds.
     /// </summary>
-    public int TotalRuns { get; set; }
+    public long DurationMs { get; set; }
 
     /// <summary>
-    /// Number of executions that passed.
+    /// The ID of the transcript for this run.
     /// </summary>
-    public int PassedRuns { get; set; }
+    public Guid? TranscriptId { get; set; }
 
     /// <summary>
-    /// Number of executions that failed.
+    /// The outcome of the test execution.
     /// </summary>
-    public int FailedRuns { get; set; }
+    public TestOutcomeResponseModel? Outcome { get; set; }
 
     /// <summary>
-    /// pass@k score (proportion that passed).
+    /// Results from each grader.
     /// </summary>
-    public double PassAtK { get; set; }
+    public IReadOnlyList<TestGraderResultResponseModel> GraderResults { get; set; } = [];
 
     /// <summary>
-    /// Average score across all runs.
+    /// Optional metadata for the run (JSON).
     /// </summary>
-    public double AverageScore { get; set; }
+    public string? MetadataJson { get; set; }
 
     /// <summary>
-    /// Optional profile ID override used for this run.
+    /// Optional batch ID if this run is part of a batch execution.
     /// </summary>
-    public Guid? ProfileIdOverride { get; set; }
-
-    /// <summary>
-    /// Optional context IDs override used for this run.
-    /// </summary>
-    public IReadOnlyList<Guid>? ContextIdsOverride { get; set; }
-
-    /// <summary>
-    /// Error message if the run failed.
-    /// </summary>
-    public string? ErrorMessage { get; set; }
-
-    /// <summary>
-    /// Transcripts for each execution.
-    /// </summary>
-    public IReadOnlyList<TestTranscriptResponseModel> Transcripts { get; set; } = [];
-
-    /// <summary>
-    /// Outcomes for each execution.
-    /// </summary>
-    public IReadOnlyList<TestOutcomeResponseModel> Outcomes { get; set; } = [];
+    public Guid? BatchId { get; set; }
 }
 
 /// <summary>
@@ -129,30 +129,25 @@ public class TestTranscriptResponseModel
 public class TestOutcomeResponseModel
 {
     /// <summary>
-    /// The unique identifier of the outcome.
+    /// The type of output produced by the test.
     /// </summary>
     [Required]
-    public Guid Id { get; set; }
+    public string OutputType { get; set; } = string.Empty;
 
     /// <summary>
-    /// The run number (1-indexed).
+    /// The actual output value from the test execution.
     /// </summary>
-    public int RunNumber { get; set; }
+    public string? OutputValue { get; set; }
 
     /// <summary>
-    /// Whether this execution passed all graders.
+    /// The reason the execution finished.
     /// </summary>
-    public bool Passed { get; set; }
+    public string? FinishReason { get; set; }
 
     /// <summary>
-    /// Aggregate weighted score from all graders.
+    /// Token usage information (JSON).
     /// </summary>
-    public double Score { get; set; }
-
-    /// <summary>
-    /// Results from each grader.
-    /// </summary>
-    public IReadOnlyList<TestGraderResultResponseModel> GraderResults { get; set; } = [];
+    public string? TokenUsageJson { get; set; }
 }
 
 /// <summary>

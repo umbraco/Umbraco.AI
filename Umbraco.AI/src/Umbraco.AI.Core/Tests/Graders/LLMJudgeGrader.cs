@@ -113,13 +113,25 @@ Be objective and consistent in your evaluation.
                 new(ChatRole.User, judgmentPrompt)
             };
 
-            var response = await _chatService.GetChatResponseAsync(
-                messages,
-                config.ProfileId,
-                cancellationToken);
+            ChatResponse response;
+            if (config.ProfileId.HasValue)
+            {
+                response = await _chatService.GetChatResponseAsync(
+                    config.ProfileId.Value,
+                    messages,
+                    null,
+                    cancellationToken);
+            }
+            else
+            {
+                response = await _chatService.GetChatResponseAsync(
+                    messages,
+                    null,
+                    cancellationToken);
+            }
 
             // Parse judgment result
-            var judgmentText = response.Message.Text ?? string.Empty;
+            var judgmentText = response.Messages.LastOrDefault()?.Text ?? string.Empty;
             
             // Extract JSON from response (handle markdown code blocks)
             var jsonStart = judgmentText.IndexOf('{');

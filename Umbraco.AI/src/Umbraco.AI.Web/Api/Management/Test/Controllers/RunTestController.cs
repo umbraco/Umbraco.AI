@@ -60,7 +60,7 @@ public class RunTestController : TestControllerBase
         }
         if (existing is null)
         {
-            return TestNotFound();
+            return NotFound(CreateProblemDetails("Test not found", "The requested test could not be found."));
         }
 
         // Execute the test

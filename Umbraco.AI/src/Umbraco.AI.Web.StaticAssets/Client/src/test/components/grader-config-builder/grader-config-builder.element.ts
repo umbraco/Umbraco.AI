@@ -4,6 +4,7 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
 import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
+import { UaiSelectedEvent } from "../../../core/events/selected.event.js";
 import { UAI_GRADER_CONFIG_EDITOR_MODAL } from "../../modals/grader-config-editor/index.js";
 import type { UaiTestGraderConfig } from "../../types.js";
 import { getGraderSummary } from "../../types.js";
@@ -45,9 +46,10 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
             },
         });
 
-        // Handle type selection without closing the picker
-        typeModal.onSubmit().then(async (typeResult) => {
-            const selectedType = typeResult.selection[0];
+        // Listen for selection event (picker stays open)
+        typeModal.addEventListener(UaiSelectedEvent.TYPE, async (e: Event) => {
+            const selectedEvent = e as UaiSelectedEvent;
+            const selectedType = selectedEvent.item as UaiPickableItemModel;
 
             // Open config editor over the picker (picker stays open)
             const configModal = modalManager.open(this, UAI_GRADER_CONFIG_EDITOR_MODAL, {
@@ -62,15 +64,13 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
                 const configResult = await configModal.onSubmit();
 
                 // Config submitted - close picker and add grader
-                typeModal.destroy();
+                typeModal.reject();
                 this.graders = [...this.graders, configResult.grader];
                 this.dispatchEvent(new UmbChangeEvent());
             } catch {
                 // Config cancelled - picker remains open so user can select different type
-                // Don't destroy picker, just let them choose again
+                // Don't close picker, just let them choose again
             }
-        }).catch(() => {
-            // Picker cancelled - do nothing
         });
     }
 

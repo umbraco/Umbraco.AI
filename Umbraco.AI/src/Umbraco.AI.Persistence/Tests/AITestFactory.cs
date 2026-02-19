@@ -32,11 +32,7 @@ internal static class AITestFactory
             Name = entity.Name,
             Description = entity.Description,
             TestFeatureId = entity.TestFeatureId,
-            Target = new AITestTarget
-            {
-                TargetId = entity.TargetId,
-                IsAlias = entity.TargetIsAlias
-            },
+            TestTargetId = entity.TestTargetId,
             TestCaseJson = entity.TestCaseJson,
             Graders = graders,
             RunCount = entity.RunCount,
@@ -63,8 +59,7 @@ internal static class AITestFactory
             Name = test.Name,
             Description = test.Description,
             TestFeatureId = test.TestFeatureId,
-            TargetId = test.Target.TargetId,
-            TargetIsAlias = test.Target.IsAlias,
+            TestTargetId = test.TestTargetId,
             TestCaseJson = test.TestCaseJson,
             GradersJson = test.Graders.Count > 0 ? JsonSerializer.Serialize(test.Graders) : null,
             RunCount = test.RunCount,
@@ -88,8 +83,7 @@ internal static class AITestFactory
         entity.Name = test.Name;
         entity.Description = test.Description;
         entity.TestFeatureId = test.TestFeatureId;
-        entity.TargetId = test.Target.TargetId;
-        entity.TargetIsAlias = test.Target.IsAlias;
+        entity.TestTargetId = test.TestTargetId;
         entity.TestCaseJson = test.TestCaseJson;
         entity.GradersJson = test.Graders.Count > 0 ? JsonSerializer.Serialize(test.Graders) : null;
         entity.RunCount = test.RunCount;

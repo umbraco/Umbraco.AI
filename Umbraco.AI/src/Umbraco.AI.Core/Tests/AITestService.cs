@@ -105,8 +105,11 @@ internal sealed class AITestService : IAITestService
             throw new InvalidOperationException("Test case JSON cannot be empty");
         }
 
-        // Validate target
-        ArgumentException.ThrowIfNullOrWhiteSpace(test.Target.TargetId);
+        // Validate target ID
+        if (test.TestTargetId == Guid.Empty)
+        {
+            throw new InvalidOperationException("Test target ID cannot be empty");
+        }
 
         // Validate run count
         if (test.RunCount < 1)

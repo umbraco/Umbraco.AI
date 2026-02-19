@@ -37,10 +37,10 @@ public class TestResponseModel
     public string TestFeatureId { get; set; } = string.Empty;
 
     /// <summary>
-    /// The target being tested (prompt ID/alias or agent ID/alias).
+    /// The ID of the target entity being tested (prompt, agent, etc.).
     /// </summary>
     [Required]
-    public TestTargetModel Target { get; set; } = new();
+    public Guid TestTargetId { get; set; }
 
     /// <summary>
     /// Test case configuration as JSON string.
@@ -78,23 +78,6 @@ public class TestResponseModel
     /// The current version number of the entity.
     /// </summary>
     public int Version { get; set; }
-}
-
-/// <summary>
-/// Target specification for a test.
-/// </summary>
-public class TestTargetModel
-{
-    /// <summary>
-    /// The ID or alias of the target.
-    /// </summary>
-    [Required]
-    public string TargetId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Whether the TargetId is an alias (true) or ID (false).
-    /// </summary>
-    public bool IsAlias { get; set; }
 }
 
 /// <summary>

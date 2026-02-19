@@ -35,9 +35,10 @@ public sealed class AITest : IAIVersionableEntity
     public required string TestFeatureId { get; init; }
 
     /// <summary>
-    /// What to test - the target prompt, agent, or custom feature.
+    /// The ID of the target entity being tested (prompt, agent, etc.).
+    /// UI uses entity pickers to ensure valid IDs.
     /// </summary>
-    public required AITestTarget Target { get; set; }
+    public required Guid TestTargetId { get; set; }
 
     /// <summary>
     /// Test input configuration as JSON - structure depends on TestFeatureId.

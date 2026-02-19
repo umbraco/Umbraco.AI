@@ -3,6 +3,7 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UaiTestFeatureItemRepository } from "../../repository/test-feature/test-feature-item.repository.js";
 import type { UaiTestFeatureItemModel } from "../../types.js";
 import { UAI_CREATE_TEST_WORKSPACE_PATH_PATTERN } from "../../workspace/paths.js";
+import { UAI_TEST_ICON } from "../../constants.ts";
 
 /**
  * Collection action element for creating a new test.
@@ -52,8 +53,8 @@ export class UaiTestCreateCollectionActionElement extends UmbLitElement {
                         ? html`<div class="empty">No test features available</div>`
                         : this._testFeatures.map(
                               (feature) => html`
-                                  <uui-menu-item label=${feature.name} @click=${() => this.#onSelect(feature.id)}>
-                                      <umb-icon slot="icon" name="icon-checkbox"></umb-icon>
+                                  <uui-menu-item label=${feature.name} @click=${() => this.#onSelect(feature.id)} style="--uui-menu-item-flat-structure: 1;">
+                                      <umb-icon slot="icon" name=${UAI_TEST_ICON}></umb-icon>
                                   </uui-menu-item>
                               `,
                           )}

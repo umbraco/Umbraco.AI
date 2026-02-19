@@ -6,6 +6,7 @@ import type {
     UaiTestCreateOptionsModalData,
     UaiTestCreateOptionsModalValue,
 } from "./test-create-options-modal.token.js";
+import { UAI_TEST_ICON } from "../../constants.ts";
 
 @customElement("uai-test-create-options-modal")
 export class UaiTestCreateOptionsModalElement extends UmbModalBaseElement<
@@ -55,7 +56,7 @@ export class UaiTestCreateOptionsModalElement extends UmbModalBaseElement<
                                             @selected=${() => this.#onSelect(feature.id)}
                                             @open=${() => this.#onSelect(feature.id)}
                                         >
-                                            <umb-icon slot="icon" name="icon-lab"></umb-icon>
+                                            <umb-icon slot="icon" name=${UAI_TEST_ICON}></umb-icon>
                                         </uui-ref-node>
                                     `,
                                 )}

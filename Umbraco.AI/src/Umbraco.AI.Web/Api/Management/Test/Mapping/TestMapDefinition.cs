@@ -20,11 +20,7 @@ public class TestMapDefinition : IMapDefinition
             Name = source.Name,
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
-            Target = new TestTargetModel
-            {
-                TargetId = source.Target.TargetId,
-                IsAlias = source.Target.IsAlias
-            },
+            TestTargetId = source.TestTargetId,
             TestCaseJson = source.TestCaseJson,
             Graders = source.Graders.Select(g => new TestGraderModel
             {
@@ -66,11 +62,7 @@ public class TestMapDefinition : IMapDefinition
             Name = source.Name,
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
-            Target = new AITestTarget
-            {
-                TargetId = source.Target.TargetId,
-                IsAlias = source.Target.IsAlias
-            },
+            TestTargetId = source.TestTargetId,
             TestCaseJson = source.TestCaseJson,
             Graders = source.Graders.Select(g => new AITestGrader
             {
@@ -94,7 +86,7 @@ public class TestMapDefinition : IMapDefinition
             Alias = string.Empty,
             Name = string.Empty,
             TestFeatureId = string.Empty,
-            Target = new AITestTarget { TargetId = string.Empty, IsAlias = false },
+            TestTargetId = Guid.Empty,
             TestCaseJson = string.Empty
         }, MapFromUpdateRequest);
 
@@ -193,11 +185,7 @@ public class TestMapDefinition : IMapDefinition
         target.Alias = source.Alias;
         target.Name = source.Name;
         target.Description = source.Description;
-        target.Target = new AITestTarget
-        {
-            TargetId = source.Target.TargetId,
-            IsAlias = source.Target.IsAlias
-        };
+        target.TestTargetId = source.TestTargetId;
         target.TestCaseJson = source.TestCaseJson;
         target.Graders = source.Graders.Select(g => new AITestGrader
         {

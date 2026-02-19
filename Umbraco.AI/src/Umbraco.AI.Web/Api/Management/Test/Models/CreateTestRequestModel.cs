@@ -31,10 +31,10 @@ public class CreateTestRequestModel
     public string TestFeatureId { get; set; } = string.Empty;
 
     /// <summary>
-    /// The target being tested (prompt ID/alias or agent ID/alias).
+    /// The ID of the target entity being tested (prompt, agent, etc.).
     /// </summary>
     [Required]
-    public TestTargetModel Target { get; set; } = new();
+    public Guid TestTargetId { get; set; }
 
     /// <summary>
     /// Test case configuration as JSON string.

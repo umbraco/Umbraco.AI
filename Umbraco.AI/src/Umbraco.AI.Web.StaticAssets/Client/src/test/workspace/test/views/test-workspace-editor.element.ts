@@ -1,5 +1,4 @@
-import { css, html, customElement, state, when, nothing, repeat } from "@umbraco-cms/backoffice/external/lit";
-import type { UUIButtonState } from "@umbraco-cms/backoffice/external/uui";
+import { css, html, customElement, state, when, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import type { UUIInputElement, UUIInputEvent } from "@umbraco-cms/backoffice/external/uui";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";

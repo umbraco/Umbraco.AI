@@ -20,4 +20,4 @@ export const UAI_TEST_ROOT_WORKSPACE_ALIAS = "UmbracoAI.Workspace.TestRoot";
 export const UAI_TEST_MENU_ITEM_ALIAS = "UmbracoAI.MenuItem.Test";
 
 // Icons
-export const UAI_TEST_ICON = "icon-checkbox";
+export const UAI_TEST_ICON = "icon-lab";

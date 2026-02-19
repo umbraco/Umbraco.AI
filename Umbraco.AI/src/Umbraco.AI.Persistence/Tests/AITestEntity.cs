@@ -31,14 +31,9 @@ internal class AITestEntity
     public string TestFeatureId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Target identifier (Guid or alias).
+    /// The ID of the target entity being tested (prompt, agent, etc.).
     /// </summary>
-    public string TargetId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Whether TargetId is an alias (true) or Guid (false).
-    /// </summary>
-    public bool TargetIsAlias { get; set; }
+    public Guid TestTargetId { get; set; }
 
     /// <summary>
     /// Test case configuration as JSON.

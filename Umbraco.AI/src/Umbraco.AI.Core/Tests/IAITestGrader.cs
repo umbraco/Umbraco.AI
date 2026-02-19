@@ -77,7 +77,7 @@ public interface IAITestGrader : IDiscoverable
     Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken);
 }
 

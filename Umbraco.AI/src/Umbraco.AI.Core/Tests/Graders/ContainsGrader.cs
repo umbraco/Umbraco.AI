@@ -33,13 +33,10 @@ public class ContainsGraderConfig
 /// Fast, deterministic validation for content checks.
 /// </summary>
 [AITestGrader("contains", "Contains", Type = AIGraderType.CodeBased)]
-public class ContainsGrader : AITestGraderBase
+public class ContainsGrader : AITestGraderBase<ContainsGraderConfig>
 {
     /// <inheritdoc />
     public override string Description => "Validates that output contains a specific substring or pattern";
-
-    /// <inheritdoc />
-    public override Type? ConfigType => typeof(ContainsGraderConfig);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ContainsGrader"/> class.
@@ -53,7 +50,7 @@ public class ContainsGrader : AITestGraderBase
     public override Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
         // Deserialize configuration

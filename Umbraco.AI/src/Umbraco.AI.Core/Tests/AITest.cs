@@ -51,7 +51,7 @@ public sealed class AITest : IAIVersionableEntity
     /// Success criteria - graders that evaluate the test output.
     /// Multiple graders can be applied to validate different aspects.
     /// </summary>
-    public IReadOnlyList<AITestGrader> Graders { get; set; } = Array.Empty<AITestGrader>();
+    public IReadOnlyList<AITestGraderConfig> Graders { get; set; } = Array.Empty<AITestGraderConfig>();
 
     /// <summary>
     /// Number of times to run this test (1 to N).

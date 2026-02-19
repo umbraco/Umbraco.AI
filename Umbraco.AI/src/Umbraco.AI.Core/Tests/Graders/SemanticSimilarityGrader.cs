@@ -48,15 +48,12 @@ public class SemanticSimilarityGraderConfig
 /// Uses cosine similarity between expected and actual content embeddings.
 /// </summary>
 [AITestGrader("semantic-similarity", "Semantic Similarity", Type = AIGraderType.ModelBased)]
-public class SemanticSimilarityGrader : AITestGraderBase
+public class SemanticSimilarityGrader : AITestGraderBase<SemanticSimilarityGraderConfig>
 {
     private readonly IAIEmbeddingService _embeddingService;
 
     /// <inheritdoc />
     public override string Description => "Measures semantic similarity using embeddings";
-
-    /// <inheritdoc />
-    public override Type? ConfigType => typeof(SemanticSimilarityGraderConfig);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SemanticSimilarityGrader"/> class.
@@ -73,7 +70,7 @@ public class SemanticSimilarityGrader : AITestGraderBase
     public override async Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
         // Deserialize configuration

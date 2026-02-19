@@ -19,10 +19,10 @@ internal static class AITestFactory
             tags = entity.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
 
-        IReadOnlyList<AITestGrader> graders = Array.Empty<AITestGrader>();
+        IReadOnlyList<AITestGraderConfig> graders = Array.Empty<AITestGraderConfig>();
         if (!string.IsNullOrEmpty(entity.GradersJson))
         {
-            graders = (IReadOnlyList<AITestGrader>?)JsonSerializer.Deserialize<List<AITestGrader>>(entity.GradersJson) ?? Array.Empty<AITestGrader>();
+            graders = (IReadOnlyList<AITestGraderConfig>?)JsonSerializer.Deserialize<List<AITestGraderConfig>>(entity.GradersJson) ?? Array.Empty<AITestGraderConfig>();
         }
 
         JsonElement? testCase = null;

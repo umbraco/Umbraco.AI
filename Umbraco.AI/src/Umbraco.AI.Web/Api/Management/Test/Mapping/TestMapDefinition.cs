@@ -70,7 +70,7 @@ public class TestMapDefinition : IMapDefinition
             TestFeatureId = source.TestFeatureId,
             TestTargetId = source.TestTargetId,
             TestCase = source.TestCase,
-            Graders = source.Graders.Select(g => new AITestGrader
+            Graders = source.Graders.Select(g => new AITestGraderConfig
             {
                 Id = g.Id,
                 GraderTypeId = g.GraderTypeId,
@@ -192,7 +192,7 @@ public class TestMapDefinition : IMapDefinition
         target.Description = source.Description;
         target.TestTargetId = source.TestTargetId;
         target.TestCase = source.TestCase;
-        target.Graders = source.Graders.Select(g => new AITestGrader
+        target.Graders = source.Graders.Select(g => new AITestGraderConfig
         {
             Id = g.Id,
             GraderTypeId = g.GraderTypeId,

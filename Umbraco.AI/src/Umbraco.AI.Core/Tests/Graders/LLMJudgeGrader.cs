@@ -48,15 +48,12 @@ public class LLMJudgeGraderConfig
 /// Provides flexible, rubric-based evaluation for subjective criteria.
 /// </summary>
 [AITestGrader("llm-judge", "LLM Judge", Type = AIGraderType.ModelBased)]
-public class LLMJudgeGrader : AITestGraderBase
+public class LLMJudgeGrader : AITestGraderBase<LLMJudgeGraderConfig>
 {
     private readonly IAIChatService _chatService;
 
     /// <inheritdoc />
     public override string Description => "Uses an LLM to evaluate test outputs based on criteria";
-
-    /// <inheritdoc />
-    public override Type? ConfigType => typeof(LLMJudgeGraderConfig);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LLMJudgeGrader"/> class.
@@ -73,7 +70,7 @@ public class LLMJudgeGrader : AITestGraderBase
     public override async Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
         // Deserialize configuration
@@ -132,7 +129,7 @@ Be objective and consistent in your evaluation.
 
             // Parse judgment result
             var judgmentText = response.Messages.LastOrDefault()?.Text ?? string.Empty;
-            
+
             // Extract JSON from response (handle markdown code blocks)
             var jsonStart = judgmentText.IndexOf('{');
             var jsonEnd = judgmentText.LastIndexOf('}');

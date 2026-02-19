@@ -4,7 +4,7 @@ namespace Umbraco.AI.Core.Tests;
 /// Defines success criteria for a test - validates test outcomes.
 /// Multiple graders can be applied to evaluate different aspects (format, content quality, tool usage, etc.).
 /// </summary>
-public sealed class AITestGrader
+public sealed class AITestGraderConfig
 {
     /// <summary>
     /// Unique identifier for the grader within the test.

@@ -33,13 +33,10 @@ public class ExactMatchGraderConfig
 /// Fast, deterministic validation for exact equality.
 /// </summary>
 [AITestGrader("exact-match", "Exact Match", Type = AIGraderType.CodeBased)]
-public class ExactMatchGrader : AITestGraderBase
+public class ExactMatchGrader : AITestGraderBase<ExactMatchGraderConfig>
 {
     /// <inheritdoc />
     public override string Description => "Validates exact string match between actual and expected values";
-
-    /// <inheritdoc />
-    public override Type? ConfigType => typeof(ExactMatchGraderConfig);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExactMatchGrader"/> class.
@@ -53,7 +50,7 @@ public class ExactMatchGrader : AITestGraderBase
     public override Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
         // Deserialize configuration

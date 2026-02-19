@@ -43,13 +43,10 @@ public class RegexGraderConfig
 /// Flexible pattern validation for structured outputs.
 /// </summary>
 [AITestGrader("regex", "Regex Match", Type = AIGraderType.CodeBased)]
-public class RegexGrader : AITestGraderBase
+public class RegexGrader : AITestGraderBase<RegexGraderConfig>
 {
     /// <inheritdoc />
     public override string Description => "Validates that output matches a regular expression pattern";
-
-    /// <inheritdoc />
-    public override Type? ConfigType => typeof(RegexGraderConfig);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RegexGrader"/> class.
@@ -63,7 +60,7 @@ public class RegexGrader : AITestGraderBase
     public override Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
         // Deserialize configuration

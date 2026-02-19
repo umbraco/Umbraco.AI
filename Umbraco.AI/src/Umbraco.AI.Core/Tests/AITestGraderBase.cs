@@ -7,7 +7,7 @@ namespace Umbraco.AI.Core.Tests;
 /// Base class for AI test graders.
 /// Handles attribute reading and provides common infrastructure.
 /// </summary>
-public abstract class AITestGraderBase : IAITestGrader
+public abstract class AITestGraderBase<TConfig> : IAITestGrader
 {
     private readonly Lazy<AIEditableModelSchema?> _configSchema;
 
@@ -24,7 +24,7 @@ public abstract class AITestGraderBase : IAITestGrader
     public AIGraderType Type { get; }
 
     /// <inheritdoc />
-    public abstract Type? ConfigType { get; }
+    public Type? ConfigType => typeof(TConfig);
 
     /// <summary>
     /// The schema builder for generating UI schemas.
@@ -78,6 +78,6 @@ public abstract class AITestGraderBase : IAITestGrader
     public abstract Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken);
 }

@@ -44,13 +44,10 @@ public class ToolCallGraderConfig
 /// Validates that expected tools were called during execution.
 /// </summary>
 [AITestGrader("tool-call", "Tool Call Validation", Type = AIGraderType.CodeBased)]
-public class ToolCallGrader : AITestGraderBase
+public class ToolCallGrader : AITestGraderBase<ToolCallGraderConfig>
 {
     /// <inheritdoc />
     public override string Description => "Validates that expected tools were called during execution";
-
-    /// <inheritdoc />
-    public override Type? ConfigType => typeof(ToolCallGraderConfig);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ToolCallGrader"/> class.
@@ -64,7 +61,7 @@ public class ToolCallGrader : AITestGraderBase
     public override Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
         // Deserialize configuration

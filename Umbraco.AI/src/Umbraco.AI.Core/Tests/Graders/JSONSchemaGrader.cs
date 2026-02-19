@@ -35,13 +35,10 @@ public class JSONSchemaGraderConfig
 /// Note: This is a simplified JSON validator. Full JSON Schema validation requires external libraries.
 /// </summary>
 [AITestGrader("json-schema", "JSON Schema Validation", Type = AIGraderType.CodeBased)]
-public class JSONSchemaGrader : AITestGraderBase
+public class JSONSchemaGrader : AITestGraderBase<JSONSchemaGraderConfig>
 {
     /// <inheritdoc />
     public override string Description => "Validates that output is valid JSON with expected structure";
-
-    /// <inheritdoc />
-    public override Type? ConfigType => typeof(JSONSchemaGraderConfig);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JSONSchemaGrader"/> class.
@@ -55,7 +52,7 @@ public class JSONSchemaGrader : AITestGraderBase
     public override Task<AITestGraderResult> GradeAsync(
         AITestTranscript transcript,
         AITestOutcome outcome,
-        AITestGrader graderConfig,
+        AITestGraderConfig graderConfig,
         CancellationToken cancellationToken)
     {
         // Deserialize configuration

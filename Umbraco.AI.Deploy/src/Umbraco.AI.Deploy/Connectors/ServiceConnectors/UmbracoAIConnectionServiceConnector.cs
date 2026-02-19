@@ -194,7 +194,7 @@ public class UmbracoAIConnectionServiceConnector(
                 // Layer 3: IgnoreEncrypted - block encrypted values but allow $ config references
                 if (_settingsAccessor.Settings.Connections.IgnoreEncrypted && isEncryptedValue)
                 {
-                    return !isConfigReference;  // Block encrypted, allow $ refs
+                    return isConfigReference;  // Block encrypted, allow $ refs
                 }
 
                 return true;  // Include all other fields

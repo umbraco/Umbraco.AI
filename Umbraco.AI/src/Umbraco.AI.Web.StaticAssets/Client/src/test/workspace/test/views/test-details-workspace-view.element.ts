@@ -24,7 +24,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 	private _testGraders: TestGraderInfoModel[] = [];
 
 	@state()
-	private _testFeature?: TestFeatureResponseModel;
+	private _testFeature?: TestFeatureResponseModel | null;
 
 	constructor() {
 		super();
@@ -73,6 +73,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 			this._testFeature = await this.#repository.getTestFeatureById(testFeatureId);
 		} catch (error) {
 			console.error("Failed to load test feature details:", error);
+			this._testFeature = null;
 			this.#notificationContext?.peek("danger", {
 				data: { message: "Failed to load test feature details" },
 			});
@@ -165,7 +166,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 						.value=${this._model.description || ""}
 						@input=${this.#onDescriptionChange}
 						placeholder="Enter test description (optional)"
-					></uai-model-editor>
+					></uui-textarea>
 				</umb-property-layout>
 
 				<umb-property-layout label="Target Entity" description="The entity to test" mandatory>
@@ -278,7 +279,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 						@input=${(e: Event) =>
 							this.#onGraderChange(index, "configJson", (e.target as HTMLTextAreaElement).value)}
 						rows="3"
-					></uai-model-editor>
+					></uui-textarea>
 				</umb-property-layout>
 
 				<div class="grader-options">

@@ -29,7 +29,7 @@ export class UaiTestDetailServerDataSource implements UmbDetailDataSource<UaiTes
             description: null,
             testFeatureId: preset?.testFeatureId ?? "",
             testTargetId: preset?.testTargetId ?? "",
-            testCaseJson: "",
+            testCase: null,
             graders: [],
             runCount: 0,
             tags: [],

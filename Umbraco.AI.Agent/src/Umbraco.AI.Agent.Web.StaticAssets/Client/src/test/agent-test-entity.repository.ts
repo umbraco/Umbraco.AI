@@ -24,10 +24,10 @@ export class AgentTestFeatureEntityRepository extends UmbControllerBase implemen
 			}
 
 			return response.data.items.map((agent) => ({
-				id: agent.alias, // Use alias as primary identifier
-				name: agent.name,
-				description: agent.description || undefined,
-				icon: "icon-robot", // Agent icon
+				id: agent.id,
+                name: agent.name,
+				description: agent.alias,
+				icon: "icon-bot"
 			}));
 		} catch (error) {
 			console.error("Failed to load agents for test picker:", error);
@@ -47,10 +47,10 @@ export class AgentTestFeatureEntityRepository extends UmbControllerBase implemen
 
 			const agent = response.data;
 			return {
-				id: agent.alias,
-				name: agent.name,
-				description: agent.description || undefined,
-				icon: "icon-robot",
+                id: agent.id,
+                name: agent.name,
+                description: agent.alias,
+                icon: "icon-bot"
 			};
 		} catch {
 			return undefined;

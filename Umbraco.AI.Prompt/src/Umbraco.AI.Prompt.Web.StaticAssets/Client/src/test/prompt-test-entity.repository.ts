@@ -30,7 +30,7 @@ export class PromptTestFeatureEntityRepository
 				id: prompt.id,
 				name: prompt.name,
 				description: prompt.alias,
-				icon: "icon-command", // Prompt icon
+				icon: "icon-command",
 			}));
 		} catch (error) {
 			console.error("Failed to load prompts for test picker:", error);
@@ -50,10 +50,10 @@ export class PromptTestFeatureEntityRepository
 
 			const prompt = response.data;
 			return {
-				id: prompt.alias,
-				name: prompt.name,
-				description: prompt.description || undefined,
-				icon: "icon-script-alt",
+                id: prompt.id,
+                name: prompt.name,
+                description: prompt.alias,
+                icon: "icon-command",
 			};
 		} catch {
 			return undefined;

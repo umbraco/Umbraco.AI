@@ -4,13 +4,13 @@ import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { umbExtensionsRegistry, createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-registry";
-import { UAI_ITEM_PICKER_MODAL } from "../../core/modals/item-picker/item-picker-modal.token.js";
-import type { UaiPickableItemModel } from "../../core/modals/item-picker/types.js";
-import type { ManifestUaiTestFeatureEntityRepository } from "../extensions/uai-test-feature-entity-repository.extension.js";
+import { UAI_ITEM_PICKER_MODAL } from "../../../core/modals/item-picker/item-picker-modal.token.js";
+import type { UaiPickableItemModel } from "../../../core/modals/item-picker/types.js";
+import type { ManifestUaiTestFeatureEntityRepository } from "../../extensions/uai-test-feature-entity-repository.extension.js";
 import type {
 	UaiTestFeatureEntityData,
 	UaiTestFeatureEntityRepositoryApi,
-} from "../test-feature-entity-repository.js";
+} from "../../test-feature-entity-repository.js";
 
 const elementName = "uai-test-feature-entity-picker";
 

@@ -8,6 +8,7 @@ import type { UaiTestGraderConfig } from "../../types.js";
 import { createEmptyGraderConfig } from "../../types.js";
 import type { EditableModelSchemaModel } from "../../../api/types.gen.js";
 import { TestsService } from "../../../api/sdk.gen.js";
+import type { UaiModelEditorChangeEventDetail } from "../../../core/components/exports.js";
 
 @customElement("uai-grader-config-editor-modal")
 export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
@@ -91,9 +92,9 @@ export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
         this._grader = { ...this._grader, negate: input.checked };
     }
 
-    #onConfigChange(e: CustomEvent) {
+    #onConfigChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
         // Model editor dispatches change event with updated config
-        this._configModel = { ...this._configModel, ...e.detail };
+        this._configModel = e.detail.model;
     }
 
     #onSubmit(e: Event) {

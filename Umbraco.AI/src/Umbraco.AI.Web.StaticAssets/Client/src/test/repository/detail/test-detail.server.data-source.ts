@@ -62,7 +62,6 @@ export class UaiTestDetailServerDataSource implements UmbDetailDataSource<UaiTes
      * Creates a new test.
      */
     async create(model: UaiTestDetailModel, _parentUnique: string | null) {
-        debugger;
         const requestBody = UaiTestTypeMapper.toCreateRequest(model);
 
         const { response, error } = await tryExecute(

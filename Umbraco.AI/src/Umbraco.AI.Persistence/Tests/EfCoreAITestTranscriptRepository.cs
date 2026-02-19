@@ -29,18 +29,6 @@ internal class EfCoreAITestTranscriptRepository : IAITestTranscriptRepository
     }
 
     /// <inheritdoc />
-    public async Task<AITestTranscript?> GetByRunIdAsync(Guid runId, CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
-
-        AITestTranscriptEntity? entity = await scope.ExecuteWithContextAsync(async db =>
-            await db.TestTranscripts.FirstOrDefaultAsync(t => t.RunId == runId, cancellationToken));
-
-        scope.Complete();
-        return entity is null ? null : AITestTranscriptFactory.BuildDomain(entity);
-    }
-
-    /// <inheritdoc />
     public async Task<AITestTranscript> SaveAsync(AITestTranscript transcript, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();

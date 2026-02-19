@@ -17,15 +17,6 @@ internal interface IAITestRunRepository
     Task<IEnumerable<AITestRun>> GetByTestIdAsync(Guid testId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets runs for a test with pagination.
-    /// </summary>
-    Task<Umbraco.Cms.Core.Models.PagedModel<AITestRun>> GetPagedByTestIdAsync(
-        Guid testId,
-        int skip = 0,
-        int take = 100,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Gets runs with pagination and optional filters.
     /// </summary>
     Task<(IEnumerable<AITestRun> Items, int Total)> GetPagedAsync(
@@ -40,11 +31,6 @@ internal interface IAITestRunRepository
     /// Gets the latest run for a test.
     /// </summary>
     Task<AITestRun?> GetLatestByTestIdAsync(Guid testId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets all runs in a batch.
-    /// </summary>
-    Task<IEnumerable<AITestRun>> GetByBatchIdAsync(Guid batchId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves a run.

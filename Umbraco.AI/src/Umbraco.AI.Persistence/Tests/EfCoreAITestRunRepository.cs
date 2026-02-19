@@ -44,36 +44,6 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
     }
 
     /// <inheritdoc />
-    public async Task<Umbraco.Cms.Core.Models.PagedModel<AITestRun>> GetPagedByTestIdAsync(
-        Guid testId,
-        int skip = 0,
-        int take = 100,
-        CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
-
-        var result = await scope.ExecuteWithContextAsync(async db =>
-        {
-            IQueryable<AITestRunEntity> query = db.TestRuns.Where(r => r.TestId == testId);
-
-            int total = await query.CountAsync(cancellationToken);
-
-            List<AITestRunEntity> items = await query
-                .OrderByDescending(r => r.ExecutedAt)
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync(cancellationToken);
-
-            return (items, total);
-        });
-
-        scope.Complete();
-        return new Umbraco.Cms.Core.Models.PagedModel<AITestRun>(
-            result.total,
-            result.items.Select(AITestRunFactory.BuildDomain));
-    }
-
-    /// <inheritdoc />
     public async Task<(IEnumerable<AITestRun> Items, int Total)> GetPagedAsync(
         Guid? testId = null,
         Guid? batchId = null,
@@ -132,21 +102,6 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
 
         scope.Complete();
         return entity is null ? null : AITestRunFactory.BuildDomain(entity);
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<AITestRun>> GetByBatchIdAsync(Guid batchId, CancellationToken cancellationToken = default)
-    {
-        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
-
-        List<AITestRunEntity> entities = await scope.ExecuteWithContextAsync(async db =>
-            await db.TestRuns
-                .Where(r => r.BatchId == batchId)
-                .OrderByDescending(r => r.ExecutedAt)
-                .ToListAsync(cancellationToken));
-
-        scope.Complete();
-        return entities.Select(AITestRunFactory.BuildDomain);
     }
 
     /// <inheritdoc />

@@ -12,11 +12,6 @@ internal interface IAITestTranscriptRepository
     Task<AITestTranscript?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets a transcript by run ID.
-    /// </summary>
-    Task<AITestTranscript?> GetByRunIdAsync(Guid runId, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Saves a transcript.
     /// </summary>
     Task<AITestTranscript> SaveAsync(AITestTranscript transcript, CancellationToken cancellationToken = default);

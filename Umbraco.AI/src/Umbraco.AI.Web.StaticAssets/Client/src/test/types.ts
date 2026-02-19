@@ -12,7 +12,7 @@ export interface UaiTestDetailModel extends UmbEntityModel {
     description?: string | null;
     testFeatureId: string;
     testTargetId: string; // ID or alias of the target entity (prompt, agent, etc.)
-    testCaseJson: string;
+    testCase: Record<string, any> | null;
     graders: TestGraderModel[];
     runCount: number;
     tags: string[];

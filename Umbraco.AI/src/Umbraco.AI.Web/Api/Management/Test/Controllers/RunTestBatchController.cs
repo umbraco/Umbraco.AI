@@ -35,7 +35,7 @@ public class RunTestBatchController : TestControllerBase
     /// <param name="requestModel">The batch execution request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Batch execution results with metrics for each test.</returns>
-    [HttpPost("tests/execute-batch")]
+    [HttpPost("execute-batch")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(TestBatchResultsResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

@@ -8,7 +8,7 @@ namespace Umbraco.AI.Agent.Core.Tests;
 /// Test case configuration for agent testing.
 /// Defines what messages, tools, state, and context to test with.
 /// </summary>
-public class AgentTestTestCase
+public class AgentTestCase
 {
     /// <summary>
     /// Messages to send to the agent.

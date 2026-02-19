@@ -25,7 +25,7 @@ public class AgentTestFeature : AITestFeatureBase
     public override string Description => "Tests agent execution with messages, tools, and context";
 
     /// <inheritdoc />
-    public override Type? TestCaseType => typeof(AgentTestTestCase);
+    public override Type? TestCaseType => typeof(AgentTestCase);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentTestFeature"/> class.
@@ -47,7 +47,7 @@ public class AgentTestFeature : AITestFeatureBase
         CancellationToken cancellationToken)
     {
         // Deserialize test case from test.TestCaseJson
-        var testCase = JsonSerializer.Deserialize<AgentTestTestCase>(test.TestCaseJson);
+        var testCase = JsonSerializer.Deserialize<AgentTestCase>(test.TestCaseJson);
         if (testCase == null)
         {
             throw new InvalidOperationException("Failed to deserialize test case");

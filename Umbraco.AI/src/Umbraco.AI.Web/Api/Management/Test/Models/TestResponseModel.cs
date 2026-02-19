@@ -43,11 +43,10 @@ public class TestResponseModel
     public Guid TestTargetId { get; set; }
 
     /// <summary>
-    /// Test case configuration as JSON string.
-    /// Structure depends on the test type's TestCaseType.
+    /// Test case configuration object.
+    /// Structure depends on the test feature's TestCaseType.
     /// </summary>
-    [Required]
-    public string TestCaseJson { get; set; } = string.Empty;
+    public object? TestCase { get; set; }
 
     /// <summary>
     /// List of graders to evaluate test outcomes.

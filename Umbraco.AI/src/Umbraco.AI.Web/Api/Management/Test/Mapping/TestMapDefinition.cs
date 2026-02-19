@@ -12,6 +12,9 @@ public class TestMapDefinition : IMapDefinition
 {
     public void DefineMaps(IUmbracoMapper mapper)
     {
+        // IAITestFeature -> TestFeatureResponseModel
+        mapper.Define<IAITestFeature, TestFeatureResponseModel>((_, _) => new TestFeatureResponseModel(), MapTestFeature);
+
         // AITest -> TestResponseModel
         mapper.Define<AITest, TestResponseModel>((source, context) => new TestResponseModel
         {
@@ -21,7 +24,7 @@ public class TestMapDefinition : IMapDefinition
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
             TestTargetId = source.TestTargetId,
-            TestCaseJson = source.TestCaseJson,
+            TestCase = source.TestCase,
             Graders = source.Graders.Select(g => new TestGraderModel
             {
                 Id = g.Id,
@@ -63,7 +66,7 @@ public class TestMapDefinition : IMapDefinition
             Description = source.Description,
             TestFeatureId = source.TestFeatureId,
             TestTargetId = source.TestTargetId,
-            TestCaseJson = source.TestCaseJson,
+            TestCase = source.TestCase,
             Graders = source.Graders.Select(g => new AITestGrader
             {
                 Id = g.Id,
@@ -86,8 +89,7 @@ public class TestMapDefinition : IMapDefinition
             Alias = string.Empty,
             Name = string.Empty,
             TestFeatureId = string.Empty,
-            TestTargetId = Guid.Empty,
-            TestCaseJson = string.Empty
+            TestTargetId = Guid.Empty
         }, MapFromUpdateRequest);
 
         // AITestRun -> TestRunResponseModel
@@ -186,7 +188,7 @@ public class TestMapDefinition : IMapDefinition
         target.Name = source.Name;
         target.Description = source.Description;
         target.TestTargetId = source.TestTargetId;
-        target.TestCaseJson = source.TestCaseJson;
+        target.TestCase = source.TestCase;
         target.Graders = source.Graders.Select(g => new AITestGrader
         {
             Id = g.Id,
@@ -200,5 +202,17 @@ public class TestMapDefinition : IMapDefinition
         }).ToList();
         target.RunCount = source.RunCount;
         target.Tags = source.Tags.ToList();
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapTestFeature(IAITestFeature source, TestFeatureResponseModel target, MapperContext context)
+    {
+        target.Id = source.Id;
+        target.Name = source.Name;
+        target.Description = source.Description;
+        target.Category = source.Category;
+        target.TestCaseSchema = source.TestCaseType is not null
+            ? context.Map<EditableModelSchemaModel>(source.GetTestCaseSchema())
+            : null;
     }
 }

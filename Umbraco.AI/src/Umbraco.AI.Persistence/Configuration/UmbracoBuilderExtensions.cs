@@ -45,8 +45,9 @@ public static class UmbracoBuilderExtensions
             ConfigureDatabaseProvider(options, connectionString, providerName);
         });
 
-        // Connection factory for entity/domain mapping with encryption support
+        // Factories for entity/domain mapping
         builder.Services.AddSingleton<IAIConnectionFactory, AIConnectionFactory>();
+        builder.Services.AddSingleton<AITestFactory>();
 
         // Replace in-memory repository with EF Core implementations (Singleton - IEFCoreScopeProvider manages scopes internally)
         builder.Services.AddSingleton<IAIConnectionRepository, EfCoreAIConnectionRepository>();

@@ -11,6 +11,7 @@ import type {
     TestBatchResultsResponseModel,
     RunTestBatchRequestModel,
     TestFeatureInfoModel,
+    TestFeatureResponseModel,
     TestGraderInfoModel,
     TestRunComparisonResponseModel,
 } from "../../api/types.gen.js";
@@ -213,6 +214,20 @@ export class AITestRepository extends UmbControllerBase {
     async getAllTestFeatures(): Promise<TestFeatureInfoModel[]> {
         const { data } = await TestsService.getAllTestFeatures();
         return data ?? [];
+    }
+
+    /**
+     * Get a test feature by ID (includes schema).
+     */
+    async getTestFeatureById(id: string): Promise<TestFeatureResponseModel | null> {
+        try {
+            const { data } = await TestsService.getTestFeatureById({
+                path: { id },
+            });
+            return data ?? null;
+        } catch {
+            return null;
+        }
     }
 
     /**

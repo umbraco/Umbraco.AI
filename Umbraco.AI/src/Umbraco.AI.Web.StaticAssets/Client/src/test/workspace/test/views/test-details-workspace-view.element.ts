@@ -5,10 +5,11 @@ import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UMB_NOTIFICATION_CONTEXT } from "@umbraco-cms/backoffice/notification";
 import { UmbFormControlMixin } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_CONTEXT } from "../test-workspace.context-token.js";
-import type { TestGraderModel, TestGraderInfoModel } from "../../../../api/types.gen.js";
+import type { TestGraderModel, TestGraderInfoModel, TestFeatureResponseModel } from "../../../../api/types.gen.js";
 import type { UaiTestDetailModel } from "../../../types.js";
 import { UaiPartialUpdateCommand } from "../../../../core/command/implement/partial-update.command.js";
 import { AITestRepository } from "../../../repository/test.repository.js";
+import type { UaiModelEditorChangeEventDetail } from "../../../../core/components/exports.js";
 
 @customElement("umbraco-ai-test-details-workspace-view")
 export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixin(UmbLitElement) {
@@ -22,6 +23,9 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 	@state()
 	private _testGraders: TestGraderInfoModel[] = [];
 
+	@state()
+	private _testFeature?: TestFeatureResponseModel;
+
 	constructor() {
 		super();
 
@@ -31,7 +35,15 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 			if (!context) return;
 			this.#workspaceContext = context;
 			this.observe(context.model, (model) => {
+				// Only load test feature details when testFeatureId changes, not on every model update.
+				// This prevents unnecessary re-renders that cause cursor jumping in form inputs.
+				const testFeatureChanged = model?.testFeatureId && model.testFeatureId !== this._model?.testFeatureId;
+
 				this._model = model;
+
+				if (testFeatureChanged) {
+					this.#loadTestFeatureDetails(model!.testFeatureId);
+				}
 			});
 		});
 
@@ -56,6 +68,17 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		}
 	}
 
+	async #loadTestFeatureDetails(testFeatureId: string) {
+		try {
+			this._testFeature = await this.#repository.getTestFeatureById(testFeatureId);
+		} catch (error) {
+			console.error("Failed to load test feature details:", error);
+			this.#notificationContext?.peek("danger", {
+				data: { message: "Failed to load test feature details" },
+			});
+		}
+	}
+
 	#onDescriptionChange(event: Event) {
 		const target = event.target as HTMLTextAreaElement;
 		this.#workspaceContext?.handleCommand(
@@ -73,10 +96,9 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		);
 	}
 
-	#onTestCaseJsonChange(event: Event) {
-		const target = event.target as HTMLTextAreaElement;
+	#onTestCaseChange(e: CustomEvent<UaiModelEditorChangeEventDetail>) {
 		this.#workspaceContext?.handleCommand(
-			new UaiPartialUpdateCommand<UaiTestDetailModel>({ testCaseJson: target.value }, "testCaseJson"),
+			new UaiPartialUpdateCommand<UaiTestDetailModel>({ testCase: e.detail.model }, "testCase"),
 		);
 	}
 
@@ -143,7 +165,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 						.value=${this._model.description || ""}
 						@input=${this.#onDescriptionChange}
 						placeholder="Enter test description (optional)"
-					></uui-textarea>
+					></uai-model-editor>
 				</umb-property-layout>
 
 				<umb-property-layout label="Target Entity" description="The entity to test" mandatory>
@@ -155,14 +177,14 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 					></uai-test-feature-entity-picker>
 				</umb-property-layout>
 
-				<umb-property-layout label="Test Case (JSON)" description="Test case data in JSON format" mandatory>
-					<uui-textarea
+				<umb-property-layout label="Test Case" description="Configure the test case parameters" mandatory>
+					<uai-model-editor
 						slot="editor"
-						.value=${this._model.testCaseJson}
-						@input=${this.#onTestCaseJsonChange}
-						placeholder='{"key": "value"}'
-						rows="10"
-					></uui-textarea>
+								.schema=${this._testFeature?.testCaseSchema}
+						.model=${this._model.testCase}
+								empty-message="This test feature has no configurable test case parameters."
+						@change=${this.#onTestCaseChange}
+					></uai-model-editor>
 				</umb-property-layout>
 
 				<umb-property-layout label="Run Count" description="Number of times to run this test (for pass@k calculation)">
@@ -256,7 +278,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 						@input=${(e: Event) =>
 							this.#onGraderChange(index, "configJson", (e.target as HTMLTextAreaElement).value)}
 						rows="3"
-					></uui-textarea>
+					></uai-model-editor>
 				</umb-property-layout>
 
 				<div class="grader-options">

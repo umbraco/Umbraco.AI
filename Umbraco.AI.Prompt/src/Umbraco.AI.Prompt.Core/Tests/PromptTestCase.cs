@@ -7,7 +7,7 @@ namespace Umbraco.AI.Prompt.Core.Tests;
 /// Test case configuration for prompt testing.
 /// Defines what content/media to test with and whether to use real or mock data.
 /// </summary>
-public class PromptTestTestCase
+public class PromptTestCase
 {
     /// <summary>
     /// The entity ID to test with (content/media item).

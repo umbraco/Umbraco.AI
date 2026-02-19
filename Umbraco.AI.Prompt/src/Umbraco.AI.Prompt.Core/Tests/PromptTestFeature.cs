@@ -20,7 +20,7 @@ public class PromptTestFeature : AITestFeatureBase
     public override string Description => "Tests prompt execution with mock or real content context";
 
     /// <inheritdoc />
-    public override Type? TestCaseType => typeof(PromptTestTestCase);
+    public override Type? TestCaseType => typeof(PromptTestCase);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptTestFeature"/> class.
@@ -42,7 +42,7 @@ public class PromptTestFeature : AITestFeatureBase
         CancellationToken cancellationToken)
     {
         // Deserialize test case from test.TestCaseJson
-        var testCase = JsonSerializer.Deserialize<PromptTestTestCase>(test.TestCaseJson);
+        var testCase = JsonSerializer.Deserialize<PromptTestCase>(test.TestCaseJson);
         if (testCase == null)
         {
             throw new InvalidOperationException("Failed to deserialize test case");

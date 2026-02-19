@@ -41,10 +41,11 @@ public sealed class AITest : IAIVersionableEntity
     public required Guid TestTargetId { get; set; }
 
     /// <summary>
-    /// Test input configuration as JSON - structure depends on TestFeatureId.
-    /// Deserialized to the type specified by IAITestFeature.TestCaseType.
+    /// Test case data object.
+    /// Type depends on the test feature's TestCaseType.
+    /// Serialized to JSON in the database.
     /// </summary>
-    public required string TestCaseJson { get; set; }
+    public object? TestCase { get; set; }
 
     /// <summary>
     /// Success criteria - graders that evaluate the test output.

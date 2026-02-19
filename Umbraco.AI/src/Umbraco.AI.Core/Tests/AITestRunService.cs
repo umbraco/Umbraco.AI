@@ -26,10 +26,10 @@ internal sealed class AITestRunService : IAITestRunService
         => _runRepository.GetByIdAsync(id, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<IEnumerable<AITestRun>> GetRunsByTestAsync(Guid testId, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AITestRun>> GetRunsByTestAsync(Guid testId, CancellationToken cancellationToken = default)
     {
-        var runs = await _runRepository.GetByTestIdAsync(testId, cancellationToken);
-        return runs.OrderByDescending(r => r.ExecutedAt);
+        // Repository already returns runs ordered by ExecutedAt descending
+        return _runRepository.GetByTestIdAsync(testId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -43,10 +43,10 @@ internal sealed class AITestRunService : IAITestRunService
         => _runRepository.GetPagedAsync(testId, batchId, status, skip, take, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AITestRun?> GetLatestRunAsync(Guid testId, CancellationToken cancellationToken = default)
+    public Task<AITestRun?> GetLatestRunAsync(Guid testId, CancellationToken cancellationToken = default)
     {
-        var runs = await _runRepository.GetByTestIdAsync(testId, cancellationToken);
-        return runs.OrderByDescending(r => r.ExecutedAt).FirstOrDefault();
+        // Use efficient repository method that fetches only the latest run at database level
+        return _runRepository.GetLatestByTestIdAsync(testId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -183,34 +183,12 @@ internal sealed class AITestRunService : IAITestRunService
     }
 
     /// <inheritdoc />
-    public async Task<int> DeleteOldRunsAsync(Guid testId, int keepCount, CancellationToken cancellationToken = default)
+    public Task<int> DeleteOldRunsAsync(Guid testId, int keepCount, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(keepCount);
 
-        // Get all runs for the test, ordered by execution date descending
-        var runs = await _runRepository.GetByTestIdAsync(testId, cancellationToken);
-        var orderedRuns = runs.OrderByDescending(r => r.ExecutedAt).ToList();
-
-        // Skip the most recent N runs, delete the rest
-        var runsToDelete = orderedRuns.Skip(keepCount).ToList();
-
-        var deletedCount = 0;
-        foreach (var run in runsToDelete)
-        {
-            // Delete transcript if exists
-            if (run.TranscriptId.HasValue)
-            {
-                await _transcriptRepository.DeleteAsync(run.TranscriptId.Value, cancellationToken);
-            }
-
-            // Delete run
-            if (await _runRepository.DeleteAsync(run.Id, cancellationToken))
-            {
-                deletedCount++;
-            }
-        }
-
-        return deletedCount;
+        // Use efficient repository method that performs bulk deletion with transcript cleanup
+        return _runRepository.DeleteOldRunsAsync(testId, keepCount, cancellationToken);
     }
 
     /// <inheritdoc />

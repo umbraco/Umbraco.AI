@@ -205,25 +205,40 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
 
         int deletedCount = await scope.ExecuteWithContextAsync(async db =>
         {
-            // Get run IDs to delete (all except the latest keepCount)
-            List<Guid> idsToDelete = await db.TestRuns
+            // Get runs to delete with their transcript IDs (all except the latest keepCount)
+            var runsToDelete = await db.TestRuns
                 .Where(r => r.TestId == testId)
                 .OrderByDescending(r => r.ExecutedAt)
                 .Skip(keepCount)
-                .Select(r => r.Id)
+                .Select(r => new { r.Id, r.TranscriptId })
                 .ToListAsync(cancellationToken);
 
-            if (idsToDelete.Count == 0)
+            if (runsToDelete.Count == 0)
             {
                 return 0;
             }
 
-            // Delete the runs
+            // Extract IDs for bulk operations
+            var runIds = runsToDelete.Select(r => r.Id).ToList();
+            var transcriptIds = runsToDelete
+                .Where(r => r.TranscriptId.HasValue)
+                .Select(r => r.TranscriptId!.Value)
+                .ToList();
+
+            // Delete associated transcripts first (if any)
+            if (transcriptIds.Count > 0)
+            {
+                await db.TestTranscripts
+                    .Where(t => transcriptIds.Contains(t.Id))
+                    .ExecuteDeleteAsync(cancellationToken);
+            }
+
+            // Bulk delete the runs
             await db.TestRuns
-                .Where(r => idsToDelete.Contains(r.Id))
+                .Where(r => runIds.Contains(r.Id))
                 .ExecuteDeleteAsync(cancellationToken);
 
-            return idsToDelete.Count;
+            return runsToDelete.Count;
         });
 
         scope.Complete();

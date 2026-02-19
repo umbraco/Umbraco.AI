@@ -610,11 +610,7 @@ public class UmbracoAIDbContext : DbContext
                 .HasMaxLength(100)
                 .IsRequired();
 
-            entity.Property(e => e.TargetId)
-                .HasMaxLength(100)
-                .IsRequired();
-
-            entity.Property(e => e.TargetIsAlias)
+            entity.Property(e => e.TestTargetId)
                 .IsRequired();
 
             entity.Property(e => e.TestCaseJson)

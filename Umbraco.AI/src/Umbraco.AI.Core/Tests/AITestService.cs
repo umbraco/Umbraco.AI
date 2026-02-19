@@ -99,10 +99,10 @@ internal sealed class AITestService : IAITestService
         ArgumentException.ThrowIfNullOrWhiteSpace(test.Name);
         ArgumentException.ThrowIfNullOrWhiteSpace(test.TestFeatureId);
 
-        // Validate test case JSON is not empty
-        if (string.IsNullOrWhiteSpace(test.TestCaseJson))
+        // Validate test case is not null
+        if (test.TestCase == null)
         {
-            throw new InvalidOperationException("Test case JSON cannot be empty");
+            throw new InvalidOperationException("Test case cannot be null");
         }
 
         // Validate target ID

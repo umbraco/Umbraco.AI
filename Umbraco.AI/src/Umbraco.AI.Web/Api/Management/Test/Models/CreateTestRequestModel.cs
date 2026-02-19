@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace Umbraco.AI.Web.Api.Management.Test.Models;
 
@@ -37,10 +38,10 @@ public class CreateTestRequestModel
     public Guid TestTargetId { get; set; }
 
     /// <summary>
-    /// Test case configuration object.
+    /// Test case configuration as JsonElement.
     /// Structure depends on the test feature's TestCaseType.
     /// </summary>
-    public object? TestCase { get; set; }
+    public JsonElement? TestCase { get; set; }
 
     /// <summary>
     /// List of graders to evaluate test outcomes.

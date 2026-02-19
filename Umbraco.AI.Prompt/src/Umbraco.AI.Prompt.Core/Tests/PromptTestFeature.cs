@@ -42,7 +42,7 @@ public class PromptTestFeature : AITestFeatureBase
         CancellationToken cancellationToken)
     {
         // Deserialize test case from test.TestCaseJson
-        var testCase = JsonSerializer.Deserialize<PromptTestCase>(test.TestCaseJson);
+        var testCase = test.GetTestCase<PromptTestCase>();
         if (testCase == null)
         {
             throw new InvalidOperationException("Failed to deserialize test case");

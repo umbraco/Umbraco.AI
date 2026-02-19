@@ -46,8 +46,8 @@ public class AgentTestFeature : AITestFeatureBase
         IEnumerable<Guid>? contextIdsOverride,
         CancellationToken cancellationToken)
     {
-        // Deserialize test case from test.TestCaseJson
-        var testCase = JsonSerializer.Deserialize<AgentTestCase>(test.TestCaseJson);
+        // Get strongly-typed test case
+        var testCase = test.GetTestCase<AgentTestCase>();
         if (testCase == null)
         {
             throw new InvalidOperationException("Failed to deserialize test case");

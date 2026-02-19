@@ -1,4 +1,7 @@
+using System.Text.Json;
 using Umbraco.AI.Core.Tests;
+using Umbraco.AI.Web.Api.Management.Common.Models;
+using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.AI.Web.Api.Management.Test.Models;
 using Umbraco.AI.Web.Api.Management.TestRun.Models;
 using Umbraco.Cms.Core.Mapping;

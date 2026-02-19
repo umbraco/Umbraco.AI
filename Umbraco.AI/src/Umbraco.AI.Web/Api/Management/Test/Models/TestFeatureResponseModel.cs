@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Umbraco.AI.Web.Api.Management.Common.Models;
 
 namespace Umbraco.AI.Web.Api.Management.Test.Models;
 

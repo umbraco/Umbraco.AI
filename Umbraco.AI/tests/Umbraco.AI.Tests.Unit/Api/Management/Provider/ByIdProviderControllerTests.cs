@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Tests.Common.Fakes;
+using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Api.Management.Provider.Controllers;
 using Umbraco.AI.Web.Api.Management.Provider.Models;
 using Umbraco.Cms.Core.Mapping;

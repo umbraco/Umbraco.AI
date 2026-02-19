@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Umbraco.AI.Core.Versioning;
 
 namespace Umbraco.AI.Core.Tests;
@@ -41,11 +42,10 @@ public sealed class AITest : IAIVersionableEntity
     public required Guid TestTargetId { get; set; }
 
     /// <summary>
-    /// Test case data object.
-    /// Type depends on the test feature's TestCaseType.
-    /// Serialized to JSON in the database.
+    /// Test case data as JsonElement.
+    /// Stored as JSON in database, deserialized on demand by test features.
     /// </summary>
-    public object? TestCase { get; set; }
+    public JsonElement? TestCase { get; set; }
 
     /// <summary>
     /// Success criteria - graders that evaluate the test output.
@@ -101,4 +101,21 @@ public sealed class AITest : IAIVersionableEntity
     /// The key (GUID) of the user who last modified this test.
     /// </summary>
     public Guid? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// Gets the test case as a strongly-typed object.
+    /// Deserializes the JsonElement to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The target test case type.</typeparam>
+    /// <returns>The test case as the specified type, or null if TestCase is null.</returns>
+    public T? GetTestCase<T>() where T : class
+    {
+        if (TestCase == null)
+        {
+            return null;
+        }
+
+        // Deserialize directly from JsonElement
+        return JsonSerializer.Deserialize<T>(TestCase.Value);
+    }
 }

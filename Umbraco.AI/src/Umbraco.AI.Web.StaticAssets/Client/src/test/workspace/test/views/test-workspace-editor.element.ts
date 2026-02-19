@@ -1,14 +1,14 @@
 import { LitElement, html, css } from "@umbraco-cms/backoffice/external/lit";
 import { customElement, property, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbElementMixin } from "@umbraco-cms/backoffice/element-api";
-import { AITestRepository } from "../../repository/test.repository.js";
+import { AITestRepository } from "../../../repository/test.repository.js";
 import type {
     CreateTestRequestModel,
     UpdateTestRequestModel,
     TestGraderModel,
     TestFeatureInfoModel,
     TestGraderInfoModel,
-} from "../../../api/types.gen.js";
+} from "../../../../api/types.gen.js";
 
 /**
  * Test editor workspace for creating and editing AI tests.

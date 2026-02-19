@@ -8,10 +8,14 @@ import {
 import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { UmbBasicState, UmbObjectState } from "@umbraco-cms/backoffice/observable-api";
 import { UmbEntityContext } from "@umbraco-cms/backoffice/entity";
+import { UmbValidationContext } from "@umbraco-cms/backoffice/validation";
 import { UAI_TEST_WORKSPACE_ALIAS, UAI_TEST_ENTITY_TYPE } from "../../constants.js";
 import { UAI_TEST_ROOT_WORKSPACE_PATH } from "../test-root/paths.js";
 import { AITestRepository } from "../../repository/test.repository.js";
-import { UmbracoAITestWorkspaceEditorElement } from "./test-workspace-editor.element.js";
+import { UmbracoAITestWorkspaceEditorElement } from "./views/test-workspace-editor.element.js";
+import type { UaiCommand } from "../../../core/command/command.base.js";
+import { UaiCommandStore } from "../../../core/command/command.store.js";
+import { UaiEntityDeletedRedirectController } from "../../../core/workspace/entity-deleted-redirect.controller.js";
 import type {
     TestResponseModel,
     CreateTestRequestModel,
@@ -35,12 +39,21 @@ export class UaiTestWorkspaceContext
     readonly model = this.#model.asObservable();
 
     #repository: AITestRepository;
+    #commandStore = new UaiCommandStore();
     #entityContext = new UmbEntityContext(this);
+    #validationContext = new UmbValidationContext(this);
+
+    // Expose validation context publicly so editor elements can register validators
+    get validation() {
+        return this.#validationContext;
+    }
 
     constructor(host: UmbControllerHost) {
         super(host, UAI_TEST_WORKSPACE_ALIAS);
 
         this.#repository = new AITestRepository(this);
+        this.addValidationContext(this.#validationContext);
+
         this.#entityContext.setEntityType(UAI_TEST_ENTITY_TYPE);
         this.observe(this.unique, (unique) => this.#entityContext.setUnique(unique ?? null));
 
@@ -48,9 +61,9 @@ export class UaiTestWorkspaceContext
             {
                 path: "create/:testFeatureId",
                 component: UmbracoAITestWorkspaceEditorElement,
-                setup: (_component, info) => {
+                setup: async (_component, info) => {
                     const testFeatureId = info.match.params.testFeatureId;
-                    this.#createScaffold(testFeatureId);
+                    await this.scaffold(testFeatureId);
                     new UmbWorkspaceIsNewRedirectController(
                         this,
                         this,
@@ -65,6 +78,13 @@ export class UaiTestWorkspaceContext
                     this.removeUmbControllerByAlias(UmbWorkspaceIsNewRedirectControllerAlias);
                     const id = info.match.params.id;
                     this.load(id);
+
+                    // Redirect to collection view when entity is deleted
+                    new UaiEntityDeletedRedirectController(this, {
+                        getUnique: () => this.getUnique(),
+                        getEntityType: () => this.getEntityType(),
+                        collectionPath: UAI_TEST_ROOT_WORKSPACE_PATH,
+                    });
                 },
             },
         ]);
@@ -74,8 +94,12 @@ export class UaiTestWorkspaceContext
         super.resetState();
         this.#unique.setValue(undefined);
         this.#model.setValue(undefined);
+        this.#commandStore.reset();
     }
 
+    /**
+     * Loads an existing test by ID or alias.
+     */
     async load(unique: string) {
         const data = await this.#repository.getTestByIdOrAlias(unique);
         if (data) {
@@ -85,14 +109,27 @@ export class UaiTestWorkspaceContext
         }
     }
 
-    #createScaffold(testFeatureId: string) {
+    /**
+     * Reloads the current test.
+     */
+    async reload() {
+        const unique = this.getUnique();
+        if (unique) {
+            await this.load(unique);
+        }
+    }
+
+    /**
+     * Creates a scaffold for a new test.
+     */
+    async scaffold(testFeatureId?: string) {
         this.resetState();
         const scaffold: TestResponseModel = {
             id: crypto.randomUUID(),
             alias: "",
             name: "",
             description: null,
-            testFeatureId: testFeatureId,
+            testFeatureId: testFeatureId || "",
             target: {
                 targetId: "",
                 isAlias: false,
@@ -111,54 +148,88 @@ export class UaiTestWorkspaceContext
         this.setIsNew(true);
     }
 
-    getData() {
+    /**
+     * Handles a command to update the model.
+     * Commands are tracked for replay after model refresh.
+     */
+    handleCommand(command: UaiCommand) {
+        const currentValue = this.#model.getValue();
+        if (currentValue) {
+            const newValue = structuredClone(currentValue);
+            command.execute(newValue);
+            this.#model.setValue(newValue);
+            this.#commandStore.add(command);
+        }
+    }
+
+    getData(): TestResponseModel | undefined {
         return this.#model.getValue();
     }
 
-    getUnique() {
+    getUnique(): string | undefined {
         return this.#unique.getValue();
     }
 
-    getEntityType() {
+    getEntityType(): string {
         return UAI_TEST_ENTITY_TYPE;
     }
 
+    /**
+     * Saves the test (create or update).
+     */
     async submit() {
         const model = this.getData();
         if (!model) {
             throw new Error("No model to submit");
         }
 
-        if (this.getIsNew()) {
-            const request: CreateTestRequestModel = {
-                alias: model.alias,
-                name: model.name,
-                description: model.description || undefined,
-                testFeatureId: model.testFeatureId,
-                target: model.target,
-                testCaseJson: model.testCaseJson,
-                graders: model.graders,
-                runCount: model.runCount,
-                tags: model.tags,
-            };
+        // Validate before submit
+        try {
+            await this.#validationContext.validate();
+        } catch {
+            // Validation failed - focus first invalid element
+            this.#validationContext.focusFirstInvalidElement();
+            return;
+        }
 
-            const id = await this.#repository.createTest(request);
-            this.#unique.setValue(id);
-            this.setIsNew(false);
-        } else {
-            const request: UpdateTestRequestModel = {
-                alias: model.alias,
-                name: model.name,
-                description: model.description || undefined,
-                testFeatureId: model.testFeatureId,
-                target: model.target,
-                testCaseJson: model.testCaseJson,
-                graders: model.graders,
-                runCount: model.runCount,
-                tags: model.tags,
-            };
+        // Mute command store during submit
+        this.#commandStore.mute();
 
-            await this.#repository.updateTest(model.id, request);
+        try {
+            if (this.getIsNew()) {
+                const request: CreateTestRequestModel = {
+                    alias: model.alias,
+                    name: model.name,
+                    description: model.description || undefined,
+                    testFeatureId: model.testFeatureId,
+                    target: model.target,
+                    testCaseJson: model.testCaseJson,
+                    graders: model.graders,
+                    runCount: model.runCount,
+                    tags: model.tags,
+                };
+
+                const id = await this.#repository.createTest(request);
+                this.#unique.setValue(id);
+                this.setIsNew(false);
+            } else {
+                const request: UpdateTestRequestModel = {
+                    alias: model.alias,
+                    name: model.name,
+                    description: model.description || undefined,
+                    target: model.target,
+                    testCaseJson: model.testCaseJson,
+                    graders: model.graders,
+                    runCount: model.runCount,
+                    tags: model.tags,
+                };
+
+                await this.#repository.updateTest(model.id, request);
+            }
+
+            this.#commandStore.reset();
+        } finally {
+            this.#commandStore.unmute();
         }
     }
 
@@ -177,4 +248,4 @@ export class UaiTestWorkspaceContext
     }
 }
 
-export default UaiTestWorkspaceContext;
+export { UaiTestWorkspaceContext as api };

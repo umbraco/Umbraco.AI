@@ -87,6 +87,14 @@ public class TestMapDefinition : IMapDefinition
             Tags = source.Tags.ToList()
         });
 
+        // UpdateTestRequestModel -> AITest (updates existing entity)
+        mapper.Define<UpdateTestRequestModel, AITest>((_, _) => new AITest
+        {
+            Alias = string.Empty,
+            Name = string.Empty,
+            TestFeatureId = string.Empty
+        }, MapFromUpdateRequest);
+
         // AITestRun -> TestRunResponseModel
         mapper.Define<AITestRun, TestRunResponseModel>((source, context) => new TestRunResponseModel
         {
@@ -172,5 +180,34 @@ public class TestMapDefinition : IMapDefinition
                 ScoreChange = gc.ScoreChange
             }).ToList()
         });
+    }
+
+    // Umbraco.Code.MapAll -Id -TestFeatureId -IsActive -BaselineRunId -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
+    private static void MapFromUpdateRequest(UpdateTestRequestModel source, AITest target, MapperContext context)
+    {
+        // Note: Id, TestFeatureId, DateCreated are preserved from the existing entity
+        // DateModified and Version will be set by the service/repository
+        target.Alias = source.Alias;
+        target.Name = source.Name;
+        target.Description = source.Description;
+        target.Target = new AITestTarget
+        {
+            TargetId = source.Target.TargetId,
+            IsAlias = source.Target.IsAlias
+        };
+        target.TestCaseJson = source.TestCaseJson;
+        target.Graders = source.Graders.Select(g => new AITestGrader
+        {
+            Id = g.Id,
+            GraderTypeId = g.GraderTypeId,
+            Name = g.Name,
+            Description = g.Description,
+            ConfigJson = g.ConfigJson,
+            Negate = g.Negate,
+            Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
+            Weight = g.Weight
+        }).ToList();
+        target.RunCount = source.RunCount;
+        target.Tags = source.Tags.ToList();
     }
 }

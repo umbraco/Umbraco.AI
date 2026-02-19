@@ -77,40 +77,8 @@ public class UpdateTestController : TestControllerBase
             }
         }
 
-        // Update existing entity with request values (TestFeatureId cannot be changed - it's init-only)
-        var test = new AITest
-        {
-            Id = existing.Id,
-            Alias = requestModel.Alias,
-            Name = requestModel.Name,
-            Description = requestModel.Description,
-            TestFeatureId = existing.TestFeatureId,
-            Target = new AITestTarget
-            {
-                TargetId = requestModel.Target.TargetId,
-                IsAlias = requestModel.Target.IsAlias
-            },
-            TestCaseJson = requestModel.TestCaseJson,
-            Graders = requestModel.Graders.Select(g => new AITestGrader
-            {
-                Id = g.Id,
-                GraderTypeId = g.GraderTypeId,
-                Name = g.Name,
-                Description = g.Description,
-                ConfigJson = g.ConfigJson,
-                Negate = g.Negate,
-                Severity = Enum.Parse<AITestGraderSeverity>(g.Severity, ignoreCase: true),
-                Weight = g.Weight
-            }).ToList(),
-            RunCount = requestModel.RunCount,
-            Tags = requestModel.Tags.ToList(),
-            IsActive = existing.IsActive,
-            BaselineRunId = existing.BaselineRunId,
-            DateCreated = existing.DateCreated,
-            DateModified = DateTime.UtcNow,
-            Version = existing.Version,
-            CreatedByUserId = existing.CreatedByUserId
-        };
+        // Map request onto existing entity (TestFeatureId and other init-only properties are preserved)
+        AITest test = _umbracoMapper.Map(requestModel, existing);
 
         await _testService.SaveTestAsync(test, cancellationToken);
 

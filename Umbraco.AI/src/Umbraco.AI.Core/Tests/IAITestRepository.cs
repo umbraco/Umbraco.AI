@@ -22,11 +22,6 @@ internal interface IAITestRepository
     Task<IEnumerable<AITest>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets tests that have all specified tags (AND logic).
-    /// </summary>
-    Task<IEnumerable<AITest>> GetByTagsAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Gets tests with pagination and optional filtering.
     /// </summary>
     /// <param name="filter">Optional filter to search by name (case-insensitive contains).</param>

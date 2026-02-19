@@ -25,7 +25,6 @@ public class RegexGraderConfig
     [AIField(
         Label = "Ignore Case",
         Description = "Case-insensitive matching",
-        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 2)]
     public bool IgnoreCase { get; set; } = true;
 
@@ -35,7 +34,6 @@ public class RegexGraderConfig
     [AIField(
         Label = "Multiline",
         Description = "Enable multiline mode (^ and $ match line boundaries)",
-        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 3)]
     public bool Multiline { get; set; }
 }

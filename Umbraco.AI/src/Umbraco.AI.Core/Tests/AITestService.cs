@@ -88,7 +88,6 @@ internal sealed class AITestService : IAITestService
         int skip,
         int take,
         string? filter = null,
-        IEnumerable<string>? tags = null,
         CancellationToken cancellationToken = default)
         => _repository.GetPagedAsync(filter, null, null, skip, take, cancellationToken);
 

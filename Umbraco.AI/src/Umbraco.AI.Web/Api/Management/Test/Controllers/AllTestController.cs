@@ -35,7 +35,6 @@ public class AllTestController : TestControllerBase
     /// Get all tests.
     /// </summary>
     /// <param name="filter">Optional filter to search by name/alias (case-insensitive contains).</param>
-    /// <param name="tags">Optional comma-separated tags filter.</param>
     /// <param name="skip">Number of items to skip for pagination.</param>
     /// <param name="take">Number of items to take for pagination.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -45,22 +44,14 @@ public class AllTestController : TestControllerBase
     [ProducesResponseType(typeof(PagedViewModel<TestItemResponseModel>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedViewModel<TestItemResponseModel>>> GetAllTests(
         string? filter = null,
-        string? tags = null,
         int skip = 0,
         int take = 100,
         CancellationToken cancellationToken = default)
     {
-        IEnumerable<string>? tagsList = null;
-        if (!string.IsNullOrEmpty(tags))
-        {
-            tagsList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        }
-
         var (items, total) = await _testService.GetTestsPagedAsync(
             skip,
             take,
             filter,
-            tagsList,
             cancellationToken);
 
         var viewModel = new PagedViewModel<TestItemResponseModel>

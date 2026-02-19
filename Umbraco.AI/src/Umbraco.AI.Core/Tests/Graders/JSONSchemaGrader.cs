@@ -25,7 +25,6 @@ public class JSONSchemaGraderConfig
     [AIField(
         Label = "Require All Keys",
         Description = "All expected keys must be present",
-        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 2)]
     public bool RequireAllKeys { get; set; } = true;
 }

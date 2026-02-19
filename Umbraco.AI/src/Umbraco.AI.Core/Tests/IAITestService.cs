@@ -34,14 +34,12 @@ public interface IAITestService
     /// <param name="skip">Number of items to skip.</param>
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter string for name/alias.</param>
-    /// <param name="tags">Optional tags filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Tuple containing the items and total count.</returns>
     Task<(IEnumerable<AITest> Items, int Total)> GetTestsPagedAsync(
         int skip,
         int take,
         string? filter = null,
-        IEnumerable<string>? tags = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

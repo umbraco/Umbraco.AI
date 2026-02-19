@@ -35,7 +35,6 @@ public class ToolCallGraderConfig
     [AIField(
         Label = "Validate Order",
         Description = "Whether tool calls must appear in the specified order",
-        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 3)]
     public bool ValidateOrder { get; set; }
 }

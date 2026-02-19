@@ -24,19 +24,8 @@ public class ExactMatchGraderConfig
     [AIField(
         Label = "Ignore Case",
         Description = "Case-insensitive comparison",
-        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
         SortOrder = 2)]
     public bool IgnoreCase { get; set; }
-
-    /// <summary>
-    /// Whether to trim whitespace before comparing.
-    /// </summary>
-    [AIField(
-        Label = "Trim Whitespace",
-        Description = "Trim leading/trailing whitespace",
-        EditorUiAlias = "Umb.PropertyEditorUi.Toggle",
-        SortOrder = 3)]
-    public bool TrimWhitespace { get; set; } = true;
 }
 
 /// <summary>
@@ -77,8 +66,8 @@ public class ExactMatchGrader : AITestGraderBase
         var actualValue = ExtractContentFromOutput(outcome.OutputValue);
 
         // Apply transformations
-        var actual = config.TrimWhitespace ? actualValue.Trim() : actualValue;
-        var expected = config.TrimWhitespace ? config.ExpectedValue.Trim() : config.ExpectedValue;
+        var actual = actualValue.Trim();
+        var expected = config.ExpectedValue.Trim();
 
         // Perform comparison
         var passed = config.IgnoreCase

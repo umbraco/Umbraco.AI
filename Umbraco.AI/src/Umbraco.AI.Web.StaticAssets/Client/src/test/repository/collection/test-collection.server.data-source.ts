@@ -24,7 +24,6 @@ export class UaiTestCollectionServerDataSource implements UmbCollectionDataSourc
             TestsService.getAllTests({
                 query: {
                     filter: filter.filter,
-                    tags: undefined, // Can be extended to support tag filtering
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
                 },

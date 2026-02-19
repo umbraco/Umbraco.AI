@@ -18,7 +18,7 @@ export class UaiTestFeatureItemServerDataSource {
      * Fetches all available test features.
      */
     async getItems(): Promise<{ data?: UaiTestFeatureItemModel[]; error?: unknown }> {
-        const { data, error } = await tryExecute(this.#host, TestsService.getAll());
+        const { data, error } = await tryExecute(this.#host, TestsService.getAllTestFeatures());
 
         if (error || !data) {
             return { error };

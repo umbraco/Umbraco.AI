@@ -30,12 +30,11 @@ export class AITestRepository extends UmbControllerBase {
      */
     async getAllTests(
         filter?: string,
-        tags?: string,
         skip: number = 0,
         take: number = 100,
     ): Promise<{ items: TestItemResponseModel[]; total: number }> {
         const { data } = await TestsService.getAllTests({
-            query: { filter, tags, skip, take },
+            query: { filter, skip, take },
         });
         return {
             items: data?.items ?? [],
@@ -105,23 +104,23 @@ export class AITestRepository extends UmbControllerBase {
      * Run multiple tests in batch.
      */
     async runBatch(request: RunTestBatchRequestModel): Promise<TestBatchResultsResponseModel> {
-        const { data } = await TestsService.runBatch({
+        const { data } = await TestsService.runTestBatch({
             body: request,
         });
         return data!;
     }
 
     /**
-     * Run tests by tags.
+     * Run tests by IDs.
      */
-    async runByTags(
-        tags: string[],
+    async runByIds(
+        testIds: string[],
         profileIdOverride?: string,
         contextIdsOverride?: string[]
     ): Promise<TestBatchResultsResponseModel> {
-        const { data } = await TestsService.runByTags({
+        const { data } = await TestsService.runTestBatch({
             body: {
-                tags,
+                testIds,
                 profileIdOverride,
                 contextIdsOverride,
             },
@@ -137,7 +136,7 @@ export class AITestRepository extends UmbControllerBase {
         skip: number = 0,
         take: number = 100
     ): Promise<{ items: TestRunResponseModel[]; total: number }> {
-        const { data } = await TestsService.getAll3({
+        const { data } = await TestsService.getAllTestRuns({
             query: { testId, skip, take },
         });
         return {
@@ -151,7 +150,7 @@ export class AITestRepository extends UmbControllerBase {
      */
     async getRunById(id: string): Promise<TestRunResponseModel | null> {
         try {
-            const { data } = await TestsService.getById({
+            const { data } = await TestsService.getTestRunById({
                 path: { id },
             });
             return data ?? null;
@@ -165,7 +164,7 @@ export class AITestRepository extends UmbControllerBase {
      */
     async getLatestRun(testId: string): Promise<TestRunResponseModel | null> {
         try {
-            const { data } = await TestsService.getLatest({
+            const { data } = await TestsService.getLatestTestRun({
                 path: { testId },
             });
             return data ?? null;
@@ -181,7 +180,7 @@ export class AITestRepository extends UmbControllerBase {
         baselineRunId: string,
         comparisonRunId: string
     ): Promise<TestRunComparisonResponseModel> {
-        const { data } = await TestsService.compareRuns({
+        const { data } = await TestsService.compareTestRuns({
             body: {
                 baselineRunId,
                 comparisonRunId,
@@ -194,7 +193,7 @@ export class AITestRepository extends UmbControllerBase {
      * Set a run as the baseline for comparison.
      */
     async setBaseline(testId: string, runId: string): Promise<void> {
-        await TestsService.setBaseline({
+        await TestsService.setBaselineTestRun({
             path: { testId, runId },
         });
     }
@@ -203,7 +202,7 @@ export class AITestRepository extends UmbControllerBase {
      * Delete a test run.
      */
     async deleteRun(id: string): Promise<void> {
-        await TestsService.delete({
+        await TestsService.deleteTestRun({
             path: { id },
         });
     }
@@ -212,7 +211,7 @@ export class AITestRepository extends UmbControllerBase {
      * Get all available test features.
      */
     async getAllTestFeatures(): Promise<TestFeatureInfoModel[]> {
-        const { data } = await TestsService.getAll();
+        const { data } = await TestsService.getAllTestFeatures();
         return data ?? [];
     }
 
@@ -220,7 +219,7 @@ export class AITestRepository extends UmbControllerBase {
      * Get all available test graders.
      */
     async getAllTestGraders(): Promise<TestGraderInfoModel[]> {
-        const { data } = await TestsService.getAll2();
+        const { data } = await TestsService.getAllTestGraders();
         return data ?? [];
     }
 }

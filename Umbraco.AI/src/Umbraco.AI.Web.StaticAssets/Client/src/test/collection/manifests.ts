@@ -1,4 +1,6 @@
 import { UAI_TEST_COLLECTION_ALIAS, UAI_TEST_COLLECTION_REPOSITORY_ALIAS } from "../constants.js";
+import { testCollectionActionManifests } from "./action/manifests.js";
+import { testBulkActionManifests } from "./bulk-action/manifests.js";
 
 export const testCollectionManifests: Array<UmbExtensionManifest> = [
     {
@@ -23,4 +25,6 @@ export const testCollectionManifests: Array<UmbExtensionManifest> = [
         },
         conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_TEST_COLLECTION_ALIAS }],
     },
+    ...testCollectionActionManifests,
+    ...testBulkActionManifests,
 ];

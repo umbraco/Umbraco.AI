@@ -35,6 +35,7 @@ packages/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+!**/src/**/Artifacts/
 
 # ASP.NET
 ScaffoldingReadMe.txt

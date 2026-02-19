@@ -10,6 +10,7 @@ import type { UaiTestGraderConfig } from "../../types.js";
 import { getGraderSummary } from "../../types.js";
 import { TestsService } from "../../../api/sdk.gen.js";
 import type { TestGraderInfoModel } from "../../../api/types.gen.js";
+import { css } from "@umbraco-cms/backoffice/dist-cms/external/lit";
 
 @customElement("uai-grader-config-builder")
 export class UaiGraderConfigBuilderElement extends UmbLitElement {
@@ -133,7 +134,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
                             name=${grader.name || "Unnamed grader"}
                             detail=${this.#getGraderDetail(grader)}
                         >
-                            <uui-icon slot="icon" name="icon-check"></uui-icon>
+                            <uui-icon slot="icon" name="icon-checkbox"></uui-icon>
                             <uui-action-bar slot="actions">
                                 <uui-button @click=${() => this.#onEdit(grader)} label="Edit">
                                     <uui-icon name="icon-edit"></uui-icon>
@@ -146,12 +147,20 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
                     `
                 )}
             </uui-ref-list>
-            <uui-button look="placeholder" label="Add Grader" @click=${this.#onAdd}>
+            <uui-button class="add-btn" look="placeholder" label="Add Grader" @click=${this.#onAdd}>
                 <uui-icon name="icon-add"></uui-icon>
                 Add Grader
             </uui-button>
         `;
     }
+
+    static override styles = [
+        css`
+            add-btn {
+                width: 100%;
+            }
+        `,
+    ];
 }
 
 export default UaiGraderConfigBuilderElement;

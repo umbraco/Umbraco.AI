@@ -88,19 +88,24 @@ export function createEmptyGraderConfig(): UaiTestGraderConfig {
 
 /**
  * Generates a human-readable summary for a grader.
+ * Returns type, severity, weight, and negate status (name is shown separately in UI).
  */
 export function getGraderSummary(grader: UaiTestGraderConfig, typeName?: string): string {
     const parts: string[] = [];
 
-    parts.push(grader.name || "Unnamed grader");
     if (typeName) {
-        parts.push(`(${typeName})`);
+        parts.push(typeName);
     }
-    parts.push(`${grader.severity}`);
+
+    parts.push(`Severity: ${grader.severity}`);
+
+    if (grader.weight !== 1.0) {
+        parts.push(`Weight: ${grader.weight}`);
+    }
 
     if (grader.negate) {
         parts.push("(Negated)");
     }
 
-    return parts.join(" ");
+    return parts.join(" • ");
 }

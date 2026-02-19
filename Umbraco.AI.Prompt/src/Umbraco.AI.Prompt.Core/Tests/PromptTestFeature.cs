@@ -48,21 +48,8 @@ public class PromptTestFeature : AITestFeatureBase
             throw new InvalidOperationException("Failed to deserialize test case");
         }
 
-        // Resolve target prompt (by ID or alias)
-        Guid? promptId;
-        if (test.Target.IsAlias)
-        {
-            var prompt = await _promptService.GetPromptByAliasAsync(test.Target.TargetId, cancellationToken);
-            if (prompt == null)
-            {
-                throw new InvalidOperationException($"Prompt with alias '{test.Target.TargetId}' not found");
-            }
-            promptId = prompt.Id;
-        }
-        else
-        {
-            promptId = Guid.Parse(test.Target.TargetId);
-        }
+        // Use target prompt ID directly (entity picker ensures valid ID)
+        Guid promptId = test.TestTargetId;
 
         // Build execution request
         var request = new AIPromptExecutionRequest
@@ -82,7 +69,7 @@ public class PromptTestFeature : AITestFeatureBase
         try
         {
             // TODO: Handle profileIdOverride and contextIdsOverride once prompt service supports it
-            result = await _promptService.ExecutePromptAsync(promptId.Value, request, cancellationToken);
+            result = await _promptService.ExecutePromptAsync(promptId, request, cancellationToken);
         }
         catch (Exception ex)
         {

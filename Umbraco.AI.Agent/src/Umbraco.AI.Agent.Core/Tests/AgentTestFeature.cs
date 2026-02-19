@@ -53,21 +53,8 @@ public class AgentTestFeature : AITestFeatureBase
             throw new InvalidOperationException("Failed to deserialize test case");
         }
 
-        // Resolve target agent (by ID or alias)
-        Guid agentId;
-        if (test.Target.IsAlias)
-        {
-            var agent = await _agentService.GetAgentByAliasAsync(test.Target.TargetId, cancellationToken);
-            if (agent == null)
-            {
-                throw new InvalidOperationException($"Agent with alias '{test.Target.TargetId}' not found");
-            }
-            agentId = agent.Id;
-        }
-        else
-        {
-            agentId = Guid.Parse(test.Target.TargetId);
-        }
+        // Use target agent ID directly (entity picker ensures valid ID)
+        Guid agentId = test.TestTargetId;
 
         // Build AG-UI run request
         var request = new AGUIRunRequest

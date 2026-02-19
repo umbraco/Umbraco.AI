@@ -22,8 +22,8 @@ export const manifests: Array<UmbExtensionManifest> = [
 		weight: 100,
 		meta: {
 			label: "Settings",
-			pathname: "details",
-			icon: "icon-document",
+			pathname: "settings",
+			icon: "icon-settings",
 		},
 		conditions: [
 			{

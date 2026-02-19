@@ -48,6 +48,7 @@ public class ByIdTestFeatureController : TestControllerBase
             return Task.FromResult(TestNotFound());
         }
 
-        return Task.FromResult<IActionResult>(Ok(_umbracoMapper.Map<TestFeatureResponseModel>(testFeature)));
+        var responseModel = _umbracoMapper.Map<IAITestFeature, TestFeatureResponseModel>(testFeature);
+        return Task.FromResult<IActionResult>(Ok(responseModel));
     }
 }

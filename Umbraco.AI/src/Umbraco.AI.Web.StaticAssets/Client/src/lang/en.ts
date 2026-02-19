@@ -134,6 +134,7 @@ export default {
         advancedLabel: "Advanced",
         featuresLabel: "Features",
         dataLabel: "Data",
+        configLabel: "Configuration",
     },
     uaiValidation: {
         required: "This field is required",

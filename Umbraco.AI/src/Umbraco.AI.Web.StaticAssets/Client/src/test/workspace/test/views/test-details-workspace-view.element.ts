@@ -159,7 +159,7 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 		if (!this._model) return html`<uui-loader></uui-loader>`;
 
 		return html`
-			<uui-box headline="Test Details">
+			<uui-box headline="General">
 				<umb-property-layout label="Description" description="Optional description of this test">
 					<uui-textarea
 						slot="editor"
@@ -178,16 +178,6 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 					></uai-test-feature-entity-picker>
 				</umb-property-layout>
 
-				<umb-property-layout label="Test Case" description="Configure the test case parameters" mandatory>
-					<uai-model-editor
-						slot="editor"
-								.schema=${this._testFeature?.testCaseSchema}
-						.model=${this._model.testCase}
-								empty-message="This test feature has no configurable test case parameters."
-						@change=${this.#onTestCaseChange}
-					></uai-model-editor>
-				</umb-property-layout>
-
 				<umb-property-layout label="Run Count" description="Number of times to run this test (for pass@k calculation)">
 					<uui-input
 						slot="editor"
@@ -199,6 +189,15 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 					></uui-input>
 				</umb-property-layout>
 			</uui-box>
+
+            <uai-model-editor
+                slot="editor"
+                .schema=${this._testFeature?.testCaseSchema}
+                .model=${this._model.testCase}
+                empty-message="This test feature has no configurable test case parameters."
+                @change=${this.#onTestCaseChange}
+                default-group="#uaiFieldGroups_configLabel"
+            ></uai-model-editor>
 
 			<uui-box headline="Tags">
 				<umb-property-layout label="Tags" description="Tags to categorize this test">
@@ -340,6 +339,10 @@ export class UmbracoAITestDetailsWorkspaceViewElement extends UmbFormControlMixi
 			uui-box:not(:first-child) {
 				margin-top: var(--uui-size-layout-1);
 			}
+
+            uai-model-editor {
+                margin-top: var(--uui-size-layout-1);
+            }
 
 			uui-loader {
 				display: block;

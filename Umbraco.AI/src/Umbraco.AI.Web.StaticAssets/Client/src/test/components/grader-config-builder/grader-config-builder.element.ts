@@ -109,6 +109,7 @@ export class UaiGraderConfigBuilderElement extends UmbLitElement {
 
     async #getGraderItems(): Promise<UaiPickableItemModel[]> {
         return this._graders.map((type) => ({
+            icon: "icon-checkbox color-blue",
             value: type.id,
             label: type.name,
             description: type.description || undefined,

@@ -1,4 +1,4 @@
-import { html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import type {
     UaiGraderConfigEditorModalData,
@@ -124,96 +124,125 @@ export class UaiGraderConfigEditorModalElement extends UmbModalBaseElement<
         }
 
         return html`
-            <umb-body-layout headline=${this.data?.graderTypeName || "Configure Grader"}>
+            <umb-body-layout headline="Configure ${this.data?.graderTypeName} Grader">
                 <form id="grader-form" @submit=${this.#onSubmit}>
-                    <uui-box>
-                        <div slot="header">Basic Configuration</div>
+                    <uui-box headline="General">
+                        <umb-property-layout label="Name" description="Display name for this grader">
+                            <div slot="editor">
+                                <uui-input
+                                    id="name"
+                                    type="text"
+                                    .value=${this._grader.name}
+                                    @input=${this.#onNameChange}
+                                    placeholder="Enter grader name"
+                                    required
+                                ></uui-input>
+                            </div>
+                        </umb-property-layout>
 
-                        <uui-form-layout-item>
-                            <uui-label slot="label" for="name" required>Name</uui-label>
-                            <uui-input
-                                id="name"
-                                type="text"
-                                .value=${this._grader.name}
-                                @input=${this.#onNameChange}
-                                required
-                            ></uui-input>
-                        </uui-form-layout-item>
+                        <umb-property-layout
+                            label="Description"
+                            description="Optional description of what this grader checks"
+                        >
+                            <div slot="editor">
+                                <uui-input
+                                    id="description"
+                                    type="text"
+                                    .value=${this._grader.description || ""}
+                                    @input=${this.#onDescriptionChange}
+                                    placeholder="Enter description"
+                                ></uui-input>
+                            </div>
+                        </umb-property-layout>
 
-                        <uui-form-layout-item>
-                            <uui-label slot="label" for="description">Description</uui-label>
-                            <uui-input
-                                id="description"
-                                type="text"
-                                .value=${this._grader.description || ""}
-                                @input=${this.#onDescriptionChange}
-                            ></uui-input>
-                        </uui-form-layout-item>
-
-                        <uui-form-layout-item>
-                            <uui-label slot="label" for="severity">Severity</uui-label>
-                            <uui-select
-                                id="severity"
-                                .value=${this._grader.severity}
-                                @change=${this.#onSeverityChange}
-                            >
-                                <uui-select-option value="Info">Info</uui-select-option>
-                                <uui-select-option value="Warning">Warning</uui-select-option>
-                                <uui-select-option value="Error">Error</uui-select-option>
-                            </uui-select>
-                        </uui-form-layout-item>
-
-                        <uui-form-layout-item>
-                            <uui-label slot="label" for="weight">Weight</uui-label>
-                            <uui-input
-                                id="weight"
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                .value=${this._grader.weight.toString()}
-                                @input=${this.#onWeightChange}
-                            ></uui-input>
-                        </uui-form-layout-item>
-
-                        <uui-form-layout-item>
-                            <uui-label slot="label">
-                                <uui-checkbox
-                                    .checked=${this._grader.negate}
-                                    @change=${this.#onNegateChange}
+                        <umb-property-layout
+                            label="Severity"
+                            description="Severity level when this grader fails"
+                        >
+                            <div slot="editor">
+                                <uui-select
+                                    id="severity"
+                                    .value=${this._grader.severity}
+                                    @change=${this.#onSeverityChange}
                                 >
+                                    <uui-select-option value="Info">Info</uui-select-option>
+                                    <uui-select-option value="Warning">Warning</uui-select-option>
+                                    <uui-select-option value="Error">Error</uui-select-option>
+                                </uui-select>
+                            </div>
+                        </umb-property-layout>
+
+                        <umb-property-layout label="Weight" description="Scoring weight for this grader (default: 1.0)">
+                            <div slot="editor">
+                                <uui-input
+                                    id="weight"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    .value=${this._grader.weight.toString()}
+                                    @input=${this.#onWeightChange}
+                                ></uui-input>
+                            </div>
+                        </umb-property-layout>
+
+                        <umb-property-layout
+                            label="Negate"
+                            description="Invert the pass/fail result of this grader"
+                        >
+                            <div slot="editor">
+                                <uui-checkbox .checked=${this._grader.negate} @change=${this.#onNegateChange}>
                                     Negate (invert pass/fail)
                                 </uui-checkbox>
-                            </uui-label>
-                        </uui-form-layout-item>
+                            </div>
+                        </umb-property-layout>
                     </uui-box>
 
                     ${this._schema
                         ? html`
-                              <uui-box>
-                                  <div slot="header">Grader-Specific Configuration</div>
-                                  <uai-model-editor
-                                      .schema=${this._schema}
-                                      .model=${this._configModel}
-                                      @change=${this.#onConfigChange}
-                                  ></uai-model-editor>
-                              </uui-box>
+                              <uai-model-editor
+                                  .schema=${this._schema}
+                                  .model=${this._configModel}
+                                  @change=${this.#onConfigChange}
+                                  default-group="#uaiFieldGroups_configLabel"
+                                  style="margin-top: var(--uui-size-layout-1);"
+                              >
+                              </uai-model-editor>
                           `
                         : ""}
                 </form>
 
                 <div slot="actions">
-                    <uui-button label="Cancel" @click=${this.#onCancel}></uui-button>
+                    <uui-button label="Cancel" @click=${this.#onCancel}> Cancel </uui-button>
                     <uui-button
                         type="submit"
                         form="grader-form"
                         look="primary"
                         color="positive"
                         label="Save"
-                    ></uui-button>
+                    >
+                        Save
+                    </uui-button>
                 </div>
             </umb-body-layout>
         `;
     }
+
+    static override styles = [
+        css`
+            uui-box {
+                --uui-box-default-padding: 0 var(--uui-size-space-5);
+            }
+
+            uui-box:not(:first-child) {
+                margin-top: var(--uui-size-layout-1);
+            }
+
+            uui-input,
+            uui-select {
+                width: 100%;
+            }
+        `,
+    ];
 }
 
 export default UaiGraderConfigEditorModalElement;

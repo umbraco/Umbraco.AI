@@ -70,7 +70,7 @@ internal sealed class AIPromptService : IAIPromptService
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AIPrompt>> GetPromptsPagedAsync(
+    public Task<(IEnumerable<AIPrompt> Items, int Total)> GetPromptsPagedAsync(
         int skip,
         int take,
         string? filter = null,

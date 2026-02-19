@@ -33,7 +33,7 @@ internal sealed class AITestRunService : IAITestRunService
     }
 
     /// <inheritdoc />
-    public Task<PagedModel<AITestRun>> GetRunsPagedAsync(
+    public Task<(IEnumerable<AITestRun> Items, int Total)> GetRunsPagedAsync(
         Guid? testId = null,
         Guid? batchId = null,
         AITestRunStatus? status = null,

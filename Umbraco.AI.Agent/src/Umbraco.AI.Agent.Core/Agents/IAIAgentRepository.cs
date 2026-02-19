@@ -38,11 +38,11 @@ internal interface IAIAgentRepository
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
-    /// <param name="surfaceId">Optional surface ID filter.
+    /// <param name="surfaceId">Optional surface ID filter.</param>
     /// <param name="isActive">Optional active status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Paged result containing Agents and total count.</returns>
-    Task<PagedModel<AIAgent>> GetPagedAsync(
+    /// <returns>A tuple containing the filtered/paginated agents and the total count.</returns>
+    Task<(IEnumerable<AIAgent> Items, int Total)> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,

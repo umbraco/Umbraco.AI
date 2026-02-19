@@ -44,7 +44,7 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
     }
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<AITestRun> Items, int Total)> GetPagedByTestIdAsync(
+    public async Task<Umbraco.Cms.Core.Models.PagedModel<AITestRun>> GetPagedByTestIdAsync(
         Guid testId,
         int skip = 0,
         int take = 100,
@@ -68,11 +68,13 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
         });
 
         scope.Complete();
-        return (result.items.Select(AITestRunFactory.BuildDomain), result.total);
+        return new Umbraco.Cms.Core.Models.PagedModel<AITestRun>(
+            result.total,
+            result.items.Select(AITestRunFactory.BuildDomain));
     }
 
     /// <inheritdoc />
-    public async Task<Umbraco.Cms.Core.Models.PagedModel<AITestRun>> GetPagedAsync(
+    public async Task<(IEnumerable<AITestRun> Items, int Total)> GetPagedAsync(
         Guid? testId = null,
         Guid? batchId = null,
         AITestRunStatus? status = null,
@@ -114,9 +116,7 @@ internal class EfCoreAITestRunRepository : IAITestRunRepository
         });
 
         scope.Complete();
-        return new Umbraco.Cms.Core.Models.PagedModel<AITestRun>(
-            result.total,
-            result.items.Select(AITestRunFactory.BuildDomain));
+        return (result.items.Select(AITestRunFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />

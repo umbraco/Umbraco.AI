@@ -33,8 +33,8 @@ public interface IAITestRunService
     /// <param name="skip">Number of items to skip.</param>
     /// <param name="take">Number of items to take.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Paged result containing runs and total count.</returns>
-    Task<PagedModel<AITestRun>> GetRunsPagedAsync(
+    /// <returns>A tuple containing the filtered/paginated runs and the total count.</returns>
+    Task<(IEnumerable<AITestRun> Items, int Total)> GetRunsPagedAsync(
         Guid? testId = null,
         Guid? batchId = null,
         AITestRunStatus? status = null,

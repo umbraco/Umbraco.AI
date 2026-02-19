@@ -58,7 +58,7 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public async Task<PagedModel<Core.Agents.AIAgent>> GetPagedAsync(
+    public async Task<(IEnumerable<Core.Agents.AIAgent> Items, int Total)> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -111,8 +111,7 @@ internal sealed class EfCoreAIAgentRepository : IAIAgentRepository
 
         scope.Complete();
 
-        var Agents = result.items.Select(AIAgentEntityFactory.BuildDomain).ToList();
-        return new PagedModel<Core.Agents.AIAgent>(result.total, Agents);
+        return (result.items.Select(AIAgentEntityFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />

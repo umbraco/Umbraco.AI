@@ -38,8 +38,8 @@ public interface IAIPromptService
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Paged result containing prompts and total count.</returns>
-    Task<PagedModel<AIPrompt>> GetPromptsPagedAsync(
+    /// <returns>A tuple containing the filtered/paginated prompts and the total count.</returns>
+    Task<(IEnumerable<AIPrompt> Items, int Total)> GetPromptsPagedAsync(
         int skip,
         int take,
         string? filter = null,

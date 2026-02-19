@@ -41,7 +41,7 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<PagedModel<AIAgent>> GetPagedAsync(
+    public Task<(IEnumerable<AIAgent> Items, int Total)> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -81,7 +81,7 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
             .Take(take)
             .ToList();
 
-        return Task.FromResult(new PagedModel<AIAgent>(total, items));
+        return Task.FromResult((Items: (IEnumerable<AIAgent>)items, Total: total));
     }
 
     /// <inheritdoc />

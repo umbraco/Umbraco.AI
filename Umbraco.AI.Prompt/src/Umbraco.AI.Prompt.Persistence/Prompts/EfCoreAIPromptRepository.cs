@@ -58,7 +58,7 @@ internal sealed class EfCoreAIPromptRepository : IAIPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<PagedModel<Core.Prompts.AIPrompt>> GetPagedAsync(
+    public async Task<(IEnumerable<Core.Prompts.AIPrompt> Items, int Total)> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -96,8 +96,7 @@ internal sealed class EfCoreAIPromptRepository : IAIPromptRepository
 
         scope.Complete();
 
-        var prompts = result.items.Select(AIPromptEntityFactory.BuildDomain).ToList();
-        return new PagedModel<Core.Prompts.AIPrompt>(result.total, prompts);
+        return (result.items.Select(AIPromptEntityFactory.BuildDomain), result.total);
     }
 
     /// <inheritdoc />

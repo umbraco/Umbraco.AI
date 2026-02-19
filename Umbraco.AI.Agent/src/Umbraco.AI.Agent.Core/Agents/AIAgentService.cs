@@ -83,7 +83,7 @@ internal sealed class AIAgentService : IAIAgentService
         => _repository.GetAllAsync(cancellationToken);
 
     /// <inheritdoc />
-    public Task<PagedModel<AIAgent>> GetAgentsPagedAsync(
+    public Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
         int skip,
         int take,
         string? filter = null,

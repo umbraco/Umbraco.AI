@@ -41,7 +41,7 @@ internal sealed class InMemoryAIPromptRepository : IAIPromptRepository
     }
 
     /// <inheritdoc />
-    public Task<PagedModel<AIPrompt>> GetPagedAsync(
+    public Task<(IEnumerable<AIPrompt> Items, int Total)> GetPagedAsync(
         int skip,
         int take,
         string? filter = null,
@@ -69,7 +69,7 @@ internal sealed class InMemoryAIPromptRepository : IAIPromptRepository
             .Take(take)
             .ToList();
 
-        return Task.FromResult(new PagedModel<AIPrompt>(total, items));
+        return Task.FromResult((Items: (IEnumerable<AIPrompt>)items, Total: total));
     }
 
     /// <inheritdoc />

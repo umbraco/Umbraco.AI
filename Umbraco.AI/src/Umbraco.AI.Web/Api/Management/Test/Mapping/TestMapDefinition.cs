@@ -88,11 +88,14 @@ public class TestMapDefinition : IMapDefinition
         });
 
         // UpdateTestRequestModel -> AITest (updates existing entity)
+        // Note: Factory provides dummy values for required properties; MapFromUpdateRequest sets actual values
         mapper.Define<UpdateTestRequestModel, AITest>((_, _) => new AITest
         {
             Alias = string.Empty,
             Name = string.Empty,
-            TestFeatureId = string.Empty
+            TestFeatureId = string.Empty,
+            Target = new AITestTarget { TargetId = string.Empty, IsAlias = false },
+            TestCaseJson = string.Empty
         }, MapFromUpdateRequest);
 
         // AITestRun -> TestRunResponseModel

@@ -39,11 +39,11 @@ public class LatestTestRunController : TestRunControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(TestRunResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TestRunResponseModel>> GetLatest(
+    public async Task<ActionResult<TestRunResponseModel>> GetLatestTestRun(
         Guid testId,
         CancellationToken cancellationToken = default)
     {
-        var run = await _runService.GetLatestRunAsync(testId, cancellationToken);
+        var run = await _runService.GetLatestTestRunAsync(testId, cancellationToken);
 
         if (run is null)
         {

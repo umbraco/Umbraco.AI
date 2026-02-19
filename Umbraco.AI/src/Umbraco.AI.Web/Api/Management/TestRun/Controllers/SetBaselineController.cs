@@ -29,19 +29,19 @@ public class SetBaselineController : TestRunControllerBase
     /// The baseline run is used as the reference point when detecting regressions.
     /// </summary>
     /// <param name="testId">The test ID.</param>
-    /// <param name="runId">The run ID to set as baseline.</param>
+    /// <param name="testRunId">The test run ID to set as baseline.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>No content if successful.</returns>
-    [HttpPost("baseline/{testId:guid}/{runId:guid}")]
+    [HttpPost("baseline/{testId:guid}/{testRunId:guid}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SetBaseline(
+    public async Task<IActionResult> SetBaselineTestRun(
         Guid testId,
-        Guid runId,
+        Guid testRunId,
         CancellationToken cancellationToken = default)
     {
-        var success = await _runService.SetBaselineRunAsync(testId, runId, cancellationToken);
+        var success = await _runService.SetBaselineTestRunAsync(testId, testRunId, cancellationToken);
 
         if (!success)
         {

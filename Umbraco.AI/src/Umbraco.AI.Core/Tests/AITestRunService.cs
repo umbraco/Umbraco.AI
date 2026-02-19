@@ -22,7 +22,7 @@ internal sealed class AITestRunService : IAITestRunService
     }
 
     /// <inheritdoc />
-    public Task<AITestRun?> GetRunAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<AITestRun?> GetTestRunAsync(Guid id, CancellationToken cancellationToken = default)
         => _runRepository.GetByIdAsync(id, cancellationToken);
 
     /// <inheritdoc />
@@ -43,14 +43,14 @@ internal sealed class AITestRunService : IAITestRunService
         => _runRepository.GetPagedAsync(testId, batchId, status, skip, take, cancellationToken);
 
     /// <inheritdoc />
-    public Task<AITestRun?> GetLatestRunAsync(Guid testId, CancellationToken cancellationToken = default)
+    public Task<AITestRun?> GetLatestTestRunAsync(Guid testId, CancellationToken cancellationToken = default)
     {
         // Use efficient repository method that fetches only the latest run at database level
         return _runRepository.GetLatestByTestIdAsync(testId, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<(AITestRun? Run, AITestTranscript? Transcript)> GetRunWithTranscriptAsync(
+    public async Task<(AITestRun? Run, AITestTranscript? Transcript)> GetTestRunWithTranscriptAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
@@ -70,16 +70,16 @@ internal sealed class AITestRunService : IAITestRunService
     }
 
     /// <inheritdoc />
-    public async Task<AITestRunComparison> CompareRunsAsync(
-        Guid baselineRunId,
-        Guid comparisonRunId,
+    public async Task<AITestRunComparison> CompareTestRunsAsync(
+        Guid baselineTestRunId,
+        Guid comparisonTestRunId,
         CancellationToken cancellationToken = default)
     {
-        var baselineRun = await _runRepository.GetByIdAsync(baselineRunId, cancellationToken)
-            ?? throw new InvalidOperationException($"Baseline run {baselineRunId} not found");
+        var baselineRun = await _runRepository.GetByIdAsync(baselineTestRunId, cancellationToken)
+            ?? throw new InvalidOperationException($"Baseline run {baselineTestRunId} not found");
 
-        var comparisonRun = await _runRepository.GetByIdAsync(comparisonRunId, cancellationToken)
-            ?? throw new InvalidOperationException($"Comparison run {comparisonRunId} not found");
+        var comparisonRun = await _runRepository.GetByIdAsync(comparisonTestRunId, cancellationToken)
+            ?? throw new InvalidOperationException($"Comparison run {comparisonTestRunId} not found");
 
         // Detect regression/improvement
         var isRegression = baselineRun.Status == AITestRunStatus.Passed && comparisonRun.Status != AITestRunStatus.Passed;
@@ -140,10 +140,10 @@ internal sealed class AITestRunService : IAITestRunService
     }
 
     /// <inheritdoc />
-    public async Task<bool> SetBaselineRunAsync(Guid testId, Guid runId, CancellationToken cancellationToken = default)
+    public async Task<bool> SetBaselineTestRunAsync(Guid testId, Guid testRunId, CancellationToken cancellationToken = default)
     {
         // Verify the run exists and belongs to the test
-        var run = await _runRepository.GetByIdAsync(runId, cancellationToken);
+        var run = await _runRepository.GetByIdAsync(testRunId, cancellationToken);
         if (run is null || run.TestId != testId)
         {
             return false;
@@ -157,14 +157,14 @@ internal sealed class AITestRunService : IAITestRunService
         }
 
         // Update the test's baseline run ID
-        test.BaselineRunId = runId;
+        test.BaselineRunId = testRunId;
         await _testRepository.SaveAsync(test, userId: null, cancellationToken);
 
         return true;
     }
 
     /// <inheritdoc />
-    public async Task<bool> DeleteRunAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteTestRunAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var run = await _runRepository.GetByIdAsync(id, cancellationToken);
         if (run is null)
@@ -183,7 +183,7 @@ internal sealed class AITestRunService : IAITestRunService
     }
 
     /// <inheritdoc />
-    public Task<int> DeleteOldRunsAsync(Guid testId, int keepCount, CancellationToken cancellationToken = default)
+    public Task<int> DeleteOldTestRunsAsync(Guid testId, int keepCount, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(keepCount);
 

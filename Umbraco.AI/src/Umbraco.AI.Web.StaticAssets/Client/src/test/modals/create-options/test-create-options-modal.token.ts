@@ -11,9 +11,9 @@ export interface UaiTestCreateOptionsModalValue {
 export const UAI_TEST_CREATE_OPTIONS_MODAL = new UmbModalToken<
     UaiTestCreateOptionsModalData,
     UaiTestCreateOptionsModalValue
->("Uai.Modal.TestCreateOptions", {
+>("UmbracoAI.Modal.Test.CreateOptions", {
     modal: {
-        type: "sidebar",
+        type: "dialog",
         size: "small",
     },
 });

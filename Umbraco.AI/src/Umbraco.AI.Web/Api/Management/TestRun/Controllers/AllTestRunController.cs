@@ -43,7 +43,7 @@ public class AllTestRunController : TestRunControllerBase
     [HttpGet]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedModel<TestRunResponseModel>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedModel<TestRunResponseModel>>> GetAll(
+    public async Task<ActionResult<PagedModel<TestRunResponseModel>>> GetAllTestRuns(
         [FromQuery] Guid? testId,
         [FromQuery] Guid? batchId,
         [FromQuery] string? status,

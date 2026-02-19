@@ -39,15 +39,15 @@ public class CompareRunsController : TestRunControllerBase
     [ProducesResponseType(typeof(TestRunComparisonResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TestRunComparisonResponseModel>> CompareRuns(
+    public async Task<ActionResult<TestRunComparisonResponseModel>> CompareTestRuns(
         [FromBody] CompareRunsRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var comparison = await _runService.CompareRunsAsync(
-                requestModel.BaselineRunId,
-                requestModel.ComparisonRunId,
+            var comparison = await _runService.CompareTestRunsAsync(
+                requestModel.BaselineTestRunId,
+                requestModel.ComparisonTestRunId,
                 cancellationToken);
 
             var responseModel = _mapper.Map<TestRunComparisonResponseModel>(comparison)!;

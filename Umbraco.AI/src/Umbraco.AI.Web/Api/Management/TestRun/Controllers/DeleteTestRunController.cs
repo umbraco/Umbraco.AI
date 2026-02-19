@@ -34,11 +34,11 @@ public class DeleteTestRunController : TestRunControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(
+    public async Task<IActionResult> DeleteTestRun(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var deleted = await _runService.DeleteRunAsync(id, cancellationToken);
+        var deleted = await _runService.DeleteTestRunAsync(id, cancellationToken);
 
         if (!deleted)
         {

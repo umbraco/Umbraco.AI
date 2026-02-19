@@ -14,7 +14,7 @@ public interface IAITestRunService
     /// <param name="id">The run ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The test run if found, null otherwise.</returns>
-    Task<AITestRun?> GetRunAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<AITestRun?> GetTestRunAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all runs for a specific test.
@@ -48,7 +48,7 @@ public interface IAITestRunService
     /// <param name="testId">The test ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The latest run if found, null otherwise.</returns>
-    Task<AITestRun?> GetLatestRunAsync(Guid testId, CancellationToken cancellationToken = default);
+    Task<AITestRun?> GetLatestTestRunAsync(Guid testId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a run with its associated transcript.
@@ -56,30 +56,30 @@ public interface IAITestRunService
     /// <param name="id">The run ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the run and transcript if found.</returns>
-    Task<(AITestRun? Run, AITestTranscript? Transcript)> GetRunWithTranscriptAsync(
+    Task<(AITestRun? Run, AITestTranscript? Transcript)> GetTestRunWithTranscriptAsync(
         Guid id,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Compares two test runs and detects regressions.
     /// </summary>
-    /// <param name="baselineRunId">The baseline run ID.</param>
-    /// <param name="comparisonRunId">The comparison run ID.</param>
+    /// <param name="baselineTestRunId">The baseline test run ID.</param>
+    /// <param name="comparisonTestRunId">The comparison test run ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Comparison result with regression detection.</returns>
-    Task<AITestRunComparison> CompareRunsAsync(
-        Guid baselineRunId,
-        Guid comparisonRunId,
+    Task<AITestRunComparison> CompareTestRunsAsync(
+        Guid baselineTestRunId,
+        Guid comparisonTestRunId,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets a run as the baseline for future comparisons.
     /// </summary>
     /// <param name="testId">The test ID.</param>
-    /// <param name="runId">The run ID to set as baseline.</param>
+    /// <param name="testRunId">The test run ID to set as baseline.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if successful.</returns>
-    Task<bool> SetBaselineRunAsync(Guid testId, Guid runId, CancellationToken cancellationToken = default);
+    Task<bool> SetBaselineTestRunAsync(Guid testId, Guid testRunId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a specific test run.
@@ -87,7 +87,7 @@ public interface IAITestRunService
     /// <param name="id">The run ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deleted, false if not found.</returns>
-    Task<bool> DeleteRunAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeleteTestRunAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes old test runs based on retention policy.
@@ -97,7 +97,7 @@ public interface IAITestRunService
     /// <param name="keepCount">Number of recent runs to keep.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Number of runs deleted.</returns>
-    Task<int> DeleteOldRunsAsync(Guid testId, int keepCount, CancellationToken cancellationToken = default);
+    Task<int> DeleteOldTestRunsAsync(Guid testId, int keepCount, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Calculates metrics from a set of runs (batch or by test ID).

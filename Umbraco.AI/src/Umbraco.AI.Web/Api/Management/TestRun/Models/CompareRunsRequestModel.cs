@@ -8,14 +8,14 @@ namespace Umbraco.AI.Web.Api.Management.TestRun.Models;
 public class CompareRunsRequestModel
 {
     /// <summary>
-    /// The baseline run ID.
+    /// The baseline test run ID.
     /// </summary>
     [Required]
-    public Guid BaselineRunId { get; set; }
+    public Guid BaselineTestRunId { get; set; }
 
     /// <summary>
-    /// The comparison run ID.
+    /// The comparison test run ID.
     /// </summary>
     [Required]
-    public Guid ComparisonRunId { get; set; }
+    public Guid ComparisonTestRunId { get; set; }
 }

@@ -39,11 +39,11 @@ public class ByIdTestRunController : TestRunControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(TestRunResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TestRunResponseModel>> GetById(
+    public async Task<ActionResult<TestRunResponseModel>> GetTestRunById(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var run = await _runService.GetRunAsync(id, cancellationToken);
+        var run = await _runService.GetTestRunAsync(id, cancellationToken);
 
         if (run is null)
         {

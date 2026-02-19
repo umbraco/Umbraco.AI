@@ -427,7 +427,7 @@ export type TestItemResponseModel = {
     alias: string;
     name: string;
     description?: string | null;
-    testTypeId: string;
+    testFeatureId: string;
     tags: Array<string>;
     runCount: number;
     dateCreated: string;
@@ -546,7 +546,6 @@ export type UpdateTestRequestModel = {
     alias: string;
     name: string;
     description?: string | null;
-    testFeatureId: string;
     target: TestTargetModel;
     testCaseJson: string;
     graders: Array<TestGraderModel>;
@@ -1778,53 +1777,7 @@ export type UpdateSettingsResponses = {
 
 export type UpdateSettingsResponse = UpdateSettingsResponses[keyof UpdateSettingsResponses];
 
-export type GetAllData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/test-features';
-};
-
-export type GetAllErrors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type GetAllResponses = {
-    /**
-     * OK
-     */
-    200: Array<TestFeatureInfoModel>;
-};
-
-export type GetAllResponse = GetAllResponses[keyof GetAllResponses];
-
-export type GetAll2Data = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/umbraco/ai/management/api/v1/test-graders';
-};
-
-export type GetAll2Errors = {
-    /**
-     * The resource is protected and requires an authentication token
-     */
-    401: unknown;
-};
-
-export type GetAll2Responses = {
-    /**
-     * OK
-     */
-    200: Array<TestGraderInfoModel>;
-};
-
-export type GetAll2Response = GetAll2Responses[keyof GetAll2Responses];
-
-export type GetAll3Data = {
+export type GetAllTestRunsData = {
     body?: never;
     path?: never;
     query?: {
@@ -1837,23 +1790,23 @@ export type GetAll3Data = {
     url: '/umbraco/ai/management/api/v1/test-runs';
 };
 
-export type GetAll3Errors = {
+export type GetAllTestRunsErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type GetAll3Responses = {
+export type GetAllTestRunsResponses = {
     /**
      * OK
      */
     200: PagedModelTestRunResponseModel;
 };
 
-export type GetAll3Response = GetAll3Responses[keyof GetAll3Responses];
+export type GetAllTestRunsResponse = GetAllTestRunsResponses[keyof GetAllTestRunsResponses];
 
-export type DeleteData = {
+export type DeleteTestRunData = {
     body?: never;
     path: {
         id: string;
@@ -1862,7 +1815,7 @@ export type DeleteData = {
     url: '/umbraco/ai/management/api/v1/test-runs/{id}';
 };
 
-export type DeleteErrors = {
+export type DeleteTestRunErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -1873,18 +1826,18 @@ export type DeleteErrors = {
     404: ProblemDetails;
 };
 
-export type DeleteError = DeleteErrors[keyof DeleteErrors];
+export type DeleteTestRunError = DeleteTestRunErrors[keyof DeleteTestRunErrors];
 
-export type DeleteResponses = {
+export type DeleteTestRunResponses = {
     /**
      * No Content
      */
     204: void;
 };
 
-export type DeleteResponse = DeleteResponses[keyof DeleteResponses];
+export type DeleteTestRunResponse = DeleteTestRunResponses[keyof DeleteTestRunResponses];
 
-export type GetByIdData = {
+export type GetTestRunByIdData = {
     body?: never;
     path: {
         id: string;
@@ -1893,7 +1846,7 @@ export type GetByIdData = {
     url: '/umbraco/ai/management/api/v1/test-runs/{id}';
 };
 
-export type GetByIdErrors = {
+export type GetTestRunByIdErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -1904,18 +1857,18 @@ export type GetByIdErrors = {
     404: ProblemDetails;
 };
 
-export type GetByIdError = GetByIdErrors[keyof GetByIdErrors];
+export type GetTestRunByIdError = GetTestRunByIdErrors[keyof GetTestRunByIdErrors];
 
-export type GetByIdResponses = {
+export type GetTestRunByIdResponses = {
     /**
      * OK
      */
     200: TestRunResponseModel;
 };
 
-export type GetByIdResponse = GetByIdResponses[keyof GetByIdResponses];
+export type GetTestRunByIdResponse = GetTestRunByIdResponses[keyof GetTestRunByIdResponses];
 
-export type SetBaselineData = {
+export type SetBaselineTestRunData = {
     body?: never;
     path: {
         testId: string;
@@ -1925,7 +1878,7 @@ export type SetBaselineData = {
     url: '/umbraco/ai/management/api/v1/test-runs/baseline/{testId}/{runId}';
 };
 
-export type SetBaselineErrors = {
+export type SetBaselineTestRunErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -1936,25 +1889,25 @@ export type SetBaselineErrors = {
     404: ProblemDetails;
 };
 
-export type SetBaselineError = SetBaselineErrors[keyof SetBaselineErrors];
+export type SetBaselineTestRunError = SetBaselineTestRunErrors[keyof SetBaselineTestRunErrors];
 
-export type SetBaselineResponses = {
+export type SetBaselineTestRunResponses = {
     /**
      * No Content
      */
     204: void;
 };
 
-export type SetBaselineResponse = SetBaselineResponses[keyof SetBaselineResponses];
+export type SetBaselineTestRunResponse = SetBaselineTestRunResponses[keyof SetBaselineTestRunResponses];
 
-export type CompareRunsData = {
+export type CompareTestRunsData = {
     body?: CompareRunsRequestModel;
     path?: never;
     query?: never;
     url: '/umbraco/ai/management/api/v1/test-runs/compare';
 };
 
-export type CompareRunsErrors = {
+export type CompareTestRunsErrors = {
     /**
      * Bad Request
      */
@@ -1969,18 +1922,18 @@ export type CompareRunsErrors = {
     404: ProblemDetails;
 };
 
-export type CompareRunsError = CompareRunsErrors[keyof CompareRunsErrors];
+export type CompareTestRunsError = CompareTestRunsErrors[keyof CompareTestRunsErrors];
 
-export type CompareRunsResponses = {
+export type CompareTestRunsResponses = {
     /**
      * OK
      */
     200: TestRunComparisonResponseModel;
 };
 
-export type CompareRunsResponse = CompareRunsResponses[keyof CompareRunsResponses];
+export type CompareTestRunsResponse = CompareTestRunsResponses[keyof CompareTestRunsResponses];
 
-export type GetLatestData = {
+export type GetLatestTestRunData = {
     body?: never;
     path: {
         testId: string;
@@ -1989,7 +1942,7 @@ export type GetLatestData = {
     url: '/umbraco/ai/management/api/v1/test-runs/latest/{testId}';
 };
 
-export type GetLatestErrors = {
+export type GetLatestTestRunErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
@@ -2000,23 +1953,22 @@ export type GetLatestErrors = {
     404: ProblemDetails;
 };
 
-export type GetLatestError = GetLatestErrors[keyof GetLatestErrors];
+export type GetLatestTestRunError = GetLatestTestRunErrors[keyof GetLatestTestRunErrors];
 
-export type GetLatestResponses = {
+export type GetLatestTestRunResponses = {
     /**
      * OK
      */
     200: TestRunResponseModel;
 };
 
-export type GetLatestResponse = GetLatestResponses[keyof GetLatestResponses];
+export type GetLatestTestRunResponse = GetLatestTestRunResponses[keyof GetLatestTestRunResponses];
 
 export type GetAllTestsData = {
     body?: never;
     path?: never;
     query?: {
         filter?: string;
-        tags?: string;
         skip?: number;
         take?: number;
     };
@@ -2194,14 +2146,60 @@ export type RunTestResponses = {
 
 export type RunTestResponse = RunTestResponses[keyof RunTestResponses];
 
-export type RunBatchData = {
+export type GetAllTestFeaturesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/test-features';
+};
+
+export type GetAllTestFeaturesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestFeaturesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestFeatureInfoModel>;
+};
+
+export type GetAllTestFeaturesResponse = GetAllTestFeaturesResponses[keyof GetAllTestFeaturesResponses];
+
+export type GetAllTestGradersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/tests/test-graders';
+};
+
+export type GetAllTestGradersErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetAllTestGradersResponses = {
+    /**
+     * OK
+     */
+    200: Array<TestGraderInfoModel>;
+};
+
+export type GetAllTestGradersResponse = GetAllTestGradersResponses[keyof GetAllTestGradersResponses];
+
+export type RunTestBatchData = {
     body?: RunTestBatchRequestModel;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/tests/execute-batch';
+    url: '/umbraco/ai/management/api/v1/tests/tests/execute-batch';
 };
 
-export type RunBatchErrors = {
+export type RunTestBatchErrors = {
     /**
      * Bad Request
      */
@@ -2212,25 +2210,25 @@ export type RunBatchErrors = {
     401: unknown;
 };
 
-export type RunBatchError = RunBatchErrors[keyof RunBatchErrors];
+export type RunTestBatchError = RunTestBatchErrors[keyof RunTestBatchErrors];
 
-export type RunBatchResponses = {
+export type RunTestBatchResponses = {
     /**
      * OK
      */
     200: TestBatchResultsResponseModel;
 };
 
-export type RunBatchResponse = RunBatchResponses[keyof RunBatchResponses];
+export type RunTestBatchResponse = RunTestBatchResponses[keyof RunTestBatchResponses];
 
-export type RunByTagsData = {
+export type RunTestsByTagsData = {
     body?: RunTestsByTagsRequestModel;
     path?: never;
     query?: never;
-    url: '/umbraco/ai/management/api/v1/tests/execute-by-tags';
+    url: '/umbraco/ai/management/api/v1/tests/tests/execute-by-tags';
 };
 
-export type RunByTagsErrors = {
+export type RunTestsByTagsErrors = {
     /**
      * Bad Request
      */
@@ -2241,16 +2239,16 @@ export type RunByTagsErrors = {
     401: unknown;
 };
 
-export type RunByTagsError = RunByTagsErrors[keyof RunByTagsErrors];
+export type RunTestsByTagsError = RunTestsByTagsErrors[keyof RunTestsByTagsErrors];
 
-export type RunByTagsResponses = {
+export type RunTestsByTagsResponses = {
     /**
      * OK
      */
     200: TestBatchResultsResponseModel;
 };
 
-export type RunByTagsResponse = RunByTagsResponses[keyof RunByTagsResponses];
+export type RunTestsByTagsResponse = RunTestsByTagsResponses[keyof RunTestsByTagsResponses];
 
 export type GetAllToolsData = {
     body?: never;
